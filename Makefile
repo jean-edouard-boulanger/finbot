@@ -1,14 +1,14 @@
 run-finbotwsrv-dev:
 	env FLASK_APP=./finbot/apps/finbotwsrv/finbotwsrv.py \
 		FLASK_ENV=development \
-		flask run --port 5001
+		flask run --port 5001 -h 0.0.0.0
 
 run-snapwsrv-dev:
 	env FLASK_APP=./finbot/apps/snapwsrv/snapwsrv.py \
 		FLASK_ENV=development \
 		SECRET_PATH=$(shell pwd)/.secure/secret.txt \
 		ACCOUNTS_PATH=$(shell pwd)/.secure/accounts \
-		flask run --port 5000
+		flask run --port 5000 -h 0.0.0.0
 
 run-tester-dev:
 	env python3.7 -m finbot.apps.tester.tester \
@@ -32,7 +32,7 @@ reveal-accounts:
 	env PYTHONPATH=$(shell pwd):${PYTHONPATH} python3.7 tools/crypt \
 		fernet-decrypt \
 		-k $(shell pwd)/.secure/secret.txt \
-		-i $(shell pwd)/.secure/accounts
+		-i $(shell pwd)/.secure/accounts | less
 
 edit-accounts:
 	env PYTHONPATH=$(shell pwd):${PYTHONPATH} \

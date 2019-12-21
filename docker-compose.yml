@@ -1,0 +1,45 @@
+version: "3"
+services:
+  finbotdb:
+    image: "postgres:12"
+    container_name: finbotdb
+    restart: always
+    shm_size: 256MB
+    environment:
+        POSTGRES_PORT: 5432
+        POSTGRES_DB: finbot
+        POSTGRES_USER: finbot
+        POSTGRES_PASSWORD: finbot
+    ports:
+      - "5100:5432"
+    volumes:
+      - .finbotdb:/var/lib/postgresql/data
+      - ${PWD}/db/finbot.sql:/docker-entrypoint-initdb.d/finbot.sql:ro
+  finbotwsrv:
+    build:
+      context: .
+      dockerfile: finbotwsrv.Dockerfile
+    container_name: finbotwsrv
+    working_dir: /finbot
+    command: "make run-finbotwsrv-dev"
+    volumes:
+      - .:/finbot
+  snapwsrv:
+    build:
+      context: .
+      dockerfile: snapwsrv.Dockerfile
+    container_name: snapwsrv
+    depends_on: 
+      - finbotdb
+    working_dir: /finbot
+    command: sh -c "/usr/bin/wait && make run-snapwsrv-dev"
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/finbot
+    environment:
+      WAIT_HOSTS: finbotdb:5432
+      FINBOTWSRV_ENDPOINT: "http://finbotwsrv:5001"
+volumes:
+    .finbotdb:
+    .:

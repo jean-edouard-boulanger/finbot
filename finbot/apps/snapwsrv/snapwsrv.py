@@ -52,7 +52,7 @@ def take_snapshot():
 
     logging.info("taking snapshot")
     raw_snapshot = []
-    finbot_client = FinbotClient("http://127.0.0.1:5001")
+    finbot_client = FinbotClient(os.environ.get("FINBOTWSRV_ENDPOINT", "http://127.0.0.1:5001"))
     for account in all_accounts:
         logging.info(f"taking snapshot for account {account['id']} ({account['provider_id']})")
         snapshot_entry = finbot_client.get_financial_data(

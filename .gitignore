@@ -2,3 +2,4 @@
 .secure/
 *.pyc
 __pycache__/
+.finbotdb/

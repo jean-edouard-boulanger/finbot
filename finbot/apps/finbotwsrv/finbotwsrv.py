@@ -82,7 +82,7 @@ def item_handler(item_type, provider_api):
         return {
             "line_item": item_type,
             "error": make_error(
-                user_message=f"failed to retrieve line item {line_item}",
+                user_message=f"failed to retrieve {item_type} line item",
                 debug_message=str(e),
                 trace=traceback.format_exc()
             )
