@@ -1,0 +1,3 @@
+selenium
+terminaltables
+price-parser

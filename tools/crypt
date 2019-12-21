@@ -1,0 +1,72 @@
+#!/usr/bin/env python3.7
+from finbot.core import crypto
+import argparse
+
+
+def setup_encrypt_subparser(parser):
+    parser.add_argument("-k", "--secret", type=str, help="path to secret key", required=True)
+    parser.add_argument("-i", "--input-file", type=str, help="input file path", required=True)
+
+
+def setup_decrypt_subparser(parser):
+    parser.add_argument("-k", "--secret", type=str, help="path to secret key", required=True)
+    parser.add_argument("-i", "--input-file", type=str, help="input file path", required=True)
+
+
+def key_tool(settings):
+    print(crypto.fernet_generate_key().decode()) 
+
+
+def encrypt_tool(settings):
+    with open(settings.secret, "rb") as secret_file:
+        secret = secret_file.read()
+        with open(settings.input_file, "rb") as input_file:
+            print(crypto.fernet_encrypt(input_file.read(), secret).decode())
+
+
+def decrypt_tool(settings):
+    with open(settings.secret, "rb") as secret_file:
+        secret = secret_file.read()
+        with open(settings.input_file, "rb") as input_file:
+            print(crypto.fernet_decrypt(input_file.read(), secret).decode())
+
+
+ALL_TOOLS = {
+    "fernet-key": {
+        "description": "generate key (fernet)",
+        "parser_builder": (lambda _: None),
+        "handler": key_tool
+    },
+    "fernet-encrypt": {
+        "description": "encrypt a file (fernet)",
+        "parser_builder": setup_encrypt_subparser,
+        "handler": encrypt_tool
+    },
+    "fernet-decrypt": {
+        "description": "decrypt a file (fernet)",
+        "parser_builder": setup_decrypt_subparser,
+        "handler": decrypt_tool
+    }
+}
+
+
+def create_parser():
+    parser = argparse.ArgumentParser(prog='encryption utility')
+    subparsers = parser.add_subparsers(help='tools')
+    for tool_name, tool in ALL_TOOLS.items():
+        subparser = subparsers.add_parser(tool_name, help=tool["description"])
+        subparser.set_defaults(tool_name=tool_name)
+        tool["parser_builder"](subparser)
+    return parser
+
+
+def main():
+    parser = create_parser()
+    settings = parser.parse_args()
+    if not hasattr(settings, "tool_name"):
+        parser.print_usage()
+        return
+    return ALL_TOOLS[settings.tool_name]["handler"](settings)
+
+if __name__ == "__main__":
+    main()
