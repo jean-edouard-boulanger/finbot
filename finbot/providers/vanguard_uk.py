@@ -158,7 +158,7 @@ class Api(providers.Base):
         def extract_fund_asset(product_type, product_row):
             cells = product_row.find_elements_by_tag_name("td")
             name_cell = cells[0].find_element_by_css_selector(
-                "div.product-info-wrapper > p.content-product-name")
+                "p.content-product-name")
             product_name = name_cell.text.strip()
             ongoing_charges = float(cells[1].text.strip()[:-1]) / 100.0
             units = float(cells[2].text.strip())
@@ -194,13 +194,11 @@ class Api(providers.Base):
             presence_of_element_located((By.CSS_SELECTOR, "table.table-investments-detailed")))
         product_type = None
         all_assets = []
-        for row in investments_table.find_elements_by_tag_name("tr"):
-            class_name = row.get_attribute("class")
-            if class_name == "group-row":
-                product_type = row.find_element_by_tag_name("td > span > span").text.strip().lower()
-            if class_name == "product-row":
-                assert product_type is not None
-                all_assets.append(extract_asset(product_type, row))
+        for section in investments_table.find_elements_by_css_selector("tbody.group-content"):
+            group_row = section.find_element_by_css_selector("tr.group-row")
+            product_type = group_row.text.strip().split()[0].lower()
+            for product_row in section.find_elements_by_css_selector("tr.product-row"):
+                all_assets.append(extract_asset(product_type, product_row))                
         return {
             "account": {
                 "id": account["id"],

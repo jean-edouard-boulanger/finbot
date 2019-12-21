@@ -20,10 +20,13 @@ BALANCES_URL = "https://lwp.aegon.co.uk/targetplanUI/investments"
 
 
 def has_error(browser):
-    error_area = browser.find_elements_by_css_selector("div#error-container-wrapper")
-    if len(error_area) < 1:
+    try:
+        error_area = browser.find_elements_by_css_selector("div#error-container-wrapper")
+        if len(error_area) < 1:
+            return False
+        return error_area[0].is_displayed()
+    except StaleElementReferenceException:
         return False
-    return error_area[0].is_displayed()
 
 
 def is_logged_in(browser):
@@ -82,7 +85,7 @@ class Api(providers.Base):
     def _go_home(self):
         if not self._is_home():
             (self.browser.find_element_by_css_selector("div#navbarSupportedContent")
-                        .find_element_by_tag_name("div.dropdown")
+                        .find_element_by_css_selector("div.dropdown")
                         .find_element_by_tag_name("a")
                         .click())
         WebDriverWait(self.browser, 60).until(

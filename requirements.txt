@@ -5,3 +5,4 @@ flask
 requests
 cryptography
 cffi
+psycopg2
