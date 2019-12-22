@@ -7,7 +7,12 @@ from selenium.webdriver.support.expected_conditions import (
     presence_of_element_located
 )
 from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
-from finbot.providers.support.selenium import DefaultBrowserFactory, any_of, dump_html
+from finbot.providers.support.selenium import (
+    DefaultBrowserFactory, 
+    any_of, 
+    dump_html, 
+    page_loaded_hacky
+)
 from finbot.providers.errors import AuthFailure
 from finbot import providers
 from copy import deepcopy
@@ -19,7 +24,7 @@ AUTH_URL = "https://lwp.aegon.co.uk/targetplanUI/login"
 BALANCES_URL = "https://lwp.aegon.co.uk/targetplanUI/investments"
 
 
-def has_error(browser):
+def _has_error(browser):
     try:
         error_area = browser.find_elements_by_css_selector("div#error-container-wrapper")
         if len(error_area) < 1:
@@ -29,12 +34,19 @@ def has_error(browser):
         return False
 
 
-def is_logged_in(browser):
+def _is_logged_in(browser):
     avatar_area = browser.find_elements_by_css_selector("a#nav-primary-profile")
     return len(avatar_area) > 0 
 
 
-def iter_accounts(browser):
+def _wait_accounts(browser):
+    accounts_xpath = "//div[contains(@class,'card-product-')]"
+    WebDriverWait(browser, 120).until(
+        presence_of_element_located((By.XPATH, accounts_xpath)))
+    return browser.find_elements_by_xpath(accounts_xpath)
+
+
+def iter_accounts(accounts_elements):
     def extract_account(account_card):
         card_body = account_card.find_element_by_css_selector("div.card-body")
         card_footer = account_card.find_element_by_css_selector("div.card-footer")
@@ -55,8 +67,7 @@ def iter_accounts(browser):
                 "link_element": account_link
             }
         }
-    accounts = browser.find_elements_by_xpath("//div[contains(@class,'card-product-')]")
-    return [extract_account(account_card) for account_card in accounts]
+    return [extract_account(account_card) for account_card in accounts_elements]
 
 
 class Credentials(object):
@@ -79,25 +90,21 @@ class Api(providers.Base):
         self.browser = browser_factory()
         self.accounts = None
 
-    def _is_home(self):
-        return len(self.browser.find_elements_by_tag_name("h1#page-heading")) > 0
-
     def _go_home(self):
-        if not self._is_home():
-            (self.browser.find_element_by_css_selector("div#navbarSupportedContent")
-                        .find_element_by_css_selector("div.dropdown")
-                        .find_element_by_tag_name("a")
-                        .click())
-        WebDriverWait(self.browser, 60).until(
-            presence_of_element_located((By.XPATH, "//div[contains(@class,'card-product-')]")))
+        (self.browser.find_element_by_css_selector("div#navbarSupportedContent")
+                    .find_element_by_css_selector("div.dropdown")
+                    .find_element_by_tag_name("a")
+                    .click())
 
     def _switch_account(self, account_id):
         self._go_home()
-        for entry in iter_accounts(self.browser):
+        accounts_elements = _wait_accounts(self.browser)
+        for entry in iter_accounts(accounts_elements):
             if entry["account"]["id"] == account_id:
-                for try_again in range(4):
+                retries = 4
+                for _ in range(retries):
                     try:
-                        time.sleep(1)
+                        time.sleep(2)
                         entry["selenium"]["link_element"].click()
                         WebDriverWait(self.browser, 30).until(
                             presence_of_element_located((By.CSS_SELECTOR, "table.table-invs-allocation")))
@@ -110,35 +117,51 @@ class Api(providers.Base):
                             presence_of_element_located((By.CSS_SELECTOR, "table.table-invs-allocation")))
         raise RuntimeError(f"unknown account {account_id}")
 
-    def authenticate(self, credentials):
+    def _authenticate_impl(self, credentials, submit_wait):
         browser = self.browser
         browser.get(AUTH_URL)
-        login_area = WebDriverWait(browser, 120).until(
+        login_area = WebDriverWait(browser, 60).until(
             presence_of_element_located((By.CSS_SELECTOR, "form#login")))
         username_input, password_input = login_area.find_elements_by_css_selector("input.form-control")
         username_input.send_keys(credentials.username)
         password_input.send_keys(credentials.password)
         submit_button = login_area.find_element_by_tag_name("button")
+        time.sleep(submit_wait)
+        # TODO hacky, how to properly detect the form is ready (vs. redirect to self page)?
         submit_button.click()
-        WebDriverWait(browser, 120).until(
-            any_of(has_error, is_logged_in))
-        if not is_logged_in(browser):
+        WebDriverWait(browser, 60).until(
+            any_of(_has_error, _is_logged_in))
+        if not _is_logged_in(browser):
             raise AuthFailure("authentication failure")
-        self._go_home()
+        accounts_elements = _wait_accounts(self.browser)
         self.accounts = {
             entry["account"]["id"]: deepcopy(entry["account"]) 
-            for entry in iter_accounts(browser)
+            for entry in iter_accounts(accounts_elements)
         }
+
+    def authenticate(self, credentials):
+        submit_wait = 0
+        trials = 4
+        for i in range(trials):
+            try:
+                self._authenticate_impl(credentials, submit_wait)
+                return
+            except TimeoutException:
+                logging.warn("timeout while login, re-trying")
+                submit_wait = submit_wait * 2 + 1
+                pass
+        raise RuntimeError(f"unable to login after {trials} trials")
 
     def get_balances(self, account_ids=None):
         self._go_home()
+        accounts_elements = _wait_accounts(self.browser)
         return {
             "accounts": [
                 {
                     "account": deepcopy(entry["account"]),
                     "balance": entry["balance"]
                 }
-                for entry in iter_accounts(self.browser)
+                for entry in iter_accounts(accounts_elements)
             ]
         }
 

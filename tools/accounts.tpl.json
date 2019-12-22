@@ -28,7 +28,7 @@
         },
         {
             "id": "4",
-            "provider_id": "credit_agricole_fr",
+            "provider_id": "ca_fr",
             "credentials": {
                 "account_number": "1234123456",
                 "password": "123456"

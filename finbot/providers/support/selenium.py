@@ -1,4 +1,6 @@
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities    
+import logging
+import time
 
 
 class DefaultBrowserFactory(object):
@@ -50,3 +52,9 @@ def find_element_maybe(plural_handler, *args, **kwargs):
 
 def get_cookies(browser):
     return {cookie["name"]: cookie["value"] for cookie in browser.get_cookies()}
+
+
+def page_loaded_hacky(browser):
+    while True:
+        time.sleep(0.1)
+        logging.info(browser.execute_script("return (document.readyState == 'complete' && jQuery.active == 0)"))

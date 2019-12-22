@@ -105,7 +105,6 @@ class Api(providers.Base):
         browser.get(AUTH_URL)
 
         # Step 1: last name + card number
-        logging.info("will provide last name and card number")
         step1_form = WebDriverWait(browser, 60).until(
             presence_of_element_located((By.NAME, "loginStep1")))
         step1_form.find_element_by_css_selector("input#surname0").send_keys(
@@ -119,8 +118,6 @@ class Api(providers.Base):
         passcode_button = WebDriverWait(browser, 60).until(_get_passcode_login_button)
         browser.execute_script("arguments[0].click();", passcode_button)
 
-        logging.info("waiting for identity confirmation form")
-
         WebDriverWait(browser, 60).until(
             any_of(
                 presence_of_element_located((By.ID, "passcode0")),
@@ -131,7 +128,6 @@ class Api(providers.Base):
             raise AuthFailure(error)
 
         # step 2: authentication (passcode + memorable)
-        logging.info("will confirm identity")
         passcode_input = browser.find_element_by_id("passcode0")
         passcode_input.send_keys(credentials.passcode)
         memorable_label = browser.find_element_by_id("label-memorableCharacters").text.strip()
