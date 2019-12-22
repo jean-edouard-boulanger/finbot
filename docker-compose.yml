@@ -11,7 +11,7 @@ services:
         POSTGRES_USER: finbot
         POSTGRES_PASSWORD: finbot
     ports:
-      - "5100:5432"
+      - "5432:5432"
     volumes:
       - .finbotdb:/var/lib/postgresql/data
       - ${PWD}/db/finbot.sql:/docker-entrypoint-initdb.d/finbot.sql:ro

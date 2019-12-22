@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+while true
+do
+    read -r -p "$1 [Y/n] " input
+    case $input in
+        [yY][eE][sS]|[yY])
+            exit 0
+            ;;
+        [nN][oO]|[nN])
+            exit 1
+            ;;
+        *)
+        echo "Invalid input..."
+        ;;
+    esac
+done

@@ -1,0 +1,54 @@
+{
+    "accounts": [
+        {
+            "id": "1",
+            "provider_id": "vanguard_uk",
+            "credentials": {
+                "username": "user1",
+                "password": "secret"
+            }
+        },
+        {
+            "id": "2",
+            "provider_id": "aegon_targetplan_uk",
+            "credentials": {
+                "username": "user1",
+                "password": "secret"
+            }
+        },
+        {
+            "id": "3",
+            "provider_id": "barclays_uk",
+            "credentials": {
+                "last_name": "user1",
+                "card_number": "1234-5678-9123-4567",
+                "passcode": "12345",
+                "memorable_word": "memorable"
+            }
+        },
+        {
+            "id": "4",
+            "provider_id": "credit_agricole_fr",
+            "credentials": {
+                "account_number": "1234123456",
+                "password": "123456"
+            }
+        },
+        {
+            "id": "5",
+            "provider_id": "lending_works_uk",
+            "credentials": {
+                "username": "user1",
+                "password": "secret"
+            }
+        },
+        {
+            "id": "6",
+            "provider_id": "october_fr",
+            "credentials": {
+                "username": "user1",
+                "password": "secret"
+            }
+        }
+    ]
+}

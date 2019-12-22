@@ -30,6 +30,9 @@ RUN wget -O /tmp/chromedriver_linux64.zip https://chromedriver.storage.googleapi
 ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.2.1/wait /usr/bin/wait
 RUN chmod +x /usr/bin/wait
 
-COPY requirements.txt /tmp/requirements.txt
+RUN pip3 install \
+    selenium \
+    price-parser \
+    flask \
+    requests
 
-RUN pip3 install -r /tmp/requirements.txt

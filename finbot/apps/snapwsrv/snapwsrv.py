@@ -1,9 +1,6 @@
 from finbot.clients.finbot import FinbotClient, LineItem
 from flask import Flask, jsonify, request
-from queue import Queue
-from copy import deepcopy
 from finbot.core import crypto
-from finbot.apps.core import get_provider
 from finbot.apps.support import (
     generic_request_handler,
     make_error_response,
@@ -12,7 +9,6 @@ from finbot.apps.support import (
 import logging.config
 import logging
 import json
-import uuid
 import os
 
 
@@ -31,11 +27,6 @@ logging.config.dictConfig({
         'handlers': ['wsgi']
     }
 })
-
-
-def json_dumps(data):
-    return json.dumps(data, indent=4)
-
 
 app = Flask(__name__)
 
