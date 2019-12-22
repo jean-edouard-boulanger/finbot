@@ -28,19 +28,3 @@ class FinbotClient(object):
             "items": [item.value for item in line_items]
         })
         return json.loads(response.content)
-
-
-def tester():
-    finbot_client = FinbotClient("http://127.0.0.1:5000")
-    print(json_dumps(finbot_client.get_providers()))
-    print(json_dumps(finbot_client.get_financial_data(
-        provider="vanguard_uk",
-        line_items=[LineItem.Balances, LineItem.Assets],
-        credentials_data={
-            "username": "jboulanger2",
-            "password": "***REMOVED***"
-        })))
-
-
-if __name__ == "__main__":
-    tester()
