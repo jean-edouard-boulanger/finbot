@@ -14,7 +14,6 @@ services:
       - "5432:5432"
     volumes:
       - .finbotdb:/var/lib/postgresql/data
-      - ${PWD}/db/finbot.sql:/docker-entrypoint-initdb.d/finbot.sql:ro
   finbotwsrv:
     build:
       context: .

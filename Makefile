@@ -60,3 +60,15 @@ edit-accounts:
 		-k .secure/secret.txt \
 		-i .accounts.tmp > .secure/accounts && \
 	rm .accounts.tmp
+
+finbotdb-build:
+	tools/finbotdb build
+
+finbotdb-destroy:
+	tools/finbotdb destroy
+
+finbotdb-rebuild:
+	tools/finbotdb destroy && tools/finbotdb build
+
+finbotdb-psql:
+	env PGPASSWORD=finbot psql -h 127.0.0.1 -U finbot -d finbot

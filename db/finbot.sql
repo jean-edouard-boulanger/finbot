@@ -23,7 +23,7 @@ CREATE TYPE snapshot_status AS ENUM ('pending', 'started', 'finished', 'failure'
 
 CREATE TABLE finbot_snapshots (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES finbot_users(id),
+    user_id INTEGER REFERENCES finbot_users(id) NOT NULL,
     status snapshot_status NOT NULL,
     requested_ccy CHAR(4) NOT NULL,
     scheduled_time TIMESTAMP WITH TIME ZONE NOT NULL,

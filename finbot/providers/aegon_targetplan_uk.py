@@ -126,8 +126,7 @@ class Api(providers.Base):
         username_input.send_keys(credentials.username)
         password_input.send_keys(credentials.password)
         submit_button = login_area.find_element_by_tag_name("button")
-        time.sleep(submit_wait)
-        # TODO hacky, how to properly detect the form is ready (vs. redirect to self page)?
+        time.sleep(submit_wait)  # TODO hacky, how to properly detect the form is ready
         submit_button.click()
         WebDriverWait(browser, 60).until(
             any_of(_has_error, _is_logged_in))
@@ -140,15 +139,15 @@ class Api(providers.Base):
         }
 
     def authenticate(self, credentials):
-        submit_wait = 0
+        submit_wait = 1
         trials = 4
         for i in range(trials):
             try:
                 self._authenticate_impl(credentials, submit_wait)
                 return
             except TimeoutException:
-                logging.warn("timeout while login, re-trying")
-                submit_wait = submit_wait * 2 + 1
+                logging.warn(f"timeout while login, re-trying ({i})")
+                submit_wait = submit_wait * 2
                 pass
         raise RuntimeError(f"unable to login after {trials} trials")
 
