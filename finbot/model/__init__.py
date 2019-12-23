@@ -1,5 +1,6 @@
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
+from sqlalchemy.types import TypeDecorator, VARCHAR
 from sqlalchemy import (
     Column, 
     Integer, 
@@ -13,6 +14,20 @@ from sqlalchemy import (
     Enum
 )
 import enum
+import json
+
+
+class JSONEncoded(TypeDecorator):
+    impl = VARCHAR
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return None
+        return json.dumps(value)
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return None
+        return json.loads(value)
 
 
 Base = declarative_base()
@@ -26,15 +41,18 @@ class User(Base):
     password_salt = Column(String(64), nullable=False)
     full_name = Column(String(128), nullable=False)
     valuation_ccy = Column(String(3), nullable=False)
-    registered_accounts = relationship("RegisteredAccount", back_populates="user")
+    external_accounts = relationship("ExternalAccount", back_populates="user")
 
 
 class Provider(Base):
     __tablename__ = "finbot_providers"
     id = Column(Integer, primary_key=True)
-    provider_name = Column(String(32), nullable=False)
+    name = Column(String(32), nullable=False)
     description = Column(String(256), nullable=False)
-
+    credentials_schema = Column(JSONEncoded, nullable=False)
+    __table_args__ = (
+        UniqueConstraint(name, name="uidx_providers_name"),
+    )
 
 class ExternalAccount(Base):
     __tablename__ = "finbot_external_accounts"
@@ -67,7 +85,7 @@ class Snapshot(Base):
     requested_ccy = Column(String(3), nullable=False)
     start_time = Column(DateTime(timezone=True))
     end_time = Column(DateTime(timezone=True))
-    xccy_rates = relationship("SnapshotXccyRate", back_populates="snapshot")
+    xccy_rates = relationship("XccyRateSnapshot", back_populates="snapshot")
 
 
 class XccyRateSnapshot(Base):

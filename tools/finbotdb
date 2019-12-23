@@ -1,8 +1,120 @@
 #!/usr/bin/env python3.7
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
-from finbot.model import Base
+from finbot.model import Base, Provider
 import sys
+
+
+def hydrate_finbotdb(session):
+    session.add_all([
+        Provider(
+            name="vanguard_uk",
+            description="Vanguard Investors (UK)",
+            credentials_schema={
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "properties": {
+                    "username": {
+                        "type": "string",
+                    },
+                    "password": {
+                        "type": "string",
+                    }
+                }
+            }
+        ),
+        Provider(
+            name="aegon_targetplan_uk",
+            description="Aegon Targetplan (UK)",
+            credentials_schema={
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "type": "idn-email",
+                    },
+                    "password": {
+                        "type": "string",
+                    }
+                }
+            }
+        ),
+        Provider(
+            name="barclays_uk",
+            description="Barclays (UK)",
+            credentials_schema={
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "properties": {
+                    "last_name": {
+                        "type": "string",
+                    },
+                    "card_number": {
+                        "type": "string",
+                        "pattern": r"\d{4}-\d{4}-\d{4}-\d{4}"
+                    },
+                    "passcode": {
+                        "type": "string",
+                        "pattern": r"\d{5}"
+                    },
+                    "memorable_word": {
+                        "type": "string"
+                    }
+                }
+            }
+        ),
+        Provider(
+            name="ca_fr",
+            description="Credit Agricole (FR)",
+            credentials_schema={
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "properties": {
+                    "account_number": {
+                        "type": "string",
+                        "pattern": r"\d+"
+                    },
+                    "password": {
+                        "type": "string",
+                        "pattern": r"\d{6}"
+                    }
+                }
+            }
+        ),
+        Provider(
+            name="lending_works_uk",
+            description="Lending Works (UK)",
+            credentials_schema={
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "type": "idn-email",
+                    },
+                    "password": {
+                        "type": "string",
+                    }
+                }
+            }
+        ),
+        Provider(
+            name="october_fr",
+            description="October (FR)",
+            credentials_schema={
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "type": "idn-email",
+                    },
+                    "password": {
+                        "type": "string",
+                    }
+                }
+            }
+        )
+    ])
+    session.commit()
 
 
 def main():
@@ -15,6 +127,10 @@ def main():
     elif action == "destroy":
         print("destroying finbotdb")
         Base.metadata.drop_all(engine)
+
+    elif action == "hydrate":
+        print("hydrating finbotdb")
+        hydrate_finbotdb(sessionmaker(bind=engine)())
 
     else:
         raise RuntimeError(f"unknown action '{action}'")

@@ -70,5 +70,8 @@ finbotdb-destroy:
 finbotdb-rebuild:
 	tools/finbotdb destroy && tools/finbotdb build
 
+finbotdb-hydrate:
+	tools/finbotdb hydrate
+
 finbotdb-psql:
 	env PGPASSWORD=finbot psql -h 127.0.0.1 -U finbot -d finbot
