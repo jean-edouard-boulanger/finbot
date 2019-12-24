@@ -13,6 +13,16 @@ def setup_decrypt_subparser(parser):
     parser.add_argument("-i", "--input-file", type=str, help="input file path", required=True)
 
 
+def create_parser():
+    parser = argparse.ArgumentParser(prog='encryption utility')
+    subparsers = parser.add_subparsers(help='tools')
+    for tool_name, tool in all_tools.items():
+        subparser = subparsers.add_parser(tool_name, help=tool["description"])
+        subparser.set_defaults(tool_name=tool_name)
+        tool["parser_builder"](subparser)
+    return parser
+
+
 def key_tool(settings):
     print(crypto.fernet_generate_key().decode()) 
 
@@ -31,7 +41,7 @@ def decrypt_tool(settings):
             print(crypto.fernet_decrypt(input_file.read(), secret).decode())
 
 
-ALL_TOOLS = {
+all_tools = {
     "fernet-key": {
         "description": "generate key (fernet)",
         "parser_builder": (lambda _: None),
@@ -50,23 +60,13 @@ ALL_TOOLS = {
 }
 
 
-def create_parser():
-    parser = argparse.ArgumentParser(prog='encryption utility')
-    subparsers = parser.add_subparsers(help='tools')
-    for tool_name, tool in ALL_TOOLS.items():
-        subparser = subparsers.add_parser(tool_name, help=tool["description"])
-        subparser.set_defaults(tool_name=tool_name)
-        tool["parser_builder"](subparser)
-    return parser
-
-
 def main():
     parser = create_parser()
     settings = parser.parse_args()
     if not hasattr(settings, "tool_name"):
         parser.print_usage()
         return
-    return ALL_TOOLS[settings.tool_name]["handler"](settings)
+    return all_tools[settings.tool_name]["handler"](settings)
 
 if __name__ == "__main__":
     main()

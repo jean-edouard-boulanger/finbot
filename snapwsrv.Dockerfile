@@ -20,5 +20,7 @@ RUN pip3 install \
     requests \
     cryptography \
     cffi \
-    psycopg2
+    psycopg2 \
+    sqlalchemy
+
 

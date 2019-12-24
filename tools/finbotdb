@@ -1,15 +1,37 @@
 #!/usr/bin/env python3.7
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
-from finbot.model import Base, Provider
-import sys
+from finbot.model import (
+    Base,
+    Provider,
+    UserAccount,
+    UserAccountSettings,
+    ExternalAccount
+)
+from finbot.core import crypto
+import argparse
+import json
 
 
-def hydrate_finbotdb(session):
-    session.add_all([
-        Provider(
-            name="vanguard_uk",
+def build_tool(settings, engine, session):
+    Base.metadata.create_all(engine)
+
+
+def destroy_tool(settings, engine, session):
+    Base.metadata.drop_all(engine)
+
+
+def hydrate_tool(settings, engine, session):
+    with open(settings.secret) as kf:
+        secret = kf.read()
+        with open(settings.accounts, "rb") as af:
+            accounts = json.loads(crypto.fernet_decrypt(af.read(), secret))["accounts"]
+
+    providers = {
+        "vanguard_uk": Provider(
+            id="vanguard_uk",
             description="Vanguard Investors (UK)",
+            website_url="https://www.vanguardinvestor.co.uk/",
             credentials_schema={
                 "$schema": "http://json-schema.org/draft-07/schema#",
                 "type": "object",
@@ -23,9 +45,10 @@ def hydrate_finbotdb(session):
                 }
             }
         ),
-        Provider(
-            name="aegon_targetplan_uk",
+        "aegon_targetplan_uk": Provider(
+            id="aegon_targetplan_uk",
             description="Aegon Targetplan (UK)",
+            website_url="https://lwp.aegon.co.uk/targetplanUI/login",
             credentials_schema={
                 "$schema": "http://json-schema.org/draft-07/schema#",
                 "type": "object",
@@ -39,9 +62,10 @@ def hydrate_finbotdb(session):
                 }
             }
         ),
-        Provider(
-            name="barclays_uk",
+        "barclays_uk": Provider(
+            id="barclays_uk",
             description="Barclays (UK)",
+            website_url="https://www.barclays.co.uk/",
             credentials_schema={
                 "$schema": "http://json-schema.org/draft-07/schema#",
                 "type": "object",
@@ -63,9 +87,10 @@ def hydrate_finbotdb(session):
                 }
             }
         ),
-        Provider(
-            name="ca_fr",
+        "ca_fr": Provider(
+            id="ca_fr",
             description="Credit Agricole (FR)",
+            website_url="https://www.credit-agricole.fr/",
             credentials_schema={
                 "$schema": "http://json-schema.org/draft-07/schema#",
                 "type": "object",
@@ -81,9 +106,10 @@ def hydrate_finbotdb(session):
                 }
             }
         ),
-        Provider(
-            name="lending_works_uk",
+        "lending_works_uk": Provider(
+            id="lending_works_uk",
             description="Lending Works (UK)",
+            website_url="https://www.lendingworks.co.uk/",
             credentials_schema={
                 "$schema": "http://json-schema.org/draft-07/schema#",
                 "type": "object",
@@ -97,9 +123,10 @@ def hydrate_finbotdb(session):
                 }
             }
         ),
-        Provider(
-            name="october_fr",
+        "october_fr": Provider(
+            id="october_fr",
             description="October (FR)",
+            website_url="https://fr.october.eu/",
             credentials_schema={
                 "$schema": "http://json-schema.org/draft-07/schema#",
                 "type": "object",
@@ -113,27 +140,74 @@ def hydrate_finbotdb(session):
                 }
             }
         )
-    ])
+    }
+    session.add_all(providers.values())
+    session.add(
+        UserAccount(
+            email="test@finbot.net",
+            encrypted_password=crypto.fernet_encrypt(
+                "test".encode(), secret).decode(),
+            full_name="Test user",
+            settings=UserAccountSettings(
+                valuation_ccy="EUR"
+            ),
+            external_accounts=[
+                ExternalAccount(
+                    provider=providers[account["provider_id"]],
+                    account_name=providers[account["provider_id"]].description,
+                    encrypted_credentials=crypto.fernet_encrypt(
+                        json.dumps(account["credentials"]).encode(), secret).decode()
+                )
+                for account in accounts
+            ]
+        )
+    )
     session.commit()
 
 
+def setup_hydrate_subparser(parser):
+    parser.add_argument("-k", "--secret", type=str, help="path to secret key", required=True)
+    parser.add_argument("-A", "--accounts", type=str, help="path to accounts file", required=True)
+
+
+def create_parser():
+    parser = argparse.ArgumentParser(prog='finbotdb utility')
+    subparsers = parser.add_subparsers(help='tools')
+    for tool_name, tool in all_tools.items():
+        subparser = subparsers.add_parser(tool_name, help=tool["description"])
+        subparser.set_defaults(tool_name=tool_name)
+        tool["parser_builder"](subparser)
+    return parser
+
+
+all_tools = {
+    "build": {
+        "description": "create all tables in database",
+        "parser_builder": (lambda _: None),
+        "handler": build_tool
+    },
+    "destroy": {
+        "description": "remove all tables in database",
+        "parser_builder": (lambda _: None),
+        "handler": destroy_tool
+    },
+    "hydrate": {
+        "description": "hydrate database with initial (test) data",
+        "parser_builder": setup_hydrate_subparser,
+        "handler": hydrate_tool
+    }
+}
+
+
 def main():
-    action = sys.argv[1]
-    engine = create_engine('postgresql+psycopg2://finbot:finbot@127.0.0.1/finbot')
-    if action == "build":
-        print("building finbotdb")
-        Base.metadata.create_all(engine)
-
-    elif action == "destroy":
-        print("destroying finbotdb")
-        Base.metadata.drop_all(engine)
-
-    elif action == "hydrate":
-        print("hydrating finbotdb")
-        hydrate_finbotdb(sessionmaker(bind=engine)())
-
-    else:
-        raise RuntimeError(f"unknown action '{action}'")
+    parser = create_parser()
+    settings = parser.parse_args()
+    if not hasattr(settings, "tool_name"):
+        parser.print_usage()
+        return
+    db_engine = create_engine('postgresql+psycopg2://finbot:finbot@127.0.0.1/finbot')
+    db_session = sessionmaker(bind=db_engine)()
+    return all_tools[settings.tool_name]["handler"](settings, db_engine, db_session)
 
 
 if __name__ == "__main__":

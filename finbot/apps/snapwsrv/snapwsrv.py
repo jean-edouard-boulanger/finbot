@@ -1,15 +1,14 @@
+from flask import Flask, jsonify
+from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session, sessionmaker, joinedload
 from finbot.clients.finbot import FinbotClient, LineItem
-from flask import Flask, jsonify, request
 from finbot.core import crypto
-from finbot.apps.support import (
-    generic_request_handler,
-    make_error_response,
-    make_error
-)
+from finbot.apps.support import generic_request_handler
+from finbot.model import UserAccount
 import logging.config
 import logging
-import json
 import os
+import json
 
 
 logging.config.dictConfig({
@@ -28,35 +27,52 @@ logging.config.dictConfig({
     }
 })
 
+
+def load_secret(path):
+    with open(path) as secret_file:
+        return secret_file.read()
+
+
+secret = load_secret(os.environ["FINBOT_SECRET_PATH"])
+db_engine = create_engine(os.environ['FINBOT_DB_URL'])
+db_session = scoped_session(sessionmaker(bind=db_engine))
+finbot_client = FinbotClient(os.environ.get("FINBOTWSRV_ENDPOINT", "http://127.0.0.1:5001"))
+
 app = Flask(__name__)
 
 
-@app.route("/snapshot", methods=["GET"])
-@generic_request_handler
-def take_snapshot():
-    with open(os.environ["SECRET_PATH"], "rb") as secret_file:
-        secret = secret_file.read()
-        with open(os.environ["ACCOUNTS_PATH"], "rb") as accounts_file:
-            all_accounts_serialized = crypto.fernet_decrypt(
-                accounts_file.read(), secret).decode()
-            all_accounts = json.loads(all_accounts_serialized)["accounts"]
+@app.teardown_appcontext
+def cleanup_context(*args, **kwargs):
+    db_session.remove()
 
-    logging.info("taking snapshot")
+
+@app.route("/snapshot/<user_account_id>", methods=["GET"])
+@generic_request_handler
+def take_snapshot(user_account_id):
+    user_account = (db_session.query(UserAccount)
+                              .options(joinedload(UserAccount.external_accounts))
+                              .filter_by(id=user_account_id)
+                              .first())
+
+    logging.info(f"starting snapshot for user account id '{user_account_id}' "
+                 f"linked to {len(user_account.external_accounts)} external accounts")
+
     raw_snapshot = []
-    finbot_client = FinbotClient(os.environ.get("FINBOTWSRV_ENDPOINT", "http://127.0.0.1:5001"))
-    for account in all_accounts:
-        logging.info(f"taking snapshot for account {account['id']} ({account['provider_id']})")
+    for account in user_account.external_accounts:
+        logging.info(f"taking snapshot for external account id '{account.id}' ({account.provider_id})")
         snapshot_entry = finbot_client.get_financial_data(
-            provider=account["provider_id"],
-            credentials_data=account["credentials"],
+            provider=account.provider_id,
+            credentials_data=json.loads(crypto.fernet_decrypt(
+                account.encrypted_credentials.encode(),
+                secret).decode()),
             line_items=[
                 LineItem.Balances,
                 LineItem.Assets
             ]
         )
         raw_snapshot.append({
-            "provider": account["provider_id"],
-            "account_id": account["id"],
+            "provider": account.provider_id,
+            "account_id": account.id,
             "data": snapshot_entry
         })
     return jsonify({
