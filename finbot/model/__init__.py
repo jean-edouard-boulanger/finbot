@@ -99,7 +99,6 @@ class UserAccountSnapshot(Base):
     id = Column(Integer, primary_key=True)
     status = Column(Enum(SnapshotStatus), nullable=False)
     requested_ccy = Column(String(3), nullable=False)
-    value_snapshot_ccy = Column(Numeric)
     start_time = Column(DateTimeTz)
     end_time = Column(DateTimeTz)
     created_at = Column(DateTimeTz, server_default=func.now())
@@ -124,7 +123,7 @@ class LinkedAccountSnapshotEntry(Base):
     snapshot_id = Column(Integer, ForeignKey("finbot_user_accounts_snapshots.id"))
     linked_account_id = Column(Integer, ForeignKey("finbot_linked_accounts.id"))
     success = Column(Boolean, nullable=False)
-    value_snapshot_ccy = Column(Numeric)
+    failure_details = Column(JSONEncoded)
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
     snapshot = relationship("UserAccountSnapshot", uselist=False, back_populates="linked_accounts_entries")
@@ -138,8 +137,6 @@ class SubAccountSnapshotEntry(Base):
     sub_account_id = Column(String(32), nullable=False)
     sub_account_ccy = Column(String(3), nullable=False)
     sub_account_description = Column(String(256), nullable=False)
-    value_sub_account_ccy = Column(Numeric)
-    value_snapshot_ccy = Column(Numeric)
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
     linked_account_entry = relationship("LinkedAccountSnapshotEntry", uselist=False, back_populates="sub_accounts_entries")
@@ -164,7 +161,7 @@ class SubAccountItemSnapshotEntry(Base):
     sub_account_entry = relationship("SubAccountSnapshotEntry", uselist=False, back_populates="items_entries")
 
 
-class UserAccountDailyValuationEntry(Base):
+class UserAccountValuationEntry(Base):
     __tablename__ = "finbot_user_accounts_daily_valuations"
     entry_id = Column(Integer, primary_key=True)
     user_account_id = Column(Integer, ForeignKey("finbot_user_accounts.id"))

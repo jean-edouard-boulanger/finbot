@@ -81,6 +81,11 @@ test-providers:
 			--accounts-file ${FINBOT_ACCOUNTS_PATH} \
 			${TESTER_ACCOUNTS}
 
+test-snapwsrv:
+	tools/snapwsrv-tester \
+		--endpoint ${FINBOT_SNAP_ENDPOINT} \
+		--account-id ${ACCOUNT_ID}
+
 confirm-override-accounts:
 	[[ ! -d .secure ]] || tools/yes_no 'This will erase existing accounts, continue?'
 
@@ -129,7 +134,3 @@ finbotdb-hydrate:
 finbotdb-psql:
 	env PGPASSWORD=finbot psql -h 127.0.0.1 -U finbot -d finbot
 
-test-snapwsrv:
-	tools/snapwsrv-tester \
-		--endpoint ${FINBOT_SNAP_ENDPOINT} \
-		--account-id ${ACCOUNT_ID}

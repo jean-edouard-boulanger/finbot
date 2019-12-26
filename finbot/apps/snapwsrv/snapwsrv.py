@@ -58,7 +58,7 @@ def cleanup_context(*args, **kwargs):
 
 
 class SnapshotTreeVisitor(object):
-    def visit_account(self, account):
+    def visit_account(self, account, errors):
         pass
 
     def visit_sub_account(self, account, sub_account, balance):
@@ -82,9 +82,27 @@ def visit_snapshot_tree(raw_snapshot, visitor):
         if data["line_item"] == "balances":
             return 0
         return 1
+
+    def iter_errors(account_data):
+        if "error" in account_data:
+            yield {
+                "scope": "linked_account",
+                "error": account_data["error"]
+            }
+            return
+        for entry in account_data["financial_data"]:
+            if "error" in entry:
+                yield {
+                    "scope": f"linked_account.{entry['line_item']}",
+                    "error": entry["error"]
+                }
+
     for account in raw_snapshot:
         real_account = {"id": account["account_id"], "provider": account["provider"]}
-        visitor.visit_account(real_account)
+        account_errors = list(iter_errors(account["data"]))
+        visitor.visit_account(real_account, account_errors)
+        if account_errors:
+            continue
         for entry in sorted(account["data"]["financial_data"], key=balance_has_priority):
             line_item = entry["line_item"]
             for result in entry["results"]:
@@ -134,13 +152,15 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
         self.linked_accounts = {}  # linked_account_id -> account
         self.sub_accounts = {}  # link_account_id, sub_account_id -> sub_account
 
-    def visit_account(self, account):
+    def visit_account(self, account, errors):
         snapshot = self.snapshot
         account_id = account["id"]
         assert account_id not in self.linked_accounts
         linked_account_entry = LinkedAccountSnapshotEntry(
             linked_account_id=account_id)
-        linked_account_entry.value_snapshot_ccy = 0.0
+        linked_account_entry.success = not bool(errors)
+        if errors:
+            linked_account_entry.failure_details = errors
         snapshot.linked_accounts_entries.append(linked_account_entry)
         self.linked_accounts[account_id] = linked_account_entry
 
@@ -153,15 +173,12 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
             sub_account_id=sub_account_id,
             sub_account_ccy=sub_account["iso_currency"],
             sub_account_description=sub_account["name"])
-        sub_account_entry.value_sub_account_ccy = 0.0
-        sub_account_entry.value_snapshot_ccy = 0.0
         linked_account.sub_accounts_entries.append(sub_account_entry)
         self.sub_accounts[(account_id, sub_account_id)] = sub_account_entry
 
     def visit_item(self, account, sub_account, item_type, item):
         linked_account_id = account["id"]
         sub_account_id = sub_account["id"]
-        linked_account_entry = self.linked_accounts[linked_account_id]
         sub_account_entry = self.sub_accounts[(linked_account_id, sub_account_id)]
         item_value = item["value"]
         new_item = SubAccountItemSnapshotEntry(
@@ -173,10 +190,6 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
             value_snapshot_ccy=item_value * self.xccy_rates_getter(
                 Xccy(sub_account["iso_currency"], self.target_ccy)))
         sub_account_entry.items_entries.append(new_item)
-        sub_account_entry.value_sub_account_ccy += item_value
-        sub_account_entry.value_snapshot_ccy += new_item.value_snapshot_ccy
-        linked_account_entry.value_snapshot_ccy += new_item.value_snapshot_ccy
-        self.snapshot.value_snapshot_ccy += new_item.value_snapshot_ccy
 
 
 def take_raw_snapshot(user_account):
@@ -252,7 +265,6 @@ def take_snapshot(user_account_id):
     logging.info("building final snapshot")
 
     with db_session.persist(new_snapshot):
-        new_snapshot.value_snapshot_ccy = 0.0
         visit_snapshot_tree(
             raw_snapshot,
             SnapshotBuilderVisitor(
