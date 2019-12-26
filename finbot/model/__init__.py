@@ -123,6 +123,7 @@ class LinkedAccountSnapshotEntry(Base):
     entry_id = Column(Integer, primary_key=True)
     snapshot_id = Column(Integer, ForeignKey("finbot_user_accounts_snapshots.id"))
     linked_account_id = Column(Integer, ForeignKey("finbot_linked_accounts.id"))
+    success = Column(Boolean, nullable=False)
     value_snapshot_ccy = Column(Numeric)
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())

@@ -31,12 +31,17 @@ info:
 run-finbotwsrv-dev:
 	env FLASK_APP=./finbot/apps/finbotwsrv/finbotwsrv.py \
 		FLASK_ENV=development \
-		flask run --port 5001 -h 0.0.0.0
+		flask run \
+			--port 5001 \
+			--extra-files 'finbot/providers/*.py' \
+			-h 0.0.0.0
 
 run-snapwsrv-dev:
 	env FLASK_APP=./finbot/apps/snapwsrv/snapwsrv.py \
 		FLASK_ENV=development \
-		flask run --port 5000 -h 0.0.0.0
+		flask run \
+			--port 5000 \
+			-h 0.0.0.0
 
 build-finbotwsrv-docker:
 	docker build -t finbot/finbotwsrv:latest -f finbotwsrv.Dockerfile .

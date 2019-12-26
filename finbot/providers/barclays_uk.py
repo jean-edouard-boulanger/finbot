@@ -3,21 +3,10 @@ from price_parser import Price
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support.expected_conditions import (
-    staleness_of, 
-    presence_of_element_located
-)
-from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
+from selenium.webdriver.support.expected_conditions import presence_of_element_located
 from finbot import providers
-from finbot.providers.support.selenium import (
-    DefaultBrowserFactory, 
-    any_of, 
-    dump_html
-)
+from finbot.providers.support.selenium import DefaultBrowserFactory, any_of
 from finbot.providers.errors import AuthFailure
-from copy import deepcopy
-import logging
-import time
 import re
 
 
@@ -39,9 +28,9 @@ class Credentials(object):
     @staticmethod
     def init(data):
         return Credentials(
-            data["last_name"], 
-            data["card_number"], 
-            data["passcode"], 
+            data["last_name"],
+            data["card_number"],
+            data["passcode"],
             data["memorable_word"])
 
 
@@ -132,7 +121,7 @@ class Api(providers.Base):
         passcode_input.send_keys(credentials.passcode)
         memorable_label = browser.find_element_by_id("label-memorableCharacters").text.strip()
         char_combos = browser.find_elements_by_id("idForScrollFeature")
-        for index, i_str in enumerate(re.findall("\d", memorable_label)):
+        for index, i_str in enumerate(re.findall(r"\d", memorable_label)):
             i = int(i_str) - 1
             item_idx = ord(credentials.memorable_word[i]) - ord('a')
             select_combo_item(char_combos[index], item_idx)
@@ -158,7 +147,6 @@ class Api(providers.Base):
                 if account_ids is None or account["account"]["id"] in account_ids
             ]
         }
-        return data
 
     def get_assets(self, account_ids=None):
         return {
