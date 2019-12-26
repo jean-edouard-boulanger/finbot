@@ -3,7 +3,7 @@ from functools import partial
 from contextlib import closing
 from multiprocessing.pool import ThreadPool
 from finbot.providers.support.selenium import DefaultBrowserFactory
-from finbot.apps.core import get_provider
+from finbot.providers.factory import get_provider
 from finbot.core import crypto, fx
 import functools
 import traceback

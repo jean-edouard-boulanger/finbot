@@ -25,9 +25,6 @@ $(info FINBOT_DB_URL=${FINBOT_DB_URL})
 export FINBOT_SNAP_ENDPOINT := $(if $(FINBOT_SNAP_ENDPOINT),$(FINBOT_SNAP_ENDPOINT),http://127.0.0.1:5000)
 $(info FINBOT_SNAP_ENDPOINT=${FINBOT_SNAP_ENDPOINT})
 
-export VNCVIEWER_PATH := $(if $(VNCVIEWER_PATH),$(VNCVIEWER_PATH),/Applications/VNC\ Viewer.app/Contents/MacOS/vncviewer)
-$(info VNCVIEWER_PATH=${VNCVIEWER_PATH})
-
 info:
 	$(info done)
 
@@ -44,25 +41,25 @@ run-snapwsrv-dev:
 build-finbotwsrv-docker:
 	docker build -t finbot/finbotwsrv:latest -f finbotwsrv.Dockerfile .
 
-build-tester-docker: build-finbotwsrv-docker
-	docker build -t finbot/tester:latest -f tester.Dockerfile .
+build-providers-tester-docker: build-finbotwsrv-docker
+	docker build -t finbot/providers-tester:latest -f tester.Dockerfile .
 
-run-tester-docker: build-tester-docker
+test-providers-docker:
 	docker run \
 		-v $(shell pwd):/finbot \
-		--name finbot/tester:latest \
 		--workdir /finbot \
+		--env PYTHONPATH='${PYTONPATH}:/finbot' \
 		--rm -it \
-		finbot_tester \
-		python3.7 -m finbot.apps.tester.tester \
+		finbot/providers-tester:latest \
+		tools/providers-tester \
 			--currency EUR \
 			--dump-balances --dump-assets \
 			--secret-file ${FINBOT_SECRET_PATH} \
 			--accounts-file ${FINBOT_ACCOUNTS_PATH} \
 			${TESTER_ACCOUNTS}
 
-run-tester-dev:
-	python3.7 -m finbot.apps.tester.tester \
+test-providers-debug:
+	tools/providers-tester \
 			--currency EUR \
 			--dump-balances --dump-assets \
 			--secret-file ${FINBOT_SECRET_PATH} \
@@ -72,8 +69,8 @@ run-tester-dev:
 			--no-threadpool \
 			${TESTER_ACCOUNTS}
 
-run-tester:
-	python3.7 -m finbot.apps.tester.tester \
+test-providers:
+	tools/providers-tester \
 			--currency EUR \
 			--secret-file ${FINBOT_SECRET_PATH} \
 			--accounts-file ${FINBOT_ACCOUNTS_PATH} \
@@ -128,6 +125,6 @@ finbotdb-psql:
 	env PGPASSWORD=finbot psql -h 127.0.0.1 -U finbot -d finbot
 
 test-snapwsrv:
-	tools/snapwsrv_tester \
+	tools/snapwsrv-tester \
 		--endpoint ${FINBOT_SNAP_ENDPOINT} \
 		--account-id ${ACCOUNT_ID}

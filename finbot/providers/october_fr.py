@@ -3,18 +3,17 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.expected_conditions import presence_of_element_located
 from finbot import providers
-from finbot.providers.support.selenium import DefaultBrowserFactory, any_of, find_element_maybe
+from finbot.providers.support.selenium import (
+    DefaultBrowserFactory,
+    any_of,
+    find_element_maybe
+)
 from finbot.providers.errors import AuthFailure
 
 
 AUTH_URL = "https://app.october.eu/login"
 PORTFOLIO_URL = "https://app.october.eu/transactions/summary"
 LOANS_URL = "https://app.october.eu/transactions/loans"
-
-
-def json_dumps(data):
-    import json
-    return json.dumps(data, indent=4)
 
 
 def has_error(browser):
@@ -138,17 +137,14 @@ class Api(providers.Base):
 
         browser = self.browser
         browser.get(LOANS_URL)
-        browser.save_screenshot("1.png")
         table = WebDriverWait(browser, 60).until(
             presence_of_element_located((By.CSS_SELECTOR, "div.investment-table")))
-        browser.save_screenshot("2.png")
         load_button = find_element_maybe(browser.find_elements_by_css_selector, "div.load-more")
         if load_button:
             load_button.click()
-            browser.save_screenshot("3.png")
         return [
             extract_loan(row)
-            for row in table.find_elements_by_tag_name("ul.entry")
+            for row in table.find_elements_by_css_selector("ul.entry")
         ]
 
     def get_assets(self, account_ids=None):

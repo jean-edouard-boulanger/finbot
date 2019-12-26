@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request
 from contextlib import closing
-from finbot.apps.core import get_provider
+from finbot.providers.factory import get_provider
 from finbot.apps.support import (
     generic_request_handler,
     make_error_response,
