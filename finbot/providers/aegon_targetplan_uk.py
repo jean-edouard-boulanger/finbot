@@ -2,20 +2,14 @@ from copy import deepcopy
 from price_parser import Price
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support.expected_conditions import (
-    staleness_of, 
-    presence_of_element_located
-)
+from selenium.webdriver.support.expected_conditions import presence_of_element_located
 from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
 from finbot.providers.support.selenium import (
-    DefaultBrowserFactory, 
-    any_of, 
-    dump_html, 
-    page_loaded_hacky
+    DefaultBrowserFactory,
+    any_of,
 )
 from finbot.providers.errors import AuthFailure
 from finbot import providers
-from copy import deepcopy
 import logging
 import time
 
@@ -36,7 +30,7 @@ def _has_error(browser):
 
 def _is_logged_in(browser):
     avatar_area = browser.find_elements_by_css_selector("a#nav-primary-profile")
-    return len(avatar_area) > 0 
+    return len(avatar_area) > 0
 
 
 def _wait_accounts(browser):
@@ -59,7 +53,7 @@ def iter_accounts(accounts_elements):
             "account": {
                 "id": account_id,
                 "name": account_name,
-                "iso_currency": "GBP" # TODO
+                "iso_currency": "GBP"  # TODO could be a different currency?
             },
             "balance": Price.fromstring(balance_str).amount_float,
             "selenium": {
@@ -92,9 +86,9 @@ class Api(providers.Base):
 
     def _go_home(self):
         (self.browser.find_element_by_css_selector("div#navbarSupportedContent")
-                    .find_element_by_css_selector("div.dropdown")
-                    .find_element_by_tag_name("a")
-                    .click())
+                     .find_element_by_css_selector("div.dropdown")
+                     .find_element_by_tag_name("a")
+                     .click())
 
     def _switch_account(self, account_id):
         self._go_home()
@@ -134,7 +128,7 @@ class Api(providers.Base):
             raise AuthFailure("authentication failure")
         accounts_elements = _wait_accounts(self.browser)
         self.accounts = {
-            entry["account"]["id"]: deepcopy(entry["account"]) 
+            entry["account"]["id"]: deepcopy(entry["account"])
             for entry in iter_accounts(accounts_elements)
         }
 
@@ -194,7 +188,7 @@ class Api(providers.Base):
         }
 
     def get_liabilities(self, account_ids):
-        return {"accounts":[]}
+        return {"accounts": []}
 
     def close(self):
         self.browser.quit()

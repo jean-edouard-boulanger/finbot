@@ -32,8 +32,10 @@ RUN chmod +x /usr/bin/wait
 
 RUN pip3 install \
     selenium \
+    cryptography \
+    cffi \
+    terminaltables \
     price-parser \
     flask \
     requests \
     pytz
-

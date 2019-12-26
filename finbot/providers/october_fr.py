@@ -1,15 +1,10 @@
 from price_parser import Price
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support.expected_conditions import (
-    staleness_of, 
-    presence_of_element_located
-)
-from selenium.common.exceptions import StaleElementReferenceException
+from selenium.webdriver.support.expected_conditions import presence_of_element_located
 from finbot import providers
 from finbot.providers.support.selenium import DefaultBrowserFactory, any_of, find_element_maybe
 from finbot.providers.errors import AuthFailure
-import logging
 
 
 AUTH_URL = "https://app.october.eu/login"
@@ -35,12 +30,12 @@ def get_error(browser):
 
 def is_logged_in(browser):
     avatar_area = browser.find_elements_by_css_selector("li.avatar")
-    return len(avatar_area) > 0 
+    return len(avatar_area) > 0
 
 
 def get_accounts_amount(summary_area):
     synthesis_area = (summary_area.find_element_by_tag_name("section")
-                                    .find_element_by_tag_name("article"))
+                                  .find_element_by_tag_name("article"))
     loan_area, cash_area, *_ = synthesis_area.find_elements_by_tag_name("dl")
     loan_amount = Price.fromstring(loan_area.find_element_by_tag_name("dd").text)
     cash_amount = Price.fromstring(cash_area.find_element_by_tag_name("dd").text)
@@ -90,7 +85,6 @@ class Api(providers.Base):
 
     def get_balances(self):
         assert self.logged_in
-        browser = self.browser
         summary_area = self._go_home()
         loan_amount, cash_amount = get_accounts_amount(summary_area)
         return {
@@ -144,16 +138,19 @@ class Api(providers.Base):
 
         browser = self.browser
         browser.get(LOANS_URL)
+        browser.save_screenshot("1.png")
         table = WebDriverWait(browser, 60).until(
             presence_of_element_located((By.CSS_SELECTOR, "div.investment-table")))
+        browser.save_screenshot("2.png")
         load_button = find_element_maybe(browser.find_elements_by_css_selector, "div.load-more")
         if load_button:
             load_button.click()
+            browser.save_screenshot("3.png")
         return [
-            extract_loan(row) 
+            extract_loan(row)
             for row in table.find_elements_by_tag_name("ul.entry")
         ]
-    
+
     def get_assets(self, account_ids=None):
         return {
             "accounts": [
@@ -174,7 +171,7 @@ class Api(providers.Base):
         }
 
     def get_liabilities(self, account_ids):
-        return {"accounts":[]}
+        return {"accounts": []}
 
     def close(self):
         self.browser.quit()
