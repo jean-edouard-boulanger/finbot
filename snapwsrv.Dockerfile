@@ -21,6 +21,7 @@ RUN pip3 install \
     cryptography \
     cffi \
     psycopg2 \
-    sqlalchemy
+    sqlalchemy \
+    pytz
 
 

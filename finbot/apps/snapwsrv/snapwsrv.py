@@ -1,10 +1,21 @@
+from dataclasses import dataclass
 from flask import Flask, jsonify
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker, joinedload
+from copy import deepcopy
 from finbot.clients.finbot import FinbotClient, LineItem
-from finbot.core import crypto
+from finbot.core import crypto, utils, fx
 from finbot.apps.support import generic_request_handler
-from finbot.model import UserAccount
+from finbot.model import (
+    UserAccount,
+    UserAccountSnapshot,
+    SnapshotStatus,
+    LinkedAccountSnapshotEntry,
+    SubAccountSnapshotEntry,
+    SubAccountItemSnapshotEntry,
+    SubAccountItemType,
+    XccyRateSnapshotEntry
+)
 import logging.config
 import logging
 import os
@@ -22,7 +33,7 @@ logging.config.dictConfig({
         'formatter': 'default'
     }},
     'root': {
-        'level': 'INFO',
+        'level': 'DEBUG',
         'handlers': ['wsgi']
     }
 })
@@ -35,7 +46,7 @@ def load_secret(path):
 
 secret = load_secret(os.environ["FINBOT_SECRET_PATH"])
 db_engine = create_engine(os.environ['FINBOT_DB_URL'])
-db_session = scoped_session(sessionmaker(bind=db_engine))
+db_session = utils.improve_session(scoped_session(sessionmaker(bind=db_engine)))
 finbot_client = FinbotClient(os.environ.get("FINBOTWSRV_ENDPOINT", "http://127.0.0.1:5001"))
 
 app = Flask(__name__)
@@ -46,25 +57,138 @@ def cleanup_context(*args, **kwargs):
     db_session.remove()
 
 
-@app.route("/snapshot/<user_account_id>", methods=["GET"])
-@generic_request_handler
-def take_snapshot(user_account_id):
-    user_account = (db_session.query(UserAccount)
-                              .options(joinedload(UserAccount.external_accounts))
-                              .filter_by(id=user_account_id)
-                              .first())
+class SnapshotTreeVisitor(object):
+    def visit_account(self, account):
+        pass
 
-    logging.info(f"starting snapshot for user account id '{user_account_id}' "
-                 f"linked to {len(user_account.external_accounts)} external accounts")
+    def visit_sub_account(self, account, sub_account, balance):
+        pass
 
+    def visit_item(self, account, sub_account, item_type, item):
+        pass
+
+
+@dataclass(frozen=True, eq=True)
+class Xccy(object):
+    domestic: str
+    foreign: str
+
+    def __str__(self):
+        return f"{self.domestic}{self.foreign}"
+
+
+def visit_snapshot_tree(raw_snapshot, visitor):
+    def balance_has_priority(data):
+        if data["line_item"] == "balances":
+            return 0
+        return 1
+    for account in raw_snapshot:
+        real_account = {"id": account["account_id"], "provider": account["provider"]}
+        visitor.visit_account(real_account)
+        for entry in sorted(account["data"]["financial_data"], key=balance_has_priority):
+            line_item = entry["line_item"]
+            for result in entry["results"]:
+                sub_account = deepcopy(result["account"])
+                if line_item == "balances":
+                    visitor.visit_sub_account(
+                        real_account,
+                        sub_account,
+                        result["balance"])
+                elif line_item == "assets":
+                    for asset in result["assets"]:
+                        visitor.visit_item(
+                            real_account,
+                            sub_account,
+                            "asset",
+                            deepcopy(asset))
+
+
+class XccyCollector(SnapshotTreeVisitor):
+    def __init__(self, target_ccy):
+        self.target_ccy = target_ccy
+        self.xccys = set()
+
+    def visit_sub_account(self, account, sub_account, balance):
+        if sub_account["iso_currency"] != self.target_ccy:
+            self.xccys.add(Xccy(sub_account["iso_currency"], self.target_ccy))
+
+
+class CachedXccyRatesGetter(object):
+    def __init__(self, xccy_rates):
+        self.xccy_rates = xccy_rates
+
+    def __call__(self, xccy: Xccy):
+        if xccy.foreign == xccy.domestic:
+            return 1.0
+        return self.xccy_rates[xccy]
+
+
+class SnapshotBuilderVisitor(SnapshotTreeVisitor):
+    def __init__(self,
+                 snapshot: UserAccountSnapshot,
+                 xccy_rates_getter,
+                 target_ccy):
+        self.snapshot = snapshot
+        self.xccy_rates_getter = xccy_rates_getter
+        self.target_ccy = target_ccy
+        self.linked_accounts = {}  # linked_account_id -> account
+        self.sub_accounts = {}  # link_account_id, sub_account_id -> sub_account
+
+    def visit_account(self, account):
+        snapshot = self.snapshot
+        account_id = account["id"]
+        assert account_id not in self.linked_accounts
+        linked_account_entry = LinkedAccountSnapshotEntry(
+            linked_account_id=account_id)
+        linked_account_entry.value_snapshot_ccy = 0.0
+        snapshot.linked_accounts_entries.append(linked_account_entry)
+        self.linked_accounts[account_id] = linked_account_entry
+
+    def visit_sub_account(self, account, sub_account, balance):
+        account_id = account["id"]
+        linked_account = self.linked_accounts[account_id]
+        sub_account_id = sub_account["id"]
+        assert sub_account_id not in self.sub_accounts
+        sub_account_entry = SubAccountSnapshotEntry(
+            sub_account_id=sub_account_id,
+            sub_account_ccy=sub_account["iso_currency"],
+            sub_account_description=sub_account["name"])
+        sub_account_entry.value_sub_account_ccy = 0.0
+        sub_account_entry.value_snapshot_ccy = 0.0
+        linked_account.sub_accounts_entries.append(sub_account_entry)
+        self.sub_accounts[(account_id, sub_account_id)] = sub_account_entry
+
+    def visit_item(self, account, sub_account, item_type, item):
+        linked_account_id = account["id"]
+        sub_account_id = sub_account["id"]
+        linked_account_entry = self.linked_accounts[linked_account_id]
+        sub_account_entry = self.sub_accounts[(linked_account_id, sub_account_id)]
+        item_value = item["value"]
+        new_item = SubAccountItemSnapshotEntry(
+            item_type=SubAccountItemType.asset,  # TODO (could eventually be liability)
+            name=item["name"],
+            item_subtype=item["type"],
+            units=item.get("units"),
+            value_sub_account_ccy=item_value,
+            value_snapshot_ccy=item_value * self.xccy_rates_getter(
+                Xccy(sub_account["iso_currency"], self.target_ccy)))
+        sub_account_entry.items_entries.append(new_item)
+        sub_account_entry.value_sub_account_ccy += item_value
+        sub_account_entry.value_snapshot_ccy += new_item.value_snapshot_ccy
+        linked_account_entry.value_snapshot_ccy += new_item.value_snapshot_ccy
+        self.snapshot.value_snapshot_ccy += new_item.value_snapshot_ccy
+
+
+def take_raw_snapshot(user_account):
     raw_snapshot = []
-    for account in user_account.external_accounts:
+    for account in user_account.linked_accounts:
         logging.info(f"taking snapshot for external account id '{account.id}' ({account.provider_id})")
         snapshot_entry = finbot_client.get_financial_data(
             provider=account.provider_id,
-            credentials_data=json.loads(crypto.fernet_decrypt(
-                account.encrypted_credentials.encode(),
-                secret).decode()),
+            credentials_data=json.loads(
+                crypto.fernet_decrypt(
+                    account.encrypted_credentials.encode(),
+                    secret).decode()),
             line_items=[
                 LineItem.Balances,
                 LineItem.Assets
@@ -75,6 +199,70 @@ def take_snapshot(user_account_id):
             "account_id": account.id,
             "data": snapshot_entry
         })
+    return raw_snapshot
+
+
+@app.route("/snapshot/<user_account_id>", methods=["GET"])
+@generic_request_handler
+def take_snapshot(user_account_id):
+    logging.info(f"fetching user information for user account id {user_account_id}")
+
+    user_account = (db_session.query(UserAccount)
+                              .options(joinedload(UserAccount.linked_accounts))
+                              .options(joinedload(UserAccount.settings))
+                              .filter_by(id=user_account_id)
+                              .first())
+
+    logging.info(f"starting snapshot for user account "
+                 f"linked to {len(user_account.linked_accounts)} external accounts")
+
+    requested_ccy = user_account.settings.valuation_ccy
+    logging.info(f"requested valuation currency is {requested_ccy}")
+
+    with db_session.persist(UserAccountSnapshot()) as new_snapshot:
+        new_snapshot.status = SnapshotStatus.processing
+        new_snapshot.requested_ccy = requested_ccy
+        new_snapshot.start_time = utils.now_utc()
+
+    logging.info(f"snapshot {new_snapshot.id} created")
+
+    raw_snapshot = take_raw_snapshot(user_account)
+    logging.info(utils.pretty_dump(raw_snapshot))
+
+    logging.info(f"collecting currency pairs from raw snapshot")
+
+    xccy_collector = XccyCollector(requested_ccy)
+    visit_snapshot_tree(raw_snapshot, xccy_collector)
+
+    logging.info(f"fetching cross currency rates for: {', '.join(str(xccy) for xccy in xccy_collector.xccys)}")
+
+    xccy_rates = {
+        xccy: fx.get_xccy_rate(xccy.domestic, xccy.foreign)
+        for xccy in xccy_collector.xccys
+    }
+
+    logging.info(f"adding cross currency rates to snapshot")
+
+    with db_session.persist(new_snapshot):
+        new_snapshot.xccy_rates_entries.extend([
+            XccyRateSnapshotEntry(xccy_pair=str(xccy), rate=rate)
+            for xccy, rate in xccy_rates.items()
+        ])
+
+    logging.info("building final snapshot")
+
+    with db_session.persist(new_snapshot):
+        new_snapshot.value_snapshot_ccy = 0.0
+        visit_snapshot_tree(
+            raw_snapshot,
+            SnapshotBuilderVisitor(
+                new_snapshot,
+                CachedXccyRatesGetter(xccy_rates),
+                new_snapshot.requested_ccy))
+
+        new_snapshot.status = SnapshotStatus.success
+        new_snapshot.end_time = utils.now_utc()
+
     return jsonify({
-        "snapshot": raw_snapshot
+        "snapshot_id": new_snapshot.id
     })

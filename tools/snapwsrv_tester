@@ -1,0 +1,23 @@
+#!/usr/bin/env python3.7
+from finbot.clients.snap import SnapClient
+import argparse
+
+
+def create_parser():
+    parser = argparse.ArgumentParser("snapwsrv tester")
+    parser.add_argument("--endpoint", type=str)
+    parser.add_argument("--account-id", type=int)
+    return parser
+
+
+def main():
+    parser = create_parser()
+    settings = parser.parse_args()
+    client = SnapClient(settings.endpoint)
+    print(f"will send snapshot request for account id {settings.account_id}")
+    snapshot_id = client.take_snapshot(settings.account_id)
+    print(f"got snapshot id {snapshot_id}")
+
+
+if __name__ == "__main__":
+    main()

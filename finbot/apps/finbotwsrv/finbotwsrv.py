@@ -10,8 +10,6 @@ import traceback
 import logging.config
 import logging
 import json
-import time
-import sys
 
 
 logging.config.dictConfig({
@@ -32,16 +30,6 @@ logging.config.dictConfig({
 
 
 app = Flask(__name__)
-
-
-@app.route("/providers", methods=["GET"])
-def get_providers():
-    return jsonify({
-        "providers": [
-            {"id": provider_id, "description": provider.description}
-            for provider_id, provider in providers.items()
-        ]
-    })
 
 
 def balances_handler(provider_api):

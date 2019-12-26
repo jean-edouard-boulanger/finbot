@@ -3,18 +3,15 @@ from price_parser import Price
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.expected_conditions import (
-    staleness_of, 
+    staleness_of,
     presence_of_element_located
 )
-from selenium.common.exceptions import StaleElementReferenceException
 from finbot.providers.support.selenium import (
-    DefaultBrowserFactory, any_of, all_of, negate, dump_html,
+    DefaultBrowserFactory, any_of, all_of, negate,
     find_element_maybe
 )
 from finbot import providers
 from finbot.providers.errors import AuthFailure
-import logging
-import datetime
 
 
 BASE_URL = "https://www.ca-cb.fr/"

@@ -22,6 +22,9 @@ $(info FINBOT_DB_DBNAME=${FINBOT_DB_DBNAME})
 export FINBOT_DB_URL := postgresql+psycopg2://${FINBOT_DB_USER}:${FINBOT_DB_PASSWORD}@${FINBOT_DB_HOSTNAME}/${FINBOT_DB_DBNAME}
 $(info FINBOT_DB_URL=${FINBOT_DB_URL})
 
+export FINBOT_SNAP_ENDPOINT := $(if $(FINBOT_SNAP_ENDPOINT),$(FINBOT_SNAP_ENDPOINT),http://127.0.0.1:5000)
+$(info FINBOT_DB_URL=${FINBOT_SNAP_ENDPOINT})
+
 
 run-finbotwsrv-dev:
 	env FLASK_APP=./finbot/apps/finbotwsrv/finbotwsrv.py \
@@ -73,14 +76,14 @@ show-accounts:
 edit-accounts:
 	tools/crypt fernet-decrypt \
 		-k ${FINBOT_SECRET_PATH} \
-		-i ${FINBOT_ACCOUNTS_PATH} > .accounts.tmp && \
-	chmod 600 .accounts.tmp && \
-	vim .accounts.tmp && \
+		-i ${FINBOT_ACCOUNTS_PATH} > .accounts.tmp.json && \
+	chmod 600 .accounts.tmp.json && \
+	vim .accounts.tmp.json && \
 	tools/crypt \
 		fernet-encrypt \
 		-k ${FINBOT_SECRET_PATH} \
-		-i .accounts.tmp > ${FINBOT_ACCOUNTS_PATH} && \
-	rm .accounts.tmp
+		-i .accounts.tmp.json > ${FINBOT_ACCOUNTS_PATH} && \
+	rm .accounts.tmp.json
 
 finbotdb-build:
 	tools/finbotdb build
@@ -98,3 +101,8 @@ finbotdb-hydrate:
 
 finbotdb-psql:
 	env PGPASSWORD=finbot psql -h 127.0.0.1 -U finbot -d finbot
+
+test-snapwsrv:
+	tools/snapwsrv_tester \
+		--endpoint ${FINBOT_SNAP_ENDPOINT} \
+		--account-id ${ACCOUNT_ID}

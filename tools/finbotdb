@@ -6,7 +6,7 @@ from finbot.model import (
     Provider,
     UserAccount,
     UserAccountSettings,
-    ExternalAccount
+    LinkedAccount
 )
 from finbot.core import crypto
 import argparse
@@ -139,29 +139,55 @@ def hydrate_tool(settings, engine, session):
                     }
                 }
             }
+        ),
+        "dummy_uk": Provider(
+            id="dummy_uk",
+            description="Dummy (fake) provider (UK)",
+            website_url="https://dummy.co.uk/",
+            credentials_schema={}
         )
     }
     session.add_all(providers.values())
-    session.add(
+    session.add_all([
         UserAccount(
-            email="test@finbot.net",
+            email="test1@finbot.net",
             encrypted_password=crypto.fernet_encrypt(
                 "test".encode(), secret).decode(),
-            full_name="Test user",
+            full_name="Test user (1)",
             settings=UserAccountSettings(
-                valuation_ccy="EUR"
+                valuation_ccy="USD"
             ),
-            external_accounts=[
-                ExternalAccount(
+            linked_accounts=[
+                LinkedAccount(
                     provider=providers[account["provider_id"]],
                     account_name=providers[account["provider_id"]].description,
                     encrypted_credentials=crypto.fernet_encrypt(
                         json.dumps(account["credentials"]).encode(), secret).decode()
                 )
                 for account in accounts
+                if account["provider_id"] in {"dummy_uk"}
+            ]
+        ),
+        UserAccount(
+            email="test2@finbot.net",
+            encrypted_password=crypto.fernet_encrypt(
+                "test".encode(), secret).decode(),
+            full_name="Test user (2)",
+            settings=UserAccountSettings(
+                valuation_ccy="EUR"
+            ),
+            linked_accounts=[
+                LinkedAccount(
+                    provider=providers[account["provider_id"]],
+                    account_name=providers[account["provider_id"]].description,
+                    encrypted_credentials=crypto.fernet_encrypt(
+                        json.dumps(account["credentials"]).encode(), secret).decode()
+                )
+                for account in accounts
+                if account["provider_id"] not in {"dummy_uk"}
             ]
         )
-    )
+    ])
     session.commit()
 
 

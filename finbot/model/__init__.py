@@ -38,20 +38,20 @@ Base = declarative_base()
 
 
 class UserAccount(Base):
-    __tablename__ = "finbot_users"
+    __tablename__ = "finbot_user_accounts"
     id = Column(Integer, primary_key=True)
     email = Column(String(128), nullable=False)
     encrypted_password = Column(Text, nullable=False)
     full_name = Column(String(128), nullable=False)
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
-    external_accounts = relationship("ExternalAccount", back_populates="user_account")
+    linked_accounts = relationship("LinkedAccount", back_populates="user_account")
     settings = relationship("UserAccountSettings", uselist=False, back_populates="user_account")
 
 
 class UserAccountSettings(Base):
-    __tablename__ = "finbot_users_settings"
-    user_account_id = Column(Integer, ForeignKey("finbot_users.id"), primary_key=True)
+    __tablename__ = "finbot_user_accounts_settings"
+    user_account_id = Column(Integer, ForeignKey("finbot_user_accounts.id"), primary_key=True)
     valuation_ccy = Column(String(3), nullable=False)
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
@@ -68,22 +68,22 @@ class Provider(Base):
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
 
-class ExternalAccount(Base):
-    __tablename__ = "finbot_external_accounts"
+class LinkedAccount(Base):
+    __tablename__ = "finbot_linked_accounts"
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("finbot_users.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("finbot_user_accounts.id"), nullable=False)
     provider_id = Column(String(64), ForeignKey("finbot_providers.id"), nullable=False)
     account_name = Column(String(64), nullable=False)
     encrypted_credentials = Column(Text)
     deleted = Column(Boolean, nullable=False, default=False)
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
-    user_account = relationship("UserAccount", uselist=False, back_populates="external_accounts")
+    user_account = relationship("UserAccount", uselist=False, back_populates="linked_accounts")
     provider = relationship("Provider")
     __table_args__ = (
         UniqueConstraint(
             user_id, provider_id, account_name,
-            name="uidx_external_accounts_user_provider_account_name"),
+            name="uidx_linked_accounts_user_provider_account_name"),
     )
 
 
@@ -95,21 +95,22 @@ class SnapshotStatus(enum.Enum):
 
 
 class UserAccountSnapshot(Base):
-    __tablename__ = "user_accounts_snapshots"
+    __tablename__ = "finbot_user_accounts_snapshots"
     id = Column(Integer, primary_key=True)
     status = Column(Enum(SnapshotStatus), nullable=False)
     requested_ccy = Column(String(3), nullable=False)
+    value_snapshot_ccy = Column(Numeric)
     start_time = Column(DateTimeTz)
     end_time = Column(DateTimeTz)
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
     xccy_rates_entries = relationship("XccyRateSnapshotEntry", back_populates="snapshot")
-    external_accounts_entries = relationship("ExternalAccountSnapshotEntry", back_populates="snapshot")
+    linked_accounts_entries = relationship("LinkedAccountSnapshotEntry", back_populates="snapshot")
 
 
 class XccyRateSnapshotEntry(Base):
     __tablename__ = "finbot_xccy_rates_snapshots"
-    snapshot_id = Column(Integer, ForeignKey("user_accounts_snapshots.id"), primary_key=True)
+    snapshot_id = Column(Integer, ForeignKey("finbot_user_accounts_snapshots.id"), primary_key=True)
     xccy_pair = Column(String(6), primary_key=True)
     rate = Column(Numeric, nullable=False)
     created_at = Column(DateTimeTz, server_default=func.now())
@@ -117,29 +118,57 @@ class XccyRateSnapshotEntry(Base):
     snapshot = relationship("UserAccountSnapshot", uselist=False, back_populates="xccy_rates_entries")
 
 
-class ExternalAccountSnapshotEntry(Base):
-    __tablename__ = "finbot_external_accounts_snapshots"
+class LinkedAccountSnapshotEntry(Base):
+    __tablename__ = "finbot_linked_accounts_snapshots"
     entry_id = Column(Integer, primary_key=True)
-    snapshot_id = Column(Integer, ForeignKey("user_accounts_snapshots.id"))
-    external_account_id = Column(Integer, ForeignKey("finbot_external_accounts.id"))
-    hist_provider_name = Column(String(32), nullable=False)
-    hist_provider_description = Column(String(256), nullable=False)
-    hist_account_name = Column(String(64), nullable=False)
-    value_snapshot_ccy = Column(Numeric, nullable=False)
-    overall_weight = Column(Numeric, nullable=False)
+    snapshot_id = Column(Integer, ForeignKey("finbot_user_accounts_snapshots.id"))
+    linked_account_id = Column(Integer, ForeignKey("finbot_linked_accounts.id"))
+    value_snapshot_ccy = Column(Numeric)
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
-    snapshot = relationship("UserAccountSnapshot", uselist=False, back_populates="external_accounts_entries")
+    snapshot = relationship("UserAccountSnapshot", uselist=False, back_populates="linked_accounts_entries")
+    sub_accounts_entries = relationship("SubAccountSnapshotEntry", back_populates="linked_account_entry")
+
+
+class SubAccountSnapshotEntry(Base):
+    __tablename__ = "finbot_sub_accounts_snapshots"
+    entry_id = Column(Integer, primary_key=True)
+    linked_account_snapshot_entry_id = Column(Integer, ForeignKey("finbot_linked_accounts_snapshots.entry_id"))
+    sub_account_id = Column(String(32), nullable=False)
+    sub_account_ccy = Column(String(3), nullable=False)
+    sub_account_description = Column(String(256), nullable=False)
+    value_sub_account_ccy = Column(Numeric)
+    value_snapshot_ccy = Column(Numeric)
+    created_at = Column(DateTimeTz, server_default=func.now())
+    updated_at = Column(DateTimeTz, onupdate=func.now())
+    linked_account_entry = relationship("LinkedAccountSnapshotEntry", uselist=False, back_populates="sub_accounts_entries")
+    items_entries = relationship("SubAccountItemSnapshotEntry", back_populates="sub_account_entry")
+
+
+class SubAccountItemType(enum.Enum):
+    asset = 1
+    liability = 2
+
+
+class SubAccountItemSnapshotEntry(Base):
+    __tablename__ = "finbot_sub_accounts_items_snapshots"
+    entry_id = Column(Integer, primary_key=True)
+    sub_account_snapshot_entry_id = Column(Integer, ForeignKey("finbot_sub_accounts_snapshots.entry_id"), nullable=False)
+    item_type = Column(Enum(SubAccountItemType), nullable=False)
+    name = Column(String(256), nullable=False)
+    item_subtype = Column(String(32), nullable=False)
+    units = Column(Numeric)
+    value_sub_account_ccy = Column(Numeric)
+    value_snapshot_ccy = Column(Numeric)
+    sub_account_entry = relationship("SubAccountSnapshotEntry", uselist=False, back_populates="items_entries")
 
 
 class UserAccountDailyValuationEntry(Base):
     __tablename__ = "finbot_user_accounts_daily_valuations"
     entry_id = Column(Integer, primary_key=True)
-    user_account_id = Column(Integer, ForeignKey("finbot_users.id"))
+    user_account_id = Column(Integer, ForeignKey("finbot_user_accounts.id"))
     valuation_ccy = Column(String(3), nullable=False)
     valuation_date = Column(Date, nullable=False)
-    min_value = Column(Numeric, nullable=False)
-    max_value = Column(Numeric, nullable=False)
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
     user_account = relationship("UserAccount", uselist=False)

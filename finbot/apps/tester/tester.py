@@ -4,8 +4,7 @@ from contextlib import closing
 from multiprocessing.pool import ThreadPool
 from finbot.providers.support.selenium import DefaultBrowserFactory
 from finbot.apps.core import get_provider
-from finbot.core import crypto
-import requests
+from finbot.core import crypto, fx
 import functools
 import traceback
 import argparse
@@ -22,21 +21,7 @@ def json_dumps(data):
 
 @functools.lru_cache(128)
 def get_fx_rate(home_ccy, foreign_ccy):
-    def get_fx_rate_impl(home_ccy, foreign_ccy):
-        if home_ccy == foreign_ccy:
-            return 1.0
-        fx_pair = f"{home_ccy.upper()}{foreign_ccy.upper()}"
-        response = requests.get(f"https://www.freeforexapi.com/api/live?pairs={fx_pair}")
-        data = json.loads(response.content.decode())
-        if data["code"] != 200:
-            return None
-        return data["rates"][fx_pair]["rate"]
-    rate = get_fx_rate_impl(home_ccy, foreign_ccy)
-    if rate is None:
-        rate = get_fx_rate_impl(foreign_ccy, home_ccy)
-        assert rate is not None
-        return 1 / rate
-    return rate
+    return fx.get_xccy_rate(home_ccy, foreign_ccy)
 
 
 def wait_forever():
@@ -116,7 +101,7 @@ def fetch_balances(settings, browser_factory, account):
                     balance=Price(entry["balance"], account["iso_currency"]))
                 provider_data.accounts[account["id"]] = account_data
             logging.info(f"[{provider.description}] fetching balances - done")
-            
+
             logging.info(f"[{provider.description}] fetching assets")
             assets = api.get_assets()
             if settings.dump_assets:
@@ -133,7 +118,7 @@ def fetch_balances(settings, browser_factory, account):
             return provider_data
         except KeyboardInterrupt:
             raise
-        except:
+        except Exception:
             if settings.pause_on_error:
                 logging.warning(traceback.format_exc())
                 logging.warning("PAUSING execution because of error")
@@ -168,7 +153,8 @@ def main():
     parser = create_arguments_parser()
     settings = parser.parse_args()
     browser_factory = DefaultBrowserFactory(headless=settings.headless)
-    load_all = len(settings.accounts) == 0
+    selected_providers = flatten_accounts_list(settings.accounts)
+    load_all = all(provider_id.startswith("~") for provider_id in selected_providers)
 
     with open(settings.secret_file, "rb") as secret_file:
         secret = secret_file.read()
@@ -176,12 +162,12 @@ def main():
             all_accounts = json.loads(
                 crypto.fernet_decrypt(accounts_file.read(), secret).decode())["accounts"]
 
-    selected_accounts = flatten_accounts_list(settings.accounts)
-    logging.info(f"selected accounts: {', '.join(selected_accounts)}")
+    logging.info(f"selected accounts: {', '.join(selected_providers)}")
 
     selected_accounts = [
-        account for account in all_accounts 
-        if load_all or account["provider_id"] in selected_accounts
+        account for account in all_accounts
+        if (load_all and f"~{account['provider_id']}" not in selected_providers)
+        or (account["provider_id"] in selected_providers)
     ]
 
     try:
@@ -200,7 +186,7 @@ def main():
 
         raw_table = [["Account", "Amount", "Weight", "Currency"]]
         raw_table.append([
-            "(All assets)", 
+            "(All assets)",
             f"{all_assets_amount:.2f}",
             "100.00%",
             settings.currency])
@@ -209,15 +195,15 @@ def main():
             provider_amount = provider_data.amount(settings.currency)
             provider_pc = (provider_amount / all_assets_amount) * 100.0
             raw_table.append([
-                f"  + {provider_data.name}", 
-                f"{provider_amount:.2f}", 
+                f"  + {provider_data.name}",
+                f"{provider_amount:.2f}",
                 f"{provider_pc:.2f}%",
                 settings.currency])
             for account_data in provider_data.accounts.values():
                 account_amount = account_data.amount(settings.currency)
                 account_pc = (account_amount / all_assets_amount) * 100.0
                 raw_table.append([
-                    f"    + {account_data.account['name']} ", 
+                    f"    + {account_data.account['name']} ",
                     f"{account_amount:.2f}",
                     f"{account_pc:.2f}%",
                     settings.currency
@@ -235,8 +221,9 @@ def main():
 
         print(terminaltables.AsciiTable(raw_table).table)
 
-    except:
+    except Exception:
         logging.fatal(traceback.format_exc())
+
 
 if __name__ == "__main__":
     main()

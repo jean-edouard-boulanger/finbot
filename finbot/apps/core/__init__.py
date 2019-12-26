@@ -1,10 +1,11 @@
 from finbot.providers import (
-    credit_agricole_fr, 
+    credit_agricole_fr,
     vanguard_uk,
     october_fr,
     aegon_targetplan_uk,
     lending_works_uk,
-    barclays_uk
+    barclays_uk,
+    dummy_uk
 )
 
 
@@ -45,5 +46,9 @@ get_provider.providers = {
     "barclays_uk": Provider(
         description="Barclays",
         api_module=barclays_uk
+    ),
+    "dummy_uk": Provider(
+        description="Dummy (fake) provider",
+        api_module=dummy_uk
     )
 }

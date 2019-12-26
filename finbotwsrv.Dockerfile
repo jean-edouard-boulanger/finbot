@@ -34,5 +34,6 @@ RUN pip3 install \
     selenium \
     price-parser \
     flask \
-    requests
+    requests \
+    pytz
 
