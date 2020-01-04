@@ -11,7 +11,7 @@ class SnapClient(object):
         self.server_endpoint = server_endpoint
 
     def take_snapshot(self, account_id):
-        response = requests.get(f"{self.server_endpoint}/snapshot/{account_id}")
+        response = requests.post(f"{self.server_endpoint}/snapshot/{account_id}/take")
         if not response:
             raise Error(f"failure while taking snapshot (code {response.status_code})")
-        return json.loads(response.content)["snapshot_id"]
+        return json.loads(response.content)

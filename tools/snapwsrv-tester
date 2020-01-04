@@ -1,5 +1,6 @@
 #!/usr/bin/env python3.7
 from finbot.clients.snap import SnapClient
+from finbot.core.utils import pretty_dump
 import argparse
 
 
@@ -15,8 +16,7 @@ def main():
     settings = parser.parse_args()
     client = SnapClient(settings.endpoint)
     print(f"will send snapshot request for account id {settings.account_id}")
-    snapshot_id = client.take_snapshot(settings.account_id)
-    print(f"got snapshot id {snapshot_id}")
+    print(f"snapshot finished {pretty_dump(client.take_snapshot(settings.account_id))}")
 
 
 if __name__ == "__main__":

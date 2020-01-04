@@ -4,7 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker, joinedload
 from copy import deepcopy
 from finbot.clients.finbot import FinbotClient, LineItem
-from finbot.core import crypto, utils, fx
+from finbot.core import crypto, utils, dbutils, fx
 from finbot.apps.support import generic_request_handler
 from finbot.model import (
     UserAccount,
@@ -46,7 +46,7 @@ def load_secret(path):
 
 secret = load_secret(os.environ["FINBOT_SECRET_PATH"])
 db_engine = create_engine(os.environ['FINBOT_DB_URL'])
-db_session = utils.improve_session(scoped_session(sessionmaker(bind=db_engine)))
+db_session = dbutils.add_persist_utilities(scoped_session(sessionmaker(bind=db_engine)))
 finbot_client = FinbotClient(os.environ.get("FINBOTWSRV_ENDPOINT", "http://127.0.0.1:5001"))
 
 app = Flask(__name__)
@@ -195,7 +195,7 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
         sub_account_entry = self.sub_accounts[(linked_account_id, sub_account_id)]
         item_value = item["value"]
         new_item = SubAccountItemSnapshotEntry(
-            item_type=SubAccountItemType.asset,  # TODO (could eventually be liability)
+            item_type=SubAccountItemType.Asset,  # TODO (could eventually be liability)
             name=item["name"],
             item_subtype=item["type"],
             units=item.get("units"),
@@ -228,7 +228,7 @@ def take_raw_snapshot(user_account):
     return raw_snapshot
 
 
-@app.route("/snapshot/<user_account_id>", methods=["GET"])
+@app.route("/snapshot/<user_account_id>/take", methods=["POST"])
 @generic_request_handler
 def take_snapshot(user_account_id):
     logging.info(f"fetching user information for user account id {user_account_id}")
@@ -248,6 +248,7 @@ def take_snapshot(user_account_id):
     with db_session.persist(UserAccountSnapshot()) as new_snapshot:
         new_snapshot.status = SnapshotStatus.Processing
         new_snapshot.requested_ccy = requested_ccy
+        new_snapshot.user_account_id = user_account_id
         new_snapshot.start_time = utils.now_utc()
 
     logging.info(f"snapshot {new_snapshot.id} created")

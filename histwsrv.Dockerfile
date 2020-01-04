@@ -22,4 +22,5 @@ RUN pip3 install \
     cffi \
     psycopg2 \
     sqlalchemy \
-    pytz
+    pytz \
+    pandas

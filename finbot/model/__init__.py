@@ -60,10 +60,7 @@ class UserAccountSettings(Base):
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
-    user_account = relationship(
-        UserAccount, 
-        uselist=False, 
-        back_populates="settings")
+    user_account = relationship(UserAccount, uselist=False, back_populates="settings")
 
 
 class Provider(Base):
@@ -79,7 +76,7 @@ class Provider(Base):
 class LinkedAccount(Base):
     __tablename__ = "finbot_linked_accounts"
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey(UserAccount.id), nullable=False)
+    user_account_id = Column(Integer, ForeignKey(UserAccount.id), nullable=False)
     provider_id = Column(String(64), ForeignKey(Provider.id), nullable=False)
     account_name = Column(String(64), nullable=False)
     encrypted_credentials = Column(Text)
@@ -96,7 +93,7 @@ class LinkedAccount(Base):
 
     __table_args__ = (
         UniqueConstraint(
-            user_id, provider_id, account_name,
+            user_account_id, provider_id, account_name,
             name="uidx_linked_accounts_user_provider_account_name"),
     )
 
@@ -111,6 +108,7 @@ class SnapshotStatus(enum.Enum):
 class UserAccountSnapshot(Base):
     __tablename__ = "finbot_user_accounts_snapshots"
     id = Column(Integer, primary_key=True)
+    user_account_id = Column(Integer, ForeignKey(UserAccount.id), nullable=False)
     status = Column(Enum(SnapshotStatus), nullable=False)
     requested_ccy = Column(String(3), nullable=False)
     start_time = Column(DateTimeTz)
@@ -118,10 +116,10 @@ class UserAccountSnapshot(Base):
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
+    user_account = relationship(UserAccount, uselist=False)
     xccy_rates_entries = relationship(
         "XccyRateSnapshotEntry", 
         back_populates="snapshot")
-
     linked_accounts_entries = relationship(
         "LinkedAccountSnapshotEntry", 
         back_populates="snapshot")
@@ -143,7 +141,7 @@ class XccyRateSnapshotEntry(Base):
 
 class LinkedAccountSnapshotEntry(Base):
     __tablename__ = "finbot_linked_accounts_snapshots"
-    entry_id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True)
     snapshot_id = Column(Integer, ForeignKey(UserAccountSnapshot.id))
     linked_account_id = Column(Integer, ForeignKey("finbot_linked_accounts.id"))
     success = Column(Boolean, nullable=False)
@@ -155,16 +153,15 @@ class LinkedAccountSnapshotEntry(Base):
         UserAccountSnapshot, 
         uselist=False, 
         back_populates="linked_accounts_entries")
-    
     sub_accounts_entries = relationship(
         "SubAccountSnapshotEntry", 
         back_populates="linked_account_entry")
 
 
 class SubAccountSnapshotEntry(Base):
-    __tablename__ = "finbot_sub_accounts_snapshots"
-    entry_id = Column(Integer, primary_key=True)
-    linked_account_snapshot_entry_id = Column(Integer, ForeignKey(LinkedAccountSnapshotEntry.entry_id))
+    __tablename__ = "finbot_sub_accounts_snapshot_entries"
+    id = Column(Integer, primary_key=True)
+    linked_account_snapshot_entry_id = Column(Integer, ForeignKey(LinkedAccountSnapshotEntry.id))
     sub_account_id = Column(String(32), nullable=False)
     sub_account_ccy = Column(String(3), nullable=False)
     sub_account_description = Column(String(256), nullable=False)
@@ -175,7 +172,6 @@ class SubAccountSnapshotEntry(Base):
         LinkedAccountSnapshotEntry, 
         uselist=False, 
         back_populates="sub_accounts_entries")
-    
     items_entries = relationship(
         "SubAccountItemSnapshotEntry", 
         back_populates="sub_account_entry")
@@ -187,9 +183,9 @@ class SubAccountItemType(enum.Enum):
 
 
 class SubAccountItemSnapshotEntry(Base):
-    __tablename__ = "finbot_sub_accounts_items_snapshots"
-    entry_id = Column(Integer, primary_key=True)
-    sub_account_snapshot_entry_id = Column(Integer, ForeignKey(SubAccountSnapshotEntry.entry_id), nullable=False)
+    __tablename__ = "finbot_sub_accounts_items_snapshot_entries"
+    id = Column(Integer, primary_key=True)
+    sub_account_snapshot_entry_id = Column(Integer, ForeignKey(SubAccountSnapshotEntry.id), nullable=False)
     item_type = Column(Enum(SubAccountItemType), nullable=False)
     name = Column(String(256), nullable=False)
     item_subtype = Column(String(32), nullable=False)
@@ -205,11 +201,24 @@ class SubAccountItemSnapshotEntry(Base):
         back_populates="items_entries")
 
 
+class ValuationChangeEntry(Base):
+    __tablename__ = "finbot_valuation_change_entries"
+    id = Column(Integer, primary_key=True)
+    change_1hour = Column(Numeric)
+    change_1day = Column(Numeric)
+    change_1week = Column(Numeric)
+    change_1month = Column(Numeric)
+    change_6months = Column(Numeric)
+    change_1year = Column(Numeric)
+    change_all_time = Column(Numeric)
+
+
 class UserAccountHistoryEntry(Base):
     __tablename__ = "finbot_user_accounts_history_entries"
-    entry_id = Column(Integer, primary_key=True)
-    user_account_id = Column(Integer, ForeignKey(UserAccount.id))
+    id = Column(Integer, primary_key=True)
+    user_account_id = Column(Integer, ForeignKey(UserAccount.id), nullable=False)
     source_snapshot_id = Column(Integer, ForeignKey(UserAccountSnapshot.id))
+    currency = Column(String(3), nullable=False)
     effective_at = Column(DateTimeTz, nullable=False)
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
@@ -224,16 +233,23 @@ class UserAccountHistoryEntry(Base):
 
 class UserAccountValuationHistoryEntry(Base):
     __tablename__ = "finbot_user_accounts_valuation_history_entries"
-    history_entry_id = Column(Integer, ForeignKey(UserAccountHistoryEntry.entry_id), primary_key=True)
-    valuation_ccy = Column(String(3), nullable=False)
-    valuation_date = Column(Date, nullable=False)
-    change_1hour = Column(Numeric)
-    change_1day = Column(Numeric)
-    change_1week = Column(Numeric)
-    change_1month = Column(Numeric)
-    change_6months = Column(Numeric)
-    change_1year = Column(Numeric)
-    change_all_time = Column(Numeric)
+    history_entry_id = Column(Integer, ForeignKey(UserAccountHistoryEntry.id), primary_key=True)
+    amount = Column(Numeric, nullable=False)
+    created_at = Column(DateTimeTz, server_default=func.now())
+    updated_at = Column(DateTimeTz, onupdate=func.now())
+
+    account_valuation_history_entry = relationship(
+        UserAccountHistoryEntry, 
+        uselist=False, 
+        back_populates="valuation_history_entry")
+
+
+class LinkedAccountValuationHistoryEntry(Base):
+    __tablename__ = "finbot_linked_accounts_valuation_history_entries"
+    history_entry_id = Column(Integer, ForeignKey(UserAccountHistoryEntry.id), primary_key=True)
+    linked_account_id = Column(Integer, ForeignKey(LinkedAccount.id), primary_key=True)
+    effective_snapshot_id = Column(Integer, ForeignKey(UserAccountSnapshot.id))
+    amount = Column(Numeric, nullable=False)
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
 

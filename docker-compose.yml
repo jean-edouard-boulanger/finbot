@@ -1,5 +1,6 @@
 version: "3"
 services:
+
   finbotdb:
     image: "postgres:12"
     container_name: finbotdb
@@ -14,6 +15,7 @@ services:
       - "5432:5432"
     volumes:
       - .finbotdb:/var/lib/postgresql/data
+
   finbotwsrv:
     build:
       context: .
@@ -23,6 +25,7 @@ services:
     command: "make run-finbotwsrv-dev"
     volumes:
       - .:/finbot
+
   snapwsrv:
     build:
       context: .
@@ -41,6 +44,23 @@ services:
       FINBOTWSRV_ENDPOINT: "http://finbotwsrv:5001"
       FINBOT_DB_HOSTNAME: finbotdb
 
+  histwsrv:
+    build:
+      context: .
+      dockerfile: histwsrv.Dockerfile
+    container_name: histwsrv
+    depends_on: 
+      - finbotdb
+    working_dir: /finbot
+    command: sh -c "/usr/bin/wait && make run-histwsrv-dev"
+    ports:
+      - "5002:5002"
+    volumes:
+      - .:/finbot
+    environment:
+      WAIT_HOSTS: finbotdb:5432
+      FINBOT_DB_HOSTNAME: finbotdb
+  
 volumes:
     .finbotdb:
     .:

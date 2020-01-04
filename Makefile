@@ -32,8 +32,15 @@ $(info FINBOT_CCY=${FINBOT_CCY})
 info:
 	$(info END)
 
+run-histwsrv-dev:
+	env FLASK_APP=finbot/apps/histwsrv/histwsrv.py \
+		FLASK_ENV=development \
+		flask run \
+			--port 5002 \
+			-h 0.0.0.0
+
 run-finbotwsrv-dev:
-	env FLASK_APP=./finbot/apps/finbotwsrv/finbotwsrv.py \
+	env FLASK_APP=finbot/apps/finbotwsrv/finbotwsrv.py \
 		FLASK_ENV=development \
 		flask run \
 			--port 5001 \
@@ -41,11 +48,14 @@ run-finbotwsrv-dev:
 			-h 0.0.0.0
 
 run-snapwsrv-dev:
-	env FLASK_APP=./finbot/apps/snapwsrv/snapwsrv.py \
+	env FLASK_APP=finbot/apps/snapwsrv/snapwsrv.py \
 		FLASK_ENV=development \
 		flask run \
 			--port 5000 \
 			-h 0.0.0.0
+
+build-histwsrv-docker:
+	docker build -t finbot/histwsrv:latest -f histwsrv.Dockerfile .
 
 build-finbotwsrv-docker:
 	docker build -t finbot/finbotwsrv:latest -f finbotwsrv.Dockerfile .
