@@ -154,21 +154,22 @@ class Api(providers.Base):
         }]
 
     def _get_loan_assets(self):
+        def _chunk_outstanding(row):
+            return float(row["Chunk Amount"]) - float(row["Chunk Capital Repaid"])
         cookies = get_cookies(self.browser)
         response = requests.get(LOANS_EXPORT_URL, cookies=cookies)
         csv_data = response.content.decode()
         all_data = list(csv.DictReader(io.StringIO(csv_data)))
-        total_outstanding = sum(float(row["Chunk Capital Outstanding"]) for row in all_data)
+        logging.info(all_data)
+        total_outstanding = sum(_chunk_outstanding(row) for row in all_data)
         return [
             {
                 "name": f"{row['Loan ID']}-{row['Chunk ID']}" ,
                 "type": "loan",
-                "annual_rate": float(row["Chunk Expected Annual Rate"]),
-                "value": float(row["Chunk Capital Outstanding"]),
+                "value": _chunk_outstanding(row),
                 "provider_specific": deepcopy(dict(row))
             }
             for row in all_data
-            if float(row["Chunk Capital Outstanding"]) > 0
         ]
 
     def get_assets(self, account_ids=None):

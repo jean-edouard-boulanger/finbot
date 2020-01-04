@@ -25,8 +25,12 @@ $(info FINBOT_DB_URL=${FINBOT_DB_URL})
 export FINBOT_SNAP_ENDPOINT := $(if $(FINBOT_SNAP_ENDPOINT),$(FINBOT_SNAP_ENDPOINT),http://127.0.0.1:5000)
 $(info FINBOT_SNAP_ENDPOINT=${FINBOT_SNAP_ENDPOINT})
 
+export FINBOT_CCY := $(if $(FINBOT_CCY),$(FINBOT_CCY),EUR)
+$(info FINBOT_CCY=${FINBOT_CCY})
+
+
 info:
-	$(info done)
+	$(info END)
 
 run-finbotwsrv-dev:
 	env FLASK_APP=./finbot/apps/finbotwsrv/finbotwsrv.py \
@@ -57,7 +61,7 @@ test-providers-docker:
 		--rm -it \
 		finbot/providers-tester:latest \
 		tools/providers-tester \
-			--currency EUR \
+			--currency ${FINBOT_CCY} \
 			--dump-balances --dump-assets \
 			--secret-file ${FINBOT_SECRET_PATH} \
 			--accounts-file ${FINBOT_ACCOUNTS_PATH} \
@@ -65,7 +69,7 @@ test-providers-docker:
 
 test-providers-debug:
 	tools/providers-tester \
-			--currency EUR \
+			--currency ${FINBOT_CCY} \
 			--dump-balances --dump-assets \
 			--secret-file ${FINBOT_SECRET_PATH} \
 			--accounts-file ${FINBOT_ACCOUNTS_PATH} \
@@ -76,7 +80,7 @@ test-providers-debug:
 
 test-providers:
 	tools/providers-tester \
-			--currency EUR \
+			--currency ${FINBOT_CCY} \
 			--secret-file ${FINBOT_SECRET_PATH} \
 			--accounts-file ${FINBOT_ACCOUNTS_PATH} \
 			${TESTER_ACCOUNTS}
