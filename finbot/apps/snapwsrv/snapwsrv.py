@@ -141,6 +141,16 @@ class CachedXccyRatesGetter(object):
         return self.xccy_rates[xccy]
 
 
+class SnapshotResultsCount(object):
+    def __init__(self, total=0, failures=0):
+        self.total = total
+        self.failures = failures
+
+    @property
+    def success(self):
+        return self.total - self.failures
+
+
 class SnapshotBuilderVisitor(SnapshotTreeVisitor):
     def __init__(self,
                  snapshot: UserAccountSnapshot,
@@ -151,6 +161,7 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
         self.target_ccy = target_ccy
         self.linked_accounts = {}  # linked_account_id -> account
         self.sub_accounts = {}  # link_account_id, sub_account_id -> sub_account
+        self.results_count = SnapshotResultsCount()
 
     def visit_account(self, account, errors):
         snapshot = self.snapshot
@@ -159,7 +170,9 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
         linked_account_entry = LinkedAccountSnapshotEntry(
             linked_account_id=account_id)
         linked_account_entry.success = not bool(errors)
+        self.results_count.total += 1
         if errors:
+            self.results_count.failures += 1
             linked_account_entry.failure_details = errors
         snapshot.linked_accounts_entries.append(linked_account_entry)
         self.linked_accounts[account_id] = linked_account_entry
@@ -233,7 +246,7 @@ def take_snapshot(user_account_id):
     logging.info(f"requested valuation currency is {requested_ccy}")
 
     with db_session.persist(UserAccountSnapshot()) as new_snapshot:
-        new_snapshot.status = SnapshotStatus.processing
+        new_snapshot.status = SnapshotStatus.Processing
         new_snapshot.requested_ccy = requested_ccy
         new_snapshot.start_time = utils.now_utc()
 
@@ -247,7 +260,8 @@ def take_snapshot(user_account_id):
     xccy_collector = XccyCollector(requested_ccy)
     visit_snapshot_tree(raw_snapshot, xccy_collector)
 
-    logging.info(f"fetching cross currency rates for: {', '.join(str(xccy) for xccy in xccy_collector.xccys)}")
+    logging.info("fetching cross currency rates for: "
+                 f"{', '.join(str(xccy) for xccy in xccy_collector.xccys)}")
 
     xccy_rates = {
         xccy: fx.get_xccy_rate(xccy.domestic, xccy.foreign)
@@ -264,17 +278,25 @@ def take_snapshot(user_account_id):
 
     logging.info("building final snapshot")
 
-    with db_session.persist(new_snapshot):
-        visit_snapshot_tree(
-            raw_snapshot,
-            SnapshotBuilderVisitor(
-                new_snapshot,
-                CachedXccyRatesGetter(xccy_rates),
-                new_snapshot.requested_ccy))
+    snapshot_builder = SnapshotBuilderVisitor(
+        new_snapshot, 
+        CachedXccyRatesGetter(xccy_rates), 
+        new_snapshot.requested_ccy)
 
-        new_snapshot.status = SnapshotStatus.success
+    with db_session.persist(new_snapshot):
+        visit_snapshot_tree(raw_snapshot, snapshot_builder)
+        new_snapshot.status = SnapshotStatus.Success
         new_snapshot.end_time = utils.now_utc()
 
     return jsonify({
-        "snapshot_id": new_snapshot.id
+        "snapshot": {
+            "identifier": new_snapshot.id,
+            "start_time": new_snapshot.start_time.isoformat(),
+            "end_time": new_snapshot.end_time.isoformat(),
+            "results_count": {
+                "total": snapshot_builder.results_count.total,
+                "success": snapshot_builder.results_count.success,
+                "failures": snapshot_builder.results_count.failures
+            }
+        }
     })

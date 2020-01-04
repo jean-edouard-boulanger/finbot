@@ -160,7 +160,6 @@ class Api(providers.Base):
         response = requests.get(LOANS_EXPORT_URL, cookies=cookies)
         csv_data = response.content.decode()
         all_data = list(csv.DictReader(io.StringIO(csv_data)))
-        logging.info(all_data)
         total_outstanding = sum(_chunk_outstanding(row) for row in all_data)
         return [
             {
