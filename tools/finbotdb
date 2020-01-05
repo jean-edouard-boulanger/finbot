@@ -6,11 +6,16 @@ from finbot.model import (
     Provider,
     UserAccount,
     UserAccountSettings,
-    LinkedAccount
+    LinkedAccount,
+    UserAccountHistoryEntry,
+    UserAccountValuationHistoryEntry,
+    ValuationChangeEntry
 )
 from finbot.core import crypto
+import datetime
 import argparse
 import json
+import pytz
 
 
 def build_tool(settings, engine, session):
@@ -19,6 +24,37 @@ def build_tool(settings, engine, session):
 
 def destroy_tool(settings, engine, session):
     Base.metadata.drop_all(engine)
+
+
+def generate_dummy_historical_valuation(user_account: UserAccount,
+                                        valuation_ccy: str,
+                                        start_amount: float,
+                                        start_time: datetime.datetime,
+                                        end_time: datetime.datetime, 
+                                        interval: datetime.timedelta,
+                                        period_contribution: float,
+                                        yearly_rate: float):
+    assert end_time > start_time
+    valuations = []
+    current_time = start_time
+    current_amount = start_amount
+    seconds_in_year = 3600 * 24 * 364
+    interval_rate = yearly_rate * (interval.total_seconds() / seconds_in_year)
+    while current_time <= end_time:
+        valuations.append((current_time, current_amount))
+        current_amount = (current_amount * (1 + interval_rate)) + period_contribution
+        current_time += interval
+
+    return [
+        UserAccountHistoryEntry(
+            user_account=user_account,
+            valuation_ccy=valuation_ccy,
+            effective_at=valuation_time,
+            user_account_valuation_history_entry=UserAccountValuationHistoryEntry(
+                valuation=amount)
+        )
+        for valuation_time, amount in valuations
+    ]
 
 
 def hydrate_tool(settings, engine, session):
@@ -148,7 +184,8 @@ def hydrate_tool(settings, engine, session):
         )
     }
     session.add_all(providers.values())
-    session.add_all([
+
+    user_accounts = [
         UserAccount(
             email="test1@finbot.net",
             encrypted_password=crypto.fernet_encrypt(
@@ -187,7 +224,22 @@ def hydrate_tool(settings, engine, session):
                 if account["provider_id"] not in {"dummy_uk"}
             ]
         )
-    ])
+    ]
+
+    session.add_all(user_accounts)
+    session.commit()
+
+    dummy_account = user_accounts[0]
+    session.add_all(
+        generate_dummy_historical_valuation(
+            user_account=dummy_account,
+            valuation_ccy=dummy_account.settings.valuation_ccy,
+            start_amount=10000.0,
+            start_time=datetime.datetime(year=2015, month=1, day=1, tzinfo=pytz.utc),
+            end_time=datetime.datetime(year=2020, month=1, day=1, tzinfo=pytz.utc),
+            interval=datetime.timedelta(weeks=4),
+            period_contribution=1000.0,
+            yearly_rate=0.05))
     session.commit()
 
 

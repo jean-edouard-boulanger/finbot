@@ -1,6 +1,7 @@
+from finbot.core import utils
+from finbot.core.dbutils import JSONEncoded, DateTimeTz
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-from sqlalchemy.types import TypeDecorator, VARCHAR
 from sqlalchemy import (
     Column,
     Integer,
@@ -19,21 +20,6 @@ import enum
 import json
 
 
-class JSONEncoded(TypeDecorator):
-    impl = VARCHAR
-
-    def process_bind_param(self, value, dialect):
-        if value is None:
-            return None
-        return json.dumps(value)
-
-    def process_result_value(self, value, dialect):
-        if value is None:
-            return None
-        return json.loads(value)
-
-
-DateTimeTz = DateTime(timezone=True)
 Base = declarative_base()
 
 
@@ -204,13 +190,22 @@ class SubAccountItemSnapshotEntry(Base):
 class ValuationChangeEntry(Base):
     __tablename__ = "finbot_valuation_change_entries"
     id = Column(Integer, primary_key=True)
-    change_1hour = Column(Numeric)
     change_1day = Column(Numeric)
     change_1week = Column(Numeric)
     change_1month = Column(Numeric)
     change_6months = Column(Numeric)
     change_1year = Column(Numeric)
-    change_all_time = Column(Numeric)
+    change_2years = Column(Numeric)
+
+    def serialize(self):
+        return utils.serialize({
+            "change_1day": self.change_1day,
+            "change_1week": self.change_1week,
+            "change_1month": self.change_1month,
+            "change_6months": self.change_6months,
+            "change_1year": self.change_1year,
+            "change_2years": self.change_2years,
+        })
 
 
 class UserAccountHistoryEntry(Base):
@@ -218,30 +213,41 @@ class UserAccountHistoryEntry(Base):
     id = Column(Integer, primary_key=True)
     user_account_id = Column(Integer, ForeignKey(UserAccount.id), nullable=False)
     source_snapshot_id = Column(Integer, ForeignKey(UserAccountSnapshot.id))
-    currency = Column(String(3), nullable=False)
+    valuation_ccy = Column(String(3), nullable=False)
     effective_at = Column(DateTimeTz, nullable=False)
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
     user_account = relationship(UserAccount, uselist=False)
     source_snapshot = relationship(UserAccountSnapshot, uselist=False)
-    valuation_history_entry = relationship(
+    user_account_valuation_history_entry = relationship(
         "UserAccountValuationHistoryEntry", 
         uselist=False, 
+        back_populates="account_valuation_history_entry")
+    linked_accounts_valuation_history_entries = relationship(
+        "LinkedAccountValuationHistoryEntry", 
+        back_populates="account_valuation_history_entry")
+    sub_accounts_valuation_history_entries = relationship(
+        "SubAccountValuationHistoryEntry", 
+        back_populates="account_valuation_history_entry")
+    sub_accounts_items_valuation_history_entries = relationship(
+        "SubAccountItemValuationHistoryEntry", 
         back_populates="account_valuation_history_entry")
 
 
 class UserAccountValuationHistoryEntry(Base):
     __tablename__ = "finbot_user_accounts_valuation_history_entries"
     history_entry_id = Column(Integer, ForeignKey(UserAccountHistoryEntry.id), primary_key=True)
-    amount = Column(Numeric, nullable=False)
+    valuation = Column(Numeric, nullable=False)
+    valuation_change_id = Column(Integer, ForeignKey(ValuationChangeEntry.id))
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
+    valuation_change = relationship(ValuationChangeEntry, uselist=False)
     account_valuation_history_entry = relationship(
-        UserAccountHistoryEntry, 
-        uselist=False, 
-        back_populates="valuation_history_entry")
+        UserAccountHistoryEntry,
+        uselist=False,
+        back_populates="user_account_valuation_history_entry")
 
 
 class LinkedAccountValuationHistoryEntry(Base):
@@ -249,11 +255,54 @@ class LinkedAccountValuationHistoryEntry(Base):
     history_entry_id = Column(Integer, ForeignKey(UserAccountHistoryEntry.id), primary_key=True)
     linked_account_id = Column(Integer, ForeignKey(LinkedAccount.id), primary_key=True)
     effective_snapshot_id = Column(Integer, ForeignKey(UserAccountSnapshot.id))
-    amount = Column(Numeric, nullable=False)
+    valuation = Column(Numeric, nullable=False)
+    valuation_change_id = Column(Integer, ForeignKey(ValuationChangeEntry.id))
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
+    valuation_change = relationship(ValuationChangeEntry, uselist=False)
     account_valuation_history_entry = relationship(
-        UserAccountHistoryEntry, 
-        uselist=False, 
-        back_populates="valuation_history_entry")
+        UserAccountHistoryEntry,
+        uselist=False,
+        back_populates="linked_accounts_valuation_history_entries")
+
+
+class SubAccountValuationHistoryEntry(Base):
+    __tablename__ = "finbot_sub_accounts_valuation_history_entries"
+    history_entry_id = Column(Integer, ForeignKey(UserAccountHistoryEntry.id), primary_key=True)
+    linked_account_id = Column(Integer, ForeignKey(LinkedAccount.id), primary_key=True)
+    sub_account_id = Column(String(32), primary_key=True)
+    sub_account_ccy = Column(String(3), nullable=False)
+    sub_account_description = Column(String(256), nullable=False)
+    valuation = Column(Numeric, nullable=False)
+    valuation_change_id = Column(Integer, ForeignKey(ValuationChangeEntry.id))
+    created_at = Column(DateTimeTz, server_default=func.now())
+    updated_at = Column(DateTimeTz, onupdate=func.now())
+
+    valuation_change = relationship(ValuationChangeEntry, uselist=False)
+    linked_account = relationship(LinkedAccount, uselist=False)
+    account_valuation_history_entry = relationship(
+        UserAccountHistoryEntry,
+        uselist=False,
+        back_populates="sub_accounts_valuation_history_entries")
+
+
+class SubAccountItemValuationHistoryEntry(Base):
+    __tablename__ = "finbot_sub_accounts_items_valuation_history_entries"
+    history_entry_id = Column(Integer, ForeignKey(UserAccountHistoryEntry.id), primary_key=True)
+    linked_account_id = Column(Integer, ForeignKey(LinkedAccount.id), primary_key=True)
+    sub_account_id = Column(String(32), primary_key=True)
+    item_type = Column(Enum(SubAccountItemType), primary_key=True)
+    name = Column(String(256), primary_key=True)
+    item_subtype = Column(String(32), nullable=False)
+    units = Column(Numeric)
+    valuation = Column(Numeric, nullable=False)
+    valuation_change_id = Column(Integer, ForeignKey(ValuationChangeEntry.id))
+    created_at = Column(DateTimeTz, server_default=func.now())
+    updated_at = Column(DateTimeTz, onupdate=func.now())
+
+    valuation_change = relationship(ValuationChangeEntry, uselist=False)
+    account_valuation_history_entry = relationship(
+        UserAccountHistoryEntry,
+        uselist=False,
+        back_populates="sub_accounts_items_valuation_history_entries")

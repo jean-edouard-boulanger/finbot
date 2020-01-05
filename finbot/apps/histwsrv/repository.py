@@ -1,3 +1,6 @@
+from finbot.model import (
+    ValuationChangeEntry
+)
 import logging
 import pandas as pd
 
@@ -36,3 +39,45 @@ def get_consistent_snapshot_data(db_session, snapshot_id):
     """
     results = db_session.execute(query, {"snapshot_id": snapshot_id})
     return pd.DataFrame([dict(row) for row in results])
+
+
+def get_linked_accounts_valuation_change(db_session, valuation_date, 
+                                         linked_accounts_amounts):
+    pass
+
+
+def get_user_account_valuation_change(db_session, user_account_id, 
+                                      valuation_date, current_amount):
+    query = """
+        SELECT uavh.amount AS amount
+          FROM finbot_user_accounts_valuation_history_entries uavh
+          JOIN finbot_user_accounts_history_entries uahe
+            ON uavh.history_entry_id = uahe.id
+         WHERE uahe.user_account_id = :user_account_id
+           AND uahe.effective_at <= (:valuation_date - INTERVAL :interval)
+      ORDER BY uahe.effective_at DESC
+         LIMIT 1
+    """
+
+    handlers = {
+        "change_1day": "1 day",
+        "change_1week": "1 week",
+        "change_1month": "1 month",
+        "change_6months": "6 months",
+        "change_1year": "1 year",
+        "change_2years": "2 years"
+    }
+
+    change_entry = ValuationChangeEntry()
+    for field, interval in handlers.items():
+        results = db_session.execute(query, {
+            "user_account_id": user_account_id,
+            "valuation_date": valuation_date,
+            "interval": interval
+        })
+        results = [row for row in results]
+        if results:
+            delta = float(current_amount - results[0]["amount"])
+            logging.info((interval, delta))
+            setattr(change_entry, field, delta)
+    return change_entry

@@ -66,23 +66,30 @@ def create_history(snapshot_id):
     logging.info(f"snapshot is effective at {snapshot.end_time}")
     logging.info(f"fetching consistent snapshot")
 
-    data = repository.get_consistent_snapshot_data(db_session, snapshot_id)
-    logging.info(data)
+    data = repository.get_consistent_snapshot_data(
+        db_session=db_session, 
+        snapshot_id=snapshot_id)
 
     logging.info(f"consistent snapshot has {len(data)} entries")
-    logging.info(f"handling basic valuation")
+    logging.info("handling basic valuation")
 
     user_account_valuation = get_user_account_valuation(data)
     linked_accounts_valuation = get_linked_accounts_valuation(data)
-    logging.info(linked_accounts_valuation)
+
+    user_account_valuation_change = repository.get_user_account_valuation_change(
+        db_session=db_session, 
+        user_account_id=snapshot.user_account_id, 
+        valuation_date=snapshot.end_time,
+        current_amount=user_account_valuation)
 
     history_entry = UserAccountHistoryEntry(
         user_account_id=snapshot.user_account_id,
         source_snapshot_id=snapshot_id,
         effective_at=snapshot.end_time,
-        currency=snapshot.requested_ccy,
-        valuation_history_entry=UserAccountValuationHistoryEntry(
-            amount=user_account_valuation
+        valuation_ccy=snapshot.requested_ccy,
+        user_account_valuation_history_entry=UserAccountValuationHistoryEntry(
+            amount=user_account_valuation,
+            valuation_change=user_account_valuation_change
         ))
 
     db_session.add(history_entry)
@@ -91,7 +98,11 @@ def create_history(snapshot_id):
     return jsonify({
         "history": {
             "summary": {
-                "user_account_valuation": float(user_account_valuation)
+                "valuation_date": snapshot.end_time.isoformat(),
+                "user_account_valuation": {
+                    "amount": float(user_account_valuation),
+                    "change": user_account_valuation_change.serialize()
+                }
             }
         }
     })
