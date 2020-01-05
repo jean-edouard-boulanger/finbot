@@ -97,8 +97,8 @@ class UserAccountSnapshot(Base):
     user_account_id = Column(Integer, ForeignKey(UserAccount.id), nullable=False)
     status = Column(Enum(SnapshotStatus), nullable=False)
     requested_ccy = Column(String(3), nullable=False)
-    start_time = Column(DateTimeTz)
-    end_time = Column(DateTimeTz)
+    start_time = Column(DateTimeTz, index=True)
+    end_time = Column(DateTimeTz, index=True)
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
@@ -214,7 +214,7 @@ class UserAccountHistoryEntry(Base):
     user_account_id = Column(Integer, ForeignKey(UserAccount.id), nullable=False)
     source_snapshot_id = Column(Integer, ForeignKey(UserAccountSnapshot.id))
     valuation_ccy = Column(String(3), nullable=False)
-    effective_at = Column(DateTimeTz, nullable=False)
+    effective_at = Column(DateTimeTz, nullable=False, index=True)
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
@@ -302,6 +302,7 @@ class SubAccountItemValuationHistoryEntry(Base):
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
     valuation_change = relationship(ValuationChangeEntry, uselist=False)
+    linked_account = relationship(LinkedAccount, uselist=False)
     account_valuation_history_entry = relationship(
         UserAccountHistoryEntry,
         uselist=False,
