@@ -12,6 +12,7 @@ from sqlalchemy import (
     Numeric,
     Text,
     ForeignKey,
+    ForeignKeyConstraint,
     UniqueConstraint,
     Enum,
     func
@@ -190,6 +191,7 @@ class SubAccountItemSnapshotEntry(Base):
 class ValuationChangeEntry(Base):
     __tablename__ = "finbot_valuation_change_entries"
     id = Column(Integer, primary_key=True)
+    change_1hour = Column(Numeric)
     change_1day = Column(Numeric)
     change_1week = Column(Numeric)
     change_1month = Column(Numeric)
@@ -198,14 +200,15 @@ class ValuationChangeEntry(Base):
     change_2years = Column(Numeric)
 
     def serialize(self):
-        return utils.serialize({
+        return {
+            "change_1hour": self.change_1hour,
             "change_1day": self.change_1day,
             "change_1week": self.change_1week,
             "change_1month": self.change_1month,
             "change_6months": self.change_6months,
             "change_1year": self.change_1year,
             "change_2years": self.change_2years,
-        })
+        }
 
 
 class UserAccountHistoryEntry(Base):
@@ -215,6 +218,7 @@ class UserAccountHistoryEntry(Base):
     source_snapshot_id = Column(Integer, ForeignKey(UserAccountSnapshot.id))
     valuation_ccy = Column(String(3), nullable=False)
     effective_at = Column(DateTimeTz, nullable=False, index=True)
+    available = Column(Boolean, nullable=False, default=False, index=True)
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
@@ -261,6 +265,7 @@ class LinkedAccountValuationHistoryEntry(Base):
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
     valuation_change = relationship(ValuationChangeEntry, uselist=False)
+    linked_account = relationship(LinkedAccount, uselist=False)
     account_valuation_history_entry = relationship(
         UserAccountHistoryEntry,
         uselist=False,
@@ -285,6 +290,9 @@ class SubAccountValuationHistoryEntry(Base):
         UserAccountHistoryEntry,
         uselist=False,
         back_populates="sub_accounts_valuation_history_entries")
+    sub_accounts_items_valuation_history_entries = relationship(
+        "SubAccountItemValuationHistoryEntry",
+        back_populates="sub_account_valuation_history_entry")
 
 
 class SubAccountItemValuationHistoryEntry(Base):
@@ -297,6 +305,7 @@ class SubAccountItemValuationHistoryEntry(Base):
     item_subtype = Column(String(32), nullable=False)
     units = Column(Numeric)
     valuation = Column(Numeric, nullable=False)
+    valuation_sub_account_ccy = Column(Numeric, nullable=False)
     valuation_change_id = Column(Integer, ForeignKey(ValuationChangeEntry.id))
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
@@ -307,3 +316,29 @@ class SubAccountItemValuationHistoryEntry(Base):
         UserAccountHistoryEntry,
         uselist=False,
         back_populates="sub_accounts_items_valuation_history_entries")
+    sub_account_valuation_history_entry = relationship(
+        SubAccountValuationHistoryEntry,
+        uselist=False,
+        back_populates="sub_accounts_items_valuation_history_entries",
+        viewonly=True,
+        foreign_keys=[
+            history_entry_id, 
+            linked_account_id, 
+            sub_account_id
+        ]
+    )
+
+    __table_args__ = (
+        ForeignKeyConstraint(
+            [
+                history_entry_id, 
+                linked_account_id, 
+                sub_account_id
+            ],
+            [
+                SubAccountValuationHistoryEntry.history_entry_id,
+                SubAccountValuationHistoryEntry.linked_account_id,
+                SubAccountValuationHistoryEntry.sub_account_id
+            ]
+        ),
+    )

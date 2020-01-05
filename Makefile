@@ -37,6 +37,7 @@ run-histwsrv-dev:
 		FLASK_ENV=development \
 		flask run \
 			--port 5002 \
+			--extra-files 'finbot/**/*.py' \
 			-h 0.0.0.0
 
 run-finbotwsrv-dev:
@@ -44,7 +45,7 @@ run-finbotwsrv-dev:
 		FLASK_ENV=development \
 		flask run \
 			--port 5001 \
-			--extra-files 'finbot/providers/*.py' \
+			--extra-files 'finfinbot/**/*.py' \
 			-h 0.0.0.0
 
 run-snapwsrv-dev:
@@ -52,6 +53,7 @@ run-snapwsrv-dev:
 		FLASK_ENV=development \
 		flask run \
 			--port 5000 \
+			--extra-files 'finbot/**/*.py' \
 			-h 0.0.0.0
 
 build-histwsrv-docker:

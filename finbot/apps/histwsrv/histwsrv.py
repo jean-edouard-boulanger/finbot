@@ -3,11 +3,15 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import scoped_session, sessionmaker, joinedload
 from finbot.apps.support import generic_request_handler
 from finbot.apps.histwsrv import repository
-from finbot.core import dbutils, utils
+from finbot.core.utils import serialize, pretty_dump
+from finbot.core import dbutils
 from finbot.model import (
     UserAccountSnapshot,
     UserAccountHistoryEntry,
-    UserAccountValuationHistoryEntry
+    UserAccountValuationHistoryEntry,
+    LinkedAccountValuationHistoryEntry,
+    SubAccountValuationHistoryEntry,
+    SubAccountItemValuationHistoryEntry
 )
 import pandas as pd
 import logging.config
@@ -44,10 +48,35 @@ def get_user_account_valuation(data: pd.DataFrame):
 
 
 def get_linked_accounts_valuation(data: pd.DataFrame):
-    group_by = ["linked_account_snapshot_entry_id", "snapshot_id"]
-    return (data.groupby(group_by)["value_snapshot_ccy"]
+    groups = ["linked_account_id", "snapshot_id"]
+    return (data.groupby(groups)["value_snapshot_ccy"]
                 .sum()
                 .to_dict())
+
+
+def get_sub_accounts_valuation(data: pd.DataFrame):
+    groups = [
+        "linked_account_id", 
+        "sub_account_id",
+        "sub_account_ccy",
+        "sub_account_description"
+    ]
+    return (data.groupby(groups)["value_snapshot_ccy"]
+                .sum()
+                .to_dict())
+
+
+def iter_sub_accounts_valuation_history_entries(data: pd.DataFrame):
+    for _, row in data.iterrows():
+        yield SubAccountItemValuationHistoryEntry(
+            linked_account_id=row["linked_account_id"],
+            sub_account_id=row["sub_account_id"],
+            item_type=row["item_type"],
+            name=row["item_name"],
+            item_subtype=row["item_subtype"],
+            units=row["item_units"],
+            valuation=row["value_snapshot_ccy"],
+            valuation_sub_account_ccy=row["value_sub_account_ccy"])
 
 
 @app.teardown_appcontext
@@ -55,54 +84,150 @@ def cleanup_context(*args, **kwargs):
     db_session.remove()
 
 
-@app.route("/history/<snapshot_id>/create", methods=["GET"])
+@app.route("/history/for/snapshot/<snapshot_id>/write", methods=["GET"])
 @generic_request_handler
-def create_history(snapshot_id):
-    logging.info("fetching snapshot {} metadata".format(snapshot_id))
+def write_history(snapshot_id):
+    repo = repository.ReportRepository(db_session)
+
+    logging.info("fetching snapshot_id={} metadata".format(snapshot_id))
     snapshot = (db_session.query(UserAccountSnapshot)
                           .filter_by(id=snapshot_id)
                           .first())
 
-    logging.info(f"snapshot is effective at {snapshot.end_time}")
+    valuation_date = snapshot.end_time
+    logging.info(f"snapshot is effective_at={valuation_date}")
     logging.info(f"fetching consistent snapshot")
 
-    data = repository.get_consistent_snapshot_data(
-        db_session=db_session, 
-        snapshot_id=snapshot_id)
+    snapshot_data = repo.get_consistent_snapshot_data(snapshot_id)
 
-    logging.info(f"consistent snapshot has {len(data)} entries")
-    logging.info("handling basic valuation")
+    logging.debug(snapshot_data.to_csv())
 
-    user_account_valuation = get_user_account_valuation(data)
-    linked_accounts_valuation = get_linked_accounts_valuation(data)
+    logging.info(f"consistent snapshot has entries={len(snapshot_data)}")
+    logging.info(f"creating new history entry (marked not available)")
 
-    user_account_valuation_change = repository.get_user_account_valuation_change(
-        db_session=db_session, 
-        user_account_id=snapshot.user_account_id, 
-        valuation_date=snapshot.end_time,
-        current_amount=user_account_valuation)
+    with db_session.persist(UserAccountHistoryEntry()) as history_entry:
+        history_entry.user_account_id = snapshot.user_account_id
+        history_entry.source_snapshot_id = snapshot_id
+        history_entry.effective_at = valuation_date
+        history_entry.valuation_ccy = snapshot.requested_ccy
+        history_entry.user_account_id = snapshot.user_account_id
+        history_entry.available = False
 
-    history_entry = UserAccountHistoryEntry(
+    logging.info(f"blank history entry created with id={history_entry.id}")
+
+    logging.info(f"handling basic valuation")
+
+    user_account_valuation = get_user_account_valuation(snapshot_data)
+    logging.info(f"user account valuation {user_account_valuation}")
+
+    with db_session.persist(history_entry):
+        history_entry.user_account_valuation_history_entry = UserAccountValuationHistoryEntry(
+            valuation=user_account_valuation)
+
+    linked_accounts_valuation = get_linked_accounts_valuation(snapshot_data)
+    logging.info(f"fetched linked accounts valuation")
+    logging.debug(pretty_dump(linked_accounts_valuation))
+
+    with db_session.persist(history_entry):
+        history_entry.linked_accounts_valuation_history_entries.extend([
+            LinkedAccountValuationHistoryEntry(
+                linked_account_id=linked_account_id,
+                effective_snapshot_id=effective_snapshot_id,
+                valuation=valuation
+            )
+            for (linked_account_id, effective_snapshot_id), valuation 
+            in linked_accounts_valuation.items()
+        ])
+
+    sub_accounts_valuation = get_sub_accounts_valuation(snapshot_data)
+    logging.info(f"fetched sub accounts valuation")
+    logging.debug(pretty_dump(sub_accounts_valuation))
+
+    with db_session.persist(history_entry):
+        history_entry.sub_accounts_valuation_history_entries.extend([
+            SubAccountValuationHistoryEntry(
+                linked_account_id=linked_account_id,
+                sub_account_id=sub_account_id,
+                sub_account_ccy=sub_account_ccy,
+                sub_account_description=sub_account_description,
+                valuation=valuation
+            )
+            for (linked_account_id, 
+                 sub_account_id, 
+                 sub_account_ccy, 
+                 sub_account_description), 
+                valuation
+            in sub_accounts_valuation.items()
+        ])
+
+    with db_session.persist(history_entry):
+        history_entry.sub_accounts_items_valuation_history_entries = list(
+            iter_sub_accounts_valuation_history_entries(snapshot_data))
+
+    logging.info(f"handling valuation change calculations")
+
+    reference_history_entry_ids = repo.get_reference_history_entry_ids(
+        baseline_id=history_entry.id,
         user_account_id=snapshot.user_account_id,
-        source_snapshot_id=snapshot_id,
-        effective_at=snapshot.end_time,
-        valuation_ccy=snapshot.requested_ccy,
-        user_account_valuation_history_entry=UserAccountValuationHistoryEntry(
-            amount=user_account_valuation,
-            valuation_change=user_account_valuation_change
-        ))
+        valuation_date=valuation_date)
 
-    db_session.add(history_entry)
-    db_session.commit()
+    logging.info("reference history entry ids")
+    logging.debug(pretty_dump(reference_history_entry_ids))
 
-    return jsonify({
-        "history": {
-            "summary": {
-                "valuation_date": snapshot.end_time.isoformat(),
-                "user_account_valuation": {
-                    "amount": float(user_account_valuation),
-                    "change": user_account_valuation_change.serialize()
-                }
-            }
+    user_account_valuation_change = repo.get_user_account_valuation_change(
+        reference_history_entry_ids)
+
+    logging.info("fetched user account valuation change")
+    logging.debug(pretty_dump(user_account_valuation_change))
+
+    with db_session.persist(history_entry):
+        entry = history_entry.user_account_valuation_history_entry
+        entry.valuation_change = user_account_valuation_change
+
+    linked_accounts_valuation_change = repo.get_linked_accounts_valuation_change(
+        reference_history_entry_ids)
+
+    logging.info("fetched linked accounts valuation change")
+    logging.debug(pretty_dump(linked_accounts_valuation_change))
+
+    with db_session.persist(history_entry):
+        for entry in history_entry.linked_accounts_valuation_history_entries:
+            entry.valuation_change = linked_accounts_valuation_change[entry.linked_account_id]
+
+    sub_accounts_valuation_change = repo.get_sub_accounts_valuation_change(
+        reference_history_entry_ids)
+
+    logging.info("fetched sub accounts valuation change")
+    logging.debug(pretty_dump(sub_accounts_valuation_change))
+
+    with db_session.persist(history_entry):
+        for entry in history_entry.sub_accounts_valuation_history_entries:
+            path = (entry.linked_account_id, entry.sub_account_id)
+            entry.valuation_change = sub_accounts_valuation_change[path]
+
+    sub_accounts_items_valuation_change = repo.get_sub_accounts_items_valuation_change(
+        reference_history_entry_ids)
+
+    logging.info("fetched sub accounts items valuation change")
+    logging.debug(pretty_dump(sub_accounts_items_valuation_change))
+
+    with db_session.persist(history_entry):
+        for entry in history_entry.sub_accounts_items_valuation_history_entries:
+            path = (
+                entry.linked_account_id, entry.sub_account_id, 
+                entry.item_type.name, entry.name
+            )
+            entry.valuation_change = sub_accounts_items_valuation_change[path]
+
+    with db_session.persist(history_entry):
+        history_entry.available = True
+
+    logging.info("new history entry added and enabled successfully")
+
+    return jsonify(serialize({
+        "report": {
+            "history_entry_id": history_entry.id,
+            "valuation_date": valuation_date,
+            "user_account_valuation": user_account_valuation
         }
-    })
+    }))

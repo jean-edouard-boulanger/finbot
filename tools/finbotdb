@@ -1,6 +1,7 @@
 #!/usr/bin/env python3.7
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
+from finbot.providers import dummy_uk
 from finbot.model import (
     Base,
     Provider,
@@ -9,7 +10,11 @@ from finbot.model import (
     LinkedAccount,
     UserAccountHistoryEntry,
     UserAccountValuationHistoryEntry,
-    ValuationChangeEntry
+    LinkedAccountValuationHistoryEntry,
+    SubAccountValuationHistoryEntry,
+    SubAccountItemValuationHistoryEntry,
+    ValuationChangeEntry,
+    SubAccountItemType
 )
 from finbot.core import crypto
 import datetime
@@ -45,15 +50,48 @@ def generate_dummy_historical_valuation(user_account: UserAccount,
         current_amount = (current_amount * (1 + interval_rate)) + period_contribution
         current_time += interval
 
+    linked_accounts = user_account.linked_accounts
+    dummy_account = dummy_uk.DUMMY_ACCOUNT
+
     return [
         UserAccountHistoryEntry(
             user_account=user_account,
             valuation_ccy=valuation_ccy,
             effective_at=valuation_time,
+            available=True,
             user_account_valuation_history_entry=UserAccountValuationHistoryEntry(
-                valuation=amount)
+                valuation=valuation * len(linked_accounts)),
+            linked_accounts_valuation_history_entries=[
+                LinkedAccountValuationHistoryEntry(
+                    linked_account=linked_account,
+                    valuation=valuation
+                )
+                for linked_account in linked_accounts
+            ],
+            sub_accounts_valuation_history_entries=[
+                SubAccountValuationHistoryEntry(
+                    linked_account=linked_account,
+                    sub_account_id=dummy_account["id"],
+                    sub_account_ccy=dummy_account["iso_currency"],
+                    sub_account_description=dummy_account["name"],
+                    valuation=valuation
+                )
+                for linked_account in linked_accounts
+            ],
+            sub_accounts_items_valuation_history_entries=[
+                SubAccountItemValuationHistoryEntry(
+                    linked_account=linked_account,
+                    sub_account_id=dummy_account["id"],
+                    item_type=SubAccountItemType.Asset,
+                    name="cash",
+                    item_subtype="cash",
+                    valuation=valuation,
+                    valuation_sub_account_ccy=valuation
+                )
+                for linked_account in linked_accounts
+            ]
         )
-        for valuation_time, amount in valuations
+        for valuation_time, valuation in valuations
     ]
 
 
@@ -234,11 +272,11 @@ def hydrate_tool(settings, engine, session):
         generate_dummy_historical_valuation(
             user_account=dummy_account,
             valuation_ccy=dummy_account.settings.valuation_ccy,
-            start_amount=10000.0,
-            start_time=datetime.datetime(year=2015, month=1, day=1, tzinfo=pytz.utc),
-            end_time=datetime.datetime(year=2020, month=1, day=1, tzinfo=pytz.utc),
-            interval=datetime.timedelta(weeks=4),
-            period_contribution=1000.0,
+            start_amount=10.0,
+            start_time=datetime.datetime(year=2018, month=1, day=1, tzinfo=pytz.utc),
+            end_time=datetime.datetime.now(tz=pytz.utc),
+            interval=datetime.timedelta(days=1),
+            period_contribution=2,
             yearly_rate=0.05))
     session.commit()
 
