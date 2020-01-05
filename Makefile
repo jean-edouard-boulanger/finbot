@@ -22,8 +22,14 @@ $(info FINBOT_DB_DBNAME=${FINBOT_DB_DBNAME})
 export FINBOT_DB_URL := postgresql+psycopg2://${FINBOT_DB_USER}:${FINBOT_DB_PASSWORD}@${FINBOT_DB_HOSTNAME}/${FINBOT_DB_DBNAME}
 $(info FINBOT_DB_URL=${FINBOT_DB_URL})
 
-export FINBOT_SNAP_ENDPOINT := $(if $(FINBOT_SNAP_ENDPOINT),$(FINBOT_SNAP_ENDPOINT),http://127.0.0.1:5000)
-$(info FINBOT_SNAP_ENDPOINT=${FINBOT_SNAP_ENDPOINT})
+export FINBOT_FINBOTWSRV_ENDPOINT := $(if $(FINBOT_FINBOTWSRV_ENDPOINT),$(FINBOT_FINBOTWSRV_ENDPOINT),http://127.0.0.1:5001)
+$(info FINBOT_FINBOTWSRV_ENDPOINT=${FINBOT_FINBOTWSRV_ENDPOINT})
+
+export FINBOT_SNAPWSRV_ENDPOINT := $(if $(FINBOT_SNAPWSRV_ENDPOINT),$(FINBOT_SNAPWSRV_ENDPOINT),http://127.0.0.1:5000)
+$(info FINBOT_SNAPWSRV_ENDPOINT=${FINBOT_SNAPWSRV_ENDPOINT})
+
+export FINBOT_HISTWSRV_ENDPOINT := $(if $(FINBOT_HISTWSRV_ENDPOINT),$(FINBOT_HISTWSRV_ENDPOINT),http://127.0.0.1:5002)
+$(info FINBOT_HISTWSRV_ENDPOINT=${FINBOT_HISTWSRV_ENDPOINT})
 
 export FINBOT_CCY := $(if $(FINBOT_CCY),$(FINBOT_CCY),EUR)
 $(info FINBOT_CCY=${FINBOT_CCY})
@@ -31,6 +37,9 @@ $(info FINBOT_CCY=${FINBOT_CCY})
 
 info:
 	$(info END)
+
+run-schedsrv-dev:
+	python3.7 finbot/apps/schedsrv/schedsrv.py
 
 run-histwsrv-dev:
 	env FLASK_APP=finbot/apps/histwsrv/histwsrv.py \
@@ -55,6 +64,12 @@ run-snapwsrv-dev:
 			--port 5000 \
 			--extra-files 'finbot/**/*.py' \
 			-h 0.0.0.0
+
+run-finbotdb-docker:
+	
+
+build-schedsrv-docker:
+	docker build -t finbot/schedsrv:latest -f schedsrv.Dockerfile .
 
 build-histwsrv-docker:
 	docker build -t finbot/histwsrv:latest -f histwsrv.Dockerfile .
@@ -99,7 +114,7 @@ test-providers:
 
 test-snapwsrv:
 	tools/snapwsrv-tester \
-		--endpoint ${FINBOT_SNAP_ENDPOINT} \
+		--endpoint ${FINBOT_SNAPWSRV_ENDPOINT} \
 		--account-id ${ACCOUNT_ID}
 
 confirm-override-accounts:

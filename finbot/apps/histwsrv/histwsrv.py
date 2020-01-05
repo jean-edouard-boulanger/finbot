@@ -84,7 +84,7 @@ def cleanup_context(*args, **kwargs):
     db_session.remove()
 
 
-@app.route("/history/for/snapshot/<snapshot_id>/write", methods=["GET"])
+@app.route("/history/<snapshot_id>/write", methods=["POST"])
 @generic_request_handler
 def write_history(snapshot_id):
     repo = repository.ReportRepository(db_session)

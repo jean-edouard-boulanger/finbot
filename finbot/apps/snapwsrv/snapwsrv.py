@@ -47,7 +47,7 @@ def load_secret(path):
 secret = load_secret(os.environ["FINBOT_SECRET_PATH"])
 db_engine = create_engine(os.environ['FINBOT_DB_URL'])
 db_session = dbutils.add_persist_utilities(scoped_session(sessionmaker(bind=db_engine)))
-finbot_client = FinbotClient(os.environ.get("FINBOTWSRV_ENDPOINT", "http://127.0.0.1:5001"))
+finbot_client = FinbotClient(os.environ["FINBOT_FINBOTWSRV_ENDPOINT"])
 
 app = Flask(__name__)
 

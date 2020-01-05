@@ -23,6 +23,8 @@ services:
     container_name: finbotwsrv
     working_dir: /finbot
     command: "make run-finbotwsrv-dev"
+    ports:
+      - "5001:5001"
     volumes:
       - .:/finbot
 
@@ -40,8 +42,8 @@ services:
     volumes:
       - .:/finbot
     environment:
-      WAIT_HOSTS: finbotdb:5432
-      FINBOTWSRV_ENDPOINT: "http://finbotwsrv:5001"
+      WAIT_HOSTS: finbotdb:5432, finbotwsrv:5001
+      FINBOT_FINBOTWSRV_ENDPOINT: "http://finbotwsrv:5001"
       FINBOT_DB_HOSTNAME: finbotdb
 
   histwsrv:
@@ -60,7 +62,25 @@ services:
     environment:
       WAIT_HOSTS: finbotdb:5432
       FINBOT_DB_HOSTNAME: finbotdb
-  
+
+  schedsrv:
+    build:
+      context: .
+      dockerfile: schedsrv.Dockerfile
+    container_name: schedsrv
+    depends_on: 
+      - snapwsrv
+      - histwsrv
+    working_dir: /finbot
+    command: sh -c "/usr/bin/wait && make run-schedsrv-dev"
+    volumes:
+      - .:/finbot
+    environment:
+      WAIT_HOSTS: histwsrv:5002, snapwsrv:5000
+      FINBOT_DB_HOSTNAME: finbotdb
+      FINBOT_SNAPWSRV_ENDPOINT: "http://snapwsrv:5000"
+      FINBOT_HISTWSRV_ENDPOINT: "http://histwsrv:5002"
+
 volumes:
     .finbotdb:
     .:

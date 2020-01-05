@@ -11,8 +11,7 @@ class ReportRepository(object):
 
     def get_consistent_snapshot_data(self, snapshot_id):
         query = """
-            SELECT uas.id AS snapshot_id,
-                   uas.end_time AS snapshot_effective_time,
+            SELECT slas.snapshot_id AS snapshot_id,
                    sase.linked_account_snapshot_entry_id AS linked_account_snapshot_entry_id,
                    slas.linked_account_id AS linked_account_id,
                    sase.sub_account_id AS sub_account_id,
@@ -32,9 +31,8 @@ class ReportRepository(object):
                 -- that was taken before) for each linked account belonging
                 -- to the user.
 
-                SELECT las.snapshot_id AS snapshot_id,
-                       las.linked_account_id AS linked_account_id, 
-                       MAX(las.id) AS linked_account_snapshot_entry_id
+                SELECT las.linked_account_id AS linked_account_id,
+                       MAX(las.snapshot_id) AS snapshot_id
                 FROM finbot_linked_accounts_snapshots las
                 JOIN (
                     -- Find all active linked accounts owned by the user 
@@ -48,11 +46,15 @@ class ReportRepository(object):
                 ) AS la ON la.id = las.linked_account_id
                 WHERE success
                 AND las.snapshot_id <= :snapshot_id
-                GROUP BY las.snapshot_id, las.linked_account_id
-            ) slas
-            JOIN finbot_user_accounts_snapshots uas ON slas.snapshot_id = uas.id
-            JOIN finbot_sub_accounts_snapshot_entries sase ON sase.linked_account_snapshot_entry_id = slas.linked_account_snapshot_entry_id
-            JOIN finbot_sub_accounts_items_snapshot_entries sais ON sais.sub_account_snapshot_entry_id = sase.id
+                GROUP BY las.linked_account_id
+            ) AS slas
+            JOIN finbot_linked_accounts_snapshots las
+              ON las.snapshot_id = slas.snapshot_id
+             AND las.linked_account_id = slas.linked_account_id
+            JOIN finbot_sub_accounts_snapshot_entries sase 
+              ON sase.linked_account_snapshot_entry_id = las.id
+            JOIN finbot_sub_accounts_items_snapshot_entries sais 
+              ON sais.sub_account_snapshot_entry_id = sase.id
         """
         results = self.db_session.execute(query, {"snapshot_id": snapshot_id})
         return pd.DataFrame([dict(row) for row in results])
