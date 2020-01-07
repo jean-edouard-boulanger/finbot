@@ -251,7 +251,7 @@ def take_snapshot(user_account_id):
         new_snapshot.user_account_id = user_account_id
         new_snapshot.start_time = utils.now_utc()
 
-    logging.info(f"snapshot {new_snapshot.id} created")
+    logging.info(f"blank snapshot {new_snapshot.id} created")
 
     raw_snapshot = take_raw_snapshot(user_account)
     logging.info(utils.pretty_dump(raw_snapshot))

@@ -1,8 +1,24 @@
 from flask import jsonify
 from contextlib import contextmanager
 from datetime import datetime
+import functools
 import logging
 import traceback
+
+
+class Route(object):
+    def __init__(self, base=None):
+        self.base = base
+
+    def p(self, identifier):
+        return Route(str(f"{self.base}/<{identifier}>"))
+
+    def __getattr__(self, path):
+        return Route(str(f"{self.base}/{path}"))
+
+    @property
+    def _(self):
+        return str(self.base)
 
 
 def log_time_elapsed(time_elapsed):
@@ -31,6 +47,7 @@ def make_error_response(user_message, debug_message=None, trace=None):
 
 
 def generic_request_handler(func):
+    @functools.wraps(func)
     def impl(*args, **kwargs):
         with time_elapsed():
             try:

@@ -81,6 +81,23 @@ services:
       FINBOT_SNAPWSRV_ENDPOINT: "http://snapwsrv:5000"
       FINBOT_HISTWSRV_ENDPOINT: "http://histwsrv:5002"
 
+  appwsrv:
+    build:
+      context: .
+      dockerfile: appwsrv.Dockerfile
+    container_name: appwsrv
+    depends_on: 
+      - finbotdb
+    working_dir: /finbot
+    command: sh -c "/usr/bin/wait && make run-appwsrv-dev"
+    ports:
+      - "5003:5003"
+    volumes:
+      - .:/finbot
+    environment:
+      WAIT_HOSTS: finbotdb:5432
+      FINBOT_DB_HOSTNAME: finbotdb
+
 volumes:
     .finbotdb:
     .:

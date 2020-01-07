@@ -59,6 +59,15 @@ class Provider(Base):
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
+    def serialize(self):
+        return {
+            "id": self.id,
+            "description": self.description,
+            "website_url": self.website_url,
+            "credentials_schema": self.credentials_schema,
+            "created_at": self.created_at,
+            "updated_at": self.updated_at
+        }
 
 class LinkedAccount(Base):
     __tablename__ = "finbot_linked_accounts"
@@ -280,6 +289,7 @@ class SubAccountValuationHistoryEntry(Base):
     sub_account_ccy = Column(String(3), nullable=False)
     sub_account_description = Column(String(256), nullable=False)
     valuation = Column(Numeric, nullable=False)
+    valuation_sub_account_ccy = Column(Numeric, nullable=False)
     valuation_change_id = Column(Integer, ForeignKey(ValuationChangeEntry.id))
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())

@@ -65,11 +65,28 @@ run-snapwsrv-dev:
 			--extra-files 'finbot/**/*.py' \
 			-h 0.0.0.0
 
-run-finbotdb-docker:
-	
+run-appwsrv-dev:
+	env FLASK_APP=finbot/apps/appwsrv/appwsrv.py \
+		FLASK_ENV=development \
+		flask run \
+			--port 5003 \
+			--extra-files 'finbot/**/*.py' \
+			-h 0.0.0.0
+
+run-workers-docker:
+	docker-compose up finbotdb appwsrv snapwsrv finbotwsrv histwsrv
+
+run-all-docker: run-workers-docker
+	docker-compose up schedsrv
+
+build-appwsrv-docker:
+	docker build -t finbot/appwsrv:latest -f appwsrv.Dockerfile .
 
 build-schedsrv-docker:
 	docker build -t finbot/schedsrv:latest -f schedsrv.Dockerfile .
+
+build-snapwsrv-docker:
+	docker build -t finbot/snapwsrv:latest -f snapwsrv.Dockerfile .
 
 build-histwsrv-docker:
 	docker build -t finbot/histwsrv:latest -f histwsrv.Dockerfile .
@@ -77,7 +94,7 @@ build-histwsrv-docker:
 build-finbotwsrv-docker:
 	docker build -t finbot/finbotwsrv:latest -f finbotwsrv.Dockerfile .
 
-build-providers-tester-docker: build-finbotwsrv-docker
+build-providers-tester-docker:
 	docker build -t finbot/providers-tester:latest -f tester.Dockerfile .
 
 test-providers-docker:
@@ -116,6 +133,11 @@ test-snapwsrv:
 	tools/snapwsrv-tester \
 		--endpoint ${FINBOT_SNAPWSRV_ENDPOINT} \
 		--account-id ${ACCOUNT_ID}
+
+test-histwsrv:
+	tools/histwsrv-tester \
+		--endpoint ${FINBOT_HISTWSRV_ENDPOINT} \
+		--snapshot-id ${SNAPSHOT_ID}
 
 confirm-override-accounts:
 	[[ ! -d .secure ]] || tools/yes_no 'This will erase existing accounts, continue?'

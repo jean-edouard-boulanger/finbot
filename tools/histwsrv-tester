@@ -1,0 +1,23 @@
+#!/usr/bin/env python3.7
+from finbot.clients.history import HistoryClient
+from finbot.core.utils import pretty_dump
+import argparse
+
+
+def create_parser():
+    parser = argparse.ArgumentParser("snapwsrv tester")
+    parser.add_argument("--endpoint", type=str)
+    parser.add_argument("--snapshot-id", type=int)
+    return parser
+
+
+def main():
+    parser = create_parser()
+    settings = parser.parse_args()
+    client = HistoryClient(settings.endpoint)
+    print(f"will send history report request for snapshot {settings.snapshot_id}")
+    print(f"history report finished {pretty_dump(client.write_history(settings.snapshot_id))}")
+
+
+if __name__ == "__main__":
+    main()

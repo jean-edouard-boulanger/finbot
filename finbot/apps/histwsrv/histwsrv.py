@@ -17,7 +17,6 @@ import pandas as pd
 import logging.config
 import logging
 import os
-import json
 
 
 logging.config.dictConfig({
@@ -61,9 +60,18 @@ def get_sub_accounts_valuation(data: pd.DataFrame):
         "sub_account_ccy",
         "sub_account_description"
     ]
-    return (data.groupby(groups)["value_snapshot_ccy"]
-                .sum()
+    data = (data.groupby(groups)
+                .agg({
+                    "value_sub_account_ccy": "sum",
+                    "value_snapshot_ccy": "sum"
+                })
                 .to_dict())
+    sub_account_data = data["value_sub_account_ccy"]
+    snapshot_data = data["value_snapshot_ccy"]
+    return {
+        path: (value, sub_account_data[path])
+        for path, value in snapshot_data.items()
+    }
 
 
 def iter_sub_accounts_valuation_history_entries(data: pd.DataFrame):
@@ -150,13 +158,14 @@ def write_history(snapshot_id):
                 sub_account_id=sub_account_id,
                 sub_account_ccy=sub_account_ccy,
                 sub_account_description=sub_account_description,
-                valuation=valuation
+                valuation=snapshot_valuation,
+                valuation_sub_account_ccy=account_valuation
             )
             for (linked_account_id, 
                  sub_account_id, 
                  sub_account_ccy, 
                  sub_account_description), 
-                valuation
+                (snapshot_valuation, account_valuation)
             in sub_accounts_valuation.items()
         ])
 

@@ -1,7 +1,8 @@
 from finbot.clients.snap import SnapClient
 from finbot.clients.history import HistoryClient
+from functools import partial
+import schedule
 import time
-import datetime
 import logging.config
 import logging
 import os
@@ -22,9 +23,6 @@ logging.config.dictConfig({
         'handlers': ['wsgi']
     }
 })
-
-
-JOB_INTERVAL = datetime.timedelta(minutes=30)
 
 
 def run_workflow(user_account_id, snap_client, hist_client):
@@ -58,14 +56,16 @@ def main():
     hist_client = HistoryClient(histwsrv_endpoint)
     logging.info(f"history report client created with {histwsrv_endpoint} endpoint")
 
-    while True:
-        run_workflow(
-            user_account_id=2,
-            snap_client=snap_client,
-            hist_client=hist_client)
+    schedule.every(1).hour.do(lambda: run_workflow(
+        user_account_id=1, 
+        snap_client=snap_client, 
+        hist_client=hist_client))
 
-        logging.info(f"will trigger next job in {JOB_INTERVAL}")
-        time.sleep(JOB_INTERVAL.total_seconds())
+
+    schedule.run_all()
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
 
 
 if __name__ == "__main__":

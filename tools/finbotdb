@@ -74,7 +74,8 @@ def generate_dummy_historical_valuation(user_account: UserAccount,
                     sub_account_id=dummy_account["id"],
                     sub_account_ccy=dummy_account["iso_currency"],
                     sub_account_description=dummy_account["name"],
-                    valuation=valuation
+                    valuation=valuation,
+                    valuation_sub_account_ccy=valuation
                 )
                 for linked_account in linked_accounts
             ],

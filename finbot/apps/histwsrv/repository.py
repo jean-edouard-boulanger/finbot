@@ -76,7 +76,7 @@ class ReportRepository(object):
             LEFT JOIN (
                 SELECT 1 AS pk, id
                 FROM finbot_user_accounts_history_entries
-                WHERE effective_at <= (:valuation_date - INTERVAL '1 day')
+                WHERE effective_at <= (:valuation_date - INTERVAL '1 hour')
                 AND user_account_id = :user_account_id
                 AND available
                 ORDER BY effective_at DESC
@@ -323,6 +323,7 @@ class ReportRepository(object):
                AND val_c2y.item_type = val.item_type
                AND val_c2y.name = val.name
                AND val_c2y.history_entry_id = :change_1y_id
+             WHERE val.history_entry_id = :baseline_id
         """
         rows = self.db_session.execute(query, reference_ids)
         results = {}
