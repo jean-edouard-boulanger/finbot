@@ -170,8 +170,8 @@ def write_history(snapshot_id):
         ])
 
     with db_session.persist(history_entry):
-        history_entry.sub_accounts_items_valuation_history_entries = list(
-            iter_sub_accounts_valuation_history_entries(snapshot_data))
+        history_entry.sub_accounts_items_valuation_history_entries.extend(
+            list(iter_sub_accounts_valuation_history_entries(snapshot_data)))
 
     logging.info(f"handling valuation change calculations")
 
