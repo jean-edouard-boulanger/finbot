@@ -1,6 +1,6 @@
 from flask import Flask, jsonify
 from sqlalchemy import create_engine, text, desc
-from sqlalchemy.orm import scoped_session, sessionmaker, joinedload
+from sqlalchemy.orm import scoped_session, sessionmaker, joinedload, contains_eager
 from finbot.apps.support import generic_request_handler, Route
 from finbot.core.utils import serialize, pretty_dump
 from finbot.core import dbutils
@@ -17,6 +17,7 @@ from finbot.model import (
 )
 import logging.config
 import logging
+import itertools
 import os
 
 logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
@@ -61,7 +62,7 @@ def get_providers():
     }))
 
 
-ACCOUNT = API.accounts.p("user_account_id")
+ACCOUNT = API_V1.accounts.p("user_account_id")
 
 @app.route(ACCOUNT.history._, methods=["GET"])
 @generic_request_handler
@@ -87,7 +88,7 @@ def get_user_account_valuation_history(user_account_id):
 
 @app.route(ACCOUNT._, methods=["GET"])
 @generic_request_handler
-def get_valuation(user_account_id):
+def get_account_valuation(user_account_id):
     entry = (db_session.query(UserAccountHistoryEntry)
                        .filter_by(user_account_id=user_account_id)
                        .filter_by(available=True)
@@ -164,18 +165,33 @@ def get_linked_accounts_valuation(user_account_id):
 
 
 LINKED_ACCOUNT = ACCOUNT.linked_accounts.p("linked_account_id")
-print(LINKED_ACCOUNT.history._)
-
 
 
 @app.route(LINKED_ACCOUNT.history._, methods=["GET"])
 @generic_request_handler
-def get_linked_account_valuation_history(user_account_id, linked_account_id):
+def get_linked_account_historical_valuation(user_account_id, linked_account_id):
+    linked_account_id = int(linked_account_id)
     results = (db_session.query(UserAccountHistoryEntry)
                          .filter_by(user_account_id=user_account_id)
                          .filter_by(available=True)
                          .join(UserAccountHistoryEntry.linked_accounts_valuation_history_entries)
+                         .options(
+                             contains_eager(UserAccountHistoryEntry.linked_accounts_valuation_history_entries))
                          .filter(LinkedAccountValuationHistoryEntry.linked_account_id == linked_account_id)
                          .order_by(desc(UserAccountHistoryEntry.effective_at))
-                         .first())
-    return jsonify({})
+                         .all())
+
+    output_entries = []
+    for account_entry in results:
+        assert len(account_entry.linked_accounts_valuation_history_entries) == 1
+        for entry in account_entry.linked_accounts_valuation_history_entries:
+            assert entry.linked_account_id == linked_account_id
+            output_entries.append({
+                    "linked_account_id": entry.linked_account_id,
+                    "date": account_entry.effective_at,
+                    "currency": account_entry.valuation_ccy,
+                    "value": entry.valuation
+                })
+    return jsonify(serialize(output_entries))
+
+
