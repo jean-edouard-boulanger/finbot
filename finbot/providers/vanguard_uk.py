@@ -152,7 +152,7 @@ class Api(providers.Base):
             amount_str = product_row.find_elements_by_tag_name("td")[5].text.strip()
             return {
                 "name": "cash",
-                "type": "cash",
+                "type": "currency",
                 "value": Price.fromstring(amount_str).amount_float,
             }
         def extract_fund_asset(product_type, product_row):

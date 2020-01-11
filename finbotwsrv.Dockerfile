@@ -38,4 +38,7 @@ RUN pip3 install \
     price-parser \
     flask \
     requests \
+    krakenex \
+    python-bittrex \
+    pycoingecko \
     pytz

@@ -44,7 +44,7 @@ class Api(providers.Base):
                     "account": deepcopy(DUMMY_ACCOUNT),
                     "assets": [{
                         "name": "cash",
-                        "type": "cash",
+                        "type": "currency",
                         "value": DUMMY_BALANCE
                     }]
                 }

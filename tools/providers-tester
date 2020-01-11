@@ -184,7 +184,7 @@ def main():
             print("no assets")
             return
 
-        raw_table = [["Account", "Amount", "Weight", "Currency"]]
+        raw_table = [["Account", "Value", "Weight", "Currency"]]
         raw_table.append([
             "(All assets)",
             f"{all_assets_amount:.2f}",
@@ -212,7 +212,7 @@ def main():
                     asset_amount = asset.amount(settings.currency)
                     asset_pc = (asset_amount / all_assets_amount) * 100.0
                     raw_table.append([
-                        f"      * {asset.name.title()}",
+                        f"      * {asset.name}",
                         f"{asset_amount:.2f}",
                         f"{asset_pc:.2f}%",
                         settings.currency

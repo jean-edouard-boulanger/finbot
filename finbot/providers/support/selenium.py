@@ -1,3 +1,6 @@
+from functools import wraps
+
+
 class DefaultBrowserFactory(object):
     def __init__(self, headless=True):
         self.headless = headless
@@ -14,9 +17,19 @@ class DefaultBrowserFactory(object):
         return Chrome(options=opts)
 
 
+def _safe_cond(cond):
+    @wraps(cond)
+    def impl(*args, **kwargs):
+        try:
+            return cond(*args, **kwargs)
+        except Exception:
+            return None
+    return impl
+
+
 class any_of(object):
     def __init__(self, *args):
-        self.conds = args
+        self.conds = [_safe_cond(cond) for cond in args]
 
     def __call__(self, driver):
         return any(cond(driver) for cond in self.conds)
@@ -24,7 +37,7 @@ class any_of(object):
 
 class all_of(object):
     def __init__(self, *args):
-        self.conds = args
+        self.conds = [_safe_cond(cond) for cond in args]
 
     def __call__(self, driver):
         return all(cond(driver) for cond in self.conds)

@@ -155,7 +155,7 @@ class Api(providers.Base):
                     "account": deepcopy(entry["account"]),
                     "assets": [{
                         "name": "cash",
-                        "type": "cash",
+                        "type": "currency",
                         "value": entry["balance"]
                     }]
                 }

@@ -1,7 +1,10 @@
 #!/usr/bin/env python3.7
+from collections import defaultdict
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from finbot.providers import dummy_uk
+from finbot.core.utils import pretty_dump
+from finbot.core import fx
 from finbot.model import (
     Base,
     Provider,
@@ -17,10 +20,34 @@ from finbot.model import (
     SubAccountItemType
 )
 from finbot.core import crypto
+import logging.config
+import logging
+import pandas as pd
 import datetime
 import argparse
 import json
 import pytz
+import csv
+
+
+logging.config.dictConfig({
+    'version': 1,
+    'formatters': {'default': {
+        'format': '%(asctime)s [%(levelname)s] %(message)s (%(filename)s:%(lineno)d)',
+    }},
+    'handlers': {'wsgi': {
+        'class': 'logging.StreamHandler',
+        'stream': 'ext://sys.stdout',
+        'formatter': 'default'
+    }},
+    'root': {
+        'level': 'DEBUG',
+        'handlers': ['wsgi']
+    }
+})
+
+
+BIG_PANDA = pd.option_context('display.max_rows', None, 'display.max_columns', None, "display.width", 1000)
 
 
 def build_tool(settings, engine, session):
@@ -95,6 +122,84 @@ def generate_dummy_historical_valuation(user_account: UserAccount,
         for valuation_time, valuation in valuations
     ]
 
+
+def general_real_historical_valuation(history_file_path, 
+                                      user_account: UserAccount):
+    entries = []
+    valuation_ccy = user_account.settings.valuation_ccy
+    with open(history_file_path, "r") as f:
+        reader = csv.DictReader(f, delimiter=";")
+        for row in reader:
+            valuation_date = datetime.datetime(*list(reversed(list(int(v) for v in row["date"].split("-")))), tzinfo=pytz.utc)
+            entries.append([
+                valuation_date,
+                row["provider"],
+                row["account_id"],
+                float(row["amount"]),
+                row["ccy"],
+                float(row["amount"]) * fx.get_xccy_rate_cached(row["ccy"], valuation_ccy, valuation_date),
+                valuation_ccy
+            ])
+
+    df = pd.DataFrame.from_records(entries, columns=[
+        "date", 
+        "provider", 
+        "account_id", 
+        "amount_account_ccy", 
+        "account_ccy",
+        "amount_snapshot_ccy",
+        "snapshot_ccy"
+    ]).sort_values(by=["date"])
+
+    val_by_date = df.groupby(["date"])["amount_snapshot_ccy"].sum()
+    val_by_date_provider = df.groupby(["date", "provider"])["amount_snapshot_ccy"].sum()
+    val_by_date_sub_account = df.groupby(["date", "provider", "account_id", "account_ccy"]).agg({
+        "amount_snapshot_ccy": "sum",
+        "amount_account_ccy": "sum"
+    }).to_dict()
+    val_by_date_sub_account = {
+        path: (acc_val, val_by_date_sub_account["amount_snapshot_ccy"][path])
+        for path, acc_val in val_by_date_sub_account["amount_account_ccy"].items()
+    }
+
+    linked_account_by_provider = {
+        linked_account.provider_id: linked_account
+        for linked_account in user_account.linked_accounts 
+    }
+
+    return [
+        UserAccountHistoryEntry(
+            user_account=user_account,
+            valuation_ccy=valuation_ccy,
+            effective_at=val_date,
+            available=True,
+            user_account_valuation_history_entry=UserAccountValuationHistoryEntry(
+                valuation=amount),
+            linked_accounts_valuation_history_entries=[
+                LinkedAccountValuationHistoryEntry(
+                    linked_account=linked_account_by_provider[provider_id],
+                    valuation=linked_amount
+                )
+                for (val_date0, provider_id), linked_amount 
+                in val_by_date_provider.iteritems()
+                if val_date0 == val_date
+            ],
+            sub_accounts_valuation_history_entries=[
+                SubAccountValuationHistoryEntry(
+                    linked_account=linked_account_by_provider[provider_id],
+                    sub_account_id=sub_account_id,
+                    sub_account_ccy=sub_account_ccy,
+                    sub_account_description=sub_account_id,
+                    valuation=snap_val,
+                    valuation_sub_account_ccy=acc_val
+                )
+                for (val_date0, provider_id, sub_account_id, sub_account_ccy), (acc_val, snap_val)
+                in val_by_date_sub_account.items()
+                if val_date0 == val_date
+            ]
+        )
+        for val_date, amount in val_by_date.iteritems()
+    ]
 
 def hydrate_tool(settings, engine, session):
     with open(settings.secret) as kf:
@@ -215,6 +320,40 @@ def hydrate_tool(settings, engine, session):
                 }
             }
         ),
+        "kraken_us": Provider(
+            id="kraken_us",
+            description="Kraken (US)",
+            website_url="https://www.kraken.com/",
+            credentials_schema={
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "properties": {
+                    "api_key": {
+                        "type": "string",
+                    },
+                    "private_key": {
+                        "type": "string",
+                    }
+                }
+            }
+        ),
+        "bittrex_us": Provider(
+            id="bittrex_us",
+            description="Bittrex (US)",
+            website_url="https://global.bittrex.com/",
+            credentials_schema={
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "properties": {
+                    "api_key": {
+                        "type": "string",
+                    },
+                    "private_key": {
+                        "type": "string",
+                    }
+                }
+            }
+        ),
         "dummy_uk": Provider(
             id="dummy_uk",
             description="Dummy (fake) provider (UK)",
@@ -268,6 +407,8 @@ def hydrate_tool(settings, engine, session):
     session.add_all(user_accounts)
     session.commit()
 
+    logging.info("adding fake historical valuation")
+
     dummy_account = user_accounts[0]
     session.add_all(
         generate_dummy_historical_valuation(
@@ -281,8 +422,17 @@ def hydrate_tool(settings, engine, session):
             yearly_rate=0.05))
     session.commit()
 
+    real_account = user_accounts[1]
+    if settings.history:
+        logging.info("adding real historical valuation")
+        assert len(settings.history) == 1
+        session.add_all(
+            general_real_historical_valuation(settings.history[0], real_account))
+        session.commit()
+
 
 def setup_hydrate_subparser(parser):
+    parser.add_argument("history", metavar="history", nargs='*')
     parser.add_argument("-k", "--secret", type=str, help="path to secret key", required=True)
     parser.add_argument("-A", "--accounts", type=str, help="path to accounts file", required=True)
 

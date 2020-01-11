@@ -135,7 +135,7 @@ class Api(providers.Base):
                              .text.strip())
         return [{
             "name": "cash",
-            "type": "cash",
+            "type": "currency",
             "value": Price.fromstring(amount_str).amount_float,
             "provider_specific": None
         }]
@@ -148,7 +148,7 @@ class Api(providers.Base):
                              .text.strip())
         return [{
             "name": "cash",
-            "type": "cash",
+            "type": "currency",
             "value": Price.fromstring(amount_str).amount_float,
             "provider_specific": None
         }]

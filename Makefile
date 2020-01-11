@@ -182,7 +182,8 @@ finbotdb-rebuild:
 finbotdb-hydrate:
 	tools/finbotdb hydrate \
 		--secret ${FINBOT_SECRET_PATH} \
-		--accounts ${FINBOT_ACCOUNTS_PATH}
+		--accounts ${FINBOT_ACCOUNTS_PATH} \
+		${HISTORY_PATH}
 
 finbotdb-psql:
 	env PGPASSWORD=finbot psql -h 127.0.0.1 -U finbot -d finbot

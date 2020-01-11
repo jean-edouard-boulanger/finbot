@@ -5,6 +5,8 @@ from finbot.providers import (
     aegon_targetplan_uk,
     lending_works_uk,
     barclays_uk,
+    kraken_us,
+    bittrex_us,
     dummy_uk
 )
 
@@ -24,7 +26,7 @@ def get_provider(provider_id):
 
 get_provider.providers = {
     "ca_fr": Provider(
-        description="Credit agricole",
+        description="Credit agricole (FR)",
         api_module=credit_agricole_fr
     ),
     "vanguard_uk": Provider(
@@ -32,20 +34,28 @@ get_provider.providers = {
         api_module=vanguard_uk
     ),
     "october_fr": Provider(
-        description="October",
+        description="October (FR)",
         api_module=october_fr
     ),
     "aegon_targetplan_uk": Provider(
-        description="Aegon Target Plan",
+        description="Aegon Target Plan (UK)",
         api_module=aegon_targetplan_uk
     ),
     "lending_works_uk": Provider(
-        description="Lending Works",
+        description="Lending Works (UK)",
         api_module=lending_works_uk
     ),
     "barclays_uk": Provider(
-        description="Barclays",
+        description="Barclays (UK)",
         api_module=barclays_uk
+    ),
+    "kraken_us": Provider(
+        description="Kraken (US)",
+        api_module=kraken_us
+    ),
+    "bittrex_us": Provider(
+        description="Bittrex (US)",
+        api_module=bittrex_us
     ),
     "dummy_uk": Provider(
         description="Dummy (fake) provider",

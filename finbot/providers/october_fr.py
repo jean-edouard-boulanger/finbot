@@ -107,15 +107,12 @@ class Api(providers.Base):
             ]
         }
 
-    def get_transactions(self, account_ids=None):
-        return {"transactions": []}
-
     def _get_cash_assets(self):
         summary_area = self._go_home()
         _, cash_amount = get_accounts_amount(summary_area)
         return [{
             "name": "cash",
-            "type": "cash",
+            "type": "currency",
             "current_weight": 1.0,
             "value": cash_amount,
             "provider_specific": None

@@ -48,17 +48,3 @@ def encrypt(data, public_key):
 
 def decrypt(data, private_key):
     return private_key.decrypt(data, _get_encryption_settings())
-
-
-def main():
-    import sys
-    from getpass import getpass
-    private_key = load_private_key(f"{sys.argv[1]}/key.pem", getpass("password: ").encode())
-    public_key = load_public_key(f"{sys.argv[1]}/public.pem")
-    data = "password: 70dfs8g7df9g897dfg87"
-    encrypted_data = encrypt(data.encode(), public_key)
-    print(decrypt(encrypted_data, private_key).decode())
-
-
-if __name__ == "__main__":
-    tester()

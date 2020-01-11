@@ -12,6 +12,7 @@ from finbot.providers.errors import AuthFailure
 from finbot import providers
 import logging
 import time
+import traceback
 
 
 AUTH_URL = "https://lwp.aegon.co.uk/targetplanUI/login"
@@ -38,6 +39,10 @@ def _wait_accounts(browser):
     WebDriverWait(browser, 120).until(
         presence_of_element_located((By.XPATH, accounts_xpath)))
     return browser.find_elements_by_xpath(accounts_xpath)
+
+
+def _is_maintenance(browser):
+    return "scheme-maintenance" in browser.current_url
 
 
 def iter_accounts(accounts_elements):
@@ -92,7 +97,8 @@ class Api(providers.Base):
 
     def _switch_account(self, account_id):
         self._go_home()
-        accounts_elements = _wait_accounts(self.browser)
+        browser = self.browser
+        accounts_elements = _wait_accounts(browser)
         for entry in iter_accounts(accounts_elements):
             if entry["account"]["id"] == account_id:
                 retries = 4
@@ -100,14 +106,23 @@ class Api(providers.Base):
                     try:
                         time.sleep(2)
                         entry["selenium"]["link_element"].click()
-                        WebDriverWait(self.browser, 30).until(
+                        WebDriverWait(browser, 30).until(
+                            any_of(
+                                presence_of_element_located((By.CSS_SELECTOR, "table.table-invs-allocation")),
+                                _is_maintenance))
+                        if not _is_maintenance(browser):
+                            return
+                        logging.info("aegon system is in maintenance mode, acknowledging")
+                        link = browser.find_element_by_xpath("//a[contains(text(), 'to product page')]")
+                        link.click()
+                        WebDriverWait(browser, 30).until(
                             presence_of_element_located((By.CSS_SELECTOR, "table.table-invs-allocation")))
                         return
                     except TimeoutException:
-                        logging.warn("could not go to account page, will try again")
+                        logging.warn(f"could not go to account page, will try again, trace: {traceback.format_exc()}")
                     except StaleElementReferenceException:
-                        logging.warn("stale element, we probably managed to get there after all")
-                        WebDriverWait(self.browser, 30).until(
+                        logging.warn(f"stale element, we probably managed to get there after all, trace: {traceback.format_exc()}")
+                        WebDriverWait(browser, 30).until(
                             presence_of_element_located((By.CSS_SELECTOR, "table.table-invs-allocation")))
         raise RuntimeError(f"unknown account {account_id}")
 
