@@ -49,6 +49,10 @@ app = Flask(__name__)
 CORS(app)
 
 
+class ApplicationError(RuntimeError):
+    pass
+
+
 @app.teardown_appcontext
 def cleanup_context(*args, **kwargs):
     db_session.remove()
@@ -101,6 +105,9 @@ def get_account_valuation(user_account_id):
                        .options(joinedload(UserAccountHistoryEntry.user_account))
                        .options(joinedload(UserAccountHistoryEntry.user_account, UserAccount.settings))
                        .first())
+
+    if entry is None:
+        raise ApplicationError(f"user account {user_account_id} not found")
 
     account = entry.user_account
     return jsonify(serialize({
