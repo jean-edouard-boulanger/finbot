@@ -19,4 +19,5 @@ RUN pip3 install \
     flask \
     psycopg2 \
     sqlalchemy \
-    pytz
+    pytz \
+    flask-cors

@@ -16,6 +16,10 @@ class Route(object):
     def __getattr__(self, path):
         return Route(str(f"{self.base}/{path}"))
 
+    @property
+    def _(self):
+        return str(self.base)
+
 
 def log_time_elapsed(time_elapsed):
     logging.info(f"time elapsed: {time_elapsed}")

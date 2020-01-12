@@ -1,4 +1,5 @@
 from flask import Flask, jsonify
+from flask_cors import CORS
 from sqlalchemy import create_engine, text, desc
 from sqlalchemy.orm import scoped_session, sessionmaker, joinedload, contains_eager
 from finbot.apps.support import generic_request_handler, Route
@@ -20,7 +21,9 @@ import logging
 import itertools
 import os
 
+
 logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+
 
 logging.config.dictConfig({
     'version': 1,
@@ -43,6 +46,7 @@ db_engine = create_engine(os.environ['FINBOT_DB_URL'])
 db_session = dbutils.add_persist_utilities(scoped_session(sessionmaker(bind=db_engine)))
 
 app = Flask(__name__)
+CORS(app)
 
 
 @app.teardown_appcontext
