@@ -41,4 +41,6 @@ RUN pip3 install \
     krakenex \
     python-bittrex \
     pycoingecko \
+    gspread \
+    oauth2client \
     pytz

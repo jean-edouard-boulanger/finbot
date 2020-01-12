@@ -354,6 +354,23 @@ def hydrate_tool(settings, engine, session):
                 }
             }
         ),
+        "google_sheets": Provider(
+            id="google_sheets",
+            description="Portfolio managed via Google sheets",
+            website_url="https://www.google.com/sheets/about/",
+            credentials_schema={
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "properties": {
+                    "sheet_key": {
+                        "type": "string",
+                    },
+                    "google_api_credentials": {
+                        "type": "object",
+                    }
+                }
+            }
+        ),
         "dummy_uk": Provider(
             id="dummy_uk",
             description="Dummy (fake) provider (UK)",
@@ -375,7 +392,7 @@ def hydrate_tool(settings, engine, session):
             linked_accounts=[
                 LinkedAccount(
                     provider=providers[account["provider_id"]],
-                    account_name=providers[account["provider_id"]].description,
+                    account_name=account["description"],
                     encrypted_credentials=crypto.fernet_encrypt(
                         json.dumps(account["credentials"]).encode(), secret).decode()
                 )
@@ -394,7 +411,7 @@ def hydrate_tool(settings, engine, session):
             linked_accounts=[
                 LinkedAccount(
                     provider=providers[account["provider_id"]],
-                    account_name=providers[account["provider_id"]].description,
+                    account_name=account["description"],
                     encrypted_credentials=crypto.fernet_encrypt(
                         json.dumps(account["credentials"]).encode(), secret).decode()
                 )

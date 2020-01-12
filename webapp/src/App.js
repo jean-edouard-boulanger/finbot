@@ -220,19 +220,16 @@ class App extends React.Component {
                         toolbar: {
                           show: true,
                           tools: {
-                            zoom: false,
-                            zoomin: true,
-                            zoomout: true,
-                            pan: false,
-                            selection: false,
                             download: false,
-                            reset: true
                           }
                         }
                       },
                       xaxis: {
                         type: 'datetime',
                         categories: historical_valuation.map(entry => entry.date),
+                        tooltip: {
+                          enabled: false
+                        }
                       },
                       yaxis: {
                         show: false
