@@ -1,15 +1,10 @@
 from price_parser import Price
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support.expected_conditions import (
-    staleness_of, 
-    presence_of_element_located
-)
+from selenium.webdriver.support.expected_conditions import presence_of_element_located
 from selenium.common.exceptions import StaleElementReferenceException
 from finbot import providers
-from finbot.providers.support.selenium import (
-    DefaultBrowserFactory, any_of, all_of, negate, dump_html, get_cookies
-)
+from finbot.providers.support.selenium import any_of, get_cookies
 from finbot.providers.errors import AuthFailure
 from copy import deepcopy
 import requests
@@ -68,10 +63,9 @@ class Credentials(object):
         return Credentials(data["username"], data["password"])
 
 
-class Api(providers.Base):
-    def __init__(self, browser_factory=None):
-        browser_factory = browser_factory or DefaultBrowserFactory()
-        self.browser = browser_factory()
+class Api(providers.SeleniumBased):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     def _is_home(self):
         return self.browser.current_url == CLASSIC_URL
@@ -194,6 +188,3 @@ class Api(providers.Base):
 
     def get_liabilities(self, account_ids):
         return {"accounts":[]}
-
-    def close(self):
-        self.browser.quit()

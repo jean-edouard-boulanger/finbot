@@ -4,10 +4,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.expected_conditions import presence_of_element_located
 from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
-from finbot.providers.support.selenium import (
-    DefaultBrowserFactory,
-    any_of,
-)
+from finbot.providers.support.selenium import any_of
 from finbot.providers.errors import AuthFailure
 from finbot import providers
 import logging
@@ -83,10 +80,9 @@ class Credentials(object):
         return Credentials(data["username"], data["password"])
 
 
-class Api(providers.Base):
-    def __init__(self, browser_factory=None):
-        browser_factory = browser_factory or DefaultBrowserFactory()
-        self.browser = browser_factory()
+class Api(providers.SeleniumBased):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.accounts = None
 
     def _go_home(self):
@@ -204,6 +200,3 @@ class Api(providers.Base):
 
     def get_liabilities(self, account_ids):
         return {"accounts": []}
-
-    def close(self):
-        self.browser.quit()

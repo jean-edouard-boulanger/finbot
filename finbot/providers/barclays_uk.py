@@ -5,7 +5,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.expected_conditions import presence_of_element_located
 from finbot import providers
-from finbot.providers.support.selenium import DefaultBrowserFactory, any_of
+from finbot.providers.support.selenium import any_of
 from finbot.providers.errors import AuthFailure
 import re
 
@@ -79,10 +79,9 @@ def _get_error(browser):
     return None
 
 
-class Api(providers.Base):
-    def __init__(self, browser_factory=None):
-        browser_factory = browser_factory or DefaultBrowserFactory()
-        self.browser = browser_factory()
+class Api(providers.SeleniumBased):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.accounts = None
 
     def authenticate(self, credentials):

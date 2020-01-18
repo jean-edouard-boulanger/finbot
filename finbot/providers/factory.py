@@ -1,4 +1,5 @@
 from finbot.providers import (
+    amex_us,
     credit_agricole_fr,
     vanguard_uk,
     october_fr,
@@ -26,6 +27,10 @@ def get_provider(provider_id):
 
 
 get_provider.providers = {
+    "amex_us": Provider(
+        description="American express (US)",
+        api_module=amex_us
+    ),
     "ca_fr": Provider(
         description="Credit agricole (FR)",
         api_module=credit_agricole_fr

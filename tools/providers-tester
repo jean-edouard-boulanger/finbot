@@ -81,7 +81,7 @@ class AssetTree(object):
 
 def fetch_balances(settings, browser_factory, account):
     provider = get_provider(account["provider_id"])
-    with closing(provider.api_module.Api(browser_factory)) as api:
+    with closing(provider.api_module.Api(browser_factory=browser_factory)) as api:
         try:
             credentials = provider.api_module.Credentials.init(account["credentials"])
             logging.info(f"[{provider.description}] authenticate {credentials.user_id}")

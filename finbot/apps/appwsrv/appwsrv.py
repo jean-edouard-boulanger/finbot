@@ -214,5 +214,3 @@ def get_linked_account_historical_valuation(user_account_id, linked_account_id):
                     "value": entry.valuation
                 })
     return jsonify(serialize(output_entries))
-
-

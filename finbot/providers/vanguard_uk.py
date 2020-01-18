@@ -7,7 +7,7 @@ from selenium.webdriver.support.expected_conditions import (
     presence_of_element_located
 )
 from selenium.common.exceptions import StaleElementReferenceException
-from finbot.providers.support.selenium import DefaultBrowserFactory, any_of, dump_html
+from finbot.providers.support.selenium import any_of
 from finbot.providers.errors import AuthFailure
 from finbot import providers
 import json
@@ -65,10 +65,9 @@ class Credentials(object):
         return Credentials(data["username"], data["password"])
 
 
-class Api(providers.Base):
-    def __init__(self, browser_factory=None):
-        browser_factory = browser_factory or DefaultBrowserFactory()
-        self.browser = browser_factory()
+class Api(providers.SeleniumBased):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.session = Session()
     
     def _go_home(self):
@@ -216,6 +215,3 @@ class Api(providers.Base):
                 if account_ids is None or account["id"] in account_ids
             ]
         }
-
-    def close(self):
-        self.browser.quit()

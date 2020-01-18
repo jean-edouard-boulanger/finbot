@@ -119,7 +119,7 @@ class DurationBadge extends React.Component {
       }
     }
 
-    return (<span className="badge badge-info">{formatDuration(this.state.elapsed)}</span>)
+    return (<span className="badge badge-secondary">{formatDuration(this.state.elapsed)}</span>)
   }
 }
 

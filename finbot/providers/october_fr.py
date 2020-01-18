@@ -55,10 +55,9 @@ class Credentials(object):
         return Credentials(data["username"], data["password"])
 
 
-class Api(providers.Base):
-    def __init__(self, browser_factory=None):
-        browser_factory = browser_factory or DefaultBrowserFactory()
-        self.browser = browser_factory()
+class Api(providers.SeleniumBased):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.logged_in = False
 
     def _go_home(self):
@@ -168,6 +167,3 @@ class Api(providers.Base):
 
     def get_liabilities(self, account_ids):
         return {"accounts": []}
-
-    def close(self):
-        self.browser.quit()

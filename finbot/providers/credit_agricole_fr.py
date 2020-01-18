@@ -65,10 +65,9 @@ class Credentials(object):
         return Credentials(data["account_number"], data["password"])
 
 
-class Api(providers.Base):
-    def __init__(self, browser_factory=None):
-        browser_factory = browser_factory or DefaultBrowserFactory()
-        self.browser = browser_factory()
+class Api(providers.SeleniumBased):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.accounts = None
 
     def _go_home(self):
@@ -185,6 +184,3 @@ class Api(providers.Base):
                 for entry in self.get_balances(account_ids)["accounts"]
             ]
         }
-
-    def close(self):
-        self.browser.quit()
