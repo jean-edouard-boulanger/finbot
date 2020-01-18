@@ -50,6 +50,18 @@ function hasValue(val) {
   return val !== undefined && val !== null;
 }
 
+function maxValue(list, accessor) {
+  accessor = accessor || ((val) => val);
+  let currentMax = null;
+  for(let i = 0; i !== list.length; ++i) {
+    const val = accessor(list[i]);
+    if(currentMax === null || val > currentMax) {
+      currentMax = val;
+    }
+  }
+  return currentMax;
+}
+
 function ValuationChange(props) {
   const {
     amount,
@@ -114,6 +126,7 @@ class App extends React.Component {
     this.setState({
       valuation: account_data.valuation,
       linked_accounts: linked_accounts.sort(byValuation),
+      valuation_high: maxValue(historical_valuation, (entry) => entry.value),
       historical_valuation: historical_valuation.map(entry => {
         return {
           date:  Date.parse(entry.date).getTime(),
@@ -125,9 +138,14 @@ class App extends React.Component {
 
   render() {
     const locale = this.locale;
-    const valuation = this.state.valuation;
-    const linked_accounts = this.state.linked_accounts;
-    const historical_valuation = this.state.historical_valuation;
+    const {
+      valuation_high, 
+      valuation, 
+      linked_accounts, 
+      historical_valuation} = this.state;
+
+    console.log(valuation_high);
+
     return (
       <>
         <NavBar bg="dark" variant="dark">
@@ -175,19 +193,25 @@ class App extends React.Component {
                   <Chart
                     options={{
                       chart: {
-                        type: "area",
                         stacked: false,
                         zoom: {
-                          type: 'x',
-                          enabled: true,
-                          autoScaleYaxis: true
+                          enabled: false,
                         },
                         toolbar: {
                           show: true,
                           tools: {
                             download: false,
                           }
-                        }
+                        },
+                      },
+                      grid: {
+                        show: false
+                      },
+                      theme: {
+                        palette: "palette8"
+                      },
+                      dataLabels: {
+                        enabled: false
                       },
                       xaxis: {
                         type: 'datetime',
@@ -197,7 +221,9 @@ class App extends React.Component {
                         }
                       },
                       yaxis: {
-                        show: false
+                        show: false,
+                        min: 0,
+                        max: valuation_high
                       },
                       tooltip: {
                         x: {
@@ -209,8 +235,12 @@ class App extends React.Component {
                           }
                         }
                       },
+                      fill: {
+                        opacity: 0.5,
+                        type: "solid"
+                      },
                       stroke: {
-                        width: 1.8,
+                        width: 1,
                       }
                     }}
                     series={[
@@ -219,6 +249,7 @@ class App extends React.Component {
                         data: historical_valuation.map(entry => entry.value)
                       }
                     ]}
+                    type="area"
                     width="100%"
                     height="250px"
                   />
@@ -233,6 +264,9 @@ class App extends React.Component {
                     options={{
                       legend: {
                         show: true
+                      },
+                      theme: {
+                        palette: "palette8"
                       },
                       tooltip: {
                         y: {
