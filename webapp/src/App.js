@@ -62,6 +62,68 @@ function maxValue(list, accessor) {
   return currentMax;
 }
 
+class DurationBadge extends React.Component {
+  constructor(props) {
+    super(props);
+    this.props = props;
+    this.interval = null;
+    this.state = {
+      elapsed: 0
+    };
+  }
+
+  refreshDuration() {
+    const {
+      from,
+      to=(new Date())
+    } = this.props;
+
+    this.setState({
+      elapsed: (to.getTime() / 1000.0) - (from.getTime() / 1000.0)
+    })
+  }
+
+  componentDidMount() {
+    if(this.props.to === undefined) {
+      this.interval = setInterval(() => this.refreshDuration(), 10 * 1000);
+    }
+    this.refreshDuration();
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.interval);
+    this.interval = null;
+  }
+
+  render() {
+    const {
+      nowLimit=60.0,
+      secondsLimit=60.0,
+      minutesLimit=3600.0,
+      hoursLimit=3600.0 * 48.0
+    } = this.props
+
+    function formatDuration(d) {
+      const nowFmt = (_) => "now";
+      const secondsFmt = (val) => `${Math.trunc(val)}s ago`;
+      const minutesFmt = (val) => `${Math.trunc(val / 60.0)}m ago`;
+      const hoursFmt = (val) => `${Math.trunc(val / 3600.0)}h ago`;
+      const daysFmt = (val) => `${Math.trunc(val / (3600.0 * 24))}d ago`;
+    
+      switch(true) {
+        case (d < nowLimit): return nowFmt(d);
+        case (d >= nowLimit && d < secondsLimit): return secondsFmt(d);
+        case (d >= secondsLimit && d < minutesLimit): return minutesFmt(d);
+        case (d >= minutesLimit && d < hoursLimit): return hoursFmt(d);
+        default: return daysFmt(d);
+      }
+    }
+
+    return (<span className="badge badge-info">{formatDuration(this.state.elapsed)}</span>)
+  }
+}
+
+
 function ValuationChange(props) {
   const {
     amount,
@@ -69,10 +131,9 @@ function ValuationChange(props) {
     previousValue,
 
     showZero=false,
-    decimalPlaces=2,
   } = props;
 
-  const fmt = (val) => { return val.toFixed(decimalPlaces); };
+  const fmt = (val) => { return val.toLocaleString('en-GB'); };
 
   function impl(val) {
     if(!hasValue(val) || (val === 0.0 && !showZero)) {
@@ -143,8 +204,6 @@ class App extends React.Component {
       valuation, 
       linked_accounts, 
       historical_valuation} = this.state;
-
-    console.log(valuation_high);
 
     return (
       <>
@@ -290,7 +349,12 @@ class App extends React.Component {
           </Row>
           <Row className="mt-4">
             <Col>
-              <Table bordered>
+              <h3>Holdings summary</h3>
+            </Col>
+          </Row>
+          <Row className="mt-4">
+            <Col>
+              <Table responsive className="table-sm">
                 <thead>
                   <tr>
                     <th>Account Name</th>
@@ -311,7 +375,11 @@ class App extends React.Component {
                       const ccy = entry.valuation.currency;
                       return (
                         <tr key={`linked-account-${linked_account.id}`}>
-                          <td>{linked_account.description}</td>
+                          <td>
+                            {linked_account.description}
+                            <h6><DurationBadge from={Date.parse(valuation.date)} />
+                            </h6>
+                          </td>
                           <td><Money amount={valuation.value} locale={locale} ccy={ccy} /></td>
                           <td><ValuationChange amount={change.change_1hour} /></td>
                           <td><ValuationChange amount={change.change_1day} /></td>

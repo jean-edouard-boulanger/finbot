@@ -184,8 +184,8 @@ class Api(providers.Base):
                 return extract_cash_asset(product_row)
             return extract_fund_asset(product_type, product_row)
 
-        assets_url = f"{BASE_URL}{account['home_url']}/Investments/Holdings"
         browser = self.browser
+        assets_url = f"{BASE_URL}{account['home_url']}/Investments/Holdings"
         browser.get(assets_url)
         toggle_switch = WebDriverWait(browser, 60).until(
             presence_of_element_located((By.CSS_SELECTOR, "div.toggle-switch")))
@@ -216,9 +216,6 @@ class Api(providers.Base):
                 if account_ids is None or account["id"] in account_ids
             ]
         }
-
-    def get_liabilities(self, account_ids):
-        return {"accounts":[]}
 
     def close(self):
         self.browser.quit()

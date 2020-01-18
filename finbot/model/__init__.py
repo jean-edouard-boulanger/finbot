@@ -120,6 +120,10 @@ class UserAccountSnapshot(Base):
         "LinkedAccountSnapshotEntry", 
         back_populates="snapshot")
 
+    @property
+    def effective_at(self):
+        return self.end_time
+
 
 class XccyRateSnapshotEntry(Base):
     __tablename__ = "finbot_xccy_rates_snapshots"
@@ -273,6 +277,7 @@ class LinkedAccountValuationHistoryEntry(Base):
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
+    effective_snapshot = relationship(UserAccountSnapshot, uselist=False)
     valuation_change = relationship(ValuationChangeEntry, uselist=False)
     linked_account = relationship(LinkedAccount, uselist=False)
     account_valuation_history_entry = relationship(

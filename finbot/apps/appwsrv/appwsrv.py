@@ -158,6 +158,11 @@ def get_linked_accounts_valuation(user_account_id):
                                 UserAccountHistoryEntry.linked_accounts_valuation_history_entries,
                                 LinkedAccountValuationHistoryEntry.linked_account)
                         )
+                        .options(
+                            joinedload(
+                                UserAccountHistoryEntry.linked_accounts_valuation_history_entries,
+                                LinkedAccountValuationHistoryEntry.effective_snapshot)
+                        )
                         .first())
 
     return jsonify(serialize({
@@ -169,7 +174,7 @@ def get_linked_accounts_valuation(user_account_id):
                     "description": entry.linked_account.account_name,
                 },
                 "valuation": {
-                    "date": result.effective_at,
+                    "date": entry.effective_snapshot.effective_at,
                     "currency": result.valuation_ccy,
                     "value": entry.valuation,
                     "change": entry.valuation_change
