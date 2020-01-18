@@ -46,6 +46,10 @@ def get_user_account_valuation(data: pd.DataFrame):
     return data["value_snapshot_ccy"].sum()
 
 
+def get_user_account_liabilities(data: pd.DataFrame):
+    return data.loc[data["value_snapshot_ccy"] < 0, "value_snapshot_ccy"].sum()
+
+
 def get_linked_accounts_valuation(data: pd.DataFrame):
     groups = ["linked_account_id", "snapshot_id"]
     return (data.groupby(groups)["value_snapshot_ccy"]
@@ -128,9 +132,13 @@ def write_history(snapshot_id):
     user_account_valuation = get_user_account_valuation(snapshot_data)
     logging.info(f"user account valuation {user_account_valuation}")
 
+    user_account_total_liabilities = get_user_account_liabilities(snapshot_data)
+    logging.info(f"user account liabilities {user_account_total_liabilities}")
+
     with db_session.persist(history_entry):
         history_entry.user_account_valuation_history_entry = UserAccountValuationHistoryEntry(
-            valuation=user_account_valuation)
+            valuation=user_account_valuation,
+            total_liabilities=user_account_total_liabilities)
 
     linked_accounts_valuation = get_linked_accounts_valuation(snapshot_data)
     logging.info(f"fetched linked accounts valuation")

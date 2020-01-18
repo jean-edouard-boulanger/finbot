@@ -236,6 +236,18 @@ class App extends React.Component {
             <Col>
               <Card>
                 <Card.Body>
+                  <Card.Title>Liabilities</Card.Title>
+                    {valuation === null ? "-" :
+                      <strong><Money className="text-info"
+                                     amount={valuation.total_liabilities} 
+                                     locale={locale} 
+                                     ccy={valuation.currency} /></strong>}
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col>
+              <Card>
+                <Card.Body>
                   <Card.Title>24h Change</Card.Title>
                   {valuation  === null ? "-" : 
                     <strong>{
@@ -247,7 +259,6 @@ class App extends React.Component {
                 </Card.Body>
                 </Card>
             </Col>
-            <Col></Col>
             <Col></Col>
           </Row>
           <Row className="mt-4">
@@ -340,7 +351,8 @@ class App extends React.Component {
                           }
                         }
                       },
-                      labels: linked_accounts.map(entry => entry.linked_account.description)
+                      labels: linked_accounts.filter(entry => entry.valuation.value >= 0.0)
+                                             .map(entry => entry.linked_account.description)
                     }}
                     type="donut"
                     series={

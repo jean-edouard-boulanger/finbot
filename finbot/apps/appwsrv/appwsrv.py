@@ -164,6 +164,7 @@ def get_account_valuation(user_account_id):
                 "date": entry.effective_at,
                 "currency": entry.valuation_ccy,
                 "value": entry.user_account_valuation_history_entry.valuation,
+                "total_liabilities": entry.user_account_valuation_history_entry.total_liabilities,
                 "change": entry.user_account_valuation_history_entry.valuation_change
             }
         }
