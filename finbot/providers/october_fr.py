@@ -70,12 +70,15 @@ class Api(providers.Base):
         assert not self.logged_in
         browser = self.browser
         browser.get(AUTH_URL)
-        app_area = browser.find_element_by_tag_name("body")
-        auth_area = app_area.find_element_by_css_selector("div.wrapper")
+        app_area = browser.find_element_by_css_selector("div.container")
+        auth_area = WebDriverWait(browser, 60).until(
+            presence_of_element_located((By.TAG_NAME, "form")))
         email_input, password_input = auth_area.find_elements_by_tag_name("input")
         email_input.send_keys(credentials.username)
         password_input.send_keys(credentials.password)
-        auth_area.find_element_by_tag_name("button").click()
+        actions_area = WebDriverWait(browser, 60).until(
+            presence_of_element_located((By.CSS_SELECTOR, "div.actions")))
+        actions_area.find_element_by_css_selector("button.action-button").click()
         WebDriverWait(browser, 60).until(
             any_of(has_error, is_logged_in))
         if not is_logged_in(browser):

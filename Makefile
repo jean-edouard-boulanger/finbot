@@ -94,7 +94,7 @@ build-histwsrv-docker:
 build-finbotwsrv-docker:
 	docker build -t finbot/finbotwsrv:latest -f finbotwsrv.Dockerfile .
 
-build-providers-tester-docker:
+build-providers-tester-docker: build-finbotwsrv-docker
 	docker build -t finbot/providers-tester:latest -f tester.Dockerfile .
 
 test-providers-docker:
