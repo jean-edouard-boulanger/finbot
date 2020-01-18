@@ -197,6 +197,3 @@ class Api(providers.SeleniumBased):
         return {
             "accounts": accounts
         }
-
-    def get_liabilities(self, account_ids):
-        return {"accounts": []}

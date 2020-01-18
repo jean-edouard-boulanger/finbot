@@ -97,6 +97,7 @@ services:
     environment:
       WAIT_HOSTS: finbotdb:5432
       FINBOT_DB_HOSTNAME: finbotdb
+      FINBOT_FINBOTWSRV_ENDPOINT: "http://finbotwsrv:5001"
 
 volumes:
     .finbotdb:

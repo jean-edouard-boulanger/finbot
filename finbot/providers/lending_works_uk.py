@@ -185,6 +185,3 @@ class Api(providers.SeleniumBased):
                 if account_ids is None or account_id in account_ids
             ]
         }
-
-    def get_liabilities(self, account_ids):
-        return {"accounts":[]}

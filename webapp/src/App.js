@@ -31,10 +31,11 @@ function getRelativeChange(startVal, finalVal) {
 }
 
 function moneyFormatter(amount, locale, currency) {
-  return new Intl.NumberFormat(locale, { 
+  const localized =  new Intl.NumberFormat(locale, { 
     style: 'currency', 
     currency: currency 
-  }).format(amount);
+  }).format(Math.abs(amount));
+  return amount >= 0 ? localized : `(${localized})`
 }
 
 function Money(props) {
@@ -43,7 +44,12 @@ function Money(props) {
     locale,
     ccy
   } = props;
-  return (<span {...props}>{moneyFormatter(amount, locale, ccy)}</span>);
+  if(amount >= 0) {
+    return (<span >{moneyFormatter(amount, locale, ccy)}</span>);
+  }
+  else {
+    return (<span span className="badge badge-danger">{moneyFormatter(amount, locale, ccy)}</span>);
+  }
 }
 
 function hasValue(val) {
@@ -338,7 +344,8 @@ class App extends React.Component {
                     }}
                     type="donut"
                     series={
-                      linked_accounts.map(entry => entry.valuation.value)
+                      linked_accounts.filter(entry => entry.valuation.value >= 0.0)
+                                     .map(entry => entry.valuation.value)
                     }
                     width="100%"
                     height="250px"

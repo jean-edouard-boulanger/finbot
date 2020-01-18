@@ -1,11 +1,13 @@
 from datetime import timedelta
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 from sqlalchemy import create_engine, text, desc, asc
 from sqlalchemy.orm import scoped_session, sessionmaker, joinedload, contains_eager
+from finbot.clients.finbot import FinbotClient
 from finbot.apps.appwsrv import timeseries
 from finbot.apps.support import generic_request_handler, Route
 from finbot.core.utils import serialize, pretty_dump
+from finbot.core import crypto
 from finbot.core import dbutils
 from finbot.model import (
     Provider,
@@ -21,10 +23,15 @@ from finbot.model import (
 import logging.config
 import logging
 import itertools
+import json
 import os
 
 
 logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+
+
+SECRET = open(os.environ["FINBOT_SECRET_PATH"], "r").read()
+FINBOT_FINBOTWSRV_ENDPOINT = os.environ["FINBOT_FINBOTWSRV_ENDPOINT"]
 
 
 logging.config.dictConfig({
@@ -47,6 +54,7 @@ logging.config.dictConfig({
 db_engine = create_engine(os.environ['FINBOT_DB_URL'])
 db_session = dbutils.add_persist_utilities(scoped_session(sessionmaker(bind=db_engine)))
 
+
 app = Flask(__name__)
 CORS(app)
 
@@ -63,6 +71,18 @@ def cleanup_context(*args, **kwargs):
 API_V1 = Route("/api/v1")
 
 
+@app.route(API_V1.providers._, methods=["POST"])
+@generic_request_handler
+def create_provider():
+    data = request.json
+    with db_session.persist(Provider()) as provider:
+        provider.id = data["id"]
+        provider.description = data["description"]
+        provider.website_url = data["website_url"]
+        provider.credentials_schema = data["credentials_schema"]
+    return jsonify(provider.serialize())
+
+
 @app.route(API_V1.providers._, methods=["GET"])
 @generic_request_handler
 def get_providers():
@@ -72,7 +92,17 @@ def get_providers():
     }))
 
 
+@app.route(API_V1.providers.p("provider_id")._, methods=["DELETE"])
+@generic_request_handler
+def delete_provider(provider_id):
+    count = db_session.query(Provider).filter_by(id=provider_id).delete()
+    db_session.commit()
+    logging.info(f"deleted provider_id={provider_id}")
+    return jsonify({"deleted": count})
+
+
 ACCOUNT = API_V1.accounts.p("user_account_id")
+
 
 @app.route(ACCOUNT.history._, methods=["GET"])
 @generic_request_handler
@@ -183,6 +213,39 @@ def get_linked_accounts_valuation(user_account_id):
             for entry in result.linked_accounts_valuation_history_entries
         ]
     }))
+
+
+@app.route(ACCOUNT.linked_accounts._, methods=["POST"])
+@generic_request_handler
+def link_to_external_account(user_account_id):
+    user_account = (db_session.query(UserAccount)
+                              .filter_by(id=user_account_id)
+                              .first())
+    if not user_account:
+        raise ApplicationError(f"could not find user account with id {user_account_id}")
+
+    data = request.get_json()
+    finbot_client = FinbotClient(FINBOT_FINBOTWSRV_ENDPOINT)
+
+    provider_id = data["provider_id"]
+    logging.info(f"validating authentication details for account {user_account_id} and provider {provider_id}")
+
+    finbot_response = finbot_client.get_financial_data(
+        provider=provider_id,
+        credentials_data=data["credentials"],
+        line_items=[])
+
+    if "error" in finbot_response:
+        user_message = finbot_response["error"]["user_message"]
+        raise ApplicationError(f"unable to validate provided credentials: {user_message}")
+
+    with db_session.persist(user_account):
+        user_account.linked_accounts.append(
+            LinkedAccount(
+                provider_id=data["provider_id"],
+                account_name=data["account_name"],
+                encrypted_credentials=crypto.fernet_encrypt(
+                    json.dumps(data["credentials"]).encode(), SECRET).decode()))
 
 
 LINKED_ACCOUNT = ACCOUNT.linked_accounts.p("linked_account_id")

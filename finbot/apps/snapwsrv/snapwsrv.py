@@ -224,7 +224,8 @@ def take_raw_snapshot(user_account):
                     secret).decode()),
             line_items=[
                 LineItem.Balances,
-                LineItem.Assets
+                LineItem.Assets,
+                LineItem.Liabilities
             ]
         )
         raw_snapshot.append({

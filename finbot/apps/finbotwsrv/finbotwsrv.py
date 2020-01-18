@@ -58,7 +58,7 @@ def liabilities_handler(provider_api):
             "account": entry["account"],
             "liabilities": entry["liabilities"]
         }
-        for entry in provider_api.get_assets()["accounts"]
+        for entry in provider_api.get_liabilities()["accounts"]
     ]
 
 

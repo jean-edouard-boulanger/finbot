@@ -1,4 +1,5 @@
 from finbot import providers
+from finbot.providers.errors import AuthFailure
 from finbot.providers.support.selenium import any_of
 from finbot.providers.errors import AuthFailure, Error
 from selenium.webdriver.support.expected_conditions import presence_of_element_located
@@ -66,6 +67,13 @@ class Credentials(object):
         return Credentials(data["user_id"], data["password"])
 
 
+def get_loging_error(browser):
+    alert_area = browser.find_elements_by_css_selector("div.alert")
+    if alert_area:
+        return alert_area[0].text
+    return None
+
+
 class Api(providers.SeleniumBased):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -89,6 +97,16 @@ class Api(providers.SeleniumBased):
         browser.find_element_by_id("eliloUserID").send_keys(credentials.user_id)
         browser.find_element_by_id("eliloPassword").send_keys(credentials.password)
         browser.find_element_by_id("loginSubmit").click()
+
+        WebDriverWait(self.browser, 60).until(
+            any_of(
+                presence_of_element_located((By.CSS_SELECTOR, "section.balance-container")),
+                get_loging_error
+            ))
+
+        login_error = get_loging_error(browser)
+        if login_error:
+            raise AuthFailure(login_error)
 
         self.accounts = {
             entry["account"]["id"]: deepcopy(entry["account"])

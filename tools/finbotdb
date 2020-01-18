@@ -47,7 +47,10 @@ logging.config.dictConfig({
 })
 
 
-BIG_PANDA = pd.option_context('display.max_rows', None, 'display.max_columns', None, "display.width", 1000)
+BIG_PANDA = pd.option_context(
+    'display.max_rows', None, 
+    'display.max_columns', None, 
+    "display.width", 1000)
 
 
 def build_tool(settings, engine, session):
@@ -295,10 +298,10 @@ def hydrate_tool(settings, engine, session):
                 "type": "object",
                 "properties": {
                     "email": {
-                        "type": "idn-email",
+                        "type": "idn-email"
                     },
                     "password": {
-                        "type": "string",
+                        "type": "string"
                     }
                 }
             }
@@ -312,10 +315,10 @@ def hydrate_tool(settings, engine, session):
                 "type": "object",
                 "properties": {
                     "email": {
-                        "type": "idn-email",
+                        "type": "idn-email"
                     },
                     "password": {
-                        "type": "string",
+                        "type": "string"
                     }
                 }
             }
@@ -329,10 +332,10 @@ def hydrate_tool(settings, engine, session):
                 "type": "object",
                 "properties": {
                     "api_key": {
-                        "type": "string",
+                        "type": "string"
                     },
                     "private_key": {
-                        "type": "string",
+                        "type": "string"
                     }
                 }
             }
@@ -346,10 +349,10 @@ def hydrate_tool(settings, engine, session):
                 "type": "object",
                 "properties": {
                     "api_key": {
-                        "type": "string",
+                        "type": "string"
                     },
                     "private_key": {
-                        "type": "string",
+                        "type": "string"
                     }
                 }
             }
@@ -363,10 +366,10 @@ def hydrate_tool(settings, engine, session):
                 "type": "object",
                 "properties": {
                     "sheet_key": {
-                        "type": "string",
+                        "type": "string"
                     },
                     "google_api_credentials": {
-                        "type": "object",
+                        "type": "object"
                     }
                 }
             }
