@@ -52,10 +52,21 @@ def assets_handler(provider_api):
     ]
 
 
+def liabilities_handler(provider_api):
+    return [
+        {
+            "account": entry["account"],
+            "liabilities": entry["liabilities"]
+        }
+        for entry in provider_api.get_assets()["accounts"]
+    ]
+
+
 def item_handler(item_type, provider_api):
     handler = {
         "balances": balances_handler,
-        "assets": assets_handler
+        "assets": assets_handler,
+        "liabilities": liabilities_handler
     }.get(item_type)
     try:
         if not handler:

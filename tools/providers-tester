@@ -62,10 +62,12 @@ class ProviderData(object):
 
 
 class AccountData(object):
-    def __init__(self, account=None, balance=None, assets=None):
+    def __init__(self, account=None, balance=None, assets=None, 
+                 liabilities=None):
         self.account = account
         self.balance = balance
         self.assets = assets or []
+        self.liabilities = liabilities or []
 
     def amount(self, currency_override=None):
         return self.balance.amount(currency_override)
@@ -115,6 +117,13 @@ def fetch_balances(settings, browser_factory, account):
                         amount=Price(asset["value"], account["iso_currency"])
                     ))
             logging.info(f"[{provider.description}] fetching assets - done")
+
+            logging.info(f"[{provider.description}] fetching liabilities")
+            liabilities = api.get_liabilities()
+            if settings.dump_liabilities:
+                logging.info(f"[{provider.description}] liabilities {json_dumps(liabilities)}")
+            logging.info(f"[{provider.description}] fetching liabilities - done")
+
             return provider_data
         except KeyboardInterrupt:
             raise
@@ -140,6 +149,7 @@ def create_arguments_parser():
     parser.add_argument("--secret-file", required=True)
     parser.add_argument("--dump-balances", action="store_true", default=False)
     parser.add_argument("--dump-assets", action="store_true", default=False)
+    parser.add_argument("--dump-liabilities", action="store_true", default=False)
     parser.add_argument("--accounts-file", required=True)
     parser.add_argument("--show-browser", action="store_false", default=True, dest="headless")
     parser.add_argument("--no-threadpool", action="store_false", default=True, dest="threadpool")

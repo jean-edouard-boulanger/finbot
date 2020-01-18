@@ -117,8 +117,15 @@ def visit_snapshot_tree(raw_snapshot, visitor):
                         visitor.visit_item(
                             real_account,
                             sub_account,
-                            "asset",
+                            SubAccountItemType.Asset,
                             deepcopy(asset))
+                elif line_item == "liabilities":
+                    for liability in result["liabilities"]:
+                        visitor.visit_item(
+                            real_account,
+                            sub_account,
+                            SubAccountItemType.Liability,
+                            deepcopy(liability))
 
 
 class XccyCollector(SnapshotTreeVisitor):
@@ -195,7 +202,7 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
         sub_account_entry = self.sub_accounts[(linked_account_id, sub_account_id)]
         item_value = item["value"]
         new_item = SubAccountItemSnapshotEntry(
-            item_type=SubAccountItemType.Asset,  # TODO (could eventually be liability)
+            item_type=item_type,
             name=item["name"],
             item_subtype=item["type"],
             units=item.get("units"),

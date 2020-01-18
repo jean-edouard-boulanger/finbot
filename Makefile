@@ -118,7 +118,7 @@ test-providers-docker:
 		finbot/providers-tester:latest \
 		tools/providers-tester \
 			--currency ${FINBOT_CCY} \
-			--dump-balances --dump-assets \
+			--dump-balances --dump-assets --dump-liabilities \
 			--secret-file ${FINBOT_SECRET_PATH} \
 			--accounts-file ${FINBOT_ACCOUNTS_PATH} \
 			${TESTER_ACCOUNTS}
@@ -126,7 +126,7 @@ test-providers-docker:
 test-providers-debug:
 	tools/providers-tester \
 			--currency ${FINBOT_CCY} \
-			--dump-balances --dump-assets \
+			--dump-balances --dump-assets --dump-liabilities \
 			--secret-file ${FINBOT_SECRET_PATH} \
 			--accounts-file ${FINBOT_ACCOUNTS_PATH} \
 			--show-browser \

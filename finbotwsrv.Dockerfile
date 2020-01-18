@@ -43,4 +43,5 @@ RUN pip3 install \
     pycoingecko \
     gspread \
     oauth2client \
+    iso4217parse \
     pytz

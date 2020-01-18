@@ -127,7 +127,6 @@ class Api(providers.SeleniumBased):
         browser.find_element_by_css_selector("button.btn--login").click()
 
         # step 3: gather available accounts
-
         accounts_area = _wait_accounts(self.browser)
         self.accounts = {
             entry["account"]["id"]: entry["account"]

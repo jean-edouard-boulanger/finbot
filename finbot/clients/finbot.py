@@ -10,6 +10,7 @@ def json_dumps(data):
 class LineItem(Enum):
     Balances = "balances"
     Assets = "assets"
+    Liabilities = "liabilities"
 
 
 class Error(RuntimeError):
