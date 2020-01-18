@@ -256,6 +256,7 @@ class UserAccountValuationHistoryEntry(Base):
     __tablename__ = "finbot_user_accounts_valuation_history_entries"
     history_entry_id = Column(Integer, ForeignKey(UserAccountHistoryEntry.id), primary_key=True)
     valuation = Column(Numeric, nullable=False)
+    total_liabilities = Column(Numeric, nullable=False, server_default="0.0")
     valuation_change_id = Column(Integer, ForeignKey(ValuationChangeEntry.id))
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
@@ -266,6 +267,10 @@ class UserAccountValuationHistoryEntry(Base):
         uselist=False,
         back_populates="user_account_valuation_history_entry")
 
+    @property
+    def total_assets(self):
+        return self.valuation - self.total_liabilities
+
 
 class LinkedAccountValuationHistoryEntry(Base):
     __tablename__ = "finbot_linked_accounts_valuation_history_entries"
@@ -273,6 +278,7 @@ class LinkedAccountValuationHistoryEntry(Base):
     linked_account_id = Column(Integer, ForeignKey(LinkedAccount.id), primary_key=True)
     effective_snapshot_id = Column(Integer, ForeignKey(UserAccountSnapshot.id))
     valuation = Column(Numeric, nullable=False)
+    total_liabilities = Column(Numeric, nullable=False, server_default="0.0")
     valuation_change_id = Column(Integer, ForeignKey(ValuationChangeEntry.id))
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
@@ -285,6 +291,10 @@ class LinkedAccountValuationHistoryEntry(Base):
         uselist=False,
         back_populates="linked_accounts_valuation_history_entries")
 
+    @property
+    def total_assets(self):
+        return self.valuation - self.total_liabilities
+
 
 class SubAccountValuationHistoryEntry(Base):
     __tablename__ = "finbot_sub_accounts_valuation_history_entries"
@@ -294,6 +304,7 @@ class SubAccountValuationHistoryEntry(Base):
     sub_account_ccy = Column(String(3), nullable=False)
     sub_account_description = Column(String(256), nullable=False)
     valuation = Column(Numeric, nullable=False)
+    total_liabilities = Column(Numeric, nullable=False, server_default="0.0")
     valuation_sub_account_ccy = Column(Numeric, nullable=False)
     valuation_change_id = Column(Integer, ForeignKey(ValuationChangeEntry.id))
     created_at = Column(DateTimeTz, server_default=func.now())
@@ -308,6 +319,10 @@ class SubAccountValuationHistoryEntry(Base):
     sub_accounts_items_valuation_history_entries = relationship(
         "SubAccountItemValuationHistoryEntry",
         back_populates="sub_account_valuation_history_entry")
+
+    @property
+    def total_assets(self):
+        return self.valuation - self.total_liabilities
 
 
 class SubAccountItemValuationHistoryEntry(Base):

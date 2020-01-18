@@ -38,6 +38,18 @@ $(info FINBOT_CCY=${FINBOT_CCY})
 info:
 	$(info END)
 
+alembic-gen:
+	alembic revision --autogenerate -m "${message}"
+
+alembic-upgrade:
+	alembic upgrade head
+
+alembic-downgrade:
+	alembic downgrade -1
+
+alembic-history:
+	alembic history
+
 run-schedsrv-dev:
 	python3.7 finbot/apps/schedsrv/schedsrv.py
 
