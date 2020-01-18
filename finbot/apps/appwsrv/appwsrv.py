@@ -1,7 +1,9 @@
+from datetime import timedelta
 from flask import Flask, jsonify
 from flask_cors import CORS
-from sqlalchemy import create_engine, text, desc
+from sqlalchemy import create_engine, text, desc, asc
 from sqlalchemy.orm import scoped_session, sessionmaker, joinedload, contains_eager
+from finbot.apps.appwsrv import timeseries
 from finbot.apps.support import generic_request_handler, Route
 from finbot.core.utils import serialize, pretty_dump
 from finbot.core import dbutils
@@ -78,7 +80,7 @@ def get_user_account_valuation_history(user_account_id):
     history_entries = (db_session.query(UserAccountHistoryEntry)
                                  .filter_by(user_account_id=user_account_id)
                                  .filter_by(available=True)
-                                 .order_by(desc(UserAccountHistoryEntry.effective_at))
+                                 .order_by(asc(UserAccountHistoryEntry.effective_at))
                                  .options(joinedload(UserAccountHistoryEntry.user_account_valuation_history_entry, innerjoin=True))
                                  .all())
 
@@ -89,7 +91,10 @@ def get_user_account_valuation_history(user_account_id):
                     "currency": entry.valuation_ccy,
                     "value": entry.user_account_valuation_history_entry.valuation
                 }
-                for entry in history_entries
+                for entry in timeseries.sample_time_series(
+                    history_entries,
+                    time_getter=(lambda item: item.effective_at),
+                    frequency=timedelta(days=1))
         ]
     }))
 

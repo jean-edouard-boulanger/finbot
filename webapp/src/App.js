@@ -1,3 +1,4 @@
+import FinbotClient from './FinbotClient'
 import Table from 'react-bootstrap/Table';
 import Container from 'react-bootstrap/Container';
 import NavBar from 'react-bootstrap/NavBar';
@@ -6,11 +7,7 @@ import Nav from 'react-bootstrap/Nav';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Card from 'react-bootstrap/Card';
-import DropDown from 'react-bootstrap/DropDown';
-import Button from 'react-bootstrap/Button';
-import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Chart from "react-apexcharts";
-import axios from 'axios';
 import React from 'react';
 
 function formatRelChange(val) {
@@ -23,6 +20,10 @@ function formatRelChange(val) {
   else {
     return (<span className="text-success">+{(val * 100).toFixed(2)}%</span>)
   }
+}
+
+function byValuation(item1, item2) {
+  return item2.valuation.value - item1.valuation.value
 }
 
 function getRelativeChange(startVal, finalVal) {
@@ -55,17 +56,14 @@ function ValuationChange(props) {
     currentValue,
     previousValue,
 
-    blankZero=true,
+    showZero=false,
     decimalPlaces=2,
-    format="absolute"
   } = props;
 
-  const absFmt = (val) => { return val.toFixed(decimalPlaces); };
-  const relFmt = (val) => { return `${(val * 100).toFixed(decimalPlaces)}%`; };
-  const fmt = (format === "relative") ? relFmt : absFmt;
+  const fmt = (val) => { return val.toFixed(decimalPlaces); };
 
   function impl(val) {
-    if(!hasValue(val) || (val === 0.0 && blankZero)) {
+    if(!hasValue(val) || (val === 0.0 && !showZero)) {
       return (<span className="text-muted">-</span>);
     }
     else if(val === 0.0) {
@@ -93,39 +91,6 @@ function ValuationChange(props) {
   }
 }
 
-class FinbotApi {
-  constructor(settings) {
-    settings = settings || {};
-    this.endpoint = settings.endpoint || "http://127.0.0.1:5003/api/v1"
-  }
-
-  handle_response(response) {
-    const app_data = response.data;
-    if(app_data.hasOwnProperty("error")) {
-      throw app_data.error.debug_message;
-    }
-    return app_data;
-  }
-
-  async getAccount(settings) {
-    const {account_id} = settings;
-    const response = await axios.get(`${this.endpoint}/accounts/${account_id}`);
-    return this.handle_response(response).result;
-  }
-
-  async getAccountHistoricalValuation(settings) {
-    const {account_id} = settings;
-    const response = await axios.get(`${this.endpoint}/accounts/${account_id}/history`);
-    return this.handle_response(response).historical_valuation;
-  }
-
-  async getLinkedAccounts(settings) {
-    const {account_id} = settings;
-    const response = await axios.get(`${this.endpoint}/accounts/${account_id}/linked_accounts`);
-    return this.handle_response(response).linked_accounts;
-  }
-};
-
 class App extends React.Component {
   constructor(props) {
     super(props);
@@ -140,16 +105,16 @@ class App extends React.Component {
   }
 
   async componentDidMount() {
-    let finbot_api = new FinbotApi();
+    let finbot_client = new FinbotClient();
 
-    const account_data = await finbot_api.getAccount({account_id: this.account_id});
-    const linked_accounts = await finbot_api.getLinkedAccounts({account_id: this.account_id});
-    const historical_valuation = await finbot_api.getAccountHistoricalValuation({account_id: this.account_id});
+    const account_data = await finbot_client.getAccount({account_id: this.account_id});
+    const linked_accounts = await finbot_client.getLinkedAccounts({account_id: this.account_id});
+    const historical_valuation = await finbot_client.getAccountHistoricalValuation({account_id: this.account_id});
 
     this.setState({
       valuation: account_data.valuation,
-      linked_accounts: linked_accounts,
-      historical_valuation: historical_valuation.reverse().map(entry => {
+      linked_accounts: linked_accounts.sort(byValuation),
+      historical_valuation: historical_valuation.map(entry => {
         return {
           date:  Date.parse(entry.date).getTime(),
           value: entry.value
@@ -269,6 +234,13 @@ class App extends React.Component {
                       legend: {
                         show: true
                       },
+                      tooltip: {
+                        y: {
+                          formatter: (value) => {
+                            return moneyFormatter(value, locale, valuation.currency);
+                          }
+                        }
+                      },
                       labels: linked_accounts.map(entry => entry.linked_account.description)
                     }}
                     type="donut"
@@ -298,8 +270,7 @@ class App extends React.Component {
                 </thead>
                 <tbody>
                   {
-                    linked_accounts.sort((l1, l2) => {return l2.valuation.value - l1.valuation.value})
-                                   .map(entry => {
+                    linked_accounts.map(entry => {
                       const valuation = entry.valuation;
                       const change = valuation.change;
                       const linked_account = entry.linked_account;
