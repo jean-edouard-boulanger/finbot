@@ -6,6 +6,7 @@ from finbot.providers import (
     aegon_targetplan_uk,
     lending_works_uk,
     barclays_uk,
+    barclaycard_uk,
     kraken_us,
     bittrex_us,
     google_sheets,
@@ -54,6 +55,10 @@ get_provider.providers = {
     "barclays_uk": Provider(
         description="Barclays (UK)",
         api_module=barclays_uk
+    ),
+    "barclaycard_uk": Provider(
+        description="Barclaydcard (UK)",
+        api_module=barclaycard_uk
     ),
     "kraken_us": Provider(
         description="Kraken (US)",

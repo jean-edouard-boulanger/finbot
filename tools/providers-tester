@@ -154,6 +154,7 @@ def create_arguments_parser():
     parser.add_argument("--show-browser", action="store_false", default=True, dest="headless")
     parser.add_argument("--no-threadpool", action="store_false", default=True, dest="threadpool")
     parser.add_argument("--pause-on-error", action="store_true", default=False, dest="pause_on_error")
+    parser.add_argument("--developer-tools", action="store_true", default=False, dest="developer_tools")
     parser.add_argument("--currency", type=str, default="GBP")
     return parser
 
@@ -162,7 +163,9 @@ def main():
     logging.basicConfig(stream=sys.stdout, level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s (%(filename)s:%(lineno)d)')
     parser = create_arguments_parser()
     settings = parser.parse_args()
-    browser_factory = DefaultBrowserFactory(headless=settings.headless)
+    browser_factory = DefaultBrowserFactory(
+        headless=settings.headless,
+        developer_tools=settings.developer_tools)
     selected_providers = flatten_accounts_list(settings.accounts)
     load_all = all(provider_id.startswith("~") for provider_id in selected_providers)
 

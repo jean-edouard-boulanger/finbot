@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request
 from contextlib import closing
 from finbot.providers.factory import get_provider
+from finbot.providers.errors import AuthFailure
 from finbot.apps.support import (
     generic_request_handler,
     make_error_response,
@@ -101,13 +102,18 @@ def get_financial_data():
         try:
             logging.info(f"authenticating {credentials.user_id}")
             provider_api.authenticate(credentials)
+        except AuthFailure as e:
+            logging.warn(f"authentication failure: {e}")
+            return make_error_response(
+                user_message=str(e),
+                debug_message=str(e),
+                trace=traceback.format_exc())
         except Exception as e:
             logging.warn(f"authentication failure: {e}")
             return make_error_response(
-                user_message="failed to authenticate",
+                user_message="authentication failure (unknown error)",
                 debug_message=str(e),
-                trace=traceback.format_exc()
-            )
+                trace=traceback.format_exc())
 
         return jsonify({
             "financial_data": [

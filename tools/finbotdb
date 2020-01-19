@@ -211,6 +211,23 @@ def hydrate_tool(settings, engine, session):
             accounts = json.loads(crypto.fernet_decrypt(af.read(), secret))["accounts"]
 
     providers = {
+        "amex_us": Provider(
+            id="amex_us",
+            description="American express (US)",
+            website_url="https://www.americanexpress.com/",
+            credentials_schema={
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "properties": {
+                    "user_id": {
+                        "type": "string",
+                    },
+                    "password": {
+                        "type": "string",
+                    }
+                }
+            }
+        ),
         "vanguard_uk": Provider(
             id="vanguard_uk",
             description="Vanguard Investors (UK)",
@@ -263,6 +280,27 @@ def hydrate_tool(settings, engine, session):
                     "passcode": {
                         "type": "string",
                         "pattern": r"\d{5}"
+                    },
+                    "memorable_word": {
+                        "type": "string"
+                    }
+                }
+            }
+        ),
+        "barclaycard": Provider(
+            id="barclaycard",
+            description="Barclaycard (UK)",
+            website_url="https://www.barclaycard.co.uk/personal/customer",
+            credentials_schema={
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "passcode": {
+                        "type": "string",
+                        "pattern": r"\d{6}"
                     },
                     "memorable_word": {
                         "type": "string"

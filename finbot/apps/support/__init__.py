@@ -46,6 +46,14 @@ def make_error_response(user_message, debug_message=None, trace=None):
     return jsonify({"error": make_error(user_message, debug_message, trace)})
 
 
+class Error(RuntimeError):
+    pass
+
+
+class ApplicationError(Error):
+    pass
+
+
 def generic_request_handler(func):
     @functools.wraps(func)
     def impl(*args, **kwargs):
@@ -55,11 +63,16 @@ def generic_request_handler(func):
                 response = func(*args, **kwargs)
                 logging.info("request processed successfully")
                 return response
+            except ApplicationError as e:
+                logging.warn(f"request processed with error: {e}\n{traceback.format_exc()}")
+                return make_error_response(
+                    user_message=str(e),
+                    debug_message=str(e),
+                    trace=traceback.format_exc())
             except Exception as e:
                 logging.warn(f"request processed with error: {e}\n{traceback.format_exc()}")
                 return make_error_response(
-                    user_message="system failure",
+                    user_message="operation failed (unknown error)",
                     debug_message=str(e),
-                    trace=traceback.format_exc()
-                )
+                    trace=traceback.format_exc())
     return impl

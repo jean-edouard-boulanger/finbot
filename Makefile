@@ -139,6 +139,7 @@ test-providers-debug:
 			--show-browser \
 			--pause-on-error \
 			--no-threadpool \
+			--developer-tools \
 			${TESTER_ACCOUNTS}
 
 test-providers:

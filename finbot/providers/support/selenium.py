@@ -2,8 +2,9 @@ from functools import wraps
 
 
 class DefaultBrowserFactory(object):
-    def __init__(self, headless=True):
+    def __init__(self, headless=True, developer_tools=False):
         self.headless = headless
+        self.developer_tools = developer_tools
 
     def __call__(self):
         from selenium.webdriver import Chrome
@@ -13,6 +14,8 @@ class DefaultBrowserFactory(object):
         opts.add_argument("--start-maximized")
         opts.add_argument("--disable-dev-shm-usage")
         opts.add_argument("--no-sandbox")
+        if self.developer_tools:
+            opts.add_argument("--auto-open-devtools-for-tabs")
         opts.headless = self.headless
         return Chrome(options=opts)
 
@@ -22,7 +25,7 @@ def _safe_cond(cond):
     def impl(*args, **kwargs):
         try:
             return cond(*args, **kwargs)
-        except Exception:
+        except Exception as e:
             return None
     return impl
 

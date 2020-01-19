@@ -5,7 +5,7 @@ from sqlalchemy import create_engine, text, desc, asc
 from sqlalchemy.orm import scoped_session, sessionmaker, joinedload, contains_eager
 from finbot.clients.finbot import FinbotClient
 from finbot.apps.appwsrv import timeseries
-from finbot.apps.support import generic_request_handler, Route
+from finbot.apps.support import generic_request_handler, Route, ApplicationError
 from finbot.core.utils import serialize, pretty_dump
 from finbot.core import crypto
 from finbot.core import dbutils
@@ -57,10 +57,6 @@ db_session = dbutils.add_persist_utilities(scoped_session(sessionmaker(bind=db_e
 
 app = Flask(__name__)
 CORS(app)
-
-
-class ApplicationError(RuntimeError):
-    pass
 
 
 @app.teardown_appcontext
@@ -219,34 +215,58 @@ def get_linked_accounts_valuation(user_account_id):
 @app.route(ACCOUNT.linked_accounts._, methods=["POST"])
 @generic_request_handler
 def link_to_external_account(user_account_id):
+    do_validate = bool(int(request.args.get("validate", 1)))
+    do_persist = bool(int(request.args.get("persist", 1)))
+    request_data = request.get_json()
+
+    logging.info(f"validate={do_validate} persist={do_persist}")
+
     user_account = (db_session.query(UserAccount)
                               .filter_by(id=user_account_id)
                               .first())
+
     if not user_account:
-        raise ApplicationError(f"could not find user account with id {user_account_id}")
+        raise ApplicationError(f"could not find user account with id '{user_account_id}'")
 
-    data = request.get_json()
-    finbot_client = FinbotClient(FINBOT_FINBOTWSRV_ENDPOINT)
+    provider_id = request_data["provider_id"]
+    provider = (db_session.query(Provider)
+                          .filter_by(id=provider_id)
+                          .first())
 
-    provider_id = data["provider_id"]
-    logging.info(f"validating authentication details for account {user_account_id} and provider {provider_id}")
+    if not provider:
+        raise ApplicationError(f"could not find provider with id '{provider_id}'")
 
-    finbot_response = finbot_client.get_financial_data(
-        provider=provider_id,
-        credentials_data=data["credentials"],
-        line_items=[])
+    if do_validate:
+        logging.info(f"validating authentication details for "
+                     f"account_id={user_account_id} and provider_id={provider_id}")
 
-    if "error" in finbot_response:
-        user_message = finbot_response["error"]["user_message"]
-        raise ApplicationError(f"unable to validate provided credentials: {user_message}")
+        finbot_client = FinbotClient(FINBOT_FINBOTWSRV_ENDPOINT)
+        finbot_response = finbot_client.get_financial_data(
+            provider=provider_id,
+            credentials_data=request_data["credentials"],
+            line_items=[])
 
-    with db_session.persist(user_account):
-        user_account.linked_accounts.append(
-            LinkedAccount(
-                provider_id=data["provider_id"],
-                account_name=data["account_name"],
-                encrypted_credentials=crypto.fernet_encrypt(
-                    json.dumps(data["credentials"]).encode(), SECRET).decode()))
+        if "error" in finbot_response:
+            user_message = finbot_response["error"]["user_message"]
+            raise ApplicationError(f"Unable to validate provided credentials ({user_message})")
+
+    if do_persist:
+        logging.info("Linking user account to external account")
+        with db_session.persist(user_account):
+            encrypted_credentials = crypto.fernet_encrypt(
+                json.dumps(request_data["credentials"]).encode(), SECRET).decode()
+            user_account.linked_accounts.append(
+                LinkedAccount(
+                    provider_id=request_data["provider_id"],
+                    account_name=request_data["account_name"],
+                    encrypted_credentials=encrypted_credentials))
+
+    return jsonify({
+        "result": {
+            "validated": do_validate,
+            "persisted": do_persist
+        }
+    })
 
 
 LINKED_ACCOUNT = ACCOUNT.linked_accounts.p("linked_account_id")
