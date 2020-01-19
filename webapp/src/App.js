@@ -9,6 +9,7 @@ import Col from 'react-bootstrap/Col';
 import Card from 'react-bootstrap/Card';
 import Chart from "react-apexcharts";
 import React from 'react';
+import BarLoader from "react-spinners/BarLoader";
 
 function formatRelChange(val) {
   if(val === null || val === undefined || val === 0.0) {
@@ -225,7 +226,7 @@ class App extends React.Component {
               <Card>
                 <Card.Body>
                   <Card.Title>Net Worth</Card.Title>
-                  {valuation === null ? "-" :
+                  {valuation === null ? <BarLoader color={"#F0F0F0"} /> :
                     <strong><Money className="text-info"
                                    amount={valuation.value} 
                                    locale={locale} 
@@ -237,7 +238,7 @@ class App extends React.Component {
               <Card>
                 <Card.Body>
                   <Card.Title>Liabilities</Card.Title>
-                    {valuation === null ? "-" :
+                    {valuation === null ? <BarLoader color={"#F0F0F0"} /> :
                       <strong><Money className="text-info"
                                      amount={valuation.total_liabilities} 
                                      locale={locale} 
@@ -249,7 +250,7 @@ class App extends React.Component {
               <Card>
                 <Card.Body>
                   <Card.Title>24h Change</Card.Title>
-                  {valuation  === null ? "-" : 
+                  {valuation  === null ? <BarLoader color={"#F0F0F0"} /> : 
                     <strong>{
                       formatRelChange(
                         getRelativeChange(
@@ -410,7 +411,7 @@ class App extends React.Component {
                     })
                   }
                 </tbody>
-                {valuation === null ? null :
+                {valuation === null ? <BarLoader color={"#F0F0F0"} /> :
                   <tfoot>
                     <tr>
                       <th>Totals</th>
