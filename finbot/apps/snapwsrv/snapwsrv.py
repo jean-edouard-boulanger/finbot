@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from flask import Flask, jsonify
 from sqlalchemy import create_engine
@@ -5,7 +6,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker, joinedload
 from copy import deepcopy
 from finbot.clients.finbot import FinbotClient, LineItem
 from finbot.core import crypto, utils, dbutils, fx
-from finbot.apps.support import generic_request_handler
+from finbot.apps.support import generic_request_handler, make_error
 from finbot.model import (
     UserAccount,
     UserAccountSnapshot,
@@ -16,6 +17,7 @@ from finbot.model import (
     SubAccountItemType,
     XccyRateSnapshotEntry
 )
+import traceback
 import logging.config
 import logging
 import os
@@ -25,7 +27,7 @@ import json
 logging.config.dictConfig({
     'version': 1,
     'formatters': {'default': {
-        'format': '%(asctime)s [%(levelname)s] %(message)s (%(filename)s:%(lineno)d)',
+        'format': '%(asctime)s (%(threadName)s) [%(levelname)s] %(message)s (%(filename)s:%(lineno)d)',
     }},
     'handlers': {'wsgi': {
         'class': 'logging.StreamHandler',
@@ -47,7 +49,6 @@ def load_secret(path):
 secret = load_secret(os.environ["FINBOT_SECRET_PATH"])
 db_engine = create_engine(os.environ['FINBOT_DB_URL'])
 db_session = dbutils.add_persist_utilities(scoped_session(sessionmaker(bind=db_engine)))
-finbot_client = FinbotClient(os.environ["FINBOT_FINBOTWSRV_ENDPOINT"])
 
 app = Flask(__name__)
 
@@ -212,28 +213,75 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
         sub_account_entry.items_entries.append(new_item)
 
 
+class AccountSnapshotRequest(object):
+    def __init__(self, account_id, provider_id, credentials_data, line_items):
+        self.account_id = account_id
+        self.provider_id = provider_id
+        self.credentials_data = credentials_data
+        self.line_items = line_items
+
+
+def dispatch_snapshot_entry(request: AccountSnapshotRequest):
+    try:
+        logging.info(f"starting snapshot for account_id={request.account_id}'"
+                    f" provider_id={request.provider_id}")
+
+        finbot_client = FinbotClient(os.environ["FINBOT_FINBOTWSRV_ENDPOINT"])
+        account_snapshot = finbot_client.get_financial_data(
+            provider=request.provider_id,
+            credentials_data=request.credentials_data,
+            line_items=request.line_items)
+
+        logging.info(f"snapshot complete for for account_id={request.account_id}'"
+                    f" provider_id={request.provider_id}")
+
+        return request, account_snapshot
+    except Exception as e:
+        trace = traceback.format_exc()
+        logging.warn(f"fatal error while taking snapshot for account_id={request.account_id}"
+                     f" provider_id={request.provider_id}"
+                     f" error: {e}"
+                     f" trace:\n{trace}")
+        return request, make_error(
+            user_message="error while taking account snapshot",
+            debug_message=str(e),
+            trace=trace)
+
+
 def take_raw_snapshot(user_account):
     raw_snapshot = []
-    for account in user_account.linked_accounts:
-        logging.info(f"taking snapshot for external account id '{account.id}' ({account.provider_id})")
-        snapshot_entry = finbot_client.get_financial_data(
-            provider=account.provider_id,
-            credentials_data=json.loads(
-                crypto.fernet_decrypt(
-                    account.encrypted_credentials.encode(),
-                    secret).decode()),
-            line_items=[
-                LineItem.Balances,
-                LineItem.Assets,
-                LineItem.Liabilities
-            ]
-        )
-        raw_snapshot.append({
-            "provider": account.provider_id,
-            "account_id": account.id,
-            "data": snapshot_entry
-        })
-    return raw_snapshot
+    finbot_client = FinbotClient(os.environ["FINBOT_FINBOTWSRV_ENDPOINT"])
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        logging.info("initializing accounts snapshot requests")
+        requests = [
+            AccountSnapshotRequest(
+                account_id=account.id,
+                provider_id=account.provider_id,
+                credentials_data=json.loads(
+                    crypto.fernet_decrypt(
+                        account.encrypted_credentials.encode(),
+                        secret).decode()),
+                line_items=[
+                    LineItem.Balances,
+                    LineItem.Assets,
+                    LineItem.Liabilities
+                ]
+            )
+            for account in user_account.linked_accounts
+        ]
+
+        logging.info(f"starting snapshot with {len(requests)} request(s)")
+        snapshot_entries = executor.map(dispatch_snapshot_entry, requests)
+        logging.info("complete snapshot taken")
+
+        return [
+            {
+                "provider": request.provider_id,
+                "account_id": request.account_id,
+                "data": account_snapshot
+            }
+            for request, account_snapshot in snapshot_entries
+        ]
 
 
 @app.route("/snapshot/<user_account_id>/take", methods=["POST"])

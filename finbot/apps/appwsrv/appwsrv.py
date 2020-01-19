@@ -27,7 +27,7 @@ import json
 import os
 
 
-logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+#logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 
 SECRET = open(os.environ["FINBOT_SECRET_PATH"], "r").read()
@@ -37,7 +37,7 @@ FINBOT_FINBOTWSRV_ENDPOINT = os.environ["FINBOT_FINBOTWSRV_ENDPOINT"]
 logging.config.dictConfig({
     'version': 1,
     'formatters': {'default': {
-        'format': '%(asctime)s [%(levelname)s] %(message)s (%(filename)s:%(lineno)d)',
+        'format': '%(asctime)s (%(threadName)s) [%(levelname)s] %(message)s (%(filename)s:%(lineno)d)',
     }},
     'handlers': {'wsgi': {
         'class': 'logging.StreamHandler',

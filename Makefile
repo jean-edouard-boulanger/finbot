@@ -7,6 +7,9 @@ $(info FINBOT_SECRET_PATH=${FINBOT_SECRET_PATH})
 export FINBOT_ACCOUNTS_PATH := $(if $(FINBOT_ACCOUNTS_PATH),$(FINBOT_ACCOUNTS_PATH),.secure/accounts)
 $(info FINBOT_ACCOUNTS_PATH=${FINBOT_ACCOUNTS_PATH})
 
+export FINBOT_DB_PORT := $(if $(FINBOT_DB_PORT),$(FINBOT_DB_PORT),5432)
+$(info FINBOT_DB_PORT=${FINBOT_DB_PORT})
+
 export FINBOT_DB_HOSTNAME := $(if $(FINBOT_DB_HOSTNAME),$(FINBOT_DB_HOSTNAME),127.0.0.1)
 $(info FINBOT_DB_HOSTNAME=${FINBOT_DB_HOSTNAME})
 
@@ -19,7 +22,7 @@ $(info FINBOT_DB_PASSWORD=${FINBOT_DB_PASSWORD})
 export FINBOT_DB_DBNAME := $(if $(FINBOT_DB_DBNAME),$(FINBOT_DB_DBNAME),finbot)
 $(info FINBOT_DB_DBNAME=${FINBOT_DB_DBNAME})
 
-export FINBOT_DB_URL := postgresql+psycopg2://${FINBOT_DB_USER}:${FINBOT_DB_PASSWORD}@${FINBOT_DB_HOSTNAME}/${FINBOT_DB_DBNAME}
+export FINBOT_DB_URL := postgresql+psycopg2://${FINBOT_DB_USER}:${FINBOT_DB_PASSWORD}@${FINBOT_DB_HOSTNAME}:${FINBOT_DB_PORT}/${FINBOT_DB_DBNAME}
 $(info FINBOT_DB_URL=${FINBOT_DB_URL})
 
 export FINBOT_FINBOTWSRV_ENDPOINT := $(if $(FINBOT_FINBOTWSRV_ENDPOINT),$(FINBOT_FINBOTWSRV_ENDPOINT),http://127.0.0.1:5001)
@@ -58,6 +61,7 @@ run-histwsrv-dev:
 		FLASK_ENV=development \
 		flask run \
 			--port 5002 \
+			--without-threads \
 			--extra-files 'finbot/**/*.py' \
 			-h 0.0.0.0
 
@@ -66,6 +70,7 @@ run-finbotwsrv-dev:
 		FLASK_ENV=development \
 		flask run \
 			--port 5001 \
+			--with-threads \
 			--extra-files 'finfinbot/**/*.py' \
 			-h 0.0.0.0
 
@@ -74,6 +79,7 @@ run-snapwsrv-dev:
 		FLASK_ENV=development \
 		flask run \
 			--port 5000 \
+			--without-threads \
 			--extra-files 'finbot/**/*.py' \
 			-h 0.0.0.0
 
@@ -82,6 +88,7 @@ run-appwsrv-dev:
 		FLASK_ENV=development \
 		flask run \
 			--port 5003 \
+			--without-threads \
 			--extra-files 'finbot/**/*.py' \
 			-h 0.0.0.0
 
