@@ -83,8 +83,7 @@ class Api(providers.SeleniumBased):
         for entry in _iter_accounts(self.browser):
             if entry["account"]["id"] == account_id:
                 entry["selenium"]["account_element_ref"].click()
-                return WebDriverWait(self.browser, 60).until(
-                    presence_of_element_located((By.CSS_SELECTOR, "section.balance-container")))
+                return self._wait_element(By.CSS_SELECTOR, "section.balance-container")
         raise Error(f"unable to switch to account {account_id}")
 
     def authenticate(self, credentials):
@@ -98,11 +97,10 @@ class Api(providers.SeleniumBased):
         browser.find_element_by_id("eliloPassword").send_keys(credentials.password)
         browser.find_element_by_id("loginSubmit").click()
 
-        WebDriverWait(self.browser, 60).until(
-            any_of(
-                presence_of_element_located((By.CSS_SELECTOR, "section.balance-container")),
-                get_loging_error
-            ))
+        self._wait().until(any_of(
+            presence_of_element_located((By.CSS_SELECTOR, "section.balance-container")),
+            get_loging_error
+        ))
 
         login_error = get_loging_error(browser)
         if login_error:

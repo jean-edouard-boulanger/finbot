@@ -73,21 +73,19 @@ class Api(providers.SeleniumBased):
     def _go_home(self):
         if not self._is_home():
             self.browser.get(CLASSIC_URL)
-        side_bar = WebDriverWait(self.browser, 60).until(
-            presence_of_element_located((By.CSS_SELECTOR, "div.m-lw-db-region-sidebar")))
-        WebDriverWait(self.browser, 60).until(balances_loaded)
+        side_bar = self._wait_element(By.CSS_SELECTOR, "div.m-lw-db-region-sidebar")
+        self._wait().until(balances_loaded)
 
     def authenticate(self, credentials):
         browser = self.browser
         browser.get(AUTH_URL)
-        login_block = WebDriverWait(browser, 60).until(
-            presence_of_element_located((By.CSS_SELECTOR, "div.m-lw-login-block")))
+        login_block = self._wait_element(By.CSS_SELECTOR, "div.m-lw-login-block")
         username_input, password_input, *_ = login_block.find_elements_by_tag_name("input")
         username_input.send_keys(credentials.username)
         password_input.send_keys(credentials.password)
         submit_button = browser.find_element_by_css_selector("button.form-submit")
         submit_button.click()
-        WebDriverWait(browser, 60).until(any_of(is_logged_in, has_error))
+        self._wait().until(any_of(is_logged_in, has_error))
         if not is_logged_in(browser):
             raise AuthFailure(get_error(browser))
 

@@ -1,11 +1,7 @@
 from copy import deepcopy
 from price_parser import Price
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support.expected_conditions import (
-    staleness_of, 
-    presence_of_element_located
-)
+from selenium.webdriver.support.expected_conditions import staleness_of
 from selenium.common.exceptions import StaleElementReferenceException
 from finbot.providers.support.selenium import any_of
 from finbot.providers.errors import AuthFailure
@@ -35,8 +31,7 @@ class has_login_error(object):
 
 
 class Session(object):
-    def __init__(self, is_auth=False, home_url=None, context_data=None):
-        self.is_authenticated = is_auth
+    def __init__(self, home_url=None, context_data=None):
         self.home_url = None
         self.account_data = None
 
@@ -75,9 +70,6 @@ class Api(providers.SeleniumBased):
             return
         self.browser.get(self.session.home_url)
 
-    def is_authenticated(self):
-        return self.session.is_authenticated
-
     def authenticate(self, credentials):
         def extract_accounts(context_data):
             accounts = []
@@ -92,24 +84,20 @@ class Api(providers.SeleniumBased):
                     })
             return accounts
 
-        assert not self.session.is_authenticated
         browser = self.browser
         browser.get(f"{BASE_URL}/Login")
-        auth_form = WebDriverWait(browser, 60).until(
-            presence_of_element_located((By.CSS_SELECTOR, "form.form-login")))
+        auth_form = self._wait_element(By.CSS_SELECTOR, "form.form-login")
         user_input, password_input, *_ = auth_form.find_elements_by_tag_name("input")
         user_input.send_keys(credentials.username)
         password_input.send_keys(credentials.password)
         (auth_form.find_element_by_class_name("submit")
                   .find_element_by_css_selector("button")
                   .click())
-        WebDriverWait(browser, 120).until(
-            any_of(
-                staleness_of(auth_form),
-                has_login_error(auth_form)))
+        self._wait().until(any_of(
+            staleness_of(auth_form),
+            has_login_error(auth_form)))
         if has_login_error(auth_form)(browser):
             raise AuthFailure(get_login_error(auth_form))
-        self.session.is_authenticated = True
         self.session.home_url = self.browser.current_url
         self.session.account_data = extract_accounts(json.loads(
             browser.find_element_by_xpath("//*[@data-available-context]")
@@ -130,11 +118,9 @@ class Api(providers.SeleniumBased):
                 "balance": balance.amount_float
             }
 
-        assert self.session.is_authenticated
         self._go_home()
         browser = self.browser
-        balances_table = WebDriverWait(browser, 60).until(
-            presence_of_element_located((By.CLASS_NAME, "table-multi-product")))
+        balances_table = self._wait_element(By.CLASS_NAME, "table-multi-product")
         balances_table_body = balances_table.find_element_by_tag_name("tbody")
         return {
             "accounts": [
@@ -186,11 +172,9 @@ class Api(providers.SeleniumBased):
         browser = self.browser
         assets_url = f"{BASE_URL}{account['home_url']}/Investments/Holdings"
         browser.get(assets_url)
-        toggle_switch = WebDriverWait(browser, 60).until(
-            presence_of_element_located((By.CSS_SELECTOR, "div.toggle-switch")))
+        toggle_switch = self._wait_element(By.CSS_SELECTOR, "div.toggle-switch")
         toggle_switch.find_element_by_css_selector("span.label-one").click()
-        investments_table = WebDriverWait(browser, 60).until(
-            presence_of_element_located((By.CSS_SELECTOR, "table.table-investments-detailed")))
+        investments_table = self._wait_element(By.CSS_SELECTOR, "table.table-investments-detailed")
         product_type = None
         all_assets = []
         for section in investments_table.find_elements_by_css_selector("tbody.group-content"):

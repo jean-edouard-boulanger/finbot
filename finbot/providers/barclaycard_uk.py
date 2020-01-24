@@ -2,7 +2,6 @@ from copy import deepcopy
 from price_parser import Price
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.expected_conditions import presence_of_element_located
 from finbot import providers
 from finbot.providers.support.selenium import any_of
@@ -47,7 +46,6 @@ class Api(providers.SeleniumBased):
 
     def authenticate(self, credentials):
         browser = self.browser
-
         browser.get(BARCLAYCARD_URL)
 
         logging.info("getting logging form")
@@ -76,7 +74,7 @@ class Api(providers.SeleniumBased):
         input2.send_keys(credentials.memorable_word[letter2_idx])
         browser.find_element_by_xpath("//button[@type='submit']").click()
 
-        WebDriverWait(browser, 60).until(any_of(
+        self._wait().until(any_of(
             presence_of_element_located((By.CSS_SELECTOR, "div.sitenav-select-account-link")),
             _get_login_error
         ))

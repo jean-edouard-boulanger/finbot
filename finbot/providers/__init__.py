@@ -47,5 +47,8 @@ class SeleniumBased(Base):
         return WebDriverWait(self.browser, timeout).until(
             presence_of_element_located((by, selector)))
 
+    def _wait(self, timeout=60):
+        return WebDriverWait(self.browser, timeout)
+
     def close(self):
         self.browser.quit()

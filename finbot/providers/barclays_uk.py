@@ -93,8 +93,7 @@ class Api(providers.SeleniumBased):
         browser.get(AUTH_URL)
 
         # Step 1: last name + card number
-        step1_form = WebDriverWait(browser, 60).until(
-            presence_of_element_located((By.NAME, "loginStep1")))
+        step1_form = self._wait_element(By.NAME, "loginStep1")
         step1_form.find_element_by_css_selector("input#surname0").send_keys(
             credentials.last_name)
         card_radio = step1_form.find_element_by_css_selector("input#radio-c2")
@@ -106,10 +105,9 @@ class Api(providers.SeleniumBased):
         passcode_button = WebDriverWait(browser, 60).until(_get_passcode_login_button)
         browser.execute_script("arguments[0].click();", passcode_button)
 
-        WebDriverWait(browser, 60).until(
-            any_of(
-                presence_of_element_located((By.ID, "passcode0")),
-                _get_error(browser)))
+        self._wait().until(any_of(
+            presence_of_element_located((By.ID, "passcode0")),
+            _get_error(browser)))
 
         error = _get_error(browser)
         if error is not None:

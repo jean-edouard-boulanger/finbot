@@ -1,13 +1,11 @@
 from copy import deepcopy
 from price_parser import Price
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support.expected_conditions import (
-    staleness_of,
-    presence_of_element_located
-)
+from selenium.webdriver.support.expected_conditions import staleness_of
 from finbot.providers.support.selenium import (
-    DefaultBrowserFactory, any_of, all_of, negate,
+    any_of, 
+    all_of, 
+    negate, 
     find_element_maybe
 )
 from finbot import providers
@@ -72,8 +70,7 @@ class Api(providers.SeleniumBased):
 
     def _go_home(self):
         self.browser.find_element_by_css_selector("a#bnc-compte-href").click()
-        WebDriverWait(self.browser, 60).until(
-            presence_of_element_located((By.CSS_SELECTOR, "table.ca-table")))
+        self._wait_element(By.CSS_SELECTOR, "table.ca-table")
 
     def _switch_account_with_selector(self, account_id, account_selector):
         for option in account_selector.find_elements_by_tag_name("option"):
@@ -95,8 +92,7 @@ class Api(providers.SeleniumBased):
             self._switch_account_with_selector(account_id, account_selector)
         else:
             self._switch_account_via_home(account_id)
-        return WebDriverWait(self.browser, 60).until(
-            presence_of_element_located((By.CSS_SELECTOR, "div.ca-forms")))
+        return self._wait_element(By.CSS_SELECTOR, "div.ca-forms")
 
     def authenticate(self, credentials):
         def map_keypad_buttons(keypad_table):
@@ -111,8 +107,7 @@ class Api(providers.SeleniumBased):
         browser = self.browser
         browser.get(BASE_URL)
         browser.find_element_by_id("acces_aux_comptes").find_element_by_tag_name("a").click()
-        keypad_table = WebDriverWait(browser, 60).until(
-            presence_of_element_located((By.CSS_SELECTOR, "table#pave-saisie-code")))
+        keypad_table = self._wait_element(By.CSS_SELECTOR, "table#pave-saisie-code")
         links_mapping = map_keypad_buttons(keypad_table)
         for digit in str(credentials.password):
             links_mapping[digit].click()
@@ -122,12 +117,13 @@ class Api(providers.SeleniumBased):
                                   .find_elements_by_tag_name("a")[1])
         root_area = browser.find_element_by_css_selector("div#container")
         submit_link.click()
-        WebDriverWait(browser, 60).until(
-            any_of(
-                _is_logged_in,
-                all_of(staleness_of(root_area), negate(_is_logged_in))))
+        self._wait().until(any_of(
+            _is_logged_in,
+            all_of(staleness_of(root_area), negate(_is_logged_in))))
+
         if not _is_logged_in(browser):
             raise AuthFailure()
+
         self.accounts = {
             entry["account"]["id"]: entry["account"]
             for entry in _iter_accounts(self.browser)

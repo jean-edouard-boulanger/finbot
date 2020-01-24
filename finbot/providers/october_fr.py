@@ -1,7 +1,5 @@
 from price_parser import Price
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support.expected_conditions import presence_of_element_located
 from finbot import providers
 from finbot.providers.support.selenium import (
     DefaultBrowserFactory,
@@ -61,23 +59,19 @@ class Api(providers.SeleniumBased):
 
     def _go_home(self):
         self.browser.get(PORTFOLIO_URL)
-        return WebDriverWait(self.browser, 60).until(
-            presence_of_element_located((By.CSS_SELECTOR, "div.summary")))
+        return self._wait_element(By.CSS_SELECTOR, "div.summary")
 
     def authenticate(self, credentials):
         browser = self.browser
         browser.get(AUTH_URL)
         app_area = browser.find_element_by_css_selector("div.container")
-        auth_area = WebDriverWait(browser, 60).until(
-            presence_of_element_located((By.TAG_NAME, "form")))
+        auth_area = self._wait_element(By.TAG_NAME, "form")
         email_input, password_input = auth_area.find_elements_by_tag_name("input")
         email_input.send_keys(credentials.username)
         password_input.send_keys(credentials.password)
-        actions_area = WebDriverWait(browser, 60).until(
-            presence_of_element_located((By.CSS_SELECTOR, "div.actions")))
+        actions_area = self._wait_element(By.CSS_SELECTOR, "div.actions")
         actions_area.find_element_by_css_selector("button.action-button").click()
-        WebDriverWait(browser, 60).until(
-            any_of(has_error, is_logged_in))
+        self._wait().until(any_of(has_error, is_logged_in))
         if not is_logged_in(browser):
             raise AuthFailure(get_error(browser))
 
@@ -132,8 +126,7 @@ class Api(providers.SeleniumBased):
 
         browser = self.browser
         browser.get(LOANS_URL)
-        table = WebDriverWait(browser, 60).until(
-            presence_of_element_located((By.CSS_SELECTOR, "div.investment-table")))
+        table = self._wait_element(By.CSS_SELECTOR, "div.investment-table")
         load_button = find_element_maybe(browser.find_elements_by_css_selector, "div.load-more")
         if load_button:
             load_button.click()
