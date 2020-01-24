@@ -56,7 +56,7 @@ class Api(providers.SeleniumBased):
         logging.info(f"providing username {credentials.user_name}")
         username_input = self._wait_element(By.XPATH, "//input[@name='usernameAndID']")
         username_input.send_keys(credentials.user_name)
-        browser.find_element_by_xpath("//button[@type='submit']").click()
+        self._find(By.XPATH, "//button[@type='submit']").click()
 
         # step 3: provide passcode
         logging.info(f"providing passcode")

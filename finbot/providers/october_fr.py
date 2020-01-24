@@ -3,8 +3,7 @@ from selenium.webdriver.common.by import By
 from finbot import providers
 from finbot.providers.support.selenium import (
     DefaultBrowserFactory,
-    any_of,
-    find_element_maybe
+    any_of
 )
 from finbot.providers.errors import AuthFailure
 
@@ -64,7 +63,7 @@ class Api(providers.SeleniumBased):
     def authenticate(self, credentials):
         browser = self.browser
         browser.get(AUTH_URL)
-        app_area = browser.find_element_by_css_selector("div.container")
+        app_area = self._find(By.CSS_SELECTOR, "div.container")
         auth_area = self._wait_element(By.TAG_NAME, "form")
         email_input, password_input = auth_area.find_elements_by_tag_name("input")
         email_input.send_keys(credentials.username)
@@ -127,7 +126,7 @@ class Api(providers.SeleniumBased):
         browser = self.browser
         browser.get(LOANS_URL)
         table = self._wait_element(By.CSS_SELECTOR, "div.investment-table")
-        load_button = find_element_maybe(browser.find_elements_by_css_selector, "div.load-more")
+        load_button = self._find_maybe(By.CSS_SELECTOR, "div.load-more")
         if load_button:
             load_button.click()
         return [

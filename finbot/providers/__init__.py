@@ -50,5 +50,17 @@ class SeleniumBased(Base):
     def _wait(self, timeout=60):
         return WebDriverWait(self.browser, timeout)
 
+    def _find(self, by, selector):
+        return self.browser.find_element(by, selector)
+
+    def _find_many(self, by, selector):
+        return self.browser.find_elements(by, selector)
+
+    def _find_maybe(self, by, selector):
+        all_elements = self._find_many(by, selector)
+        if not all_elements:
+            return None
+        return all_elements[0]
+
     def close(self):
         self.browser.quit()

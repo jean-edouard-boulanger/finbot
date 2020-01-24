@@ -5,8 +5,7 @@ from selenium.webdriver.support.expected_conditions import staleness_of
 from finbot.providers.support.selenium import (
     any_of, 
     all_of, 
-    negate, 
-    find_element_maybe
+    negate
 )
 from finbot import providers
 from finbot.providers.errors import AuthFailure
@@ -49,6 +48,17 @@ def _iter_accounts(browser):
         }
 
 
+def _map_keypad_buttons(keypad_table):
+    mapping = {}
+    for row in keypad_table.find_elements_by_tag_name("tr"):
+        for cell in row.find_elements_by_tag_name("td"):
+            link = cell.find_element_by_tag_name("a")
+            value = link.text.strip()
+            if len(value) > 0:
+                mapping[value] = link
+    return mapping
+
+
 class Credentials(object):
     def __init__(self, account_number, password):
         self.account_number = account_number
@@ -87,7 +97,7 @@ class Api(providers.SeleniumBased):
         raise RuntimeError(f"unable to find account {account_id}")
 
     def _switch_account(self, account_id):
-        account_selector = find_element_maybe(self.browser.find_elements_by_css_selector, "select#lstCpte")
+        account_selector = self._find_maybe(By.CSS_SELECTOR, "select#lstCpte")
         if account_selector:
             self._switch_account_with_selector(account_id, account_selector)
         else:
@@ -95,20 +105,11 @@ class Api(providers.SeleniumBased):
         return self._wait_element(By.CSS_SELECTOR, "div.ca-forms")
 
     def authenticate(self, credentials):
-        def map_keypad_buttons(keypad_table):
-            mapping = {}
-            for row in keypad_table.find_elements_by_tag_name("tr"):
-                for cell in row.find_elements_by_tag_name("td"):
-                    link = cell.find_element_by_tag_name("a")
-                    value = link.text.strip()
-                    if len(value) > 0:
-                        mapping[value] = link
-            return mapping
         browser = self.browser
         browser.get(BASE_URL)
         browser.find_element_by_id("acces_aux_comptes").find_element_by_tag_name("a").click()
         keypad_table = self._wait_element(By.CSS_SELECTOR, "table#pave-saisie-code")
-        links_mapping = map_keypad_buttons(keypad_table)
+        links_mapping = _map_keypad_buttons(keypad_table)
         for digit in str(credentials.password):
             links_mapping[digit].click()
         browser.find_element_by_name("CCPTE").send_keys(credentials.account_number)

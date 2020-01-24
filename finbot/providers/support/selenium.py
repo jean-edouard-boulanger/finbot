@@ -48,21 +48,10 @@ class all_of(object):
 
 class negate(object):
     def __init__(self, cond):
-        self.cond = cond
+        self.cond = _safe_cond(cond)
 
     def __call__(self, driver):
         return not(self.cond(driver))
-
-
-def dump_html(block):
-    return block.get_attribute("innerHTML")
-
-
-def find_element_maybe(plural_handler, *args, **kwargs):
-    elements = plural_handler(*args, **kwargs)
-    if len(elements) < 1:
-        return None
-    return elements[0]
 
 
 def get_cookies(browser):

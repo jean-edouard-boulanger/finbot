@@ -89,13 +89,12 @@ class Api(providers.SeleniumBased):
     def authenticate(self, credentials):
         browser = self.browser
         browser.get(AUTH_URL)
-        cookies_mask = WebDriverWait(browser, 60).until(
-            presence_of_element_located((By.ID, "euc_mask")))
+        cookies_mask = self._wait_element(By.ID, "euc_mask")
         cookies_mask.click()
 
-        browser.find_element_by_id("eliloUserID").send_keys(credentials.user_id)
-        browser.find_element_by_id("eliloPassword").send_keys(credentials.password)
-        browser.find_element_by_id("loginSubmit").click()
+        self._find(By.ID, "eliloUserID").send_keys(credentials.user_id)
+        self._find(By.ID, "eliloPassword").send_keys(credentials.password)
+        self._find(By.ID, "loginSubmit").click()
 
         self._wait().until(any_of(
             presence_of_element_located((By.CSS_SELECTOR, "section.balance-container")),

@@ -83,7 +83,7 @@ class Api(providers.SeleniumBased):
         username_input, password_input, *_ = login_block.find_elements_by_tag_name("input")
         username_input.send_keys(credentials.username)
         password_input.send_keys(credentials.password)
-        submit_button = browser.find_element_by_css_selector("button.form-submit")
+        submit_button = self._find(By.CSS_SELECTOR, "button.form-submit")
         submit_button.click()
         self._wait().until(any_of(is_logged_in, has_error))
         if not is_logged_in(browser):
@@ -102,13 +102,12 @@ class Api(providers.SeleniumBased):
                 "balance": amount.amount_float
             }
         self._go_home()
-        browser = self.browser
         return {
             "accounts": [
                 extract_balance(account_id, block) for (account_id, block) in [
-                    ("wallet", browser.find_element_by_css_selector("div.lw-card-wallet")),
-                    ("offers", browser.find_element_by_css_selector("div.lw-card-queue")),
-                    ("loan", browser.find_element_by_css_selector("div.lw-card-loan"))
+                    ("wallet", self._find(By.CSS_SELECTOR, "div.lw-card-wallet")),
+                    ("offers", self._find(By.CSS_SELECTOR, "div.lw-card-queue")),
+                    ("loan", self._find(By.CSS_SELECTOR, "div.lw-card-loan"))
                 ]
             ]
         }
@@ -119,9 +118,9 @@ class Api(providers.SeleniumBased):
     def _get_wallet_assets(self):
         self._go_home()
         browser = self.browser
-        amount_str = (browser.find_element_by_css_selector("div.lw-card-wallet")
-                             .find_element_by_css_selector("div.lw-amount")
-                             .text.strip())
+        amount_str = (self._find(By.CSS_SELECTOR, "div.lw-card-wallet")
+                          .find_element_by_css_selector("div.lw-amount")
+                          .text.strip())
         return [{
             "name": "cash",
             "type": "currency",
@@ -132,9 +131,9 @@ class Api(providers.SeleniumBased):
     def _get_offers_assets(self):
         self._go_home()
         browser = self.browser
-        amount_str = (browser.find_element_by_css_selector("div.lw-card-queue")
-                             .find_element_by_css_selector("div.lw-amount")
-                             .text.strip())
+        amount_str = (self._find(By.CSS_SELECTOR, "div.lw-card-queue")
+                          .find_element_by_css_selector("div.lw-amount")
+                          .text.strip())
         return [{
             "name": "cash",
             "type": "currency",
