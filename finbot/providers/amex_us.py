@@ -113,7 +113,7 @@ class Api(providers.SeleniumBased):
             for entry in _iter_accounts(browser)
         }
 
-    def get_balances(self, account_ids=None):
+    def get_balances(self):
         accounts = []
         for account_id, account in self.accounts.items():
             balance = _get_balance(self._switch_account(account_id))
@@ -124,7 +124,7 @@ class Api(providers.SeleniumBased):
 
         return {"accounts": accounts}
 
-    def get_liabilities(self, account_ids=None):
+    def get_liabilities(self):
         return {
             "accounts": [
                 {
@@ -135,6 +135,6 @@ class Api(providers.SeleniumBased):
                         "value": entry["balance"]
                     }]
                 }
-                for entry in self.get_balances(account_ids)["accounts"]
+                for entry in self.get_balances()["accounts"]
             ]
         }

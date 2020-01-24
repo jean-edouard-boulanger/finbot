@@ -133,7 +133,7 @@ class Api(providers.SeleniumBased):
             for entry in _iter_accounts(accounts_area)
         }
 
-    def get_balances(self, account_ids=None):
+    def get_balances(self):
         accounts_area = _go_home(self.browser)
         return {
             "accounts": [
@@ -142,11 +142,10 @@ class Api(providers.SeleniumBased):
                     "balance": account["balance"]
                 }
                 for account in _iter_accounts(accounts_area)
-                if account_ids is None or account["account"]["id"] in account_ids
             ]
         }
 
-    def get_assets(self, account_ids=None):
+    def get_assets(self):
         return {
             "accounts": [
                 {
@@ -157,6 +156,6 @@ class Api(providers.SeleniumBased):
                         "value": entry["balance"]
                     }]
                 }
-                for entry in self.get_balances(account_ids)["accounts"]
+                for entry in self.get_balances()["accounts"]
             ]
         }

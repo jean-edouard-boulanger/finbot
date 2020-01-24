@@ -27,7 +27,7 @@ class Api(providers.Base):
     def authenticate(self, *args, **kwargs):
         pass
 
-    def get_balances(self, *args, **kwargs):
+    def get_balances(self):
         return {
             "accounts": [
                 {
@@ -37,7 +37,7 @@ class Api(providers.Base):
             ]
         }
 
-    def get_assets(self, *args, **kwargs):
+    def get_assets(self):
         return {
             "accounts": [
                 {

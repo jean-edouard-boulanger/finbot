@@ -91,7 +91,7 @@ class Api(providers.SeleniumBased):
         if not is_logged_in(browser):
             raise AuthFailure(get_error(browser))
 
-    def get_balances(self, account_ids=None):
+    def get_balances(self):
         def extract_balance(account_id, account_block):
             amount_element = account_block.find_element_by_css_selector("div.lw-amount")
             amount = Price.fromstring(amount_element.text.strip())
@@ -103,7 +103,6 @@ class Api(providers.SeleniumBased):
                 },
                 "balance": amount.amount_float
             }
-        validate_accounts(account_ids)
         self._go_home()
         browser = self.browser
         return {
@@ -113,12 +112,10 @@ class Api(providers.SeleniumBased):
                     ("offers", browser.find_element_by_css_selector("div.lw-card-queue")),
                     ("loan", browser.find_element_by_css_selector("div.lw-card-loan"))
                 ]
-                if account_ids is None or account_id in account_ids
             ]
         }
 
-    def get_transactions(self, account_ids=None):
-        validate_accounts(account_ids)
+    def get_transactions(self):
         return {"transactions": []}
 
     def _get_wallet_assets(self):
@@ -165,8 +162,7 @@ class Api(providers.SeleniumBased):
             for row in all_data
         ]
 
-    def get_assets(self, account_ids=None):
-        validate_accounts(account_ids)
+    def get_assets(self):
         return {
             "accounts": [
                 {
@@ -182,6 +178,5 @@ class Api(providers.SeleniumBased):
                     ("offers", self._get_offers_assets),
                     ("loan", self._get_loan_assets)
                 ]
-                if account_ids is None or account_id in account_ids
             ]
         }

@@ -143,7 +143,7 @@ class Api(providers.SeleniumBased):
             ]
         }
 
-    def get_transactions(self, account_ids=None):
+    def get_transactions(self):
         return {"accounts": []}
 
     def _get_assets_for_account(self, account):
@@ -207,11 +207,10 @@ class Api(providers.SeleniumBased):
             "assets": all_assets
         }
 
-    def get_assets(self, account_ids=None):
+    def get_assets(self):
         return {
             "accounts": [
                 self._get_assets_for_account(account)
                 for account in self.session.account_data
-                if account_ids is None or account["id"] in account_ids
             ]
         }

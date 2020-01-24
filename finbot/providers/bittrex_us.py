@@ -63,7 +63,7 @@ class Api(providers.Base):
         if not results["success"]:
             raise AuthFailure(results["message"])
 
-    def get_balances(self, *args, **kwargs):
+    def get_balances(self):
         balance = sum(value for (_, _, value) in self._iter_balances())
         return {
             "accounts": [
@@ -74,7 +74,7 @@ class Api(providers.Base):
             ]
         }
 
-    def get_assets(self, *args, **kwargs):
+    def get_assets(self):
         return {
             "accounts": [
                 {

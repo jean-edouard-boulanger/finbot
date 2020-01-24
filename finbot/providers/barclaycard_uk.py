@@ -94,7 +94,7 @@ class Api(providers.SeleniumBased):
             "iso_currency": "GBP"
         }
 
-    def get_balances(self, account_ids=None):
+    def get_balances(self):
         browser = self.browser
         balance_area = self._wait_element(By.CSS_SELECTOR, "div.current-balance")
         balance_amount_str = balance_area.find_element_by_css_selector("span.value").text.strip()
@@ -108,7 +108,7 @@ class Api(providers.SeleniumBased):
             ]
         }
 
-    def get_liabilities(self, account_ids=None):
+    def get_liabilities(self):
         return {
             "accounts": [
                 {
@@ -119,6 +119,6 @@ class Api(providers.SeleniumBased):
                         "value": entry["balance"]
                     }]
                 }
-                for entry in self.get_balances(account_ids)["accounts"]
+                for entry in self.get_balances()["accounts"]
             ]
         }

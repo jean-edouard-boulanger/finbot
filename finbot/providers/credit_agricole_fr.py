@@ -17,20 +17,20 @@ from finbot.providers.errors import AuthFailure
 BASE_URL = "https://www.ca-cb.fr/"
 
 
-def is_logged_in(browser):
+def _is_logged_in(browser):
     account_button = browser.find_elements_by_css_selector("li#bnc-compte")
     return len(account_button) > 0 
 
 
-def get_account_rows(browser):
+def _get_account_rows(browser):
     ca_table = browser.find_element_by_css_selector("table.ca-table")
     even_rows = ca_table.find_elements_by_css_selector("tr.colcellignepaire")
     odd_rows = ca_table.find_elements_by_css_selector("tr.colcelligneimpaire")
     return even_rows + odd_rows
 
 
-def iter_accounts(browser):
-    for row in get_account_rows(browser):
+def _iter_accounts(browser):
+    for row in _get_account_rows(browser):
         cells = row.find_elements_by_tag_name("td")
         account_name = cells[0].find_element_by_tag_name("a").text.strip()
         account_id_link = cells[2].find_element_by_tag_name("a")
@@ -84,7 +84,7 @@ class Api(providers.SeleniumBased):
 
     def _switch_account_via_home(self, account_id):
         self._go_home()
-        for account_entry in iter_accounts(self.browser):
+        for account_entry in _iter_accounts(self.browser):
             if account_entry["account"]["id"] == account_id:
                 return account_entry["selenium"]["link_element"].click()
         raise RuntimeError(f"unable to find account {account_id}")
@@ -97,25 +97,6 @@ class Api(providers.SeleniumBased):
             self._switch_account_via_home(account_id)
         return WebDriverWait(self.browser, 60).until(
             presence_of_element_located((By.CSS_SELECTOR, "div.ca-forms")))
-
-    def _is_valid_account(self, account_id):
-        return account_id in self.accounts
-
-    def _validate_accounts(self, account_ids):
-        if account_ids is None:
-            return
-        for account_id in account_ids:
-            if account_id not in self.accounts:
-                raise RuntimeError(f"unknown account {account_id}")
-
-    def _iter_accounts(self, account_ids=None):
-        if account_ids is None:
-            for account_id, account in self.accounts.items():
-                yield account_id, account
-            return
-        self._validate_accounts(account_ids)
-        for account_id in account_ids:
-            yield account_id, self.accounts[account_id]
 
     def authenticate(self, credentials):
         def map_keypad_buttons(keypad_table):
@@ -143,21 +124,16 @@ class Api(providers.SeleniumBased):
         submit_link.click()
         WebDriverWait(browser, 60).until(
             any_of(
-                is_logged_in,
-                all_of(staleness_of(root_area), negate(is_logged_in))))
-        if not is_logged_in(browser):
+                _is_logged_in,
+                all_of(staleness_of(root_area), negate(_is_logged_in))))
+        if not _is_logged_in(browser):
             raise AuthFailure()
         self.accounts = {
             entry["account"]["id"]: entry["account"]
-            for entry in iter_accounts(self.browser)
+            for entry in _iter_accounts(self.browser)
         }
 
     def get_balances(self, account_ids=None):
-        def include_account(account_entry, account_ids):
-            if account_ids is None:
-                return True
-            return account_entry["account"]["id"] in account_ids
-        self._validate_accounts(account_ids)
         self._go_home()
         return {
             "accounts": [
@@ -165,12 +141,11 @@ class Api(providers.SeleniumBased):
                     "account": deepcopy(entry["account"]),
                     "balance": entry["balance"]
                 }
-                for entry in iter_accounts(self.browser)
-                if include_account(entry, account_ids)
+                for entry in _iter_accounts(self.browser)
             ]
         }
 
-    def get_assets(self, account_ids=None):
+    def get_assets(self):
         return {
             "accounts": [
                 {
@@ -181,6 +156,6 @@ class Api(providers.SeleniumBased):
                         "value": entry["balance"],
                     }]
                 }
-                for entry in self.get_balances(account_ids)["accounts"]
+                for entry in self.get_balances()["accounts"]
             ]
         }

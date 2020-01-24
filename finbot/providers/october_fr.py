@@ -58,7 +58,6 @@ class Credentials(object):
 class Api(providers.SeleniumBased):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.logged_in = False
 
     def _go_home(self):
         self.browser.get(PORTFOLIO_URL)
@@ -66,7 +65,6 @@ class Api(providers.SeleniumBased):
             presence_of_element_located((By.CSS_SELECTOR, "div.summary")))
 
     def authenticate(self, credentials):
-        assert not self.logged_in
         browser = self.browser
         browser.get(AUTH_URL)
         app_area = browser.find_element_by_css_selector("div.container")
@@ -82,10 +80,8 @@ class Api(providers.SeleniumBased):
             any_of(has_error, is_logged_in))
         if not is_logged_in(browser):
             raise AuthFailure(get_error(browser))
-        self.logged_in = True
 
     def get_balances(self):
-        assert self.logged_in
         summary_area = self._go_home()
         loan_amount, cash_amount = get_accounts_amount(summary_area)
         return {
@@ -146,7 +142,7 @@ class Api(providers.SeleniumBased):
             for row in table.find_elements_by_css_selector("ul.entry")
         ]
 
-    def get_assets(self, account_ids=None):
+    def get_assets(self):
         return {
             "accounts": [
                 {
@@ -161,6 +157,5 @@ class Api(providers.SeleniumBased):
                     ("cash", self._get_cash_assets),
                     ("loan", self._get_loan_assets)
                 ]
-                if account_ids is None or account_id in account_ids
             ]
         }

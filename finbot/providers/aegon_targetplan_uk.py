@@ -156,7 +156,7 @@ class Api(providers.SeleniumBased):
                 pass
         raise RuntimeError(f"unable to login after {trials} trials")
 
-    def get_balances(self, account_ids=None):
+    def get_balances(self):
         self._go_home()
         accounts_elements = _wait_accounts(self.browser)
         return {
@@ -169,7 +169,7 @@ class Api(providers.SeleniumBased):
             ]
         }
 
-    def get_assets(self, account_ids=None):
+    def get_assets(self):
         accounts = []
         for account_id, account in self.accounts.items():
             self._switch_account(account_id)

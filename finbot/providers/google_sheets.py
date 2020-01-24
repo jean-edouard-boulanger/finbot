@@ -222,7 +222,7 @@ class Api(providers.Base):
                 credentials.google_api_credentials, scope))
         self.sheet = self.api.open_by_key(credentials.sheet_key)
 
-    def get_balances(self, account_ids=None):
+    def get_balances(self):
         return {
             "accounts": [
                 {
@@ -237,7 +237,7 @@ class Api(providers.Base):
             ]
         }
 
-    def get_assets(self, account_ids=None):
+    def get_assets(self):
         return {
             "accounts": [
                 {

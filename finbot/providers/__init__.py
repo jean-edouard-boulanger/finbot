@@ -16,17 +16,17 @@ class Base(object):
         """
         pass
 
-    def get_balances(self, account_ids=None):
+    def get_balances(self):
         """
         """
         return {"accounts": []}
 
-    def get_assets(self, account_ids=None):
+    def get_assets(self):
         """
         """
         return {"accounts": []}
 
-    def get_liabilities(self, account_ids=None):
+    def get_liabilities(self):
         """
         """
         return {"accounts": []}
