@@ -17,7 +17,8 @@ class DefaultBrowserFactory(object):
         if self.developer_tools:
             opts.add_argument("--auto-open-devtools-for-tabs")
         opts.headless = self.headless
-        return Chrome(options=opts)
+        driver = Chrome(options=opts)
+        return driver
 
 
 def _safe_cond(cond):

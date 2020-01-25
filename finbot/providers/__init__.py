@@ -31,6 +31,11 @@ class Base(object):
         """
         return {"accounts": []}
 
+    def get_transactions(self):
+        """
+        """
+        return {"accounts": []}
+
     def close(self):
         """ Implement to release any used resource at the end of the session
         """
@@ -61,6 +66,9 @@ class SeleniumBased(Base):
         if not all_elements:
             return None
         return all_elements[0]
+
+    def _click_js(self, element):
+        self.browser.execute_script("arguments[0].click();", element)
 
     def close(self):
         self.browser.quit()

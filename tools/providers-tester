@@ -5,6 +5,8 @@ from multiprocessing.pool import ThreadPool
 from finbot.providers.support.selenium import DefaultBrowserFactory
 from finbot.providers.factory import get_provider
 from finbot.core import crypto, fx
+from finbot.core.utils import pretty_dump
+from datetime import datetime, timedelta
 import functools
 import traceback
 import argparse
@@ -13,10 +15,6 @@ import sys
 import json
 import terminaltables
 import time
-
-
-def json_dumps(data):
-    return json.dumps(data, indent=4)
 
 
 @functools.lru_cache(128)
@@ -92,10 +90,19 @@ def fetch_balances(settings, browser_factory, account):
 
             provider_data = ProviderData(name=provider.description)
 
+            txn_to_date = datetime.now()
+            txn_from_date = (txn_to_date - timedelta(days=7))
+            logging.info(f"[{provider.description}] fetching transactions" 
+                         f"from {txn_from_date.date().isoformat()} to {txn_to_date.date().isoformat()}")
+            transactions = api.get_transactions(txn_from_date, txn_to_date)
+            if settings.dump_transactions:
+                logging.info(f"[{provider.description}] transactions {pretty_dump(transactions)}")
+            logging.info(f"[{provider.description}] fetching transactions - done")
+
             logging.info(f"[{provider.description}] fetching balances")
             balances = api.get_balances()
             if settings.dump_balances:
-                logging.info(f"[{provider.description}] balances {json_dumps(balances)}")
+                logging.info(f"[{provider.description}] balances {pretty_dump(balances)}")
             for entry in balances["accounts"]:
                 account = entry["account"]
                 account_data = AccountData(
@@ -107,7 +114,7 @@ def fetch_balances(settings, browser_factory, account):
             logging.info(f"[{provider.description}] fetching assets")
             assets = api.get_assets()
             if settings.dump_assets:
-                logging.info(f"[{provider.description}] assets {json_dumps(assets)}")
+                logging.info(f"[{provider.description}] assets {pretty_dump(assets)}")
             for entry in assets["accounts"]:
                 account = entry["account"]
                 account_data = provider_data.accounts[account["id"]]
@@ -121,7 +128,7 @@ def fetch_balances(settings, browser_factory, account):
             logging.info(f"[{provider.description}] fetching liabilities")
             liabilities = api.get_liabilities()
             if settings.dump_liabilities:
-                logging.info(f"[{provider.description}] liabilities {json_dumps(liabilities)}")
+                logging.info(f"[{provider.description}] liabilities {pretty_dump(liabilities)}")
             logging.info(f"[{provider.description}] fetching liabilities - done")
 
             return provider_data
@@ -150,6 +157,7 @@ def create_arguments_parser():
     parser.add_argument("--dump-balances", action="store_true", default=False)
     parser.add_argument("--dump-assets", action="store_true", default=False)
     parser.add_argument("--dump-liabilities", action="store_true", default=False)
+    parser.add_argument("--dump-transactions", action="store_true", default=False)
     parser.add_argument("--accounts-file", required=True)
     parser.add_argument("--show-browser", action="store_false", default=True, dest="headless")
     parser.add_argument("--no-threadpool", action="store_false", default=True, dest="threadpool")
