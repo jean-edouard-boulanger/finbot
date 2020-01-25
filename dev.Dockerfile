@@ -1,17 +1,20 @@
 FROM ubuntu:latest
 
-RUN apt-get upgrade
-
 RUN apt-get update
 
 RUN apt-get install -y \
     curl \
     python3.7 \
+    python3.7-dev \
     python3-pip \
     unzip \
+    vim \
+    less \
     xvfb \
     libxi6 \
-    libgconf-2-4
+    libgconf-2-4 \
+    postgresql-client \
+    libpq-dev
 
 RUN python3.7 -m pip install --upgrade pip
 
@@ -27,6 +30,25 @@ RUN wget -O /tmp/chromedriver_linux64.zip https://chromedriver.storage.googleapi
     chown root:root /usr/bin/chromedriver && \
     chmod +x /usr/bin/chromedriver
 
-COPY requirements.txt /tmp/requirements.txt
+RUN pip3 install \
+    requests \
+    cryptography \
+    cffi \
+    flask \
+    flask-cors \
+    psycopg2 \
+    sqlalchemy \
+    pytz \
+    selenium \
+    terminaltables \
+    price-parser \
+    krakenex \
+    python-bittrex \
+    pycoingecko \
+    gspread \
+    oauth2client \
+    iso4217parse \
+    pandas \
+    schedule
 
-RUN pip3 install -r /tmp/requirements.txt
+ENTRYPOINT ["/bin/bash"]

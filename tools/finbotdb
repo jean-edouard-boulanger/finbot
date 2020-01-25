@@ -497,6 +497,7 @@ def setup_add_account_subparser(parser):
 
 def create_parser():
     parser = argparse.ArgumentParser(prog='finbotdb utility')
+    parser.add_argument("--database", type=str, required=True)
     subparsers = parser.add_subparsers(help='tools')
     for tool_name, tool in all_tools.items():
         subparser = subparsers.add_parser(tool_name, help=tool["description"])
@@ -535,7 +536,7 @@ def main():
     if not hasattr(settings, "tool_name"):
         parser.print_usage()
         return
-    db_engine = create_engine('postgresql+psycopg2://finbot:finbot@127.0.0.1/finbot')
+    db_engine = create_engine(settings.database)
     db_session = sessionmaker(bind=db_engine)()
     return all_tools[settings.tool_name]["handler"](settings, db_engine, db_session)
 

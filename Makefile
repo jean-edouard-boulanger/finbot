@@ -10,7 +10,7 @@ export FINBOT_DB_URL := postgresql+psycopg2://${FINBOT_DB_USER}:${FINBOT_DB_PASS
 export FINBOT_FINBOTWSRV_ENDPOINT ?= http://127.0.0.1:5001
 export FINBOT_SNAPWSRV_ENDPOINT ?= http://127.0.0.1:5000
 export FINBOT_HISTWSRV_ENDPOINT ?= http://127.0.0.1:5002
-export FINBOT_EDIT_CMD ?= code --wait
+export FINBOT_EDIT_CMD ?= vim
 export FINBOT_SELECTED_USER ?= 1
 
 info:
@@ -165,21 +165,23 @@ edit-account:
 	rm .accounts.tmp.json
 
 finbotdb-build:
-	tools/finbotdb build
+	tools/finbotdb --database ${FINBOT_DB_URL} build
 
 finbotdb-destroy:
-	tools/finbotdb destroy
+	tools/finbotdb --database ${FINBOT_DB_URL} destroy
 
 finbotdb-rebuild:
-	tools/finbotdb destroy && tools/finbotdb build
+	tools/finbotdb --database ${FINBOT_DB_URL} destroy && \
+	tools/finbotdb --database ${FINBOT_DB_URL} build
 
 finbotdb-hydrate:
-	tools/finbotdb hydrate
+	tools/finbotdb --database ${FINBOT_DB_URL} hydrate
 
 finbotdb-add-account:
-	tools/finbotdb add-account \
+	tools/finbotdb --database ${FINBOT_DB_URL}  add-account \
 		--secret ${FINBOT_SECRET_PATH} \
 		--account ${FINBOT_ACCOUNT_PATH}
 
 finbotdb-psql:
-	env PGPASSWORD=finbot psql -h 127.0.0.1 -U finbot -d finbot
+	env PGPASSWORD=${FINBOT_DB_PASSWORD} \
+		psql -h ${FINBOT_DB_HOSTNAME} -U ${FINBOT_DB_USER} -d ${FINBOT_DB_DBNAME}

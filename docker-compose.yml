@@ -102,6 +102,7 @@ services:
 
   webapp:
     image: "node:13-alpine3.10"
+    container_name: webapp
     volumes:
       - ./webapp:/webapp
     working_dir: /webapp
@@ -110,6 +111,20 @@ services:
       - "5005:5005"
     environment:
       REACT_APP_SELECTED_USER: 1
+
+  dev:
+    build:
+      context: .
+      dockerfile: dev.Dockerfile
+    container_name: dev
+    working_dir: /finbot
+    command: sleep infinity
+    stdin_open: true
+    tty: true
+    volumes:
+      - .:/finbot
+    environment:
+      FINBOT_DB_HOSTNAME: finbotdb
 
 volumes:
     .finbotdb:

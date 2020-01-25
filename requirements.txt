@@ -1,8 +1,0 @@
-selenium
-terminaltables
-price-parser
-flask
-requests
-cryptography
-cffi
-psycopg2
