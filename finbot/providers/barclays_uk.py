@@ -150,7 +150,6 @@ class Api(providers.SeleniumBased):
             cells = header_row.find_elements_by_tag_name("div.th")
             _, date_cell, desc_cell, in_cell, out_cell, bal_cell = cells
             txn_date = datetime.strptime(date_cell.text.strip(), "%a, %d %b %y")
-            print(txn_date)
             if not date_in_range(txn_date, from_date, to_date):
                 continue
             txn_in_amount = Price.fromstring(in_cell.text.strip()).amount_float

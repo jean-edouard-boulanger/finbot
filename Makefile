@@ -10,7 +10,7 @@ export FINBOT_DB_URL := postgresql+psycopg2://${FINBOT_DB_USER}:${FINBOT_DB_PASS
 export FINBOT_FINBOTWSRV_ENDPOINT ?= http://127.0.0.1:5001
 export FINBOT_SNAPWSRV_ENDPOINT ?= http://127.0.0.1:5000
 export FINBOT_HISTWSRV_ENDPOINT ?= http://127.0.0.1:5002
-export FINBOT_CCY ?= EUR
+export FINBOT_EDIT_CMD ?= code --wait
 
 info:
 	$(info PYTHONPATH=${PYTHONPATH})
@@ -25,7 +25,6 @@ info:
 	$(info FINBOT_FINBOTWSRV_ENDPOINT=${FINBOT_FINBOTWSRV_ENDPOINT})
 	$(info FINBOT_SNAPWSRV_ENDPOINT=${FINBOT_SNAPWSRV_ENDPOINT})
 	$(info FINBOT_HISTWSRV_ENDPOINT=${FINBOT_HISTWSRV_ENDPOINT})
-	$(info FINBOT_CCY=${FINBOT_CCY})
 
 alembic-gen:
 	alembic revision --autogenerate -m "${message}"
@@ -110,7 +109,6 @@ test-providers-docker:
 		--rm -it \
 		finbot/providers-tester:latest \
 		tools/providers-tester \
-			--currency ${FINBOT_CCY} \
 			--dump-balances --dump-assets --dump-liabilities --dump-transactions \
 			--secret-file ${FINBOT_SECRET_PATH} \
 			--accounts-file ${FINBOT_ACCOUNTS_PATH} \
@@ -118,7 +116,6 @@ test-providers-docker:
 
 test-providers-debug:
 	tools/providers-tester \
-			--currency ${FINBOT_CCY} \
 			--dump-balances --dump-assets --dump-liabilities --dump-transactions \
 			--secret-file ${FINBOT_SECRET_PATH} \
 			--accounts-file ${FINBOT_ACCOUNTS_PATH} \
@@ -130,7 +127,6 @@ test-providers-debug:
 
 test-providers:
 	tools/providers-tester \
-			--currency ${FINBOT_CCY} \
 			--secret-file ${FINBOT_SECRET_PATH} \
 			--accounts-file ${FINBOT_ACCOUNTS_PATH} \
 			${TESTER_ACCOUNTS}
@@ -169,7 +165,7 @@ edit-accounts:
 		-k ${FINBOT_SECRET_PATH} \
 		-i ${FINBOT_ACCOUNTS_PATH} > .accounts.tmp.json && \
 	chmod 600 .accounts.tmp.json && \
-	vim .accounts.tmp.json && \
+	${FINBOT_EDIT_CMD} .accounts.tmp.json && \
 	tools/crypt \
 		fernet-encrypt \
 		-k ${FINBOT_SECRET_PATH} \
@@ -193,4 +189,3 @@ finbotdb-hydrate:
 
 finbotdb-psql:
 	env PGPASSWORD=finbot psql -h 127.0.0.1 -U finbot -d finbot
-

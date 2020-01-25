@@ -163,7 +163,6 @@ def create_arguments_parser():
     parser.add_argument("--no-threadpool", action="store_false", default=True, dest="threadpool")
     parser.add_argument("--pause-on-error", action="store_true", default=False, dest="pause_on_error")
     parser.add_argument("--developer-tools", action="store_true", default=False, dest="developer_tools")
-    parser.add_argument("--currency", type=str, default="GBP")
     return parser
 
 
@@ -180,13 +179,13 @@ def main():
     with open(settings.secret_file, "rb") as secret_file:
         secret = secret_file.read()
         with open(settings.accounts_file, "rb") as accounts_file:
-            all_accounts = json.loads(
-                crypto.fernet_decrypt(accounts_file.read(), secret).decode())["accounts"]
+            account_data = json.loads(
+                crypto.fernet_decrypt(accounts_file.read(), secret).decode())
 
     logging.info(f"selected accounts: {', '.join(selected_providers)}")
 
     selected_accounts = [
-        account for account in all_accounts
+        account for account in account_data["linked_accounts"]
         if (load_all and f"~{account['provider_id']}" not in selected_providers)
         or (account["provider_id"] in selected_providers)
     ]
@@ -199,8 +198,11 @@ def main():
         else:
             all_data = map(fetcher, selected_accounts)
 
+        currency = account_data["user_account"]["settings"].get("valuation_ccy", "GBP")
+        logging.info(f"valuation currency is set to {currency}")
+
         asset_tree = AssetTree(all_data)
-        all_assets_amount = asset_tree.amount(settings.currency)
+        all_assets_amount = asset_tree.amount(currency)
         if all_assets_amount == 0.0:
             print("no assets")
             return
@@ -210,33 +212,33 @@ def main():
             "(All assets)",
             f"{all_assets_amount:.2f}",
             "100.00%",
-            settings.currency])
+            currency])
         raw_table.append(["", "", ""])
         for provider_data in asset_tree.providers:
-            provider_amount = provider_data.amount(settings.currency)
+            provider_amount = provider_data.amount(currency)
             provider_pc = (provider_amount / all_assets_amount) * 100.0
             raw_table.append([
                 f"  + {provider_data.name}",
                 f"{provider_amount:.2f}",
                 f"{provider_pc:.2f}%",
-                settings.currency])
+                currency])
             for account_data in provider_data.accounts.values():
-                account_amount = account_data.amount(settings.currency)
+                account_amount = account_data.amount(currency)
                 account_pc = (account_amount / all_assets_amount) * 100.0
                 raw_table.append([
                     f"    + {account_data.account['name']} ",
                     f"{account_amount:.2f}",
                     f"{account_pc:.2f}%",
-                    settings.currency
+                    currency
                 ])
                 for asset in account_data.assets:
-                    asset_amount = asset.amount(settings.currency)
+                    asset_amount = asset.amount(currency)
                     asset_pc = (asset_amount / all_assets_amount) * 100.0
                     raw_table.append([
                         f"      * {asset.name}",
                         f"{asset_amount:.2f}",
                         f"{asset_pc:.2f}%",
-                        settings.currency
+                        currency
                     ])
             raw_table.append(["", "", ""])
 
