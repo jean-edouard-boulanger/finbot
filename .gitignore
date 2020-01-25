@@ -2,6 +2,6 @@
 .secure/
 *.pyc
 __pycache__/
-.finbotdb/
+.finbotdb*/
 .vscode/
 .sandbox/
