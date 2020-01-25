@@ -174,7 +174,7 @@ function ValuationChange(props) {
 class App extends React.Component {
   constructor(props) {
     super(props);
-    this.account_id = 2;
+    this.account_id = process.env.REACT_APP_SELECTED_USER;
     this.locale = "en-GB";
     this.state = {
       account: null,

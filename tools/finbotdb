@@ -22,6 +22,7 @@ from finbot.model import (
 from finbot.core import crypto
 import logging.config
 import logging
+import random
 import pandas as pd
 import datetime
 import argparse
@@ -47,12 +48,6 @@ logging.config.dictConfig({
 })
 
 
-BIG_PANDA = pd.option_context(
-    'display.max_rows', None, 
-    'display.max_columns', None, 
-    "display.width", 1000)
-
-
 def build_tool(settings, engine, session):
     Base.metadata.create_all(engine)
 
@@ -61,71 +56,8 @@ def destroy_tool(settings, engine, session):
     Base.metadata.drop_all(engine)
 
 
-def generate_dummy_historical_valuation(user_account: UserAccount,
-                                        valuation_ccy: str,
-                                        start_amount: float,
-                                        start_time: datetime.datetime,
-                                        end_time: datetime.datetime, 
-                                        interval: datetime.timedelta,
-                                        period_contribution: float,
-                                        yearly_rate: float):
-    assert end_time > start_time
-    valuations = []
-    current_time = start_time
-    current_amount = start_amount
-    seconds_in_year = 3600 * 24 * 364
-    interval_rate = yearly_rate * (interval.total_seconds() / seconds_in_year)
-    while current_time <= end_time:
-        valuations.append((current_time, current_amount))
-        current_amount = (current_amount * (1 + interval_rate)) + period_contribution
-        current_time += interval
-
-    linked_accounts = user_account.linked_accounts
-    dummy_account = dummy_uk.DUMMY_ACCOUNT
-
-    return [
-        UserAccountHistoryEntry(
-            user_account=user_account,
-            valuation_ccy=valuation_ccy,
-            effective_at=valuation_time,
-            available=True,
-            user_account_valuation_history_entry=UserAccountValuationHistoryEntry(
-                valuation=valuation * len(linked_accounts)),
-            linked_accounts_valuation_history_entries=[
-                LinkedAccountValuationHistoryEntry(
-                    linked_account=linked_account,
-                    valuation=valuation
-                )
-                for linked_account in linked_accounts
-            ],
-            sub_accounts_valuation_history_entries=[
-                SubAccountValuationHistoryEntry(
-                    linked_account=linked_account,
-                    sub_account_id=dummy_account["id"],
-                    sub_account_ccy=dummy_account["iso_currency"],
-                    sub_account_description=dummy_account["name"],
-                    valuation=valuation,
-                    valuation_sub_account_ccy=valuation
-                )
-                for linked_account in linked_accounts
-            ],
-            sub_accounts_items_valuation_history_entries=[
-                SubAccountItemValuationHistoryEntry(
-                    linked_account=linked_account,
-                    sub_account_id=dummy_account["id"],
-                    item_type=SubAccountItemType.Asset,
-                    name="cash",
-                    item_subtype="cash",
-                    valuation=valuation,
-                    valuation_sub_account_ccy=valuation
-                )
-                for linked_account in linked_accounts
-            ]
-        )
-        for valuation_time, valuation in valuations
-    ]
-
-
+# will be fixed when needed
+"""
 def general_real_historical_valuation(history_file_path, 
                                       user_account: UserAccount):
     entries = []
@@ -203,15 +135,12 @@ def general_real_historical_valuation(history_file_path,
         )
         for val_date, amount in val_by_date.iteritems()
     ]
+"""
+
 
 def hydrate_tool(settings, engine, session):
-    with open(settings.secret) as kf:
-        secret = kf.read()
-        with open(settings.accounts, "rb") as af:
-            accounts = json.loads(crypto.fernet_decrypt(af.read(), secret))["accounts"]
-
-    providers = {
-        "amex_us": Provider(
+    providers = [
+        Provider(
             id="amex_us",
             description="American express (US)",
             website_url="https://www.americanexpress.com/",
@@ -228,7 +157,7 @@ def hydrate_tool(settings, engine, session):
                 }
             }
         ),
-        "vanguard_uk": Provider(
+        Provider(
             id="vanguard_uk",
             description="Vanguard Investors (UK)",
             website_url="https://www.vanguardinvestor.co.uk/",
@@ -245,7 +174,7 @@ def hydrate_tool(settings, engine, session):
                 }
             }
         ),
-        "aegon_targetplan_uk": Provider(
+        Provider(
             id="aegon_targetplan_uk",
             description="Aegon Targetplan (UK)",
             website_url="https://lwp.aegon.co.uk/targetplanUI/login",
@@ -262,7 +191,7 @@ def hydrate_tool(settings, engine, session):
                 }
             }
         ),
-        "barclays_uk": Provider(
+        Provider(
             id="barclays_uk",
             description="Barclays (UK)",
             website_url="https://www.barclays.co.uk/",
@@ -287,7 +216,7 @@ def hydrate_tool(settings, engine, session):
                 }
             }
         ),
-        "barclaycard": Provider(
+        Provider(
             id="barclaycard",
             description="Barclaycard (UK)",
             website_url="https://www.barclaycard.co.uk/personal/customer",
@@ -308,7 +237,7 @@ def hydrate_tool(settings, engine, session):
                 }
             }
         ),
-        "ca_fr": Provider(
+        Provider(
             id="ca_fr",
             description="Credit Agricole (FR)",
             website_url="https://www.credit-agricole.fr/",
@@ -327,7 +256,7 @@ def hydrate_tool(settings, engine, session):
                 }
             }
         ),
-        "lending_works_uk": Provider(
+        Provider(
             id="lending_works_uk",
             description="Lending Works (UK)",
             website_url="https://www.lendingworks.co.uk/",
@@ -344,7 +273,7 @@ def hydrate_tool(settings, engine, session):
                 }
             }
         ),
-        "october_fr": Provider(
+        Provider(
             id="october_fr",
             description="October (FR)",
             website_url="https://fr.october.eu/",
@@ -361,7 +290,7 @@ def hydrate_tool(settings, engine, session):
                 }
             }
         ),
-        "kraken_us": Provider(
+        Provider(
             id="kraken_us",
             description="Kraken (US)",
             website_url="https://www.kraken.com/",
@@ -378,7 +307,7 @@ def hydrate_tool(settings, engine, session):
                 }
             }
         ),
-        "bittrex_us": Provider(
+        Provider(
             id="bittrex_us",
             description="Bittrex (US)",
             website_url="https://global.bittrex.com/",
@@ -395,7 +324,7 @@ def hydrate_tool(settings, engine, session):
                 }
             }
         ),
-        "google_sheets": Provider(
+        Provider(
             id="google_sheets",
             description="Portfolio managed via Google sheets",
             website_url="https://www.google.com/sheets/about/",
@@ -412,87 +341,158 @@ def hydrate_tool(settings, engine, session):
                 }
             }
         ),
-        "dummy_uk": Provider(
+        Provider(
             id="dummy_uk",
             description="Dummy (fake) provider (UK)",
             website_url="https://dummy.co.uk/",
             credentials_schema={}
         )
-    }
-    session.add_all(providers.values())
-
-    user_accounts = [
-        UserAccount(
-            email="test1@finbot.net",
-            encrypted_password=crypto.fernet_encrypt(
-                "test".encode(), secret).decode(),
-            full_name="Test user (1)",
-            settings=UserAccountSettings(
-                valuation_ccy="USD"
-            ),
-            linked_accounts=[
-                LinkedAccount(
-                    provider=providers[account["provider_id"]],
-                    account_name=account["description"],
-                    encrypted_credentials=crypto.fernet_encrypt(
-                        json.dumps(account["credentials"]).encode(), secret).decode()
-                )
-                for account in accounts
-                if account["provider_id"] in {"dummy_uk"}
-            ]
-        ),
-        UserAccount(
-            email="test2@finbot.net",
-            encrypted_password=crypto.fernet_encrypt(
-                "test".encode(), secret).decode(),
-            full_name="Test user (2)",
-            settings=UserAccountSettings(
-                valuation_ccy="EUR"
-            ),
-            linked_accounts=[
-                LinkedAccount(
-                    provider=providers[account["provider_id"]],
-                    account_name=account["description"],
-                    encrypted_credentials=crypto.fernet_encrypt(
-                        json.dumps(account["credentials"]).encode(), secret).decode()
-                )
-                for account in accounts
-                if account["provider_id"] not in {"dummy_uk"}
-            ]
-        )
     ]
 
-    session.add_all(user_accounts)
+    session.add_all(providers)
     session.commit()
 
-    logging.info("adding fake historical valuation")
+    logging.info("hydrated finbotdb with default data")
 
-    dummy_account = user_accounts[0]
-    session.add_all(
-        generate_dummy_historical_valuation(
-            user_account=dummy_account,
-            valuation_ccy=dummy_account.settings.valuation_ccy,
-            start_amount=10.0,
-            start_time=datetime.datetime(year=2018, month=1, day=1, tzinfo=pytz.utc),
-            end_time=datetime.datetime.now(tz=pytz.utc),
-            interval=datetime.timedelta(days=1),
-            period_contribution=2,
-            yearly_rate=0.05))
+
+def parse_input_date(date_str):
+    if date_str == "now":
+        return datetime.datetime.now()
+    return datetime.datetime.strptime(date_str, "%d-%b-%Y")
+
+
+def handle_fake_data_source(user_account: UserAccount,
+                            initial_amount,
+                            rate,
+                            contributions,
+                            period_days,
+                            start_date,
+                            end_date):
+    seconds_in_year = 3600 * 24 * 364
+    start_date = parse_input_date(start_date)
+    end_date = parse_input_date(end_date)
+    assert end_date > start_date
+    min_rate, max_rate = rate
+    min_contribution, max_contribution = contributions
+    period = datetime.timedelta(days=period_days)
+
+    linked_accounts = user_account.linked_accounts
+
+    valuations = [(start_date, [initial_amount] * len(linked_accounts))]
+    while True:
+        previous_time, previous_values = valuations[-1]
+        current_time = previous_time + period
+        if current_time > end_date:
+            break
+
+        current_values = []
+        for valuation_idx in range(len(linked_accounts)):
+            current_value =  previous_values[valuation_idx]
+            period_contribution = random.uniform(min_contribution, max_contribution)
+            yearly_rate = random.uniform(min_rate, max_rate)
+            period_rate = yearly_rate * (period.total_seconds() / seconds_in_year)
+            current_values.append((current_value * (1.0 + period_rate)) + period_contribution)
+        valuations.append((current_time, current_values))
+
+    currency = user_account.settings.valuation_ccy
+    sub_account_id = "checkings"
+
+    return [
+        UserAccountHistoryEntry(
+            user_account=user_account,
+            valuation_ccy=currency,
+            effective_at=valuation_date,
+            available=True,
+            user_account_valuation_history_entry=UserAccountValuationHistoryEntry(
+                valuation=sum(values)),
+            linked_accounts_valuation_history_entries=[
+                LinkedAccountValuationHistoryEntry(
+                    linked_account=linked_account,
+                    valuation=value
+                )
+                for value, linked_account in zip(values, linked_accounts)
+            ],
+            sub_accounts_valuation_history_entries=[
+                SubAccountValuationHistoryEntry(
+                    linked_account=linked_account,
+                    sub_account_id=sub_account_id,
+                    sub_account_ccy=currency,
+                    sub_account_description=sub_account_id,
+                    valuation=value,
+                    valuation_sub_account_ccy=value
+                )
+                for value, linked_account in zip(values, linked_accounts)
+            ],
+            sub_accounts_items_valuation_history_entries=[
+                SubAccountItemValuationHistoryEntry(
+                    linked_account=linked_account,
+                    sub_account_id=sub_account_id,
+                    item_type=SubAccountItemType.Asset,
+                    name="cash",
+                    item_subtype="currency",
+                    valuation=value,
+                    valuation_sub_account_ccy=value
+                )
+                for value, linked_account in zip(values, linked_accounts)
+            ]
+        )
+        for valuation_date, values in valuations
+    ]
+
+
+def add_account_tool(settings, engine, session):
+    with open(settings.secret) as kf:
+        secret = kf.read()
+        with open(settings.account, "rb") as af:
+            account_data = json.loads(crypto.fernet_decrypt(af.read(), secret))
+
+    # 1. find all available providers
+
+    all_providers = {
+        provider.id: provider
+        for provider in  session.query(Provider).all()
+    }
+
+    # 2. create user account for account file
+    user_account_data = account_data["user_account"]
+    new_account = UserAccount(
+        email=user_account_data["email"],
+        encrypted_password=crypto.fernet_encrypt(
+            user_account_data["password"].encode(), secret).decode(),
+        full_name=user_account_data["full_name"],
+        settings=UserAccountSettings(
+            valuation_ccy=user_account_data["settings"]["valuation_ccy"]
+        ),
+        linked_accounts=[
+            LinkedAccount(
+                provider=all_providers[linked_account["provider_id"]],
+                account_name=linked_account["description"],
+                encrypted_credentials=crypto.fernet_encrypt(
+                    json.dumps(linked_account["credentials"]).encode(), secret).decode()
+            )
+            for linked_account in account_data["linked_accounts"]
+        ]
+    )
+
+    session.add(new_account)
     session.commit()
 
-    real_account = user_accounts[1]
-    if settings.history:
-        logging.info("adding real historical valuation")
-        assert len(settings.history) == 1
-        session.add_all(
-            general_real_historical_valuation(settings.history[0], real_account))
+    data_source = account_data.get("data_source")
+    if data_source:
+        data_source_type = list(data_source.keys())[0]
+        data_source_handlers = {
+            "fake": handle_fake_data_source
+        }
+        handler = data_source_handlers[data_source_type]
+        session.add_all(handler(new_account, **data_source[data_source_type]))
         session.commit()
 
+    logging.info(f"user account '{new_account.id}' created")
 
-def setup_hydrate_subparser(parser):
-    parser.add_argument("history", metavar="history", nargs='*')
+
+def setup_add_account_subparser(parser):
     parser.add_argument("-k", "--secret", type=str, help="path to secret key", required=True)
-    parser.add_argument("-A", "--accounts", type=str, help="path to accounts file", required=True)
+    parser.add_argument("-A", "--account", type=str, help="path to account file", required=True)
 
 
 def create_parser():
@@ -517,9 +517,14 @@ all_tools = {
         "handler": destroy_tool
     },
     "hydrate": {
-        "description": "hydrate database with initial (test) data",
-        "parser_builder": setup_hydrate_subparser,
+        "description": "hydrate database with minimal data",
+        "parser_builder": (lambda _: None),
         "handler": hydrate_tool
+    },
+    "add-account": {
+        "description": "adds the current test account to the database",
+        "parser_builder": setup_add_account_subparser,
+        "handler": add_account_tool
     }
 }
 

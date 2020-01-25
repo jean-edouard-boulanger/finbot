@@ -80,6 +80,7 @@ services:
       FINBOT_DB_HOSTNAME: finbotdb
       FINBOT_SNAPWSRV_ENDPOINT: "http://snapwsrv:5000"
       FINBOT_HISTWSRV_ENDPOINT: "http://histwsrv:5002"
+      FINBOT_SELECTED_USER: 1
 
   appwsrv:
     build:
@@ -107,6 +108,8 @@ services:
     command: sh -c "npm install && npm start"
     ports:
       - "5005:5005"
+    environment:
+      REACT_APP_SELECTED_USER: 1
 
 volumes:
     .finbotdb:

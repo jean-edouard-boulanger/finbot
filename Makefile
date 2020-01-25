@@ -1,6 +1,6 @@
 export PYTHONPATH := $(PYTHONPATH):$(shell pwd)
 export FINBOT_SECRET_PATH ?= .secure/secret.txt
-export FINBOT_ACCOUNTS_PATH ?= .secure/accounts
+export FINBOT_ACCOUNT_PATH ?= .secure/accounts
 export FINBOT_DB_PORT ?= 5432
 export FINBOT_DB_HOSTNAME ?= 127.0.0.1
 export FINBOT_DB_USER ?= finbot
@@ -11,11 +11,12 @@ export FINBOT_FINBOTWSRV_ENDPOINT ?= http://127.0.0.1:5001
 export FINBOT_SNAPWSRV_ENDPOINT ?= http://127.0.0.1:5000
 export FINBOT_HISTWSRV_ENDPOINT ?= http://127.0.0.1:5002
 export FINBOT_EDIT_CMD ?= code --wait
+export FINBOT_SELECTED_USER ?= 1
 
 info:
 	$(info PYTHONPATH=${PYTHONPATH})
 	$(info FINBOT_SECRET_PATH=${FINBOT_SECRET_PATH})
-	$(info FINBOT_ACCOUNTS_PATH=${FINBOT_ACCOUNTS_PATH})
+	$(info FINBOT_ACCOUNT_PATH=${FINBOT_ACCOUNT_PATH})
 	$(info FINBOT_DB_PORT=${FINBOT_DB_PORT})
 	$(info FINBOT_DB_HOSTNAME=${FINBOT_DB_HOSTNAME})
 	$(info FINBOT_DB_USER=${FINBOT_DB_USER})
@@ -25,6 +26,7 @@ info:
 	$(info FINBOT_FINBOTWSRV_ENDPOINT=${FINBOT_FINBOTWSRV_ENDPOINT})
 	$(info FINBOT_SNAPWSRV_ENDPOINT=${FINBOT_SNAPWSRV_ENDPOINT})
 	$(info FINBOT_HISTWSRV_ENDPOINT=${FINBOT_HISTWSRV_ENDPOINT})
+	$(info FINBOT_SELECTED_USER=${FINBOT_SELECTED_USER})
 
 alembic-gen:
 	alembic revision --autogenerate -m "${message}"
@@ -77,12 +79,6 @@ run-appwsrv-dev:
 			--extra-files 'finbot/**/*.py' \
 			-h 0.0.0.0
 
-run-workers-docker:
-	docker-compose up finbotdb appwsrv snapwsrv finbotwsrv histwsrv
-
-run-all-docker: run-workers-docker
-	docker-compose up schedsrv
-
 build-appwsrv-docker:
 	docker build -t finbot/appwsrv:latest -f appwsrv.Dockerfile .
 
@@ -111,14 +107,14 @@ test-providers-docker:
 		tools/providers-tester \
 			--dump-balances --dump-assets --dump-liabilities --dump-transactions \
 			--secret-file ${FINBOT_SECRET_PATH} \
-			--accounts-file ${FINBOT_ACCOUNTS_PATH} \
+			--accounts-file ${FINBOT_ACCOUNT_PATH} \
 			${TESTER_ACCOUNTS}
 
 test-providers-debug:
 	tools/providers-tester \
 			--dump-balances --dump-assets --dump-liabilities --dump-transactions \
 			--secret-file ${FINBOT_SECRET_PATH} \
-			--accounts-file ${FINBOT_ACCOUNTS_PATH} \
+			--accounts-file ${FINBOT_ACCOUNT_PATH} \
 			--show-browser \
 			--pause-on-error \
 			--no-threadpool \
@@ -128,7 +124,7 @@ test-providers-debug:
 test-providers:
 	tools/providers-tester \
 			--secret-file ${FINBOT_SECRET_PATH} \
-			--accounts-file ${FINBOT_ACCOUNTS_PATH} \
+			--accounts-file ${FINBOT_ACCOUNT_PATH} \
 			${TESTER_ACCOUNTS}
 
 test-snapwsrv:
@@ -149,23 +145,23 @@ init-vault:
 init-account:
 	tools/crypt fernet-encrypt \
 		-k ${FINBOT_SECRET_PATH} \
-		-i tools/accounts.tpl.json > ${FINBOT_ACCOUNTS_PATH} && \
+		-i tools/accounts.tpl.json > ${FINBOT_ACCOUNT_PATH} && \
 	echo "created default account, run 'make edit-account' to configure"
 
 show-account:
 	tools/crypt fernet-decrypt \
 		-k ${FINBOT_SECRET_PATH} \
-		-i ${FINBOT_ACCOUNTS_PATH} | less
+		-i ${FINBOT_ACCOUNT_PATH} | less
 
 edit-account:
 	tools/crypt fernet-decrypt \
 		-k ${FINBOT_SECRET_PATH} \
-		-i ${FINBOT_ACCOUNTS_PATH} > .accounts.tmp.json && \
+		-i ${FINBOT_ACCOUNT_PATH} > .accounts.tmp.json && \
 	chmod 600 .accounts.tmp.json && \
 	${FINBOT_EDIT_CMD} .accounts.tmp.json && \
 	tools/crypt fernet-encrypt \
 		-k ${FINBOT_SECRET_PATH} \
-		-i .accounts.tmp.json > ${FINBOT_ACCOUNTS_PATH} && \
+		-i .accounts.tmp.json > ${FINBOT_ACCOUNT_PATH} && \
 	rm .accounts.tmp.json
 
 finbotdb-build:
@@ -178,10 +174,12 @@ finbotdb-rebuild:
 	tools/finbotdb destroy && tools/finbotdb build
 
 finbotdb-hydrate:
-	tools/finbotdb hydrate \
+	tools/finbotdb hydrate
+
+finbotdb-add-account:
+	tools/finbotdb add-account \
 		--secret ${FINBOT_SECRET_PATH} \
-		--accounts ${FINBOT_ACCOUNTS_PATH} \
-		${HISTORY_PATH}
+		--account ${FINBOT_ACCOUNT_PATH}
 
 finbotdb-psql:
 	env PGPASSWORD=finbot psql -h 127.0.0.1 -U finbot -d finbot

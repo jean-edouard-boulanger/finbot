@@ -198,7 +198,7 @@ def main():
         else:
             all_data = map(fetcher, selected_accounts)
 
-        currency = account_data["user_account"]["settings"].get("valuation_ccy", "GBP")
+        currency = account_data["user_account"]["settings"]["valuation_ccy"]
         logging.info(f"valuation currency is set to {currency}")
 
         asset_tree = AssetTree(all_data)

@@ -57,7 +57,7 @@ def main():
     logging.info(f"history report client created with {histwsrv_endpoint} endpoint")
 
     schedule.every(1).hour.do(lambda: run_workflow(
-        user_account_id=2,
+        user_account_id=os.environ["FINBOT_SELECTED_USER"],
         snap_client=snap_client, 
         hist_client=hist_client))
 
