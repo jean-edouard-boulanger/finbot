@@ -31,7 +31,7 @@ class Base(object):
         """
         return {"accounts": []}
 
-    def get_transactions(self):
+    def get_transactions(self, from_date, to_date):
         """
         """
         return {"accounts": []}

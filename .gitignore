@@ -1,5 +1,5 @@
 .DS_Store
-.secure/
+.secure*/
 *.pyc
 __pycache__/
 .finbotdb*/

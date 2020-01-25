@@ -141,33 +141,29 @@ test-histwsrv:
 		--endpoint ${FINBOT_HISTWSRV_ENDPOINT} \
 		--snapshot-id ${SNAPSHOT_ID}
 
-confirm-override-accounts:
-	[[ ! -d .secure ]] || tools/yes_no 'This will erase existing accounts, continue?'
-
-init-accounts: confirm-override-accounts
+init-vault:
 	mkdir -p .secure && \
 	tools/crypt fernet-key > ${FINBOT_SECRET_PATH} && \
-	chmod 600 ${FINBOT_SECRET_PATH} && \
-	cp tools/accounts.tpl.json .accounts.tmp && \
+	chmod 600 ${FINBOT_SECRET_PATH}
+
+init-account:
 	tools/crypt fernet-encrypt \
 		-k ${FINBOT_SECRET_PATH} \
-		-i .accounts.tmp > ${FINBOT_ACCOUNTS_PATH} && \
-	rm .accounts.tmp && \
-	chmod 600 ${FINBOT_ACCOUNTS_PATH}
+		-i tools/accounts.tpl.json > ${FINBOT_ACCOUNTS_PATH} && \
+	echo "created default account, run 'make edit-account' to configure"
 
-show-accounts:
+show-account:
 	tools/crypt fernet-decrypt \
 		-k ${FINBOT_SECRET_PATH} \
 		-i ${FINBOT_ACCOUNTS_PATH} | less
 
-edit-accounts:
+edit-account:
 	tools/crypt fernet-decrypt \
 		-k ${FINBOT_SECRET_PATH} \
 		-i ${FINBOT_ACCOUNTS_PATH} > .accounts.tmp.json && \
 	chmod 600 .accounts.tmp.json && \
 	${FINBOT_EDIT_CMD} .accounts.tmp.json && \
-	tools/crypt \
-		fernet-encrypt \
+	tools/crypt fernet-encrypt \
 		-k ${FINBOT_SECRET_PATH} \
 		-i .accounts.tmp.json > ${FINBOT_ACCOUNTS_PATH} && \
 	rm .accounts.tmp.json
