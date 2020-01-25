@@ -91,7 +91,7 @@ def fetch_balances(settings, browser_factory, account):
             provider_data = ProviderData(name=provider.description)
 
             txn_to_date = datetime.now()
-            txn_from_date = (txn_to_date - timedelta(days=7))
+            txn_from_date = (txn_to_date - timedelta(days=30))
             logging.info(f"[{provider.description}] fetching transactions" 
                          f"from {txn_from_date.date().isoformat()} to {txn_to_date.date().isoformat()}")
             transactions = api.get_transactions(txn_from_date, txn_to_date)

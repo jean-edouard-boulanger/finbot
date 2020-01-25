@@ -32,3 +32,11 @@ def pretty_dump(data):
 
 def now_utc():
     return datetime.now(timezone('UTC'))
+
+
+def date_in_range(date, from_date, to_date):
+    if from_date and date < from_date:
+        return False
+    if to_date and date > to_date:
+        return False
+    return True

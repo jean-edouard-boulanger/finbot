@@ -2,6 +2,7 @@ from finbot import providers
 from finbot.providers.errors import AuthFailure
 from finbot.providers.support.selenium import any_of
 from finbot.providers.errors import AuthFailure, Error
+from finbot.core.utils import date_in_range
 from selenium.webdriver.support.expected_conditions import presence_of_element_located
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
@@ -10,7 +11,6 @@ from copy import deepcopy
 from price_parser import Price
 from finbot.core.utils import pretty_dump
 import re
-import time
 
 
 AUTH_URL = "https://global.americanexpress.com/login"
@@ -148,13 +148,6 @@ class Api(providers.SeleniumBased):
         }
 
     def _get_account_transactions(self, account_id, from_date, to_date):
-        def date_in_range(date, from_date, to_date):
-            if from_date and date < from_date:
-                return False
-            if to_date and date > to_date:
-                return False
-            return True
-
         def parse_transaction_date(date_str):
             return datetime.strptime(date_str, "%d %b %y") 
 

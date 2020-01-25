@@ -6,8 +6,12 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.expected_conditions import presence_of_element_located
 from finbot import providers
 from finbot.providers.support.selenium import any_of
-from finbot.providers.errors import AuthFailure
+from finbot.providers.errors import AuthFailure, Error
+from finbot.core.utils import date_in_range
+from datetime import datetime
 import re
+import hashlib
+import code
 
 
 AUTH_URL = "https://bank.barclays.co.uk/olb/authlogin/loginAppContainer.do"
@@ -49,28 +53,21 @@ def _wait_accounts(browser):
 
 def _iter_accounts(accounts_area):
     for row in accounts_area.find_elements_by_css_selector("div.o-account__head"):
-        account_name = row.find_element_by_css_selector("div.account-link").text
+        account_cell = row.find_element_by_css_selector("div.account-link")
+        account_link_element = account_cell.find_element_by_tag_name("a")
         account_details = row.find_element_by_css_selector("div.o-account__details-body").text.strip().split("\n")
         balance_str = row.find_element_by_css_selector("div.o-account__balance-head").text.strip()
         yield {
             "account": {
                 "id": account_details[0],
-                "name": account_name,
+                "name": account_cell.text.strip(),
                 "iso_currency": "GBP"
             },
-            "balance": Price.fromstring(balance_str).amount_float
+            "balance": Price.fromstring(balance_str).amount_float,
+            "selenium": {
+                "account_link": account_link_element
+            }
         }
-
-
-def _is_home(browser):
-    return HOME_URL in browser.current_url
-
-
-def _go_home(browser):
-    if not _is_home(browser):
-        browser.get(HOME_URL)
-    return _wait_accounts(browser)
-
 
 def _get_error(browser):
     warnings = browser.find_elements_by_css_selector("div.notification--warning")
@@ -83,6 +80,19 @@ class Api(providers.SeleniumBased):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.accounts = None
+
+    def _go_home(self):
+        browser = self.browser
+        browser.get(HOME_URL)
+        return _wait_accounts(browser)
+
+    def _switch_account(self, account_id):
+        accounts_area = self._go_home()
+        for entry in _iter_accounts(accounts_area):
+            if entry["account"]["id"] == account_id:
+                entry["selenium"]["account_link"].click()
+                return self._wait_element(By.CSS_SELECTOR, "div.transactions-table")
+        raise Error(f"unable to switch to account '{account_id}'")
 
     def authenticate(self, credentials):
         def select_combo_item(combo, item_idx):
@@ -131,8 +141,60 @@ class Api(providers.SeleniumBased):
             for entry in _iter_accounts(accounts_area)
         }
 
+    def _get_account_transactions(self, account_id, from_date, to_date):
+        all_txn = []
+        transactions_table = self._switch_account(account_id)
+        body_area = transactions_table.find_element_by_css_selector("div.tbody-trans")
+        for row in body_area.find_elements_by_css_selector("div.row"):
+            header_row = row.find_element_by_css_selector("div.th-wrapper")
+            cells = header_row.find_elements_by_tag_name("div.th")
+            _, date_cell, desc_cell, in_cell, out_cell, bal_cell = cells
+            txn_date = datetime.strptime(date_cell.text.strip(), "%a, %d %b %y")
+            print(txn_date)
+            if not date_in_range(txn_date, from_date, to_date):
+                continue
+            txn_in_amount = Price.fromstring(in_cell.text.strip()).amount_float
+            txn_out_amount = Price.fromstring(out_cell.text.strip()).amount_float
+            txn_amount = txn_in_amount if txn_in_amount is not None else (txn_out_amount * -1.0)
+            txn_type = "credit" if txn_in_amount is not None else "debit"
+
+            more_data_cells = row.find_elements_by_css_selector(
+                "span.additional-data-content")
+            txn_type_cell = more_data_cells[1]
+            txn_description = desc_cell.text.strip()
+            if len(more_data_cells) > 2:
+                txn_description += f" ({more_data_cells[2].get_attribute('innerText').strip()})"
+            txn_id = hashlib.sha256("/".join([
+                txn_date.isoformat(),
+                txn_description,
+                str(txn_amount),
+                txn_type,
+                txn_type_cell.text.strip()
+            ]).encode()).hexdigest()
+
+            all_txn.append({
+                "id": txn_id,
+                "date": txn_date,
+                "description": txn_description,
+                "amount": txn_amount,
+                "type": txn_type,
+            })
+        return all_txn
+
+    def get_transactions(self, from_date, to_date):
+        return {
+            "accounts": [
+                {
+                    "account": deepcopy(account),
+                    "transactions": self._get_account_transactions(
+                        account_id, from_date, to_date)
+                }
+                for account_id, account in self.accounts.items()
+            ]
+        }
+
     def get_balances(self):
-        accounts_area = _go_home(self.browser)
+        accounts_area = self._go_home()
         return {
             "accounts": [
                 {
