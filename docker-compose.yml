@@ -99,6 +99,15 @@ services:
       FINBOT_DB_HOSTNAME: finbotdb
       FINBOT_FINBOTWSRV_ENDPOINT: "http://finbotwsrv:5001"
 
+  webapp:
+    image: "node:13-alpine3.10"
+    volumes:
+      - ./webapp:/webapp
+    working_dir: /webapp
+    command: sh -c "npm install && npm start"
+    ports:
+      - "5005:5005"
+
 volumes:
     .finbotdb:
     .:
