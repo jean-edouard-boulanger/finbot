@@ -1,0 +1,98 @@
+@startuml
+
+schedsrv -> schedsrv: Start workflow (scheduled)\n(For specific user)
+activate schedsrv
+
+schedsrv -> snapwsrv: Take snapshot\n(For specific user)
+activate snapwsrv
+
+snapwsrv -> finbotdb: Fetch external accounts
+activate finbotdb
+finbotdb -> snapwsrv
+deactivate finbotdb
+
+snapwsrv -> finbotdb: Create blank snapshot
+activate finbotdb
+finbotdb -> snapwsrv
+deactivate finbotdb
+
+loop For each external account (asynchronous)
+    snapwsrv -> finbotwsrv: Get financial data for all line items\n(Balances, Assets, Liabilities, Transactions)
+    activate finbotwsrv
+
+    finbotwsrv -> providers: Provider lookup
+    activate providers
+    providers -> finbotwsrv
+    deactivate providers
+
+    finbotwsrv -> providers: Authenticate
+    activate providers
+    providers -> finbotwsrv
+    deactivate providers
+
+    loop For each line item
+        finbotwsrv -> providers: Get line item
+        activate providers
+        providers -> finbotwsrv
+        deactivate providers
+    end
+
+    finbotwsrv -> snapwsrv: Financial data
+    deactivate finbotwsrv
+
+    snapwsrv -> snapwsrv: Aggregate into raw snapshot
+end
+
+snapwsrv -> finbotdb: Write snapshot
+activate finbotdb
+finbotdb -> snapwsrv
+deactivate finbotdb
+
+snapwsrv -> schedsrv: Snapshot identifier
+deactivate snapwsrv
+
+schedsrv -> histwsrv: Create report\n(using new snapshot identifier)
+activate histwsrv
+
+histwsrv -> finbotdb: Fetch consistent snapshot data
+activate finbotdb
+finbotdb -> histwsrv
+deactivate finbotdb
+
+histwsrv -> finbotdb: Create blank report
+activate finbotdb
+finbotdb -> histwsrv
+deactivate finbotdb
+
+loop For each linked account,\nsub-account\nand items (assets, Liabilities)
+    histwsrv -> histwsrv: Basic valuation
+
+    histwsrv -> finbotdb: Write valuation to report
+    activate finbotdb
+    finbotdb -> histwsrv
+    deactivate finbotdb
+end
+
+loop For each linked account,\nsub-account\nand items (assets, Liabilities)
+    histwsrv -> finbotdb: Fetch historical valuation (1h, 1d, 1m, etc.)
+    activate finbotdb
+    finbotdb -> histwsrv
+    deactivate finbotdb
+    histwsrv -> histwsrv: Valuation change
+    histwsrv -> finbotdb: Write valuation change to report
+    activate finbotdb
+    finbotdb -> histwsrv
+    deactivate finbotdb
+end
+
+histwsrv -> finbotdb: Make report available
+activate finbotdb
+finbotdb -> histwsrv
+deactivate finbotdb
+
+histwsrv -> schedsrv: Report identifier
+deactivate histwsrv
+
+deactivate schedsrv
+
+@enduml

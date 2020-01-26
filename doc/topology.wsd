@@ -1,0 +1,104 @@
+@startuml
+
+allow_mixing
+
+database finbotdb [
+    finbotdb
+    ---
+    <b>finbot database</b>
+    <i>postgresql server</i>
+]
+
+node appwsrv [
+    finbot.apps.appwsrv
+    ....
+    <b>Finbot application API</b>
+    <b>web service (rest)</b>
+    <i>Python Flask Web Server</i>
+]
+
+artifact histclient <<module>> [
+    finbot.clients.history
+    ....
+    <b>histwsrv client</b>
+    <i>Python module</i>
+]
+
+node histwsrv [
+    finbot.apps.histwsrv
+    ....
+    <b>Financial data reporting</b>
+    <b>web service (rest)</b>
+    <i>Python Flask Web Server</i>
+]
+
+node schedsrv [
+    finbot.apps.schedsrv
+    ....
+    <b>Financial data aggregation</b>
+    <b>scheduler service</b>
+    <i>Python server</i>
+]
+
+node snapwsrv [
+    finbot.apps.snapwsrv
+    ....
+    <b>Financial data snapshot</b>
+    <b>web service (rest)</b>
+    <i>Python Flask Web Server</i>
+]
+
+artifact snapclient <<module>> [
+    finbot.clients.snap
+    ....
+    <b>snapwsrv client</b>
+    <i>Python module</i>
+]
+
+node finbotwsrv [
+    finbot.apps.finbotwsrv
+    ....
+    <b>Financial data provider</b>
+    <b>web service (rest)</b>
+    <i>Python Flask Web Server</i>
+]
+
+artifact finbotclient <<module>> [
+    finbot.clients.finbot
+    ....
+    <b>finbotwsrv client</b>
+    <i>Python module</i>
+]
+
+artifact selenium <<package>>
+
+artifact providers <<package>> [
+    finbot.providers
+    ....
+    <b>Finbot financial data</b>
+    <b>providers</b>
+    <i>Python package</i>
+]
+
+artifact webapp [
+    webapp
+    ....
+    <b>Finbot web application</b>
+    <i>React JS application</i>
+]
+
+histclient --> histwsrv
+histwsrv --> finbotdb
+snapwsrv --> finbotclient
+snapwsrv --> finbotdb
+snapclient --> snapwsrv
+finbotclient --> finbotwsrv
+finbotwsrv --> providers
+appwsrv --> finbotdb
+providers --> selenium
+schedsrv --> histclient
+schedsrv --> snapclient
+webapp --> appwsrv
+
+@enduml
+
