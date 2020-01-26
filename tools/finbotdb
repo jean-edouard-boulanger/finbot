@@ -1,8 +1,8 @@
 #!/usr/bin/env python3.7
 from collections import defaultdict
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
-from finbot.providers import dummy_uk
 from finbot.core.utils import pretty_dump
 from finbot.core import fx
 from finbot.model import (
@@ -23,12 +23,13 @@ from finbot.core import crypto
 import logging.config
 import logging
 import random
-import pandas as pd
 import datetime
 import argparse
 import json
 import pytz
 import csv
+import sys
+import time
 
 
 logging.config.dictConfig({
@@ -48,18 +49,12 @@ logging.config.dictConfig({
 })
 
 
-def build_tool(settings, engine, session):
-    Base.metadata.create_all(engine)
-
-
-def destroy_tool(settings, engine, session):
-    Base.metadata.drop_all(engine)
-
-
 # will be fixed when needed
 """
 def general_real_historical_valuation(history_file_path, 
                                       user_account: UserAccount):
+    import pandas as pd
+
     entries = []
     valuation_ccy = user_account.settings.valuation_ccy
     with open(history_file_path, "r") as f:
@@ -353,6 +348,7 @@ def hydrate_tool(settings, engine, session):
     session.commit()
 
     logging.info("hydrated finbotdb with default data")
+    return True
 
 
 def parse_input_date(date_str):
@@ -488,6 +484,27 @@ def add_account_tool(settings, engine, session):
         session.commit()
 
     logging.info(f"user account '{new_account.id}' created")
+    return True
+
+
+def wait_tool(settings, engine, session):
+    while True:
+        try:
+            session.execute("SELECT 1")
+            logging.info("finbotdb is operational")
+            break
+        except OperationalError:
+            logging.warning("finbotdb is not yet available")
+            time.sleep(2)
+    return True
+
+
+def build_tool(settings, engine, session):
+    Base.metadata.create_all(engine)
+
+
+def destroy_tool(settings, engine, session):
+    Base.metadata.drop_all(engine)
 
 
 def setup_add_account_subparser(parser):
@@ -522,6 +539,11 @@ all_tools = {
         "parser_builder": (lambda _: None),
         "handler": hydrate_tool
     },
+    "wait": {
+        "description": "wait until finbotdb becomes available",
+        "parser_builder": (lambda _: None),
+        "handler": wait_tool
+    },
     "add-account": {
         "description": "adds the current test account to the database",
         "parser_builder": setup_add_account_subparser,
@@ -542,4 +564,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    success = main()
+    sys.exit(0 if success else 1)

@@ -36,13 +36,13 @@ services:
     depends_on: 
       - finbotdb
     working_dir: /finbot
-    command: sh -c "/usr/bin/wait && make run-snapwsrv-dev"
+    command: sh -c "make finbotdb-wait && make run-snapwsrv-dev"
     ports:
       - "5000:5000"
     volumes:
       - .:/finbot
     environment:
-      WAIT_HOSTS: finbotdb:5432, finbotwsrv:5001
+      WAIT_HOSTS: finbotwsrv:5001
       FINBOT_FINBOTWSRV_ENDPOINT: "http://finbotwsrv:5001"
       FINBOT_DB_HOSTNAME: finbotdb
 
@@ -54,13 +54,12 @@ services:
     depends_on: 
       - finbotdb
     working_dir: /finbot
-    command: sh -c "/usr/bin/wait && make run-histwsrv-dev"
+    command: sh -c "make finbotdb-wait && make run-histwsrv-dev"
     ports:
       - "5002:5002"
     volumes:
       - .:/finbot
     environment:
-      WAIT_HOSTS: finbotdb:5432
       FINBOT_DB_HOSTNAME: finbotdb
 
   schedsrv:
@@ -90,13 +89,12 @@ services:
     depends_on: 
       - finbotdb
     working_dir: /finbot
-    command: sh -c "/usr/bin/wait && make run-appwsrv-dev"
+    command: sh -c "make finbotdb-wait && make run-appwsrv-dev"
     ports:
       - "5003:5003"
     volumes:
       - .:/finbot
     environment:
-      WAIT_HOSTS: finbotdb:5432
       FINBOT_DB_HOSTNAME: finbotdb
       FINBOT_FINBOTWSRV_ENDPOINT: "http://finbotwsrv:5001"
 

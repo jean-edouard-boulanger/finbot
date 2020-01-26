@@ -164,6 +164,9 @@ edit-account:
 		-i .accounts.tmp.json > ${FINBOT_ACCOUNT_PATH} && \
 	rm .accounts.tmp.json
 
+finbotdb-wait:
+	tools/finbotdb --database ${FINBOT_DB_URL} wait
+
 finbotdb-build:
 	tools/finbotdb --database ${FINBOT_DB_URL} build
 
