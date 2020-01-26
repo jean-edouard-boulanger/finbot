@@ -50,5 +50,3 @@ RUN pip3 install \
     iso4217parse \
     pandas \
     schedule
-
-ENTRYPOINT ["/bin/bash"]

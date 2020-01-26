@@ -1,85 +1,52 @@
 # finbot
 
+open-source personal financial data aggregation framework / platform.
+
 ## Developer guide
 
-### Getting started
+### 1. Development environment setup
 
-#### 1. Build all containers
-
-```bash
-(host) $ docker-compose build
-```
-
-#### 2. Start the database (finbotdb) and the development containers
+A local development environment can be created by running the following command:
 
 ```bash
-(host) $ docker-compose up -d finbotdb dev
+(host) $ make init-dev
 ```
 
-#### 3. Get shell in dev container
+This command can be re-executed at any point. **Word of caution**, the existing
+database will be erased and initialized with the local development account.
 
-```bash
-(host) $ docker exec -it dev /bin/bash
-```
+### 2. Useful commands
 
-#### 4. Initialize vault
+#### Containers management
 
-This step creates a `.secure/secret.txt` file (readable by user only) 
-containing a key used to encrypt/decrypt local account credentials.
+The entire `finbot` infrastructure can be run locally (as long as dependencies 
+are available) but `Docker` and `docker-compose` is the preferred development
+environment.
 
-```bash
-(dev ) $ make init-vault
-```
+At this point, each application has its own docker container which provides their
+respective runtime environment. The overall infrastructure orchestration is 
+defined in `docker-compose.yml`. The development setup allows to make modifications
+while running the finbot infrastructure, at which point applications are automatically
+restarted.
 
-#### 5. Create development account
+- **Build all containers**: `docker-compose build`
+- **Start all containers**: `docker-compose up` or `docker-compose up -d` to run as daemon.
+- **Stop all containers**: `docker-compose down`
 
-This step creates a default development account file that is then encrypted and
-placed in the vault. The default account file only contains 'dummy' account
-entries.
+### 3. `finbot` application layout
 
-```bash
-(dev ) $ make init-account
-(dev ) $ make edit-account # optional, see below
-```
+#### `finbot/` directory
 
-Additional accounts can be registered in the development account file if needed.
-The list of available providers is available in `finbot/providers`.
+`finbot` Backend implementation (Python):
 
-#### 6. Initial development environment test (optional)
+- `apps/`: Backend applications (_web servers, scheduler_)
+- `clients/`: Python clients given access to backend servers.
+- `core/`: General-purpose packages (_high-level utilities, etc._)
+- `model/__init__.py`: `finbot` `SQLAlchemy` business model (_used to create finbotdb schema_)
+- `providers/`: Implement the `finbot.providers.Base`. Each module gives access to
+   a specific financial data provider (most are implemented via Selenium, but some
+   rely on specific APIs, like Kraken or Google sheets)
 
-A basic test can be run to make sure the development environment is setup 
-properly.
+#### `webapp/` directory
 
-```bash
-(dev ) $ make test-providers
-```
-
-#### 7. Initialize the database (finbotdb)
-
-```bash
-(dev ) $ make finbotdb-build # create all tables based on finbot sqlalchemy model
-(dev ) $ make finbotdb-hydrate # adds minimal configuration needed for finbot to work
-(dev ) $ make finbotdb-add-account # persist the development account created previously in the database
-```
-
-#### 8. Start the finbot backend
-
-```bash
-(dev ) $ exit # leave the development docker container
-(host) $ docker-compose up # start all remaining web services (-d to start in deamon mode)
-```
-
-The web application will be available at `127.0.0.1:5005` as soon as this message
-is displayed by the `webapp` container (it can take a few minutes to start):
-
-```
-webapp        | Compiled successfully!
-webapp        | 
-webapp        | You can now view webapp in the browser.
-webapp        | 
-webapp        |   Local:            http://localhost:5005/
-webapp        |   On Your Network:  http://192.168.32.7:5005/
-```
-
-Services and applications will automatically be restarted whenever a code change
-is made to any of the files under `finbot/` or `webapp/`.
+`finbot` web application implementation, based on React.

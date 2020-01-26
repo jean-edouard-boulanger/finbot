@@ -115,6 +115,8 @@ services:
       context: .
       dockerfile: dev.Dockerfile
     container_name: dev
+    depends_on: 
+      - finbotdb
     working_dir: /finbot
     command: sleep infinity
     stdin_open: true

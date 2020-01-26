@@ -501,10 +501,11 @@ def wait_tool(settings, engine, session):
 
 def build_tool(settings, engine, session):
     Base.metadata.create_all(engine)
-
+    return True
 
 def destroy_tool(settings, engine, session):
     Base.metadata.drop_all(engine)
+    return True
 
 
 def setup_add_account_subparser(parser):

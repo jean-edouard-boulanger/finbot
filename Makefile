@@ -1,6 +1,7 @@
 export PYTHONPATH := $(PYTHONPATH):$(shell pwd)
-export FINBOT_SECRET_PATH ?= .secure/secret.txt
-export FINBOT_ACCOUNT_PATH ?= .secure/accounts
+export FINBOT_VAULT_PATH ?= .secure
+export FINBOT_SECRET_PATH ?= $(FINBOT_VAULT_PATH)/secret.txt
+export FINBOT_ACCOUNT_PATH ?= $(FINBOT_VAULT_PATH)/accounts
 export FINBOT_DB_PORT ?= 5432
 export FINBOT_DB_HOSTNAME ?= 127.0.0.1
 export FINBOT_DB_USER ?= finbot
@@ -188,3 +189,6 @@ finbotdb-add-account:
 finbotdb-psql:
 	env PGPASSWORD=${FINBOT_DB_PASSWORD} \
 		psql -h ${FINBOT_DB_HOSTNAME} -U ${FINBOT_DB_USER} -d ${FINBOT_DB_DBNAME}
+
+init-dev:
+	tools/init-dev.sh
