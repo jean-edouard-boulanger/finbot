@@ -73,19 +73,19 @@ class Api(providers.SeleniumBased):
     def _go_home(self):
         if not self._is_home():
             self.browser.get(CLASSIC_URL)
-        side_bar = self._wait_element(By.CSS_SELECTOR, "div.m-lw-db-region-sidebar")
-        self._wait().until(balances_loaded)
+        side_bar = self._do.wait_element(By.CSS_SELECTOR, "div.m-lw-db-region-sidebar")
+        self._do.wait().until(balances_loaded)
 
     def authenticate(self, credentials):
         browser = self.browser
         browser.get(AUTH_URL)
-        login_block = self._wait_element(By.CSS_SELECTOR, "div.m-lw-login-block")
+        login_block = self._do.wait_element(By.CSS_SELECTOR, "div.m-lw-login-block")
         username_input, password_input, *_ = login_block.find_elements_by_tag_name("input")
         username_input.send_keys(credentials.username)
         password_input.send_keys(credentials.password)
-        submit_button = self._find(By.CSS_SELECTOR, "button.form-submit")
+        submit_button = self._do.find(By.CSS_SELECTOR, "button.form-submit")
         submit_button.click()
-        self._wait().until(any_of(is_logged_in, has_error))
+        self._do.wait().until(any_of(is_logged_in, has_error))
         if not is_logged_in(browser):
             raise AuthFailure(get_error(browser))
 
@@ -105,20 +105,17 @@ class Api(providers.SeleniumBased):
         return {
             "accounts": [
                 extract_balance(account_id, block) for (account_id, block) in [
-                    ("wallet", self._find(By.CSS_SELECTOR, "div.lw-card-wallet")),
-                    ("offers", self._find(By.CSS_SELECTOR, "div.lw-card-queue")),
-                    ("loan", self._find(By.CSS_SELECTOR, "div.lw-card-loan"))
+                    ("wallet", self._do.find(By.CSS_SELECTOR, "div.lw-card-wallet")),
+                    ("offers", self._do.find(By.CSS_SELECTOR, "div.lw-card-queue")),
+                    ("loan", self._do.find(By.CSS_SELECTOR, "div.lw-card-loan"))
                 ]
             ]
         }
 
-    def get_transactions(self):
-        return {"transactions": []}
-
     def _get_wallet_assets(self):
         self._go_home()
         browser = self.browser
-        amount_str = (self._find(By.CSS_SELECTOR, "div.lw-card-wallet")
+        amount_str = (self._do.find(By.CSS_SELECTOR, "div.lw-card-wallet")
                           .find_element_by_css_selector("div.lw-amount")
                           .text.strip())
         return [{
@@ -131,7 +128,7 @@ class Api(providers.SeleniumBased):
     def _get_offers_assets(self):
         self._go_home()
         browser = self.browser
-        amount_str = (self._find(By.CSS_SELECTOR, "div.lw-card-queue")
+        amount_str = (self._do.find(By.CSS_SELECTOR, "div.lw-card-queue")
                           .find_element_by_css_selector("div.lw-amount")
                           .text.strip())
         return [{

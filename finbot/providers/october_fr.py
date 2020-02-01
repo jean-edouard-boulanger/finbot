@@ -58,19 +58,19 @@ class Api(providers.SeleniumBased):
 
     def _go_home(self):
         self.browser.get(PORTFOLIO_URL)
-        return self._wait_element(By.CSS_SELECTOR, "div.summary")
+        return self._do.wait_element(By.CSS_SELECTOR, "div.summary")
 
     def authenticate(self, credentials):
         browser = self.browser
         browser.get(AUTH_URL)
-        app_area = self._find(By.CSS_SELECTOR, "div.container")
-        auth_area = self._wait_element(By.TAG_NAME, "form")
+        app_area = self._do.find(By.CSS_SELECTOR, "div.container")
+        auth_area = self._do.wait_element(By.TAG_NAME, "form")
         email_input, password_input = auth_area.find_elements_by_tag_name("input")
         email_input.send_keys(credentials.username)
         password_input.send_keys(credentials.password)
-        actions_area = self._wait_element(By.CSS_SELECTOR, "div.actions")
+        actions_area = self._do.wait_element(By.CSS_SELECTOR, "div.actions")
         actions_area.find_element_by_css_selector("button.action-button").click()
-        self._wait().until(any_of(has_error, is_logged_in))
+        self._do.wait().until(any_of(has_error, is_logged_in))
         if not is_logged_in(browser):
             raise AuthFailure(get_error(browser))
 
@@ -125,8 +125,8 @@ class Api(providers.SeleniumBased):
 
         browser = self.browser
         browser.get(LOANS_URL)
-        table = self._wait_element(By.CSS_SELECTOR, "div.investment-table")
-        load_button = self._find_maybe(By.CSS_SELECTOR, "div.load-more")
+        table = self._do.wait_element(By.CSS_SELECTOR, "div.investment-table")
+        load_button = self._do.find_maybe(By.CSS_SELECTOR, "div.load-more")
         if load_button:
             load_button.click()
         return [

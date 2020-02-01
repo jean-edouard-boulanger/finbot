@@ -49,41 +49,41 @@ class Api(providers.SeleniumBased):
         browser.get(BARCLAYCARD_URL)
 
         logging.info("getting logging form")
-        login_button = self._wait_element(By.XPATH, "//a[@data-aem-js='loginButton']")
+        login_button = self._do.wait_element(By.XPATH, "//a[@data-aem-js='loginButton']")
         browser.execute_script("arguments[0].click();", login_button)
 
         # step 2: provide username
         logging.info(f"providing username {credentials.user_name}")
-        username_input = self._wait_element(By.XPATH, "//input[@name='usernameAndID']")
+        username_input = self._do.wait_element(By.XPATH, "//input[@name='usernameAndID']")
         username_input.send_keys(credentials.user_name)
-        self._find(By.XPATH, "//button[@type='submit']").click()
+        self._do.find(By.XPATH, "//button[@type='submit']").click()
 
         # step 3: provide passcode
         logging.info(f"providing passcode")
-        passcode_input = self._wait_element(By.XPATH, "//input[@type='password']")
+        passcode_input = self._do.wait_element(By.XPATH, "//input[@type='password']")
         passcode_input.send_keys(credentials.passcode)
         browser.find_element_by_xpath("//button[@type='submit']").click()
 
         # step 4: provide partial memorable word
         logging.info(f"providing memorable word")
 
-        input1 = self._wait_element(By.XPATH, "//input[@data-id='memorableWord-letter1']")
+        input1 = self._do.wait_element(By.XPATH, "//input[@data-id='memorableWord-letter1']")
         input1_id = input1.get_attribute("id")
 
-        input2 = self._wait_element(By.XPATH, "//input[@data-id='memorableWord-letter2']")
+        input2 = self._do.wait_element(By.XPATH, "//input[@data-id='memorableWord-letter2']")
         input2_id = input2.get_attribute("id")
 
         letter1_label_id = f"{input1_id}-label"
-        letter1_idx = int(self._wait_element(By.ID, letter1_label_id).text.strip()[0]) - 1
+        letter1_idx = int(self._do.wait_element(By.ID, letter1_label_id).text.strip()[0]) - 1
 
         letter2_label_id = f"{input2_id}-label"
-        letter2_idx = int(self._wait_element(By.ID, letter2_label_id).text.strip()[0]) - 1
+        letter2_idx = int(self._do.wait_element(By.ID, letter2_label_id).text.strip()[0]) - 1
 
         input1.send_keys(credentials.memorable_word[letter1_idx])
         input2.send_keys(credentials.memorable_word[letter2_idx])
         browser.find_element_by_xpath("//button[@type='submit']").click()
 
-        self._wait().until(any_of(
+        self._do.wait().until(any_of(
             presence_of_element_located((By.CSS_SELECTOR, "div.sitenav-select-account-link")),
             _get_login_error
         ))
@@ -93,7 +93,7 @@ class Api(providers.SeleniumBased):
             raise AuthFailure(login_error)
 
         # step 5: collect account info
-        account_area = self._wait_element(By.CSS_SELECTOR, "div.sitenav-select-account-link")
+        account_area = self._do.wait_element(By.CSS_SELECTOR, "div.sitenav-select-account-link")
         account_name, account_id = account_area.text.strip().split("...")
         self.account = {
             "id": account_id,
@@ -103,7 +103,7 @@ class Api(providers.SeleniumBased):
 
     def get_balances(self):
         browser = self.browser
-        balance_area = self._wait_element(By.CSS_SELECTOR, "div.current-balance")
+        balance_area = self._do.wait_element(By.CSS_SELECTOR, "div.current-balance")
         balance_amount_str = balance_area.find_element_by_css_selector("span.value").text.strip()
         balance_amount = Price.fromstring(balance_amount_str)
         return {
