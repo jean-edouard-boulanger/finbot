@@ -66,10 +66,19 @@ class Api(providers.SeleniumBased):
 
         # step 4: provide partial memorable word
         logging.info(f"providing memorable word")
-        input1 = self._wait_element(By.ID, "memorableWord_0_letter1")
-        input2 = self._wait_element(By.ID, "memorableWord_1_letter2")
-        letter1_idx = int(self._wait_element(By.ID, "memorableWord_0_letter1-label").text.strip()[0]) - 1
-        letter2_idx = int(self._wait_element(By.ID, "memorableWord_1_letter2-label").text.strip()[0]) - 1
+
+        input1 = self._wait_element(By.XPATH, "//input[@data-id='memorableWord-letter1']")
+        input1_id = input1.get_attribute("id")
+
+        input2 = self._wait_element(By.XPATH, "//input[@data-id='memorableWord-letter2']")
+        input2_id = input2.get_attribute("id")
+
+        letter1_label_id = f"{input1_id}-label"
+        letter1_idx = int(self._wait_element(By.ID, letter1_label_id).text.strip()[0]) - 1
+
+        letter2_label_id = f"{input2_id}-label"
+        letter2_idx = int(self._wait_element(By.ID, letter2_label_id).text.strip()[0]) - 1
+
         input1.send_keys(credentials.memorable_word[letter1_idx])
         input2.send_keys(credentials.memorable_word[letter2_idx])
         browser.find_element_by_xpath("//button[@type='submit']").click()

@@ -21,7 +21,7 @@ def _iter_accounts(browser):
     accounts_switcher_area = WebDriverWait(browser, 60).until(
         presence_of_element_located((By.CSS_SELECTOR, "section.axp-account-switcher")))
     accounts_switcher = accounts_switcher_area.find_element_by_tag_name("button")
-    accounts_switcher.click()
+    browser.execute_script("arguments[0].click();", accounts_switcher)
 
     accounts_area = WebDriverWait(browser, 60).until(
         presence_of_element_located((By.ID, "accounts")))
@@ -93,7 +93,7 @@ class Api(providers.SeleniumBased):
         self._go_home()
         for entry in _iter_accounts(self.browser):
             if entry["account"]["id"] == account_id:
-                entry["selenium"]["account_element_ref"].click()
+                self._click_js(entry["selenium"]["account_element_ref"])
                 return self._wait_element(By.CSS_SELECTOR, "section.balance-container")
         raise Error(f"unable to switch to account {account_id}")
 
