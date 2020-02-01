@@ -107,8 +107,6 @@ services:
     command: sh -c "npm install && npm start"
     ports:
       - "5005:5005"
-    environment:
-      REACT_APP_SELECTED_USER: 1
 
   dev:
     build:

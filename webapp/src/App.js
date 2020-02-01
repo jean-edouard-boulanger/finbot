@@ -10,6 +10,7 @@ import Card from 'react-bootstrap/Card';
 import Chart from "react-apexcharts";
 import React from 'react';
 import BarLoader from "react-spinners/BarLoader";
+import queryString from 'query-string';
 
 function formatRelChange(val) {
   if(val === null || val === undefined || val === 0.0) {
@@ -46,10 +47,10 @@ function Money(props) {
     ccy
   } = props;
   if(amount >= 0) {
-    return (<span >{moneyFormatter(amount, locale, ccy)}</span>);
+    return (<span>{moneyFormatter(amount, locale, ccy)}</span>);
   }
   else {
-    return (<span span className="badge badge-danger">{moneyFormatter(amount, locale, ccy)}</span>);
+    return (<span className="badge badge-danger">{moneyFormatter(amount, locale, ccy)}</span>);
   }
 }
 
@@ -171,10 +172,18 @@ function ValuationChange(props) {
   }
 }
 
+
+function getAccountId() {
+  const urlParams = queryString.parse(window.location.search);
+  const userId = urlParams.userId;
+  return userId === undefined ? 1 : userId;
+}
+
+
 class App extends React.Component {
   constructor(props) {
     super(props);
-    this.account_id = process.env.REACT_APP_SELECTED_USER;
+    this.account_id = getAccountId();
     this.locale = "en-GB";
     this.state = {
       account: null,
