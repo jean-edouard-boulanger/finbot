@@ -35,6 +35,7 @@ services:
     container_name: snapwsrv
     depends_on: 
       - finbotdb
+      - finbotwsrv
     working_dir: /finbot
     command: sh -c "make finbotdb-wait && make run-snapwsrv-dev"
     ports:
@@ -71,7 +72,7 @@ services:
       - snapwsrv
       - histwsrv
     working_dir: /finbot
-    command: sh -c "/usr/bin/wait && make run-schedsrv-dev"
+    command: sh -c "make finbotdb-wait && /usr/bin/wait && make run-schedsrv-dev"
     volumes:
       - .:/finbot
     environment:
@@ -79,7 +80,6 @@ services:
       FINBOT_DB_HOSTNAME: finbotdb
       FINBOT_SNAPWSRV_ENDPOINT: "http://snapwsrv:5000"
       FINBOT_HISTWSRV_ENDPOINT: "http://histwsrv:5002"
-      FINBOT_SELECTED_USER: 1
 
   appwsrv:
     build:
