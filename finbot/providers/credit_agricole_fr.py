@@ -118,7 +118,7 @@ class Api(providers.SeleniumBased):
                                   .find_elements_by_tag_name("a")[1])
         root_area = browser.find_element_by_css_selector("div#container")
         submit_link.click()
-        self._do.wait().until(any_of(
+        self._do.wait_cond(any_of(
             _is_logged_in,
             all_of(staleness_of(root_area), negate(_is_logged_in))))
 

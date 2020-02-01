@@ -83,7 +83,7 @@ class Api(providers.SeleniumBased):
         input2.send_keys(credentials.memorable_word[letter2_idx])
         browser.find_element_by_xpath("//button[@type='submit']").click()
 
-        self._do.wait().until(any_of(
+        self._do.wait_cond(any_of(
             presence_of_element_located((By.CSS_SELECTOR, "div.sitenav-select-account-link")),
             _get_login_error
         ))

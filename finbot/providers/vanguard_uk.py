@@ -93,7 +93,7 @@ class Api(providers.SeleniumBased):
         (auth_form.find_element_by_class_name("submit")
                   .find_element_by_css_selector("button")
                   .click())
-        self._do.wait().until(any_of(
+        self._do.wait_cond(any_of(
             staleness_of(auth_form),
             has_login_error(auth_form)))
         if has_login_error(auth_form)(browser):

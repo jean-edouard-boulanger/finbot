@@ -70,7 +70,7 @@ class Api(providers.SeleniumBased):
         password_input.send_keys(credentials.password)
         actions_area = self._do.wait_element(By.CSS_SELECTOR, "div.actions")
         actions_area.find_element_by_css_selector("button.action-button").click()
-        self._do.wait().until(any_of(has_error, is_logged_in))
+        self._do.wait_cond(any_of(has_error, is_logged_in))
         if not is_logged_in(browser):
             raise AuthFailure(get_error(browser))
 

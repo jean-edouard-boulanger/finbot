@@ -42,7 +42,7 @@ def _is_maintenance(browser):
     return "scheme-maintenance" in browser.current_url
 
 
-def iter_accounts(accounts_elements):
+def _iter_accounts(accounts_elements):
     def extract_account(account_card):
         card_body = account_card.find_element_by_css_selector("div.card-body")
         card_footer = account_card.find_element_by_css_selector("div.card-footer")
@@ -95,7 +95,7 @@ class Api(providers.SeleniumBased):
         self._go_home()
         browser = self.browser
         accounts_elements = _wait_accounts(browser)
-        for entry in iter_accounts(accounts_elements):
+        for entry in _iter_accounts(accounts_elements):
             if entry["account"]["id"] == account_id:
                 retries = 4
                 for _ in range(retries):
@@ -133,14 +133,13 @@ class Api(providers.SeleniumBased):
         submit_button = login_area.find_element_by_tag_name("button")
         time.sleep(submit_wait)  # TODO hacky, how to properly detect the form is ready
         submit_button.click()
-        WebDriverWait(browser, 60).until(
-            any_of(_has_error, _is_logged_in))
+        self._do.wait_cond(any_of(_has_error, _is_logged_in))
         if not _is_logged_in(browser):
             raise AuthFailure("authentication failure")
         accounts_elements = _wait_accounts(self.browser)
         self.accounts = {
             entry["account"]["id"]: deepcopy(entry["account"])
-            for entry in iter_accounts(accounts_elements)
+            for entry in _iter_accounts(accounts_elements)
         }
 
     def authenticate(self, credentials):
@@ -165,7 +164,7 @@ class Api(providers.SeleniumBased):
                     "account": deepcopy(entry["account"]),
                     "balance": entry["balance"]
                 }
-                for entry in iter_accounts(accounts_elements)
+                for entry in _iter_accounts(accounts_elements)
             ]
         }
 

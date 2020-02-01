@@ -17,16 +17,15 @@ AUTH_URL = "https://global.americanexpress.com/login"
 HOME_URL = "https://global.americanexpress.com/dashboard"
 
 
-def _iter_accounts(browser):
-    accounts_switcher_area = WebDriverWait(browser, 60).until(
-        presence_of_element_located((By.CSS_SELECTOR, "section.axp-account-switcher")))
+def _iter_accounts(browser_helper: providers.SeleniumHelper):
+    accounts_switcher_area = browser_helper.wait_element(
+        By.CSS_SELECTOR, "section.axp-account-switcher")
     accounts_switcher = accounts_switcher_area.find_element_by_tag_name("button")
-    browser.execute_script("arguments[0].click();", accounts_switcher)
+    browser_helper.click(accounts_switcher)
 
-    accounts_area = WebDriverWait(browser, 60).until(
-        presence_of_element_located((By.ID, "accounts")))
-
+    accounts_area = browser_helper.wait_element(By.ID, "accounts")
     account_rows = accounts_area.find_elements_by_css_selector("section.account-row")
+
     for account_row in account_rows:
         account_name = account_row.text.strip()
         # TODO make this configurable?
@@ -43,7 +42,8 @@ def _iter_accounts(browser):
                 "account_element_ref": account_row
             }
         }
-    browser.execute_script("arguments[0].click();", accounts_switcher)
+
+    browser_helper.click(accounts_switcher)
 
 
 def _get_balance(balance_area):
@@ -91,7 +91,7 @@ class Api(providers.SeleniumBased):
 
     def _switch_account(self, account_id):
         self._go_home()
-        for entry in _iter_accounts(self.browser):
+        for entry in _iter_accounts(self._do):
             if entry["account"]["id"] == account_id:
                 self._do.click(entry["selenium"]["account_element_ref"])
                 return self._do.wait_element(By.CSS_SELECTOR, "section.balance-container")
@@ -107,7 +107,7 @@ class Api(providers.SeleniumBased):
         self._do.find(By.ID, "eliloPassword").send_keys(credentials.password)
         self._do.find(By.ID, "loginSubmit").click()
 
-        self._do.wait().until(any_of(
+        self._do.wait_cond(any_of(
             presence_of_element_located((By.CSS_SELECTOR, "section.balance-container")),
             get_loging_error
         ))
@@ -118,7 +118,7 @@ class Api(providers.SeleniumBased):
 
         self.accounts = {
             entry["account"]["id"]: deepcopy(entry["account"])
-            for entry in _iter_accounts(browser)
+            for entry in _iter_accounts(self._do)
         }
 
     def get_balances(self):
@@ -180,7 +180,8 @@ class Api(providers.SeleniumBased):
 
         self._switch_account(account_id)
         links_area = self._do.wait_element(By.CSS_SELECTOR, "div.transaction-footer-links")
-        transactions_link = links_area.find_element_by_xpath("//a[contains(@title, 'recent activity')]")
+        transactions_link = links_area.find_element_by_xpath(
+            "//a[contains(@title, 'recent activity')]")
         self._do.click(transactions_link)
 
         # 2. get full transaction list
@@ -189,7 +190,7 @@ class Api(providers.SeleniumBased):
             more_button = self._do.find_maybe(By.XPATH, "//button[contains(@title, 'more transactions')]")
             if not more_button or not more_button.is_displayed():
                 break
-            self.browser.execute_script("arguments[0].click();", more_button)
+            self._do.click(more_button)
 
         # 3. expand all transactions
 

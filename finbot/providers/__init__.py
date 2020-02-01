@@ -53,6 +53,9 @@ class SeleniumHelper(object):
         return self.wait(timeout).until(
             presence_of_element_located((by, selector)))
 
+    def wait_cond(self, cond, timeout=60):
+        return self.wait(timeout).until(cond)
+
     def find(self, by, selector):
         return self.browser.find_element(by, selector)
 

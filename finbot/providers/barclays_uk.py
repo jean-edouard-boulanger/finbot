@@ -107,15 +107,15 @@ class Api(providers.SeleniumBased):
         step1_form.find_element_by_css_selector("input#surname0").send_keys(
             credentials.last_name)
         card_radio = step1_form.find_element_by_css_selector("input#radio-c2")
-        browser.execute_script("arguments[0].click();", card_radio)
+        self._do.click(card_radio)
         card_nums = credentials.card_number.split("-")
         for i in range(0, 4):
             step1_form.find_element_by_id(f"cardNumber{i}").send_keys(card_nums[i])
         step1_form.find_element_by_tag_name("button").click()
-        passcode_button = WebDriverWait(browser, 60).until(_get_passcode_login_button)
-        browser.execute_script("arguments[0].click();", passcode_button)
+        passcode_button = self._do.wait_cond(_get_passcode_login_button)
+        self._do.click(passcode_button)
 
-        self._do.wait().until(any_of(
+        self._do.wait_cond(any_of(
             presence_of_element_located((By.ID, "passcode0")),
             _get_error(browser)))
 

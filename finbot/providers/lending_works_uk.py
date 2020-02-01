@@ -74,7 +74,7 @@ class Api(providers.SeleniumBased):
         if not self._is_home():
             self.browser.get(CLASSIC_URL)
         side_bar = self._do.wait_element(By.CSS_SELECTOR, "div.m-lw-db-region-sidebar")
-        self._do.wait().until(balances_loaded)
+        self._do.wait_cond(balances_loaded)
 
     def authenticate(self, credentials):
         browser = self.browser
@@ -85,7 +85,7 @@ class Api(providers.SeleniumBased):
         password_input.send_keys(credentials.password)
         submit_button = self._do.find(By.CSS_SELECTOR, "button.form-submit")
         submit_button.click()
-        self._do.wait().until(any_of(is_logged_in, has_error))
+        self._do.wait_cond(any_of(is_logged_in, has_error))
         if not is_logged_in(browser):
             raise AuthFailure(get_error(browser))
 
