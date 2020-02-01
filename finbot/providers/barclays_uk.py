@@ -147,7 +147,7 @@ class Api(providers.SeleniumBased):
         body_area = transactions_table.find_element_by_css_selector("div.tbody-trans")
         for row in body_area.find_elements_by_css_selector("div.row"):
             header_row = row.find_element_by_css_selector("div.th-wrapper")
-            cells = header_row.find_elements_by_tag_name("div.th")
+            cells = header_row.find_elements_by_css_selector("div.th")
             _, date_cell, desc_cell, in_cell, out_cell, bal_cell = cells
             txn_date = datetime.strptime(date_cell.text.strip(), "%a, %d %b %y")
             if not date_in_range(txn_date, from_date, to_date):
