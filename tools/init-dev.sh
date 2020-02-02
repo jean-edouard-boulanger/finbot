@@ -40,7 +40,7 @@ if [[ "${rebuild_images}" == "1" ]]
 then
     log_info "Will re-build all finbot containers from scratch"
     docker-compose build --no-cache
-if
+fi
 
 log_info "Starting database and development container"
 docker-compose up -d finbotdb dev
