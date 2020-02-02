@@ -46,16 +46,16 @@ log_info "Starting database and development container"
 docker-compose up -d finbotdb dev
 
 log_info "Waiting for finbotdb to be reachable"
-docker exec -it dev make finbotdb-wait
+docker exec dev make finbotdb-wait
 
 log_info "Will rebuild finbotdb schema from model"
-docker exec -it dev make finbotdb-rebuild
+docker exec dev make finbotdb-rebuild
 
 log_info "Hydrating finbotdb with default data"
-docker exec -it dev make finbotdb-hydrate
+docker exec dev make finbotdb-hydrate
 
 log_info "Adding development account to finbotdb"
-docker exec -it dev make finbotdb-add-account
+docker exec dev make finbotdb-add-account
 
 log_info "The development environment is ready"
 
