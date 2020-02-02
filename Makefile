@@ -164,23 +164,23 @@ edit-account:
 	rm .accounts.tmp.json
 
 finbotdb-wait:
-	tools/finbotdb --database ${FINBOT_DB_URL} wait
+	python3.7 tools/finbotdb --database ${FINBOT_DB_URL} wait
 
 finbotdb-build:
-	tools/finbotdb --database ${FINBOT_DB_URL} build
+	python3.7 tools/finbotdb --database ${FINBOT_DB_URL} build
 
 finbotdb-destroy:
-	tools/finbotdb --database ${FINBOT_DB_URL} destroy
+	python3.7 tools/finbotdb --database ${FINBOT_DB_URL} destroy
 
 finbotdb-rebuild:
-	tools/finbotdb --database ${FINBOT_DB_URL} destroy && \
-	tools/finbotdb --database ${FINBOT_DB_URL} build
+	python3.7 tools/finbotdb --database ${FINBOT_DB_URL} destroy && \
+	python3.7 tools/finbotdb --database ${FINBOT_DB_URL} build
 
 finbotdb-hydrate:
-	tools/finbotdb --database ${FINBOT_DB_URL} hydrate
+	python3.7 tools/finbotdb --database ${FINBOT_DB_URL} hydrate
 
 finbotdb-add-account:
-	tools/finbotdb --database ${FINBOT_DB_URL}  add-account \
+	python3.7 tools/finbotdb --database ${FINBOT_DB_URL}  add-account \
 		--secret ${FINBOT_SECRET_PATH} \
 		--account ${FINBOT_ACCOUNT_PATH}
 
