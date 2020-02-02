@@ -103,14 +103,14 @@ test-providers-docker:
 		--env PYTHONPATH='${PYTONPATH}:/finbot' \
 		--rm -it \
 		finbot/providers-tester:latest \
-		tools/providers-tester \
+		python3.7 tools/providers-tester \
 			--dump-balances --dump-assets --dump-liabilities --dump-transactions \
 			--secret-file ${FINBOT_SECRET_PATH} \
 			--accounts-file ${FINBOT_ACCOUNT_PATH} \
 			${TESTER_ACCOUNTS}
 
 test-providers-debug:
-	tools/providers-tester \
+	python3.7 tools/providers-tester \
 			--dump-balances --dump-assets --dump-liabilities --dump-transactions \
 			--secret-file ${FINBOT_SECRET_PATH} \
 			--accounts-file ${FINBOT_ACCOUNT_PATH} \
@@ -121,44 +121,44 @@ test-providers-debug:
 			${TESTER_ACCOUNTS}
 
 test-providers:
-	tools/providers-tester \
+	python3.7 tools/providers-tester \
 			--secret-file ${FINBOT_SECRET_PATH} \
 			--accounts-file ${FINBOT_ACCOUNT_PATH} \
 			${TESTER_ACCOUNTS}
 
 test-snapwsrv:
-	tools/snapwsrv-tester \
+	python3.7 tools/snapwsrv-tester \
 		--endpoint ${FINBOT_SNAPWSRV_ENDPOINT} \
 		--account-id ${ACCOUNT_ID}
 
 test-histwsrv:
-	tools/histwsrv-tester \
+	python3.7 tools/histwsrv-tester \
 		--endpoint ${FINBOT_HISTWSRV_ENDPOINT} \
 		--snapshot-id ${SNAPSHOT_ID}
 
 init-vault:
 	mkdir -p .secure && \
-	tools/crypt fernet-key > ${FINBOT_SECRET_PATH} && \
+	python3.7 tools/crypt fernet-key > ${FINBOT_SECRET_PATH} && \
 	chmod 600 ${FINBOT_SECRET_PATH}
 
 init-account:
-	tools/crypt fernet-encrypt \
+	python3.7 tools/crypt fernet-encrypt \
 		-k ${FINBOT_SECRET_PATH} \
 		-i tools/accounts.tpl.json > ${FINBOT_ACCOUNT_PATH} && \
 	echo "created default account, run 'make edit-account' to configure"
 
 show-account:
-	tools/crypt fernet-decrypt \
+	python3.7 tools/crypt fernet-decrypt \
 		-k ${FINBOT_SECRET_PATH} \
 		-i ${FINBOT_ACCOUNT_PATH} | less
 
 edit-account:
-	tools/crypt fernet-decrypt \
+	python3.7 tools/crypt fernet-decrypt \
 		-k ${FINBOT_SECRET_PATH} \
 		-i ${FINBOT_ACCOUNT_PATH} > .accounts.tmp.json && \
 	chmod 600 .accounts.tmp.json && \
 	${FINBOT_EDIT_CMD} .accounts.tmp.json && \
-	tools/crypt fernet-encrypt \
+	python3.7 tools/crypt fernet-encrypt \
 		-k ${FINBOT_SECRET_PATH} \
 		-i .accounts.tmp.json > ${FINBOT_ACCOUNT_PATH} && \
 	rm .accounts.tmp.json
