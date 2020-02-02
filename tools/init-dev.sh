@@ -22,28 +22,28 @@ which docker >/dev/null 2>&1 || die "'docker' is not available in this machine, 
 log_info checking docker-compose availability
 which docker-compose  >/dev/null 2>&1 || die "'docker-compose' is not available on this machine, install and try again"
 
-[[ -n "${FINBOT_VAULT_PATH}" ]] || die "FINBOT_VAULT_PATH is not set"
-if [[ ! -d ${FINBOT_VAULT_PATH} ]]
-then
-    log_info "Vault does not exist, will initialize"
-    make init-vault
-fi
-
-[[ -n "${FINBOT_ACCOUNT_PATH}" ]] || die "FINBOT_ACCOUNT_PATH is not set"
-if [[ ! -f ${FINBOT_ACCOUNT_PATH} ]]
-then
-    log_info "Development account does not exist, will create"
-    make init-account
-fi
-
 if [[ "${rebuild_images}" == "1" ]]
 then
     log_info "Will re-build all finbot containers from scratch"
     docker-compose build --no-cache
 fi
 
-log_info "Starting database and development container"
-docker-compose up -d finbotdb dev
+log_info "Starting development container"
+docker-compose up -d dev
+
+[[ -n "${FINBOT_VAULT_PATH}" ]] || die "FINBOT_VAULT_PATH is not set"
+if [[ ! -d ${FINBOT_VAULT_PATH} ]]
+then
+    log_info "Vault does not exist, will initialize"
+    docker exec dev make init-vault
+fi
+
+[[ -n "${FINBOT_ACCOUNT_PATH}" ]] || die "FINBOT_ACCOUNT_PATH is not set"
+if [[ ! -f ${FINBOT_ACCOUNT_PATH} ]]
+then
+    log_info "Development account does not exist, will create"
+    docker exec dev make init-account
+fi
 
 log_info "Waiting for finbotdb to be reachable"
 docker exec dev make finbotdb-wait
