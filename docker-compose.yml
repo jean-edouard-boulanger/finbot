@@ -20,6 +20,8 @@ services:
     build:
       context: .
       dockerfile: finbotwsrv.Dockerfile
+    depends_on: 
+      - dev
     container_name: finbotwsrv
     working_dir: /finbot
     command: "make run-finbotwsrv-dev"
@@ -36,6 +38,7 @@ services:
     depends_on: 
       - finbotdb
       - finbotwsrv
+      - dev
     working_dir: /finbot
     command: sh -c "make finbotdb-wait && make run-snapwsrv-dev"
     ports:
@@ -54,6 +57,7 @@ services:
     container_name: histwsrv
     depends_on: 
       - finbotdb
+      - dev
     working_dir: /finbot
     command: sh -c "make finbotdb-wait && make run-histwsrv-dev"
     ports:
@@ -71,6 +75,7 @@ services:
     depends_on: 
       - snapwsrv
       - histwsrv
+      - dev
     working_dir: /finbot
     command: sh -c "make finbotdb-wait && /usr/bin/wait && make run-schedsrv-dev"
     volumes:
@@ -88,6 +93,7 @@ services:
     container_name: appwsrv
     depends_on: 
       - finbotdb
+      - dev
     working_dir: /finbot
     command: sh -c "make finbotdb-wait && make run-appwsrv-dev"
     ports:
@@ -101,6 +107,9 @@ services:
   webapp:
     image: "node:13-alpine3.10"
     container_name: webapp
+    depends_on: 
+      - appwsrv
+      - dev
     volumes:
       - ./webapp:/webapp
     working_dir: /webapp
