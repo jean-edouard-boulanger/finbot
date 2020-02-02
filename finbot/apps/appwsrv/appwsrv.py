@@ -192,6 +192,7 @@ def get_linked_accounts_valuation(user_account_id):
                         )
                         .first())
 
+    history_entry_effective_at = result.effective_at
     return jsonify(serialize({
         "linked_accounts": [
             {
@@ -203,7 +204,7 @@ def get_linked_accounts_valuation(user_account_id):
                 "valuation": {
                     "date": (entry.effective_snapshot.effective_at 
                                 if entry.effective_snapshot 
-                                else entry.effective_at),
+                                else history_entry_effective_at),
                     "currency": result.valuation_ccy,
                     "value": entry.valuation,
                     "change": entry.valuation_change
