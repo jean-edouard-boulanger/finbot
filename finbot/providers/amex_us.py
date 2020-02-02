@@ -11,6 +11,7 @@ from copy import deepcopy
 from price_parser import Price
 from finbot.core.utils import pretty_dump
 import re
+import logging
 
 
 AUTH_URL = "https://global.americanexpress.com/login"
@@ -161,11 +162,15 @@ class Api(providers.SeleniumBased):
                 "amount": txn_amount,
                 "description": description_cell.text.strip(),
                 "type": "debit" if txn_amount >= 0 else "credit",
-                "details_ref": details_id
+                "details_id": details_id,
+                "selenium": {
+                    "header_row_ref": row
+                }
             }
 
         def extract_transaction(txn_header):
-            details_row = self._do.wait_element(By.ID, txn_header["details_ref"])
+            self._do.click(txn_header["selenium"]["header_row_ref"])
+            details_row = self._do.wait_element(By.ID, txn_header["details_id"])
             clean_details = " ".join(entry.strip() for entry in details_row.text.split("\n"))
             txn_id = re.findall(r"REFERENCE NUMBER:\s+(\w+)\s+", clean_details)[0]
             return {
@@ -203,7 +208,6 @@ class Api(providers.SeleniumBased):
             txn_header = extract_transaction_header(txn_row)
             if date_in_range(txn_header["date"], from_date, to_date):
                 txn_in_scope.append(txn_header)
-                self._do.click(txn_row)
 
         return [
             extract_transaction(txn_header) 
