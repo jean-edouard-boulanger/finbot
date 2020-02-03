@@ -67,7 +67,7 @@ def generic_request_handler(schema=None):
                             request_data = request.json
                             jsonschema.validate(instance=request_data, schema=schema)
                         except jsonschema.ValidationError as e:
-                            raise Error(f"failed to validate schema: {e}")
+                            raise Error(f"failed to validate request: {e}")
                     response = func(*args, **kwargs)
                     logging.info("request processed successfully")
                     return response
