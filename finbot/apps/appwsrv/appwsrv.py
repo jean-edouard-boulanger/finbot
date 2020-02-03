@@ -29,7 +29,7 @@ import json
 import os
 
 
-#logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 
 SECRET = open(os.environ["FINBOT_SECRET_PATH"], "r").read()
@@ -166,19 +166,31 @@ ACCOUNT = ACCOUNTS.p("user_account_id")
 @app.route(ACCOUNT._, methods=["GET"])
 @generic_request_handler()
 def get_user_account(user_account_id):
-    entry = (db_session.query(UserAccountHistoryEntry)
-                       .filter_by(user_account_id=user_account_id)
-                       .filter_by(available=True)
-                       .order_by(desc(UserAccountHistoryEntry.effective_at))
-                       .options(joinedload(UserAccountHistoryEntry.user_account_valuation_history_entry))
-                       .options(joinedload(UserAccountHistoryEntry.user_account))
-                       .options(joinedload(UserAccountHistoryEntry.user_account, UserAccount.settings))
-                       .first())
+    def serialize_valuation(entry):
+        return {
+            "history_entry_id": entry.id,
+            "date": entry.effective_at,
+            "currency": entry.valuation_ccy,
+            "value": entry.user_account_valuation_history_entry.valuation,
+            "total_liabilities": entry.user_account_valuation_history_entry.total_liabilities,
+            "change": entry.user_account_valuation_history_entry.valuation_change
+        }
 
-    if entry is None:
-        raise ApplicationError(f"user account {user_account_id} not found")
+    account = (db_session.query(UserAccount)
+                         .filter_by(id=user_account_id)
+                         .options(joinedload(UserAccount.settings))
+                         .first())
 
-    account = entry.user_account
+    if not account:
+        raise ApplicationError(f"user account '{user_account_id}' not found")
+
+    valuation = (db_session.query(UserAccountHistoryEntry)
+                           .filter_by(user_account_id=user_account_id)
+                           .filter_by(available=True)
+                           .order_by(desc(UserAccountHistoryEntry.effective_at))
+                           .options(joinedload(UserAccountHistoryEntry.user_account_valuation_history_entry))
+                           .first())
+
     return jsonify(serialize({
         "result": {
             "user_account": {
@@ -193,14 +205,7 @@ def get_user_account(user_account_id):
                 "created_at": account.created_at,
                 "updated_at": account.updated_at
             },
-            "valuation": {
-                "history_entry_id": entry.id,
-                "date": entry.effective_at,
-                "currency": entry.valuation_ccy,
-                "value": entry.user_account_valuation_history_entry.valuation,
-                "total_liabilities": entry.user_account_valuation_history_entry.total_liabilities,
-                "change": entry.user_account_valuation_history_entry.valuation_change
-            }
+            "valuation": serialize_valuation(valuation) if valuation else None
         }
     }))
 
@@ -255,7 +260,6 @@ def get_linked_accounts_valuation(user_account_id):
                         )
                         .first())
 
-    history_entry_effective_at = result.effective_at
     return jsonify(serialize({
         "linked_accounts": [
             {
@@ -267,13 +271,14 @@ def get_linked_accounts_valuation(user_account_id):
                 "valuation": {
                     "date": (entry.effective_snapshot.effective_at 
                                 if entry.effective_snapshot 
-                                else history_entry_effective_at),
+                                else result.effective_at),
                     "currency": result.valuation_ccy,
                     "value": entry.valuation,
                     "change": entry.valuation_change
                 }
             }
-            for entry in result.linked_accounts_valuation_history_entries
+            for entry in (result.linked_accounts_valuation_history_entries
+                          if result else [])
         ]
     }))
 
