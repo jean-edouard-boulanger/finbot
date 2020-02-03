@@ -1,4 +1,5 @@
 import React from "react";
+import PropTypes from "prop-types";
 
 const ValuationChange = props => {
     const {
@@ -43,5 +44,11 @@ const ValuationChange = props => {
         return impl(null);
     }
 }
+
+ValuationChange.propTypes = {
+    amount: PropTypes.number,
+    currentValue: PropTypes.number,
+    previousValue: PropTypes.number
+};
 
 export default ValuationChange;

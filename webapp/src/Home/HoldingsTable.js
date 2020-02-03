@@ -1,4 +1,6 @@
 import React from "react";
+import PropTypes from "prop-types";
+
 import ValuationChange from "./ValuationChange";
 import Money from "./Money";
 import DurationBadge from "./DurationBadge";
@@ -15,6 +17,7 @@ const HoldingsTable = props => {
         valuation,
         valuationIsLoaded
     } = props;
+
     return (
         <>
             <Row className="mt-4">
@@ -80,5 +83,13 @@ const HoldingsTable = props => {
         </>
     )
 }
+
+HoldingsTable.propTypes = {
+    linked_accounts: PropTypes.array,
+    locale: PropTypes.string,
+    moneyFormatter: PropTypes.func,
+    valuation: PropTypes.object,
+    valuationIsLoaded: PropTypes.bool,
+};
 
 export default HoldingsTable;

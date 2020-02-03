@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from "prop-types";
 
 class DurationBadge extends React.Component {
     constructor(props) {
@@ -60,5 +61,9 @@ class DurationBadge extends React.Component {
         return (<span className="badge badge-secondary">{formatDuration(this.state.elapsed)}</span>)
     }
 }
+
+DurationBadge.propTypes = {
+    from: PropTypes.instanceOf(Date)
+};
 
 export default DurationBadge;
