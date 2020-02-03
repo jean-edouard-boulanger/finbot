@@ -3,6 +3,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from sqlalchemy import create_engine, text, desc, asc
 from sqlalchemy.orm import scoped_session, sessionmaker, joinedload, contains_eager
+from sqlalchemy.exc import IntegrityError
 from finbot.clients.finbot import FinbotClient
 from finbot.apps.appwsrv import timeseries
 from finbot.apps.support import generic_request_handler, Route, ApplicationError
@@ -12,6 +13,7 @@ from finbot.core import dbutils
 from finbot.model import (
     Provider,
     UserAccount,
+    UserAccountSettings,
     LinkedAccount,
     UserAccountSnapshot,
     UserAccountHistoryEntry,
@@ -97,37 +99,47 @@ def delete_provider(provider_id):
     return jsonify({"deleted": count})
 
 
-ACCOUNT = API_V1.accounts.p("user_account_id")
+ACCOUNTS = API_V1.accounts
 
 
-@app.route(ACCOUNT.history._, methods=["GET"])
+@app.route(ACCOUNTS._, methods=["POST"])
 @generic_request_handler
-def get_user_account_valuation_history(user_account_id):
-    history_entries = (db_session.query(UserAccountHistoryEntry)
-                                 .filter_by(user_account_id=user_account_id)
-                                 .filter_by(available=True)
-                                 .order_by(asc(UserAccountHistoryEntry.effective_at))
-                                 .options(joinedload(UserAccountHistoryEntry.user_account_valuation_history_entry, innerjoin=True))
-                                 .all())
+def create_user_account():
+    data = request.json
+    try:
+        with db_session.persist(UserAccount()) as user_account:
+            user_account.email = data["email"]
+            user_account.encrypted_password = crypto.fernet_encrypt(
+                    data["password"].encode(), SECRET).decode()
+            user_account.full_name = data["full_name"]
+            user_account.settings = UserAccountSettings(
+                valuation_ccy=data["settings"]["valuation_ccy"])
+    except IntegrityError as e:
+        logging.warning(f"failed to create user account: {e}")
+        raise ApplicationError(f"User account with email '{user_account.email}' already exists")
 
-    return jsonify(serialize({
-        "historical_valuation": [
-                {
-                    "date": entry.effective_at,
-                    "currency": entry.valuation_ccy,
-                    "value": entry.user_account_valuation_history_entry.valuation
-                }
-                for entry in timeseries.sample_time_series(
-                    history_entries,
-                    time_getter=(lambda item: item.effective_at),
-                    frequency=timedelta(days=1))
-        ]
-    }))
+    return jsonify({
+        "user_account": {
+            "id": user_account.id,
+            "email": user_account.email,
+            "full_name": user_account.full_name,
+            "settings": {
+                "valuation_ccy": user_account.settings.valuation_ccy,
+                "created_at": user_account.settings.created_at,
+                "updated_at": user_account.settings.updated_at
+            },
+            "created_at": user_account.created_at,
+            "updated_at": user_account.updated_at
+        }
+    })
+
+
+ACCOUNT = ACCOUNTS.p("user_account_id")
 
 
 @app.route(ACCOUNT._, methods=["GET"])
 @generic_request_handler
-def get_account_valuation(user_account_id):
+def get_user_account(user_account_id):
     entry = (db_session.query(UserAccountHistoryEntry)
                        .filter_by(user_account_id=user_account_id)
                        .filter_by(available=True)
@@ -164,6 +176,31 @@ def get_account_valuation(user_account_id):
                 "change": entry.user_account_valuation_history_entry.valuation_change
             }
         }
+    }))
+
+
+@app.route(ACCOUNT.history._, methods=["GET"])
+@generic_request_handler
+def get_user_account_valuation_history(user_account_id):
+    history_entries = (db_session.query(UserAccountHistoryEntry)
+                                 .filter_by(user_account_id=user_account_id)
+                                 .filter_by(available=True)
+                                 .order_by(asc(UserAccountHistoryEntry.effective_at))
+                                 .options(joinedload(UserAccountHistoryEntry.user_account_valuation_history_entry, innerjoin=True))
+                                 .all())
+
+    return jsonify(serialize({
+        "historical_valuation": [
+                {
+                    "date": entry.effective_at,
+                    "currency": entry.valuation_ccy,
+                    "value": entry.user_account_valuation_history_entry.valuation
+                }
+                for entry in timeseries.sample_time_series(
+                    history_entries,
+                    time_getter=(lambda item: item.effective_at),
+                    frequency=timedelta(days=1))
+        ]
     }))
 
 

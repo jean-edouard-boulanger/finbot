@@ -27,7 +27,7 @@ Base = declarative_base()
 class UserAccount(Base):
     __tablename__ = "finbot_user_accounts"
     id = Column(Integer, primary_key=True)
-    email = Column(String(128), nullable=False)
+    email = Column(String(128), nullable=False, unique=True)
     encrypted_password = Column(Text, nullable=False)
     full_name = Column(String(128), nullable=False)
     created_at = Column(DateTimeTz, server_default=func.now())

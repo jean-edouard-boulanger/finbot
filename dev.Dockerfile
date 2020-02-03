@@ -38,6 +38,7 @@ RUN pip3 install \
     flask-cors \
     psycopg2 \
     sqlalchemy \
+    alembic \
     pytz \
     selenium \
     terminaltables \
