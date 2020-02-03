@@ -86,14 +86,14 @@ class Api(providers.SeleniumBased):
 
         browser = self.browser
         browser.get(f"{BASE_URL}/Login")
-        auth_form = self._wait_element(By.CSS_SELECTOR, "form.form-login")
+        auth_form = self._do.wait_element(By.CSS_SELECTOR, "form.form-login")
         user_input, password_input, *_ = auth_form.find_elements_by_tag_name("input")
         user_input.send_keys(credentials.username)
         password_input.send_keys(credentials.password)
         (auth_form.find_element_by_class_name("submit")
                   .find_element_by_css_selector("button")
                   .click())
-        self._wait().until(any_of(
+        self._do.wait_cond(any_of(
             staleness_of(auth_form),
             has_login_error(auth_form)))
         if has_login_error(auth_form)(browser):
@@ -120,7 +120,7 @@ class Api(providers.SeleniumBased):
 
         self._go_home()
         browser = self.browser
-        balances_table = self._wait_element(By.CLASS_NAME, "table-multi-product")
+        balances_table = self._do.wait_element(By.CLASS_NAME, "table-multi-product")
         balances_table_body = balances_table.find_element_by_tag_name("tbody")
         return {
             "accounts": [
@@ -128,9 +128,6 @@ class Api(providers.SeleniumBased):
                 for row in balances_table_body.find_elements_by_tag_name("tr")
             ]
         }
-
-    def get_transactions(self):
-        return {"accounts": []}
 
     def _get_assets_for_account(self, account):
         def extract_cash_asset(product_row):
@@ -172,9 +169,9 @@ class Api(providers.SeleniumBased):
         browser = self.browser
         assets_url = f"{BASE_URL}{account['home_url']}/Investments/Holdings"
         browser.get(assets_url)
-        toggle_switch = self._wait_element(By.CSS_SELECTOR, "div.toggle-switch")
+        toggle_switch = self._do.wait_element(By.CSS_SELECTOR, "div.toggle-switch")
         toggle_switch.find_element_by_css_selector("span.label-one").click()
-        investments_table = self._wait_element(By.CSS_SELECTOR, "table.table-investments-detailed")
+        investments_table = self._do.wait_element(By.CSS_SELECTOR, "table.table-investments-detailed")
         product_type = None
         all_assets = []
         for section in investments_table.find_elements_by_css_selector("tbody.group-content"):

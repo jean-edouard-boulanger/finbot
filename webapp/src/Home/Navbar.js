@@ -3,10 +3,9 @@ import Navbar from 'react-bootstrap/Navbar';
 import NavBar from 'react-bootstrap/NavBar';
 import Nav from 'react-bootstrap/Nav';
 
-const Navbar = () => {
+const Navigation = () => {
 
-    return
-    (
+    return (
         <NavBar bg="dark" variant="dark">
             <Navbar.Brand href="#home">Finbot</Navbar.Brand>
             <Nav className="mr-auto">
@@ -16,4 +15,4 @@ const Navbar = () => {
     )
 }
 
-export default Navbar;
+export default Navigation;

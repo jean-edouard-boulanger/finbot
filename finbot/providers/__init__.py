@@ -42,33 +42,42 @@ class Base(object):
         pass
 
 
+class SeleniumHelper(object):
+    def __init__(self, browser):
+        self.browser = browser
+
+    def wait(self, timeout=60):
+        return WebDriverWait(self.browser, timeout)
+
+    def wait_element(self, by, selector, timeout=60):
+        return self.wait(timeout).until(
+            presence_of_element_located((by, selector)))
+
+    def wait_cond(self, cond, timeout=60):
+        return self.wait(timeout).until(cond)
+
+    def find(self, by, selector):
+        return self.browser.find_element(by, selector)
+
+    def find_many(self, by, selector):
+        return self.browser.find_elements(by, selector)
+
+    def find_maybe(self, by, selector):
+        all_elements = self.find_many(by, selector)
+        if not all_elements:
+            return None
+        return all_elements[0]
+
+    def click(self, element):
+        self.browser.execute_script("arguments[0].click();", element)
+
+
 class SeleniumBased(Base):
     def __init__(self, browser_factory=None, **kwargs):
         super().__init__(**kwargs)
         browser_factory = browser_factory or DefaultBrowserFactory()
         self.browser = browser_factory()
-
-    def _wait_element(self, by, selector, timeout=60):
-        return WebDriverWait(self.browser, timeout).until(
-            presence_of_element_located((by, selector)))
-
-    def _wait(self, timeout=60):
-        return WebDriverWait(self.browser, timeout)
-
-    def _find(self, by, selector):
-        return self.browser.find_element(by, selector)
-
-    def _find_many(self, by, selector):
-        return self.browser.find_elements(by, selector)
-
-    def _find_maybe(self, by, selector):
-        all_elements = self._find_many(by, selector)
-        if not all_elements:
-            return None
-        return all_elements[0]
-
-    def _click_js(self, element):
-        self.browser.execute_script("arguments[0].click();", element)
+        self._do = SeleniumHelper(self.browser)
 
     def close(self):
         self.browser.quit()

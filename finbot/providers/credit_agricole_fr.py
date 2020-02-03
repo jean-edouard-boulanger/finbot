@@ -80,7 +80,7 @@ class Api(providers.SeleniumBased):
 
     def _go_home(self):
         self.browser.find_element_by_css_selector("a#bnc-compte-href").click()
-        self._wait_element(By.CSS_SELECTOR, "table.ca-table")
+        self._do.wait_element(By.CSS_SELECTOR, "table.ca-table")
 
     def _switch_account_with_selector(self, account_id, account_selector):
         for option in account_selector.find_elements_by_tag_name("option"):
@@ -97,18 +97,18 @@ class Api(providers.SeleniumBased):
         raise RuntimeError(f"unable to find account {account_id}")
 
     def _switch_account(self, account_id):
-        account_selector = self._find_maybe(By.CSS_SELECTOR, "select#lstCpte")
+        account_selector = self._do.find_maybe(By.CSS_SELECTOR, "select#lstCpte")
         if account_selector:
             self._switch_account_with_selector(account_id, account_selector)
         else:
             self._switch_account_via_home(account_id)
-        return self._wait_element(By.CSS_SELECTOR, "div.ca-forms")
+        return self._do.wait_element(By.CSS_SELECTOR, "div.ca-forms")
 
     def authenticate(self, credentials):
         browser = self.browser
         browser.get(BASE_URL)
         browser.find_element_by_id("acces_aux_comptes").find_element_by_tag_name("a").click()
-        keypad_table = self._wait_element(By.CSS_SELECTOR, "table#pave-saisie-code")
+        keypad_table = self._do.wait_element(By.CSS_SELECTOR, "table#pave-saisie-code")
         links_mapping = _map_keypad_buttons(keypad_table)
         for digit in str(credentials.password):
             links_mapping[digit].click()
@@ -118,7 +118,7 @@ class Api(providers.SeleniumBased):
                                   .find_elements_by_tag_name("a")[1])
         root_area = browser.find_element_by_css_selector("div#container")
         submit_link.click()
-        self._wait().until(any_of(
+        self._do.wait_cond(any_of(
             _is_logged_in,
             all_of(staleness_of(root_area), negate(_is_logged_in))))
 

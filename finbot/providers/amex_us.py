@@ -11,22 +11,22 @@ from copy import deepcopy
 from price_parser import Price
 from finbot.core.utils import pretty_dump
 import re
+import logging
 
 
 AUTH_URL = "https://global.americanexpress.com/login"
 HOME_URL = "https://global.americanexpress.com/dashboard"
 
 
-def _iter_accounts(browser):
-    accounts_switcher_area = WebDriverWait(browser, 60).until(
-        presence_of_element_located((By.CSS_SELECTOR, "section.axp-account-switcher")))
+def _iter_accounts(browser_helper: providers.SeleniumHelper):
+    accounts_switcher_area = browser_helper.wait_element(
+        By.CSS_SELECTOR, "section.axp-account-switcher")
     accounts_switcher = accounts_switcher_area.find_element_by_tag_name("button")
-    accounts_switcher.click()
+    browser_helper.click(accounts_switcher)
 
-    accounts_area = WebDriverWait(browser, 60).until(
-        presence_of_element_located((By.ID, "accounts")))
-
+    accounts_area = browser_helper.wait_element(By.ID, "accounts")
     account_rows = accounts_area.find_elements_by_css_selector("section.account-row")
+
     for account_row in account_rows:
         account_name = account_row.text.strip()
         # TODO make this configurable?
@@ -43,7 +43,8 @@ def _iter_accounts(browser):
                 "account_element_ref": account_row
             }
         }
-    browser.execute_script("arguments[0].click();", accounts_switcher)
+
+    browser_helper.click(accounts_switcher)
 
 
 def _get_balance(balance_area):
@@ -87,27 +88,27 @@ class Api(providers.SeleniumBased):
         if "dashboard" in browser.current_url:
             return
         browser.get(HOME_URL)
-        self._wait_element(By.CSS_SELECTOR, "section.balance-container")
+        self._do.wait_element(By.CSS_SELECTOR, "section.balance-container")
 
     def _switch_account(self, account_id):
         self._go_home()
-        for entry in _iter_accounts(self.browser):
+        for entry in _iter_accounts(self._do):
             if entry["account"]["id"] == account_id:
-                entry["selenium"]["account_element_ref"].click()
-                return self._wait_element(By.CSS_SELECTOR, "section.balance-container")
+                self._do.click(entry["selenium"]["account_element_ref"])
+                return self._do.wait_element(By.CSS_SELECTOR, "section.balance-container")
         raise Error(f"unable to switch to account {account_id}")
 
     def authenticate(self, credentials):
         browser = self.browser
         browser.get(AUTH_URL)
-        cookies_mask = self._wait_element(By.ID, "euc_mask")
+        cookies_mask = self._do.wait_element(By.ID, "euc_mask")
         cookies_mask.click()
 
-        self._find(By.ID, "eliloUserID").send_keys(credentials.user_id)
-        self._find(By.ID, "eliloPassword").send_keys(credentials.password)
-        self._find(By.ID, "loginSubmit").click()
+        self._do.find(By.ID, "eliloUserID").send_keys(credentials.user_id)
+        self._do.find(By.ID, "eliloPassword").send_keys(credentials.password)
+        self._do.find(By.ID, "loginSubmit").click()
 
-        self._wait().until(any_of(
+        self._do.wait_cond(any_of(
             presence_of_element_located((By.CSS_SELECTOR, "section.balance-container")),
             get_loging_error
         ))
@@ -118,7 +119,7 @@ class Api(providers.SeleniumBased):
 
         self.accounts = {
             entry["account"]["id"]: deepcopy(entry["account"])
-            for entry in _iter_accounts(browser)
+            for entry in _iter_accounts(self._do)
         }
 
     def get_balances(self):
@@ -161,11 +162,15 @@ class Api(providers.SeleniumBased):
                 "amount": txn_amount,
                 "description": description_cell.text.strip(),
                 "type": "debit" if txn_amount >= 0 else "credit",
-                "details_ref": details_id
+                "details_id": details_id,
+                "selenium": {
+                    "header_row_ref": row
+                }
             }
 
         def extract_transaction(txn_header):
-            details_row = self._wait_element(By.ID, txn_header["details_ref"])
+            self._do.click(txn_header["selenium"]["header_row_ref"])
+            details_row = self._do.wait_element(By.ID, txn_header["details_id"])
             clean_details = " ".join(entry.strip() for entry in details_row.text.split("\n"))
             txn_id = re.findall(r"REFERENCE NUMBER:\s+(\w+)\s+", clean_details)[0]
             return {
@@ -179,21 +184,22 @@ class Api(providers.SeleniumBased):
         # 1. go to all transactions page
 
         self._switch_account(account_id)
-        links_area = self._wait_element(By.CSS_SELECTOR, "div.transaction-footer-links")
-        transactions_link = links_area.find_element_by_xpath("//a[contains(@title, 'recent activity')]")
-        self._click_js(transactions_link)
+        links_area = self._do.wait_element(By.CSS_SELECTOR, "div.transaction-footer-links")
+        transactions_link = links_area.find_element_by_xpath(
+            "//a[contains(@title, 'recent activity')]")
+        self._do.click(transactions_link)
 
         # 2. get full transaction list
     
         while True:
-            more_button = self._find_maybe(By.XPATH, "//button[contains(@title, 'more transactions')]")
+            more_button = self._do.find_maybe(By.XPATH, "//button[contains(@title, 'more transactions')]")
             if not more_button or not more_button.is_displayed():
                 break
-            self.browser.execute_script("arguments[0].click();", more_button)
+            self._do.click(more_button)
 
         # 3. expand all transactions
 
-        transactions_table = self._wait_element(By.ID, "transaction-table")
+        transactions_table = self._do.wait_element(By.ID, "transaction-table")
         table_body = transactions_table.find_element_by_tag_name("tbody")
         txn_rows = transactions_table.find_elements_by_css_selector("tr.transaction-list-row")
         
@@ -202,7 +208,6 @@ class Api(providers.SeleniumBased):
             txn_header = extract_transaction_header(txn_row)
             if date_in_range(txn_header["date"], from_date, to_date):
                 txn_in_scope.append(txn_header)
-                self._click_js(txn_row)
 
         return [
             extract_transaction(txn_header) 

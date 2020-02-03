@@ -19,7 +19,6 @@ from finbot.model import (
     ValuationChangeEntry,
     SubAccountItemType
 )
-from finbot.core import crypto
 import logging.config
 import logging
 import random
@@ -437,6 +436,8 @@ def handle_fake_data_source(user_account: UserAccount,
 
 
 def add_account_tool(settings, engine, session):
+    from finbot.core import crypto
+
     with open(settings.secret) as kf:
         secret = kf.read()
         with open(settings.account, "rb") as af:

@@ -13,13 +13,15 @@ services:
         POSTGRES_PASSWORD: finbot
     ports:
       - "5432:5432"
-    volumes:
-      - .finbotdb:/var/lib/postgresql/data
+  #  volumes:
+  #    - .finbotdb:/var/lib/postgresql/data
 
   finbotwsrv:
     build:
       context: .
       dockerfile: finbotwsrv.Dockerfile
+    depends_on: 
+      - dev
     container_name: finbotwsrv
     working_dir: /finbot
     command: "make run-finbotwsrv-dev"
@@ -35,6 +37,8 @@ services:
     container_name: snapwsrv
     depends_on: 
       - finbotdb
+      - finbotwsrv
+      - dev
     working_dir: /finbot
     command: sh -c "make finbotdb-wait && make run-snapwsrv-dev"
     ports:
@@ -53,6 +57,7 @@ services:
     container_name: histwsrv
     depends_on: 
       - finbotdb
+      - dev
     working_dir: /finbot
     command: sh -c "make finbotdb-wait && make run-histwsrv-dev"
     ports:
@@ -70,8 +75,9 @@ services:
     depends_on: 
       - snapwsrv
       - histwsrv
+      - dev
     working_dir: /finbot
-    command: sh -c "/usr/bin/wait && make run-schedsrv-dev"
+    command: sh -c "make finbotdb-wait && /usr/bin/wait && make run-schedsrv-dev"
     volumes:
       - .:/finbot
     environment:
@@ -79,7 +85,6 @@ services:
       FINBOT_DB_HOSTNAME: finbotdb
       FINBOT_SNAPWSRV_ENDPOINT: "http://snapwsrv:5000"
       FINBOT_HISTWSRV_ENDPOINT: "http://histwsrv:5002"
-      FINBOT_SELECTED_USER: 1
 
   appwsrv:
     build:
@@ -88,6 +93,7 @@ services:
     container_name: appwsrv
     depends_on: 
       - finbotdb
+      - dev
     working_dir: /finbot
     command: sh -c "make finbotdb-wait && make run-appwsrv-dev"
     ports:
@@ -101,14 +107,15 @@ services:
   webapp:
     image: "node:13-alpine3.10"
     container_name: webapp
+    depends_on: 
+      - appwsrv
+      - dev
     volumes:
       - ./webapp:/webapp
     working_dir: /webapp
     command: sh -c "npm install && npm start"
     ports:
       - "5005:5005"
-    environment:
-      REACT_APP_SELECTED_USER: 1
 
   dev:
     build:

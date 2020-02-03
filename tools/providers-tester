@@ -79,7 +79,7 @@ class AssetTree(object):
         return sum(provider.amount(currency) for provider in self.providers)
 
 
-def fetch_balances(settings, browser_factory, account):
+def fetch_data(settings, browser_factory, account):
     provider = get_provider(account["provider_id"])
     with closing(provider.api_module.Api(browser_factory=browser_factory)) as api:
         try:
@@ -92,7 +92,7 @@ def fetch_balances(settings, browser_factory, account):
 
             txn_to_date = datetime.now()
             txn_from_date = (txn_to_date - timedelta(days=30))
-            logging.info(f"[{provider.description}] fetching transactions" 
+            logging.info(f"[{provider.description}] fetching transactions " 
                          f"from {txn_from_date.date().isoformat()} to {txn_to_date.date().isoformat()}")
             transactions = api.get_transactions(txn_from_date, txn_to_date)
             if settings.dump_transactions:
@@ -134,9 +134,10 @@ def fetch_balances(settings, browser_factory, account):
             return provider_data
         except KeyboardInterrupt:
             raise
-        except Exception:
+        except Exception as e:
+            logging.warning(f"error while fetching data for provider_id={account['provider_id']}: {e}")
+            logging.warning(traceback.format_exc())
             if settings.pause_on_error:
-                logging.warning(traceback.format_exc())
                 logging.warning("PAUSING execution because of error")
                 logging.warning("CTRL^C to exit")
                 wait_forever()
@@ -191,7 +192,7 @@ def main():
     ]
 
     try:
-        fetcher = partial(fetch_balances, settings, browser_factory)
+        fetcher = partial(fetch_data, settings, browser_factory)
         if settings.threadpool:
             with ThreadPool(processes=8) as pool:
                 all_data = pool.map(fetcher, selected_accounts)

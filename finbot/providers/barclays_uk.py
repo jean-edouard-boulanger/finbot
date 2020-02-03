@@ -91,7 +91,7 @@ class Api(providers.SeleniumBased):
         for entry in _iter_accounts(accounts_area):
             if entry["account"]["id"] == account_id:
                 entry["selenium"]["account_link"].click()
-                return self._wait_element(By.CSS_SELECTOR, "div.transactions-table")
+                return self._do.wait_element(By.CSS_SELECTOR, "div.transactions-table")
         raise Error(f"unable to switch to account '{account_id}'")
 
     def authenticate(self, credentials):
@@ -103,19 +103,19 @@ class Api(providers.SeleniumBased):
         browser.get(AUTH_URL)
 
         # Step 1: last name + card number
-        step1_form = self._wait_element(By.NAME, "loginStep1")
+        step1_form = self._do.wait_element(By.NAME, "loginStep1")
         step1_form.find_element_by_css_selector("input#surname0").send_keys(
             credentials.last_name)
         card_radio = step1_form.find_element_by_css_selector("input#radio-c2")
-        browser.execute_script("arguments[0].click();", card_radio)
+        self._do.click(card_radio)
         card_nums = credentials.card_number.split("-")
         for i in range(0, 4):
             step1_form.find_element_by_id(f"cardNumber{i}").send_keys(card_nums[i])
         step1_form.find_element_by_tag_name("button").click()
-        passcode_button = WebDriverWait(browser, 60).until(_get_passcode_login_button)
-        browser.execute_script("arguments[0].click();", passcode_button)
+        passcode_button = self._do.wait_cond(_get_passcode_login_button)
+        self._do.click(passcode_button)
 
-        self._wait().until(any_of(
+        self._do.wait_cond(any_of(
             presence_of_element_located((By.ID, "passcode0")),
             _get_error(browser)))
 
@@ -147,7 +147,7 @@ class Api(providers.SeleniumBased):
         body_area = transactions_table.find_element_by_css_selector("div.tbody-trans")
         for row in body_area.find_elements_by_css_selector("div.row"):
             header_row = row.find_element_by_css_selector("div.th-wrapper")
-            cells = header_row.find_elements_by_tag_name("div.th")
+            cells = header_row.find_elements_by_css_selector("div.th")
             _, date_cell, desc_cell, in_cell, out_cell, bal_cell = cells
             txn_date = datetime.strptime(date_cell.text.strip(), "%a, %d %b %y")
             if not date_in_range(txn_date, from_date, to_date):

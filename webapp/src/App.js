@@ -1,16 +1,15 @@
 import FinbotClient from './FinbotClient'
-import Table from 'react-bootstrap/Table';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Card from 'react-bootstrap/Card';
 import Chart from "react-apexcharts";
-import Money from "./Money";
-import DurationBadge from "./DurationBadge";
-import ValuationChange from "./ValuationChange";
-import Navbar from "./Navbar";
+import Money from "./Home/Money";
+import HoldingsTable from "./Home/HoldingsTable";
+import Navbar from "./Home/Navbar";
 import React from 'react';
 import BarLoader from "react-spinners/BarLoader";
+import queryString from 'query-string';
 
 function formatRelChange(val) {
   if (val === null || val === undefined || val === 0.0) {
@@ -52,10 +51,16 @@ function maxValue(list, accessor) {
   return currentMax;
 }
 
+function getAccountId() {
+  const urlParams = queryString.parse(window.location.search);
+  const userId = urlParams.userId;
+  return userId === undefined ? 1 : userId;
+}
+
 class App extends React.Component {
   constructor(props) {
     super(props);
-    this.account_id = process.env.REACT_APP_SELECTED_USER;
+    this.account_id = getAccountId();
     this.locale = "en-GB";
     this.state = {
       account: null,
@@ -92,6 +97,7 @@ class App extends React.Component {
       valuation,
       linked_accounts,
       historical_valuation } = this.state;
+    const valuationIsLoaded = valuation !== null && valuation.change !== null
 
     return (
       <>
@@ -128,13 +134,15 @@ class App extends React.Component {
               <Card>
                 <Card.Body>
                   <Card.Title>24h Change</Card.Title>
-                  {valuation === null ? <BarLoader color={"#F0F0F0"} /> :
+                  {(valuationIsLoaded) ?
                     <strong>{
                       formatRelChange(
                         getRelativeChange(
                           valuation.value - valuation.change.change_1day,
                           valuation.value))}
-                    </strong>}
+                    </strong> :
+                    <BarLoader color={"#F0F0F0"} />
+                  }
                 </Card.Body>
               </Card>
             </Col>
@@ -245,66 +253,12 @@ class App extends React.Component {
               </Card>
             </Col>
           </Row>
-          <Row className="mt-4">
-            <Col>
-              <h3>Holdings summary</h3>
-            </Col>
-          </Row>
-          <Row className="mt-4">
-            <Col>
-              <Table responsive className="table-sm">
-                <thead>
-                  <tr>
-                    <th>Account Name</th>
-                    <th>Value</th>
-                    <th>Hour</th>
-                    <th>Day</th>
-                    <th>Week</th>
-                    <th>Month</th>
-                    <th>Year</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {
-                    linked_accounts.map(entry => {
-                      const valuation = entry.valuation;
-                      const change = valuation.change;
-                      const linked_account = entry.linked_account;
-                      const ccy = entry.valuation.currency;
-                      return (
-                        <tr key={`linked-account-${linked_account.id}`}>
-                          <td>
-                            {linked_account.description}
-                            <h6><DurationBadge from={Date.parse(valuation.date)} />
-                            </h6>
-                          </td>
-                          <td><Money amount={valuation.value} locale={locale} ccy={ccy} moneyFormatter={moneyFormatter} /></td>
-                          <td><ValuationChange amount={change.change_1hour} /></td>
-                          <td><ValuationChange amount={change.change_1day} /></td>
-                          <td><ValuationChange amount={change.change_1week} /></td>
-                          <td><ValuationChange amount={change.change_1month} /></td>
-                          <td><ValuationChange amount={change.change_1year} /></td>
-                        </tr>
-                      )
-                    })
-                  }
-                </tbody>
-                {valuation === null ? <BarLoader color={"#F0F0F0"} /> :
-                  <tfoot>
-                    <tr>
-                      <th>Totals</th>
-                      <th><Money amount={valuation.value} locale={locale} ccy={valuation.currency} moneyFormatter={moneyFormatter} /></th>
-                      <th><ValuationChange amount={valuation.change.change_1hour} /></th>
-                      <th><ValuationChange amount={valuation.change.change_1day} /></th>
-                      <th><ValuationChange amount={valuation.change.change_1week} /></th>
-                      <th><ValuationChange amount={valuation.change.change_1month} /></th>
-                      <th><ValuationChange amount={valuation.change.change_1year} /></th>
-                    </tr>
-                  </tfoot>
-                }
-              </Table>
-            </Col>
-          </Row>
+          <HoldingsTable
+            linked_accounts={linked_accounts}
+            locale={locale}
+            moneyFormatter={moneyFormatter}
+            valuation={valuation}
+            valuationIsLoaded={valuationIsLoaded} />
         </Container>
       </>
     );
