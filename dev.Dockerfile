@@ -31,6 +31,7 @@ RUN wget -O /tmp/chromedriver_linux64.zip https://chromedriver.storage.googleapi
     chmod +x /usr/bin/chromedriver
 
 RUN pip3 install \
+    jsonschema \
     requests \
     cryptography \
     cffi \

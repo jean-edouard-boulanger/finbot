@@ -70,7 +70,17 @@ API_V1 = Route("/api/v1")
 
 
 @app.route(API_V1.providers._, methods=["POST"])
-@generic_request_handler
+@generic_request_handler(schema={
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["id", "description", "website_url", "credentials_schema"],
+    "properties": {
+        "id": {"type": "string"},
+        "description": {"type": "string"},
+        "website_url": {"type": "string"},
+        "credentials_schema": {"type": "object"}
+    }
+})
 def create_provider():
     data = request.json
     with db_session.persist(Provider()) as provider:
@@ -82,7 +92,7 @@ def create_provider():
 
 
 @app.route(API_V1.providers._, methods=["GET"])
-@generic_request_handler
+@generic_request_handler()
 def get_providers():
     providers = db_session.query(Provider).all()
     return jsonify(serialize({
@@ -91,7 +101,7 @@ def get_providers():
 
 
 @app.route(API_V1.providers.p("provider_id")._, methods=["DELETE"])
-@generic_request_handler
+@generic_request_handler()
 def delete_provider(provider_id):
     count = db_session.query(Provider).filter_by(id=provider_id).delete()
     db_session.commit()
@@ -103,7 +113,23 @@ ACCOUNTS = API_V1.accounts
 
 
 @app.route(ACCOUNTS._, methods=["POST"])
-@generic_request_handler
+@generic_request_handler(schema={
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["email", "password", "full_name", "settings"],
+    "properties": {
+        "email": {"type": "string"},
+        "password": {"type": "string"},
+        "full_name": {"type": "string"},
+        "settings": {
+            "type": "object",
+            "required": ["valuation_ccy"],
+            "properties": {
+                "valuation_ccy": {"type": "string"}
+            }
+        }
+    }
+})
 def create_user_account():
     data = request.json
     try:
@@ -138,7 +164,7 @@ ACCOUNT = ACCOUNTS.p("user_account_id")
 
 
 @app.route(ACCOUNT._, methods=["GET"])
-@generic_request_handler
+@generic_request_handler()
 def get_user_account(user_account_id):
     entry = (db_session.query(UserAccountHistoryEntry)
                        .filter_by(user_account_id=user_account_id)
@@ -180,7 +206,7 @@ def get_user_account(user_account_id):
 
 
 @app.route(ACCOUNT.history._, methods=["GET"])
-@generic_request_handler
+@generic_request_handler()
 def get_user_account_valuation_history(user_account_id):
     history_entries = (db_session.query(UserAccountHistoryEntry)
                                  .filter_by(user_account_id=user_account_id)
@@ -205,7 +231,7 @@ def get_user_account_valuation_history(user_account_id):
 
 
 @app.route(ACCOUNT.linked_accounts._, methods=["GET"])
-@generic_request_handler
+@generic_request_handler()
 def get_linked_accounts_valuation(user_account_id):
     result = (db_session.query(UserAccountHistoryEntry)
                         .filter_by(user_account_id=user_account_id)
@@ -253,11 +279,20 @@ def get_linked_accounts_valuation(user_account_id):
 
 
 @app.route(ACCOUNT.linked_accounts._, methods=["POST"])
-@generic_request_handler
+@generic_request_handler(schema={
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["provider_id", "credentials", "account_name"],
+    "properties": {
+        "provider_id": {"type": "string"},
+        "credentials": {"type": ["null", "object"]},
+        "account_name": {"type": "string"}
+    }
+})
 def link_to_external_account(user_account_id):
     do_validate = bool(int(request.args.get("validate", 1)))
     do_persist = bool(int(request.args.get("persist", 1)))
-    request_data = request.get_json()
+    request_data = request.json
 
     logging.info(f"validate={do_validate} persist={do_persist}")
 
@@ -313,7 +348,7 @@ LINKED_ACCOUNT = ACCOUNT.linked_accounts.p("linked_account_id")
 
 
 @app.route(LINKED_ACCOUNT.history._, methods=["GET"])
-@generic_request_handler
+@generic_request_handler()
 def get_linked_account_historical_valuation(user_account_id, linked_account_id):
     linked_account_id = int(linked_account_id)
     results = (db_session.query(UserAccountHistoryEntry)
