@@ -2,17 +2,28 @@ import React from "react";
 import Navbar from 'react-bootstrap/Navbar';
 import NavBar from 'react-bootstrap/NavBar';
 import Nav from 'react-bootstrap/Nav';
+import { withRouter } from "react-router";
 
-const Navigation = () => {
+const Navigation = ({ user, location }) => {
 
     return (
         <NavBar bg="dark" variant="dark">
             <Navbar.Brand href="#home">Finbot</Navbar.Brand>
-            <Nav className="mr-auto">
-                <Nav.Link href="#home">Home</Nav.Link>
-            </Nav>
+
+            {user ?
+                <Nav activeKey={location.pathname} className="mr-auto">
+                    <Nav.Link href="/">Home</Nav.Link>
+                </Nav>
+                :
+                <>
+                    <Nav activeKey={location.pathname} className="mr-auto">
+                        <Nav.Link href="/auth/sign-up">Sign Up</Nav.Link>
+                        <Nav.Link href="/auth/log-in">Log In</Nav.Link>
+                    </Nav>
+                </>
+            }
         </NavBar>
     )
 }
 
-export default Navigation;
+export default withRouter(Navigation);

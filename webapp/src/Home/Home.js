@@ -9,6 +9,7 @@ import HoldingsTable from "./HoldingsTable";
 import React from 'react';
 import BarLoader from "react-spinners/BarLoader";
 import queryString from 'query-string';
+import { withRouter } from "react-router";
 
 function formatRelChange(val) {
     if (val === null || val === undefined || val === 0.0) {
@@ -70,6 +71,11 @@ class Home extends React.Component {
     }
 
     async componentDidMount() {
+        //redirect to sign up page if not logged in
+        if (!this.props.user) {
+            this.props.history.push("/auth/sign-up");
+            return;
+        }
         let finbot_client = new FinbotClient();
 
         const account_data = await finbot_client.getAccount({ account_id: this.account_id });
@@ -263,4 +269,4 @@ class Home extends React.Component {
     }
 }
 
-export default Home;
+export default withRouter(Home);
