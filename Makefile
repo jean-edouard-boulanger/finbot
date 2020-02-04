@@ -190,3 +190,6 @@ finbotdb-psql:
 
 init-dev:
 	tools/init-dev.sh
+
+docker-dev:
+	docker exec -it dev /bin/bash

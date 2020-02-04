@@ -285,7 +285,7 @@ def take_raw_snapshot(user_account):
 
 
 @app.route("/snapshot/<user_account_id>/take", methods=["POST"])
-@generic_request_handler
+@generic_request_handler()
 def take_snapshot(user_account_id):
     logging.info(f"fetching user information for user account id {user_account_id}")
 

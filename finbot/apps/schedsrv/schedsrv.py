@@ -74,8 +74,8 @@ def main():
                     hist_client=hist_client)
             except Exception as e:
                 logging.warn(f"failure while running workflow for "
-                              "user_id={user_account.id}: {e}, trace: \n{traceback.format_exc()}")
-        time.sleep(3600)
+                             f"user_id={user_account.id}: {e}, trace: \n{traceback.format_exc()}")
+        time.sleep(6 * 3600)
 
 
 if __name__ == "__main__":

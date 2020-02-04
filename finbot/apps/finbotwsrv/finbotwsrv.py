@@ -10,7 +10,6 @@ from finbot.apps.support import (
 import traceback
 import logging.config
 import logging
-import json
 
 
 logging.config.dictConfig({
@@ -90,15 +89,24 @@ def item_handler(item_type, provider_api):
 
 
 @app.route("/financial_data", methods=["POST"])
-@generic_request_handler
+@generic_request_handler(schema={
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["provider", "credentials", "items"],
+    "properties": {
+        "provider": {"type": "string"},
+        "credentials": {"type": ["null", "object"]},
+        "items": {"type": "array", "items": {"type": "string"}}
+    }
+})
 def get_financial_data():
-    request_payload = json.loads(request.data)
-    provider_id = request_payload["provider"]
-    provider = get_provider(request_payload["provider"])
+    request_data = request.json
+    provider_id = request_data["provider"]
+    provider = get_provider(provider_id)
     logging.info(f"initializing provider {provider_id}")
     with closing(provider.api_module.Api()) as provider_api:
         credentials = provider.api_module.Credentials.init(
-            request_payload["credentials"])
+            request_data["credentials"])
         try:
             logging.info(f"authenticating {credentials.user_id}")
             provider_api.authenticate(credentials)
@@ -118,6 +126,6 @@ def get_financial_data():
         return jsonify({
             "financial_data": [
                 item_handler(line_item, provider_api)
-                for line_item in set(request_payload["items"])
+                for line_item in set(request_data["items"])
             ]
         })

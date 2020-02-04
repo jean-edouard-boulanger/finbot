@@ -3,6 +3,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from sqlalchemy import create_engine, text, desc, asc
 from sqlalchemy.orm import scoped_session, sessionmaker, joinedload, contains_eager
+from sqlalchemy.exc import IntegrityError
 from finbot.clients.finbot import FinbotClient
 from finbot.apps.appwsrv import timeseries
 from finbot.apps.support import generic_request_handler, Route, ApplicationError
@@ -12,6 +13,7 @@ from finbot.core import dbutils
 from finbot.model import (
     Provider,
     UserAccount,
+    UserAccountSettings,
     LinkedAccount,
     UserAccountSnapshot,
     UserAccountHistoryEntry,
@@ -27,7 +29,7 @@ import json
 import os
 
 
-#logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 
 SECRET = open(os.environ["FINBOT_SECRET_PATH"], "r").read()
@@ -68,7 +70,17 @@ API_V1 = Route("/api/v1")
 
 
 @app.route(API_V1.providers._, methods=["POST"])
-@generic_request_handler
+@generic_request_handler(schema={
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["id", "description", "website_url", "credentials_schema"],
+    "properties": {
+        "id": {"type": "string"},
+        "description": {"type": "string"},
+        "website_url": {"type": "string"},
+        "credentials_schema": {"type": "object"}
+    }
+})
 def create_provider():
     data = request.json
     with db_session.persist(Provider()) as provider:
@@ -80,7 +92,7 @@ def create_provider():
 
 
 @app.route(API_V1.providers._, methods=["GET"])
-@generic_request_handler
+@generic_request_handler()
 def get_providers():
     providers = db_session.query(Provider).all()
     return jsonify(serialize({
@@ -89,7 +101,7 @@ def get_providers():
 
 
 @app.route(API_V1.providers.p("provider_id")._, methods=["DELETE"])
-@generic_request_handler
+@generic_request_handler()
 def delete_provider(provider_id):
     count = db_session.query(Provider).filter_by(id=provider_id).delete()
     db_session.commit()
@@ -97,11 +109,109 @@ def delete_provider(provider_id):
     return jsonify({"deleted": count})
 
 
-ACCOUNT = API_V1.accounts.p("user_account_id")
+ACCOUNTS = API_V1.accounts
+
+
+@app.route(ACCOUNTS._, methods=["POST"])
+@generic_request_handler(schema={
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["email", "password", "full_name", "settings"],
+    "properties": {
+        "email": {"type": "string"},
+        "password": {"type": "string"},
+        "full_name": {"type": "string"},
+        "settings": {
+            "type": "object",
+            "required": ["valuation_ccy"],
+            "properties": {
+                "valuation_ccy": {"type": "string"}
+            }
+        }
+    }
+})
+def create_user_account():
+    data = request.json
+    try:
+        with db_session.persist(UserAccount()) as user_account:
+            user_account.email = data["email"]
+            user_account.encrypted_password = crypto.fernet_encrypt(
+                    data["password"].encode(), SECRET).decode()
+            user_account.full_name = data["full_name"]
+            user_account.settings = UserAccountSettings(
+                valuation_ccy=data["settings"]["valuation_ccy"])
+    except IntegrityError as e:
+        logging.warning(f"failed to create user account: {e}")
+        raise ApplicationError(f"User account with email '{user_account.email}' already exists")
+
+    return jsonify({
+        "user_account": {
+            "id": user_account.id,
+            "email": user_account.email,
+            "full_name": user_account.full_name,
+            "settings": {
+                "valuation_ccy": user_account.settings.valuation_ccy,
+                "created_at": user_account.settings.created_at,
+                "updated_at": user_account.settings.updated_at
+            },
+            "created_at": user_account.created_at,
+            "updated_at": user_account.updated_at
+        }
+    })
+
+
+ACCOUNT = ACCOUNTS.p("user_account_id")
+
+
+@app.route(ACCOUNT._, methods=["GET"])
+@generic_request_handler()
+def get_user_account(user_account_id):
+    def serialize_valuation(entry):
+        return {
+            "history_entry_id": entry.id,
+            "date": entry.effective_at,
+            "currency": entry.valuation_ccy,
+            "value": entry.user_account_valuation_history_entry.valuation,
+            "total_liabilities": entry.user_account_valuation_history_entry.total_liabilities,
+            "change": entry.user_account_valuation_history_entry.valuation_change
+        }
+
+    account = (db_session.query(UserAccount)
+                         .filter_by(id=user_account_id)
+                         .options(joinedload(UserAccount.settings))
+                         .first())
+
+    if not account:
+        raise ApplicationError(f"user account '{user_account_id}' not found")
+
+    valuation = (db_session.query(UserAccountHistoryEntry)
+                           .filter_by(user_account_id=user_account_id)
+                           .filter_by(available=True)
+                           .order_by(desc(UserAccountHistoryEntry.effective_at))
+                           .options(joinedload(UserAccountHistoryEntry.user_account_valuation_history_entry))
+                           .first())
+
+    return jsonify(serialize({
+        "result": {
+            "user_account": {
+                "id": account.id,
+                "email": account.email,
+                "full_name": account.full_name,
+                "settings": {
+                    "valuation_ccy": account.settings.valuation_ccy,
+                    "created_at": account.settings.created_at,
+                    "updated_at": account.settings.updated_at
+                },
+                "created_at": account.created_at,
+                "updated_at": account.updated_at
+            },
+            "valuation": serialize_valuation(valuation) if valuation else None
+        }
+    }))
 
 
 @app.route(ACCOUNT.history._, methods=["GET"])
-@generic_request_handler
+@generic_request_handler()
 def get_user_account_valuation_history(user_account_id):
     history_entries = (db_session.query(UserAccountHistoryEntry)
                                  .filter_by(user_account_id=user_account_id)
@@ -125,50 +235,8 @@ def get_user_account_valuation_history(user_account_id):
     }))
 
 
-@app.route(ACCOUNT._, methods=["GET"])
-@generic_request_handler
-def get_account_valuation(user_account_id):
-    entry = (db_session.query(UserAccountHistoryEntry)
-                       .filter_by(user_account_id=user_account_id)
-                       .filter_by(available=True)
-                       .order_by(desc(UserAccountHistoryEntry.effective_at))
-                       .options(joinedload(UserAccountHistoryEntry.user_account_valuation_history_entry))
-                       .options(joinedload(UserAccountHistoryEntry.user_account))
-                       .options(joinedload(UserAccountHistoryEntry.user_account, UserAccount.settings))
-                       .first())
-
-    if entry is None:
-        raise ApplicationError(f"user account {user_account_id} not found")
-
-    account = entry.user_account
-    return jsonify(serialize({
-        "result": {
-            "user_account": {
-                "id": account.id,
-                "email": account.email,
-                "full_name": account.full_name,
-                "settings": {
-                    "valuation_ccy": account.settings.valuation_ccy,
-                    "created_at": account.settings.created_at,
-                    "updated_at": account.settings.updated_at
-                },
-                "created_at": account.created_at,
-                "updated_at": account.updated_at
-            },
-            "valuation": {
-                "history_entry_id": entry.id,
-                "date": entry.effective_at,
-                "currency": entry.valuation_ccy,
-                "value": entry.user_account_valuation_history_entry.valuation,
-                "total_liabilities": entry.user_account_valuation_history_entry.total_liabilities,
-                "change": entry.user_account_valuation_history_entry.valuation_change
-            }
-        }
-    }))
-
-
 @app.route(ACCOUNT.linked_accounts._, methods=["GET"])
-@generic_request_handler
+@generic_request_handler()
 def get_linked_accounts_valuation(user_account_id):
     result = (db_session.query(UserAccountHistoryEntry)
                         .filter_by(user_account_id=user_account_id)
@@ -192,7 +260,6 @@ def get_linked_accounts_valuation(user_account_id):
                         )
                         .first())
 
-    history_entry_effective_at = result.effective_at
     return jsonify(serialize({
         "linked_accounts": [
             {
@@ -204,23 +271,33 @@ def get_linked_accounts_valuation(user_account_id):
                 "valuation": {
                     "date": (entry.effective_snapshot.effective_at 
                                 if entry.effective_snapshot 
-                                else history_entry_effective_at),
+                                else result.effective_at),
                     "currency": result.valuation_ccy,
                     "value": entry.valuation,
                     "change": entry.valuation_change
                 }
             }
-            for entry in result.linked_accounts_valuation_history_entries
+            for entry in (result.linked_accounts_valuation_history_entries
+                          if result else [])
         ]
     }))
 
 
 @app.route(ACCOUNT.linked_accounts._, methods=["POST"])
-@generic_request_handler
+@generic_request_handler(schema={
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["provider_id", "credentials", "account_name"],
+    "properties": {
+        "provider_id": {"type": "string"},
+        "credentials": {"type": ["null", "object"]},
+        "account_name": {"type": "string"}
+    }
+})
 def link_to_external_account(user_account_id):
     do_validate = bool(int(request.args.get("validate", 1)))
     do_persist = bool(int(request.args.get("persist", 1)))
-    request_data = request.get_json()
+    request_data = request.json
 
     logging.info(f"validate={do_validate} persist={do_persist}")
 
@@ -276,7 +353,7 @@ LINKED_ACCOUNT = ACCOUNT.linked_accounts.p("linked_account_id")
 
 
 @app.route(LINKED_ACCOUNT.history._, methods=["GET"])
-@generic_request_handler
+@generic_request_handler()
 def get_linked_account_historical_valuation(user_account_id, linked_account_id):
     linked_account_id = int(linked_account_id)
     results = (db_session.query(UserAccountHistoryEntry)

@@ -13,6 +13,7 @@ RUN apt-get install -y \
 RUN python3.7 -m pip install --upgrade pip
 
 RUN pip3 install \
+    jsonschema \
     requests \
     cryptography \
     cffi \

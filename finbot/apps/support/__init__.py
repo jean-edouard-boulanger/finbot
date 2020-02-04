@@ -1,9 +1,10 @@
-from flask import jsonify
+from flask import jsonify, request
 from contextlib import contextmanager
 from datetime import datetime
 import functools
 import logging
 import traceback
+import jsonschema
 
 
 class Route(object):
@@ -54,25 +55,33 @@ class ApplicationError(Error):
     pass
 
 
-def generic_request_handler(func):
-    @functools.wraps(func)
-    def impl(*args, **kwargs):
-        with time_elapsed():
-            try:
-                logging.info(f"process {func.__name__} request")
-                response = func(*args, **kwargs)
-                logging.info("request processed successfully")
-                return response
-            except ApplicationError as e:
-                logging.warn(f"request processed with error: {e}\n{traceback.format_exc()}")
-                return make_error_response(
-                    user_message=str(e),
-                    debug_message=str(e),
-                    trace=traceback.format_exc())
-            except Exception as e:
-                logging.warn(f"request processed with error: {e}\n{traceback.format_exc()}")
-                return make_error_response(
-                    user_message="operation failed (unknown error)",
-                    debug_message=str(e),
-                    trace=traceback.format_exc())
+def generic_request_handler(schema=None):
+    def impl(func):
+        @functools.wraps(func)
+        def handler(*args, **kwargs):
+            with time_elapsed():
+                try:
+                    logging.info(f"process {func.__name__} request")
+                    if schema:
+                        try:
+                            request_data = request.json
+                            jsonschema.validate(instance=request_data, schema=schema)
+                        except jsonschema.ValidationError as e:
+                            raise Error(f"failed to validate request: {e}")
+                    response = func(*args, **kwargs)
+                    logging.info("request processed successfully")
+                    return response
+                except ApplicationError as e:
+                    logging.warn(f"request processed with error: {e}\n{traceback.format_exc()}")
+                    return make_error_response(
+                        user_message=str(e),
+                        debug_message=str(e),
+                        trace=traceback.format_exc())
+                except Exception as e:
+                    logging.warn(f"request processed with error: {e}\n{traceback.format_exc()}")
+                    return make_error_response(
+                        user_message="operation failed (unknown error)",
+                        debug_message=str(e),
+                        trace=traceback.format_exc())
+        return handler
     return impl
