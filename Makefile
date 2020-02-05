@@ -177,7 +177,8 @@ finbotdb-rebuild:
 	python3.7 tools/finbotdb --database ${FINBOT_DB_URL} build
 
 finbotdb-hydrate:
-	python3.7 tools/finbotdb --database ${FINBOT_DB_URL} hydrate
+	python3.7 tools/finbotdb --database ${FINBOT_DB_URL} hydrate \
+		--data-file ./tools/hydrate.json
 
 finbotdb-add-account:
 	python3.7 tools/finbotdb --database ${FINBOT_DB_URL}  add-account \

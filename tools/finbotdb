@@ -133,219 +133,15 @@ def general_real_historical_valuation(history_file_path,
 
 
 def hydrate_tool(settings, engine, session):
-    providers = [
-        Provider(
-            id="amex_us",
-            description="American express (US)",
-            website_url="https://www.americanexpress.com/",
-            credentials_schema={
-                "$schema": "http://json-schema.org/draft-07/schema#",
-                "type": "object",
-                "properties": {
-                    "user_id": {
-                        "type": "string",
-                    },
-                    "password": {
-                        "type": "string",
-                    }
-                }
-            }
-        ),
-        Provider(
-            id="vanguard_uk",
-            description="Vanguard Investors (UK)",
-            website_url="https://www.vanguardinvestor.co.uk/",
-            credentials_schema={
-                "$schema": "http://json-schema.org/draft-07/schema#",
-                "type": "object",
-                "properties": {
-                    "username": {
-                        "type": "string",
-                    },
-                    "password": {
-                        "type": "string",
-                    }
-                }
-            }
-        ),
-        Provider(
-            id="aegon_targetplan_uk",
-            description="Aegon Targetplan (UK)",
-            website_url="https://lwp.aegon.co.uk/targetplanUI/login",
-            credentials_schema={
-                "$schema": "http://json-schema.org/draft-07/schema#",
-                "type": "object",
-                "properties": {
-                    "email": {
-                        "type": "idn-email",
-                    },
-                    "password": {
-                        "type": "string",
-                    }
-                }
-            }
-        ),
-        Provider(
-            id="barclays_uk",
-            description="Barclays (UK)",
-            website_url="https://www.barclays.co.uk/",
-            credentials_schema={
-                "$schema": "http://json-schema.org/draft-07/schema#",
-                "type": "object",
-                "properties": {
-                    "last_name": {
-                        "type": "string",
-                    },
-                    "card_number": {
-                        "type": "string",
-                        "pattern": r"\d{4}-\d{4}-\d{4}-\d{4}"
-                    },
-                    "passcode": {
-                        "type": "string",
-                        "pattern": r"\d{5}"
-                    },
-                    "memorable_word": {
-                        "type": "string"
-                    }
-                }
-            }
-        ),
-        Provider(
-            id="barclaycard",
-            description="Barclaycard (UK)",
-            website_url="https://www.barclaycard.co.uk/personal/customer",
-            credentials_schema={
-                "$schema": "http://json-schema.org/draft-07/schema#",
-                "type": "object",
-                "properties": {
-                    "username": {
-                        "type": "string"
-                    },
-                    "passcode": {
-                        "type": "string",
-                        "pattern": r"\d{6}"
-                    },
-                    "memorable_word": {
-                        "type": "string"
-                    }
-                }
-            }
-        ),
-        Provider(
-            id="ca_fr",
-            description="Credit Agricole (FR)",
-            website_url="https://www.credit-agricole.fr/",
-            credentials_schema={
-                "$schema": "http://json-schema.org/draft-07/schema#",
-                "type": "object",
-                "properties": {
-                    "account_number": {
-                        "type": "string",
-                        "pattern": r"\d+"
-                    },
-                    "password": {
-                        "type": "string",
-                        "pattern": r"\d{6}"
-                    }
-                }
-            }
-        ),
-        Provider(
-            id="lending_works_uk",
-            description="Lending Works (UK)",
-            website_url="https://www.lendingworks.co.uk/",
-            credentials_schema={
-                "$schema": "http://json-schema.org/draft-07/schema#",
-                "type": "object",
-                "properties": {
-                    "email": {
-                        "type": "idn-email"
-                    },
-                    "password": {
-                        "type": "string"
-                    }
-                }
-            }
-        ),
-        Provider(
-            id="october_fr",
-            description="October (FR)",
-            website_url="https://fr.october.eu/",
-            credentials_schema={
-                "$schema": "http://json-schema.org/draft-07/schema#",
-                "type": "object",
-                "properties": {
-                    "email": {
-                        "type": "idn-email"
-                    },
-                    "password": {
-                        "type": "string"
-                    }
-                }
-            }
-        ),
-        Provider(
-            id="kraken_us",
-            description="Kraken (US)",
-            website_url="https://www.kraken.com/",
-            credentials_schema={
-                "$schema": "http://json-schema.org/draft-07/schema#",
-                "type": "object",
-                "properties": {
-                    "api_key": {
-                        "type": "string"
-                    },
-                    "private_key": {
-                        "type": "string"
-                    }
-                }
-            }
-        ),
-        Provider(
-            id="bittrex_us",
-            description="Bittrex (US)",
-            website_url="https://global.bittrex.com/",
-            credentials_schema={
-                "$schema": "http://json-schema.org/draft-07/schema#",
-                "type": "object",
-                "properties": {
-                    "api_key": {
-                        "type": "string"
-                    },
-                    "private_key": {
-                        "type": "string"
-                    }
-                }
-            }
-        ),
-        Provider(
-            id="google_sheets",
-            description="Portfolio managed via Google sheets",
-            website_url="https://www.google.com/sheets/about/",
-            credentials_schema={
-                "$schema": "http://json-schema.org/draft-07/schema#",
-                "type": "object",
-                "properties": {
-                    "sheet_key": {
-                        "type": "string"
-                    },
-                    "google_api_credentials": {
-                        "type": "object"
-                    }
-                }
-            }
-        ),
-        Provider(
-            id="dummy_uk",
-            description="Dummy (fake) provider (UK)",
-            website_url="https://dummy.co.uk/",
-            credentials_schema={}
-        )
-    ]
+    with open(settings.data_file) as f:
+        data = json.load(f)
 
-    session.add_all(providers)
+        logging.info("adding providers")
+        providers = list(Provider(**entry) for entry in data["providers"])
+        for provider in providers:
+            session.merge(provider)
+
     session.commit()
-
     logging.info("hydrated finbotdb with default data")
     return True
 
@@ -514,6 +310,10 @@ def setup_add_account_subparser(parser):
     parser.add_argument("-A", "--account", type=str, help="path to account file", required=True)
 
 
+def setup_hydrate_subparser(parser):
+    parser.add_argument("-f", "--data-file", type=str, help="path to hydrate data file", required=True)
+
+
 def create_parser():
     parser = argparse.ArgumentParser(prog='finbotdb utility')
     parser.add_argument("--database", type=str, required=True)
@@ -538,7 +338,7 @@ all_tools = {
     },
     "hydrate": {
         "description": "hydrate database with minimal data",
-        "parser_builder": (lambda _: None),
+        "parser_builder": setup_hydrate_subparser,
         "handler": hydrate_tool
     },
     "wait": {
