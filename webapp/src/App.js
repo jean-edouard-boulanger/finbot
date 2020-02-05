@@ -15,20 +15,28 @@ const App = () => {
   const [user, setUser] = useState(_setUser(true))
 
   useEffect(() => {
+    console.log("app comp did mount")
     _setUser();
   }, [])
 
   function _resetUser() {
+    console.log("in reset user")
     setUser({ user: null })
   }
 
+  //hardcode token for now as long as no token from serverside available
   function _setUser(init) {
+    console.log("in _setUsr")
     const token = localStorage.getItem('identity')
     if (token) {
-      const decoded = jwtDecode(token)
-      delete decoded.iat
-      if (init) return decoded
-      setUser({ user: decoded })
+      console.log({ token })
+      // const decoded = jwtDecode(token)
+      // console.log({ decoded })
+      // delete decoded.iat
+      // if (init) return decoded
+      if (init) return token;
+      // setUser({ user: decoded })
+      setUser({ user: token })
     } else {
       return null
     }

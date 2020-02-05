@@ -4,19 +4,21 @@ import NavBar from 'react-bootstrap/NavBar';
 import Nav from 'react-bootstrap/Nav';
 import { withRouter } from "react-router";
 
-const Navigation = ({ user, location }) => {
+const Navigation = props => {
+    // console.log("in navigation", props.user)
 
     return (
         <NavBar bg="dark" variant="dark">
             <Navbar.Brand href="#home">Finbot</Navbar.Brand>
 
-            {user ?
-                <Nav activeKey={location.pathname} className="mr-auto">
+            {props.user ?
+                <Nav activeKey={props.location.pathname} className="mr-auto">
                     <Nav.Link href="/">Home</Nav.Link>
+                    <Nav.Link href="/auth/logout">Logout</Nav.Link>
                 </Nav>
                 :
                 <>
-                    <Nav activeKey={location.pathname} className="mr-auto">
+                    <Nav activeKey={props.location.pathname} className="mr-auto">
                         <Nav.Link href="/auth/sign-up">Sign Up</Nav.Link>
                         <Nav.Link href="/auth/log-in">Log In</Nav.Link>
                     </Nav>

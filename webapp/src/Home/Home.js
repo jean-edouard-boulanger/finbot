@@ -71,12 +71,15 @@ class Home extends React.Component {
     }
 
     async componentDidMount() {
+        console.log("in comdid mount home", this.props)
         //redirect to sign up page if not logged in
         if (!this.props.user) {
+            console.log("there is not a user")
             this.props.history.push("/auth/sign-up");
             return;
         }
         let finbot_client = new FinbotClient();
+        console.log("accid", this.account_id)
 
         const account_data = await finbot_client.getAccount({ account_id: this.account_id });
         const linked_accounts = await finbot_client.getLinkedAccounts({ account_id: this.account_id });

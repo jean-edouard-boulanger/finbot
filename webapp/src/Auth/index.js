@@ -4,7 +4,7 @@ import { Route, Switch } from "react-router-dom";
 import { withRouter } from "react-router";
 
 import SignUp from "./SignUp";
-// import Logout from "./Logout";
+import Logout from "./Logout";
 import LogIn from "./LogIn";
 // import NotFound from "../NotFound";
 
@@ -23,18 +23,24 @@ const Auth = props => {
 
     const { email, password } = credentials;
 
-    function _sign(type, data) {
+    async function _sign(type, data) {
+        let finbot_client = new FinbotClient();
+        console.log("in _sign!", type, data)
+        const { email, full_name, settings, password } = data.formData;
         setError({
             error: ""
         });
-        // try {
-        //     // const account_data = await finbot_client.getAccount({ account_id: this.account_id });
-        //     // localStorage.setItem("identity", data.token);
-        //     // props.setUser();
-        //     // props.history.push("/");
-        // } catch (error) {
-        //     // setError({error: error.description})
-        // }
+        try {
+            const res = await finbot_client.registerAccount({ email, password, full_name, settings });
+            console.log("RESPONSE REGISTER", res)
+            await localStorage.setItem("identity", "fehjd7483.furucbc883DUDH5.jnidcMf38d");
+            props.setUser();
+            console.log("after props set user")
+            props.history.push("/");
+        } catch (error) {
+            console.log({ error })
+            // setError({error: error.description})
+        }
     }
 
     return (
@@ -63,11 +69,11 @@ const Auth = props => {
                     />
                 )}
             />
-            {/* <Route
-          exact
-          path="/auth/logout"
-          render={() => <Logout resetUser={props.resetUser} />}
-        /> */}
+            <Route
+                exact
+                path="/auth/logout"
+                render={() => <Logout resetUser={props.resetUser} />}
+            />
             {/* <Route component={NotFound} /> */}
         </Switch>
     );
