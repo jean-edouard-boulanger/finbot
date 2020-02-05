@@ -41,6 +41,17 @@ class FinbotClient {
     const response = await axios.get(`${this.endpoint}/accounts/${account_id}/linked_accounts`);
     return this.handle_response(response).linked_accounts;
   }
+
+  async getProviders() {
+    const response = await axios.get(`${this.endpoint}/providers`);
+    return this.handle_response(response).providers;
+  }
+
+  async validateCredentials(data) {
+    const { provider_id, credentials, account_name } = data;
+    const response = await axios.post(`${this.endpoint}/accounts/1/linked_accounts?persist=0`, { provider_id, credentials, account_name });
+    return this.handle_response(response).result.validated;
+  }
 };
 
 
