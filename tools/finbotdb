@@ -284,6 +284,40 @@ def add_account_tool(settings, engine, session):
     return True
 
 
+def dump_account_tool(settings, engine, session):
+    from finbot.core import crypto
+    account = session.query(UserAccount).filter_by(id=settings.account_id).first()
+    if not account:
+        logging.info(f"no such account: {settings.account_id}")
+        return False
+
+    with open(settings.secret) as kf:
+        secret = kf.read()
+
+    def decrypt(data):
+        return crypto.fernet_decrypt(data.encode(), secret.encode()).decode()
+
+    print(pretty_dump({
+        "user_account": {
+            "email": account.email,
+            "full_name": account.full_name,
+            "password": decrypt(account.encrypted_password),
+            "settings": {
+                "valuation_ccy": account.settings.valuation_ccy
+            }
+        },
+        "linked_accounts": [
+            {
+                "provider_id": linked_account.provider_id,
+                "description": linked_account.account_name,
+                "credentials": json.loads(decrypt(linked_account.encrypted_credentials))
+            }
+            for linked_account in account.linked_accounts
+        ]
+    }))
+    return True
+
+
 def wait_tool(settings, engine, session):
     while True:
         try:
@@ -312,6 +346,11 @@ def setup_add_account_subparser(parser):
 
 def setup_hydrate_subparser(parser):
     parser.add_argument("-f", "--data-file", type=str, help="path to hydrate data file", required=True)
+
+
+def setup_dump_account_subparser(parser):
+    parser.add_argument("-k", "--secret", type=str, help="path to secret key", required=True)
+    parser.add_argument("--account-id", type=int, required=True)
 
 
 def create_parser():
@@ -350,6 +389,11 @@ all_tools = {
         "description": "adds the current test account to the database",
         "parser_builder": setup_add_account_subparser,
         "handler": add_account_tool
+    },
+    "dump-account": {
+        "description": "dump account dadat",
+        "parser_builder": setup_dump_account_subparser,
+        "handler": dump_account_tool
     }
 }
 

@@ -181,9 +181,14 @@ finbotdb-hydrate:
 		--data-file ./tools/hydrate.json
 
 finbotdb-add-account:
-	python3.7 tools/finbotdb --database ${FINBOT_DB_URL}  add-account \
+	python3.7 tools/finbotdb --database ${FINBOT_DB_URL} add-account \
 		--secret ${FINBOT_SECRET_PATH} \
 		--account ${FINBOT_ACCOUNT_PATH}
+
+finbotdb-dump-account:
+	python3.7 tools/finbotdb --database ${FINBOT_DB_URL} dump-account \
+		--secret ${FINBOT_SECRET_PATH} \
+		--account-id ${account_id}
 
 finbotdb-psql:
 	env PGPASSWORD=${FINBOT_DB_PASSWORD} \
