@@ -46,9 +46,9 @@ RUN pip3 install \
     price-parser \
     krakenex \
     python-bittrex \
+    python-binance \
     pycoingecko \
     gspread \
     oauth2client \
-    iso4217parse \
     pandas \
     schedule

@@ -41,8 +41,8 @@ RUN pip3 install \
     requests \
     krakenex \
     python-bittrex \
+    python-binance \
     pycoingecko \
     gspread \
     oauth2client \
-    iso4217parse \
     pytz

@@ -392,6 +392,29 @@
             }
         },
         {
+            "id": "binance_us",
+            "description": "Binance (US)",
+            "website_url": "https://www.binance.com/en",
+            "credentials_schema": {
+                "json_schema": {
+                    "$schema": "http://json-schema.org/draft-07/schema#",
+                    "type": "object",
+                    "required": ["api_key", "private_key"],
+                    "properties": {
+                        "api_key": {
+                            "title": "API key",
+                            "type": "string"
+                        },
+                        "private_key": {
+                            "title": "Private key",
+                            "type": "string"
+                        }
+                    }
+                },
+                "ui_schema": {}
+            }
+        },
+        {
             "id": "bittrex_us",
             "description": "Bittrex (US)",
             "website_url": "https://global.bittrex.com/",
