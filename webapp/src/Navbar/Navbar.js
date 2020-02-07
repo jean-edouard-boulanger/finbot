@@ -2,6 +2,7 @@ import React from "react";
 import Navbar from 'react-bootstrap/Navbar';
 import NavBar from 'react-bootstrap/NavBar';
 import Nav from 'react-bootstrap/Nav';
+import ProvidersDropdown from "./Providers";
 import { withRouter } from "react-router";
 
 const Navigation = props => {
@@ -15,6 +16,7 @@ const Navigation = props => {
                 <Nav activeKey={props.location.pathname} className="mr-auto">
                     <Nav.Link href="/">Home</Nav.Link>
                     <Nav.Link href="/auth/logout">Logout</Nav.Link>
+                    <ProvidersDropdown options={props.providers} />
                 </Nav>
                 :
                 <>

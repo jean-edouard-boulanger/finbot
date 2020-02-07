@@ -5,17 +5,37 @@ import React, { useState, useEffect } from 'react';
 import { Route, Switch, BrowserRouter } from "react-router-dom";
 import 'datejs';
 import jwtDecode from 'jwt-decode';
+import FinbotClient from "./FinbotClient/FinbotClient";
 
 //core components
 import Home from "./Home/Home";
-import Navbar from "./Home/Navbar";
+import Navbar from "./Navbar/Navbar";
 import Auth from "./Auth/index"
+import Form from "./ExternalAccount/Form";
 
 const App = () => {
   const [user, setUser] = useState(_setUser(true))
+  const [providersList, setProviders] = useState([])
+
+  useEffect(() => {
+    console.log("nav comp did mount")
+    let finbot_client = new FinbotClient();
+    async function awaitProviders() {
+      const providers = await finbot_client.getProviders();
+      setProviders([...providers])
+      console.log({ providers })
+    }
+    awaitProviders();
+  }, [])
 
   useEffect(() => {
     console.log("app comp did mount")
+    let finbot_client = new FinbotClient();
+    async function awaitProviders() {
+      const providers = await finbot_client.getProviders();
+      setProviders([...providers])
+    }
+    awaitProviders();
     _setUser();
   }, [])
 
@@ -45,10 +65,12 @@ const App = () => {
   return (
     <BrowserRouter>
       <div>
-        <Navbar user={user} />
+        <Navbar user={user} providers={providersList} />
         <Switch>
           <Route exact path="/" render={() => <Home user={user} />} />
           <Route path="/auth" render={() => <Auth setUser={_setUser} resetUser={_resetUser} />} />
+          <Route path="/account" render={() => <Form />} />
+          {/* <Route path="/providers" render={() => } */}
           {/* <Route component={Error}/> */}
         </Switch>
       </div>
