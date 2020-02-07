@@ -10,7 +10,7 @@ import FinbotClient from "./FinbotClient/FinbotClient";
 //core components
 import Home from "./Home/Home";
 import Navbar from "./Navbar/Navbar";
-import Auth from "./Auth/index"
+import Auth from "./Auth"
 import Form from "./ExternalAccount/Form";
 
 const App = () => {
@@ -24,16 +24,6 @@ const App = () => {
       const providers = await finbot_client.getProviders();
       setProviders([...providers])
       console.log({ providers })
-    }
-    awaitProviders();
-  }, [])
-
-  useEffect(() => {
-    console.log("app comp did mount")
-    let finbot_client = new FinbotClient();
-    async function awaitProviders() {
-      const providers = await finbot_client.getProviders();
-      setProviders([...providers])
     }
     awaitProviders();
     _setUser();
