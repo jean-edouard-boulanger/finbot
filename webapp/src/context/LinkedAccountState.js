@@ -9,6 +9,10 @@ const LinkedAccountState = props => {
     const [schema, setSchema] = useState(null)
     const [providersList, setProviders] = useState([])
 
+    function _getCurrentProvider() {
+        return providersList.filter(prov => prov.id === selectedProvider)[0]
+    }
+
     function _retrieveSchema(provSelected) {
         const relSchema = providersList.filter(prov => prov.id === provSelected)[0].credentials_schema || null;
         setSchema(relSchema)
@@ -20,13 +24,11 @@ const LinkedAccountState = props => {
     }
 
     function _selectProvider(providerID) {
-        console.log("TARGET", providerID);
         setProvider(providerID);
         _retrieveSchema(providerID);
     }
 
     async function _validateCredentials(input) {
-        console.log("in validate", input)
         const params = {
             credentials: input.formData,
             provider_id: selectedProvider,
@@ -43,12 +45,13 @@ const LinkedAccountState = props => {
     return (
         <ProvidersContext.Provider
             value={{
-                schema: schema,
-                selectedProvider: selectedProvider,
-                providersList: providersList,
-                _selectProvider: _selectProvider,
-                _awaitProviders: _awaitProviders,
-                _retrieveSchema: _retrieveSchema,
+                schema,
+                selectedProvider,
+                providersList,
+                _selectProvider,
+                _awaitProviders,
+                _retrieveSchema,
+                _getCurrentProvider,
                 _validateCredentials
             }}>
             {props.children}
