@@ -92,7 +92,7 @@ AUTH = API_V1.auth
         "password": {"type": "string"}
     }
 })
-def login():
+def auth_login():
     data = request.json
     account = db_session.query(UserAccount).filter_by(email=data["email"]).first()
     if not account:
@@ -117,6 +117,13 @@ def login():
             "updated_at": account.updated_at
         }
     })
+
+
+@app.route(AUTH.valid._, methods=["GET"])
+@generic_request_handler()
+@jwt_required
+def test_auth_validity():
+    return jsonify({})
 
 
 @app.route(API_V1.providers._, methods=["POST"])
