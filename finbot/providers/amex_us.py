@@ -1,6 +1,6 @@
 from finbot import providers
 from finbot.providers.errors import AuthFailure
-from finbot.providers.support.selenium import any_of
+from finbot.providers.support.selenium import any_of, SeleniumHelper
 from finbot.providers.errors import AuthFailure, Error
 from finbot.core.utils import date_in_range
 from selenium.webdriver.support.expected_conditions import presence_of_element_located
@@ -18,7 +18,7 @@ AUTH_URL = "https://global.americanexpress.com/login"
 HOME_URL = "https://global.americanexpress.com/dashboard"
 
 
-def _iter_accounts(browser_helper: providers.SeleniumHelper):
+def _iter_accounts(browser_helper: SeleniumHelper):
     accounts_switcher_area = browser_helper.wait_element(
         By.CSS_SELECTOR, "section.axp-account-switcher")
     accounts_switcher = accounts_switcher_area.find_element_by_tag_name("button")

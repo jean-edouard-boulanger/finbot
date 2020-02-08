@@ -4,9 +4,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.expected_conditions import staleness_of
 from selenium.common.exceptions import StaleElementReferenceException
 from finbot.providers.support.selenium import (
-    any_of, 
-    all_of, 
-    negate
+    any_of, all_of, negate,
+    SeleniumHelper
 )
 from finbot import providers
 from finbot.core.utils import swallow_exc
@@ -34,7 +33,7 @@ class Credentials(object):
 
 
 @swallow_exc(StaleElementReferenceException)
-def _get_login_error(browser_helper: providers.SeleniumHelper):
+def _get_login_error(browser_helper: SeleniumHelper):
     error_items = [
         item for item in browser_helper.find_many(
             By.CSS_SELECTOR, "div.error")
