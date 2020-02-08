@@ -5,4 +5,7 @@ __pycache__/
 .finbotdb*/
 .vscode/
 .sandbox/
+node_modules/
+package-lock.json
 .idea/
+
