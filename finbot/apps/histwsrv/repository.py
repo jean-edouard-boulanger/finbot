@@ -1,7 +1,4 @@
-from finbot.model import (
-    ValuationChangeEntry
-)
-import logging
+from finbot.model import ValuationChangeEntry
 import pandas as pd
 
 

@@ -3,7 +3,7 @@ from contextlib import closing
 from finbot.providers.factory import get_provider
 from finbot.providers.errors import AuthFailure
 from finbot.apps.support import (
-    generic_request_handler,
+    request_handler,
     make_error_response,
     make_error
 )
@@ -77,7 +77,7 @@ def item_handler(item_type, provider_api):
             "results": handler(provider_api)
         }
     except Exception as e:
-        logging.warn(f"error while handling '{item_type}': {e}\n{traceback.format_exc()}")
+        logging.warning(f"error while handling '{item_type}': {e}\n{traceback.format_exc()}")
         return {
             "line_item": item_type,
             "error": make_error(
@@ -89,7 +89,7 @@ def item_handler(item_type, provider_api):
 
 
 @app.route("/financial_data", methods=["POST"])
-@generic_request_handler(schema={
+@request_handler(schema={
     "type": "object",
     "additionalProperties": False,
     "required": ["provider", "credentials", "items"],
@@ -111,13 +111,13 @@ def get_financial_data():
             logging.info(f"authenticating {credentials.user_id}")
             provider_api.authenticate(credentials)
         except AuthFailure as e:
-            logging.warn(f"authentication failure: {e}")
+            logging.warning(f"authentication failure: {e}")
             return make_error_response(
                 user_message=str(e),
                 debug_message=str(e),
                 trace=traceback.format_exc())
         except Exception as e:
-            logging.warn(f"authentication failure: {e}")
+            logging.warning(f"authentication failure: {e}")
             return make_error_response(
                 user_message="authentication failure (unknown error)",
                 debug_message=str(e),

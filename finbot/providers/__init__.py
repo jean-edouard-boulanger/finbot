@@ -1,4 +1,4 @@
-from finbot.providers.support.selenium import DefaultBrowserFactory
+from finbot.providers.support.selenium import DefaultBrowserFactory, SeleniumHelper
 from selenium.webdriver.support.expected_conditions import presence_of_element_located
 from selenium.webdriver.support.ui import WebDriverWait
 
@@ -40,39 +40,6 @@ class Base(object):
         """ Implement to release any used resource at the end of the session
         """
         pass
-
-
-class SeleniumHelper(object):
-    def __init__(self, browser):
-        self.browser = browser
-
-    def get(self, url):
-        self.browser.get(url)
-
-    def wait(self, timeout=60):
-        return WebDriverWait(self.browser, timeout)
-
-    def wait_element(self, by, selector, timeout=60):
-        return self.wait(timeout).until(
-            presence_of_element_located((by, selector)))
-
-    def wait_cond(self, cond, timeout=60):
-        return self.wait(timeout).until(cond)
-
-    def find(self, by, selector):
-        return self.browser.find_element(by, selector)
-
-    def find_many(self, by, selector):
-        return self.browser.find_elements(by, selector)
-
-    def find_maybe(self, by, selector):
-        all_elements = self.find_many(by, selector)
-        if not all_elements:
-            return None
-        return all_elements[0]
-
-    def click(self, element):
-        self.browser.execute_script("arguments[0].click();", element)
 
 
 class SeleniumBased(Base):

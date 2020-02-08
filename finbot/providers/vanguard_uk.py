@@ -1,39 +1,29 @@
-from copy import deepcopy
 from price_parser import Price
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.expected_conditions import staleness_of
 from selenium.common.exceptions import StaleElementReferenceException
 from finbot.providers.support.selenium import any_of
 from finbot.providers.errors import AuthFailure
+from finbot.core.utils import swallow_exc
 from finbot import providers
 import json
-import logging
 
 
 BASE_URL = "https://secure.vanguardinvestor.co.uk"
 
 
-def get_login_error(auth_form):
-    try:
-        error_area = auth_form.find_elements_by_class_name("error-message")
-        if len(error_area) < 1 or not error_area[0].is_displayed():
-            return None
-        return error_area[0].text.strip()
-    except StaleElementReferenceException:
+@swallow_exc(StaleElementReferenceException)
+def _get_login_error(auth_form):
+    error_area = auth_form.find_elements_by_class_name("error-message")
+    if len(error_area) < 1 or not error_area[0].is_displayed():
         return None
-
-
-class has_login_error(object):
-    def __init__(self, auth_form):
-        self.auth_form = auth_form
-    def __call__(self, driver):
-        return get_login_error(self.auth_form) is not None
+    return error_area[0].text.strip()
 
 
 class Session(object):
-    def __init__(self, home_url=None, context_data=None):
-        self.home_url = None
-        self.account_data = None
+    def __init__(self, home_url=None, account_data=None):
+        self.home_url = home_url
+        self.account_data = account_data
 
     def get_account(self, account_id):
         for account in self.account_data:
@@ -93,11 +83,15 @@ class Api(providers.SeleniumBased):
         (auth_form.find_element_by_class_name("submit")
                   .find_element_by_css_selector("button")
                   .click())
+
         self._do.wait_cond(any_of(
             staleness_of(auth_form),
-            has_login_error(auth_form)))
-        if has_login_error(auth_form)(browser):
-            raise AuthFailure(get_login_error(auth_form))
+            lambda _: _get_login_error(auth_form)))
+
+        error_message = _get_login_error(auth_form)
+        if error_message:
+            raise AuthFailure(error_message)
+
         self.session.home_url = self.browser.current_url
         self.session.account_data = extract_accounts(json.loads(
             browser.find_element_by_xpath("//*[@data-available-context]")
@@ -119,7 +113,6 @@ class Api(providers.SeleniumBased):
             }
 
         self._go_home()
-        browser = self.browser
         balances_table = self._do.wait_element(By.CLASS_NAME, "table-multi-product")
         balances_table_body = balances_table.find_element_by_tag_name("tbody")
         return {
@@ -130,15 +123,16 @@ class Api(providers.SeleniumBased):
         }
 
     def _get_assets_for_account(self, account):
-        def extract_cash_asset(product_row):
-            amount_str = product_row.find_elements_by_tag_name("td")[5].text.strip()
+        def extract_cash_asset(row):
+            amount_str = row.find_elements_by_tag_name("td")[5].text.strip()
             return {
                 "name": "cash",
                 "type": "currency",
                 "value": Price.fromstring(amount_str).amount_float,
             }
-        def extract_fund_asset(product_type, product_row):
-            cells = product_row.find_elements_by_tag_name("td")
+
+        def extract_fund_asset(product_type, row):
+            cells = row.find_elements_by_tag_name("td")
             name_cell = cells[0].find_element_by_css_selector(
                 "p.content-product-name")
             product_name = name_cell.text.strip()
@@ -161,10 +155,10 @@ class Api(providers.SeleniumBased):
                 }
             }
 
-        def extract_asset(product_type, product_row):
+        def extract_asset(product_type, row):
             if product_type == "cash":
-                return extract_cash_asset(product_row)
-            return extract_fund_asset(product_type, product_row)
+                return extract_cash_asset(row)
+            return extract_fund_asset(product_type, row)
 
         browser = self.browser
         assets_url = f"{BASE_URL}{account['home_url']}/Investments/Holdings"
@@ -172,7 +166,6 @@ class Api(providers.SeleniumBased):
         toggle_switch = self._do.wait_element(By.CSS_SELECTOR, "div.toggle-switch")
         toggle_switch.find_element_by_css_selector("span.label-one").click()
         investments_table = self._do.wait_element(By.CSS_SELECTOR, "table.table-investments-detailed")
-        product_type = None
         all_assets = []
         for section in investments_table.find_elements_by_css_selector("tbody.group-content"):
             group_row = section.find_element_by_css_selector("tr.group-row")

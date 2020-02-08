@@ -1,9 +1,8 @@
 from collections import defaultdict
 from finbot import providers
-from finbot.providers.errors import AuthFailure, Error
+from finbot.providers.errors import Error
 from oauth2client.service_account import ServiceAccountCredentials
 import gspread
-import logging
 
 
 class Schema(object):
@@ -169,11 +168,12 @@ def extract_generic_table(sheet: LocalSheet, marker_cell: Cell, schema):
             raw_value = sheet.get_cell(current_row, data_col).val
             if raw_value is None and schema.is_required(attr):
                 raise Error(f"cell for required attribute '{schema.type_identifier}.{attr}' is empty")
+            converter = schema.get_type(attr)
             try:
-                converter = schema.get_type(attr)
                 current_record[attr] = converter(raw_value)
             except ValueError:
-                raise Error(f"unable to convert value '{raw_value}' to type '{converter.__name__}' for attribute '{schema.type_identifier}.{attr}'")
+                raise Error(f"unable to convert value '{raw_value}' to type '{converter.__name__}' "
+                            f"for attribute '{schema.type_identifier}.{attr}'")
         missing_attributes = schema.required_attributes.difference(
             set(current_record.keys()))
         if len(missing_attributes) > 0:
@@ -183,12 +183,13 @@ def extract_generic_table(sheet: LocalSheet, marker_cell: Cell, schema):
 
 
 class Api(providers.Base):
-    def __init__(self, *args, **kwargs):
-        self.api = None
-        self.sheet = None
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._api = None
+        self._sheet = None
 
     def _iter_accounts(self):
-        sheet = LocalSheet(self.sheet.sheet1.get_all_values())
+        sheet = LocalSheet(self._sheet.sheet1.get_all_values())
 
         accounts_marker = ACCOUNT_SCHEMA.type_identifier
         accounts_marker_cell = sheet.find(accounts_marker)
@@ -217,10 +218,10 @@ class Api(providers.Base):
 
     def authenticate(self, credentials: Credentials):
         scope = ['https://www.googleapis.com/auth/spreadsheets']
-        self.api = gspread.authorize(
+        self._api = gspread.authorize(
             ServiceAccountCredentials.from_json_keyfile_dict(
                 credentials.google_api_credentials, scope))
-        self.sheet = self.api.open_by_key(credentials.sheet_key)
+        self._sheet = self._api.open_by_key(credentials.sheet_key)
 
     def get_balances(self):
         return {

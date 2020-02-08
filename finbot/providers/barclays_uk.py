@@ -11,7 +11,6 @@ from finbot.core.utils import date_in_range
 from datetime import datetime
 import re
 import hashlib
-import code
 
 
 AUTH_URL = "https://bank.barclays.co.uk/olb/authlogin/loginAppContainer.do"
@@ -69,6 +68,7 @@ def _iter_accounts(accounts_area):
             }
         }
 
+
 def _get_error(browser):
     warnings = browser.find_elements_by_css_selector("div.notification--warning")
     if len(warnings) > 0:
@@ -95,8 +95,8 @@ class Api(providers.SeleniumBased):
         raise Error(f"unable to switch to account '{account_id}'")
 
     def authenticate(self, credentials):
-        def select_combo_item(combo, item_idx):
-            for _ in range(item_idx + 1):
+        def select_combo_item(combo, idx):
+            for _ in range(idx + 1):
                 combo.send_keys(Keys.DOWN)
             combo.send_keys(Keys.ENTER)
         browser = self.browser

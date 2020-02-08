@@ -1,10 +1,8 @@
 from copy import deepcopy
 from price_parser import Price
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support.expected_conditions import presence_of_element_located
 from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
-from finbot.providers.support.selenium import any_of
+from finbot.providers.support.selenium import any_of, SeleniumHelper
 from finbot.providers.errors import AuthFailure
 from finbot.core.utils import swallow_exc
 from finbot import providers
@@ -18,23 +16,22 @@ BALANCES_URL = "https://lwp.aegon.co.uk/targetplanUI/investments"
 
 
 @swallow_exc(StaleElementReferenceException)
-def _get_login_error(browser_helper: providers.SeleniumHelper):
+def _get_login_error(browser_helper: SeleniumHelper):
     error_area = browser_helper.find_maybe(
         By.CSS_SELECTOR, "div#error-container-wrapper")
     if error_area and error_area.is_displayed():
         return error_area.text.strip()
 
 
-def _is_logged_in(browser_helper: providers.SeleniumHelper):
+def _is_logged_in(browser_helper: SeleniumHelper):
     avatar_area = browser_helper.find_maybe(By.CSS_SELECTOR, "a#nav-primary-profile")
     return avatar_area is not None
 
 
-def _wait_accounts(browser):
+def _wait_accounts(browser_helper: SeleniumHelper):
     accounts_xpath = "//div[contains(@class,'card-product-')]"
-    WebDriverWait(browser, 120).until(
-        presence_of_element_located((By.XPATH, accounts_xpath)))
-    return browser.find_elements_by_xpath(accounts_xpath)
+    browser_helper.wait_element(By.XPATH, accounts_xpath, timeout=120)
+    return browser_helper.find_many(By.XPATH, accounts_xpath)
 
 
 def _iter_accounts(accounts_elements):
@@ -105,8 +102,7 @@ class Api(providers.SeleniumBased):
 
     def _switch_account(self, account_id):
         self._go_home()
-        browser = self.browser
-        accounts_elements = _wait_accounts(browser)
+        accounts_elements = _wait_accounts(self._do)
         for entry in _iter_accounts(accounts_elements):
             if entry["account"]["id"] == account_id:
                 retries = 4
@@ -116,15 +112,15 @@ class Api(providers.SeleniumBased):
                         entry["selenium"]["link_element"].click()
                         return self._do.wait_element(By.CSS_SELECTOR, "table.table-invs-allocation")
                     except TimeoutException:
-                        logging.warn(f"could not go to account page, will try again, trace: {traceback.format_exc()}")
+                        logging.warning(f"could not go to account page, will try again, trace: {traceback.format_exc()}")
                     except StaleElementReferenceException:
-                        logging.warn(f"stale element, we probably managed to get there after all, trace: {traceback.format_exc()}")
+                        logging.warning(f"stale element, we probably managed to get there after all, trace: {traceback.format_exc()}")
                         self._do.wait_element(By.CSS_SELECTOR, "table.table-invs-allocation")
                         return
         raise RuntimeError(f"unknown account {account_id}")
 
     def authenticate(self, credentials):
-        def impl(submit_wait):
+        def impl(wait_time):
             self._do.get(AUTH_URL)
             
             # 1. Enter credentials and submit (after specified time period)
@@ -134,7 +130,7 @@ class Api(providers.SeleniumBased):
             username_input.send_keys(credentials.username)
             password_input.send_keys(credentials.password)
             submit_button = login_area.find_element_by_tag_name("button")
-            time.sleep(submit_wait)
+            time.sleep(wait_time)
             submit_button.click()
             
             # 2. Wait logged-in or error
@@ -149,7 +145,7 @@ class Api(providers.SeleniumBased):
             
             # 3. Get accounts data
 
-            accounts_area = _wait_accounts(self.browser)
+            accounts_area = _wait_accounts(self._do)
             self.accounts = {
                 entry["account"]["id"]: deepcopy(entry["account"])
                 for entry in _iter_accounts(accounts_area)
@@ -168,7 +164,7 @@ class Api(providers.SeleniumBased):
 
     def get_balances(self):
         self._go_home()
-        accounts_elements = _wait_accounts(self.browser)
+        accounts_elements = _wait_accounts(self._do)
         return {
             "accounts": [
                 {

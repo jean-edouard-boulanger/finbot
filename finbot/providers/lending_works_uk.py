@@ -1,11 +1,10 @@
 from selenium.webdriver.common.by import By
 from finbot import providers
 from finbot.core.utils import swallow_exc
-from finbot.providers.support.selenium import any_of, get_cookies
+from finbot.providers.support.selenium import any_of, SeleniumHelper
 from selenium.common.exceptions import StaleElementReferenceException
-from finbot.providers.errors import AuthFailure, Error
+from finbot.providers.errors import AuthFailure
 import requests
-import logging
 import csv
 import io
 
@@ -15,12 +14,13 @@ DASHBOARD_URL = "https://www.lendingworks.co.uk/lending-centre/{ns}"
 LOANS_EXPORT_URL = "https://www.lendingworks.co.uk/lending-centre/{ns}/my-loans/export"
 
 
-def _is_logged_in(browser_helper: providers.SeleniumHelper):
-    return len(browser.find_elements_by_css_selector("body.logged-in")) > 0
+def _is_logged_in(browser_helper: SeleniumHelper):
+    marker = browser_helper.find_many(By.CSS_SELECTOR, "body.logged-in")
+    return marker is not None
 
 
 @swallow_exc(StaleElementReferenceException)
-def _get_login_error(browser_helper: providers.SeleniumHelper):
+def _get_login_error(browser_helper: SeleniumHelper):
     error_element = browser_helper.find_maybe(By.CSS_SELECTOR, "div.alert-block")
     if error_element and error_element.is_displayed():
         return error_element.text.strip()
@@ -48,7 +48,7 @@ class Api(providers.SeleniumBased):
     def _get_loans(self, account_type):
         def _chunk_outstanding(row):
             return float(row["Chunk Amount"]) - float(row["Chunk Capital Repaid"])
-        cookies = get_cookies(self.browser)
+        cookies = self._do.get_cookies()
         loans_endpoint = LOANS_EXPORT_URL.format(ns=account_type)
         response = requests.get(loans_endpoint, cookies=cookies)
         csv_data = response.content.decode()
@@ -121,7 +121,7 @@ class Api(providers.SeleniumBased):
 
         self._do.wait_cond(any_of(
             lambda _: _is_logged_in(self._do), 
-            lambda _: _get_error(self._do)))
+            lambda _: _get_login_error(self._do)))
 
         error_message = _get_login_error(self._do)
         if error_message:

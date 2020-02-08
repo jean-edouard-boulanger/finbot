@@ -1,5 +1,4 @@
 from finbot import providers
-from finbot.core.utils import pretty_dump
 from finbot.providers.errors import AuthFailure
 from finbot.providers.support import CoinGeckoWrapper
 from pycoingecko import CoinGeckoAPI

@@ -7,3 +7,5 @@ __pycache__/
 .sandbox/
 node_modules/
 package-lock.json
+.idea/
+
