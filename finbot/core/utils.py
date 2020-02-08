@@ -1,5 +1,6 @@
 from pytz import timezone
 from datetime import datetime
+import functools
 import decimal
 import json
 
@@ -40,3 +41,15 @@ def date_in_range(date, from_date, to_date):
     if to_date and date > to_date:
         return False
     return True
+
+
+def swallow_exc(*exc_types, default=None):
+    def decorator(func):
+        @functools.wraps(func)
+        def impl(*args, **kwargs):
+            try:
+                func(*args, **kwargs)
+            except exc_types:
+                return default
+        return impl
+    return decorator

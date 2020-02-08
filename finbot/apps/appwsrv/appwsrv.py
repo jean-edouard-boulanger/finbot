@@ -1,6 +1,13 @@
 from datetime import timedelta
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from flask_jwt_extended import (
+    JWTManager,
+    create_access_token,
+    create_refresh_token,
+    jwt_required,
+    get_jwt_identity
+)
 from sqlalchemy import create_engine, text, desc, asc
 from sqlalchemy.orm import scoped_session, sessionmaker, joinedload, contains_eager
 from sqlalchemy.exc import IntegrityError
@@ -29,7 +36,7 @@ import json
 import os
 
 
-logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+#logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 
 SECRET = open(os.environ["FINBOT_SECRET_PATH"], "r").read()
@@ -58,7 +65,10 @@ db_session = dbutils.add_persist_utilities(scoped_session(sessionmaker(bind=db_e
 
 
 app = Flask(__name__)
+app.config["JWT_SECRET_KEY"] = str(SECRET)
+
 CORS(app)
+JWTManager(app)
 
 
 @app.teardown_appcontext
@@ -67,6 +77,53 @@ def cleanup_context(*args, **kwargs):
 
 
 API_V1 = Route("/api/v1")
+
+
+AUTH = API_V1.auth
+
+
+@app.route(AUTH.login._, methods=["POST"])
+@generic_request_handler(schema={
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["email", "password"],
+    "properties": {
+        "email": {"type": "string"},
+        "password": {"type": "string"}
+    }
+})
+def auth_login():
+    data = request.json
+    account = db_session.query(UserAccount).filter_by(email=data["email"]).first()
+    if not account:
+        raise ApplicationError("invalid email or password")
+    
+    # TODO: password should be hashed, not encrypted/decrypted with secret
+    account_password = crypto.fernet_decrypt(
+        account.encrypted_password.encode(), SECRET.encode()).decode()
+    if account_password != data["password"]:
+        raise ApplicationError("invalid email or password")
+
+    return jsonify({
+        "auth": {
+            "access_token": create_access_token(identity=account.id),
+            "refresh_token": create_refresh_token(identity=account.id),
+        },
+        "account": {
+            "id": account.id,
+            "email": account.email,
+            "full_name": account.full_name,
+            "created_at": account.created_at,
+            "updated_at": account.updated_at
+        }
+    })
+
+
+@app.route(AUTH.valid._, methods=["GET"])
+@generic_request_handler()
+@jwt_required
+def test_auth_validity():
+    return jsonify({})
 
 
 @app.route(API_V1.providers._, methods=["POST"])
@@ -294,6 +351,7 @@ def get_linked_accounts_valuation(user_account_id):
         "account_name": {"type": "string"}
     }
 })
+@jwt_required
 def link_to_external_account(user_account_id):
     do_validate = bool(int(request.args.get("validate", 1)))
     do_persist = bool(int(request.args.get("persist", 1)))

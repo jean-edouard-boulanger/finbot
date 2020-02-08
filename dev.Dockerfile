@@ -37,6 +37,7 @@ RUN pip3 install \
     cffi \
     flask \
     flask-cors \
+    flask-jwt-extended \
     psycopg2 \
     sqlalchemy \
     alembic \
@@ -46,9 +47,9 @@ RUN pip3 install \
     price-parser \
     krakenex \
     python-bittrex \
+    python-binance \
     pycoingecko \
     gspread \
     oauth2client \
-    iso4217parse \
     pandas \
     schedule

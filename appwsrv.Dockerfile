@@ -18,7 +18,8 @@ RUN pip3 install \
     cryptography \
     cffi \
     flask \
+    flask-cors \
+    flask-jwt-extended \
     psycopg2 \
     sqlalchemy \
-    pytz \
-    flask-cors
+    pytz

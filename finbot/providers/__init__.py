@@ -46,6 +46,9 @@ class SeleniumHelper(object):
     def __init__(self, browser):
         self.browser = browser
 
+    def get(self, url):
+        self.browser.get(url)
+
     def wait(self, timeout=60):
         return WebDriverWait(self.browser, timeout)
 
