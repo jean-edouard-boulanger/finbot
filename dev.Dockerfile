@@ -37,6 +37,7 @@ RUN pip3 install \
     cffi \
     flask \
     flask-cors \
+    flask-jwt-extended \
     psycopg2 \
     sqlalchemy \
     alembic \
