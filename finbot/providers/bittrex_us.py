@@ -3,8 +3,6 @@ from finbot.providers.support import CoinGeckoWrapper
 from finbot.providers.errors import AuthFailure
 from pycoingecko import CoinGeckoAPI
 from bittrex.bittrex import Bittrex
-import requests
-import json
 
 
 class Credentials(object):
@@ -22,7 +20,8 @@ class Credentials(object):
 
 
 class Api(providers.Base):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self._account_ccy = "USD"
         self._spot_api = CoinGeckoWrapper(CoinGeckoAPI())
         self._api = None

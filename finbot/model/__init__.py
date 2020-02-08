@@ -1,4 +1,3 @@
-from finbot.core import utils
 from finbot.core.dbutils import JSONEncoded, DateTimeTz
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -7,8 +6,6 @@ from sqlalchemy import (
     Integer,
     String,
     Boolean,
-    DateTime,
-    Date,
     Numeric,
     Text,
     ForeignKey,
@@ -18,7 +15,6 @@ from sqlalchemy import (
     func
 )
 import enum
-import json
 
 
 Base = declarative_base()
@@ -68,6 +64,7 @@ class Provider(Base):
             "created_at": self.created_at,
             "updated_at": self.updated_at
         }
+
 
 class LinkedAccount(Base):
     __tablename__ = "finbot_linked_accounts"

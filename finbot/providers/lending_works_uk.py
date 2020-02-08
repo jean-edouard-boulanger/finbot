@@ -3,9 +3,8 @@ from finbot import providers
 from finbot.core.utils import swallow_exc
 from finbot.providers.support.selenium import any_of, SeleniumHelper
 from selenium.common.exceptions import StaleElementReferenceException
-from finbot.providers.errors import AuthFailure, Error
+from finbot.providers.errors import AuthFailure
 import requests
-import logging
 import csv
 import io
 
@@ -122,7 +121,7 @@ class Api(providers.SeleniumBased):
 
         self._do.wait_cond(any_of(
             lambda _: _is_logged_in(self._do), 
-            lambda _: _get_error(self._do)))
+            lambda _: _get_login_error(self._do)))
 
         error_message = _get_login_error(self._do)
         if error_message:

@@ -4,7 +4,6 @@ from finbot.core import dbutils
 from finbot.model import UserAccount
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
-from functools import partial
 import time
 import traceback
 import logging.config
@@ -73,8 +72,8 @@ def main():
                     snap_client=snap_client, 
                     hist_client=hist_client)
             except Exception as e:
-                logging.warn(f"failure while running workflow for "
-                             f"user_id={user_account.id}: {e}, trace: \n{traceback.format_exc()}")
+                logging.warning(f"failure while running workflow for "
+                                f"user_id={user_account.id}: {e}, trace: \n{traceback.format_exc()}")
         time.sleep(6 * 3600)
 
 

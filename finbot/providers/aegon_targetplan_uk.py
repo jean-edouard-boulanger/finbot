@@ -112,15 +112,15 @@ class Api(providers.SeleniumBased):
                         entry["selenium"]["link_element"].click()
                         return self._do.wait_element(By.CSS_SELECTOR, "table.table-invs-allocation")
                     except TimeoutException:
-                        logging.warn(f"could not go to account page, will try again, trace: {traceback.format_exc()}")
+                        logging.warning(f"could not go to account page, will try again, trace: {traceback.format_exc()}")
                     except StaleElementReferenceException:
-                        logging.warn(f"stale element, we probably managed to get there after all, trace: {traceback.format_exc()}")
+                        logging.warning(f"stale element, we probably managed to get there after all, trace: {traceback.format_exc()}")
                         self._do.wait_element(By.CSS_SELECTOR, "table.table-invs-allocation")
                         return
         raise RuntimeError(f"unknown account {account_id}")
 
     def authenticate(self, credentials):
-        def impl(submit_wait):
+        def impl(wait_time):
             self._do.get(AUTH_URL)
             
             # 1. Enter credentials and submit (after specified time period)
@@ -130,7 +130,7 @@ class Api(providers.SeleniumBased):
             username_input.send_keys(credentials.username)
             password_input.send_keys(credentials.password)
             submit_button = login_area.find_element_by_tag_name("button")
-            time.sleep(submit_wait)
+            time.sleep(wait_time)
             submit_button.click()
             
             # 2. Wait logged-in or error

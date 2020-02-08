@@ -1,17 +1,13 @@
 from finbot import providers
-from finbot.providers.errors import AuthFailure
 from finbot.providers.support.selenium import any_of, SeleniumHelper
 from finbot.providers.errors import AuthFailure, Error
 from finbot.core.utils import date_in_range
 from selenium.webdriver.support.expected_conditions import presence_of_element_located
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from datetime import datetime
 from copy import deepcopy
 from price_parser import Price
-from finbot.core.utils import pretty_dump
 import re
-import logging
 
 
 AUTH_URL = "https://global.americanexpress.com/login"
@@ -200,7 +196,6 @@ class Api(providers.SeleniumBased):
         # 3. expand all transactions
 
         transactions_table = self._do.wait_element(By.ID, "transaction-table")
-        table_body = transactions_table.find_element_by_tag_name("tbody")
         txn_rows = transactions_table.find_elements_by_css_selector("tr.transaction-list-row")
         
         txn_in_scope = []
@@ -225,5 +220,3 @@ class Api(providers.SeleniumBased):
                 for account_id, account in self.accounts.items()
             ]
         }
-        for account_id in self.accounts:
-            self._get_account_transactions(account_id, from_date, to_date)

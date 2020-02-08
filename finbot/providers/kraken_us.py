@@ -48,30 +48,31 @@ class KrakenPriceFetcher(object):
 
 
 class Api(providers.Base):
-    def __init__(self, *args, **kwargs):
-        self.api = None
-        self.account_ccy = "EUR"
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._api = None
+        self._account_ccy = "EUR"
 
     def _account_description(self):
         return {
             "id": "portfolio",
             "name": "Portfolio",
-            "iso_currency": self.account_ccy
+            "iso_currency": self._account_ccy
         }
 
     def _iter_balances(self):
-        price_fetcher = KrakenPriceFetcher(self.api)
-        results = self.api.query_private("Balance")["result"]
+        price_fetcher = KrakenPriceFetcher(self._api)
+        results = self._api.query_private("Balance")["result"]
         for symbol, units in results.items():
             demangled_symbol = format_symbol(symbol)
             units = float(units)
             if units > 0.0:
-                rate = price_fetcher.get_last_price(demangled_symbol, self.account_ccy)
+                rate = price_fetcher.get_last_price(demangled_symbol, self._account_ccy)
                 yield symbol, units, units * rate
 
     def authenticate(self, credentials):
-        self.api = krakenex.API(credentials.api_key, credentials.private_key)
-        results = self.api.query_private("Balance")
+        self._api = krakenex.API(credentials.api_key, credentials.private_key)
+        results = self._api.query_private("Balance")
         if results["error"]:
             raise AuthFailure(format_error(results["error"]))
 
