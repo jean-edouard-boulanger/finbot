@@ -1,6 +1,8 @@
 from selenium.webdriver.common.by import By
 from finbot import providers
+from finbot.core.utils import swallow_exc
 from finbot.providers.support.selenium import any_of, get_cookies
+from selenium.common.exceptions import StaleElementReferenceException
 from finbot.providers.errors import AuthFailure, Error
 import requests
 import logging
@@ -9,21 +11,19 @@ import io
 
 
 AUTH_URL = "https://www.lendingworks.co.uk/sign-in"
-BASE_URL = "https://www.lendingworks.co.uk/lending-centre"
 DASHBOARD_URL = "https://www.lendingworks.co.uk/lending-centre/{ns}"
 LOANS_EXPORT_URL = "https://www.lendingworks.co.uk/lending-centre/{ns}/my-loans/export"
 
 
-def is_logged_in(browser):
+def _is_logged_in(browser_helper: providers.SeleniumHelper):
     return len(browser.find_elements_by_css_selector("body.logged-in")) > 0
 
 
-def has_error(browser):
-    return len(browser.find_elements_by_css_selector("div.alert-block")) > 0
-
-
-def get_error(browser):
-    return browser.find_element_by_css_selector("div.alert-block").text.strip()
+@swallow_exc(StaleElementReferenceException)
+def _get_login_error(browser_helper: providers.SeleniumHelper):
+    error_element = browser_helper.find_maybe(By.CSS_SELECTOR, "div.alert-block")
+    if error_element and error_element.is_displayed():
+        return error_element.text.strip()
 
 
 class Credentials(object):
@@ -107,20 +107,34 @@ class Api(providers.SeleniumBased):
     def authenticate(self, credentials):
         browser = self.browser
         browser.get(AUTH_URL)
+
+        # 1. Enter credentials and validate
+
         login_block = self._do.wait_element(By.CSS_SELECTOR, "div.m-lw-login-block")
         username_input, password_input, *_ = login_block.find_elements_by_tag_name("input")
         username_input.send_keys(credentials.username)
         password_input.send_keys(credentials.password)
         submit_button = self._do.find(By.CSS_SELECTOR, "button.form-submit")
         submit_button.click()
-        self._do.wait_cond(any_of(is_logged_in, has_error))
-        if not is_logged_in(browser):
-            raise AuthFailure(get_error(browser))
+
+        # 2. Wait logged-in or error
+
+        self._do.wait_cond(any_of(
+            lambda _: _is_logged_in(self._do), 
+            lambda _: _get_error(self._do)))
+
+        error_message = _get_login_error(self._do)
+        if error_message:
+            raise AuthFailure(error_message)
+
+        # 3. Register available accounts types
+
         self._do.wait_element(By.CLASS_NAME, "onboarding-heading")
-        classic_btn, ifisa_btn = self._do.find_many(By.CSS_SELECTOR, "div.btn")
+        classic_btn, isa_btn = self._do.find_many(By.CSS_SELECTOR, "div.btn")
+
         if "view" in classic_btn.text.lower():
             self._accounts[("classic", "Classic account")] = None
-        if "view" in ifisa_btn.text.lower():
+        if "view" in isa_btn.text.lower():
             self._accounts[("ifisa", "ISA account")] = None
 
     def get_balances(self):
