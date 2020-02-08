@@ -16,7 +16,8 @@ LOANS_EXPORT_URL = "https://www.lendingworks.co.uk/lending-centre/{ns}/my-loans/
 
 
 def _is_logged_in(browser_helper: providers.SeleniumHelper):
-    return len(browser.find_elements_by_css_selector("body.logged-in")) > 0
+    marker = browser_helper.find_many(By.CSS_SELECTOR, "body.logged-in")
+    return marker is not None
 
 
 @swallow_exc(StaleElementReferenceException)
