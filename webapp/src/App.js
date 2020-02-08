@@ -13,10 +13,10 @@ import BarLoader from "react-spinners/BarLoader";
 import queryString from 'query-string';
 
 function formatRelChange(val) {
-  if(val === null || val === undefined || val === 0.0) {
+  if (val === null || val === undefined || val === 0.0) {
     return (<span className="text-muted">-</span>);
   }
-  if(val < 0) {
+  if (val < 0) {
     return (<span className="text-danger">{(val * 100).toFixed(2)}%</span>)
   }
   else {
@@ -33,9 +33,9 @@ function getRelativeChange(startVal, finalVal) {
 }
 
 function moneyFormatter(amount, locale, currency) {
-  const localized =  new Intl.NumberFormat(locale, { 
-    style: 'currency', 
-    currency: currency 
+  const localized = new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency: currency
   }).format(Math.abs(amount));
   return amount >= 0 ? localized : `(${localized})`
 }
@@ -46,7 +46,7 @@ function Money(props) {
     locale,
     ccy
   } = props;
-  if(amount >= 0) {
+  if (amount >= 0) {
     return (<span>{moneyFormatter(amount, locale, ccy)}</span>);
   }
   else {
@@ -61,9 +61,9 @@ function hasValue(val) {
 function maxValue(list, accessor) {
   accessor = accessor || ((val) => val);
   let currentMax = null;
-  for(let i = 0; i !== list.length; ++i) {
+  for (let i = 0; i !== list.length; ++i) {
     const val = accessor(list[i]);
-    if(currentMax === null || val > currentMax) {
+    if (currentMax === null || val > currentMax) {
       currentMax = val;
     }
   }
@@ -83,7 +83,7 @@ class DurationBadge extends React.Component {
   refreshDuration() {
     const {
       from,
-      to=(new Date())
+      to = (new Date())
     } = this.props;
 
     this.setState({
@@ -92,7 +92,7 @@ class DurationBadge extends React.Component {
   }
 
   componentDidMount() {
-    if(this.props.to === undefined) {
+    if (this.props.to === undefined) {
       this.interval = setInterval(() => this.refreshDuration(), 10 * 1000);
     }
     this.refreshDuration();
@@ -105,10 +105,10 @@ class DurationBadge extends React.Component {
 
   render() {
     const {
-      nowLimit=60.0,
-      secondsLimit=60.0,
-      minutesLimit=3600.0,
-      hoursLimit=3600.0 * 48.0
+      nowLimit = 60.0,
+      secondsLimit = 60.0,
+      minutesLimit = 3600.0,
+      hoursLimit = 3600.0 * 48.0
     } = this.props
 
     function formatDuration(d) {
@@ -117,8 +117,8 @@ class DurationBadge extends React.Component {
       const minutesFmt = (val) => `${Math.trunc(val / 60.0)}m ago`;
       const hoursFmt = (val) => `${Math.trunc(val / 3600.0)}h ago`;
       const daysFmt = (val) => `${Math.trunc(val / (3600.0 * 24))}d ago`;
-    
-      switch(true) {
+
+      switch (true) {
         case (d < nowLimit): return nowFmt(d);
         case (d >= nowLimit && d < secondsLimit): return secondsFmt(d);
         case (d >= secondsLimit && d < minutesLimit): return minutesFmt(d);
@@ -138,19 +138,19 @@ function ValuationChange(props) {
     currentValue,
     previousValue,
 
-    showZero=false,
+    showZero = false,
   } = props;
 
   const fmt = (val) => { return val.toLocaleString('en-GB'); };
 
   function impl(val) {
-    if(!hasValue(val) || (val === 0.0 && !showZero)) {
+    if (!hasValue(val) || (val === 0.0 && !showZero)) {
       return (<span className="text-muted">-</span>);
     }
-    else if(val === 0.0) {
+    else if (val === 0.0) {
       return (<span className="text-muted">{fmt(0)}</span>);
     }
-    else if(val < 0) {
+    else if (val < 0) {
       return (<span className="text-danger">{fmt(val)}</span>)
     }
     else {
@@ -159,11 +159,11 @@ function ValuationChange(props) {
   }
 
   // absolute change provided
-  if(hasValue(amount)) {
+  if (hasValue(amount)) {
     return impl(amount);
   }
   // current and previous values were provided, will compute difference
-  else if(hasValue(currentValue) && hasValue(previousValue)) {
+  else if (hasValue(currentValue) && hasValue(previousValue)) {
     return impl(currentValue - previousValue);
   }
   // invalid combination
@@ -196,9 +196,9 @@ class App extends React.Component {
   async componentDidMount() {
     let finbot_client = new FinbotClient();
 
-    const account_data = await finbot_client.getAccount({account_id: this.account_id});
-    const linked_accounts = await finbot_client.getLinkedAccounts({account_id: this.account_id});
-    const historical_valuation = await finbot_client.getAccountHistoricalValuation({account_id: this.account_id});
+    const account_data = await finbot_client.getAccount({ account_id: this.account_id });
+    const linked_accounts = await finbot_client.getLinkedAccounts({ account_id: this.account_id });
+    const historical_valuation = await finbot_client.getAccountHistoricalValuation({ account_id: this.account_id });
 
     this.setState({
       valuation: account_data.valuation,
@@ -206,7 +206,7 @@ class App extends React.Component {
       valuation_high: maxValue(historical_valuation, (entry) => entry.value),
       historical_valuation: historical_valuation.map(entry => {
         return {
-          date:  Date.parse(entry.date).getTime(),
+          date: Date.parse(entry.date).getTime(),
           value: entry.value
         }
       })
@@ -216,10 +216,10 @@ class App extends React.Component {
   render() {
     const locale = this.locale;
     const {
-      valuation_high, 
-      valuation, 
-      linked_accounts, 
-      historical_valuation} = this.state;
+      valuation_high,
+      valuation,
+      linked_accounts,
+      historical_valuation } = this.state;
 
     return (
       <>
@@ -237,9 +237,9 @@ class App extends React.Component {
                   <Card.Title>Net Worth</Card.Title>
                   {valuation === null ? <BarLoader color={"#F0F0F0"} /> :
                     <strong><Money className="text-info"
-                                   amount={valuation.value} 
-                                   locale={locale} 
-                                   ccy={valuation.currency} /></strong>}
+                      amount={valuation.value}
+                      locale={locale}
+                      ccy={valuation.currency} /></strong>}
                 </Card.Body>
               </Card>
             </Col>
@@ -247,11 +247,11 @@ class App extends React.Component {
               <Card>
                 <Card.Body>
                   <Card.Title>Liabilities</Card.Title>
-                    {valuation === null ? <BarLoader color={"#F0F0F0"} /> :
-                      <strong><Money className="text-info"
-                                     amount={valuation.total_liabilities} 
-                                     locale={locale} 
-                                     ccy={valuation.currency} /></strong>}
+                  {valuation === null ? <BarLoader color={"#F0F0F0"} /> :
+                    <strong><Money className="text-info"
+                      amount={valuation.total_liabilities}
+                      locale={locale}
+                      ccy={valuation.currency} /></strong>}
                 </Card.Body>
               </Card>
             </Col>
@@ -259,15 +259,15 @@ class App extends React.Component {
               <Card>
                 <Card.Body>
                   <Card.Title>24h Change</Card.Title>
-                  {valuation  === null ? <BarLoader color={"#F0F0F0"} /> : 
+                  {valuation === null ? <BarLoader color={"#F0F0F0"} /> :
                     <strong>{
                       formatRelChange(
                         getRelativeChange(
-                          valuation.value-valuation.change.change_1day, 
+                          valuation.value - valuation.change.change_1day,
                           valuation.value))}
                     </strong>}
                 </Card.Body>
-                </Card>
+              </Card>
             </Col>
             <Col></Col>
           </Row>
@@ -316,7 +316,7 @@ class App extends React.Component {
                           format: 'dd-MMM-yyyy hh:mm'
                         },
                         y: {
-                          formatter: (value) => { 
+                          formatter: (value) => {
                             return moneyFormatter(value, locale, valuation.currency);
                           }
                         }
@@ -346,7 +346,7 @@ class App extends React.Component {
               <Card>
                 <Card.Header>Wealth Distribution</Card.Header>
                 <Card.Body>
-                  <Chart 
+                  <Chart
                     options={{
                       legend: {
                         show: true
@@ -362,12 +362,12 @@ class App extends React.Component {
                         }
                       },
                       labels: linked_accounts.filter(entry => entry.valuation.value >= 0.0)
-                                             .map(entry => entry.linked_account.description)
+                        .map(entry => entry.linked_account.description)
                     }}
                     type="donut"
                     series={
                       linked_accounts.filter(entry => entry.valuation.value >= 0.0)
-                                     .map(entry => entry.valuation.value)
+                        .map(entry => entry.valuation.value)
                     }
                     width="100%"
                     height="250px"

@@ -13,8 +13,8 @@ services:
         POSTGRES_PASSWORD: finbot
     ports:
       - "5432:5432"
-    volumes:
-      - .finbotdb:/var/lib/postgresql/data
+  #  volumes:
+  #    - .finbotdb:/var/lib/postgresql/data
 
   finbotwsrv:
     build:
