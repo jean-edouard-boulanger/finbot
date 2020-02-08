@@ -1,17 +1,12 @@
-from copy import deepcopy
-from price_parser import Price
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.expected_conditions import staleness_of
 from selenium.common.exceptions import StaleElementReferenceException
 from finbot.providers.support.selenium import (
-    any_of, 
-    all_of, 
-    negate
+    any_of,
+    SeleniumHelper
 )
 from finbot import providers
 from finbot.core.utils import swallow_exc
 from finbot.providers.errors import AuthFailure
-import time
 import json
 
 
@@ -34,7 +29,7 @@ class Credentials(object):
 
 
 @swallow_exc(StaleElementReferenceException)
-def _get_login_error(browser_helper: providers.SeleniumHelper):
+def _get_login_error(browser_helper: SeleniumHelper):
     error_items = [
         item for item in browser_helper.find_many(
             By.CSS_SELECTOR, "div.error")
@@ -87,7 +82,7 @@ class Api(providers.SeleniumBased):
         # 3. Wait logged-in or error
 
         self._do.wait_cond(any_of(
-            lambda _: _get_error(self._do),
+            lambda _: _get_login_error(self._do),
             lambda _: self._do.find_maybe(By.CLASS_NAME, "Synthesis-user")))
 
         error_message = _get_login_error(self._do)

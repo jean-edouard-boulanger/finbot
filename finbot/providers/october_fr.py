@@ -1,10 +1,7 @@
 from price_parser import Price
 from selenium.webdriver.common.by import By
 from finbot import providers
-from finbot.providers.support.selenium import (
-    DefaultBrowserFactory,
-    any_of
-)
+from finbot.providers.support.selenium import any_of
 from finbot.providers.errors import AuthFailure
 
 
@@ -63,7 +60,6 @@ class Api(providers.SeleniumBased):
     def authenticate(self, credentials):
         browser = self.browser
         browser.get(AUTH_URL)
-        app_area = self._do.find(By.CSS_SELECTOR, "div.container")
         auth_area = self._do.wait_element(By.TAG_NAME, "form")
         email_input, password_input = auth_area.find_elements_by_tag_name("input")
         email_input.send_keys(credentials.username)

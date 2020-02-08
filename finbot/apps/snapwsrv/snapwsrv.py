@@ -6,7 +6,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker, joinedload
 from copy import deepcopy
 from finbot.clients.finbot import FinbotClient, LineItem
 from finbot.core import crypto, utils, dbutils, fx
-from finbot.apps.support import generic_request_handler, make_error
+from finbot.apps.support import request_handler, make_error
 from finbot.model import (
     UserAccount,
     UserAccountSnapshot,
@@ -91,11 +91,11 @@ def visit_snapshot_tree(raw_snapshot, visitor):
                 "error": account_data["error"]
             }
             return
-        for entry in account_data["financial_data"]:
-            if "error" in entry:
+        for data_entry in account_data["financial_data"]:
+            if "error" in data_entry:
                 yield {
-                    "scope": f"linked_account.{entry['line_item']}",
-                    "error": entry["error"]
+                    "scope": f"linked_account.{data_entry['line_item']}",
+                    "error": data_entry["error"]
                 }
 
     for account in raw_snapshot:
@@ -224,7 +224,7 @@ class AccountSnapshotRequest(object):
 def dispatch_snapshot_entry(request: AccountSnapshotRequest):
     try:
         logging.info(f"starting snapshot for account_id={request.account_id}'"
-                    f" provider_id={request.provider_id}")
+                     f" provider_id={request.provider_id}")
 
         finbot_client = FinbotClient(os.environ["FINBOT_FINBOTWSRV_ENDPOINT"])
         account_snapshot = finbot_client.get_financial_data(
@@ -233,15 +233,15 @@ def dispatch_snapshot_entry(request: AccountSnapshotRequest):
             line_items=request.line_items)
 
         logging.info(f"snapshot complete for for account_id={request.account_id}'"
-                    f" provider_id={request.provider_id}")
+                     f" provider_id={request.provider_id}")
 
         return request, account_snapshot
     except Exception as e:
         trace = traceback.format_exc()
-        logging.warn(f"fatal error while taking snapshot for account_id={request.account_id}"
-                     f" provider_id={request.provider_id}"
-                     f" error: {e}"
-                     f" trace:\n{trace}")
+        logging.warning(f"fatal error while taking snapshot for account_id={request.account_id}"
+                        f" provider_id={request.provider_id}"
+                        f" error: {e}"
+                        f" trace:\n{trace}")
         return request, make_error(
             user_message="error while taking account snapshot",
             debug_message=str(e),
@@ -249,8 +249,6 @@ def dispatch_snapshot_entry(request: AccountSnapshotRequest):
 
 
 def take_raw_snapshot(user_account):
-    raw_snapshot = []
-    finbot_client = FinbotClient(os.environ["FINBOT_FINBOTWSRV_ENDPOINT"])
     with ThreadPoolExecutor(max_workers=4) as executor:
         logging.info("initializing accounts snapshot requests")
         requests = [
@@ -285,7 +283,7 @@ def take_raw_snapshot(user_account):
 
 
 @app.route("/snapshot/<user_account_id>/take", methods=["POST"])
-@generic_request_handler()
+@request_handler()
 def take_snapshot(user_account_id):
     logging.info(f"fetching user information for user account id {user_account_id}")
 

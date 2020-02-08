@@ -6,15 +6,14 @@ from flask_jwt_extended import (
     create_access_token,
     create_refresh_token,
     jwt_required,
-    get_jwt_identity
 )
-from sqlalchemy import create_engine, text, desc, asc
+from sqlalchemy import create_engine, desc, asc
 from sqlalchemy.orm import scoped_session, sessionmaker, joinedload, contains_eager
 from sqlalchemy.exc import IntegrityError
 from finbot.clients.finbot import FinbotClient
 from finbot.apps.appwsrv import timeseries
-from finbot.apps.support import generic_request_handler, Route, ApplicationError
-from finbot.core.utils import serialize, pretty_dump
+from finbot.apps.support import request_handler, Route, ApplicationError
+from finbot.core.utils import serialize
 from finbot.core import crypto
 from finbot.core import dbutils
 from finbot.model import (
@@ -22,16 +21,11 @@ from finbot.model import (
     UserAccount,
     UserAccountSettings,
     LinkedAccount,
-    UserAccountSnapshot,
     UserAccountHistoryEntry,
-    UserAccountValuationHistoryEntry,
     LinkedAccountValuationHistoryEntry,
-    SubAccountValuationHistoryEntry,
-    SubAccountItemValuationHistoryEntry,
 )
 import logging.config
 import logging
-import itertools
 import json
 import os
 
@@ -83,7 +77,7 @@ AUTH = API_V1.auth
 
 
 @app.route(AUTH.login._, methods=["POST"])
-@generic_request_handler(schema={
+@request_handler(schema={
     "type": "object",
     "additionalProperties": False,
     "required": ["email", "password"],
@@ -120,14 +114,14 @@ def auth_login():
 
 
 @app.route(AUTH.valid._, methods=["GET"])
-@generic_request_handler()
+@request_handler()
 @jwt_required
 def test_auth_validity():
     return jsonify({})
 
 
 @app.route(API_V1.providers._, methods=["POST"])
-@generic_request_handler(schema={
+@request_handler(schema={
     "type": "object",
     "additionalProperties": False,
     "required": ["id", "description", "website_url", "credentials_schema"],
@@ -149,7 +143,7 @@ def create_provider():
 
 
 @app.route(API_V1.providers._, methods=["GET"])
-@generic_request_handler()
+@request_handler()
 def get_providers():
     providers = db_session.query(Provider).all()
     return jsonify(serialize({
@@ -158,7 +152,7 @@ def get_providers():
 
 
 @app.route(API_V1.providers.p("provider_id")._, methods=["DELETE"])
-@generic_request_handler()
+@request_handler()
 def delete_provider(provider_id):
     count = db_session.query(Provider).filter_by(id=provider_id).delete()
     db_session.commit()
@@ -170,7 +164,7 @@ ACCOUNTS = API_V1.accounts
 
 
 @app.route(ACCOUNTS._, methods=["POST"])
-@generic_request_handler(schema={
+@request_handler(schema={
     "type": "object",
     "additionalProperties": False,
     "required": ["email", "password", "full_name", "settings"],
@@ -221,7 +215,7 @@ ACCOUNT = ACCOUNTS.p("user_account_id")
 
 
 @app.route(ACCOUNT._, methods=["GET"])
-@generic_request_handler()
+@request_handler()
 def get_user_account(user_account_id):
     def serialize_valuation(entry):
         return {
@@ -268,7 +262,7 @@ def get_user_account(user_account_id):
 
 
 @app.route(ACCOUNT.history._, methods=["GET"])
-@generic_request_handler()
+@request_handler()
 def get_user_account_valuation_history(user_account_id):
     history_entries = (db_session.query(UserAccountHistoryEntry)
                                  .filter_by(user_account_id=user_account_id)
@@ -293,7 +287,7 @@ def get_user_account_valuation_history(user_account_id):
 
 
 @app.route(ACCOUNT.linked_accounts._, methods=["GET"])
-@generic_request_handler()
+@request_handler()
 def get_linked_accounts_valuation(user_account_id):
     result = (db_session.query(UserAccountHistoryEntry)
                         .filter_by(user_account_id=user_account_id)
@@ -341,7 +335,7 @@ def get_linked_accounts_valuation(user_account_id):
 
 
 @app.route(ACCOUNT.linked_accounts._, methods=["POST"])
-@generic_request_handler(schema={
+@request_handler(schema={
     "type": "object",
     "additionalProperties": False,
     "required": ["provider_id", "credentials", "account_name"],
@@ -411,7 +405,7 @@ LINKED_ACCOUNT = ACCOUNT.linked_accounts.p("linked_account_id")
 
 
 @app.route(LINKED_ACCOUNT.history._, methods=["GET"])
-@generic_request_handler()
+@request_handler()
 def get_linked_account_historical_valuation(user_account_id, linked_account_id):
     linked_account_id = int(linked_account_id)
     results = (db_session.query(UserAccountHistoryEntry)

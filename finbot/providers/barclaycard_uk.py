@@ -1,13 +1,10 @@
 from copy import deepcopy
 from price_parser import Price
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.expected_conditions import presence_of_element_located
 from finbot import providers
 from finbot.providers.support.selenium import any_of
 from finbot.providers.errors import AuthFailure
-import re
-import time
 import logging
 
 
@@ -42,7 +39,7 @@ class Credentials(object):
 class Api(providers.SeleniumBased):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.accounts = None
+        self.account = None
 
     def authenticate(self, credentials):
         browser = self.browser
@@ -102,7 +99,6 @@ class Api(providers.SeleniumBased):
         }
 
     def get_balances(self):
-        browser = self.browser
         balance_area = self._do.wait_element(By.CSS_SELECTOR, "div.current-balance")
         balance_amount_str = balance_area.find_element_by_css_selector("span.value").text.strip()
         balance_amount = Price.fromstring(balance_amount_str)

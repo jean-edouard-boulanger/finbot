@@ -1,4 +1,6 @@
 from functools import wraps
+from selenium.webdriver.support.expected_conditions import presence_of_element_located
+from selenium.webdriver.support.ui import WebDriverWait
 
 
 class DefaultBrowserFactory(object):
@@ -55,5 +57,40 @@ class negate(object):
         return not(self.cond(driver))
 
 
-def get_cookies(browser):
-    return {cookie["name"]: cookie["value"] for cookie in browser.get_cookies()}
+class SeleniumHelper(object):
+    def __init__(self, browser):
+        self.browser = browser
+
+    def get(self, url):
+        self.browser.get(url)
+
+    def wait(self, timeout=60):
+        return WebDriverWait(self.browser, timeout)
+
+    def wait_element(self, by, selector, timeout=60):
+        return self.wait(timeout).until(
+            presence_of_element_located((by, selector)))
+
+    def wait_cond(self, cond, timeout=60):
+        return self.wait(timeout).until(cond)
+
+    def find(self, by, selector):
+        return self.browser.find_element(by, selector)
+
+    def find_many(self, by, selector):
+        return self.browser.find_elements(by, selector)
+
+    def find_maybe(self, by, selector):
+        all_elements = self.find_many(by, selector)
+        if not all_elements:
+            return None
+        return all_elements[0]
+
+    def click(self, element):
+        self.browser.execute_script("arguments[0].click();", element)
+
+    def get_cookies(self):
+        return {
+            cookie["name"]: cookie["value"] 
+            for cookie in self.browser.get_cookies()
+        }

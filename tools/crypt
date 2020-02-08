@@ -23,7 +23,7 @@ def create_parser():
     return parser
 
 
-def key_tool(settings):
+def key_tool(_):
     print(crypto.fernet_generate_key().decode()) 
 
 

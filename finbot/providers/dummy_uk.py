@@ -21,10 +21,10 @@ DUMMY_ACCOUNT = {
 
 
 class Api(providers.Base):
-    def __init__(self, *args, **kwargs):
-        pass
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
-    def authenticate(self, *args, **kwargs):
+    def authenticate(self, _):
         pass
 
     def get_balances(self):

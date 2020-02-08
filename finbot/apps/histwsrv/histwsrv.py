@@ -1,7 +1,7 @@
 from flask import Flask, jsonify
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import scoped_session, sessionmaker, joinedload
-from finbot.apps.support import generic_request_handler
+from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session, sessionmaker
+from finbot.apps.support import request_handler
 from finbot.apps.histwsrv import repository
 from finbot.core.utils import serialize, pretty_dump
 from finbot.core import dbutils
@@ -68,8 +68,7 @@ def get_sub_accounts_valuation(data: pd.DataFrame):
                 .agg({
                     "value_sub_account_ccy": "sum",
                     "value_snapshot_ccy": "sum"
-                })
-                .to_dict())
+                }).to_dict())
     sub_account_data = data["value_sub_account_ccy"]
     snapshot_data = data["value_snapshot_ccy"]
     return {
@@ -97,7 +96,7 @@ def cleanup_context(*args, **kwargs):
 
 
 @app.route("/history/<snapshot_id>/write", methods=["POST"])
-@generic_request_handler()
+@request_handler()
 def write_history(snapshot_id):
     repo = repository.ReportRepository(db_session)
 
