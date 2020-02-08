@@ -460,6 +460,12 @@
                     }
                 }
             }
+        },
+        {
+            "id": "dummy_uk",
+            "description": "Dummy financial provider (UK)",
+            "website_url": "http://www.dummy.com",
+            "credentials_schema": {}
         }
     ]
 }
