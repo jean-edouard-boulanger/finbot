@@ -3,7 +3,6 @@ import React from "react";
 import Form from "react-jsonschema-form";
 import Button from "react-bootstrap/Button"
 
-
 const SignUp = props => {
 
     const schema = {
@@ -76,14 +75,12 @@ const SignUp = props => {
         props._sign("up", e);
     }
 
-
     return (
         <div className="container mt-5 w-75">
             <Form
                 className="border border-dark p-4 rounded text-center"
                 schema={schema}
                 uiSchema={uiSchema}
-                onChange={log("changed")}
                 onSubmit={_onSubmit}
                 onError={log("errors")}
                 showErrorList={false} >

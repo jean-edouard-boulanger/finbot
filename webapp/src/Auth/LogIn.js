@@ -43,8 +43,6 @@ const LogIn = props => {
                 className="border border-dark p-4 rounded text-center"
                 schema={schema}
                 uiSchema={uiSchema}
-                onChange={log("changed")}
-                onSubmit={log("submitted")}
                 onError={log("errors")}
                 showErrorList={false} >
                 <div>

@@ -1,10 +1,14 @@
-import React from "react";
+import React, { useContext } from "react";
 import NavDropdown from 'react-bootstrap/NavDropdown';
+import ProvidersContext from "../context/LinkedAccountContext"
 
-const Providers = props => {
+const Providers = ({ _setProvider }) => {
+    const providersContext = useContext(ProvidersContext);
+    const { providersList } = providersContext;
+
     return (
-        <NavDropdown title="Link provider" id="nav-dropdown">
-            {props.options.map(provider => <NavDropdown.Item onSelect={() => console.log("i wsas selected")} eventKey={provider.id}>{provider.description}</NavDropdown.Item>)}
+        <NavDropdown className="px-5" title="Link provider" id="nav-dropdown">
+            {providersList.map(provider => <NavDropdown.Item onSelect={_setProvider} size="xxs" eventKey={provider.id}>{provider.description}</NavDropdown.Item>)}
         </NavDropdown>
     )
 }
