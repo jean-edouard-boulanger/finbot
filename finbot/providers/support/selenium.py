@@ -86,8 +86,11 @@ class SeleniumHelper(object):
             return None
         return all_elements[0]
 
+    def execute_script(self, *args, **kwargs):
+        return self.browser.execute_script(*args, **kwargs)
+
     def click(self, element):
-        self.browser.execute_script("arguments[0].click();", element)
+        self.execute_script("arguments[0].click();", element)
 
     def get_cookies(self):
         return {

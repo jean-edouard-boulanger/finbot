@@ -1,6 +1,4 @@
 from finbot.providers.support.selenium import DefaultBrowserFactory, SeleniumHelper
-from selenium.webdriver.support.expected_conditions import presence_of_element_located
-from selenium.webdriver.support.ui import WebDriverWait
 
 
 class Base(object):
@@ -9,7 +7,7 @@ class Base(object):
 
     def authenticate(self, credentials):
         """ Authenticate user with provided credentials. Should persist any
-        informations needed to perform further operations (get balances, 
+        information needed to perform further operations (get balances,
         get assets, get liabilities)
 
         :raises AuthFailure: should be raised if authentication failed
@@ -51,3 +49,17 @@ class SeleniumBased(Base):
 
     def close(self):
         self.browser.quit()
+
+
+class Account(object):
+    def __init__(self, identifier, name, iso_currency):
+        self.identifier = identifier
+        self.name = name
+        self.iso_currency = iso_currency
+
+    def serialize(self):
+        return {
+            "id": self.identifier,
+            "name": self.name,
+            "iso_currency": self.iso_currency
+        }

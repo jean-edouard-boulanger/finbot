@@ -15,66 +15,6 @@ AUTH_URL = "https://lwp.aegon.co.uk/targetplanUI/login"
 BALANCES_URL = "https://lwp.aegon.co.uk/targetplanUI/investments"
 
 
-@swallow_exc(StaleElementReferenceException)
-def _get_login_error(browser_helper: SeleniumHelper):
-    error_area = browser_helper.find_maybe(
-        By.CSS_SELECTOR, "div#error-container-wrapper")
-    if error_area and error_area.is_displayed():
-        return error_area.text.strip()
-
-
-def _is_logged_in(browser_helper: SeleniumHelper):
-    avatar_area = browser_helper.find_maybe(By.CSS_SELECTOR, "a#nav-primary-profile")
-    return avatar_area is not None
-
-
-def _wait_accounts(browser_helper: SeleniumHelper):
-    accounts_xpath = "//div[contains(@class,'card-product-')]"
-    browser_helper.wait_element(By.XPATH, accounts_xpath, timeout=120)
-    return browser_helper.find_many(By.XPATH, accounts_xpath)
-
-
-def _iter_accounts(accounts_elements):
-    def extract_account(account_card):
-        card_body = account_card.find_element_by_css_selector("div.card-body")
-        card_footer = account_card.find_element_by_css_selector("div.card-footer")
-        account_id = card_footer.text.strip().split(" ")[-1]
-        account_link = (card_body.find_element_by_tag_name("h3")
-                                 .find_element_by_css_selector("a.view-manage-btn"))
-        account_name = account_link.text.strip()
-        balance_str = card_body.find_element_by_css_selector("div.h1 > span.currency-hero").text.strip()
-        return {
-            "account": {
-                "id": account_id,
-                "name": account_name,
-                "iso_currency": "GBP"
-            },
-            "balance": Price.fromstring(balance_str).amount_float,
-            "selenium": {
-                "ref": account_card,
-                "link_element": account_link
-            }
-        }
-    return [extract_account(account_card) for account_card in accounts_elements]
-
-
-def _iter_assets(assets_table_body):
-    for row in assets_table_body.find_elements_by_tag_name("tr"):
-        cells = row.find_elements_by_tag_name("td")
-        asset_name = (cells[0].find_element_by_tag_name("a")
-                                .find_elements_by_tag_name("span")[1]
-                                .text.strip())
-        yield {
-            "name": asset_name,
-            "type": "blended fund",
-            "units": float(cells[1].text.strip()),
-            "value": float(cells[3].text.strip()),
-            "provider_specific": {
-                "Last price": float(cells[2].text.strip())
-            }
-        }
-
-
 class Credentials(object):
     def __init__(self, username, password):
         self.username = username
@@ -95,10 +35,10 @@ class Api(providers.SeleniumBased):
         self.accounts = None
 
     def _go_home(self):
-        (self.browser.find_element_by_css_selector("div#navbarSupportedContent")
-                     .find_element_by_css_selector("div.dropdown")
-                     .find_element_by_tag_name("a")
-                     .click())
+        (self._do.find(By.CSS_SELECTOR, "div#navbarSupportedContent")
+                 .find_element_by_css_selector("div.dropdown")
+                 .find_element_by_tag_name("a")
+                 .click())
 
     def _switch_account(self, account_id):
         self._go_home()
@@ -191,4 +131,64 @@ class Api(providers.SeleniumBased):
                 get_account_assets(account_id, account)
                 for account_id, account in self.accounts.items()
             ]
+        }
+
+
+@swallow_exc(StaleElementReferenceException)
+def _get_login_error(browser_helper: SeleniumHelper):
+    error_area = browser_helper.find_maybe(
+        By.CSS_SELECTOR, "div#error-container-wrapper")
+    if error_area and error_area.is_displayed():
+        return error_area.text.strip()
+
+
+def _is_logged_in(browser_helper: SeleniumHelper):
+    avatar_area = browser_helper.find_maybe(By.CSS_SELECTOR, "a#nav-primary-profile")
+    return avatar_area is not None
+
+
+def _wait_accounts(browser_helper: SeleniumHelper):
+    accounts_xpath = "//div[contains(@class,'card-product-')]"
+    browser_helper.wait_element(By.XPATH, accounts_xpath, timeout=120)
+    return browser_helper.find_many(By.XPATH, accounts_xpath)
+
+
+def _iter_accounts(accounts_elements):
+    def extract_account(account_card):
+        card_body = account_card.find_element_by_css_selector("div.card-body")
+        card_footer = account_card.find_element_by_css_selector("div.card-footer")
+        account_id = card_footer.text.strip().split(" ")[-1]
+        account_link = (card_body.find_element_by_tag_name("h3")
+                                 .find_element_by_css_selector("a.view-manage-btn"))
+        account_name = account_link.text.strip()
+        balance_str = card_body.find_element_by_css_selector("div.h1 > span.currency-hero").text.strip()
+        return {
+            "account": {
+                "id": account_id,
+                "name": account_name,
+                "iso_currency": "GBP"
+            },
+            "balance": Price.fromstring(balance_str).amount_float,
+            "selenium": {
+                "ref": account_card,
+                "link_element": account_link
+            }
+        }
+    return [extract_account(account_card) for account_card in accounts_elements]
+
+
+def _iter_assets(assets_table_body):
+    for row in assets_table_body.find_elements_by_tag_name("tr"):
+        cells = row.find_elements_by_tag_name("td")
+        asset_name = (cells[0].find_element_by_tag_name("a")
+                                .find_elements_by_tag_name("span")[1]
+                                .text.strip())
+        yield {
+            "name": asset_name,
+            "type": "blended fund",
+            "units": float(cells[1].text.strip()),
+            "value": float(cells[3].text.strip()),
+            "provider_specific": {
+                "Last price": float(cells[2].text.strip())
+            }
         }

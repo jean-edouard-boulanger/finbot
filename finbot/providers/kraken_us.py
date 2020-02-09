@@ -17,36 +17,6 @@ class Credentials(object):
         return Credentials(data["api_key"], data["private_key"])
 
 
-def format_error(errors):
-    return ", ".join(errors)
-
-
-def classify_asset(symbol):
-    if symbol.startswith("Z"):
-        return "currency"
-    return "crypto"
-
-
-def format_symbol(symbol):
-    return symbol[1:] if len(symbol) > 3 else symbol
-
-
-class KrakenPriceFetcher(object):
-    def __init__(self, kraken_api):
-        self.api = kraken_api
-
-    def get_last_price(self, source_crypto_asset, target_ccy):
-        if source_crypto_asset == target_ccy:
-            return 1.0
-        pair = f"{source_crypto_asset}{target_ccy}"
-        results = self.api.query_public("Ticker", {
-            "pair": pair
-        })
-        if results["error"]:
-            raise RuntimeError(f"{pair} " + format_error(results["error"]))
-        return float(results["result"][list(results["result"].keys())[0]]["c"][0])
-
-
 class Api(providers.Base):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -64,7 +34,7 @@ class Api(providers.Base):
         price_fetcher = KrakenPriceFetcher(self._api)
         results = self._api.query_private("Balance")["result"]
         for symbol, units in results.items():
-            demangled_symbol = format_symbol(symbol)
+            demangled_symbol = _format_symbol(symbol)
             units = float(units)
             if units > 0.0:
                 rate = price_fetcher.get_last_price(demangled_symbol, self._account_ccy)
@@ -74,7 +44,7 @@ class Api(providers.Base):
         self._api = krakenex.API(credentials.api_key, credentials.private_key)
         results = self._api.query_private("Balance")
         if results["error"]:
-            raise AuthFailure(format_error(results["error"]))
+            raise AuthFailure(_format_error(results["error"]))
 
     def get_balances(self):
         balance = sum(value for (_, _, value) in self._iter_balances())
@@ -94,8 +64,8 @@ class Api(providers.Base):
                     "account": self._account_description(),
                     "assets": [
                         {
-                            "name": format_symbol(symbol),
-                            "type": classify_asset(symbol),
+                            "name": _format_symbol(symbol),
+                            "type": _classify_asset(symbol),
                             "units": units,
                             "value": value
                         }
@@ -104,3 +74,33 @@ class Api(providers.Base):
                 for symbol, units, value in self._iter_balances()
             ]
         }
+
+
+def _format_error(errors):
+    return ", ".join(errors)
+
+
+def _classify_asset(symbol):
+    if symbol.startswith("Z"):
+        return "currency"
+    return "crypto"
+
+
+def _format_symbol(symbol):
+    return symbol[1:] if len(symbol) > 3 else symbol
+
+
+class KrakenPriceFetcher(object):
+    def __init__(self, kraken_api):
+        self.api = kraken_api
+
+    def get_last_price(self, source_crypto_asset, target_ccy):
+        if source_crypto_asset == target_ccy:
+            return 1.0
+        pair = f"{source_crypto_asset}{target_ccy}"
+        results = self.api.query_public("Ticker", {
+            "pair": pair
+        })
+        if results["error"]:
+            raise RuntimeError(f"{pair} " + _format_error(results["error"]))
+        return float(results["result"][list(results["result"].keys())[0]]["c"][0])

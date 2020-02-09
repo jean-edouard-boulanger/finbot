@@ -28,17 +28,6 @@ class Credentials(object):
         return Credentials(data["region"], data["account_number"], data["password"])
 
 
-@swallow_exc(StaleElementReferenceException)
-def _get_login_error(browser_helper: SeleniumHelper):
-    error_items = [
-        item for item in browser_helper.find_many(
-            By.CSS_SELECTOR, "div.error")
-        if item.is_displayed()
-    ]
-    if error_items:
-        return error_items[0].text
-
-
 class Api(providers.SeleniumBased):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -120,3 +109,14 @@ class Api(providers.SeleniumBased):
                 for entry in self._iter_accounts()
             ]
         }
+
+
+@swallow_exc(StaleElementReferenceException)
+def _get_login_error(browser_helper: SeleniumHelper):
+    error_items = [
+        item for item in browser_helper.find_many(
+            By.CSS_SELECTOR, "div.error")
+        if item.is_displayed()
+    ]
+    if error_items:
+        return error_items[0].text

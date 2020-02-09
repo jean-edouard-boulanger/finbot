@@ -5,6 +5,101 @@ from oauth2client.service_account import ServiceAccountCredentials
 import gspread
 
 
+class Credentials(object):
+    def __init__(self, google_api_credentials, sheet_key):
+        self.google_api_credentials = google_api_credentials
+        self.sheet_key = sheet_key
+
+    @property
+    def user_id(self):
+        return str(self.google_api_credentials["client_email"])
+
+    @staticmethod
+    def init(data):
+        return Credentials(
+             data["google_api_credentials"],
+             data["sheet_key"])
+
+
+class Api(providers.Base):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._api = None
+        self._sheet = None
+
+    def _iter_accounts(self):
+        sheet = LocalSheet(self._sheet.sheet1.get_all_values())
+
+        accounts_marker = ACCOUNT_SCHEMA.type_identifier
+        accounts_marker_cell = sheet.find(accounts_marker)
+        if not accounts_marker_cell:
+            raise Error(f"unable to find '{accounts_marker}' cell")
+        accounts_table = _extract_generic_table(
+            sheet, accounts_marker_cell, ACCOUNT_SCHEMA)
+
+        holdings_marker = HOLDING_SCHEMA.type_identifier
+        holdings_marker_cell = sheet.find(holdings_marker)
+        if not holdings_marker_cell:
+            raise Error(f"unable to find '{holdings_marker}' cell")
+        holdings_table = _extract_generic_table(
+            sheet, holdings_marker_cell, HOLDING_SCHEMA)
+
+        for entry in accounts_table:
+            yield {
+                "id": entry["identifier"],
+                "name": entry["description"],
+                "iso_currency": entry["currency"],
+                "holdings": [
+                    holding for holding in holdings_table
+                    if holding["account"] == entry["identifier"]
+                ]
+            }
+
+    def authenticate(self, credentials: Credentials):
+        scope = ['https://www.googleapis.com/auth/spreadsheets']
+        self._api = gspread.authorize(
+            ServiceAccountCredentials.from_json_keyfile_dict(
+                credentials.google_api_credentials, scope))
+        self._sheet = self._api.open_by_key(credentials.sheet_key)
+
+    def get_balances(self):
+        return {
+            "accounts": [
+                {
+                    "account": {
+                        "id": account["id"],
+                        "name": account["name"],
+                        "iso_currency": account["iso_currency"]
+                    },
+                    "balance": sum(holding["value"] for holding in account["holdings"])
+                }
+                for account in self._iter_accounts()
+            ]
+        }
+
+    def get_assets(self):
+        return {
+            "accounts": [
+                {
+                    "account": {
+                        "id": account["id"],
+                        "name": account["name"],
+                        "iso_currency": account["iso_currency"]
+                    },
+                    "assets": [
+                        {
+                            "name": holding["symbol"],
+                            "type": holding["type"],
+                            "value": holding["value"]
+                        }
+                        for holding in account["holdings"]
+                    ]
+                }
+                for account in self._iter_accounts()
+            ]
+        }
+
+
 class Schema(object):
     def __init__(self, type_identifier, attributes):
         self.type_identifier = type_identifier
@@ -22,7 +117,7 @@ class Schema(object):
     @property
     def required_attributes(self):
         return {
-            attribute for (attribute, entry) 
+            attribute for (attribute, entry)
             in self.attributes.items()
             if entry.get("required", False)
         }
@@ -70,22 +165,6 @@ HOLDING_SCHEMA = Schema(
             "required": True
         }
     })
-
-
-class Credentials(object):
-    def __init__(self, google_api_credentials, sheet_key):
-        self.google_api_credentials = google_api_credentials
-        self.sheet_key = sheet_key
-
-    @property
-    def user_id(self):
-        return str(self.google_api_credentials["client_email"])
-
-    @staticmethod
-    def init(data):
-        return Credentials(
-             data["google_api_credentials"],
-             data["sheet_key"])
 
 
 class Cell(object):
@@ -147,7 +226,7 @@ class LocalSheet(object):
         return all_cells[0]
 
 
-def extract_generic_table(sheet: LocalSheet, marker_cell: Cell, schema):
+def _extract_generic_table(sheet: LocalSheet, marker_cell: Cell, schema):
     header_start_cell = sheet.get_cell(marker_cell.row + 1, marker_cell.col)
     header = {}
     for cell in sheet.iter_row(from_cell=header_start_cell):
@@ -180,82 +259,3 @@ def extract_generic_table(sheet: LocalSheet, marker_cell: Cell, schema):
             raise Error(f"record is missing required attribute(s) '{', '.join(missing_attributes.keys())}'")
         records.append(current_record)
     return records
-
-
-class Api(providers.Base):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self._api = None
-        self._sheet = None
-
-    def _iter_accounts(self):
-        sheet = LocalSheet(self._sheet.sheet1.get_all_values())
-
-        accounts_marker = ACCOUNT_SCHEMA.type_identifier
-        accounts_marker_cell = sheet.find(accounts_marker)
-        if not accounts_marker_cell:
-            raise Error(f"unable to find '{accounts_marker}' cell")
-        accounts_table = extract_generic_table(
-            sheet, accounts_marker_cell, ACCOUNT_SCHEMA)
-
-        holdings_marker = HOLDING_SCHEMA.type_identifier
-        holdings_marker_cell = sheet.find(holdings_marker)
-        if not holdings_marker_cell:
-            raise Error(f"unable to find '{holdings_marker}' cell")
-        holdings_table = extract_generic_table(
-            sheet, holdings_marker_cell, HOLDING_SCHEMA)
-
-        for entry in accounts_table:
-            yield {
-                "id": entry["identifier"],
-                "name": entry["description"],
-                "iso_currency": entry["currency"],
-                "holdings": [
-                    holding for holding in holdings_table
-                    if holding["account"] == entry["identifier"]
-                ]
-            }
-
-    def authenticate(self, credentials: Credentials):
-        scope = ['https://www.googleapis.com/auth/spreadsheets']
-        self._api = gspread.authorize(
-            ServiceAccountCredentials.from_json_keyfile_dict(
-                credentials.google_api_credentials, scope))
-        self._sheet = self._api.open_by_key(credentials.sheet_key)
-
-    def get_balances(self):
-        return {
-            "accounts": [
-                {
-                    "account": {
-                        "id": account["id"],
-                        "name": account["name"],
-                        "iso_currency": account["iso_currency"]
-                    },
-                    "balance": sum(holding["value"] for holding in account["holdings"])
-                }
-                for account in self._iter_accounts()
-            ]
-        }
-
-    def get_assets(self):
-        return {
-            "accounts": [
-                {
-                    "account": {
-                        "id": account["id"],
-                        "name": account["name"],
-                        "iso_currency": account["iso_currency"]
-                    },
-                    "assets": [
-                        {
-                            "name": holding["symbol"],
-                            "type": holding["type"],
-                            "value": holding["value"]
-                        }
-                        for holding in account["holdings"]
-                    ]
-                }
-                for account in self._iter_accounts()
-            ]
-        }

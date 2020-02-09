@@ -14,18 +14,6 @@ DASHBOARD_URL = "https://www.lendingworks.co.uk/lending-centre/{ns}"
 LOANS_EXPORT_URL = "https://www.lendingworks.co.uk/lending-centre/{ns}/my-loans/export"
 
 
-def _is_logged_in(browser_helper: SeleniumHelper):
-    marker = browser_helper.find_many(By.CSS_SELECTOR, "body.logged-in")
-    return marker is not None
-
-
-@swallow_exc(StaleElementReferenceException)
-def _get_login_error(browser_helper: SeleniumHelper):
-    error_element = browser_helper.find_maybe(By.CSS_SELECTOR, "div.alert-block")
-    if error_element and error_element.is_displayed():
-        return error_element.text.strip()
-
-
 class Credentials(object):
     def __init__(self, username, password):
         self.username = username
@@ -64,7 +52,7 @@ class Api(providers.SeleniumBased):
 
     def _get_account_data(self, account_key):
         def do_get_account_data(_):
-            all_data = self.browser.execute_script("return window.data.appData;")
+            all_data = self._do.execute_script("return window.data.appData;")
             account_data = all_data[account_type]
             if "total_account_balance" in account_data:
                 return account_data
@@ -105,8 +93,7 @@ class Api(providers.SeleniumBased):
             }
 
     def authenticate(self, credentials):
-        browser = self.browser
-        browser.get(AUTH_URL)
+        self._do.get(AUTH_URL)
 
         # 1. Enter credentials and validate
 
@@ -158,3 +145,15 @@ class Api(providers.SeleniumBased):
                 for entry in self._iter_accounts()
             ]
         }
+
+
+def _is_logged_in(browser_helper: SeleniumHelper):
+    marker = browser_helper.find_many(By.CSS_SELECTOR, "body.logged-in")
+    return marker is not None
+
+
+@swallow_exc(StaleElementReferenceException)
+def _get_login_error(browser_helper: SeleniumHelper):
+    error_element = browser_helper.find_maybe(By.CSS_SELECTOR, "div.alert-block")
+    if error_element and error_element.is_displayed():
+        return error_element.text.strip()

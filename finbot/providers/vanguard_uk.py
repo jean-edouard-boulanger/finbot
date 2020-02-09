@@ -12,30 +12,6 @@ import json
 BASE_URL = "https://secure.vanguardinvestor.co.uk"
 
 
-@swallow_exc(StaleElementReferenceException)
-def _get_login_error(auth_form):
-    error_area = auth_form.find_elements_by_class_name("error-message")
-    if len(error_area) < 1 or not error_area[0].is_displayed():
-        return None
-    return error_area[0].text.strip()
-
-
-class Session(object):
-    def __init__(self, home_url=None, account_data=None):
-        self.home_url = home_url
-        self.account_data = account_data
-
-    def get_account(self, account_id):
-        for account in self.account_data:
-            if account["id"] == account_id:
-                return account
-        raise KeyError(f"could not find account {account_id}")
-
-
-def json_dumps(data):
-    return json.dumps(data, indent=4)
-
-
 class Credentials(object):
     def __init__(self, username, password):
         self.username = username
@@ -53,12 +29,13 @@ class Credentials(object):
 class Api(providers.SeleniumBased):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.session = Session()
-    
+        self.home_url = None
+        self.account_data = None
+
     def _go_home(self):
-        if self.browser.current_url == self.session.home_url:
+        if self.browser.current_url == self.home_url:
             return
-        self.browser.get(self.session.home_url)
+        self._do.get(self.home_url)
 
     def authenticate(self, credentials):
         def extract_accounts(context_data):
@@ -92,10 +69,10 @@ class Api(providers.SeleniumBased):
         if error_message:
             raise AuthFailure(error_message)
 
-        self.session.home_url = self.browser.current_url
-        self.session.account_data = extract_accounts(json.loads(
-            browser.find_element_by_xpath("//*[@data-available-context]")
-                   .get_attribute("data-available-context")))
+        self.home_url = self.browser.current_url
+        self.account_data = extract_accounts(json.loads(
+            self._do.find(By.XPATH, "//*[@data-available-context]")
+                    .get_attribute("data-available-context")))
 
     def get_balances(self):
         def extract_account_balance(summary_row):
@@ -107,7 +84,7 @@ class Api(providers.SeleniumBased):
                 "account": {
                     "id": account_id,
                     "name": account_name,
-                    "iso_currency": "GBP" # TODO
+                    "iso_currency": "GBP"
                 },
                 "balance": balance.amount_float
             }
@@ -185,6 +162,14 @@ class Api(providers.SeleniumBased):
         return {
             "accounts": [
                 self._get_assets_for_account(account)
-                for account in self.session.account_data
+                for account in self.account_data
             ]
         }
+
+
+@swallow_exc(StaleElementReferenceException)
+def _get_login_error(auth_form):
+    error_area = auth_form.find_elements_by_class_name("error-message")
+    if len(error_area) < 1 or not error_area[0].is_displayed():
+        return None
+    return error_area[0].text.strip()
