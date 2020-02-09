@@ -6,8 +6,8 @@ import 'datejs';
 import React, { useState, useEffect } from 'react';
 import { Route, Switch, BrowserRouter } from "react-router-dom";
 
-import LinkedAccountContext from "./context/LinkedAccountContext";
-import LinkedAccountState from "./context/LinkedAccountState";
+import LinkedAccountContext from "context/linked-account-context";
+import LinkedAccountState from "context/linked-account-state";
 import Navigation from "components/navigation";
 
 import Auth from "routes/auth";

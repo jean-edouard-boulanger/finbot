@@ -3,7 +3,7 @@ import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/NavBar';
 
 import ProvidersDropdown from "./providers-dropdown";
-import ProvidersContext from "context/LinkedAccountContext";
+import ProvidersContext from "context/linked-account-context";
 
 
 const Navigation = props => {

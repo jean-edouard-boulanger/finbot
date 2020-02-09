@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 import FinbotClient from "clients/finbot-client";
-import ProvidersContext from "../context/LinkedAccountContext";
+import ProvidersContext from "./linked-account-context";
 
 
 const LinkedAccountState = props => {
