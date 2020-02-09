@@ -125,17 +125,26 @@ class Api(providers.SeleniumBased):
         cash_txn_url = f"{BASE_URL}{account['home_url']}/Transactions/Cash"
         self._do.get(cash_txn_url)
         staleness_detector = _StalenessDetector(self._do)
+        transactions_table = self._do.wait_element(By.CSS_SELECTOR, "table.table-transactions > tbody")
         while True:
-            transactions_table = self._do.wait_element(By.CSS_SELECTOR, "table.table-transactions > tbody")
-            for transaction in _extract_cash_transactions(transactions_table, staleness_detector):
-                # vanguard displays transactions latest first, if the current transaction's date is less than the
-                # lower bound, there is no need to go further
-                if transaction["date"] < from_date:
-                    return
-                if transaction["date"] <= to_date:
-                    yield transaction
-            next_button = self._do.find_maybe(By.CSS_SELECTOR, "button.next")
-            if not next_button:
+            extractor = _extract_cash_transactions(transactions_table, staleness_detector)
+            try:
+                for transaction in extractor:
+                    # vanguard displays transactions latest first, if the current 
+                    # transaction's date is less than the lower bound, there is 
+                    # no need to go further
+                    if transaction["date"] < from_date:
+                        return
+                    if transaction["date"] <= to_date:
+                        yield transaction
+            except StaleElementReferenceException:
+                # When reaching the last page of transactions, some rows in the
+                # transactions table will become stale, raising this exception.
+                # TODO: until there is a better solution, this simply indicates
+                # the end of the transactions list
+                return
+            next_button = self._do.find(By.CSS_SELECTOR, "button.next")
+            if not next_button.is_enabled():
                 return
             next_button.click()
 
