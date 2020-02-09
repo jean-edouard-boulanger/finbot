@@ -14,76 +14,15 @@ AUTH_URL = "https://global.americanexpress.com/login"
 HOME_URL = "https://global.americanexpress.com/dashboard"
 
 
-def _iter_accounts(browser_helper: SeleniumHelper):
-    accounts_switcher_area = browser_helper.wait_element(
-        By.CSS_SELECTOR, "section.axp-account-switcher")
-    accounts_switcher = accounts_switcher_area.find_element_by_tag_name("button")
-    browser_helper.click(accounts_switcher)
-
-    accounts_area = browser_helper.wait_element(By.ID, "accounts")
-    account_rows = accounts_area.find_elements_by_css_selector("section.account-row")
-
-    for account_row in account_rows:
-        account_name = account_row.text.strip()
-        # TODO make this configurable?
-        if "corporate" in account_name.lower():
-            continue
-        account_id = re.findall(r"\(-(\d+)\)", account_name)[0]
-        yield {
-            "account": {
-                "id": account_id,
-                "name": account_name,
-                "iso_currency": "GBP"
-            },
-            "selenium": {
-                "account_element_ref": account_row
-            }
-        }
-
-    browser_helper.click(accounts_switcher)
-
-
-def _get_balance(balance_area):
-    line_items = balance_area.find_elements_by_css_selector("div.line-item")
-    for entry in line_items:
-        header = entry.find_element_by_css_selector("div.header-container").text.lower()
-        if "balance" in header:
-            balance_str = entry.find_element_by_css_selector("div.data-value").text.strip()
-            return Price.fromstring(balance_str)
-    raise Error("unable to get balance")
-
-
-class Credentials(object):
-    def __init__(self, user_id, password):
-        self._user_id = user_id
-        self.password = password
-    
-    @property
-    def user_id(self):
-        return str(self._user_id)
-
-    @staticmethod
-    def init(data):
-        return Credentials(data["user_id"], data["password"])
-
-
-def get_loging_error(browser):
-    alert_area = browser.find_elements_by_css_selector("div.alert")
-    if alert_area:
-        return alert_area[0].text
-    return None
-
-
 class Api(providers.SeleniumBased):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.accounts = None
 
     def _go_home(self):
-        browser = self.browser
-        if "dashboard" in browser.current_url:
+        if "dashboard" in self.browser.current_url:
             return
-        browser.get(HOME_URL)
+        self._do.get(HOME_URL)
         self._do.wait_element(By.CSS_SELECTOR, "section.balance-container")
 
     def _switch_account(self, account_id):
@@ -95,8 +34,7 @@ class Api(providers.SeleniumBased):
         raise Error(f"unable to switch to account {account_id}")
 
     def authenticate(self, credentials):
-        browser = self.browser
-        browser.get(AUTH_URL)
+        self._do.get(AUTH_URL)
         cookies_mask = self._do.wait_element(By.ID, "euc_mask")
         cookies_mask.click()
 
@@ -106,12 +44,11 @@ class Api(providers.SeleniumBased):
 
         self._do.wait_cond(any_of(
             presence_of_element_located((By.CSS_SELECTOR, "section.balance-container")),
-            get_loging_error
-        ))
+            lambda _: _get_login_error(self._do)))
 
-        login_error = get_loging_error(browser)
-        if login_error:
-            raise AuthFailure(login_error)
+        error_message = _get_login_error(self._do)
+        if error_message:
+            raise AuthFailure(error_message)
 
         self.accounts = {
             entry["account"]["id"]: deepcopy(entry["account"])
@@ -126,7 +63,6 @@ class Api(providers.SeleniumBased):
                 "account": deepcopy(account),
                 "balance": balance.amount_float * -1.0
             })
-
         return {"accounts": accounts}
 
     def get_liabilities(self):
@@ -220,3 +156,62 @@ class Api(providers.SeleniumBased):
                 for account_id, account in self.accounts.items()
             ]
         }
+
+
+def _iter_accounts(browser_helper: SeleniumHelper):
+    accounts_switcher_area = browser_helper.wait_element(
+        By.CSS_SELECTOR, "section.axp-account-switcher")
+    accounts_switcher = accounts_switcher_area.find_element_by_tag_name("button")
+    browser_helper.click(accounts_switcher)
+
+    accounts_area = browser_helper.wait_element(By.ID, "accounts")
+    account_rows = accounts_area.find_elements_by_css_selector("section.account-row")
+
+    for account_row in account_rows:
+        account_name = account_row.text.strip()
+        # TODO make this configurable?
+        if "corporate" in account_name.lower():
+            continue
+        account_id = re.findall(r"\(-(\d+)\)", account_name)[0]
+        yield {
+            "account": {
+                "id": account_id,
+                "name": account_name,
+                "iso_currency": "GBP"
+            },
+            "selenium": {
+                "account_element_ref": account_row
+            }
+        }
+
+    browser_helper.click(accounts_switcher)
+
+
+def _get_balance(balance_area):
+    line_items = balance_area.find_elements_by_css_selector("div.line-item")
+    for entry in line_items:
+        header = entry.find_element_by_css_selector("div.header-container").text.lower()
+        if "balance" in header:
+            balance_str = entry.find_element_by_css_selector("div.data-value").text.strip()
+            return Price.fromstring(balance_str)
+    raise Error("unable to get balance")
+
+
+class Credentials(object):
+    def __init__(self, user_id, password):
+        self._user_id = user_id
+        self.password = password
+
+    @property
+    def user_id(self):
+        return str(self._user_id)
+
+    @staticmethod
+    def init(data):
+        return Credentials(data["user_id"], data["password"])
+
+
+def _get_login_error(browser_helper: SeleniumHelper):
+    alert_area = browser_helper.find_maybe(By.CSS_SELECTOR, "div.alert")
+    if alert_area:
+        return alert_area.text

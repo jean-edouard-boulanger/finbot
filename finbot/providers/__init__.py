@@ -1,6 +1,5 @@
 from finbot.providers.support.selenium import DefaultBrowserFactory, SeleniumHelper
-from selenium.webdriver.support.expected_conditions import presence_of_element_located
-from selenium.webdriver.support.ui import WebDriverWait
+from datetime import datetime
 
 
 class Base(object):
@@ -9,7 +8,7 @@ class Base(object):
 
     def authenticate(self, credentials):
         """ Authenticate user with provided credentials. Should persist any
-        informations needed to perform further operations (get balances, 
+        information needed to perform further operations (get balances,
         get assets, get liabilities)
 
         :raises AuthFailure: should be raised if authentication failed
@@ -31,7 +30,7 @@ class Base(object):
         """
         return {"accounts": []}
 
-    def get_transactions(self, from_date, to_date):
+    def get_transactions(self, from_date: datetime, to_date: datetime):
         """
         """
         return {"accounts": []}

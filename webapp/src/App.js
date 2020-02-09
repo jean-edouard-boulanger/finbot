@@ -14,7 +14,7 @@ import Auth from "./Auth";
 import Form from "./LinkedAccount/Schema";
 
 const App = () => {
-//  const [user, setUser] = useState(localStorage.getItem("identity"));
+  //  const [user, setUser] = useState(localStorage.getItem("identity"));
 
   // useEffect(() => {
   //   if (localStorage.getItem("identity")) {

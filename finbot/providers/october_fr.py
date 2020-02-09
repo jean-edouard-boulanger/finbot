@@ -1,38 +1,13 @@
 from price_parser import Price
 from selenium.webdriver.common.by import By
 from finbot import providers
-from finbot.providers.support.selenium import any_of
+from finbot.providers.support.selenium import any_of, SeleniumHelper
 from finbot.providers.errors import AuthFailure
 
 
 AUTH_URL = "https://app.october.eu/login"
 PORTFOLIO_URL = "https://app.october.eu/transactions/summary"
 LOANS_URL = "https://app.october.eu/transactions/loans"
-
-
-def has_error(browser):
-    return get_error(browser) is not None
-
-
-def get_error(browser):
-    error_area = browser.find_elements_by_class_name("error-message")
-    if len(error_area) < 1 or not error_area[0].is_displayed():
-        return None
-    return error_area[0].text.strip()
-
-
-def is_logged_in(browser):
-    avatar_area = browser.find_elements_by_css_selector("li.avatar")
-    return len(avatar_area) > 0
-
-
-def get_accounts_amount(summary_area):
-    synthesis_area = (summary_area.find_element_by_tag_name("section")
-                                  .find_element_by_tag_name("article"))
-    loan_area, cash_area, *_ = synthesis_area.find_elements_by_tag_name("dl")
-    loan_amount = Price.fromstring(loan_area.find_element_by_tag_name("dd").text)
-    cash_amount = Price.fromstring(cash_area.find_element_by_tag_name("dd").text)
-    return loan_amount.amount_float, cash_amount.amount_float
 
 
 class Credentials(object):
@@ -54,25 +29,29 @@ class Api(providers.SeleniumBased):
         super().__init__(**kwargs)
 
     def _go_home(self):
-        self.browser.get(PORTFOLIO_URL)
+        self._do.get(PORTFOLIO_URL)
         return self._do.wait_element(By.CSS_SELECTOR, "div.summary")
 
     def authenticate(self, credentials):
-        browser = self.browser
-        browser.get(AUTH_URL)
+        self._do.get(AUTH_URL)
         auth_area = self._do.wait_element(By.TAG_NAME, "form")
         email_input, password_input = auth_area.find_elements_by_tag_name("input")
         email_input.send_keys(credentials.username)
         password_input.send_keys(credentials.password)
         actions_area = self._do.wait_element(By.CSS_SELECTOR, "div.actions")
         actions_area.find_element_by_css_selector("button.action-button").click()
-        self._do.wait_cond(any_of(has_error, is_logged_in))
-        if not is_logged_in(browser):
-            raise AuthFailure(get_error(browser))
+
+        self._do.wait_cond(any_of(
+            lambda _: _get_login_error(self._do),
+            lambda _: _is_logged_in(self._do)))
+
+        error_message = _get_login_error(self._do)
+        if error_message:
+            raise AuthFailure(error_message)
 
     def get_balances(self):
         summary_area = self._go_home()
-        loan_amount, cash_amount = get_accounts_amount(summary_area)
+        loan_amount, cash_amount = _get_accounts_amount(summary_area)
         return {
             "accounts": [
                 {
@@ -96,7 +75,7 @@ class Api(providers.SeleniumBased):
 
     def _get_cash_assets(self):
         summary_area = self._go_home()
-        _, cash_amount = get_accounts_amount(summary_area)
+        _, cash_amount = _get_accounts_amount(summary_area)
         return [{
             "name": "cash",
             "type": "currency",
@@ -119,12 +98,12 @@ class Api(providers.SeleniumBased):
                 "provider_specific": None
             }
 
-        browser = self.browser
-        browser.get(LOANS_URL)
+        self._do.get(LOANS_URL)
         table = self._do.wait_element(By.CSS_SELECTOR, "div.investment-table")
         load_button = self._do.find_maybe(By.CSS_SELECTOR, "div.load-more")
         if load_button:
             load_button.click()
+
         return [
             extract_loan(row)
             for row in table.find_elements_by_css_selector("ul.entry")
@@ -147,3 +126,23 @@ class Api(providers.SeleniumBased):
                 ]
             ]
         }
+
+
+def _get_login_error(browser_helper: SeleniumHelper):
+    error_area = browser_helper.find_maybe(By.ID, "error-message")
+    if error_area and error_area.is_displayed():
+        return error_area.text.strip()
+
+
+def _is_logged_in(browser_helper: SeleniumHelper):
+    avatar_area = browser_helper.find_maybe(By.CSS_SELECTOR, "li.avatar")
+    return avatar_area is not None
+
+
+def _get_accounts_amount(summary_area):
+    synthesis_area = (summary_area.find_element_by_tag_name("section")
+                                  .find_element_by_tag_name("article"))
+    loan_area, cash_area, *_ = synthesis_area.find_elements_by_tag_name("dl")
+    loan_amount = Price.fromstring(loan_area.find_element_by_tag_name("dd").text)
+    cash_amount = Price.fromstring(cash_area.find_element_by_tag_name("dd").text)
+    return loan_amount.amount_float, cash_amount.amount_float

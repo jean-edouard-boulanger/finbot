@@ -3,19 +3,12 @@ from price_parser import Price
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.expected_conditions import presence_of_element_located
 from finbot import providers
-from finbot.providers.support.selenium import any_of
+from finbot.providers.support.selenium import any_of, SeleniumHelper
 from finbot.providers.errors import AuthFailure
 import logging
 
 
 BARCLAYCARD_URL = "https://www.barclaycard.co.uk/personal/customer"
-
-
-def _get_login_error(browser):
-    form_error_area = browser.find_elements_by_xpath("//div[contains(@class, 'FormErrorWell')]")
-    if form_error_area:
-        return form_error_area[0].find_element_by_tag_name("strong").text.strip()
-    return None
 
 
 class Credentials(object):
@@ -42,26 +35,28 @@ class Api(providers.SeleniumBased):
         self.account = None
 
     def authenticate(self, credentials):
-        browser = self.browser
-        browser.get(BARCLAYCARD_URL)
+        self._do.get(BARCLAYCARD_URL)
 
         logging.info("getting logging form")
         login_button = self._do.wait_element(By.XPATH, "//a[@data-aem-js='loginButton']")
-        browser.execute_script("arguments[0].click();", login_button)
+        self._do.click(login_button)
 
         # step 2: provide username
+
         logging.info(f"providing username {credentials.user_name}")
         username_input = self._do.wait_element(By.XPATH, "//input[@name='usernameAndID']")
         username_input.send_keys(credentials.user_name)
         self._do.find(By.XPATH, "//button[@type='submit']").click()
 
         # step 3: provide passcode
+
         logging.info(f"providing passcode")
         passcode_input = self._do.wait_element(By.XPATH, "//input[@type='password']")
         passcode_input.send_keys(credentials.passcode)
-        browser.find_element_by_xpath("//button[@type='submit']").click()
+        self._do.find(By.XPATH, "//button[@type='submit']").click()
 
         # step 4: provide partial memorable word
+
         logging.info(f"providing memorable word")
 
         input1 = self._do.wait_element(By.XPATH, "//input[@data-id='memorableWord-letter1']")
@@ -78,16 +73,16 @@ class Api(providers.SeleniumBased):
 
         input1.send_keys(credentials.memorable_word[letter1_idx])
         input2.send_keys(credentials.memorable_word[letter2_idx])
-        browser.find_element_by_xpath("//button[@type='submit']").click()
+        self._do.find(By.XPATH, "//button[@type='submit']").click()
 
         self._do.wait_cond(any_of(
             presence_of_element_located((By.CSS_SELECTOR, "div.sitenav-select-account-link")),
-            _get_login_error
+            lambda _: _get_login_error(self._do)
         ))
 
-        login_error = _get_login_error(browser)
-        if login_error:
-            raise AuthFailure(login_error)
+        error_message = _get_login_error(self._do)
+        if error_message:
+            raise AuthFailure(error_message)
 
         # step 5: collect account info
         account_area = self._do.wait_element(By.CSS_SELECTOR, "div.sitenav-select-account-link")
@@ -125,3 +120,9 @@ class Api(providers.SeleniumBased):
                 for entry in self.get_balances()["accounts"]
             ]
         }
+
+
+def _get_login_error(browser_helper: SeleniumHelper):
+    form_error_area = browser_helper.find_many(By.XPATH, "//div[contains(@class, 'FormErrorWell')]")
+    if form_error_area:
+        return form_error_area.find_element_by_tag_name("strong").text.strip()

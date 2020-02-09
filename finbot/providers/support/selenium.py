@@ -1,6 +1,8 @@
+from typing import List, Optional, Dict
 from functools import wraps
 from selenium.webdriver.support.expected_conditions import presence_of_element_located
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.remote.webelement import WebElement
 
 
 class DefaultBrowserFactory(object):
@@ -28,7 +30,7 @@ def _safe_cond(cond):
     def impl(*args, **kwargs):
         try:
             return cond(*args, **kwargs)
-        except Exception as e:
+        except Exception:
             return None
     return impl
 
@@ -67,29 +69,32 @@ class SeleniumHelper(object):
     def wait(self, timeout=60):
         return WebDriverWait(self.browser, timeout)
 
-    def wait_element(self, by, selector, timeout=60):
+    def wait_element(self, by, selector, timeout=60) -> WebElement:
         return self.wait(timeout).until(
             presence_of_element_located((by, selector)))
 
     def wait_cond(self, cond, timeout=60):
         return self.wait(timeout).until(cond)
 
-    def find(self, by, selector):
+    def find(self, by, selector) -> WebElement:
         return self.browser.find_element(by, selector)
 
-    def find_many(self, by, selector):
+    def find_many(self, by, selector) -> List[WebElement]:
         return self.browser.find_elements(by, selector)
 
-    def find_maybe(self, by, selector):
+    def find_maybe(self, by, selector) -> Optional[WebElement]:
         all_elements = self.find_many(by, selector)
         if not all_elements:
             return None
         return all_elements[0]
 
-    def click(self, element):
-        self.browser.execute_script("arguments[0].click();", element)
+    def execute_script(self, *args, **kwargs):
+        return self.browser.execute_script(*args, **kwargs)
 
-    def get_cookies(self):
+    def click(self, element):
+        self.execute_script("arguments[0].click();", element)
+
+    def get_cookies(self) -> Dict[str, str]:
         return {
             cookie["name"]: cookie["value"] 
             for cookie in self.browser.get_cookies()

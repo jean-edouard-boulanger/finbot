@@ -2,10 +2,9 @@ from copy import deepcopy
 from price_parser import Price
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.expected_conditions import presence_of_element_located
 from finbot import providers
-from finbot.providers.support.selenium import any_of
+from finbot.providers.support.selenium import any_of, SeleniumHelper
 from finbot.providers.errors import AuthFailure, Error
 from finbot.core.utils import date_in_range
 from datetime import datetime
@@ -37,54 +36,14 @@ class Credentials(object):
             data["memorable_word"])
 
 
-def _get_passcode_login_button(driver):
-    login_buttons = driver.find_elements_by_css_selector("button.btn--login")
-    for button in login_buttons:
-        if "passcode" in button.text:
-            return button
-    return None
-
-
-def _wait_accounts(browser):
-    return WebDriverWait(browser, 60).until(
-        presence_of_element_located((By.CSS_SELECTOR, "div.accounts-body")))
-
-
-def _iter_accounts(accounts_area):
-    for row in accounts_area.find_elements_by_css_selector("div.o-account__head"):
-        account_cell = row.find_element_by_css_selector("div.account-link")
-        account_link_element = account_cell.find_element_by_tag_name("a")
-        account_details = row.find_element_by_css_selector("div.o-account__details-body").text.strip().split("\n")
-        balance_str = row.find_element_by_css_selector("div.o-account__balance-head").text.strip()
-        yield {
-            "account": {
-                "id": account_details[0],
-                "name": account_cell.text.strip(),
-                "iso_currency": "GBP"
-            },
-            "balance": Price.fromstring(balance_str).amount_float,
-            "selenium": {
-                "account_link": account_link_element
-            }
-        }
-
-
-def _get_error(browser):
-    warnings = browser.find_elements_by_css_selector("div.notification--warning")
-    if len(warnings) > 0:
-        return warnings[0].text.strip()
-    return None
-
-
 class Api(providers.SeleniumBased):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.accounts = None
 
     def _go_home(self):
-        browser = self.browser
-        browser.get(HOME_URL)
-        return _wait_accounts(browser)
+        self._do.get(HOME_URL)
+        return _wait_accounts(self._do)
 
     def _switch_account(self, account_id):
         accounts_area = self._go_home()
@@ -99,8 +58,7 @@ class Api(providers.SeleniumBased):
             for _ in range(idx + 1):
                 combo.send_keys(Keys.DOWN)
             combo.send_keys(Keys.ENTER)
-        browser = self.browser
-        browser.get(AUTH_URL)
+        self._do.get(AUTH_URL)
 
         # Step 1: last name + card number
         step1_form = self._do.wait_element(By.NAME, "loginStep1")
@@ -117,25 +75,27 @@ class Api(providers.SeleniumBased):
 
         self._do.wait_cond(any_of(
             presence_of_element_located((By.ID, "passcode0")),
-            _get_error(browser)))
+            lambda _: _get_login_error(self._do)))
 
-        error = _get_error(browser)
-        if error is not None:
-            raise AuthFailure(error)
+        error_message = _get_login_error(self._do)
+        if error_message:
+            raise AuthFailure(error_message)
 
         # step 2: authentication (passcode + memorable)
-        passcode_input = browser.find_element_by_id("passcode0")
+
+        passcode_input = self._do.find(By.ID, "passcode0")
         passcode_input.send_keys(credentials.passcode)
-        memorable_label = browser.find_element_by_id("label-memorableCharacters").text.strip()
-        char_combos = browser.find_elements_by_id("idForScrollFeature")
+        memorable_label = self._do.find(By.ID, "label-memorableCharacters").text.strip()
+        char_combos = self._do.find_many(By.ID, "idForScrollFeature")
         for index, i_str in enumerate(re.findall(r"\d", memorable_label)):
             i = int(i_str) - 1
             item_idx = ord(credentials.memorable_word[i]) - ord('a')
             select_combo_item(char_combos[index], item_idx)
-        browser.find_element_by_css_selector("button.btn--login").click()
+        self._do.find(By.CSS_SELECTOR, "button.btn--login").click()
 
         # step 3: gather available accounts
-        accounts_area = _wait_accounts(self.browser)
+
+        accounts_area = _wait_accounts(self._do)
         self.accounts = {
             entry["account"]["id"]: entry["account"]
             for entry in _iter_accounts(accounts_area)
@@ -163,15 +123,12 @@ class Api(providers.SeleniumBased):
             txn_description = desc_cell.text.strip()
             if len(more_data_cells) > 2:
                 txn_description += f" ({more_data_cells[2].get_attribute('innerText').strip()})"
+            txn_description = re.sub(r"\s+", " ", txn_description.strip())
 
             # generate synthetic transaction identifier
 
-            txn_id = hashlib.sha256("/".join([
-                txn_date.isoformat(),
-                txn_description,
-                str(txn_amount),
-                txn_type,
-                txn_type_cell.text.strip(),
+            txn_id = "BCXX-" + hashlib.sha224("/".join([
+                txn_date.isoformat(), txn_description, str(txn_amount), txn_type, txn_type_cell.text.strip(),
                 str(Price.fromstring(bal_cell.text.strip()).amount_float)
             ]).encode()).hexdigest()
 
@@ -222,3 +179,41 @@ class Api(providers.SeleniumBased):
                 for entry in self.get_balances()["accounts"]
             ]
         }
+
+
+def _get_passcode_login_button(driver):
+    login_buttons = driver.find_elements_by_css_selector("button.btn--login")
+    for button in login_buttons:
+        if "passcode" in button.text:
+            return button
+    return None
+
+
+def _wait_accounts(browser_helper: SeleniumHelper):
+    return browser_helper.wait_element(By.CSS_SELECTOR, "div.accounts-body")
+
+
+def _iter_accounts(accounts_area):
+    for row in accounts_area.find_elements_by_css_selector("div.o-account__head"):
+        account_cell = row.find_element_by_css_selector("div.account-link")
+        account_link_element = account_cell.find_element_by_tag_name("a")
+        account_details = row.find_element_by_css_selector("div.o-account__details-body").text.strip().split("\n")
+        balance_str = row.find_element_by_css_selector("div.o-account__balance-head").text.strip()
+        yield {
+            "account": {
+                "id": account_details[0],
+                "name": account_cell.text.strip(),
+                "iso_currency": "GBP"
+            },
+            "balance": Price.fromstring(balance_str).amount_float,
+            "selenium": {
+                "account_link": account_link_element
+            }
+        }
+
+
+def _get_login_error(browser_helper: SeleniumHelper):
+    warnings = browser_helper.find_maybe(By.CSS_SELECTOR, "div.notification--warning")
+    if warnings:
+        return warnings.text.strip()
+    return None
