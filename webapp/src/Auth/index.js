@@ -1,8 +1,8 @@
-import React, { useState } from "react";
-import FinbotClient from "../FinbotClient/FinbotClient"
+import React, { useEffect, useContext } from "react";
 import { Route, Switch } from "react-router-dom";
 import { withRouter } from "react-router";
 
+import AuthContext from "../context/authContext";
 import SignUp from "./SignUp";
 import Logout from "./Logout";
 import LogIn from "./LogIn";
@@ -10,37 +10,35 @@ import LogIn from "./LogIn";
 
 const Auth = props => {
 
-    const [credentials, setCredentials] = useState({
-        email: "",
-        password: "",
-        settings: "",
-        full_name: "",
-    })
+    const authContext = useContext(AuthContext);
+    const { _register, _login, _logout, accountID, isAuthenticated, error } = authContext;
 
-    const [error, setError] = useState({
-        error: ""
-    })
-
-    const { email, password } = credentials;
-
-    async function _sign(type, data) {
-        let finbot_client = new FinbotClient();
-        console.log("in _sign!", type, data)
-        const { email, full_name, settings, password } = data.formData;
-        setError({
-            error: ""
-        });
-        try {
-            const res = await finbot_client.registerAccount({ email, password, full_name, settings });
-            console.log("RESPONSE REGISTER", res)
-            await localStorage.setItem("identity", "fehjd7483.furucbc883DUDH5.jnidcMf38d");
-            props.setUser();
-            console.log("after props set user")
-            props.history.push("/");
-        } catch (error) {
-            console.log({ error })
-            // setError({error: error.description})
+    useEffect(() => {
+        if (accountID !== null && isAuthenticated === null) {
+            console.log("use effect someone registered");
+            props.history.push("/auth/log-in");
         }
+    }, [accountID])
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            console.log("use effect someone loggedin succeffsully");
+            props.history.push("/");
+        }
+    }, [isAuthenticated])
+
+    function _signIn(data) {
+        console.log("in _sign in!", data);
+        _login(data.formData)
+    }
+
+    function _signUp(data) {
+        console.log("in sign up comp");
+        _register(data.formData);
+    }
+
+    function _exit() {
+        _logout();
     }
 
     return (
@@ -50,10 +48,8 @@ const Auth = props => {
                 path="/auth/sign-up"
                 render={() => (
                     <SignUp
-                        email={email}
-                        password={password}
                         error={error}
-                        _sign={_sign}
+                        _signUp={_signUp}
                     />
                 )}
             />
@@ -62,17 +58,15 @@ const Auth = props => {
                 path="/auth/log-in"
                 render={() => (
                     <LogIn
-                        email={email}
-                        password={password}
                         error={error}
-                        _sign={_sign}
+                        _signIn={_signIn}
                     />
                 )}
             />
             <Route
                 exact
                 path="/auth/logout"
-                render={() => <Logout resetUser={props.resetUser} />}
+                render={() => (<Logout _exit={_exit} />)}
             />
             {/* <Route component={NotFound} /> */}
         </Switch>

@@ -24,6 +24,13 @@ class FinbotClient {
     return this.handle_response(response);
   }
 
+  async logInAccount(data) {
+    console.log("in login");
+    const { email, password } = data;
+    const response = await axios.post(`${this.endpoint}/auth/login`, { email, password });
+    return this.handle_response(response);
+  }
+
   async getAccount(settings) {
     const { account_id } = settings;
     const response = await axios.get(`${this.endpoint}/accounts/${account_id}`);

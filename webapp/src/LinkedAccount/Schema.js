@@ -9,8 +9,6 @@ const Schema = () => {
     const providersContext = useContext(ProvidersContext);
     const { schema, _validateCredentials, _getCurrentProvider } = providersContext
 
-    const log = (type) => console.log.bind(console, type);
-
     return (
 
         schema ?
@@ -21,7 +19,6 @@ const Schema = () => {
                         className="border border-dark p-4 rounded text-center"
                         schema={schema.json_schema || {}}
                         uiSchema={schema.ui_schema || {}}
-                        onError={log("errors")}
                         onSubmit={_validateCredentials}
                         showErrorList={false} >
                         <div>

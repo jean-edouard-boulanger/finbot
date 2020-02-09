@@ -35,7 +35,9 @@ const LogIn = props => {
         }
     }
 
-    const log = (type) => console.log.bind(console, type);
+    const _onSubmit = (e) => {
+        props._signIn(e);
+    }
 
     return (
         <div className="container mt-5 w-75">
@@ -43,7 +45,7 @@ const LogIn = props => {
                 className="border border-dark p-4 rounded text-center"
                 schema={schema}
                 uiSchema={uiSchema}
-                onError={log("errors")}
+                onSubmit={_onSubmit}
                 showErrorList={false} >
                 <div>
                     <Button className="bg-dark" type="submit">Log In</Button>

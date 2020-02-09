@@ -68,11 +68,9 @@ const SignUp = props => {
         }
     }
 
-    const log = (type) => console.log.bind(console, type);
-
     const _onSubmit = (e) => {
         console.log("submitted")
-        props._sign("up", e);
+        props._signUp(e);
     }
 
     return (
@@ -82,7 +80,6 @@ const SignUp = props => {
                 schema={schema}
                 uiSchema={uiSchema}
                 onSubmit={_onSubmit}
-                onError={log("errors")}
                 showErrorList={false} >
                 <div>
                     <Button className="bg-dark" type="submit">Submit</Button>
