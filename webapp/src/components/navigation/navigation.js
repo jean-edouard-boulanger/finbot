@@ -1,4 +1,5 @@
 import React, { useEffect, useContext } from "react";
+import { NavLink } from 'react-router-dom'
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/NavBar';
 
@@ -26,22 +27,20 @@ const Navigation = props => {
 
     return (
         <Navbar bg="dark" variant="dark">
-            <Navbar.Brand href="#home">Finbot</Navbar.Brand>
+            <NavLink className="navbar-brand" to="/">Finbot</NavLink>
 
             {props.user ?
                 <>
                     <Nav activeKey={props.location.pathname} className="ml-auto">
-                        <Nav.Link className="px-5" href="/">Home</Nav.Link>
-                        <Nav.Link className="px-5" href="/auth/logout">Logout</Nav.Link>
                         <ProvidersDropdown _setProvider={_setProvider} />
-                        {/* <ProvidersDropdown options={props.providers} selectOption={selectProvider} /> */}
+                        <NavLink className="nav-link" to="/auth/logout">Logout</NavLink>
                     </Nav>
                 </>
                 :
                 <>
                     <Nav activeKey={props.location.pathname} className="ml-auto">
-                        <Nav.Link href="/auth/sign-up">Sign Up</Nav.Link>
-                        <Nav.Link href="/auth/log-in">Log In</Nav.Link>
+                        <NavLink className="nav-link" to="/auth/sign-up">Sign Up</NavLink>
+                        <NavLink className="nav-link" to="/auth/log-in">Log In</NavLink>
                     </Nav>
                 </>
             }
