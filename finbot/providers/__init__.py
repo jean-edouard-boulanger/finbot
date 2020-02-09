@@ -1,4 +1,5 @@
 from finbot.providers.support.selenium import DefaultBrowserFactory, SeleniumHelper
+from datetime import datetime
 
 
 class Base(object):
@@ -29,7 +30,7 @@ class Base(object):
         """
         return {"accounts": []}
 
-    def get_transactions(self, from_date, to_date):
+    def get_transactions(self, from_date: datetime, to_date: datetime):
         """
         """
         return {"accounts": []}

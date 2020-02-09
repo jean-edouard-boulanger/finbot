@@ -123,15 +123,12 @@ class Api(providers.SeleniumBased):
             txn_description = desc_cell.text.strip()
             if len(more_data_cells) > 2:
                 txn_description += f" ({more_data_cells[2].get_attribute('innerText').strip()})"
+            txn_description = re.sub(r"\s+", " ", txn_description.strip())
 
             # generate synthetic transaction identifier
 
-            txn_id = hashlib.sha256("/".join([
-                txn_date.isoformat(),
-                txn_description,
-                str(txn_amount),
-                txn_type,
-                txn_type_cell.text.strip(),
+            txn_id = "BCXX-" + hashlib.sha224("/".join([
+                txn_date.isoformat(), txn_description, str(txn_amount), txn_type, txn_type_cell.text.strip(),
                 str(Price.fromstring(bal_cell.text.strip()).amount_float)
             ]).encode()).hexdigest()
 
