@@ -49,17 +49,3 @@ class SeleniumBased(Base):
 
     def close(self):
         self.browser.quit()
-
-
-class Account(object):
-    def __init__(self, identifier, name, iso_currency):
-        self.identifier = identifier
-        self.name = name
-        self.iso_currency = iso_currency
-
-    def serialize(self):
-        return {
-            "id": self.identifier,
-            "name": self.name,
-            "iso_currency": self.iso_currency
-        }
