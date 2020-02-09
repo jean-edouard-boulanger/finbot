@@ -38,7 +38,7 @@ class UserAccount(Base):
 
 class UserAccountSettings(Base):
     __tablename__ = "finbot_user_accounts_settings"
-    user_account_id = Column(Integer, ForeignKey(UserAccount.id), primary_key=True)
+    user_account_id = Column(Integer, ForeignKey(UserAccount.id, ondelete='CASCADE'), primary_key=True)
     valuation_ccy = Column(String(3), nullable=False)
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
@@ -69,8 +69,8 @@ class Provider(Base):
 class LinkedAccount(Base):
     __tablename__ = "finbot_linked_accounts"
     id = Column(Integer, primary_key=True)
-    user_account_id = Column(Integer, ForeignKey(UserAccount.id), nullable=False)
-    provider_id = Column(String(64), ForeignKey(Provider.id), nullable=False)
+    user_account_id = Column(Integer, ForeignKey(UserAccount.id, ondelete="CASCADE"), nullable=False)
+    provider_id = Column(String(64), ForeignKey(Provider.id, ondelete="CASCADE"), nullable=False)
     account_name = Column(String(64), nullable=False)
     encrypted_credentials = Column(Text)
     deleted = Column(Boolean, nullable=False, default=False)
@@ -101,7 +101,7 @@ class SnapshotStatus(enum.Enum):
 class UserAccountSnapshot(Base):
     __tablename__ = "finbot_user_accounts_snapshots"
     id = Column(Integer, primary_key=True)
-    user_account_id = Column(Integer, ForeignKey(UserAccount.id), nullable=False)
+    user_account_id = Column(Integer, ForeignKey(UserAccount.id, ondelete='CASCADE'), nullable=False)
     status = Column(Enum(SnapshotStatus), nullable=False)
     requested_ccy = Column(String(3), nullable=False)
     start_time = Column(DateTimeTz, index=True)
@@ -124,7 +124,7 @@ class UserAccountSnapshot(Base):
 
 class XccyRateSnapshotEntry(Base):
     __tablename__ = "finbot_xccy_rates_snapshots"
-    snapshot_id = Column(Integer, ForeignKey(UserAccountSnapshot.id), primary_key=True)
+    snapshot_id = Column(Integer, ForeignKey(UserAccountSnapshot.id, ondelete="CASCADE"), primary_key=True)
     xccy_pair = Column(String(6), primary_key=True)
     rate = Column(Numeric, nullable=False)
     created_at = Column(DateTimeTz, server_default=func.now())
@@ -139,8 +139,8 @@ class XccyRateSnapshotEntry(Base):
 class LinkedAccountSnapshotEntry(Base):
     __tablename__ = "finbot_linked_accounts_snapshots"
     id = Column(Integer, primary_key=True)
-    snapshot_id = Column(Integer, ForeignKey(UserAccountSnapshot.id))
-    linked_account_id = Column(Integer, ForeignKey("finbot_linked_accounts.id"))
+    snapshot_id = Column(Integer, ForeignKey(UserAccountSnapshot.id, ondelete="CASCADE"))
+    linked_account_id = Column(Integer, ForeignKey("finbot_linked_accounts.id", ondelete="CASCADE"))
     success = Column(Boolean, nullable=False)
     failure_details = Column(JSONEncoded)
     created_at = Column(DateTimeTz, server_default=func.now())
@@ -158,7 +158,7 @@ class LinkedAccountSnapshotEntry(Base):
 class SubAccountSnapshotEntry(Base):
     __tablename__ = "finbot_sub_accounts_snapshot_entries"
     id = Column(Integer, primary_key=True)
-    linked_account_snapshot_entry_id = Column(Integer, ForeignKey(LinkedAccountSnapshotEntry.id))
+    linked_account_snapshot_entry_id = Column(Integer, ForeignKey(LinkedAccountSnapshotEntry.id, ondelete="CASCADE"))
     sub_account_id = Column(String(32), nullable=False)
     sub_account_ccy = Column(String(3), nullable=False)
     sub_account_description = Column(String(256), nullable=False)
@@ -182,7 +182,7 @@ class SubAccountItemType(enum.Enum):
 class SubAccountItemSnapshotEntry(Base):
     __tablename__ = "finbot_sub_accounts_items_snapshot_entries"
     id = Column(Integer, primary_key=True)
-    sub_account_snapshot_entry_id = Column(Integer, ForeignKey(SubAccountSnapshotEntry.id), nullable=False)
+    sub_account_snapshot_entry_id = Column(Integer, ForeignKey(SubAccountSnapshotEntry.id, ondelete="CASCADE"), nullable=False)
     item_type = Column(Enum(SubAccountItemType), nullable=False)
     name = Column(String(256), nullable=False)
     item_subtype = Column(String(32), nullable=False)
@@ -224,8 +224,8 @@ class ValuationChangeEntry(Base):
 class UserAccountHistoryEntry(Base):
     __tablename__ = "finbot_user_accounts_history_entries"
     id = Column(Integer, primary_key=True)
-    user_account_id = Column(Integer, ForeignKey(UserAccount.id), nullable=False)
-    source_snapshot_id = Column(Integer, ForeignKey(UserAccountSnapshot.id))
+    user_account_id = Column(Integer, ForeignKey(UserAccount.id, ondelete="CASCADE"), nullable=False)
+    source_snapshot_id = Column(Integer, ForeignKey(UserAccountSnapshot.id, ondelete="SET NULL"))
     valuation_ccy = Column(String(3), nullable=False)
     effective_at = Column(DateTimeTz, nullable=False, index=True)
     available = Column(Boolean, nullable=False, default=False, index=True)
@@ -251,10 +251,10 @@ class UserAccountHistoryEntry(Base):
 
 class UserAccountValuationHistoryEntry(Base):
     __tablename__ = "finbot_user_accounts_valuation_history_entries"
-    history_entry_id = Column(Integer, ForeignKey(UserAccountHistoryEntry.id), primary_key=True)
+    history_entry_id = Column(Integer, ForeignKey(UserAccountHistoryEntry.id, ondelete="CASCADE"), primary_key=True)
     valuation = Column(Numeric, nullable=False)
     total_liabilities = Column(Numeric, nullable=False, server_default="0.0")
-    valuation_change_id = Column(Integer, ForeignKey(ValuationChangeEntry.id))
+    valuation_change_id = Column(Integer, ForeignKey(ValuationChangeEntry.id, ondelete="SET NULL"))
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
@@ -271,12 +271,12 @@ class UserAccountValuationHistoryEntry(Base):
 
 class LinkedAccountValuationHistoryEntry(Base):
     __tablename__ = "finbot_linked_accounts_valuation_history_entries"
-    history_entry_id = Column(Integer, ForeignKey(UserAccountHistoryEntry.id), primary_key=True)
-    linked_account_id = Column(Integer, ForeignKey(LinkedAccount.id), primary_key=True)
-    effective_snapshot_id = Column(Integer, ForeignKey(UserAccountSnapshot.id))
+    history_entry_id = Column(Integer, ForeignKey(UserAccountHistoryEntry.id, ondelete="CASCADE"), primary_key=True)
+    linked_account_id = Column(Integer, ForeignKey(LinkedAccount.id, ondelete="CASCADE"), primary_key=True)
+    effective_snapshot_id = Column(Integer, ForeignKey(UserAccountSnapshot.id, ondelete="SET NULL"))
     valuation = Column(Numeric, nullable=False)
     total_liabilities = Column(Numeric, nullable=False, server_default="0.0")
-    valuation_change_id = Column(Integer, ForeignKey(ValuationChangeEntry.id))
+    valuation_change_id = Column(Integer, ForeignKey(ValuationChangeEntry.id, ondelete="SET NULL"))
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
@@ -295,15 +295,15 @@ class LinkedAccountValuationHistoryEntry(Base):
 
 class SubAccountValuationHistoryEntry(Base):
     __tablename__ = "finbot_sub_accounts_valuation_history_entries"
-    history_entry_id = Column(Integer, ForeignKey(UserAccountHistoryEntry.id), primary_key=True)
-    linked_account_id = Column(Integer, ForeignKey(LinkedAccount.id), primary_key=True)
+    history_entry_id = Column(Integer, ForeignKey(UserAccountHistoryEntry.id, ondelete="CASCADE"), primary_key=True)
+    linked_account_id = Column(Integer, ForeignKey(LinkedAccount.id, ondelete="CASCADE"), primary_key=True)
     sub_account_id = Column(String(32), primary_key=True)
     sub_account_ccy = Column(String(3), nullable=False)
     sub_account_description = Column(String(256), nullable=False)
     valuation = Column(Numeric, nullable=False)
     total_liabilities = Column(Numeric, nullable=False, server_default="0.0")
     valuation_sub_account_ccy = Column(Numeric, nullable=False)
-    valuation_change_id = Column(Integer, ForeignKey(ValuationChangeEntry.id))
+    valuation_change_id = Column(Integer, ForeignKey(ValuationChangeEntry.id, ondelete="SET NULL"))
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
@@ -324,8 +324,8 @@ class SubAccountValuationHistoryEntry(Base):
 
 class SubAccountItemValuationHistoryEntry(Base):
     __tablename__ = "finbot_sub_accounts_items_valuation_history_entries"
-    history_entry_id = Column(Integer, ForeignKey(UserAccountHistoryEntry.id), primary_key=True)
-    linked_account_id = Column(Integer, ForeignKey(LinkedAccount.id), primary_key=True)
+    history_entry_id = Column(Integer, ForeignKey(UserAccountHistoryEntry.id, ondelete="CASCADE"), primary_key=True)
+    linked_account_id = Column(Integer, ForeignKey(LinkedAccount.id, ondelete="CASCADE"), primary_key=True)
     sub_account_id = Column(String(32), primary_key=True)
     item_type = Column(Enum(SubAccountItemType), primary_key=True)
     name = Column(String(256), primary_key=True)
@@ -333,7 +333,7 @@ class SubAccountItemValuationHistoryEntry(Base):
     units = Column(Numeric)
     valuation = Column(Numeric, nullable=False)
     valuation_sub_account_ccy = Column(Numeric, nullable=False)
-    valuation_change_id = Column(Integer, ForeignKey(ValuationChangeEntry.id))
+    valuation_change_id = Column(Integer, ForeignKey(ValuationChangeEntry.id, ondelete="SET NULL"))
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
