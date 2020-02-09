@@ -77,7 +77,7 @@ const SignupForm = props => {
     return (
         <div className="container mt-5 w-75">
             <Form
-                className="border border-dark p-4 rounded text-center"
+                className="border border-secondary p-4 text-center"
                 schema={schema}
                 uiSchema={uiSchema}
                 onSubmit={_onSubmit}
