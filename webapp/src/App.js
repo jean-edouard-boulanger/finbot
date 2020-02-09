@@ -1,18 +1,18 @@
 import 'bootswatch/dist/lux/bootstrap.min.css';
 import "./assets/css/index.css"
 
+import 'datejs';
+
 import React, { useState, useEffect } from 'react';
 import { Route, Switch, BrowserRouter } from "react-router-dom";
-import 'datejs';
-import jwtDecode from 'jwt-decode';
+
 import LinkedAccountContext from "./context/LinkedAccountContext";
 import LinkedAccountState from "./context/LinkedAccountState";
+import Navigation from "components/navigation";
 
-//core components
-import Home from "./Home/Home";
-import Navbar from "./Navbar/Navbar";
-import Auth from "./Auth";
-import Form from "./LinkedAccount/Schema";
+import Auth from "routes/auth";
+import MainDashboard from "routes/main-dashboard";
+import LinkExternalAccount from "routes/link-external-account"
 
 
 const App = () => {
@@ -49,17 +49,17 @@ const App = () => {
     <LinkedAccountState>
       <BrowserRouter>
         <div>
-          <Navbar user={user} providers={providersList} />
+          <Navigation user={user} providers={providersList} />
           <Switch>
-            <Route exact path="/" render={() => <Home user={user} />} />
+            <Route exact path="/" render={() => <MainDashboard user={user} />} />
             <Route path="/auth" render={() => <Auth setUser={_setUser} resetUser={_resetUser} />} />
-            <Route path="/linked-account" render={() => <Form providers={providersList} />} />
-            {/* <Route component={Error}/> */}
+            <Route path="/external-accounts/link" render={() => <LinkExternalAccount providers={providersList} />} />
           </Switch>
         </div>
       </BrowserRouter>
     </LinkedAccountState>
   )
 }
+
 
 export default App;

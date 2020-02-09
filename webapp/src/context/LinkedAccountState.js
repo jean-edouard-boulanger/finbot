@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import FinbotClient from "../FinbotClient/FinbotClient";
+
+import FinbotClient from "clients/finbot-client";
 import ProvidersContext from "../context/LinkedAccountContext";
+
 
 const LinkedAccountState = props => {
 
@@ -35,7 +37,7 @@ const LinkedAccountState = props => {
             account_name: providersList.filter(provider => provider.id === selectedProvider)[0].description
         }
         try {
-            const response = await finbot_client.validateCredentials(params)
+            const response = await finbot_client.validateExternalAccountCredentials(params)
             console.log("VALIDATE?", params, response)
         } catch (err) {
             console.log("VALIDFAIL", err)
@@ -58,5 +60,6 @@ const LinkedAccountState = props => {
         </ProvidersContext.Provider>
     )
 }
+
 
 export default LinkedAccountState;

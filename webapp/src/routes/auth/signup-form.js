@@ -1,9 +1,9 @@
 import React from "react";
-
 import Form from "react-jsonschema-form";
-import Button from "react-bootstrap/Button"
+import Button from "react-bootstrap/Button";
 
-const SignUp = props => {
+
+const SignupForm = props => {
 
     const schema = {
         "title": "SIGN IN",
@@ -53,7 +53,6 @@ const SignUp = props => {
             "ui:autofocus": true,
             "ui:emptyValue": "",
             "ui:placeholder": "John Doe"
-            // classNames
         },
         "email": {
             "ui:emptyValue": ""
@@ -93,4 +92,5 @@ const SignUp = props => {
     )
 }
 
-export default SignUp;
+
+export default SignupForm;

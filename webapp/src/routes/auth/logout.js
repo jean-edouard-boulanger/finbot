@@ -11,4 +11,5 @@ const Logout = props => {
     return <Redirect to="/auth/log-in" />
 }
 
-export default withRouter(Logout)
+
+export default withRouter(Logout);

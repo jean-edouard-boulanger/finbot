@@ -93,6 +93,7 @@ services:
     container_name: appwsrv
     depends_on: 
       - finbotdb
+      - finbotwsrv
       - dev
     working_dir: /finbot
     command: sh -c "make finbotdb-wait && make run-appwsrv-dev"

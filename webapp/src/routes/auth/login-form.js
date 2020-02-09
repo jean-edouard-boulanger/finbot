@@ -1,10 +1,9 @@
 import React from "react";
-
 import Form from "react-jsonschema-form";
 import Button from "react-bootstrap/Button"
 
 
-const LogIn = props => {
+const LoginForm = () => {
 
     const schema = {
         "title": "LOG IN",
@@ -53,4 +52,5 @@ const LogIn = props => {
     )
 }
 
-export default LogIn;
+
+export default LoginForm;

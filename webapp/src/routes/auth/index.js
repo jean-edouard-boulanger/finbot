@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import FinbotClient from "../FinbotClient/FinbotClient"
 import { Route, Switch } from "react-router-dom";
 import { withRouter } from "react-router";
 
-import SignUp from "./SignUp";
-import Logout from "./Logout";
-import LogIn from "./LogIn";
-// import NotFound from "../NotFound";
+import FinbotClient from "clients/finbot-client"
+import SignupForm from "./signup-form";
+import LoginForm from "./login-form";
+import Logout from "./logout";
+
 
 const Auth = props => {
 
@@ -49,7 +49,7 @@ const Auth = props => {
                 exact
                 path="/auth/sign-up"
                 render={() => (
-                    <SignUp
+                    <SignupForm
                         email={email}
                         password={password}
                         error={error}
@@ -61,7 +61,7 @@ const Auth = props => {
                 exact
                 path="/auth/log-in"
                 render={() => (
-                    <LogIn
+                    <LoginForm
                         email={email}
                         password={password}
                         error={error}
@@ -74,11 +74,9 @@ const Auth = props => {
                 path="/auth/logout"
                 render={() => <Logout resetUser={props.resetUser} />}
             />
-            {/* <Route component={NotFound} /> */}
         </Switch>
     );
 }
-
 
 
 export default withRouter(Auth);

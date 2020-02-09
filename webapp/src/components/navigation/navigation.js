@@ -1,16 +1,14 @@
 import React, { useEffect, useContext } from "react";
-import { withRouter } from "react-router";
-
-import Navbar from 'react-bootstrap/Navbar';
-import NavBar from 'react-bootstrap/NavBar';
 import Nav from 'react-bootstrap/Nav';
-import ProvidersDropdown from "./Providers";
-import ProvidersContext from "../context/LinkedAccountContext";
+import Navbar from 'react-bootstrap/NavBar';
+
+import ProvidersDropdown from "./providers-dropdown";
+import ProvidersContext from "context/LinkedAccountContext";
 
 
 const Navigation = props => {
     const providersContext = useContext(ProvidersContext)
-    const { providersList, _selectProvider, _awaitProviders, selectedProvider } = providersContext;
+    const { _selectProvider, _awaitProviders, selectedProvider } = providersContext;
 
     //component first mount
     useEffect(() => {
@@ -19,7 +17,7 @@ const Navigation = props => {
 
     //when another provider is updated, redirect to linked-account page
     useEffect(() => {
-        if (selectedProvider) props.history.push("/linked-account")
+        if (selectedProvider) props.history.push("/external-accounts/link")
     }, [selectedProvider])
 
     function _setProvider(val) {
@@ -27,7 +25,7 @@ const Navigation = props => {
     }
 
     return (
-        <NavBar bg="dark" variant="dark">
+        <Navbar bg="dark" variant="dark">
             <Navbar.Brand href="#home">Finbot</Navbar.Brand>
 
             {props.user ?
@@ -47,8 +45,8 @@ const Navigation = props => {
                     </Nav>
                 </>
             }
-        </NavBar>
+        </Navbar>
     )
 }
 
-export default withRouter(Navigation);
+export { Navigation };

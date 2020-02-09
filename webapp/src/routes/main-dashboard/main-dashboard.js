@@ -1,15 +1,16 @@
-import FinbotClient from "../FinbotClient/FinbotClient"
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Card from 'react-bootstrap/Card';
 import Chart from "react-apexcharts";
-import Money from "./Money"
-import HoldingsTable from "./HoldingsTable";
 import React from 'react';
 import BarLoader from "react-spinners/BarLoader";
 import queryString from 'query-string';
-import { withRouter } from "react-router";
+
+import FinbotClient from "clients/finbot-client"
+import Money from "components/money"
+import HoldingsTable from "components/holdings-table";
+
 
 function formatRelChange(val) {
     if (val === null || val === undefined || val === 0.0) {
@@ -23,13 +24,16 @@ function formatRelChange(val) {
     }
 }
 
+
 function byValuation(item1, item2) {
     return item2.valuation.value - item1.valuation.value
 }
 
+
 function getRelativeChange(startVal, finalVal) {
     return (finalVal - startVal) / startVal;
 }
+
 
 function moneyFormatter(amount, locale, currency) {
     const localized = new Intl.NumberFormat(locale, {
@@ -38,6 +42,7 @@ function moneyFormatter(amount, locale, currency) {
     }).format(Math.abs(amount));
     return amount >= 0 ? localized : `(${localized})`
 }
+
 
 function maxValue(list, accessor) {
     accessor = accessor || ((val) => val);
@@ -51,13 +56,15 @@ function maxValue(list, accessor) {
     return currentMax;
 }
 
+
 function getAccountId() {
     const urlParams = queryString.parse(window.location.search);
     const userId = urlParams.userId;
     return userId === undefined ? 1 : userId;
 }
 
-class Home extends React.Component {
+
+class MainDashboard extends React.Component {
     constructor(props) {
         super(props);
         this.account_id = getAccountId();
@@ -272,4 +279,5 @@ class Home extends React.Component {
     }
 }
 
-export default withRouter(Home);
+
+export { MainDashboard };

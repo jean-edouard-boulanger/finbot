@@ -1,13 +1,14 @@
 import React from "react";
 import PropTypes from "prop-types";
-
-import ValuationChange from "./ValuationChange";
-import Money from "./Money";
-import DurationBadge from "./DurationBadge";
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Table from 'react-bootstrap/Table';
 import BarLoader from "react-spinners/BarLoader";
+
+import DurationBadge from "components/duration-badge";
+import ValuationChange from "components/valuation-change";
+import Money from "components/money";
+
 
 const HoldingsTable = props => {
     const {
@@ -84,6 +85,7 @@ const HoldingsTable = props => {
     )
 }
 
+
 HoldingsTable.propTypes = {
     linked_accounts: PropTypes.array,
     locale: PropTypes.string,
@@ -92,4 +94,5 @@ HoldingsTable.propTypes = {
     valuationIsLoaded: PropTypes.bool,
 };
 
-export default HoldingsTable;
+
+export { HoldingsTable };
