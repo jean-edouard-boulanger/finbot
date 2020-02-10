@@ -5,8 +5,7 @@ import { withRouter } from "react-router";
 
 const Logout = props => {
 
-    localStorage.removeItem('identity')
-    props.resetUser()
+    props._exit()
 
     return <Redirect to="/auth/log-in" />
 }

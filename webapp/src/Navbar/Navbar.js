@@ -1,16 +1,18 @@
 import React, { useEffect, useContext } from "react";
 import { withRouter } from "react-router";
+import { NavLink } from 'react-router-dom'
 
-import Navbar from 'react-bootstrap/Navbar';
 import NavBar from 'react-bootstrap/NavBar';
 import Nav from 'react-bootstrap/Nav';
 import ProvidersDropdown from "./Providers";
 import ProvidersContext from "../context/LinkedAccountContext";
-
+import AuthContext from "../context/authContext";
 
 const Navigation = props => {
     const providersContext = useContext(ProvidersContext)
-    const { providersList, _selectProvider, _awaitProviders, selectedProvider } = providersContext;
+    const authContext = useContext(AuthContext);
+    const { _selectProvider, _awaitProviders, selectedProvider } = providersContext;
+    const { token } = authContext;
 
     //component first mount
     useEffect(() => {
@@ -19,7 +21,7 @@ const Navigation = props => {
 
     //when another provider is updated, redirect to linked-account page
     useEffect(() => {
-        if (selectedProvider) props.history.push("/linked-account")
+        if (selectedProvider) props.history.push("/linked-account/create")
     }, [selectedProvider])
 
     function _setProvider(val) {
@@ -28,22 +30,22 @@ const Navigation = props => {
 
     return (
         <NavBar bg="dark" variant="dark">
-            <Navbar.Brand href="#home">Finbot</Navbar.Brand>
+            {/* <Navbar.Brand href="#home">Finbot</Navbar.Brand> */}
+            <NavLink className="px-5 navbar-brand" to="/">Finbot</NavLink>
 
-            {props.user ?
+            {token ?
                 <>
                     <Nav activeKey={props.location.pathname} className="ml-auto">
-                        <Nav.Link className="px-5" href="/">Home</Nav.Link>
-                        <Nav.Link className="px-5" href="/auth/logout">Logout</Nav.Link>
+                        <NavLink className="px-5 nav-link" to="/">Home</NavLink>
+                        <NavLink className="px-5 nav-link" to="/auth/logout">Logout</NavLink>
                         <ProvidersDropdown _setProvider={_setProvider} />
-                        {/* <ProvidersDropdown options={props.providers} selectOption={selectProvider} /> */}
                     </Nav>
                 </>
                 :
                 <>
                     <Nav activeKey={props.location.pathname} className="ml-auto">
-                        <Nav.Link href="/auth/sign-up">Sign Up</Nav.Link>
-                        <Nav.Link href="/auth/log-in">Log In</Nav.Link>
+                        <NavLink className="px-5 nav-link" to="/auth/sign-up">Sign Up</NavLink>
+                        <NavLink className="px-5 nav-link" to="/auth/logout">Log In</NavLink>
                     </Nav>
                 </>
             }

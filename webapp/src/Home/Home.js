@@ -71,11 +71,10 @@ class Home extends React.Component {
     }
 
     async componentDidMount() {
-        console.log("in comdid mount home", this.props)
         //redirect to sign up page if not logged in
-        if (!this.props.user) {
+        if (!localStorage.getItem("identity")) {
             console.log("there is not a user")
-            this.props.history.push("/auth/sign-up");
+            this.props.history.push("/auth/log-in");
             return;
         }
         let finbot_client = new FinbotClient();
