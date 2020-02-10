@@ -30,7 +30,6 @@ const Navigation = props => {
 
     return (
         <NavBar bg="dark" variant="dark">
-            {/* <Navbar.Brand href="#home">Finbot</Navbar.Brand> */}
             <NavLink className="px-5 navbar-brand" to="/">Finbot</NavLink>
 
             {token ?

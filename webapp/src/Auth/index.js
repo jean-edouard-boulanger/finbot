@@ -35,11 +35,7 @@ const Auth = props => {
     useEffect(() => {
         if (error) {
             // setAlert(error, "error");
-            toast.configure({
-                delay: 1000,
-            });
             toast.error(error, {
-                // className: 'foo-bar'
             });
             _clearErrors();
         }
@@ -60,34 +56,36 @@ const Auth = props => {
     }
 
     return (
-        <Switch>
-            <Route
-                exact
-                path="/auth/sign-up"
-                render={() => (
-                    <SignUp
-                        error={error}
-                        _signUp={_signUp}
-                    />
-                )}
-            />
-            <Route
-                exact
-                path="/auth/log-in"
-                render={() => (
-                    <LogIn
-                        error={error}
-                        _signIn={_signIn}
-                    />
-                )}
-            />
-            <Route
-                exact
-                path="/auth/logout"
-                render={() => (<Logout _exit={_exit} />)}
-            />
-            {/* <Route component={NotFound} /> */}
-        </Switch>
+        <div>
+            <Switch>
+                <Route
+                    exact
+                    path="/auth/sign-up"
+                    render={() => (
+                        <SignUp
+                            error={error}
+                            _signUp={_signUp}
+                        />
+                    )}
+                />
+                <Route
+                    exact
+                    path="/auth/log-in"
+                    render={() => (
+                        <LogIn
+                            error={error}
+                            _signIn={_signIn}
+                        />
+                    )}
+                />
+                <Route
+                    exact
+                    path="/auth/logout"
+                    render={() => (<Logout _exit={_exit} />)}
+                />
+                {/* <Route component={NotFound} /> */}
+            </Switch>
+        </div>
     );
 }
 

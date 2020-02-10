@@ -9,7 +9,7 @@ const LinkedAccountState = props => {
     const [schema, setSchema] = useState(null);
     const [providersList, setProviders] = useState([]);
     const [error, setError] = useState(null);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState({ current: false, message: null });
     const [accountIsLinked, setAccountIsLinked] = useState(false);
 
     function _getCurrentProvider() {
@@ -40,18 +40,19 @@ const LinkedAccountState = props => {
             provider_id: selectedProvider,
             account_name: providersList.filter(provider => provider.id === selectedProvider)[0].description
         }
-        setLoading(true)
+        setLoading({ current: true, message: "Validating credentials" })
         try {
             const response = await finbot_client.validateCredentials(params)
             console.log("VALIDATE?", params, response)
+            setLoading({ current: true, message: "Linking Account" });
             const secResponse = await finbot_client.linkAccount(params);
             console.log("SECRES LINK ACOCUNZ", secResponse);
-            setLoading(false);
+            setLoading({ current: false, message: null });
             setAccountIsLinked(true);
         } catch (err) {
             setError(err);
-            setLoading(false)
-            console.log("VALIDFAIL", err)
+            setLoading({ current: false, message: null });
+            console.log("VALIDFAIL", err);
         }
     }
 

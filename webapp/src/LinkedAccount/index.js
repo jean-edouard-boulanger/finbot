@@ -15,11 +15,7 @@ const LinkedAccount = props => {
     const { _clearErrors, error, accountIsLinked } = linkedAccountContext
 
     useEffect(() => {
-        console.log("error for toast has appeared!")
         if (error) {
-            toast.configure({
-                delay: 1000,
-            });
             toast.error(error, {
                 // className: 'foo-bar'
             });
@@ -28,11 +24,7 @@ const LinkedAccount = props => {
     }, [error])
 
     useEffect(() => {
-        console.log("succesful linking!")
         if (accountIsLinked) {
-            toast.configure({
-                delay: 1000,
-            });
             toast.success("Account was linked successfully!", {
             });
             props.history.push("/")

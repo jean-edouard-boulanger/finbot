@@ -3,6 +3,7 @@ import React, { useContext } from "react";
 import Form from "react-jsonschema-form";
 import Button from "react-bootstrap/Button";
 import ProvidersContext from "../context/LinkedAccountContext";
+import SpinnerButton from "./SpinnerButton"
 
 const Schema = () => {
 
@@ -13,9 +14,9 @@ const Schema = () => {
 
         schema ?
 
-            loading ?
+            loading.current ?
 
-                <div>LOADINGunincurncurcLOADING</div>
+                <SpinnerButton message={loading.message} />
 
                 :
 
