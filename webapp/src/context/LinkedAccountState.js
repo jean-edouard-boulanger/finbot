@@ -39,12 +39,10 @@ const LinkedAccountState = props => {
             type: SET_SCHEMA,
             payload: relSchema
         });
-        // setSchema(relSchema)
     }
 
     async function _awaitProviders() {
         const providers = await finbot_client.getProviders();
-        // setProviders([...providers])
         dispatch({
             type: INITIALIZE_PROVIDERS,
             payload: providers
@@ -52,7 +50,6 @@ const LinkedAccountState = props => {
     }
 
     function _selectProvider(providerID) {
-        // setProvider(providerID);
         console.log("in selctprovider")
         dispatch({
             type: SET_SELECTED_PROVIDER,
@@ -71,22 +68,16 @@ const LinkedAccountState = props => {
             provider_id: state.selectedProvider,
             account_name: state.providersList.filter(provider => provider.id === state.selectedProvider)[0].description
         }
-        // setLoading({ current: true, message: "Validating credentials" })
         dispatch({ type: SET_LOADING, payload: "Validating credentials" })
         try {
             const response = await finbot_client.validateCredentials(params)
             console.log("VALIDATE?", params, response)
-            // setLoading({ current: true, message: "Linking Account" });
             dispatch({ type: VALIDATION_SUCCESS, payload: "Linking Account" })
             const secResponse = await finbot_client.linkAccount(params);
             console.log("SECRES LINK ACOCUNZ", secResponse);
             dispatch({ type: LINKING_ACCOUNT_SUCCESS })
-            // setLoading({ current: false, message: null });
-            // setAccountIsLinked(true);
         } catch (err) {
             dispatch({ type: VALIDATION_LINKING_FAIL, payload: err })
-            // setError(err);
-            // setLoading({ current: false, message: null });
             console.log("VALIDFAIL", err);
         }
     }
