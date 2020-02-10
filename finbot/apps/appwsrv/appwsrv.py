@@ -383,15 +383,19 @@ def link_to_external_account(user_account_id):
             raise ApplicationError(f"Unable to validate provided credentials ({user_message})")
 
     if do_persist:
-        logging.info("Linking user account to external account")
-        with db_session.persist(user_account):
-            encrypted_credentials = crypto.fernet_encrypt(
-                json.dumps(request_data["credentials"]).encode(), SECRET).decode()
-            user_account.linked_accounts.append(
-                LinkedAccount(
-                    provider_id=request_data["provider_id"],
-                    account_name=request_data["account_name"],
-                    encrypted_credentials=encrypted_credentials))
+        logging.info(f"Linking external account (provider_id={provider.id}) to user account_id={user_account.id}")
+        try:
+            with db_session.persist(user_account):
+                encrypted_credentials = crypto.fernet_encrypt(
+                    json.dumps(request_data["credentials"]).encode(), SECRET).decode()
+                user_account.linked_accounts.append(
+                    LinkedAccount(
+                        provider_id=request_data["provider_id"],
+                        account_name=request_data["account_name"],
+                        encrypted_credentials=encrypted_credentials))
+        except IntegrityError:
+            raise ApplicationError(f"Provider '{provider.description}' was already linked "
+                                   f"as '{request_data['account_name']}' in this account")
 
     return jsonify({
         "result": {
