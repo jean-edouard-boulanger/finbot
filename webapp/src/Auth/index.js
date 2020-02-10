@@ -1,8 +1,10 @@
 import React, { useEffect, useContext } from "react";
 import { Route, Switch } from "react-router-dom";
 import { withRouter } from "react-router";
+import { toast } from 'react-toastify';
 
 import AuthContext from "../context/authContext";
+import AlertContext from "../context/alertContext";
 import SignUp from "./SignUp";
 import Logout from "./Logout";
 import LogIn from "./LogIn";
@@ -11,10 +13,13 @@ import LogIn from "./LogIn";
 const Auth = props => {
 
     const authContext = useContext(AuthContext);
-    const { _register, _login, _logout, accountID, isAuthenticated, error } = authContext;
+    const alertContext = useContext(AlertContext);
+    const { _register, _login, _logout, _clearErrors, accountID, isAuthenticated, error } = authContext;
+    const { setAlert } = alertContext;
 
     useEffect(() => {
-        if (accountID !== null && isAuthenticated === null) {
+        console.log("accID changed")
+        if (accountID !== null && !isAuthenticated) {
             console.log("use effect someone registered");
             props.history.push("/auth/log-in");
         }
@@ -26,6 +31,19 @@ const Auth = props => {
             props.history.push("/");
         }
     }, [isAuthenticated])
+
+    useEffect(() => {
+        if (error) {
+            // setAlert(error, "error");
+            toast.configure({
+                delay: 1000,
+            });
+            toast.error(error, {
+                // className: 'foo-bar'
+            });
+            _clearErrors();
+        }
+    }, [error])
 
     function _signIn(data) {
         console.log("in _sign in!", data);
