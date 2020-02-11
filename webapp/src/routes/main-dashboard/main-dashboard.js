@@ -9,7 +9,11 @@ import HoldingsTable from "../../components/holdings-table";
 import React from 'react';
 import BarLoader from "react-spinners/BarLoader";
 import queryString from 'query-string';
-import { withRouter } from "react-router";
+
+// import FinbotClient from "clients/finbot-client"
+// import Money from "components/money"
+// import HoldingsTable from "components/holdings-table";
+// gg
 
 function formatRelChange(val) {
     if (val === null || val === undefined || val === 0.0) {
@@ -23,13 +27,16 @@ function formatRelChange(val) {
     }
 }
 
+
 function byValuation(item1, item2) {
     return item2.valuation.value - item1.valuation.value
 }
 
+
 function getRelativeChange(startVal, finalVal) {
     return (finalVal - startVal) / startVal;
 }
+
 
 function moneyFormatter(amount, locale, currency) {
     const localized = new Intl.NumberFormat(locale, {
@@ -38,6 +45,7 @@ function moneyFormatter(amount, locale, currency) {
     }).format(Math.abs(amount));
     return amount >= 0 ? localized : `(${localized})`
 }
+
 
 function maxValue(list, accessor) {
     accessor = accessor || ((val) => val);
@@ -51,11 +59,13 @@ function maxValue(list, accessor) {
     return currentMax;
 }
 
+
 function getAccountId() {
     const urlParams = queryString.parse(window.location.search);
     const userId = urlParams.userId;
     return userId === undefined ? 1 : userId;
 }
+
 
 class MainDashboard extends React.Component {
     constructor(props) {
@@ -270,5 +280,6 @@ class MainDashboard extends React.Component {
         );
     }
 }
+
 
 export { MainDashboard };

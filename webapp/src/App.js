@@ -15,6 +15,15 @@ import Home from "./routes/main-dashboard";
 import Navbar from "./components/navigation";
 import Auth from "./routes/auth";
 import LinkedAccount from "./routes/link-external-account";
+// <Route path="/external-accounts/link" render={() => <LinkExternalAccount providers={providersList} />} /> 
+
+
+// import LinkedAccountState from "context/linked-account-state";
+// import Navigation from "components/navigation";
+
+// import Auth from "routes/auth";
+// import MainDashboard from "routes/main-dashboard";
+// import LinkExternalAccount from "routes/link-external-account"
 
 toast.configure({
   delay: 500,
@@ -38,7 +47,7 @@ const App = () => {
         <BrowserRouter>
           <ToastContainer autoClose={7000} transition={Slide} position="bottom-right" />
           <Navbar style={{ boxShadow: "0 3px 10px rgba(51, 50, 47, 0.5)" }} />
-          <div style={{ padding: "90px 30px 74px 30px", background: "linear-gradient(to right, #ACB6E5, #74ebd5)" }}>
+          <div style={{ padding: "90px 30px 74px 30px" }}>
             <Switch>
               <Route exact path="/" render={() => <Home />} />
               <Route path="/auth" render={() => <Auth />} />
@@ -51,5 +60,6 @@ const App = () => {
     </AuthState>
   )
 }
+
 
 export default App;

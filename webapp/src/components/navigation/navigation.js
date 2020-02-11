@@ -5,7 +5,7 @@ import { NavLink } from 'react-router-dom'
 import NavBar from 'react-bootstrap/NavBar';
 import Nav from 'react-bootstrap/Nav';
 import ProvidersDropdown from "./providers-dropdown";
-import ProvidersContext from "../../context/LinkedAccountContext";
+import ProvidersContext from "../../context/linked-account-context";
 import AuthContext from "../../context/authContext";
 
 const Navigation = props => {
@@ -22,6 +22,7 @@ const Navigation = props => {
     //when another provider is updated, redirect to linked-account page
     useEffect(() => {
         if (selectedProvider) props.history.push("/linked-account/create")
+        // if (selectedProvider) props.history.push("/external-accounts/link")
     }, [selectedProvider])
 
     function _setProvider(val) {

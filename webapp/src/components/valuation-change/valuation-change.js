@@ -1,6 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 
+
 const ValuationChange = props => {
     const {
         amount,
@@ -44,6 +45,7 @@ const ValuationChange = props => {
         return impl(null);
     }
 }
+
 
 ValuationChange.propTypes = {
     amount: PropTypes.number,

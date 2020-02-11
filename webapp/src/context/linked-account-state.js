@@ -13,6 +13,10 @@ import {
     CLEAR_ERRORS,
 } from "./types"
 
+// import FinbotClient from "clients/finbot-client";
+// import ProvidersContext from "./linked-account-context";
+
+
 const LinkedAccountState = props => {
 
     const finbot_client = new FinbotClient();
@@ -70,7 +74,7 @@ const LinkedAccountState = props => {
         }
         dispatch({ type: SET_LOADING, payload: "Validating credentials" })
         try {
-            const response = await finbot_client.validateCredentials(params)
+            const response = await finbot_client.validateExternalAccountCredentials(params)
             console.log("VALIDATE?", params, response)
             dispatch({ type: VALIDATION_SUCCESS, payload: "Linking Account" })
             const secResponse = await finbot_client.linkAccount(params);
@@ -102,5 +106,6 @@ const LinkedAccountState = props => {
         </ProvidersContext.Provider>
     )
 }
+
 
 export default LinkedAccountState;

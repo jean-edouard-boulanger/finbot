@@ -2,10 +2,10 @@ import React, { useContext } from "react";
 
 import Form from "react-jsonschema-form";
 import Button from "react-bootstrap/Button";
-import ProvidersContext from "../../context/LinkedAccountContext";
-import SpinnerButton from "./SpinnerButton";
+import ProvidersContext from "../../context/linked-account-context";
+import SpinnerButton from "./SpinnerButton"
 
-const LinkExternalAccount = () => {
+const Schema = () => {
 
     const providersContext = useContext(ProvidersContext);
     const { schema, _validateCredentials, _getCurrentProvider, loading } = providersContext
@@ -24,7 +24,7 @@ const LinkExternalAccount = () => {
                     <div className="container w-75">
                         <h4 className="text-center">{_getCurrentProvider().description}</h4>
                         <Form
-                            className="border border-dark p-4 rounded text-center opaque-background"
+                            className="border border-secondary p-4 text-center opaque-background"
                             schema={schema.json_schema || {}}
                             uiSchema={schema.ui_schema || {}}
                             onSubmit={_validateCredentials}
@@ -42,4 +42,4 @@ const LinkExternalAccount = () => {
     )
 }
 
-export default LinkExternalAccount;
+export default Schema;

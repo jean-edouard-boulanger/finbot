@@ -1,10 +1,9 @@
 import React from "react";
-
 import Form from "react-jsonschema-form";
 import Button from "react-bootstrap/Button"
+// fe
 
-
-const LogIn = props => {
+const LoginForm = props => {
 
     const schema = {
         "title": "LOG IN",
@@ -42,7 +41,7 @@ const LogIn = props => {
     return (
         <div className="container mt-5 w-75">
             <Form
-                className="border border-dark p-4 rounded text-center opaque-background"
+                className="border border-secondary p-4 text-center opaque-background"
                 schema={schema}
                 uiSchema={uiSchema}
                 onSubmit={_onSubmit}
@@ -55,4 +54,5 @@ const LogIn = props => {
     )
 }
 
-export default LogIn;
+
+export default LoginForm;
