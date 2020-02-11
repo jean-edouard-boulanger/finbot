@@ -8,7 +8,7 @@ import { Route, Switch, BrowserRouter } from "react-router-dom";
 import 'datejs';
 
 import AuthState from "./context/AuthState";
-import LinkedAccountState from "./context/LinkedAccountState";
+import LinkedAccountState from "./context/linked-account-state";
 
 //core components
 import Home from "./routes/main-dashboard";
@@ -16,8 +16,6 @@ import Navbar from "./components/navigation";
 import Auth from "./routes/auth";
 import LinkedAccount from "./routes/link-external-account";
 // <Route path="/external-accounts/link" render={() => <LinkExternalAccount providers={providersList} />} /> 
-
-
 // import LinkedAccountState from "context/linked-account-state";
 // import Navigation from "components/navigation";
 
