@@ -1,11 +1,11 @@
-import FinbotClient from "../FinbotClient/FinbotClient"
+import FinbotClient from "../../clients/finbot-client";
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Card from 'react-bootstrap/Card';
 import Chart from "react-apexcharts";
-import Money from "./Money"
-import HoldingsTable from "./HoldingsTable";
+import Money from "../../components/money"
+import HoldingsTable from "../../components/holdings-table";
 import React from 'react';
 import BarLoader from "react-spinners/BarLoader";
 import queryString from 'query-string';
@@ -57,7 +57,7 @@ function getAccountId() {
     return userId === undefined ? 1 : userId;
 }
 
-class Home extends React.Component {
+class MainDashboard extends React.Component {
     constructor(props) {
         super(props);
         this.account_id = getAccountId();
@@ -271,4 +271,4 @@ class Home extends React.Component {
     }
 }
 
-export default withRouter(Home);
+export { MainDashboard };

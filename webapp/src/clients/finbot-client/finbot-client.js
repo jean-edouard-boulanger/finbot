@@ -68,4 +68,4 @@ class FinbotClient {
 };
 
 
-export default FinbotClient;
+export { FinbotClient };

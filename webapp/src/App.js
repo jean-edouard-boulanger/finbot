@@ -11,10 +11,10 @@ import AuthState from "./context/AuthState";
 import LinkedAccountState from "./context/LinkedAccountState";
 
 //core components
-import Home from "./Home/Home";
-import Navbar from "./Navbar/Navbar";
-import Auth from "./Auth";
-import LinkedAccount from "./LinkedAccount";
+import Home from "./routes/main-dashboard";
+import Navbar from "./components/navigation";
+import Auth from "./routes/auth";
+import LinkedAccount from "./routes/link-external-account";
 
 toast.configure({
   delay: 500,

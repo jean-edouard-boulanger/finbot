@@ -24,4 +24,4 @@ Money.propTypes = {
     ccy: PropTypes.string,
 };
 
-export default Money;
+export { Money };

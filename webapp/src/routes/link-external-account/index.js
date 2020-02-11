@@ -3,8 +3,8 @@ import { Route, Switch } from "react-router-dom";
 import { withRouter } from "react-router";
 import { toast } from 'react-toastify';
 
-import LinkedAccountContext from "../context/LinkedAccountContext";
-import Schema from "./Schema";
+import LinkedAccountContext from "../../context/LinkedAccountContext";
+import Schema from "./link-external-account";
 
 const LinkedAccount = props => {
 

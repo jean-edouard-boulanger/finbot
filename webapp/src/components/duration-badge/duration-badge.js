@@ -66,4 +66,4 @@ DurationBadge.propTypes = {
     from: PropTypes.instanceOf(Date)
 };
 
-export default DurationBadge;
+export { DurationBadge };

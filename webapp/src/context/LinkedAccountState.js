@@ -1,5 +1,5 @@
 import React, { useReducer } from 'react';
-import FinbotClient from "../FinbotClient/FinbotClient";
+import FinbotClient from "../clients/finbot-client";
 import ProvidersContext from "./LinkedAccountContext";
 import linkedAccountReducer from "./LinkedAccountReducer";
 import {

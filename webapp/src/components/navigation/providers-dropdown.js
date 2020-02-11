@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import NavDropdown from 'react-bootstrap/NavDropdown';
-import ProvidersContext from "../context/LinkedAccountContext"
+import ProvidersContext from "../../context/LinkedAccountContext"
 
 const Providers = ({ _setProvider }) => {
     const providersContext = useContext(ProvidersContext);

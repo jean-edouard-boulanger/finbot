@@ -4,7 +4,7 @@ import { NavLink } from 'react-router-dom'
 
 import NavBar from 'react-bootstrap/NavBar';
 import Nav from 'react-bootstrap/Nav';
-import ProvidersDropdown from "./Providers";
+import ProvidersDropdown from "./providers-dropdown";
 import ProvidersContext from "../context/LinkedAccountContext";
 import AuthContext from "../context/authContext";
 
@@ -52,4 +52,4 @@ const Navigation = props => {
     )
 }
 
-export default withRouter(Navigation);
+export { Navigation };

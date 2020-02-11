@@ -51,4 +51,4 @@ ValuationChange.propTypes = {
     previousValue: PropTypes.number
 };
 
-export default ValuationChange;
+export { ValuationChange };

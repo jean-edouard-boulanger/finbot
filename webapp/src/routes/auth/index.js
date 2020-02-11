@@ -3,10 +3,10 @@ import { Route, Switch } from "react-router-dom";
 import { withRouter } from "react-router";
 import { toast } from 'react-toastify';
 
-import AuthContext from "../context/authContext";
-import SignUp from "./SignUp";
-import Logout from "./Logout";
-import LogIn from "./LogIn";
+import AuthContext from "../../context/authContext";
+import SignUp from "./signup-form";
+import Logout from "./logout";
+import LogIn from "./login-form";
 // import NotFound from "../NotFound";
 
 const Auth = props => {

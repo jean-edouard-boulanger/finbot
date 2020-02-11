@@ -1,9 +1,9 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-import ValuationChange from "./ValuationChange";
-import Money from "./Money";
-import DurationBadge from "./DurationBadge";
+import ValuationChange from "../valuation-change";
+import Money from "../money";
+import DurationBadge from "../duration-badge";
 import Row from 'react-bootstrap/Row';
 import Card from 'react-bootstrap/Card';
 import Col from 'react-bootstrap/Col';
@@ -92,4 +92,4 @@ HoldingsTable.propTypes = {
     valuationIsLoaded: PropTypes.bool,
 };
 
-export default HoldingsTable;
+export { HoldingsTable };
