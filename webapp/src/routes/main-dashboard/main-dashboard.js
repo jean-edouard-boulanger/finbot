@@ -10,11 +10,6 @@ import React from 'react';
 import BarLoader from "react-spinners/BarLoader";
 import queryString from 'query-string';
 
-// import FinbotClient from "clients/finbot-client"
-// import Money from "components/money"
-// import HoldingsTable from "components/holdings-table";
-// gg
-
 function formatRelChange(val) {
     if (val === null || val === undefined || val === 0.0) {
         return (<span className="text-muted">-</span>);

@@ -13,9 +13,6 @@ import {
     CLEAR_ERRORS,
 } from "./types"
 
-// import FinbotClient from "clients/finbot-client";
-// import ProvidersContext from "./linked-account-context";
-
 
 const LinkedAccountState = props => {
 

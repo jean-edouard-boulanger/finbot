@@ -3,7 +3,7 @@ import "./assets/css/index.css"
 import { ToastContainer, Slide, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Route, Switch, BrowserRouter } from "react-router-dom";
 import 'datejs';
 
@@ -15,29 +15,12 @@ import Home from "./routes/main-dashboard";
 import Navbar from "./components/navigation";
 import Auth from "./routes/auth";
 import LinkedAccount from "./routes/link-external-account";
-// <Route path="/external-accounts/link" render={() => <LinkExternalAccount providers={providersList} />} /> 
-// import LinkedAccountState from "context/linked-account-state";
-// import Navigation from "components/navigation";
-
-// import Auth from "routes/auth";
-// import MainDashboard from "routes/main-dashboard";
-// import LinkExternalAccount from "routes/link-external-account"
 
 toast.configure({
   delay: 500,
 });
 
 const App = () => {
-  //  const [user, setUser] = useState(localStorage.getItem("identity"));
-
-  // useEffect(() => {
-  //   if (localStorage.getItem("identity")) {
-  //     setUser(localStorage.item)
-  //   } else {
-  //     setUser(null)
-  //   }
-  // }, [])
-
 
   return (
     <AuthState>

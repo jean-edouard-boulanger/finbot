@@ -1,7 +1,6 @@
 import React from "react";
 import Form from "react-jsonschema-form";
 import Button from "react-bootstrap/Button"
-// fe
 
 const LoginForm = props => {
 
