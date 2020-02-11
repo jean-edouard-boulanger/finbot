@@ -21,6 +21,11 @@ body {
   height: 100vh; */
 }
 
+.opaque-background {
+  background: rgba(255, 255, 255, 0.4);
+   min-height: 52vh;
+}
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;

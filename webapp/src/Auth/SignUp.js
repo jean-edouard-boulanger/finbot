@@ -6,7 +6,7 @@ import Button from "react-bootstrap/Button"
 const SignUp = props => {
 
     const schema = {
-        "title": "SIGN IN",
+        "title": "SIGN UP",
         "type": "object",
         "required": [
             "full_name",
@@ -76,7 +76,7 @@ const SignUp = props => {
     return (
         <div className="container mt-5 w-75">
             <Form
-                className="border border-dark p-4 rounded text-center"
+                className="border border-dark p-4 rounded text-center opaque-background"
                 schema={schema}
                 uiSchema={uiSchema}
                 onSubmit={_onSubmit}

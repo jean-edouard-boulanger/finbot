@@ -42,7 +42,7 @@ const LogIn = props => {
     return (
         <div className="container mt-5 w-75">
             <Form
-                className="border border-dark p-4 rounded text-center"
+                className="border border-dark p-4 rounded text-center opaque-background"
                 schema={schema}
                 uiSchema={uiSchema}
                 onSubmit={_onSubmit}

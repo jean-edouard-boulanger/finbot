@@ -21,10 +21,10 @@ const Schema = () => {
                 :
 
                 <>
-                    <div className="container mt-5 w-75">
+                    <div className="container w-75">
                         <h4 className="text-center">{_getCurrentProvider().description}</h4>
                         <Form
-                            className="border border-dark p-4 rounded text-center"
+                            className="border border-dark p-4 rounded text-center opaque-background"
                             schema={schema.json_schema || {}}
                             uiSchema={schema.ui_schema || {}}
                             onSubmit={_validateCredentials}

@@ -3,14 +3,11 @@ import { Route, Switch } from "react-router-dom";
 import { withRouter } from "react-router";
 import { toast } from 'react-toastify';
 
-import AlertContext from "../context/alertContext";
 import LinkedAccountContext from "../context/LinkedAccountContext";
 import Schema from "./Schema";
 
 const LinkedAccount = props => {
 
-    const alertContext = useContext(AlertContext);
-    const { setAlert } = alertContext;
     const linkedAccountContext = useContext(LinkedAccountContext);
     const { _clearErrors, error, accountIsLinked } = linkedAccountContext
 
