@@ -1,6 +1,7 @@
 import React from "react";
+import PropTypes from "prop-types";
 import Form from "react-jsonschema-form";
-import Button from "react-bootstrap/Button"
+import Button from "react-bootstrap/Button";
 
 const LoginForm = props => {
 
@@ -53,5 +54,8 @@ const LoginForm = props => {
     )
 }
 
+LoginForm.propTypes = {
+    _signIn: PropTypes.func,
+};
 
 export default LoginForm;

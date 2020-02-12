@@ -1,4 +1,5 @@
 import React from "react";
+import PropTypes from "prop-types";
 import Form from "react-jsonschema-form";
 import Button from "react-bootstrap/Button";
 
@@ -89,5 +90,8 @@ const SignupForm = props => {
     )
 }
 
+SignupForm.propTypes = {
+    _signUp: PropTypes.func,
+};
 
 export default SignupForm;

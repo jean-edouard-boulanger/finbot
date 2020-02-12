@@ -1,4 +1,5 @@
 import React from "react";
+import PropTypes from "prop-types";
 
 const SpinnerButton = props => {
     return (
@@ -10,5 +11,9 @@ const SpinnerButton = props => {
         </div>
     )
 }
+
+SpinnerButton.propTypes = {
+    message: PropTypes.string,
+};
 
 export default SpinnerButton;
