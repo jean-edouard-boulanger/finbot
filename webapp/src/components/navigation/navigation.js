@@ -3,6 +3,7 @@ import { withRouter } from "react-router";
 import { NavLink } from 'react-router-dom'
 
 import NavBar from 'react-bootstrap/NavBar';
+import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
 import ProvidersDropdown from "./providers-dropdown";
 import ProvidersContext from "../../context/linked-account-context";
@@ -30,23 +31,28 @@ const Navigation = props => {
     }
 
     return (
-        <NavBar bg="dark" variant="dark">
+        <NavBar collapseOnSelect expand="md" bg="dark" variant="dark">
             <NavLink className="px-5 navbar-brand" to="/">Finbot</NavLink>
+            <Navbar.Toggle aria-controls="responsive-navbar-nav" />
 
             {token ?
                 <>
-                    <Nav activeKey={props.location.pathname} className="ml-auto">
-                        <NavLink className="px-5 nav-link" to="/">Home</NavLink>
-                        <NavLink className="px-5 nav-link" to="/auth/logout">Logout</NavLink>
-                        <ProvidersDropdown _setProvider={_setProvider} />
-                    </Nav>
+                    <Navbar.Collapse id="responsive-navbar-nav">
+                        <Nav activeKey={props.location.pathname} className="ml-auto">
+                            <NavLink className="px-5 nav-link" to="/">Home</NavLink>
+                            <NavLink className="px-5 nav-link" to="/auth/logout">Logout</NavLink>
+                            <ProvidersDropdown _setProvider={_setProvider} />
+                        </Nav>
+                    </Navbar.Collapse>
                 </>
                 :
                 <>
-                    <Nav activeKey={props.location.pathname} className="ml-auto">
-                        <NavLink className="px-5 nav-link" to="/auth/sign-up">Sign Up</NavLink>
-                        <NavLink className="px-5 nav-link" to="/auth/logout">Log In</NavLink>
-                    </Nav>
+                    <Navbar.Collapse id="responsive-navbar-nav">
+                        <Nav activeKey={props.location.pathname} className="ml-auto">
+                            <NavLink className="px-5 nav-link" to="/auth/sign-up">Sign Up</NavLink>
+                            <NavLink className="px-5 nav-link" to="/auth/logout">Log In</NavLink>
+                        </Nav>
+                    </Navbar.Collapse>
                 </>
             }
         </NavBar>
