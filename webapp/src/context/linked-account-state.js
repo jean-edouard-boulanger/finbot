@@ -51,7 +51,6 @@ const LinkedAccountState = props => {
     }
 
     function _selectProvider(providerID) {
-        console.log("in selctprovider")
         dispatch({
             type: SET_SELECTED_PROVIDER,
             payload: providerID
@@ -63,7 +62,6 @@ const LinkedAccountState = props => {
     function _clearErrors() { dispatch({ type: CLEAR_ERRORS }) };
 
     async function _validateCredentials(input) {
-        console.log("in valid creden", input)
         const params = {
             credentials: input.formData || {},
             provider_id: state.selectedProvider,
@@ -79,7 +77,6 @@ const LinkedAccountState = props => {
             dispatch({ type: LINKING_ACCOUNT_SUCCESS })
         } catch (err) {
             dispatch({ type: VALIDATION_LINKING_FAIL, payload: err })
-            console.log("VALIDFAIL", err);
         }
     }
 
