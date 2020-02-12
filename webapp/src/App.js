@@ -7,7 +7,7 @@ import React from 'react';
 import { Route, Switch, BrowserRouter } from "react-router-dom";
 import 'datejs';
 
-import AuthState from "./context/AuthState";
+import AuthState from "./context/auth-state";
 import LinkedAccountState from "./context/linked-account-state";
 
 //core components

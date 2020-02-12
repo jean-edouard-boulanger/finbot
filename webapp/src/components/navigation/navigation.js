@@ -1,5 +1,4 @@
 import React, { useEffect, useContext } from "react";
-import { withRouter } from "react-router";
 import { NavLink } from 'react-router-dom'
 
 import NavBar from 'react-bootstrap/NavBar';
@@ -7,7 +6,7 @@ import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
 import ProvidersDropdown from "./providers-dropdown";
 import ProvidersContext from "../../context/linked-account-context";
-import AuthContext from "../../context/authContext";
+import AuthContext from "../../context/auth-context";
 
 const Navigation = props => {
     const providersContext = useContext(ProvidersContext)
@@ -17,6 +16,7 @@ const Navigation = props => {
 
     //component first mount
     useEffect(() => {
+        console.log("providers were mounted")
         _awaitProviders();
     }, [])
 

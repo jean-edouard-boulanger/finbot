@@ -3,7 +3,7 @@ import React, { useContext } from "react";
 import Form from "react-jsonschema-form";
 import Button from "react-bootstrap/Button";
 import ProvidersContext from "../../context/linked-account-context";
-import SpinnerButton from "./SpinnerButton"
+import SpinnerButton from "./spinnerbutton"
 
 const Schema = () => {
 

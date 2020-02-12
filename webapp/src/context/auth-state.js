@@ -1,6 +1,6 @@
 import React, { useReducer } from 'react';
 
-import AuthContext from './authContext';
+import AuthContext from './auth-context';
 import authReducer from './authReducer';
 import FinbotClient from "../clients/finbot-client";
 import setAuthHeader from "../utils/setAuthorizationHeader";
