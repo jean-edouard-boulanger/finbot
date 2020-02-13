@@ -114,8 +114,8 @@ class MainDashboard extends React.Component {
         return (
             <>
                 <Container>
-                    <Row className="mt-4">
-                        <Col>
+                    <Row>
+                        <Col md={4}>
                             <Card>
                                 <Card.Body>
                                     <Card.Title>Net Worth</Card.Title>
@@ -128,7 +128,7 @@ class MainDashboard extends React.Component {
                                 </Card.Body>
                             </Card>
                         </Col>
-                        <Col>
+                        <Col md={4}>
                             <Card>
                                 <Card.Body>
                                     <Card.Title>Liabilities</Card.Title>
@@ -141,7 +141,7 @@ class MainDashboard extends React.Component {
                                 </Card.Body>
                             </Card>
                         </Col>
-                        <Col>
+                        <Col md={4}>
                             <Card>
                                 <Card.Body>
                                     <Card.Title>24h Change</Card.Title>
@@ -157,7 +157,6 @@ class MainDashboard extends React.Component {
                                 </Card.Body>
                             </Card>
                         </Col>
-                        <Col></Col>
                     </Row>
                     <Row className="mt-4">
                         <Col>
@@ -230,6 +229,8 @@ class MainDashboard extends React.Component {
                                 </Card.Body>
                             </Card>
                         </Col>
+                    </Row>
+                    <Row className="mt-4">
                         <Col>
                             <Card>
                                 <Card.Header>Wealth Distribution</Card.Header>
