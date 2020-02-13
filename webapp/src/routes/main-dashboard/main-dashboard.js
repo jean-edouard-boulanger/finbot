@@ -243,6 +243,11 @@ class MainDashboard extends React.Component {
                                             theme: {
                                                 palette: "palette8"
                                             },
+                                            plotOptions: {
+                                                pie: {
+                                                    customScale: 1
+                                                }
+                                            },
                                             tooltip: {
                                                 y: {
                                                     formatter: (value) => {
@@ -250,6 +255,15 @@ class MainDashboard extends React.Component {
                                                     }
                                                 }
                                             },
+                                            responsive: [
+                                                {
+                                                    breakpoint: 765,
+                                                    options: {
+                                                        legend: {
+                                                            show: false
+                                                        }
+                                                    }
+                                                }],
                                             labels: linked_accounts.filter(entry => entry.valuation.value >= 0.0)
                                                 .map(entry => entry.linked_account.description)
                                         }}
