@@ -27,7 +27,8 @@ const LoginForm = props => {
 
     const uiSchema = {
         "email": {
-            "ui:emptyValue": ""
+            "ui:emptyValue": "",
+            "ui:autofocus": true,
         },
         "password": {
             "ui:widget": "password",

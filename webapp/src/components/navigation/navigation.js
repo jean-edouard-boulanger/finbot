@@ -39,9 +39,9 @@ const Navigation = props => {
                 <>
                     <Navbar.Collapse id="responsive-navbar-nav">
                         <Nav activeKey={props.location.pathname} className="ml-auto">
-                            <NavLink className="px-5 nav-link" to="/">Home</NavLink>
+                            <NavLink className="px-5 nav-link" to="/" exact>Home</NavLink>
                             <NavLink className="px-5 nav-link" to="/auth/logout">Logout</NavLink>
-                            <ProvidersDropdown _setProvider={_setProvider} />
+                            <ProvidersDropdown pathname={props.location.pathname} _setProvider={_setProvider} />
                         </Nav>
                     </Navbar.Collapse>
                 </>
@@ -50,7 +50,7 @@ const Navigation = props => {
                     <Navbar.Collapse id="responsive-navbar-nav">
                         <Nav activeKey={props.location.pathname} className="ml-auto">
                             <NavLink className="px-5 nav-link" to="/auth/sign-up">Sign Up</NavLink>
-                            <NavLink className="px-5 nav-link" to="/auth/logout">Log In</NavLink>
+                            <NavLink className="px-5 nav-link" to="/auth/log-in">Log In</NavLink>
                         </Nav>
                     </Navbar.Collapse>
                 </>
