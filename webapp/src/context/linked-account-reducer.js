@@ -14,12 +14,14 @@ export default (state, action) => {
         case SET_SCHEMA:
             return {
                 ...state,
-                schema: action.payload
+                schema: action.payload,
+                loading: { current: false, message: null }
             }
         case SET_SELECTED_PROVIDER:
             return {
                 ...state,
-                selectedProvider: action.payload
+                selectedProvider: action.payload.selected,
+                loading: { current: true, message: action.payload.message }
             }
         case INITIALIZE_PROVIDERS:
             return {

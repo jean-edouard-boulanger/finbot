@@ -1,7 +1,7 @@
 import React, { useReducer } from 'react';
 import FinbotClient from "../clients/finbot-client";
 import ProvidersContext from "./linked-account-context";
-import linkedAccountReducer from "./LinkedAccountReducer";
+import linkedAccountReducer from "./linked-account-reducer";
 import {
     SET_SCHEMA,
     SET_SELECTED_PROVIDER,
@@ -19,7 +19,7 @@ const LinkedAccountState = props => {
     const finbot_client = new FinbotClient();
 
     const initialState = {
-        selectedProvider: null,
+        selectedProvider: { id: null, name: null },
         schema: null,
         providersList: [],
         error: null,
@@ -31,11 +31,23 @@ const LinkedAccountState = props => {
 
 
     function _getCurrentProvider() {
-        return state.providersList.filter(prov => prov.id === state.selectedProvider)[0]
+        console.log("currnlty selected", state.selectedProvider)
+        return state.providersList.filter(prov => prov.id === state.selectedProvider.id)[0]
     }
 
     function _retrieveSchema(provSelected) {
-        const relSchema = state.providersList.filter(prov => prov.id === provSelected)[0].credentials_schema || null;
+        let relSchema = state.providersList.filter(prov => prov.id === provSelected)[0].credentials_schema || {};
+        const selectedProviderName = state.providersList.filter(prov => prov.id === provSelected)[0].description;
+
+        //add account name field to credentials form
+        if (relSchema && relSchema.hasOwnProperty("json_schema") && relSchema.hasOwnProperty("ui_schema")) {
+            relSchema.json_schema.properties.account_name = {
+                "type": "string",
+                "title": "Account Name",
+                "default": selectedProviderName
+            };
+            if (!relSchema.ui_schema["ui:order"].includes("account_name")) relSchema.ui_schema["ui:order"].unshift("account_name");
+        }
         dispatch({
             type: SET_SCHEMA,
             payload: relSchema
@@ -51,9 +63,10 @@ const LinkedAccountState = props => {
     }
 
     function _selectProvider(providerID) {
+        const providerName = state.providersList.filter(prov => prov.id === providerID)[0].description
         dispatch({
             type: SET_SELECTED_PROVIDER,
-            payload: providerID
+            payload: { selected: { id: providerID, name: providerName }, message: "Loading form..." }
         })
         _retrieveSchema(providerID);
 
@@ -64,8 +77,8 @@ const LinkedAccountState = props => {
     async function _validateCredentials(input) {
         const params = {
             credentials: input.formData || {},
-            provider_id: state.selectedProvider,
-            account_name: state.providersList.filter(provider => provider.id === state.selectedProvider)[0].description
+            provider_id: state.selectedProvider.id,
+            account_name: state.selectedProvider.name
         }
         dispatch({ type: SET_LOADING, payload: "Validating credentials" })
         try {

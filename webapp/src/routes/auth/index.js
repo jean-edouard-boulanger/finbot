@@ -15,8 +15,8 @@ const Auth = props => {
     const { _register, _login, _logout, _clearErrors, accountID, isAuthenticated, error } = authContext;
 
     useEffect(() => {
-        console.log("accID changed")
-        if (accountID !== null && !isAuthenticated) {
+        console.log("accID Changed")
+        if (accountID && !isAuthenticated) {
             console.log("use effect someone registered");
             props.history.push("/auth/log-in");
         }

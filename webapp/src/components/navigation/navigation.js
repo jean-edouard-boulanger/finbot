@@ -22,7 +22,7 @@ const Navigation = props => {
 
     //when another provider is updated, redirect to linked-account page
     useEffect(() => {
-        if (selectedProvider) props.history.push("/linked-account/create")
+        if (selectedProvider.name) props.history.push("/linked-account/create")
         // if (selectedProvider) props.history.push("/external-accounts/link")
     }, [selectedProvider])
 
