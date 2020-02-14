@@ -63,8 +63,7 @@ const SignupForm = props => {
             "ui:help": "Hint: Make it strong!"
         },
         "settings": {
-            "ui:placeholder": "Choose one",
-            "ui:description": "Choose currency"
+            "ui:placeholder": "Choose currency",
         }
     }
 
@@ -81,9 +80,9 @@ const SignupForm = props => {
                 uiSchema={uiSchema}
                 onSubmit={_onSubmit}
                 showErrorList={false} >
-                <div>
-                    <Button className="bg-dark" type="submit">Submit</Button>
-                    <Button className="bg-dark" type="button">Log In</Button>
+                <div className="d-flex flex-column align-items-center">
+                    <Button className="bg-dark col-md-6 m-1" type="submit">Submit</Button>
+                    <Button className="bg-dark col-md-6 m-1" type="button">Log In</Button>
                 </div>
             </Form>
         </div>
@@ -95,3 +94,5 @@ SignupForm.propTypes = {
 };
 
 export default SignupForm;
+
+// d-flex justify-content-around

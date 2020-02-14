@@ -48,7 +48,7 @@ const LoginForm = props => {
                 onSubmit={_onSubmit}
                 showErrorList={false} >
                 <div>
-                    <Button className="bg-dark" type="submit">Log In</Button>
+                    <Button className="bg-dark col-md-6" type="submit">Log In</Button>
                 </div>
             </Form>
         </div>
