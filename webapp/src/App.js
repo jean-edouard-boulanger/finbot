@@ -28,19 +28,16 @@ const App = () => {
         <BrowserRouter>
           <ToastContainer autoClose={7000} transition={Slide} position="bottom-right" />
           <Navbar style={{ boxShadow: "0 3px 10px rgba(51, 50, 47, 0.5)" }} />
-          <div style={{ padding: "90px 30px 74px 30px" }}>
-            <Switch>
-              <Route exact path="/" render={() => <Home />} />
-              <Route path="/auth" render={() => <Auth />} />
-              <Route path="/linked-account" render={() => <LinkedAccount />} />
-              {/* <Route component={Error}/> */}
-            </Switch>
-          </div>
+          <Switch>
+            <Route exact path="/" render={() => <Home />} />
+            <Route path="/auth" render={() => <Auth />} />
+            <Route path="/linked-account" render={() => <LinkedAccount />} />
+            {/* <Route component={Error}/> */}
+          </Switch>
         </BrowserRouter>
       </LinkedAccountState>
     </AuthState>
   )
 }
-
 
 export default App;

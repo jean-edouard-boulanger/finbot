@@ -8,7 +8,7 @@ import SpinnerButton from "./spinnerbutton"
 const Schema = () => {
 
     const providersContext = useContext(ProvidersContext);
-    const { schema, _validateCredentials, loading, selectedProvider } = providersContext
+    const { schema, _validateCredentials, loading } = providersContext;
 
     return (
 
@@ -21,10 +21,9 @@ const Schema = () => {
                 :
 
                 <>
-                    <div className="container w-75">
-                        <h4 className="text-center">{selectedProvider.name}</h4>
+                    <div style={{ height: "100%", display: "flex", justifyContent: "center", alignItems: "center", padding: "115px 25px 455px" }}>
                         <Form
-                            className="border border-secondary p-4 text-center opaque-background"
+                            className="border border-secondary p-4 text-center opaque-background sign-form"
                             schema={schema.json_schema || {}}
                             uiSchema={schema.ui_schema || {}}
                             onSubmit={_validateCredentials}

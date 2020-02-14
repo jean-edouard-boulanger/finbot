@@ -21,7 +21,7 @@ const HoldingsTable = props => {
     } = props;
 
     return (
-        <Row className="mt-4">
+        <Row className="mt-3">
             <Col>
                 <Card>
                     <Card.Header>Holdings Summary</Card.Header>

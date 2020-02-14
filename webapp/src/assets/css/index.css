@@ -22,8 +22,13 @@ body {
 }
 
 .opaque-background {
-  background: rgba(255, 255, 255, 0.4);
+  /* background: rgba(255, 255, 255, 0.4); */
+  background: rgba(234,226,229,0.9);
    min-height: 52vh;
+}
+
+.sign-form {
+  width: 420px;
 }
 
 code {

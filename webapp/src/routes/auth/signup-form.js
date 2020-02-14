@@ -73,9 +73,9 @@ const SignupForm = props => {
     }
 
     return (
-        <div className="container mt-5 w-75">
+        <div style={{ height: "100%", display: "flex", justifyContent: "center", alignItems: "center", padding: "115px 25px 455px" }}>
             <Form
-                className="border border-secondary p-4 text-center opaque-background"
+                className="border border-secondary p-4 text-center opaque-background sign-form"
                 schema={schema}
                 uiSchema={uiSchema}
                 onSubmit={_onSubmit}
@@ -94,5 +94,3 @@ SignupForm.propTypes = {
 };
 
 export default SignupForm;
-
-// d-flex justify-content-around
