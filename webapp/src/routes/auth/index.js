@@ -20,6 +20,7 @@ const Auth = props => {
             console.log("use effect someone registered");
             props.history.push("/auth/log-in");
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps,
     }, [accountID])
 
     useEffect(() => {
@@ -27,6 +28,7 @@ const Auth = props => {
             console.log("use effect someone loggedin succeffsully");
             props.history.push("/");
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps,
     }, [isAuthenticated])
 
     useEffect(() => {
@@ -35,6 +37,7 @@ const Auth = props => {
             });
             _clearErrors();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps,
     }, [error])
 
     function _signIn(data) {

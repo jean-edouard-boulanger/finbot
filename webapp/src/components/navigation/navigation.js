@@ -18,12 +18,14 @@ const Navigation = props => {
     useEffect(() => {
         console.log("providers were mounted")
         _awaitProviders();
+        // eslint-disable-next-line react-hooks/exhaustive-deps,
     }, [])
 
     //when another provider is updated, redirect to linked-account page
     useEffect(() => {
         if (selectedProvider.name) props.history.push("/linked-account/create")
         // if (selectedProvider) props.history.push("/external-accounts/link")
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedProvider])
 
     function _setProvider(val) {

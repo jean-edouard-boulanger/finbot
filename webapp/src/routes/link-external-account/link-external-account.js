@@ -21,7 +21,7 @@ const Schema = () => {
                 :
 
                 <>
-                    <div style={{ height: "100%", display: "flex", justifyContent: "center", alignItems: "center", padding: "115px 25px 455px" }}>
+                    <div style={{ height: "100%", display: "flex", justifyContent: "center", alignItems: "center", padding: "85px 25px 455px" }}>
                         <Form
                             className="border border-secondary p-4 text-center opaque-background sign-form"
                             schema={schema.json_schema || {}}

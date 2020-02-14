@@ -18,6 +18,7 @@ const LinkedAccount = props => {
             });
             _clearErrors();
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [error])
 
     useEffect(() => {
@@ -26,6 +27,7 @@ const LinkedAccount = props => {
             });
             props.history.push("/")
         }
+     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [accountIsLinked])
 
     return (
