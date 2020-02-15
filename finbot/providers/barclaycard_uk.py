@@ -1,10 +1,10 @@
 from copy import deepcopy
 from price_parser import Price
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.expected_conditions import presence_of_element_located
 from finbot import providers
 from finbot.providers.support.selenium import any_of, SeleniumHelper
 from finbot.providers.errors import AuthFailure
+from functools import partial
 import logging
 
 
@@ -48,6 +48,9 @@ class Api(providers.SeleniumBased):
         username_input.send_keys(credentials.user_name)
         self._do.find(By.XPATH, "//button[@type='submit']").click()
 
+        self._do.assert_success(_get_password_input, _get_bad_id_error,
+                                on_failure=partial(_report_auth_error, "providing username"))
+
         # step 3: provide passcode
 
         logging.info(f"providing passcode")
@@ -75,14 +78,8 @@ class Api(providers.SeleniumBased):
         input2.send_keys(credentials.memorable_word[letter2_idx])
         self._do.find(By.XPATH, "//button[@type='submit']").click()
 
-        self._do.wait_cond(any_of(
-            presence_of_element_located((By.CSS_SELECTOR, "div.sitenav-select-account-link")),
-            lambda _: _get_login_error(self._do)
-        ))
-
-        error_message = _get_login_error(self._do)
-        if error_message:
-            raise AuthFailure(error_message)
+        self._do.assert_success(_is_logged_in, _get_login_error,
+                                on_failure=partial(_report_auth_error, "providing credentials"))
 
         # step 5: collect account info
         account_area = self._do.wait_element(By.CSS_SELECTOR, "div.sitenav-select-account-link")
@@ -122,7 +119,26 @@ class Api(providers.SeleniumBased):
         }
 
 
-def _get_login_error(browser_helper: SeleniumHelper):
-    form_error_area = browser_helper.find_many(By.XPATH, "//div[contains(@class, 'FormErrorWell')]")
+def _report_auth_error(stage, error_message):
+    raise AuthFailure(f"{error_message} (while {stage})")
+
+
+def _is_logged_in(do: SeleniumHelper):
+    account_area = do.find_maybe(By.CSS_SELECTOR, "div.sitenav-select-account-link")
+    return account_area is not None
+
+
+def _get_password_input(do: SeleniumHelper):
+    return do.find_maybe(By.XPATH, "//input[@type='password']")
+
+
+def _get_bad_id_error(do: SeleniumHelper):
+    bad_id_error_area = do.find_maybe(By.ID, "usernameAndID-error")
+    if bad_id_error_area:
+        return bad_id_error_area.text.strip()
+
+
+def _get_login_error(do: SeleniumHelper):
+    form_error_area = do.find_maybe(By.CSS_SELECTOR, "form#login div.red.message")
     if form_error_area:
-        return form_error_area.find_element_by_tag_name("strong").text.strip()
+        return form_error_area.text.strip()

@@ -106,13 +106,8 @@ class Api(providers.SeleniumBased):
 
         # 2. Wait logged-in or error
 
-        self._do.wait_cond(any_of(
-            lambda _: _is_logged_in(self._do), 
-            lambda _: _get_login_error(self._do)))
-
-        error_message = _get_login_error(self._do)
-        if error_message:
-            raise AuthFailure(error_message)
+        self._do.assert_success(_is_logged_in, _get_login_error,
+                                _report_auth_error)
 
         # 3. Register available accounts types
 
@@ -150,6 +145,10 @@ class Api(providers.SeleniumBased):
 def _is_logged_in(browser_helper: SeleniumHelper):
     marker = browser_helper.find_many(By.CSS_SELECTOR, "body.logged-in")
     return marker is not None
+
+
+def _report_auth_error(error_message):
+    raise AuthFailure(error_message.replace("\n", " ").strip())
 
 
 @swallow_exc(StaleElementReferenceException)

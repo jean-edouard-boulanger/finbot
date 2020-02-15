@@ -76,7 +76,7 @@ class Api(providers.SeleniumBased):
             # 2. Wait logged-in or error
 
             self._do.wait_cond(any_of(
-                lambda _: _get_login_error(self._do), 
+                lambda _: _get_login_error(self._do),
                 lambda _: _is_logged_in(self._do)))
 
             error_message = _get_login_error(self._do)
@@ -97,7 +97,7 @@ class Api(providers.SeleniumBased):
             try:
                 return impl(submit_wait)
             except TimeoutException:
-                logging.warn(f"timeout while login, re-trying ({i})")
+                logging.warning(f"timeout while login, re-trying ({i})")
                 submit_wait = submit_wait * 2
                 pass
         raise RuntimeError(f"unable to login after {trials} trials")
@@ -137,7 +137,7 @@ class Api(providers.SeleniumBased):
 @swallow_exc(StaleElementReferenceException)
 def _get_login_error(browser_helper: SeleniumHelper):
     error_area = browser_helper.find_maybe(
-        By.CSS_SELECTOR, "div#error-container-wrapper")
+        By.ID, "error-container-wrapper")
     if error_area and error_area.is_displayed():
         return error_area.text.strip()
 
@@ -181,8 +181,8 @@ def _iter_assets(assets_table_body):
     for row in assets_table_body.find_elements_by_tag_name("tr"):
         cells = row.find_elements_by_tag_name("td")
         asset_name = (cells[0].find_element_by_tag_name("a")
-                                .find_elements_by_tag_name("span")[1]
-                                .text.strip())
+                              .find_elements_by_tag_name("span")[1]
+                              .text.strip())
         yield {
             "name": asset_name,
             "type": "blended fund",

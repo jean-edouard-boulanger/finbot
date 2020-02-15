@@ -61,6 +61,7 @@ class Api(providers.SeleniumBased):
         self._do.get(AUTH_URL)
 
         # Step 1: last name + card number
+
         step1_form = self._do.wait_element(By.NAME, "loginStep1")
         step1_form.find_element_by_css_selector("input#surname0").send_keys(
             credentials.last_name)
@@ -70,20 +71,24 @@ class Api(providers.SeleniumBased):
         for i in range(0, 4):
             step1_form.find_element_by_id(f"cardNumber{i}").send_keys(card_nums[i])
         step1_form.find_element_by_tag_name("button").click()
-        passcode_button = self._do.wait_cond(_get_passcode_login_button)
-        self._do.click(passcode_button)
+
+        self._do.assert_success(_reached_auth_step2, _get_login_error,
+                                on_failure=_report_auth_error)
+
+        # Step 2.1: sometimes it asks to chose between PINsentry / passcode
+        # Always pick passcode when prompted
 
         self._do.wait_cond(any_of(
-            presence_of_element_located((By.ID, "passcode0")),
-            lambda _: _get_login_error(self._do)))
+            lambda _: _get_passcode_button(self._do),
+            presence_of_element_located((By.ID, "passcode0"))))
 
-        error_message = _get_login_error(self._do)
-        if error_message:
-            raise AuthFailure(error_message)
+        passcode_button = _get_passcode_button(self._do)
+        if passcode_button:
+            passcode_button.click()
 
         # step 2: authentication (passcode + memorable)
 
-        passcode_input = self._do.find(By.ID, "passcode0")
+        passcode_input = self._do.wait_element(By.ID, "passcode0")
         passcode_input.send_keys(credentials.passcode)
         memorable_label = self._do.find(By.ID, "label-memorableCharacters").text.strip()
         char_combos = self._do.find_many(By.ID, "idForScrollFeature")
@@ -92,6 +97,9 @@ class Api(providers.SeleniumBased):
             item_idx = ord(credentials.memorable_word[i]) - ord('a')
             select_combo_item(char_combos[index], item_idx)
         self._do.find(By.CSS_SELECTOR, "button.btn--login").click()
+
+        self._do.assert_success(_is_logged_in, _get_login_error,
+                                on_failure=_report_auth_error)
 
         # step 3: gather available accounts
 
@@ -181,18 +189,6 @@ class Api(providers.SeleniumBased):
         }
 
 
-def _get_passcode_login_button(driver):
-    login_buttons = driver.find_elements_by_css_selector("button.btn--login")
-    for button in login_buttons:
-        if "passcode" in button.text:
-            return button
-    return None
-
-
-def _wait_accounts(browser_helper: SeleniumHelper):
-    return browser_helper.wait_element(By.CSS_SELECTOR, "div.accounts-body")
-
-
 def _iter_accounts(accounts_area):
     for row in accounts_area.find_elements_by_css_selector("div.o-account__head"):
         account_cell = row.find_element_by_css_selector("div.account-link")
@@ -215,8 +211,35 @@ def _iter_accounts(accounts_area):
         }
 
 
-def _get_login_error(browser_helper: SeleniumHelper):
-    warnings = browser_helper.find_maybe(By.CSS_SELECTOR, "div.notification--warning")
-    if warnings:
-        return warnings.text.strip()
-    return None
+def _wait_accounts(do: SeleniumHelper):
+    return do.wait_element(By.CSS_SELECTOR, "div.accounts-body")
+
+
+def _get_passcode_button(do: SeleniumHelper):
+    buttons = do.find_many(By.CSS_SELECTOR, "button.btn--login")
+    for button in buttons:
+        if "passcode" in button.text:
+            return button
+
+
+def _reached_auth_step2(do: SeleniumHelper):
+    return (do.find_maybe(By.ID, "passcode0") is not None
+            or _get_passcode_button(do) is not None)
+
+
+def _is_logged_in(do: SeleniumHelper):
+    accounts_area = do.find_maybe(By.CSS_SELECTOR, "div.accounts-body")
+    return accounts_area is not None
+
+
+def _get_login_error(do: SeleniumHelper):
+    warning = do.find_maybe(By.CSS_SELECTOR, "div.notification--warning")
+    if warning:
+        return warning.text.strip()
+    error = do.find_maybe(By.CSS_SELECTOR, "div.notification--error")
+    if error:
+        return error.text.strip()
+
+
+def _report_auth_error(error_message):
+    raise AuthFailure(error_message.replace("\n", " ").strip())

@@ -41,13 +41,8 @@ class Api(providers.SeleniumBased):
         actions_area = self._do.wait_element(By.CSS_SELECTOR, "div.actions")
         actions_area.find_element_by_css_selector("button.action-button").click()
 
-        self._do.wait_cond(any_of(
-            lambda _: _get_login_error(self._do),
-            lambda _: _is_logged_in(self._do)))
-
-        error_message = _get_login_error(self._do)
-        if error_message:
-            raise AuthFailure(error_message)
+        self._do.assert_success(_is_logged_in, _get_login_error,
+                                _report_auth_error)
 
     def get_balances(self):
         summary_area = self._go_home()
@@ -129,7 +124,7 @@ class Api(providers.SeleniumBased):
 
 
 def _get_login_error(browser_helper: SeleniumHelper):
-    error_area = browser_helper.find_maybe(By.ID, "error-message")
+    error_area = browser_helper.find_maybe(By.CSS_SELECTOR, "p.error")
     if error_area and error_area.is_displayed():
         return error_area.text.strip()
 
@@ -146,3 +141,7 @@ def _get_accounts_amount(summary_area):
     loan_amount = Price.fromstring(loan_area.find_element_by_tag_name("dd").text)
     cash_amount = Price.fromstring(cash_area.find_element_by_tag_name("dd").text)
     return loan_amount.amount_float, cash_amount.amount_float
+
+
+def _report_auth_error(error_message):
+    raise AuthFailure(error_message.replace("\n", " ").strip())

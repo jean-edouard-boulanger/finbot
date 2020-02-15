@@ -48,7 +48,7 @@ def swallow_exc(*exc_types, default=None):
         @functools.wraps(func)
         def impl(*args, **kwargs):
             try:
-                func(*args, **kwargs)
+                return func(*args, **kwargs)
             except exc_types:
                 return default
         return impl

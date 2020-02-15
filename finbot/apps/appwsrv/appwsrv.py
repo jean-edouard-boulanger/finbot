@@ -345,7 +345,6 @@ def get_linked_accounts_valuation(user_account_id):
         "account_name": {"type": "string"}
     }
 })
-@jwt_required
 def link_to_external_account(user_account_id):
     do_validate = bool(int(request.args.get("validate", 1)))
     do_persist = bool(int(request.args.get("persist", 1)))

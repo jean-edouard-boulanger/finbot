@@ -94,6 +94,15 @@ class SeleniumHelper(object):
     def click(self, element):
         self.execute_script("arguments[0].click();", element)
 
+    def assert_success(self, success_predicate, failure_predicate, on_failure=None, timeout=60):
+        on_failure = on_failure or (lambda _: None)
+        self.wait_cond(any_of(
+            lambda _: success_predicate(self),
+            lambda _: failure_predicate(self)), timeout=timeout)
+        failure_data = failure_predicate(self)
+        if failure_data:
+            return on_failure(failure_data)
+
     def get_cookies(self) -> Dict[str, str]:
         return {
             cookie["name"]: cookie["value"] 
