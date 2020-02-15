@@ -196,6 +196,9 @@ def _wait_accounts(browser_helper: SeleniumHelper):
 def _iter_accounts(accounts_area):
     for row in accounts_area.find_elements_by_css_selector("div.o-account__head"):
         account_cell = row.find_element_by_css_selector("div.account-link")
+        # TODO also handle investment accounts
+        if "investment" in account_cell.text.lower():
+            continue
         account_link_element = account_cell.find_element_by_tag_name("a")
         account_details = row.find_element_by_css_selector("div.o-account__details-body").text.strip().split("\n")
         balance_str = row.find_element_by_css_selector("div.o-account__balance-head").text.strip()
