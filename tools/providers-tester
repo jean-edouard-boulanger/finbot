@@ -15,6 +15,7 @@ import sys
 import json
 import terminaltables
 import time
+import os
 
 
 @functools.lru_cache(128)
@@ -80,6 +81,9 @@ class AssetTree(object):
 
 
 def fetch_data(settings, browser_factory, account):
+    class DummyException(Exception):
+        pass
+    catch_exc = Exception if settings.pause_on_error else DummyException
     provider = get_provider(account["provider_id"])
     with closing(provider.api_module.Api(browser_factory=browser_factory)) as api:
         try:
@@ -134,26 +138,16 @@ def fetch_data(settings, browser_factory, account):
             return provider_data
         except KeyboardInterrupt:
             raise
-        except Exception as e:
+        except catch_exc as e:
             logging.warning(f"error while fetching data for provider_id={account['provider_id']}: {e}")
             logging.warning(traceback.format_exc())
-            if settings.pause_on_error:
-                logging.warning("PAUSING execution because of error")
-                logging.warning("CTRL^C to exit")
-                wait_forever()
-            raise
-
-
-def flatten_accounts_list(accounts_str_list):
-    all_accounts = []
-    for accounts in accounts_str_list:
-        all_accounts += accounts
-    return all_accounts
+            logging.warning("PAUSING execution")
+            logging.warning("CTRL^C to exit")
+            wait_forever()
 
 
 def create_arguments_parser():
     parser = argparse.ArgumentParser("finance automation tester")
-    parser.add_argument("accounts", metavar="accounts", type=lambda s: s.split(","), nargs="*")
     parser.add_argument("--secret-file", required=True)
     parser.add_argument("--dump-balances", action="store_true", default=False)
     parser.add_argument("--dump-assets", action="store_true", default=False)
@@ -164,7 +158,23 @@ def create_arguments_parser():
     parser.add_argument("--no-threadpool", action="store_false", default=True, dest="threadpool")
     parser.add_argument("--pause-on-error", action="store_true", default=False, dest="pause_on_error")
     parser.add_argument("--developer-tools", action="store_true", default=False, dest="developer_tools")
+    parser.add_argument("--providers", type=str, dest="accounts", default=None, required=False)
     return parser
+
+
+def should_read_accounts_from_env(accounts_configuration):
+    return any(val.startswith(":env") for val in accounts_configuration)
+
+
+def resolve_providers(providers_settings):
+    if ":prompt" in providers_settings:
+        assert len(providers_settings) == 1
+        return resolve_providers(input("providers (comma separated): ").strip().split(","))
+    elif should_read_accounts_from_env(providers_settings):
+        assert len(providers_settings) == 1
+        _, var_name = providers_settings[0].split("=")
+        return resolve_providers(os.environ[var_name].split(","))
+    return providers_settings
 
 
 def main():
@@ -172,10 +182,11 @@ def main():
                         format='%(asctime)s [%(levelname)s] %(message)s (%(filename)s:%(lineno)d)')
     parser = create_arguments_parser()
     settings = parser.parse_args()
+
     browser_factory = DefaultBrowserFactory(
         headless=settings.headless,
         developer_tools=settings.developer_tools)
-    selected_providers = flatten_accounts_list(settings.accounts)
+    selected_providers = resolve_providers(settings.accounts.split(",") if settings.accounts else [])
     load_all = all(provider_id.startswith("~") for provider_id in selected_providers)
 
     with open(settings.secret_file, "rb") as secret_file:
@@ -184,7 +195,7 @@ def main():
             account_data = json.loads(
                 crypto.fernet_decrypt(accounts_file.read(), secret).decode())
 
-    logging.info(f"selected accounts: {', '.join(selected_providers)}")
+    logging.info(f"selected providers: {', '.join(selected_providers)}")
 
     selected_accounts = [
         account for account in account_data["linked_accounts"]
@@ -192,62 +203,58 @@ def main():
         or (account["provider_id"] in selected_providers)
     ]
 
-    try:
-        fetcher = partial(fetch_data, settings, browser_factory)
-        if settings.threadpool:
-            with ThreadPool(processes=8) as pool:
-                all_data = pool.map(fetcher, selected_accounts)
-        else:
-            all_data = map(fetcher, selected_accounts)
+    fetcher = partial(fetch_data, settings, browser_factory)
+    if settings.threadpool:
+        with ThreadPool(processes=8) as pool:
+            all_data = pool.map(fetcher, selected_accounts)
+    else:
+        all_data = map(fetcher, selected_accounts)
 
-        currency = account_data["user_account"]["settings"]["valuation_ccy"]
-        logging.info(f"valuation currency is set to {currency}")
+    currency = account_data["user_account"]["settings"]["valuation_ccy"]
+    logging.info(f"valuation currency is set to {currency}")
 
-        asset_tree = AssetTree(all_data)
-        all_assets_amount = asset_tree.amount(currency)
-        if all_assets_amount == 0.0:
-            print("no assets")
-            return
+    asset_tree = AssetTree(all_data)
+    all_assets_amount = asset_tree.amount(currency)
+    if all_assets_amount == 0.0:
+        print("no assets")
+        return
 
-        raw_table = [["Account", "Value", "Weight", "Currency"]]
+    raw_table = [["Account", "Value", "Weight", "Currency"]]
+    raw_table.append([
+        "(All assets)",
+        f"{all_assets_amount:.2f}",
+        "100.00%",
+        currency])
+    raw_table.append(["", "", ""])
+    for provider_data in asset_tree.providers:
+        provider_amount = provider_data.amount(currency)
+        provider_pc = (provider_amount / all_assets_amount) * 100.0
         raw_table.append([
-            "(All assets)",
-            f"{all_assets_amount:.2f}",
-            "100.00%",
+            f"  + {provider_data.name}",
+            f"{provider_amount:.2f}",
+            f"{provider_pc:.2f}%",
             currency])
-        raw_table.append(["", "", ""])
-        for provider_data in asset_tree.providers:
-            provider_amount = provider_data.amount(currency)
-            provider_pc = (provider_amount / all_assets_amount) * 100.0
+        for account_data in provider_data.accounts.values():
+            account_amount = account_data.amount(currency)
+            account_pc = (account_amount / all_assets_amount) * 100.0
             raw_table.append([
-                f"  + {provider_data.name}",
-                f"{provider_amount:.2f}",
-                f"{provider_pc:.2f}%",
-                currency])
-            for account_data in provider_data.accounts.values():
-                account_amount = account_data.amount(currency)
-                account_pc = (account_amount / all_assets_amount) * 100.0
+                f"    + {account_data.account['name']} ",
+                f"{account_amount:.2f}",
+                f"{account_pc:.2f}%",
+                currency
+            ])
+            for asset in account_data.assets:
+                asset_amount = asset.amount(currency)
+                asset_pc = (asset_amount / all_assets_amount) * 100.0
                 raw_table.append([
-                    f"    + {account_data.account['name']} ",
-                    f"{account_amount:.2f}",
-                    f"{account_pc:.2f}%",
+                    f"      * {asset.name}",
+                    f"{asset_amount:.2f}",
+                    f"{asset_pc:.2f}%",
                     currency
                 ])
-                for asset in account_data.assets:
-                    asset_amount = asset.amount(currency)
-                    asset_pc = (asset_amount / all_assets_amount) * 100.0
-                    raw_table.append([
-                        f"      * {asset.name}",
-                        f"{asset_amount:.2f}",
-                        f"{asset_pc:.2f}%",
-                        currency
-                    ])
-            raw_table.append(["", "", ""])
+        raw_table.append(["", "", ""])
 
-        print(terminaltables.AsciiTable(raw_table).table)
-
-    except Exception:
-        logging.fatal(traceback.format_exc())
+    print(terminaltables.AsciiTable(raw_table).table)
 
 
 if __name__ == "__main__":

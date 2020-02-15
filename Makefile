@@ -107,7 +107,7 @@ test-providers-docker:
 			--dump-balances --dump-assets --dump-liabilities --dump-transactions \
 			--secret-file ${FINBOT_SECRET_PATH} \
 			--accounts-file ${FINBOT_ACCOUNT_PATH} \
-			${providers}
+			--providers ${providers}
 
 test-providers-debug:
 	python3.7 tools/providers-tester \
@@ -118,14 +118,14 @@ test-providers-debug:
 			--pause-on-error \
 			--no-threadpool \
 			--developer-tools \
-			${providers}
+			--providers ${providers}
 
 test-providers:
 	python3.7 tools/providers-tester \
 			--dump-balances --dump-assets --dump-liabilities --dump-transactions \
 			--secret-file ${FINBOT_SECRET_PATH} \
 			--accounts-file ${FINBOT_ACCOUNT_PATH} \
-			${providers}
+			--providers ${providers}
 
 test-snapwsrv:
 	python3.7 tools/snapwsrv-tester \
