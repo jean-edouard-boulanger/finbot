@@ -1,7 +1,7 @@
 from selenium.webdriver.common.by import By
 from finbot import providers
 from finbot.core.utils import swallow_exc
-from finbot.providers.support.selenium import any_of, SeleniumHelper
+from finbot.providers.support.selenium import SeleniumHelper
 from selenium.common.exceptions import StaleElementReferenceException
 from finbot.providers.errors import AuthFailure
 import requests

@@ -1,8 +1,7 @@
 from price_parser import Price
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.expected_conditions import staleness_of
 from selenium.common.exceptions import StaleElementReferenceException
-from finbot.providers.support.selenium import any_of, SeleniumHelper
+from finbot.providers.support.selenium import SeleniumHelper
 from finbot.providers.errors import AuthFailure
 from finbot.core.utils import swallow_exc
 from finbot import providers

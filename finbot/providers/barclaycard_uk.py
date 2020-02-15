@@ -2,7 +2,7 @@ from copy import deepcopy
 from price_parser import Price
 from selenium.webdriver.common.by import By
 from finbot import providers
-from finbot.providers.support.selenium import any_of, SeleniumHelper
+from finbot.providers.support.selenium import SeleniumHelper
 from finbot.providers.errors import AuthFailure
 from functools import partial
 import logging
