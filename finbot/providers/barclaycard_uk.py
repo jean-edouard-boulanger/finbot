@@ -87,7 +87,8 @@ class Api(providers.SeleniumBased):
         self.account = {
             "id": account_id,
             "name": account_name.strip(),
-            "iso_currency": "GBP"
+            "iso_currency": "GBP",
+            "type": "credit"
         }
 
     def get_balances(self):

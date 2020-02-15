@@ -30,25 +30,17 @@ class Api(providers.Base):
     def _iter_accounts(self):
         sheet = LocalSheet(self._sheet.sheet1.get_all_values())
 
-        accounts_marker = ACCOUNT_SCHEMA.type_identifier
-        accounts_marker_cell = sheet.find(accounts_marker)
-        if not accounts_marker_cell:
-            raise Error(f"unable to find '{accounts_marker}' cell")
-        accounts_table = _extract_generic_table(
-            sheet, accounts_marker_cell, ACCOUNT_SCHEMA)
-
-        holdings_marker = HOLDING_SCHEMA.type_identifier
-        holdings_marker_cell = sheet.find(holdings_marker)
-        if not holdings_marker_cell:
-            raise Error(f"unable to find '{holdings_marker}' cell")
-        holdings_table = _extract_generic_table(
-            sheet, holdings_marker_cell, HOLDING_SCHEMA)
+        accounts_table = _get_table(sheet, ACCOUNT_SCHEMA)
+        holdings_table = _get_table(sheet, HOLDING_SCHEMA)
 
         for entry in accounts_table:
             yield {
-                "id": entry["identifier"],
-                "name": entry["description"],
-                "iso_currency": entry["currency"],
+                "account": {
+                    "id": entry["identifier"],
+                    "name": entry["description"],
+                    "iso_currency": entry["currency"],
+                    "type": entry["type"]
+                },
                 "holdings": [
                     holding for holding in holdings_table
                     if holding["account"] == entry["identifier"]
@@ -66,14 +58,10 @@ class Api(providers.Base):
         return {
             "accounts": [
                 {
-                    "account": {
-                        "id": account["id"],
-                        "name": account["name"],
-                        "iso_currency": account["iso_currency"]
-                    },
-                    "balance": sum(holding["value"] for holding in account["holdings"])
+                    "account": entry["account"],
+                    "balance": sum(holding["value"] for holding in entry["holdings"])
                 }
-                for account in self._iter_accounts()
+                for entry in self._iter_accounts()
             ]
         }
 
@@ -81,21 +69,17 @@ class Api(providers.Base):
         return {
             "accounts": [
                 {
-                    "account": {
-                        "id": account["id"],
-                        "name": account["name"],
-                        "iso_currency": account["iso_currency"]
-                    },
+                    "account": entry["account"],
                     "assets": [
                         {
                             "name": holding["symbol"],
                             "type": holding["type"],
                             "value": holding["value"]
                         }
-                        for holding in account["holdings"]
+                        for holding in entry["holdings"]
                     ]
                 }
-                for account in self._iter_accounts()
+                for entry in self._iter_accounts()
             ]
         }
 
@@ -123,6 +107,18 @@ class Schema(object):
         }
 
 
+class ValidationError(RuntimeError):
+    pass
+
+
+def union(*values):
+    def validate(value):
+        if value not in values:
+            raise ValidationError(f"should be either {', '.join(values)}")
+        return value
+    return validate
+
+
 ACCOUNT_SCHEMA = Schema(
     type_identifier="ACCOUNTS",
     attributes={
@@ -136,6 +132,10 @@ ACCOUNT_SCHEMA = Schema(
         },
         "currency": {
             "type": str,
+            "required": True
+        },
+        "type": {
+            "type": union("cash", "credit", "investment"),
             "required": True
         }
     })
@@ -226,6 +226,14 @@ class LocalSheet(object):
         return all_cells[0]
 
 
+def _get_table(sheet, schema):
+    accounts_marker = schema.type_identifier
+    accounts_marker_cell = sheet.find(accounts_marker)
+    if not accounts_marker_cell:
+        raise Error(f"unable to find '{accounts_marker}' cell")
+    return _extract_generic_table(sheet, accounts_marker_cell, schema)
+
+
 def _extract_generic_table(sheet: LocalSheet, marker_cell: Cell, schema):
     header_start_cell = sheet.get_cell(marker_cell.row + 1, marker_cell.col)
     header = {}
@@ -253,6 +261,9 @@ def _extract_generic_table(sheet: LocalSheet, marker_cell: Cell, schema):
             except ValueError:
                 raise Error(f"unable to convert value '{raw_value}' to type '{converter.__name__}' "
                             f"for attribute '{schema.type_identifier}.{attr}'")
+            except ValidationError as e:
+                raise Error(f"unable to convert value '{raw_value}' to type '{converter.__name__}' "
+                            f"for attribute '{schema.type_identifier}.{attr}' ({e})")
         missing_attributes = schema.required_attributes.difference(
             set(current_record.keys()))
         if len(missing_attributes) > 0:

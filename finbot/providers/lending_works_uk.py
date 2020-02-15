@@ -75,17 +75,18 @@ class Api(providers.SeleniumBased):
                 "account": {
                     "id": account_type,
                     "name": account_name,
-                    "iso_currency": "GBP"
+                    "iso_currency": "GBP",
+                    "type": "investment"
                 },
                 "balance": data["summary"]["total_account_balance"],
                 "assets": [
                     {
-                        "name": "offers", 
+                        "name": "Offers",
                         "type": "currency", 
                         "value": data["summary"]["total_offers"]
                     },
                     {
-                        "name": "wallet",
+                        "name": "Wallet",
                         "type": "currency",
                         "value": data["summary"]["wallet_total"]
                     }

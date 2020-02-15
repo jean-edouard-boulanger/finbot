@@ -50,7 +50,8 @@ class Api(providers.SeleniumBased):
                         "description": {
                             "id": entry["SubAccountId"].strip(),
                             "name": entry["PreferredName"].strip(),
-                            "iso_currency": "GBP"
+                            "iso_currency": "GBP",
+                            "type": "investment"
                         },
                         "hierarchy_id": entry["HierarchyId"],
                         "date_created": entry["DateCreated"],
@@ -178,7 +179,7 @@ class _StalenessDetector(object):
 def _extract_cash_asset(product_row):
     amount_str = product_row.find_elements_by_tag_name("td")[5].text.strip()
     return {
-        "name": "cash",
+        "name": "Cash",
         "type": "currency",
         "value": Price.fromstring(amount_str).amount_float,
     }

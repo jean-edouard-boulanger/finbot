@@ -166,7 +166,8 @@ def _iter_accounts(accounts_elements):
             "account": {
                 "id": account_id,
                 "name": account_name,
-                "iso_currency": "GBP"
+                "iso_currency": "GBP",
+                "type": "investment"
             },
             "balance": Price.fromstring(balance_str).amount_float,
             "selenium": {

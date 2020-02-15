@@ -43,8 +43,9 @@ class Price(object):
 
 
 class Asset(object):
-    def __init__(self, name, amount):
+    def __init__(self, name, amount, asset_type):
         self.name = name
+        self.asset_type = asset_type
         self._amount = amount
 
     def amount(self, currency_override=None):
@@ -125,8 +126,9 @@ def fetch_data(settings, browser_factory, account):
                 for asset in entry["assets"]:
                     account_data.assets.append(Asset(
                         name=asset["name"],
-                        amount=Price(asset["value"], account["iso_currency"])
-                    ))
+                        amount=Price(asset["value"], account["iso_currency"]),
+                        asset_type=asset["type"]))
+
             logging.info(f"[{provider.description}] fetching assets - done")
 
             logging.info(f"[{provider.description}] fetching liabilities")
@@ -170,6 +172,9 @@ def resolve_providers(providers_settings):
     if ":prompt" in providers_settings:
         assert len(providers_settings) == 1
         return resolve_providers(input("providers (comma separated): ").strip().split(","))
+    elif ":all" in providers_settings:
+        assert len(providers_settings) == 1
+        return []
     elif should_read_accounts_from_env(providers_settings):
         assert len(providers_settings) == 1
         _, var_name = providers_settings[0].split("=")
@@ -225,7 +230,7 @@ def main():
         f"{all_assets_amount:.2f}",
         "100.00%",
         currency])
-    raw_table.append(["", "", ""])
+    raw_table.append([])
     for provider_data in asset_tree.providers:
         provider_amount = provider_data.amount(currency)
         provider_pc = (provider_amount / all_assets_amount) * 100.0
@@ -238,7 +243,7 @@ def main():
             account_amount = account_data.amount(currency)
             account_pc = (account_amount / all_assets_amount) * 100.0
             raw_table.append([
-                f"    + {account_data.account['name']} ",
+                f"    + {account_data.account['name']} ({account_data.account['type'].capitalize()})",
                 f"{account_amount:.2f}",
                 f"{account_pc:.2f}%",
                 currency
@@ -247,7 +252,7 @@ def main():
                 asset_amount = asset.amount(currency)
                 asset_pc = (asset_amount / all_assets_amount) * 100.0
                 raw_table.append([
-                    f"      * {asset.name}",
+                    f"      * {asset.name} ({asset.asset_type.capitalize()})",
                     f"{asset_amount:.2f}",
                     f"{asset_pc:.2f}%",
                     currency

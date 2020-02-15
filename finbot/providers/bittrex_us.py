@@ -5,6 +5,9 @@ from pycoingecko import CoinGeckoAPI
 from bittrex.bittrex import Bittrex
 
 
+OWNERSHIP_UNITS_THRESHOLD = 0.00001
+
+
 class Credentials(object):
     def __init__(self, api_key, private_key):
         self.api_key = api_key
@@ -30,16 +33,18 @@ class Api(providers.Base):
         return {
             "id": "portfolio",
             "name": "Portfolio",
-            "iso_currency": self._account_ccy
+            "iso_currency": self._account_ccy,
+            "type": "investment"
         }
 
     def _iter_balances(self):
         for entry in self._api.get_balances()["result"]:
-            symbol = entry["Currency"]
             units = entry["Available"]
-            value = units * self._spot_api.get_spot_cached(
-                symbol, self._account_ccy)
-            yield symbol, units, value
+            if units > OWNERSHIP_UNITS_THRESHOLD:
+                symbol = entry["Currency"]
+                value = units * self._spot_api.get_spot_cached(
+                    symbol, self._account_ccy)
+                yield symbol, units, value
 
     def authenticate(self, credentials):
         self._api = Bittrex(credentials.api_key, credentials.private_key)
@@ -66,7 +71,7 @@ class Api(providers.Base):
                     "assets": [
                         {
                             "name": symbol,
-                            "type": "crypto",
+                            "type": "cryptocurrency",
                             "units": units,
                             "value": value
                         }

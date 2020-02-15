@@ -179,7 +179,7 @@ class Api(providers.SeleniumBased):
                 {
                     "account": deepcopy(entry["account"]),
                     "assets": [{
-                        "name": "cash",
+                        "name": "Cash",
                         "type": "currency",
                         "value": entry["balance"]
                     }]
@@ -202,7 +202,8 @@ def _iter_accounts(accounts_area):
             "account": {
                 "id": account_details[0],
                 "name": account_cell.text.strip(),
-                "iso_currency": "GBP"
+                "iso_currency": "GBP",
+                "type": "cash"
             },
             "balance": Price.fromstring(balance_str).amount_float,
             "selenium": {

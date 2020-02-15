@@ -1,9 +1,6 @@
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import StaleElementReferenceException
-from finbot.providers.support.selenium import (
-    any_of,
-    SeleniumHelper
-)
+from finbot.providers.support.selenium import SeleniumHelper
 from finbot import providers
 from finbot.core.utils import swallow_exc
 from finbot.providers.errors import AuthFailure
@@ -39,7 +36,8 @@ class Api(providers.SeleniumBased):
                 "account": {
                     "id": data["numeroCompte"].strip(),
                     "name": data["libelleUsuelProduit"].strip(),
-                    "iso_currency": data["idDevise"].strip()
+                    "iso_currency": data["idDevise"].strip(),
+                    "type": "cash"
                 },
                 "balance": data["solde"]
             }
@@ -98,7 +96,7 @@ class Api(providers.SeleniumBased):
                 {
                     "account": entry["account"],
                     "assets": [{
-                        "name": "cash",
+                        "name": "Cash",
                         "type": "currency",
                         "value": entry["balance"]
                     }]
