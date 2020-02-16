@@ -520,6 +520,52 @@
             }
         },
         {
+            "id": "hl_uk",
+            "description": "Hargreaves Lansdown (UK)",
+            "website_url": "https://online.hl.co.uk/",
+            "credentials_schema": {
+                "json_schema": {
+                    "$schema": "http://json-schema.org/draft-07/schema#",
+                    "type": "object",
+                    "required": ["username", "birth_date", "online_password", "secret_number"],
+                    "properties": {
+                        "username": {
+                            "title": "Username",
+                            "type": "string"
+                        },
+                        "birth_date": {
+                            "title": "Birth date",
+                            "type": "string",
+                            "pattern": "\\d{6}"
+                        },
+                        "online_password": {
+                            "title": "Online password",
+                            "type": "string"
+                        },
+                        "secret_number": {
+                            "title": "Secret number",
+                            "type": "string",
+                            "pattern": "\\d{6}"
+                        }
+                    }
+                },
+                "ui_schema": {
+                    "ui:order": [
+                        "username",
+                        "birth_date",
+                        "online_password",
+                        "secret_number"
+                    ],
+                    "online_password": {
+                        "ui:widget": "password"
+                    },
+                    "secret_number": {
+                        "ui:widget": "password"
+                    }
+                }
+            }
+        },
+        {
             "id": "dummy_uk",
             "description": "Dummy financial provider (UK)",
             "website_url": "http://www.dummy.com",
