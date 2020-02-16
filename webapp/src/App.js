@@ -1,53 +1,40 @@
 import 'bootswatch/dist/lux/bootstrap.min.css';
 import "./assets/css/index.css"
-import { ToastContainer, Slide } from 'react-toastify';
+import { ToastContainer, Slide, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Route, Switch, BrowserRouter } from "react-router-dom";
 import 'datejs';
-import AuthState from "./context/AuthState";
-import LinkedAccountState from "./context/LinkedAccountState";
-import AlertState from './context/AlertState';
-import Alert from "./components/Alerts";
+
+import AuthState from "./context/auth-state";
+import LinkedAccountState from "./context/linked-account-state";
 
 //core components
-import Home from "./Home/Home";
-import Navbar from "./Navbar/Navbar";
-import Auth from "./Auth";
-import Form from "./LinkedAccount/Schema";
-import LinkedAccount from "./LinkedAccount";
+import Home from "./routes/main-dashboard";
+import Navbar from "./components/navigation";
+import Auth from "./routes/auth";
+import LinkedAccounts from "./routes/link-external-account";
+
+toast.configure({
+  delay: 500,
+});
 
 const App = () => {
-  //  const [user, setUser] = useState(localStorage.getItem("identity"));
-
-  // useEffect(() => {
-  //   if (localStorage.getItem("identity")) {
-  //     setUser(localStorage.item)
-  //   } else {
-  //     setUser(null)
-  //   }
-  // }, [])
-
 
   return (
     <AuthState>
       <LinkedAccountState>
-        <AlertState>
-          <BrowserRouter>
-            <div>
-              <Navbar />
-              <ToastContainer autoClose={4000} transition={Slide} position="bottom-right" />
-              <Alert />
-              <Switch>
-                <Route exact path="/" render={() => <Home />} />
-                <Route path="/auth" render={() => <Auth />} />
-                <Route path="/linked-account" render={() => <LinkedAccount />} />
-                {/* <Route component={Error}/> */}
-              </Switch>
-            </div>
-          </BrowserRouter>
-        </AlertState>
+        <BrowserRouter>
+          <ToastContainer autoClose={7000} transition={Slide} position="bottom-right" />
+          <Navbar style={{ boxShadow: "0 3px 10px rgba(51, 50, 47, 0.5)" }} />
+          <Switch>
+            <Route exact path="/" render={() => <Home />} />
+            <Route path="/auth" render={() => <Auth />} />
+            <Route path="/linked-account" render={() => <LinkedAccounts />} />
+            {/* <Route component={Error}/> */}
+          </Switch>
+        </BrowserRouter>
       </LinkedAccountState>
     </AuthState>
   )
