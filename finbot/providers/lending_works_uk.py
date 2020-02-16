@@ -1,7 +1,7 @@
 from selenium.webdriver.common.by import By
 from finbot import providers
 from finbot.core.utils import swallow_exc
-from finbot.providers.support.selenium import any_of, SeleniumHelper
+from finbot.providers.support.selenium import SeleniumHelper
 from selenium.common.exceptions import StaleElementReferenceException
 from finbot.providers.errors import AuthFailure
 import requests
@@ -75,17 +75,18 @@ class Api(providers.SeleniumBased):
                 "account": {
                     "id": account_type,
                     "name": account_name,
-                    "iso_currency": "GBP"
+                    "iso_currency": "GBP",
+                    "type": "investment"
                 },
                 "balance": data["summary"]["total_account_balance"],
                 "assets": [
                     {
-                        "name": "offers", 
+                        "name": "Offers",
                         "type": "currency", 
                         "value": data["summary"]["total_offers"]
                     },
                     {
-                        "name": "wallet",
+                        "name": "Wallet",
                         "type": "currency",
                         "value": data["summary"]["wallet_total"]
                     }
@@ -106,13 +107,8 @@ class Api(providers.SeleniumBased):
 
         # 2. Wait logged-in or error
 
-        self._do.wait_cond(any_of(
-            lambda _: _is_logged_in(self._do), 
-            lambda _: _get_login_error(self._do)))
-
-        error_message = _get_login_error(self._do)
-        if error_message:
-            raise AuthFailure(error_message)
+        self._do.assert_success(_is_logged_in, _get_login_error,
+                                _report_auth_error)
 
         # 3. Register available accounts types
 
@@ -150,6 +146,10 @@ class Api(providers.SeleniumBased):
 def _is_logged_in(browser_helper: SeleniumHelper):
     marker = browser_helper.find_many(By.CSS_SELECTOR, "body.logged-in")
     return marker is not None
+
+
+def _report_auth_error(error_message):
+    raise AuthFailure(error_message.replace("\n", " ").strip())
 
 
 @swallow_exc(StaleElementReferenceException)

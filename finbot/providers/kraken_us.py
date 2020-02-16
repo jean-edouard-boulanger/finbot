@@ -3,6 +3,9 @@ from finbot.providers.errors import AuthFailure
 import krakenex
 
 
+OWNERSHIP_UNITS_THRESHOLD = 0.00001
+
+
 class Credentials(object):
     def __init__(self, api_key, private_key):
         self.api_key = api_key
@@ -27,16 +30,17 @@ class Api(providers.Base):
         return {
             "id": "portfolio",
             "name": "Portfolio",
-            "iso_currency": self._account_ccy
+            "iso_currency": self._account_ccy,
+            "type": "investment"
         }
 
     def _iter_balances(self):
         price_fetcher = KrakenPriceFetcher(self._api)
         results = self._api.query_private("Balance")["result"]
         for symbol, units in results.items():
-            demangled_symbol = _format_symbol(symbol)
             units = float(units)
-            if units > 0.0:
+            if units > OWNERSHIP_UNITS_THRESHOLD:
+                demangled_symbol = _format_symbol(symbol)
                 rate = price_fetcher.get_last_price(demangled_symbol, self._account_ccy)
                 yield symbol, units, units * rate
 

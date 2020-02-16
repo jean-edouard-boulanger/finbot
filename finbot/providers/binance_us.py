@@ -6,6 +6,9 @@ from binance.client import Client as Binance
 from binance.exceptions import BinanceAPIException
 
 
+OWNERSHIP_UNITS_THRESHOLD = 0.00001
+
+
 class Credentials(object):
     def __init__(self, api_key, secret_key):
         self.api_key = api_key
@@ -31,7 +34,8 @@ class Api(providers.Base):
         return {
             "id": "portfolio",
             "name": "Portfolio",
-            "iso_currency": self._account_ccy
+            "iso_currency": self._account_ccy,
+            "type": "investment"
         }
 
     def authenticate(self, credentials):
@@ -44,7 +48,7 @@ class Api(providers.Base):
     def _iter_balances(self):
         for entry in self._api.get_account()["balances"]:
             units = float(entry["free"]) + float(entry["locked"])
-            if units > 0.00001:
+            if units > OWNERSHIP_UNITS_THRESHOLD:
                 symbol = entry["asset"]
                 value = units * self._spot_api.get_spot_cached(
                     symbol, self._account_ccy)
@@ -69,7 +73,7 @@ class Api(providers.Base):
                     "assets": [
                         {
                             "name": symbol,
-                            "type": "crypto",
+                            "type": "cryptocurrency",
                             "units": units,
                             "value": value
                         }

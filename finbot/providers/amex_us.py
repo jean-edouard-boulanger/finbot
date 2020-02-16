@@ -177,7 +177,8 @@ def _iter_accounts(browser_helper: SeleniumHelper):
             "account": {
                 "id": account_id,
                 "name": account_name,
-                "iso_currency": "GBP"
+                "iso_currency": "GBP",
+                "type": "credit"
             },
             "selenium": {
                 "account_element_ref": account_row

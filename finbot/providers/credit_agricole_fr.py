@@ -1,9 +1,6 @@
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import StaleElementReferenceException
-from finbot.providers.support.selenium import (
-    any_of,
-    SeleniumHelper
-)
+from finbot.providers.support.selenium import SeleniumHelper
 from finbot import providers
 from finbot.core.utils import swallow_exc
 from finbot.providers.errors import AuthFailure
@@ -39,7 +36,8 @@ class Api(providers.SeleniumBased):
                 "account": {
                     "id": data["numeroCompte"].strip(),
                     "name": data["libelleUsuelProduit"].strip(),
-                    "iso_currency": data["idDevise"].strip()
+                    "iso_currency": data["idDevise"].strip(),
+                    "type": "cash"
                 },
                 "balance": data["solde"]
             }
@@ -50,6 +48,8 @@ class Api(providers.SeleniumBased):
 
     def authenticate(self, credentials):
         self._do.get(AUTH_URL.format(region=credentials.region))
+        self._do.assert_success(lambda _: self._do.find_maybe(By.ID, "Login-account"), _get_region_error,
+                                on_failure=_report_auth_error)
 
         # 1. Enter account number
 
@@ -70,13 +70,8 @@ class Api(providers.SeleniumBased):
 
         # 3. Wait logged-in or error
 
-        self._do.wait_cond(any_of(
-            lambda _: _get_login_error(self._do),
-            lambda _: self._do.find_maybe(By.CLASS_NAME, "Synthesis-user")))
-
-        error_message = _get_login_error(self._do)
-        if error_message:
-            raise AuthFailure(error_message)
+        self._do.assert_success(lambda _: self._do.find_maybe(By.CLASS_NAME, "Synthesis-user"), _get_login_error,
+                                on_failure=_report_auth_error)
 
         # 4. Extract accounts data
 
@@ -101,7 +96,7 @@ class Api(providers.SeleniumBased):
                 {
                     "account": entry["account"],
                     "assets": [{
-                        "name": "cash",
+                        "name": "Cash",
                         "type": "currency",
                         "value": entry["balance"]
                     }]
@@ -111,10 +106,20 @@ class Api(providers.SeleniumBased):
         }
 
 
+def _report_auth_error(error_message):
+    raise AuthFailure(error_message.replace("\n", " ").strip())
+
+
+def _get_region_error(do: SeleniumHelper):
+    message = do.find_maybe(By.CSS_SELECTOR, "div.AemBug-content")
+    if message:
+        return "La region sélectionnée est invalide"
+
+
 @swallow_exc(StaleElementReferenceException)
-def _get_login_error(browser_helper: SeleniumHelper):
+def _get_login_error(do: SeleniumHelper):
     error_items = [
-        item for item in browser_helper.find_many(
+        item for item in do.find_many(
             By.CSS_SELECTOR, "div.error")
         if item.is_displayed()
     ]

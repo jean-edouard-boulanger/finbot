@@ -1,7 +1,7 @@
 from price_parser import Price
 from selenium.webdriver.common.by import By
 from finbot import providers
-from finbot.providers.support.selenium import any_of, SeleniumHelper
+from finbot.providers.support.selenium import SeleniumHelper
 from finbot.providers.errors import AuthFailure
 
 
@@ -32,6 +32,15 @@ class Api(providers.SeleniumBased):
         self._do.get(PORTFOLIO_URL)
         return self._do.wait_element(By.CSS_SELECTOR, "div.summary")
 
+    @staticmethod
+    def _get_account_description():
+        return {
+            "id": "portfolio",
+            "name": "Portfolio",
+            "iso_currency": "EUR",
+            "type": "investment"
+        }
+
     def authenticate(self, credentials):
         self._do.get(AUTH_URL)
         auth_area = self._do.wait_element(By.TAG_NAME, "form")
@@ -41,43 +50,24 @@ class Api(providers.SeleniumBased):
         actions_area = self._do.wait_element(By.CSS_SELECTOR, "div.actions")
         actions_area.find_element_by_css_selector("button.action-button").click()
 
-        self._do.wait_cond(any_of(
-            lambda _: _get_login_error(self._do),
-            lambda _: _is_logged_in(self._do)))
-
-        error_message = _get_login_error(self._do)
-        if error_message:
-            raise AuthFailure(error_message)
+        self._do.assert_success(_is_logged_in, _get_login_error,
+                                _report_auth_error)
 
     def get_balances(self):
         summary_area = self._go_home()
         loan_amount, cash_amount = _get_accounts_amount(summary_area)
         return {
-            "accounts": [
-                {
-                    "account": {
-                        "id": "cash",
-                        "name": "Cash",
-                        "iso_currency": "EUR"
-                    },
-                    "balance": cash_amount
-                },
-                {
-                    "account": {
-                        "id": "loan",
-                        "name": "Loan",
-                        "iso_currency": "EUR"
-                    },
-                    "balance": loan_amount,
-                }
-            ]
+            "accounts": [{
+                "account": Api._get_account_description(),
+                "balance": cash_amount + loan_amount
+            }]
         }
 
     def _get_cash_assets(self):
         summary_area = self._go_home()
         _, cash_amount = _get_accounts_amount(summary_area)
         return [{
-            "name": "cash",
+            "name": "Cash",
             "type": "currency",
             "current_weight": 1.0,
             "value": cash_amount,
@@ -111,25 +101,15 @@ class Api(providers.SeleniumBased):
 
     def get_assets(self):
         return {
-            "accounts": [
-                {
-                    "account": {
-                        "id": account_id,
-                        "name": account_id.title(),
-                        "iso_currency": "EUR"
-                    },
-                    "assets": handler()
-                }
-                for account_id, handler in [
-                    ("cash", self._get_cash_assets),
-                    ("loan", self._get_loan_assets)
-                ]
-            ]
+            "accounts": [{
+                "account": self._get_account_description(),
+                "assets": self._get_cash_assets() + self._get_loan_assets()
+            }]
         }
 
 
 def _get_login_error(browser_helper: SeleniumHelper):
-    error_area = browser_helper.find_maybe(By.ID, "error-message")
+    error_area = browser_helper.find_maybe(By.CSS_SELECTOR, "p.error")
     if error_area and error_area.is_displayed():
         return error_area.text.strip()
 
@@ -140,9 +120,12 @@ def _is_logged_in(browser_helper: SeleniumHelper):
 
 
 def _get_accounts_amount(summary_area):
-    synthesis_area = (summary_area.find_element_by_tag_name("section")
-                                  .find_element_by_tag_name("article"))
+    synthesis_area = summary_area.find_element_by_css_selector("section article")
     loan_area, cash_area, *_ = synthesis_area.find_elements_by_tag_name("dl")
     loan_amount = Price.fromstring(loan_area.find_element_by_tag_name("dd").text)
     cash_amount = Price.fromstring(cash_area.find_element_by_tag_name("dd").text)
     return loan_amount.amount_float, cash_amount.amount_float
+
+
+def _report_auth_error(error_message):
+    raise AuthFailure(error_message.replace("\n", " ").strip())

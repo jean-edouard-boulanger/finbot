@@ -1,8 +1,7 @@
 from price_parser import Price
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.expected_conditions import staleness_of
 from selenium.common.exceptions import StaleElementReferenceException
-from finbot.providers.support.selenium import any_of, SeleniumHelper
+from finbot.providers.support.selenium import SeleniumHelper
 from finbot.providers.errors import AuthFailure
 from finbot.core.utils import swallow_exc
 from finbot import providers
@@ -51,7 +50,8 @@ class Api(providers.SeleniumBased):
                         "description": {
                             "id": entry["SubAccountId"].strip(),
                             "name": entry["PreferredName"].strip(),
-                            "iso_currency": "GBP"
+                            "iso_currency": "GBP",
+                            "type": "investment"
                         },
                         "hierarchy_id": entry["HierarchyId"],
                         "date_created": entry["DateCreated"],
@@ -67,13 +67,8 @@ class Api(providers.SeleniumBased):
         password_input.send_keys(credentials.password)
         auth_form.find_element_by_css_selector("div.submit button").click()
 
-        self._do.wait_cond(any_of(
-            staleness_of(auth_form),
-            lambda _: _get_login_error(auth_form)))
-
-        error_message = _get_login_error(auth_form)
-        if error_message:
-            raise AuthFailure(error_message)
+        self._do.assert_success(_is_logged_in, lambda _: _get_login_error(auth_form),
+                                _report_auth_error)
 
         self.home_url = self.browser.current_url
         self.account_data = extract_accounts(json.loads(
@@ -184,7 +179,7 @@ class _StalenessDetector(object):
 def _extract_cash_asset(product_row):
     amount_str = product_row.find_elements_by_tag_name("td")[5].text.strip()
     return {
-        "name": "cash",
+        "name": "Cash",
         "type": "currency",
         "value": Price.fromstring(amount_str).amount_float,
     }
@@ -247,6 +242,13 @@ def _extract_asset(product_type, product_row):
 @swallow_exc(StaleElementReferenceException)
 def _get_login_error(auth_form):
     error_area = auth_form.find_elements_by_class_name("error-message")
-    if len(error_area) < 1 or not error_area[0].is_displayed():
-        return None
-    return error_area[0].text.strip()
+    if error_area and error_area[0].is_displayed():
+        return error_area[0].text.strip()
+
+
+def _report_auth_error(error_message):
+    raise AuthFailure(error_message.replace("\n", " ").strip())
+
+
+def _is_logged_in(do: SeleniumHelper):
+    return do.find_maybe(By.CSS_SELECTOR, "section.portfolio-header") is not None
