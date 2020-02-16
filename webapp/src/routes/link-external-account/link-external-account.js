@@ -14,26 +14,20 @@ const LinkExternalAccount = () => {
 
         schema ?
 
-            loading.current ?
-
-                <SpinnerButton message={loading.message} />
-
-                :
-
-                <>
-                    <div style={{ height: "100%", display: "flex", justifyContent: "center", alignItems: "center", padding: "85px 25px 455px" }}>
-                        <Form
-                            className="border border-secondary p-4 text-center opaque-background sign-form"
-                            schema={schema.json_schema || {}}
-                            uiSchema={schema.ui_schema || {}}
-                            onSubmit={_validateCredentials}
-                            showErrorList={false} >
-                            <div>
-                                <Button className="bg-dark" type="submit">Authenticate</Button>
-                            </div>
-                        </Form>
-                    </div>
-                </>
+            <>
+                <div style={{ height: "100%", display: "flex", justifyContent: "center", alignItems: "center", padding: "85px 25px 455px" }}>
+                    <Form
+                        className="border border-secondary p-4 text-center opaque-background sign-form"
+                        schema={schema.json_schema || {}}
+                        uiSchema={schema.ui_schema || {}}
+                        onSubmit={_validateCredentials}
+                        showErrorList={false} >
+                        <div>
+                            {loading.current ? <SpinnerButton message={loading.message} /> : <Button className="bg-dark" type="submit">Link Account</Button>}
+                        </div>
+                    </Form>
+                </div>
+            </>
 
             :
 
