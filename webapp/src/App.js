@@ -14,7 +14,7 @@ import LinkedAccountState from "./context/linked-account-state";
 import Home from "./routes/main-dashboard";
 import Navbar from "./components/navigation";
 import Auth from "./routes/auth";
-import LinkedAccount from "./routes/link-external-account";
+import LinkedAccounts from "./routes/link-external-account";
 
 toast.configure({
   delay: 500,
@@ -31,7 +31,7 @@ const App = () => {
           <Switch>
             <Route exact path="/" render={() => <Home />} />
             <Route path="/auth" render={() => <Auth />} />
-            <Route path="/linked-account" render={() => <LinkedAccount />} />
+            <Route path="/linked-account" render={() => <LinkedAccounts />} />
             {/* <Route component={Error}/> */}
           </Switch>
         </BrowserRouter>

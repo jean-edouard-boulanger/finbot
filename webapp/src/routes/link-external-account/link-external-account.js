@@ -3,9 +3,9 @@ import React, { useContext } from "react";
 import Form from "react-jsonschema-form";
 import Button from "react-bootstrap/Button";
 import ProvidersContext from "../../context/linked-account-context";
-import SpinnerButton from "./spinnerbutton"
+import SpinnerButton from "./spinner-button"
 
-const Schema = () => {
+const LinkExternalAccount = () => {
 
     const providersContext = useContext(ProvidersContext);
     const { schema, _validateCredentials, loading } = providersContext;
@@ -41,4 +41,4 @@ const Schema = () => {
     )
 }
 
-export default Schema;
+export default LinkExternalAccount;

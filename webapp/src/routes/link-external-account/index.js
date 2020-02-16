@@ -4,9 +4,9 @@ import { withRouter } from "react-router";
 import { toast } from 'react-toastify';
 
 import LinkedAccountContext from "../../context/linked-account-context";
-import Schema from "./link-external-account";
+import LinkExternalAccount from "./link-external-account";
 
-const LinkedAccount = props => {
+const LinkedAccounts = props => {
 
     const linkedAccountContext = useContext(LinkedAccountContext);
     const { _clearErrors, error, accountIsLinked } = linkedAccountContext
@@ -18,7 +18,7 @@ const LinkedAccount = props => {
             });
             _clearErrors();
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [error])
 
     useEffect(() => {
@@ -27,7 +27,7 @@ const LinkedAccount = props => {
             });
             props.history.push("/")
         }
-     // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [accountIsLinked])
 
     return (
@@ -36,7 +36,7 @@ const LinkedAccount = props => {
                 exact
                 path="/linked-account/create"
                 render={() => (
-                    <Schema
+                    <LinkExternalAccount
                     />
                 )}
             />
@@ -54,6 +54,5 @@ const LinkedAccount = props => {
 
 
 
-export default withRouter(LinkedAccount);
-// import { LinkExternalAccount } from './link-external-account'
+export default withRouter(LinkedAccounts);
 // export default LinkExternalAccount;
