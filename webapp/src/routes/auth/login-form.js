@@ -1,5 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
+import StyledAuthContainer from "./styled";
 import Form from "react-jsonschema-form";
 import Button from "react-bootstrap/Button";
 
@@ -40,7 +41,7 @@ const LoginForm = props => {
     }
 
     return (
-        <div style={{ height: "100%", display: "flex", justifyContent: "center", alignItems: "center", padding: "115px 25px 455px" }}>
+        <StyledAuthContainer>
             <Form
                 className="border border-secondary p-4 text-center opaque-background sign-form"
                 schema={schema}
@@ -51,7 +52,7 @@ const LoginForm = props => {
                     <Button className="bg-dark col-md-6" type="submit">Log In</Button>
                 </div>
             </Form>
-        </div>
+        </StyledAuthContainer>
     )
 }
 

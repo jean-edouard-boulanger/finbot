@@ -112,7 +112,7 @@ class MainDashboard extends React.Component {
         const valuationIsLoaded = valuation !== null && valuation.change !== null
 
         return (
-            <div style={{ padding: "25px 30px 200px" }}>
+            <div className="main-wrapper">
                 <Container>
                     <Row>
                         <Col md={4} className="mt-3">

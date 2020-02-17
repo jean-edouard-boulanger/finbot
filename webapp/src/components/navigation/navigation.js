@@ -33,7 +33,7 @@ const Navigation = props => {
     }
 
     return (
-        <NavBar collapseOnSelect expand="md" bg="dark" variant="dark">
+        <NavBar className="box-shadow" collapseOnSelect expand="md" bg="dark" variant="dark">
             <NavLink className="px-5 navbar-brand" to="/">Finbot</NavLink>
             <Navbar.Toggle aria-controls="responsive-navbar-nav" />
 

@@ -1,9 +1,18 @@
 import React, { useContext } from "react";
+import styled from 'styled-components';
 
 import Form from "react-jsonschema-form";
 import Button from "react-bootstrap/Button";
 import ProvidersContext from "../../context/linked-account-context";
 import SpinnerButton from "./spinner-button"
+
+const StyledContainer = styled.div`
+height: 100%;
+display: flex;
+justify-content: center;
+alignItems: center;
+padding: 85px 25px 455px;
+`
 
 const LinkExternalAccount = () => {
 
@@ -15,7 +24,7 @@ const LinkExternalAccount = () => {
         schema ?
 
             <>
-                <div style={{ height: "100%", display: "flex", justifyContent: "center", alignItems: "center", padding: "85px 25px 455px" }}>
+                <StyledContainer>
                     <Form
                         className="border border-secondary p-4 text-center opaque-background sign-form"
                         schema={schema.json_schema || {}}
@@ -26,7 +35,7 @@ const LinkExternalAccount = () => {
                             {loading.current ? <SpinnerButton message={loading.message} /> : <Button className="bg-dark" type="submit">Link Account</Button>}
                         </div>
                     </Form>
-                </div>
+                </StyledContainer>
             </>
 
             :
