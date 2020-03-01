@@ -443,7 +443,8 @@ def get_linked_account_sub_accounts(user_account_id, linked_account_id):
                 "account": {
                     "id": entry.sub_account_id,
                     "iso_currency": entry.sub_account_ccy,
-                    "description": entry.sub_account_description
+                    "description": entry.sub_account_description,
+                    "type": entry.sub_account_type
                 },
                 "valuation": {
                     "value": entry.valuation,
