@@ -96,6 +96,10 @@ build-finbotwsrv-docker:
 build-providers-tester-docker: build-finbotwsrv-docker
 	docker build -t finbot/providers-tester:latest -f tester.Dockerfile .
 
+trigger-valuation-docker:
+	docker-compose run schedsrv \
+		make trigger-valuation accounts=${accounts}
+
 trigger-valuation:
 	python3.7 finbot/apps/schedsrv/schedsrv.py \
 		--mode one_shot \
