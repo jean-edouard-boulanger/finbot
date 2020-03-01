@@ -83,7 +83,7 @@ class MainDashboard extends React.Component {
             return;
         }
         let finbot_client = new FinbotClient();
-        console.log("accid", this.account_id)
+        console.log("acccccccid", this.account_id)
 
         const account_data = await finbot_client.getAccount({ account_id: this.account_id });
         const linked_accounts = await finbot_client.getLinkedAccounts({ account_id: this.account_id });

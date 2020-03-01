@@ -9,14 +9,14 @@ import LinkExternalAccount from "./link-external-account";
 const LinkedAccounts = props => {
 
     const linkedAccountContext = useContext(LinkedAccountContext);
-    const { _clearErrors, error, accountIsLinked } = linkedAccountContext
+    const { _clearToast, error, accountIsLinked } = linkedAccountContext
 
     useEffect(() => {
         if (error) {
             toast.error(error, {
                 // className: 'foo-bar'
             });
-            _clearErrors();
+            _clearToast();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [error])
@@ -25,6 +25,7 @@ const LinkedAccounts = props => {
         if (accountIsLinked) {
             toast.success("Account was linked successfully!", {
             });
+            _clearToast();
             props.history.push("/")
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps

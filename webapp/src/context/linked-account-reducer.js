@@ -6,7 +6,7 @@ import {
     LINKING_ACCOUNT_SUCCESS,
     SET_LOADING,
     VALIDATION_SUCCESS,
-    CLEAR_ERRORS,
+    CLEAR_TOAST,
 } from './types';
 
 export default (state, action) => {
@@ -47,10 +47,11 @@ export default (state, action) => {
                 ...state,
                 loading: { current: true, message: action.payload }
             }
-        case CLEAR_ERRORS:
+        case CLEAR_TOAST:
             return {
                 ...state,
-                error: null
+                error: null,
+                accountIsLinked: false
             };
         default:
             return state;
