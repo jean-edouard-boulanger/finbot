@@ -11,7 +11,7 @@ from sqlalchemy import create_engine, desc, asc
 from sqlalchemy.orm import scoped_session, sessionmaker, joinedload, contains_eager
 from sqlalchemy.exc import IntegrityError
 from finbot.clients.finbot import FinbotClient
-from finbot.apps.appwsrv import timeseries
+from finbot.apps.appwsrv import timeseries, repository
 from finbot.apps.support import request_handler, Route, ApplicationError
 from finbot.core.utils import serialize
 from finbot.core import crypto
@@ -23,6 +23,7 @@ from finbot.model import (
     LinkedAccount,
     UserAccountHistoryEntry,
     LinkedAccountValuationHistoryEntry,
+    SubAccountValuationHistoryEntry,
 )
 import logging.config
 import logging
@@ -289,27 +290,16 @@ def get_user_account_valuation_history(user_account_id):
 @app.route(ACCOUNT.linked_accounts._, methods=["GET"])
 @request_handler()
 def get_linked_accounts_valuation(user_account_id):
-    result = (db_session.query(UserAccountHistoryEntry)
-                        .filter_by(user_account_id=user_account_id)
-                        .filter_by(available=True)
-                        .order_by(desc(UserAccountHistoryEntry.effective_at))
-                        .options(joinedload(UserAccountHistoryEntry.linked_accounts_valuation_history_entries))
-                        .options(
-                            joinedload(
-                                UserAccountHistoryEntry.linked_accounts_valuation_history_entries,
-                                LinkedAccountValuationHistoryEntry.valuation_change)
-                        )
-                        .options(
-                            joinedload(
-                                UserAccountHistoryEntry.linked_accounts_valuation_history_entries,
-                                LinkedAccountValuationHistoryEntry.linked_account)
-                        )
-                        .options(
-                            joinedload(
-                                UserAccountHistoryEntry.linked_accounts_valuation_history_entries,
-                                LinkedAccountValuationHistoryEntry.effective_snapshot)
-                        )
-                        .first())
+    history_entry = repository.find_last_user_account_history_entry(db_session, user_account_id)
+    if not history_entry:
+        raise ApplicationError(f"No valuation available for user account '{user_account_id}'")
+
+    results = (db_session.query(LinkedAccountValuationHistoryEntry)
+                         .filter_by(history_entry_id=history_entry.id)
+                         .options(joinedload(LinkedAccountValuationHistoryEntry.valuation_change))
+                         .options(joinedload(LinkedAccountValuationHistoryEntry.linked_account))
+                         .options(joinedload(LinkedAccountValuationHistoryEntry.effective_snapshot))
+                         .all())
 
     return jsonify(serialize({
         "linked_accounts": [
@@ -321,15 +311,14 @@ def get_linked_accounts_valuation(user_account_id):
                 },
                 "valuation": {
                     "date": (entry.effective_snapshot.effective_at 
-                                if entry.effective_snapshot 
-                                else result.effective_at),
-                    "currency": result.valuation_ccy,
+                             if entry.effective_snapshot
+                             else history_entry.effective_at),
+                    "currency": history_entry.valuation_ccy,
                     "value": entry.valuation,
                     "change": entry.valuation_change
                 }
             }
-            for entry in (result.linked_accounts_valuation_history_entries
-                          if result else [])
+            for entry in results
         ]
     }))
 
@@ -433,3 +422,36 @@ def get_linked_account_historical_valuation(user_account_id, linked_account_id):
                     "value": entry.valuation
                 })
     return jsonify(serialize(output_entries))
+
+
+@app.route(LINKED_ACCOUNT.sub_accounts._, methods=["GET"])
+@request_handler()
+def get_linked_account_sub_accounts(user_account_id, linked_account_id):
+    history_entry = repository.find_last_user_account_history_entry(db_session, user_account_id)
+    if not history_entry:
+        raise ApplicationError(f"No valuation available for user account '{user_account_id}'")
+    linked_account_id = int(linked_account_id)
+    results = (db_session.query(SubAccountValuationHistoryEntry)
+                         .filter_by(history_entry_id=history_entry.id)
+                         .filter_by(linked_account_id=linked_account_id)
+                         .options(joinedload(SubAccountValuationHistoryEntry.valuation_change))
+                         .all())
+
+    return jsonify(serialize({
+        "sub_accounts": [
+            {
+                "account": {
+                    "id": entry.sub_account_id,
+                    "iso_currency": entry.sub_account_ccy,
+                    "description": entry.sub_account_description
+                },
+                "valuation": {
+                    "value": entry.valuation,
+                    "total_liabilities": entry.total_liabilities,
+                    "value_account_ccy": entry.valuation_sub_account_ccy,
+                    "change": entry.valuation_change
+                }
+            }
+            for entry in results
+        ]
+    }))
