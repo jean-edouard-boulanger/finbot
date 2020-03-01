@@ -31,11 +31,11 @@ const HoldingsTable = props => {
                                 <tr>
                                     <th>Account Name</th>
                                     <th>Value</th>
-                                    <th>Hour</th>
-                                    <th>Day</th>
-                                    <th>Week</th>
-                                    <th>Month</th>
-                                    <th>Year</th>
+                                    <th>1D</th>
+                                    <th>1W</th>
+                                    <th>1M</th>
+                                    <th>1Y</th>
+                                    <th>2Y</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -53,11 +53,11 @@ const HoldingsTable = props => {
                                                     </h6>
                                                 </td>
                                                 <td><Money amount={valuation.value} locale={locale} ccy={ccy} moneyFormatter={moneyFormatter} /></td>
-                                                <td> {change ? <ValuationChange amount={change.change_1hour} /> : "-"}</td>
                                                 <td> {change ? <ValuationChange amount={change.change_1day} /> : "-"}</td>
                                                 <td> {change ? <ValuationChange amount={change.change_1week} /> : "-"}</td>
                                                 <td> {change ? <ValuationChange amount={change.change_1month} /> : "-"}</td>
                                                 <td> {change ? <ValuationChange amount={change.change_1year} /> : "-"}</td>
+                                                <td> {change ? <ValuationChange amount={change.change_2years} /> : "-"}</td>
                                             </tr>
                                         )
                                     })
@@ -68,11 +68,11 @@ const HoldingsTable = props => {
                                     <tr>
                                         <th>Totals</th>
                                         <th><Money amount={valuation.value} locale={locale} ccy={valuation.currency} moneyFormatter={moneyFormatter} /></th>
-                                        <th>{valuationIsLoaded ? <ValuationChange amount={valuation.change.change_1hour} /> : "-"}</th>
                                         <th>{valuationIsLoaded ? <ValuationChange amount={valuation.change.change_1day} /> : "-"}</th>
                                         <th>{valuationIsLoaded ? <ValuationChange amount={valuation.change.change_1week} /> : "-"}</th>
                                         <th>{valuationIsLoaded ? <ValuationChange amount={valuation.change.change_1month} /> : "-"}</th>
                                         <th>{valuationIsLoaded ? <ValuationChange amount={valuation.change.change_1year} /> : "-"}</th>
+                                        <th>{valuationIsLoaded ? <ValuationChange amount={valuation.change.change_2years} /> : "-"}</th>
                                     </tr>
                                 </tfoot>
                             }
