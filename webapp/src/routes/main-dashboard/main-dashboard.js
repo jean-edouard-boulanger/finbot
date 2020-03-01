@@ -158,8 +158,8 @@ class MainDashboard extends React.Component {
                             </Card>
                         </Col>
                     </Row>
-                    <Row className="mt-3">
-                        <Col>
+                    <Row>
+                        <Col lg={6} md={12} sm={12} xs={12} className="mt-3">
                             <Card>
                                 <Card.Header>Historical Valuation</Card.Header>
                                 <Card.Body>
@@ -229,9 +229,7 @@ class MainDashboard extends React.Component {
                                 </Card.Body>
                             </Card>
                         </Col>
-                    </Row>
-                    <Row className="mt-3">
-                        <Col>
+                        <Col lg={6} md={12} sm={12} xs={12} className="mt-3">
                             <Card>
                                 <Card.Header>Wealth Distribution</Card.Header>
                                 <Card.Body>
