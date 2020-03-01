@@ -11,7 +11,7 @@ export FINBOT_DB_URL := postgresql+psycopg2://${FINBOT_DB_USER}:${FINBOT_DB_PASS
 export FINBOT_FINBOTWSRV_ENDPOINT ?= http://127.0.0.1:5001
 export FINBOT_SNAPWSRV_ENDPOINT ?= http://127.0.0.1:5000
 export FINBOT_HISTWSRV_ENDPOINT ?= http://127.0.0.1:5002
-export FINBOT_EDIT_CMD ?= vim
+export FINBOT_EDIT_CMD ?= code --wait
 
 info:
 	$(info PYTHONPATH=${PYTHONPATH})
@@ -95,6 +95,11 @@ build-finbotwsrv-docker:
 
 build-providers-tester-docker: build-finbotwsrv-docker
 	docker build -t finbot/providers-tester:latest -f tester.Dockerfile .
+
+trigger-valuation:
+	python3.7 finbot/apps/schedsrv/schedsrv.py \
+		--mode one_shot \
+		--accounts ${accounts}
 
 test-providers-docker:
 	docker run \
