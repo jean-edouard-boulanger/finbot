@@ -4,6 +4,7 @@ import Form from "react-jsonschema-form";
 import Button from "react-bootstrap/Button";
 import StyledAuthContainer from "./styled";
 
+
 const SignupForm = props => {
 
     const schema = {

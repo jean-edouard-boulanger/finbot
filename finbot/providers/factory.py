@@ -1,6 +1,7 @@
 from finbot.providers import (
     amex_us,
     binance_us,
+    hl_uk,
     credit_agricole_fr,
     vanguard_uk,
     october_fr,
@@ -40,6 +41,10 @@ get_provider.providers = {
     "ca_fr": Provider(
         description="Credit agricole (FR)",
         api_module=credit_agricole_fr
+    ),
+    "hl_uk": Provider(
+        description="Hargreaves Lansdown (UK)",
+        api_module=hl_uk
     ),
     "vanguard_uk": Provider(
         description="Vanguard (UK)",
