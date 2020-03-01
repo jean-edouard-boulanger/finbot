@@ -14,6 +14,7 @@ class ReportRepository(object):
                    sase.sub_account_id AS sub_account_id,
                    sase.sub_account_ccy AS sub_account_ccy,
                    sase.sub_account_description AS sub_account_description,
+                   sase.sub_account_type AS sub_account_type,
                    sais.sub_account_snapshot_entry_id AS sub_account_snapshot_entry_id,
                    sais.id AS sub_account_item_snapshot_entry_id,
                    sais.name AS item_name,

@@ -62,7 +62,8 @@ def get_sub_accounts_valuation(data: pd.DataFrame):
         "linked_account_id", 
         "sub_account_id",
         "sub_account_ccy",
-        "sub_account_description"
+        "sub_account_description",
+        "sub_account_type"
     ]
     data = (data.groupby(groups)
                 .agg({
@@ -165,13 +166,15 @@ def write_history(snapshot_id):
                 sub_account_id=sub_account_id,
                 sub_account_ccy=sub_account_ccy,
                 sub_account_description=sub_account_description,
+                sub_account_type=sub_account_type,
                 valuation=snapshot_valuation,
                 valuation_sub_account_ccy=account_valuation
             )
             for (linked_account_id, 
                  sub_account_id, 
                  sub_account_ccy, 
-                 sub_account_description), 
+                 sub_account_description,
+                 sub_account_type),
                 (snapshot_valuation, account_valuation)
             in sub_accounts_valuation.items()
         ])

@@ -162,6 +162,7 @@ class SubAccountSnapshotEntry(Base):
     sub_account_id = Column(String(32), nullable=False)
     sub_account_ccy = Column(String(3), nullable=False)
     sub_account_description = Column(String(256), nullable=False)
+    sub_account_type = Column(String(32), nullable=False)
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
@@ -300,6 +301,7 @@ class SubAccountValuationHistoryEntry(Base):
     sub_account_id = Column(String(32), primary_key=True)
     sub_account_ccy = Column(String(3), nullable=False)
     sub_account_description = Column(String(256), nullable=False)
+    sub_account_type = Column(String(32), nullable=False)
     valuation = Column(Numeric, nullable=False)
     total_liabilities = Column(Numeric, nullable=False, server_default="0.0")
     valuation_sub_account_ccy = Column(Numeric, nullable=False)
