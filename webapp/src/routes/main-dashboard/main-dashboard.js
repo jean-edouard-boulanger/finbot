@@ -158,8 +158,8 @@ class MainDashboard extends React.Component {
                             </Card>
                         </Col>
                     </Row>
-                    <Row className="mt-3">
-                        <Col>
+                    <Row>
+                        <Col lg={6} md={12} sm={12} xs={12} className="mt-3">
                             <Card>
                                 <Card.Header>Historical Valuation</Card.Header>
                                 <Card.Body>
@@ -229,9 +229,7 @@ class MainDashboard extends React.Component {
                                 </Card.Body>
                             </Card>
                         </Col>
-                    </Row>
-                    <Row className="mt-3">
-                        <Col>
+                        <Col lg={6} md={12} sm={12} xs={12} className="mt-3">
                             <Card>
                                 <Card.Header>Wealth Distribution</Card.Header>
                                 <Card.Body>
@@ -251,7 +249,13 @@ class MainDashboard extends React.Component {
                                             tooltip: {
                                                 y: {
                                                     formatter: (value) => {
-                                                        return moneyFormatter(value, locale, valuation.currency);
+                                                        const amount_str = moneyFormatter(value, locale, valuation.currency);
+                                                        return `<span class="text-white">${amount_str}</span>`;
+                                                    },
+                                                    title: {
+                                                        formatter: (seriesName) => {
+                                                            return `<strong><span class="text-white">${seriesName}</span></strong>`;
+                                                        }
                                                     }
                                                 }
                                             },
