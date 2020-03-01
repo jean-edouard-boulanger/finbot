@@ -15,10 +15,13 @@ body {
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
-
   -moz-osx-font-smoothing: grayscale;
   /* width : 100%;
   height: 100vh; */
+}
+
+.main-wrapper {
+  padding: 25px 30px 200px;
 }
 
 .opaque-background {
@@ -29,6 +32,10 @@ body {
 
 .sign-form {
   width: 420px;
+}
+
+.box-shadow {
+  box-shadow: 0 3px 10px rgba(51, 50, 47, 0.5);
 }
 
 code {

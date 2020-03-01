@@ -83,7 +83,7 @@ class MainDashboard extends React.Component {
             return;
         }
         let finbot_client = new FinbotClient();
-        console.log("accid", this.account_id)
+        console.log("acccccccid", this.account_id)
 
         const account_data = await finbot_client.getAccount({ account_id: this.account_id });
         const linked_accounts = await finbot_client.getLinkedAccounts({ account_id: this.account_id });
@@ -112,7 +112,7 @@ class MainDashboard extends React.Component {
         const valuationIsLoaded = valuation !== null && valuation.change !== null
 
         return (
-            <div style={{ padding: "25px 30px 200px" }}>
+            <div className="main-wrapper">
                 <Container>
                     <Row>
                         <Col md={4} className="mt-3">

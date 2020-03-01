@@ -27,7 +27,7 @@ const App = () => {
       <LinkedAccountState>
         <BrowserRouter>
           <ToastContainer autoClose={7000} transition={Slide} position="bottom-right" />
-          <Navbar style={{ boxShadow: "0 3px 10px rgba(51, 50, 47, 0.5)" }} />
+          <Navbar />
           <Switch>
             <Route exact path="/" render={() => <Home />} />
             <Route path="/auth" render={() => <Auth />} />

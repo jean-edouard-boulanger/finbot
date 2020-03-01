@@ -5,6 +5,7 @@ export const LOGIN_SUCCESS = 'LOGIN_SUCCESS';
 export const LOGIN_FAIL = 'LOGIN_FAIL';
 export const LOGOUT = 'LOGOUT';
 export const CLEAR_ERRORS = 'CLEAR_ERRORS';
+export const CLEAR_TOAST = 'CLEAR_TOAST';
 
 export const SET_SCHEMA = 'SET_SCHEMA';
 export const SET_SELECTED_PROVIDER = 'SET_SELECTED_PROVIDER';

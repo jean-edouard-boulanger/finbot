@@ -2,6 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import Form from "react-jsonschema-form";
 import Button from "react-bootstrap/Button";
+import StyledAuthContainer from "./styled";
 
 
 const SignupForm = props => {
@@ -73,7 +74,7 @@ const SignupForm = props => {
     }
 
     return (
-        <div style={{ height: "100%", display: "flex", justifyContent: "center", alignItems: "center", padding: "115px 25px 455px" }}>
+        <StyledAuthContainer>
             <Form
                 className="border border-secondary p-4 text-center opaque-background sign-form"
                 schema={schema}
@@ -85,7 +86,7 @@ const SignupForm = props => {
                     <Button className="bg-dark col-md-6 m-1" type="button">Log In</Button>
                 </div>
             </Form>
-        </div>
+        </StyledAuthContainer>
     )
 }
 

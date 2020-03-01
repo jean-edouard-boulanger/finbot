@@ -1,14 +1,13 @@
 import React from "react";
 import PropTypes from "prop-types";
+import Button from "react-bootstrap/Button";
 
 const SpinnerButton = props => {
     return (
-        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)" }}>
-            <button className="btn text-center d-flex justify-content-center" type="button">
-                <span className="spinner-border spinner-border-sm mr-3" role="status" aria-hidden="true"></span>
-                {props.message}
-            </button>
-        </div>
+        <Button className="bg-dark" type="button" disabled>
+            <span className="spinner-border spinner-border-sm mr-3" role="status" aria-hidden="true"></span>
+            {props.message}
+        </Button>
     )
 }
 

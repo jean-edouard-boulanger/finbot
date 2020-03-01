@@ -10,7 +10,7 @@ import {
     LINKING_ACCOUNT_SUCCESS,
     SET_LOADING,
     VALIDATION_SUCCESS,
-    CLEAR_ERRORS,
+    CLEAR_TOAST,
 } from "./types"
 
 
@@ -72,7 +72,7 @@ const LinkedAccountState = props => {
 
     }
 
-    function _clearErrors() { dispatch({ type: CLEAR_ERRORS }) };
+    function _clearToast() { dispatch({ type: CLEAR_TOAST }) };
 
     async function _validateCredentials(input) {
         const params = {
@@ -107,7 +107,7 @@ const LinkedAccountState = props => {
                 _retrieveSchema,
                 _getCurrentProvider,
                 _validateCredentials,
-                _clearErrors
+                _clearToast
             }}>
             {props.children}
         </ProvidersContext.Provider>
