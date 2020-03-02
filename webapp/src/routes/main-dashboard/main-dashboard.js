@@ -249,7 +249,13 @@ class MainDashboard extends React.Component {
                                             tooltip: {
                                                 y: {
                                                     formatter: (value) => {
-                                                        return moneyFormatter(value, locale, valuation.currency);
+                                                        const amount_str = moneyFormatter(value, locale, valuation.currency);
+                                                        return `<span class="text-white">${amount_str}</span>`;
+                                                    },
+                                                    title: {
+                                                        formatter: (seriesName) => {
+                                                            return `<strong><span class="text-white">${seriesName}</span></strong>`;
+                                                        }
                                                     }
                                                 }
                                             },
