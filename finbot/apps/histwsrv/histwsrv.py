@@ -1,3 +1,4 @@
+from typing import Dict
 from flask import Flask, jsonify
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -42,15 +43,15 @@ db_session = dbutils.add_persist_utilities(scoped_session(sessionmaker(bind=db_e
 app = Flask(__name__)
 
 
-def get_user_account_valuation(data: pd.DataFrame):
+def get_user_account_valuation(data: pd.DataFrame) -> float:
     return data["value_snapshot_ccy"].sum()
 
 
-def get_user_account_liabilities(data: pd.DataFrame):
+def get_user_account_liabilities(data: pd.DataFrame) -> float:
     return data.loc[data["value_snapshot_ccy"] < 0, "value_snapshot_ccy"].sum()
 
 
-def get_linked_accounts_valuation(data: pd.DataFrame):
+def get_linked_accounts_valuation(data: pd.DataFrame) -> Dict:
     groups = ["linked_account_id", "snapshot_id"]
     return (data.groupby(groups)["value_snapshot_ccy"]
                 .sum()

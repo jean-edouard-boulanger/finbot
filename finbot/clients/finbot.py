@@ -1,3 +1,4 @@
+from typing import Dict, List
 from enum import Enum
 import json
 import requests
@@ -18,14 +19,17 @@ class Error(RuntimeError):
 
 
 class FinbotClient(object):
-    def __init__(self, server_endpoint):
+    def __init__(self, server_endpoint: str):
         self.server_endpoint = server_endpoint
 
-    def get_providers(self):
+    def get_providers(self) -> Dict:
         endpoint = f"{self.server_endpoint}/providers"
         return json.loads(requests.get(endpoint).content)
 
-    def get_financial_data(self, provider, credentials_data, line_items):
+    def get_financial_data(self,
+                           provider: str,
+                           credentials_data: Dict,
+                           line_items: List[LineItem]) -> Dict:
         endpoint = f"{self.server_endpoint}/financial_data"
         response = requests.post(endpoint, json={
             "provider": provider,

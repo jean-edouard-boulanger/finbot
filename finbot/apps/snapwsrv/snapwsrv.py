@@ -5,7 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker, joinedload
 from copy import deepcopy
 from finbot.clients.finbot import FinbotClient, LineItem
-from finbot.core import crypto, utils, dbutils, fx
+from finbot.core import secure, utils, dbutils, fx_market
 from finbot.apps.support import request_handler, make_error
 from finbot.model import (
     UserAccount,
@@ -257,7 +257,7 @@ def take_raw_snapshot(user_account):
                 account_id=linked_account.id,
                 provider_id=linked_account.provider_id,
                 credentials_data=json.loads(
-                    crypto.fernet_decrypt(
+                    secure.fernet_decrypt(
                         linked_account.encrypted_credentials.encode(),
                         secret).decode()),
                 line_items=[
@@ -321,7 +321,7 @@ def take_snapshot(user_account_id):
                  f"{', '.join(str(xccy) for xccy in xccy_collector.xccys)}")
 
     xccy_rates = {
-        xccy: fx.get_xccy_rate(xccy.domestic, xccy.foreign)
+        xccy: fx_market.get_xccy_rate(xccy.domestic, xccy.foreign)
         for xccy in xccy_collector.xccys
     }
 

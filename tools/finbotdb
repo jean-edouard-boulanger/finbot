@@ -61,7 +61,7 @@ def general_real_historical_valuation(history_file_path,
                 row["account_id"],
                 float(row["amount"]),
                 row["ccy"],
-                float(row["amount"]) * fx.get_xccy_rate_cached(row["ccy"], valuation_ccy, valuation_date),
+                float(row["amount"]) * fx.get_xccy_rate(row["ccy"], valuation_ccy, valuation_date),
                 valuation_ccy
             ])
 
@@ -227,12 +227,12 @@ def handle_fake_data_source(user_account: UserAccount,
 
 
 def add_account_tool(settings, engine, session):
-    from finbot.core import crypto
+    from finbot.core import secure
 
     with open(settings.secret) as kf:
         secret = kf.read()
         with open(settings.account, "rb") as af:
-            account_data = json.loads(crypto.fernet_decrypt(af.read(), secret))
+            account_data = json.loads(secure.fernet_decrypt(af.read(), secret))
 
     # 1. find all available providers
 
@@ -245,7 +245,7 @@ def add_account_tool(settings, engine, session):
     user_account_data = account_data["user_account"]
     new_account = UserAccount(
         email=user_account_data["email"],
-        encrypted_password=crypto.fernet_encrypt(
+        encrypted_password=secure.fernet_encrypt(
             user_account_data["password"].encode(), secret).decode(),
         full_name=user_account_data["full_name"],
         settings=UserAccountSettings(
@@ -255,7 +255,7 @@ def add_account_tool(settings, engine, session):
             LinkedAccount(
                 provider=all_providers[linked_account["provider_id"]],
                 account_name=linked_account["description"],
-                encrypted_credentials=crypto.fernet_encrypt(
+                encrypted_credentials=secure.fernet_encrypt(
                     json.dumps(linked_account["credentials"]).encode(), secret).decode()
             )
             for linked_account in account_data["linked_accounts"]
@@ -280,7 +280,7 @@ def add_account_tool(settings, engine, session):
 
 
 def dump_account_tool(settings, engine, session):
-    from finbot.core import crypto
+    from finbot.core import secure
     account = session.query(UserAccount).filter_by(id=settings.account_id).first()
     if not account:
         logging.info(f"no such account: {settings.account_id}")
@@ -290,7 +290,7 @@ def dump_account_tool(settings, engine, session):
         secret = kf.read()
 
     def decrypt(data):
-        return crypto.fernet_decrypt(data.encode(), secret.encode()).decode()
+        return secure.fernet_decrypt(data.encode(), secret.encode()).decode()
 
     print(pretty_dump({
         "user_account": {

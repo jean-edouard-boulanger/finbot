@@ -1,3 +1,4 @@
+from datetime import datetime
 from finbot.core.dbutils import JSONEncoded, DateTimeTz
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -118,7 +119,7 @@ class UserAccountSnapshot(Base):
         back_populates="snapshot")
 
     @property
-    def effective_at(self):
+    def effective_at(self) -> datetime:
         return self.end_time
 
 
@@ -266,7 +267,7 @@ class UserAccountValuationHistoryEntry(Base):
         back_populates="user_account_valuation_history_entry")
 
     @property
-    def total_assets(self):
+    def total_assets(self) -> float:
         return self.valuation - self.total_liabilities
 
 
@@ -290,7 +291,7 @@ class LinkedAccountValuationHistoryEntry(Base):
         back_populates="linked_accounts_valuation_history_entries")
 
     @property
-    def total_assets(self):
+    def total_assets(self) -> float:
         return self.valuation - self.total_liabilities
 
 
@@ -320,7 +321,7 @@ class SubAccountValuationHistoryEntry(Base):
         back_populates="sub_account_valuation_history_entry")
 
     @property
-    def total_assets(self):
+    def total_assets(self) -> float:
         return self.valuation - self.total_liabilities
 
 

@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, request
 from contextlib import closing
+from finbot import providers
 from finbot.providers.factory import get_provider
 from finbot.providers.errors import AuthFailure
 from finbot.apps.support import (
@@ -36,7 +37,7 @@ def format_stacktrace():
     return stackprinter.format(style='darkbg3', show_vals=None)
 
 
-def balances_handler(provider_api):
+def balances_handler(provider_api: providers.Base):
     return [
         {
             "account": entry["account"],
@@ -46,7 +47,7 @@ def balances_handler(provider_api):
     ]
 
 
-def assets_handler(provider_api):
+def assets_handler(provider_api: providers.Base):
     return [
         {
             "account": entry["account"],
@@ -56,7 +57,7 @@ def assets_handler(provider_api):
     ]
 
 
-def liabilities_handler(provider_api):
+def liabilities_handler(provider_api: providers.Base):
     return [
         {
             "account": entry["account"],
@@ -66,7 +67,7 @@ def liabilities_handler(provider_api):
     ]
 
 
-def item_handler(item_type, provider_api):
+def item_handler(item_type: str, provider_api: providers.Base):
     handler = {
         "balances": balances_handler,
         "assets": assets_handler,

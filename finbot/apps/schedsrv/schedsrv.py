@@ -29,7 +29,9 @@ logging.config.dictConfig({
 })
 
 
-def run_workflow(user_account_id, snap_client, hist_client):
+def run_workflow(user_account_id: int,
+                 snap_client: SnapClient,
+                 hist_client: HistoryClient) -> None:
     logging.info(f"starting workflow for user_id={user_account_id}")
 
     logging.info(f"will take raw snapshot")
@@ -53,7 +55,7 @@ def run_workflow(user_account_id, snap_client, hist_client):
     logging.info(f"workflow done for user_id={user_account_id}")
 
 
-def create_parser():
+def create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="valuation and reporting scheduler")
     parser.add_argument("--mode", choices={"server", "one_shot"}, type=str, default="server")
     parser.add_argument("--accounts", type=lambda v: set(int(i) for i in v.split(",")), default=None)

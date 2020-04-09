@@ -1,5 +1,5 @@
 from finbot import providers
-from finbot.providers.support import CoinGeckoWrapper
+from finbot.core.crypto_market import CoinGeckoWrapper
 from finbot.providers.errors import AuthFailure
 from pycoingecko import CoinGeckoAPI
 from bittrex.bittrex import Bittrex

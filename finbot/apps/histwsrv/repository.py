@@ -1,3 +1,5 @@
+from typing import Dict, List, Tuple
+from datetime import date
 from finbot.model import ValuationChangeEntry
 import pandas as pd
 
@@ -6,7 +8,7 @@ class ReportRepository(object):
     def __init__(self, db_session):
         self.db_session = db_session
 
-    def get_consistent_snapshot_data(self, snapshot_id):
+    def get_consistent_snapshot_data(self, snapshot_id: int) -> pd.DataFrame:
         query = """
             SELECT slas.snapshot_id AS snapshot_id,
                    sase.linked_account_snapshot_entry_id AS linked_account_snapshot_entry_id,
@@ -57,8 +59,10 @@ class ReportRepository(object):
         results = self.db_session.execute(query, {"snapshot_id": snapshot_id})
         return pd.DataFrame([dict(row) for row in results])
 
-    def get_reference_history_entry_ids(self, baseline_id, user_account_id, 
-                                        valuation_date):
+    def get_reference_history_entry_ids(self,
+                                        baseline_id: int,
+                                        user_account_id: int,
+                                        valuation_date: date) -> Dict:
         """ Return user account history entry identifiers for different 'reference'
         dates in the past (1 day, 1 month, 6 months, 1 year, 2 years)
         """
@@ -143,7 +147,8 @@ class ReportRepository(object):
         past_results["baseline_id"] = baseline_id
         return past_results
 
-    def get_user_account_valuation_change(self, reference_ids):
+    def get_user_account_valuation_change(self, reference_ids: Dict[str, int]) \
+            -> ValuationChangeEntry:
         query = """
             SELECT val.valuation - val_c1h.valuation AS change_1hour,
                    val.valuation - val_c1d.valuation AS change_1day,
@@ -172,7 +177,8 @@ class ReportRepository(object):
         row = next(self.db_session.execute(query, reference_ids))
         return ValuationChangeEntry(**dict(row))
 
-    def get_linked_accounts_valuation_change(self, reference_ids):
+    def get_linked_accounts_valuation_change(self, reference_ids: Dict[str, int]) \
+            -> Dict[int, ValuationChangeEntry]:
         query = """
             SELECT val.linked_account_id AS linked_account_id,
                    val.valuation - val_c1h.valuation AS change_1hour,
@@ -214,7 +220,8 @@ class ReportRepository(object):
                 **({k: v for k, v in row.items() if k.startswith("change_")}))
         return results
 
-    def get_sub_accounts_valuation_change(self, reference_ids):
+    def get_sub_accounts_valuation_change(self, reference_ids: Dict[str, int]) \
+            -> Dict[Tuple[int, str], ValuationChangeEntry]:
         query = """
             SELECT val.linked_account_id AS linked_account_id,
                    val.sub_account_id AS sub_account_id,
@@ -265,7 +272,8 @@ class ReportRepository(object):
                 **({k: v for k, v in row.items() if k.startswith("change_")}))
         return results
 
-    def get_sub_accounts_items_valuation_change(self, reference_ids):
+    def get_sub_accounts_items_valuation_change(self, reference_ids) -> \
+            Dict[Tuple[int, str, str, str], ValuationChangeEntry]:
         query = """
             SELECT val.linked_account_id AS linked_account_id,
                    val.sub_account_id AS sub_account_id,

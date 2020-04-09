@@ -74,7 +74,7 @@ class SeleniumHelper(object):
             for cookie in self.browser.get_cookies()
         }
 
-    def get(self, url):
+    def get(self, url) -> None:
         self.browser.get(url)
 
     def wait(self, timeout=60):

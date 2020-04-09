@@ -1,7 +1,7 @@
 from finbot import providers
 from finbot.providers.support.selenium import any_of, SeleniumHelper
 from finbot.providers.errors import AuthFailure, Error
-from finbot.core.utils import date_in_range
+from finbot.core.utils import in_range
 from selenium.webdriver.support.expected_conditions import presence_of_element_located
 from selenium.webdriver.common.by import By
 from datetime import datetime
@@ -137,7 +137,7 @@ class Api(providers.SeleniumBased):
         txn_in_scope = []
         for txn_row in txn_rows:
             txn_header = extract_transaction_header(txn_row)
-            if date_in_range(txn_header["date"], from_date, to_date):
+            if in_range(txn_header["date"], from_date, to_date):
                 txn_in_scope.append(txn_header)
 
         return [

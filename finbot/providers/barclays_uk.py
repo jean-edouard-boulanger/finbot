@@ -6,7 +6,7 @@ from selenium.webdriver.support.expected_conditions import presence_of_element_l
 from finbot import providers
 from finbot.providers.support.selenium import any_of, SeleniumHelper
 from finbot.providers.errors import AuthFailure, Error
-from finbot.core.utils import date_in_range
+from finbot.core.utils import in_range
 from datetime import datetime
 import re
 import hashlib
@@ -118,7 +118,7 @@ class Api(providers.SeleniumBased):
             cells = header_row.find_elements_by_css_selector("div.th")
             _, date_cell, desc_cell, in_cell, out_cell, bal_cell = cells
             txn_date = datetime.strptime(date_cell.text.strip(), "%a, %d %b %y")
-            if not date_in_range(txn_date, from_date, to_date):
+            if not in_range(txn_date, from_date, to_date):
                 continue
             txn_in_amount = Price.fromstring(in_cell.text.strip()).amount_float
             txn_out_amount = Price.fromstring(out_cell.text.strip()).amount_float

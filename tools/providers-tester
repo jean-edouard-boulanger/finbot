@@ -4,7 +4,7 @@ from contextlib import closing
 from multiprocessing.pool import ThreadPool
 from finbot.providers.support.selenium import DefaultBrowserFactory
 from finbot.providers.factory import get_provider
-from finbot.core import crypto, fx
+from finbot.core import secure, fx_market
 from finbot.core.utils import pretty_dump
 from datetime import datetime, timedelta
 import functools
@@ -20,7 +20,7 @@ import os
 
 @functools.lru_cache(128)
 def get_fx_rate(home_ccy, foreign_ccy):
-    return fx.get_xccy_rate(home_ccy, foreign_ccy)
+    return fx_market.get_xccy_rate(home_ccy, foreign_ccy)
 
 
 def wait_forever():
@@ -198,7 +198,7 @@ def main():
         secret = secret_file.read()
         with open(settings.accounts_file, "rb") as accounts_file:
             account_data = json.loads(
-                crypto.fernet_decrypt(accounts_file.read(), secret).decode())
+                secure.fernet_decrypt(accounts_file.read(), secret).decode())
 
     logging.info(f"selected providers: {', '.join(selected_providers)}")
 

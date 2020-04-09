@@ -1,9 +1,9 @@
-from finbot import providers
-from finbot.providers.errors import AuthFailure
-from finbot.providers.support import CoinGeckoWrapper
 from pycoingecko import CoinGeckoAPI
 from binance.client import Client as Binance
 from binance.exceptions import BinanceAPIException
+from finbot import providers
+from finbot.providers.errors import AuthFailure
+from finbot.core.crypto_market import CoinGeckoWrapper
 
 
 OWNERSHIP_UNITS_THRESHOLD = 0.00001

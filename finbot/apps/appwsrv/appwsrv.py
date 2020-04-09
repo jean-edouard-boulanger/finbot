@@ -14,7 +14,7 @@ from finbot.clients.finbot import FinbotClient
 from finbot.apps.appwsrv import timeseries, repository, core
 from finbot.apps.support import request_handler, Route, ApplicationError
 from finbot.core.utils import serialize
-from finbot.core import crypto
+from finbot.core import secure
 from finbot.core import dbutils
 from finbot.model import (
     Provider,
@@ -97,7 +97,7 @@ def auth_login():
         raise ApplicationError("invalid email or password")
     
     # TODO: password should be hashed, not encrypted/decrypted with secret
-    account_password = crypto.fernet_decrypt(
+    account_password = secure.fernet_decrypt(
         account.encrypted_password.encode(), SECRET.encode()).decode()
     if account_password != data["password"]:
         raise ApplicationError("invalid email or password")
@@ -183,7 +183,7 @@ def create_user_account():
     try:
         with db_session.persist(UserAccount()) as user_account:
             user_account.email = data["email"]
-            user_account.encrypted_password = crypto.fernet_encrypt(
+            user_account.encrypted_password = secure.fernet_encrypt(
                     data["password"].encode(), SECRET).decode()
             user_account.full_name = data["full_name"]
             user_account.settings = UserAccountSettings(
@@ -363,7 +363,7 @@ def create_linked_account(user_account_id):
         logging.info(f"Linking external account (provider_id={provider.id}) to user account_id={user_account.id}")
         try:
             with db_session.persist(user_account):
-                encrypted_credentials = crypto.fernet_encrypt(
+                encrypted_credentials = secure.fernet_encrypt(
                     json.dumps(request_data["credentials"]).encode(), SECRET).decode()
                 user_account.linked_accounts.append(
                     LinkedAccount(
@@ -423,7 +423,7 @@ def update_linked_account(user_account_id, linked_account_id):
             if "account_name" in request_data:
                 linked_account.account_name = request_data["account_name"]
             if request_has_credentials:
-                encrypted_credentials = crypto.fernet_encrypt(
+                encrypted_credentials = secure.fernet_encrypt(
                     json.dumps(request_data["credentials"]).encode(), SECRET).decode()
                 linked_account.encrypted_credentials = encrypted_credentials
     except IntegrityError as e:

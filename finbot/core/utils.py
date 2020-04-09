@@ -25,20 +25,20 @@ def serialize(data):
     return data
 
 
-def pretty_dump(data):
+def pretty_dump(data) -> str:
     def fallback(unhandled_data):
         return f"<not serializable {type(unhandled_data)} {unhandled_data}>"
     return json.dumps(serialize(data), indent=4, default=fallback)
 
 
-def now_utc():
+def now_utc() -> datetime:
     return datetime.now(timezone('UTC'))
 
 
-def date_in_range(date, from_date, to_date):
-    if from_date and date < from_date:
+def in_range(value, from_value, to_value) -> bool:
+    if from_value and value < from_value:
         return False
-    if to_date and date > to_date:
+    if to_value and value > to_value:
         return False
     return True
 

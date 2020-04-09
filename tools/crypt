@@ -1,5 +1,5 @@
 #!/usr/bin/env python3.7
-from finbot.core import crypto
+from finbot.core import secure
 import argparse
 
 
@@ -24,21 +24,21 @@ def create_parser():
 
 
 def key_tool(_):
-    print(crypto.fernet_generate_key().decode()) 
+    print(secure.fernet_generate_key().decode())
 
 
 def encrypt_tool(settings):
     with open(settings.secret, "rb") as secret_file:
         secret = secret_file.read()
         with open(settings.input_file, "rb") as input_file:
-            print(crypto.fernet_encrypt(input_file.read(), secret).decode())
+            print(secure.fernet_encrypt(input_file.read(), secret).decode())
 
 
 def decrypt_tool(settings):
     with open(settings.secret, "rb") as secret_file:
         secret = secret_file.read()
         with open(settings.input_file, "rb") as input_file:
-            print(crypto.fernet_decrypt(input_file.read(), secret).decode())
+            print(secure.fernet_decrypt(input_file.read(), secret).decode())
 
 
 all_tools = {
