@@ -7,6 +7,7 @@ from binance.exceptions import BinanceAPIException
 
 
 OWNERSHIP_UNITS_THRESHOLD = 0.00001
+RECV_WINDOW = 60 * 1000
 
 
 class Credentials(object):
@@ -30,6 +31,9 @@ class Api(providers.Base):
         self._spot_api = CoinGeckoWrapper(CoinGeckoAPI())
         self._api = None
 
+    def _get_account(self):
+        return self._api.get_account(recvWindow=RECV_WINDOW)
+
     def _account_description(self):
         return {
             "id": "portfolio",
@@ -41,12 +45,12 @@ class Api(providers.Base):
     def authenticate(self, credentials):
         try:
             self._api = Binance(credentials.api_key, credentials.secret_key)
-            self._api.get_account()
+            self._get_account()
         except BinanceAPIException as e:
             raise AuthFailure(str(e))
 
     def _iter_balances(self):
-        for entry in self._api.get_account()["balances"]:
+        for entry in self._get_account()["balances"]:
             units = float(entry["free"]) + float(entry["locked"])
             if units > OWNERSHIP_UNITS_THRESHOLD:
                 symbol = entry["asset"]

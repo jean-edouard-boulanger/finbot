@@ -36,7 +36,7 @@ class Api(providers.SeleniumBased):
     def _get_loans(self, account_type):
         def _chunk_outstanding(row):
             return float(row["Chunk Amount"]) - float(row["Chunk Capital Repaid"])
-        cookies = self._do.get_cookies()
+        cookies = self._do.cookies
         loans_endpoint = LOANS_EXPORT_URL.format(ns=account_type)
         response = requests.get(loans_endpoint, cookies=cookies)
         csv_data = response.content.decode()

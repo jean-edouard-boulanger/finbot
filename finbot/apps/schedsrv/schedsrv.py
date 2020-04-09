@@ -1,6 +1,6 @@
 from finbot.clients.snap import SnapClient
 from finbot.clients.history import HistoryClient
-from finbot.core import dbutils
+from finbot.core import dbutils, utils
 from finbot.model import UserAccount
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -48,7 +48,7 @@ def run_workflow(user_account_id, snap_client, hist_client):
     
     history_entry_id = history_metadata["report"]["history_entry_id"]
     logging.info(f"history report written with id={history_entry_id}")
-    logging.debug(history_metadata)
+    logging.debug(utils.pretty_dump(history_metadata))
 
     logging.info(f"workflow done for user_id={user_account_id}")
 

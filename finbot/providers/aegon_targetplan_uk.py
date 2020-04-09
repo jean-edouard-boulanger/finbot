@@ -50,13 +50,20 @@ class Api(providers.SeleniumBased):
                     try:
                         time.sleep(2)
                         entry["selenium"]["link_element"].click()
-                        return self._do.wait_element(By.CSS_SELECTOR, "table.table-invs-allocation")
+
+                        self._do.wait_cond(any_of(
+                            lambda _: _get_allocations_table(self._do),
+                            lambda _: _is_maintenance(self._do.current_url)))
+
+                        if _is_maintenance(self._do.current_url):
+                            logging.warning("Maintenance mode, acknowledging")
+                        self._do.find(By.XPATH, "//a[@role='button']").click()
+                        return self._do.wait_cond(lambda _: _get_allocations_table(self._do))
                     except TimeoutException:
                         logging.warning(f"could not go to account page, will try again, trace: {traceback.format_exc()}")
                     except StaleElementReferenceException:
                         logging.warning(f"stale element, we probably managed to get there after all, trace: {traceback.format_exc()}")
-                        self._do.wait_element(By.CSS_SELECTOR, "table.table-invs-allocation")
-                        return
+                        return self._do.wait_cond(lambda _: _get_allocations_table(self._do))
         raise RuntimeError(f"unknown account {account_id}")
 
     def authenticate(self, credentials):
@@ -142,15 +149,23 @@ def _get_login_error(browser_helper: SeleniumHelper):
         return error_area.text.strip()
 
 
-def _is_logged_in(browser_helper: SeleniumHelper):
-    avatar_area = browser_helper.find_maybe(By.CSS_SELECTOR, "a#nav-primary-profile")
+def _get_allocations_table(do: SeleniumHelper):
+    return do.find_maybe(By.CSS_SELECTOR, "table.table-invs-allocation")
+
+
+def _is_maintenance(current_url: str) -> bool:
+    return "maintenance" in current_url
+
+
+def _is_logged_in(do: SeleniumHelper):
+    avatar_area = do.find_maybe(By.CSS_SELECTOR, "a#nav-primary-profile")
     return avatar_area is not None
 
 
-def _wait_accounts(browser_helper: SeleniumHelper):
+def _wait_accounts(do: SeleniumHelper):
     accounts_xpath = "//div[contains(@class,'card-product-')]"
-    browser_helper.wait_element(By.XPATH, accounts_xpath, timeout=120)
-    return browser_helper.find_many(By.XPATH, accounts_xpath)
+    do.wait_element(By.XPATH, accounts_xpath, timeout=120)
+    return do.find_many(By.XPATH, accounts_xpath)
 
 
 def _iter_accounts(accounts_elements):

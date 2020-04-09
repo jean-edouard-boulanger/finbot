@@ -254,11 +254,11 @@ def take_raw_snapshot(user_account):
         logging.info("initializing accounts snapshot requests")
         requests = [
             AccountSnapshotRequest(
-                account_id=account.id,
-                provider_id=account.provider_id,
+                account_id=linked_account.id,
+                provider_id=linked_account.provider_id,
                 credentials_data=json.loads(
                     crypto.fernet_decrypt(
-                        account.encrypted_credentials.encode(),
+                        linked_account.encrypted_credentials.encode(),
                         secret).decode()),
                 line_items=[
                     LineItem.Balances,
@@ -266,7 +266,8 @@ def take_raw_snapshot(user_account):
                     LineItem.Liabilities
                 ]
             )
-            for account in user_account.linked_accounts
+            for linked_account in user_account.linked_accounts
+            if not linked_account.deleted
         ]
 
         logging.info(f"starting snapshot with {len(requests)} request(s)")

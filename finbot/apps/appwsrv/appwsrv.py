@@ -11,7 +11,7 @@ from sqlalchemy import create_engine, desc, asc
 from sqlalchemy.orm import scoped_session, sessionmaker, joinedload, contains_eager
 from sqlalchemy.exc import IntegrityError
 from finbot.clients.finbot import FinbotClient
-from finbot.apps.appwsrv import timeseries, repository
+from finbot.apps.appwsrv import timeseries, repository, core
 from finbot.apps.support import request_handler, Route, ApplicationError
 from finbot.core.utils import serialize
 from finbot.core import crypto
@@ -23,7 +23,6 @@ from finbot.model import (
     LinkedAccount,
     UserAccountHistoryEntry,
     LinkedAccountValuationHistoryEntry,
-    SubAccountValuationHistoryEntry,
 )
 import logging.config
 import logging
@@ -36,6 +35,10 @@ import os
 
 SECRET = open(os.environ["FINBOT_SECRET_PATH"], "r").read()
 FINBOT_FINBOTWSRV_ENDPOINT = os.environ["FINBOT_FINBOTWSRV_ENDPOINT"]
+
+
+def get_finbot_client():
+    return FinbotClient(FINBOT_FINBOTWSRV_ENDPOINT)
 
 
 logging.config.dictConfig({
@@ -269,7 +272,8 @@ def get_user_account_valuation_history(user_account_id):
                                  .filter_by(user_account_id=user_account_id)
                                  .filter_by(available=True)
                                  .order_by(asc(UserAccountHistoryEntry.effective_at))
-                                 .options(joinedload(UserAccountHistoryEntry.user_account_valuation_history_entry, innerjoin=True))
+                                 .options(joinedload(UserAccountHistoryEntry.user_account_valuation_history_entry,
+                                                     innerjoin=True))
                                  .all())
 
     return jsonify(serialize({
@@ -290,7 +294,7 @@ def get_user_account_valuation_history(user_account_id):
 @app.route(ACCOUNT.linked_accounts._, methods=["GET"])
 @request_handler()
 def get_linked_accounts_valuation(user_account_id):
-    history_entry = repository.find_last_user_account_history_entry(db_session, user_account_id)
+    history_entry = repository.find_last_history_entry(db_session, user_account_id)
     if not history_entry:
         raise ApplicationError(f"No valuation available for user account '{user_account_id}'")
 
@@ -319,6 +323,7 @@ def get_linked_accounts_valuation(user_account_id):
                 }
             }
             for entry in results
+            if not entry.linked_account.deleted
         ]
     }))
 
@@ -334,7 +339,7 @@ def get_linked_accounts_valuation(user_account_id):
         "account_name": {"type": "string"}
     }
 })
-def link_to_external_account(user_account_id):
+def create_linked_account(user_account_id):
     do_validate = bool(int(request.args.get("validate", 1)))
     do_persist = bool(int(request.args.get("persist", 1)))
     request_data = request.json
@@ -359,16 +364,7 @@ def link_to_external_account(user_account_id):
     if do_validate:
         logging.info(f"validating authentication details for "
                      f"account_id={user_account_id} and provider_id={provider_id}")
-
-        finbot_client = FinbotClient(FINBOT_FINBOTWSRV_ENDPOINT)
-        finbot_response = finbot_client.get_financial_data(
-            provider=provider_id,
-            credentials_data=request_data["credentials"],
-            line_items=[])
-
-        if "error" in finbot_response:
-            user_message = finbot_response["error"]["user_message"]
-            raise ApplicationError(f"Unable to validate provided credentials ({user_message})")
+        core.validate_credentials(get_finbot_client(), provider_id, request_data.get("credentials"))
 
     if do_persist:
         logging.info(f"Linking external account (provider_id={provider.id}) to user account_id={user_account.id}")
@@ -394,6 +390,67 @@ def link_to_external_account(user_account_id):
 
 
 LINKED_ACCOUNT = ACCOUNT.linked_accounts.p("linked_account_id")
+
+
+@app.route(LINKED_ACCOUNT._, methods=["PUT"])
+@request_handler(schema={
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "provider_id": {"type": "string"},
+        "credentials": {"type": ["null", "object"]},
+        "account_name": {"type": "string"}
+    }
+})
+def update_linked_account(user_account_id, linked_account_id):
+    request_data = request.json
+    linked_account_id = int(linked_account_id)
+    linked_account = repository.find_linked_account(db_session, linked_account_id)
+
+    if not linked_account:
+        raise ApplicationError(f"could not find linked account with id '{linked_account_id}'")
+
+    new_provider_id = request_data.get("provider_id", linked_account.provider_id)
+    request_provider_update = "provider_id" in request_data and new_provider_id != linked_account.provider_id
+    request_has_credentials = "credentials" in request_data
+
+    if request_provider_update and not request_has_credentials:
+        raise ApplicationError("new credentials must be provided when updating provider")
+
+    credentials_need_validating = request_has_credentials or request_provider_update
+
+    if credentials_need_validating:
+        logging.info(f"validating authentication details for "
+                     f"account_id={user_account_id} and provider_id={new_provider_id}")
+        core.validate_credentials(get_finbot_client(), new_provider_id, request_data["credentials"])
+
+    try:
+        with db_session.persist(linked_account):
+            linked_account.provider_id = new_provider_id
+            if "account_name" in request_data:
+                linked_account.account_name = request_data["account_name"]
+            if request_has_credentials:
+                encrypted_credentials = crypto.fernet_encrypt(
+                    json.dumps(request_data["credentials"]).encode(), SECRET).decode()
+                linked_account.encrypted_credentials = encrypted_credentials
+    except IntegrityError as e:
+        raise ApplicationError(str(e))
+
+    return jsonify({})
+
+
+@app.route(LINKED_ACCOUNT._, methods=["DELETE"])
+@request_handler()
+def delete_linked_account(user_account_id, linked_account_id):
+    linked_account_id = int(linked_account_id)
+    linked_account = repository.find_linked_account(db_session, linked_account_id)
+    if not linked_account:
+        raise ApplicationError(f"could not find linked account with id '{linked_account_id}'")
+
+    with db_session.persist(linked_account):
+        linked_account.deleted = True
+
+    return jsonify({})
 
 
 @app.route(LINKED_ACCOUNT.history._, methods=["GET"])
@@ -427,15 +484,11 @@ def get_linked_account_historical_valuation(user_account_id, linked_account_id):
 @app.route(LINKED_ACCOUNT.sub_accounts._, methods=["GET"])
 @request_handler()
 def get_linked_account_sub_accounts(user_account_id, linked_account_id):
-    history_entry = repository.find_last_user_account_history_entry(db_session, user_account_id)
+    history_entry = repository.find_last_history_entry(db_session, user_account_id)
     if not history_entry:
         raise ApplicationError(f"No valuation available for user account '{user_account_id}'")
     linked_account_id = int(linked_account_id)
-    results = (db_session.query(SubAccountValuationHistoryEntry)
-                         .filter_by(history_entry_id=history_entry.id)
-                         .filter_by(linked_account_id=linked_account_id)
-                         .options(joinedload(SubAccountValuationHistoryEntry.valuation_change))
-                         .all())
+    results = repository.find_sub_accounts_history_entries(db_session, history_entry.id, linked_account_id)
 
     return jsonify(serialize({
         "sub_accounts": [

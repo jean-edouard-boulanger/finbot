@@ -63,6 +63,17 @@ class SeleniumHelper(object):
     def __init__(self, browser):
         self.browser = browser
 
+    @property
+    def current_url(self):
+        return self.browser.current_url
+
+    @property
+    def cookies(self) -> Dict[str, str]:
+        return {
+            str(cookie["name"]): str(cookie["value"])
+            for cookie in self.browser.get_cookies()
+        }
+
     def get(self, url):
         self.browser.get(url)
 
@@ -102,9 +113,3 @@ class SeleniumHelper(object):
         failure_data = failure_predicate(self)
         if failure_data:
             return on_failure(failure_data)
-
-    def get_cookies(self) -> Dict[str, str]:
-        return {
-            cookie["name"]: cookie["value"] 
-            for cookie in self.browser.get_cookies()
-        }
