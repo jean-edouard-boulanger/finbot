@@ -7,7 +7,7 @@ from finbot.apps.support import (
     make_error_response,
     make_error
 )
-import traceback
+import stackprinter
 import logging.config
 import logging
 
@@ -77,13 +77,13 @@ def item_handler(item_type, provider_api):
             "results": handler(provider_api)
         }
     except Exception as e:
-        logging.warning(f"error while handling '{item_type}': {e}\n{traceback.format_exc()}")
+        logging.warning(f"error while handling '{item_type}': {e}\n{stackprinter.format()}")
         return {
             "line_item": item_type,
             "error": make_error(
                 user_message=f"failed to retrieve {item_type} line item",
                 debug_message=str(e),
-                trace=traceback.format_exc()
+                trace=stackprinter.format()
             )
         }
 
@@ -111,17 +111,17 @@ def get_financial_data():
             logging.info(f"authenticating {credentials.user_id}")
             provider_api.authenticate(credentials)
         except AuthFailure as e:
-            logging.warning(f"authentication failure: {e}")
+            logging.warning(f"authentication failure: {e}, trace:\n{stackprinter.format()}")
             return make_error_response(
                 user_message=str(e),
                 debug_message=str(e),
-                trace=traceback.format_exc())
+                trace=stackprinter.format())
         except Exception as e:
-            logging.warning(f"authentication failure: {e}")
+            logging.warning(f"authentication failure: {e}, trace:\n{stackprinter.format()}")
             return make_error_response(
                 user_message="authentication failure (unknown error)",
                 debug_message=str(e),
-                trace=traceback.format_exc())
+                trace=stackprinter.format())
 
         return jsonify({
             "financial_data": [

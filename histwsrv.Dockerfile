@@ -21,4 +21,6 @@ RUN pip3 install \
     psycopg2 \
     sqlalchemy \
     pytz \
-    pandas
+    pandas \
+    stackprinter
+

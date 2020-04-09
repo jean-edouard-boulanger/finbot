@@ -19,4 +19,6 @@ RUN pip3 install \
     requests \
     psycopg2 \
     sqlalchemy \
-    pytz
+    pytz \
+    stackprinter
+

@@ -22,4 +22,6 @@ RUN pip3 install \
     flask-jwt-extended \
     psycopg2 \
     sqlalchemy \
-    pytz
+    pytz \
+    stackprinter
+

@@ -6,7 +6,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 import argparse
 import time
-import traceback
+import stackprinter
 import logging.config
 import logging
 import os
@@ -31,7 +31,7 @@ logging.config.dictConfig({
 
 def run_workflow(user_account_id, snap_client, hist_client):
     logging.info(f"starting workflow for user_id={user_account_id}")
-    
+
     logging.info(f"will take raw snapshot")
 
     snapshot_metadata = snap_client.take_snapshot(user_account_id)
@@ -86,11 +86,15 @@ def main():
                 except Exception as e:
                     logging.warning(f"failure while running workflow for "
                                     f"user_id={user_account.id}: {e}, "
-                                    f"trace: \n{traceback.format_exc()}")
+                                    f"trace: \n{stackprinter.format()}")
         if settings.mode == "one_shot":
             break
-        time.sleep(6 * 3600)
+
+        time.sleep(24 * 3600)
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        logging.error(f"fatal error while running schedsrv: \n{stackprinter.format()}")

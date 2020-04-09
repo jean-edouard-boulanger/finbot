@@ -3,8 +3,8 @@ from contextlib import contextmanager
 from datetime import datetime, timedelta
 import functools
 import logging
-import traceback
 import jsonschema
+import stackprinter
 
 
 class Route(object):
@@ -72,16 +72,16 @@ def request_handler(schema=None):
                     logging.info("request processed successfully")
                     return response
                 except ApplicationError as e:
-                    logging.warning(f"request processed with error: {e}\n{traceback.format_exc()}")
+                    logging.warning(f"request processed with error: {e}\n{stackprinter.format()}")
                     return make_error_response(
                         user_message=str(e),
                         debug_message=str(e),
-                        trace=traceback.format_exc())
+                        trace=stackprinter.format())
                 except Exception as e:
-                    logging.warning(f"request processed with error: {e}\n{traceback.format_exc()}")
+                    logging.warning(f"request processed with error: {e}\n{stackprinter.format()}")
                     return make_error_response(
                         user_message="operation failed (unknown error)",
                         debug_message=str(e),
-                        trace=traceback.format_exc())
+                        trace=stackprinter.format())
         return handler
     return impl

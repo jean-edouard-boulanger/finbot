@@ -8,7 +8,7 @@ from finbot.core import crypto, fx
 from finbot.core.utils import pretty_dump
 from datetime import datetime, timedelta
 import functools
-import traceback
+import stackprinter
 import argparse
 import logging
 import sys
@@ -142,7 +142,7 @@ def fetch_data(settings, browser_factory, account):
             raise
         except catch_exc as e:
             logging.warning(f"error while fetching data for provider_id={account['provider_id']}: {e}")
-            logging.warning(traceback.format_exc())
+            logging.warning(stackprinter.format())
             logging.warning("PAUSING execution")
             logging.warning("CTRL^C to exit")
             wait_forever()

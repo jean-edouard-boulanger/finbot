@@ -52,4 +52,6 @@ RUN pip3 install \
     gspread \
     oauth2client \
     pandas \
-    schedule
+    schedule \
+    stackprinter
+
