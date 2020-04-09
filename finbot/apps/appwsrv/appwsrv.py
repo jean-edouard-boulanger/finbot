@@ -117,13 +117,6 @@ def auth_login():
     })
 
 
-@app.route(AUTH.valid._, methods=["GET"])
-@request_handler()
-@jwt_required
-def test_auth_validity():
-    return jsonify({})
-
-
 @app.route(API_V1.providers._, methods=["POST"])
 @request_handler(schema={
     "type": "object",
@@ -168,7 +161,7 @@ ACCOUNTS = API_V1.accounts
 
 
 @app.route(ACCOUNTS._, methods=["POST"])
-@request_handler(schema={
+@request_handler(show_vals=False, schema={
     "type": "object",
     "additionalProperties": False,
     "required": ["email", "password", "full_name", "settings"],
@@ -329,7 +322,7 @@ def get_linked_accounts_valuation(user_account_id):
 
 
 @app.route(ACCOUNT.linked_accounts._, methods=["POST"])
-@request_handler(schema={
+@request_handler(show_vals=False, schema={
     "type": "object",
     "additionalProperties": False,
     "required": ["provider_id", "credentials", "account_name"],
@@ -393,7 +386,7 @@ LINKED_ACCOUNT = ACCOUNT.linked_accounts.p("linked_account_id")
 
 
 @app.route(LINKED_ACCOUNT._, methods=["PUT"])
-@request_handler(schema={
+@request_handler(show_vals=False, schema={
     "type": "object",
     "additionalProperties": False,
     "properties": {

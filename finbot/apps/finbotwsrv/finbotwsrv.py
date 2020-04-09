@@ -32,6 +32,10 @@ logging.config.dictConfig({
 app = Flask(__name__)
 
 
+def format_stacktrace():
+    return stackprinter.format(style='darkbg3', show_vals=None)
+
+
 def balances_handler(provider_api):
     return [
         {
@@ -105,23 +109,23 @@ def get_financial_data():
     provider = get_provider(provider_id)
     logging.info(f"initializing provider {provider_id}")
     with closing(provider.api_module.Api()) as provider_api:
-        credentials = provider.api_module.Credentials.init(
-            request_data["credentials"])
         try:
+            credentials = provider.api_module.Credentials.init(
+                request_data["credentials"])
             logging.info(f"authenticating {credentials.user_id}")
             provider_api.authenticate(credentials)
         except AuthFailure as e:
-            logging.warning(f"authentication failure: {e}, trace:\n{stackprinter.format()}")
+            logging.warning(f"authentication failure: {e}, trace:\n{format_stacktrace()}")
             return make_error_response(
                 user_message=str(e),
                 debug_message=str(e),
-                trace=stackprinter.format())
+                trace=format_stacktrace())
         except Exception as e:
-            logging.warning(f"authentication failure: {e}, trace:\n{stackprinter.format()}")
+            logging.warning(f"authentication failure: {e}, trace:\n{format_stacktrace()}")
             return make_error_response(
                 user_message="authentication failure (unknown error)",
                 debug_message=str(e),
-                trace=stackprinter.format())
+                trace=format_stacktrace())
 
         return jsonify({
             "financial_data": [

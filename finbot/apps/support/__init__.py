@@ -55,10 +55,11 @@ class ApplicationError(Error):
     pass
 
 
-def request_handler(schema=None):
+def request_handler(show_vals=False, schema=None):
     def impl(func):
         @functools.wraps(func)
         def handler(*args, **kwargs):
+            stackprinter_show_vals = "all" if show_vals else None
             with time_elapsed():
                 try:
                     logging.info(f"process {func.__name__} request")
@@ -72,16 +73,16 @@ def request_handler(schema=None):
                     logging.info("request processed successfully")
                     return response
                 except ApplicationError as e:
-                    logging.warning(f"request processed with error: {e}\n{stackprinter.format()}")
+                    logging.warning(f"request processed with error: {e}\n{stackprinter.format(style='darkbg3', show_vals=stackprinter_show_vals)}")
                     return make_error_response(
                         user_message=str(e),
                         debug_message=str(e),
-                        trace=stackprinter.format())
+                        trace=stackprinter.format(show_vals=stackprinter_show_vals))
                 except Exception as e:
-                    logging.warning(f"request processed with error: {e}\n{stackprinter.format()}")
+                    logging.warning(f"request processed with error: {e}\n{stackprinter.format(style='darkbg3', show_vals=stackprinter_show_vals)}")
                     return make_error_response(
                         user_message="operation failed (unknown error)",
                         debug_message=str(e),
-                        trace=stackprinter.format())
+                        trace=stackprinter.format(show_vals=stackprinter_show_vals))
         return handler
     return impl

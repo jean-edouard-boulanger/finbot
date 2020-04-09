@@ -17,11 +17,11 @@ from finbot.model import (
     SubAccountItemType,
     XccyRateSnapshotEntry
 )
-import traceback
 import logging.config
 import logging
 import os
 import json
+import stackprinter
 
 
 logging.config.dictConfig({
@@ -238,7 +238,7 @@ def dispatch_snapshot_entry(request: AccountSnapshotRequest):
 
         return request, account_snapshot
     except Exception as e:
-        trace = traceback.format_exc()
+        trace = stackprinter.format()
         logging.warning(f"fatal error while taking snapshot for account_id={request.account_id}"
                         f" provider_id={request.provider_id}"
                         f" error: {e}"
