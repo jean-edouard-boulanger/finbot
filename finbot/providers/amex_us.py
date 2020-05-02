@@ -35,8 +35,8 @@ class Api(providers.SeleniumBased):
 
     def authenticate(self, credentials):
         self._do.get(AUTH_URL)
-        cookies_mask = self._do.wait_element(By.ID, "euc_mask")
-        cookies_mask.click()
+        cookies_button = self._do.wait_element(By.ID, "sprite-ContinueButton_EN")
+        cookies_button.click()
 
         self._do.find(By.ID, "eliloUserID").send_keys(credentials.user_id)
         self._do.find(By.ID, "eliloPassword").send_keys(credentials.password)
@@ -118,7 +118,7 @@ class Api(providers.SeleniumBased):
         self._switch_account(account_id)
         links_area = self._do.wait_element(By.CSS_SELECTOR, "div.transaction-footer-links")
         transactions_link = links_area.find_element_by_xpath(
-            "//a[contains(@title, 'recent activity')]")
+            "//a[contains(@title, 'Recent transactions')]")
         self._do.click(transactions_link)
 
         # 2. get full transaction list

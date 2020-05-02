@@ -33,8 +33,12 @@ logging.config.dictConfig({
 app = Flask(__name__)
 
 
-def format_stacktrace():
+def format_stacktrace_for_logs():
     return stackprinter.format(style='darkbg3', show_vals=None)
+
+
+def format_stacktrace():
+    return stackprinter.format(show_vals=None)
 
 
 def balances_handler(provider_api: providers.Base):
@@ -116,13 +120,13 @@ def get_financial_data():
             logging.info(f"authenticating {credentials.user_id}")
             provider_api.authenticate(credentials)
         except AuthFailure as e:
-            logging.warning(f"authentication failure: {e}, trace:\n{format_stacktrace()}")
+            logging.warning(f"authentication failure: {e}, trace:\n{format_stacktrace_for_logs()}")
             return make_error_response(
                 user_message=str(e),
                 debug_message=str(e),
                 trace=format_stacktrace())
         except Exception as e:
-            logging.warning(f"authentication failure: {e}, trace:\n{format_stacktrace()}")
+            logging.warning(f"authentication failure: {e}, trace:\n{format_stacktrace_for_logs()}")
             return make_error_response(
                 user_message="authentication failure (unknown error)",
                 debug_message=str(e),

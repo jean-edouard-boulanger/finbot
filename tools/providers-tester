@@ -142,7 +142,7 @@ def fetch_data(settings, browser_factory, account):
             raise
         except catch_exc as e:
             logging.warning(f"error while fetching data for provider_id={account['provider_id']}: {e}")
-            logging.warning(stackprinter.format())
+            logging.warning(stackprinter.format(style="darkbg3"))
             logging.warning("PAUSING execution")
             logging.warning("CTRL^C to exit")
             wait_forever()

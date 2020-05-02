@@ -2,7 +2,6 @@ from copy import deepcopy
 from price_parser import Price
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.expected_conditions import presence_of_element_located
 from finbot import providers
 from finbot.providers.support.selenium import any_of, SeleniumHelper
 from finbot.providers.errors import AuthFailure, Error
@@ -17,23 +16,33 @@ HOME_URL = "https://bank.barclays.co.uk/olb/balances/PersonalFinancialSummary.ac
 
 
 class Credentials(object):
-    def __init__(self, last_name, card_number, passcode, memorable_word):
+    def __init__(self,
+                 last_name,
+                 membership_number,
+                 card_last_4_digits,
+                 card_security_code,
+                 passcode,
+                 memorable_word):
         self.last_name = last_name
-        self.card_number = card_number
+        self.membership_number = membership_number
+        self.card_last_4_digits = card_last_4_digits
+        self.card_security_code = card_security_code
         self.passcode = passcode
         self.memorable_word = memorable_word
 
     @property
     def user_id(self):
-        return f"{self.last_name} / XXXX-XXXX-XXXX-{self.card_number.split('-')[3]}"
+        return f"{self.last_name} / {self.membership_number}"
 
     @staticmethod
     def init(data):
         return Credentials(
-            data["last_name"],
-            data["card_number"],
-            data["passcode"],
-            data["memorable_word"])
+            last_name=data["last_name"],
+            membership_number=data["membership_number"],
+            card_last_4_digits=data["card_last_4_digits"],
+            card_security_code=data["card_security_code"],
+            passcode=data["passcode"],
+            memorable_word=data["memorable_word"])
 
 
 class Api(providers.SeleniumBased):
@@ -65,22 +74,16 @@ class Api(providers.SeleniumBased):
         step1_form = self._do.wait_element(By.NAME, "loginStep1")
         step1_form.find_element_by_css_selector("input#surname0").send_keys(
             credentials.last_name)
-        card_radio = step1_form.find_element_by_css_selector("input#radio-c2")
+        card_radio = step1_form.find_element_by_css_selector("input#radio-c1")
         self._do.click(card_radio)
-        card_nums = credentials.card_number.split("-")
-        for i in range(0, 4):
-            step1_form.find_element_by_id(f"cardNumber{i}").send_keys(card_nums[i])
+        step1_form.find_element_by_id(f"membershipNum0").send_keys(credentials.membership_number)
         step1_form.find_element_by_tag_name("button").click()
 
         self._do.assert_success(_reached_auth_step2, _get_login_error,
                                 on_failure=_report_auth_error)
 
-        # Step 2.1: sometimes it asks to chose between PINsentry / passcode
+        # Step 1.1: sometimes it asks to chose between PINsentry / passcode
         # Always pick passcode when prompted
-
-        self._do.wait_cond(any_of(
-            lambda _: _get_passcode_button(self._do),
-            presence_of_element_located((By.ID, "passcode0"))))
 
         passcode_button = _get_passcode_button(self._do)
         if passcode_button:
@@ -98,10 +101,24 @@ class Api(providers.SeleniumBased):
             select_combo_item(char_combos[index], item_idx)
         self._do.find(By.CSS_SELECTOR, "button.btn--login").click()
 
+        # step 3: provide card digits and security code if required
+        self._do.wait_cond(any_of(
+            lambda _: _is_logged_in(self._do),
+            lambda _: _get_login_error(self._do),
+            lambda _: _reached_auth_protect_step(self._do)))
+
+        card_digits_input, sec_code_input = _get_auth_protect_inputs(self._do)
+        if card_digits_input and sec_code_input:
+            card_digits_input.send_keys(credentials.card_last_4_digits)
+            sec_code_input.send_keys(credentials.card_security_code)
+            self._do.wait_element(By.ID, "btn-login-authSFA").click()
+
+        # step 4: verify login success
+
         self._do.assert_success(_is_logged_in, _get_login_error,
                                 on_failure=_report_auth_error)
 
-        # step 3: gather available accounts
+        # step 5: gather available accounts
 
         accounts_area = _wait_accounts(self._do)
         self.accounts = {
@@ -216,6 +233,10 @@ def _wait_accounts(do: SeleniumHelper):
     return do.wait_element(By.CSS_SELECTOR, "div.accounts-body")
 
 
+def _get_auth_protect_inputs(do: SeleniumHelper):
+    return do.find_maybe(By.ID, "lastDigits0"), do.find_maybe(By.ID, "secCode0")
+
+
 def _get_passcode_button(do: SeleniumHelper):
     buttons = do.find_many(By.CSS_SELECTOR, "button.btn--login")
     for button in buttons:
@@ -226,6 +247,11 @@ def _get_passcode_button(do: SeleniumHelper):
 def _reached_auth_step2(do: SeleniumHelper):
     return (do.find_maybe(By.ID, "passcode0") is not None
             or _get_passcode_button(do) is not None)
+
+
+def _reached_auth_protect_step(do: SeleniumHelper):
+    card_digits_input, sec_code_input = _get_auth_protect_inputs(do)
+    return card_digits_input and sec_code_input
 
 
 def _is_logged_in(do: SeleniumHelper):

@@ -79,22 +79,22 @@ run-appwsrv-dev:
 			-h 0.0.0.0
 
 build-appwsrv-docker:
-	docker build -t finbot/appwsrv:latest -f appwsrv.Dockerfile .
+	docker build -t finbot/appwsrv:latest -f appwsrv.Dockerfile --no-cache .
 
 build-schedsrv-docker:
-	docker build -t finbot/schedsrv:latest -f schedsrv.Dockerfile .
+	docker build -t finbot/schedsrv:latest -f schedsrv.Dockerfile --no-cache .
 
 build-snapwsrv-docker:
-	docker build -t finbot/snapwsrv:latest -f snapwsrv.Dockerfile .
+	docker build -t finbot/snapwsrv:latest -f snapwsrv.Dockerfile --no-cache .
 
 build-histwsrv-docker:
-	docker build -t finbot/histwsrv:latest -f histwsrv.Dockerfile .
+	docker build -t finbot/histwsrv:latest -f histwsrv.Dockerfile --no-cache .
 
 build-finbotwsrv-docker:
-	docker build -t finbot/finbotwsrv:latest -f finbotwsrv.Dockerfile .
+	docker build -t finbot/finbotwsrv:latest -f finbotwsrv.Dockerfile --no-cache .
 
 build-providers-tester-docker: build-finbotwsrv-docker
-	docker build -t finbot/providers-tester:latest -f tester.Dockerfile .
+	docker build -t finbot/providers-tester:latest -f tester.Dockerfile  --no-cache .
 
 trigger-valuation-docker:
 	docker-compose run schedsrv \

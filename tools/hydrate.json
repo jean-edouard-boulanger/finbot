@@ -112,49 +112,20 @@
                             "title": "Last name",
                             "type": "string"
                         },
-                        "auth_method": {
-                            "type": "object",
-                            "title": "How would you like to log in?",
-                            "oneOf": [
-                                {
-                                    "title": "Card number",
-                                    "required": ["card_number"],
-                                    "properties": {
-                                        "card_number": {
-                                            "title": "Card number",
-                                            "type": "string",
-                                            "pattern": "\\d{4}-\\d{4}-\\d{4}-\\d{4}"
-                                        }
-                                    }
-                                },
-                                {
-                                    "title": "Membership number",
-                                    "required": ["membership_number"],
-                                    "properties": {
-                                        "membership_number": {
-                                            "title": "Membership number",
-                                            "type": "string",
-                                            "pattern": "\\d+"
-                                        }
-                                    }
-                                },
-                                {
-                                    "title": "Sort code and account number",
-                                    "required": ["sort_code", "account_number"],
-                                    "properties": {
-                                        "sort_code": {
-                                            "title": "Sort code",
-                                            "type": "string",
-                                            "pattern": "\\d{2}-\\d{2}-\\d{2}"
-                                        },
-                                        "account_number": {
-                                            "title": "Account number",
-                                            "type": "string",
-                                            "pattern": "\\d{8}"
-                                        }
-                                    }
-                                }
-                            ]
+                        "membership_number": {
+                            "title": "Membership number",
+                            "type": "string",
+                            "pattern": "\\d+"
+                        },
+                        "card_last_4_digits": {
+                            "title": "Last 4 card digits",
+                            "type": "string",
+                            "pattern": "\\d{4}"
+                        },
+                        "card_security_code": {
+                            "title": "Card security code",
+                            "type": "string",
+                            "pattern": "\\d+"
                         },
                         "passcode": {
                             "title": "Passcode",
