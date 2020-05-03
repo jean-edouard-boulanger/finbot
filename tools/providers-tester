@@ -190,9 +190,7 @@ def main():
 
     browser_factory = DefaultBrowserFactory(
         headless=settings.headless,
-        developer_tools=settings.developer_tools,
-        enable_tracing=True)
-
+        developer_tools=settings.developer_tools)
     selected_providers = resolve_providers(settings.accounts.split(",") if settings.accounts else [])
     load_all = all(provider_id.startswith("~") for provider_id in selected_providers)
 
