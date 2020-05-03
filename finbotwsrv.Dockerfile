@@ -7,11 +7,13 @@ RUN apt-get update
 RUN apt-get install -y \
     curl \
     python3.7 \
+    python3.7-dev \
     python3-pip \
     unzip \
     xvfb \
     libxi6 \
-    libgconf-2-4
+    libgconf-2-4 \
+    libpq-dev
 
 RUN python3.7 -m pip install --upgrade pip
 
@@ -35,6 +37,8 @@ RUN pip3 install \
     selenium \
     cryptography \
     cffi \
+    psycopg2 \
+    sqlalchemy \
     terminaltables \
     price-parser \
     flask \

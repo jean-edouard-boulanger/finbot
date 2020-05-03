@@ -1,6 +1,6 @@
 from finbot.clients.snap import SnapClient
 from finbot.clients.history import HistoryClient
-from finbot.core import dbutils, utils
+from finbot.core import dbutils, utils, tracer
 from finbot.model import UserAccount
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -11,6 +11,9 @@ import logging.config
 import logging
 import os
 
+db_engine = create_engine(os.environ['FINBOT_DB_URL'])
+db_session = dbutils.add_persist_utilities(scoped_session(sessionmaker(bind=db_engine)))
+tracer.set_persistence_layer(tracer.DBPersistenceLayer(db_session))
 
 logging.config.dictConfig({
     'version': 1,
@@ -29,30 +32,40 @@ logging.config.dictConfig({
 })
 
 
-def run_workflow(user_account_id: int,
-                 snap_client: SnapClient,
-                 hist_client: HistoryClient) -> None:
+def run_workflow_impl(user_account_id: int,
+                      snap_client: SnapClient,
+                      hist_client: HistoryClient) -> None:
     logging.info(f"starting workflow for user_id={user_account_id}")
 
-    logging.info(f"will take raw snapshot")
+    with tracer.sub_step("snapshot") as step:
+        snapshot_metadata = snap_client.take_snapshot(
+            user_account_id, tracer_context=tracer.propagate())
+        step.set_output(snapshot_metadata)
 
-    snapshot_metadata = snap_client.take_snapshot(user_account_id)
     logging.debug(snapshot_metadata)
-
     snapshot_id = snapshot_metadata["snapshot"]["identifier"]
-    
+
     logging.info(f"raw snapshot created with id={snapshot_id}")
     logging.debug(snapshot_metadata)
 
-    logging.info(f"will write history report")
-    
-    history_metadata = hist_client.write_history(snapshot_id)
-    
+    with tracer.sub_step("history report") as step:
+        history_metadata = hist_client.write_history(
+            snapshot_id, tracer_context=tracer.propagate())
+        step.set_output(history_metadata)
+
     history_entry_id = history_metadata["report"]["history_entry_id"]
     logging.info(f"history report written with id={history_entry_id}")
     logging.debug(utils.pretty_dump(history_metadata))
 
     logging.info(f"workflow done for user_id={user_account_id}")
+
+
+def run_workflow(user_account_id: int,
+                 snap_client: SnapClient,
+                 hist_client: HistoryClient) -> None:
+    with tracer.root("valuation") as step:
+        step.metadata["user_account_id"] = user_account_id
+        run_workflow_impl(user_account_id, snap_client, hist_client)
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -65,9 +78,6 @@ def create_parser() -> argparse.ArgumentParser:
 def main():
     settings = create_parser().parse_args()
     logging.info(f"running in mode: {settings.mode}")
-
-    db_engine = create_engine(os.environ['FINBOT_DB_URL'])
-    db_session = dbutils.add_persist_utilities(scoped_session(sessionmaker(bind=db_engine)))
 
     snapwsrv_endpoint = os.environ["FINBOT_SNAPWSRV_ENDPOINT"]
     snap_client = SnapClient(snapwsrv_endpoint)

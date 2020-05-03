@@ -1,6 +1,9 @@
+from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session, sessionmaker
 from flask import Flask, jsonify, request
 from contextlib import closing
 from finbot import providers
+from finbot.core import tracer, dbutils
 from finbot.providers.factory import get_provider
 from finbot.providers.errors import AuthFailure
 from finbot.apps.support import (
@@ -11,6 +14,7 @@ from finbot.apps.support import (
 import stackprinter
 import logging.config
 import logging
+import os
 
 
 logging.config.dictConfig({
@@ -29,6 +33,9 @@ logging.config.dictConfig({
     }
 })
 
+db_engine = create_engine(os.environ['FINBOT_DB_URL'])
+db_session = dbutils.add_persist_utilities(scoped_session(sessionmaker(bind=db_engine)))
+tracer.set_persistence_layer(tracer.DBPersistenceLayer(db_session))
 
 app = Flask(__name__)
 
@@ -81,10 +88,13 @@ def item_handler(item_type: str, provider_api: providers.Base):
         if not handler:
             raise RuntimeError(f"unknown line item: '{item_type}'")
         logging.info(f"handling '{item_type}' line item")
-        return {
-            "line_item": item_type,
-            "results": handler(provider_api)
-        }
+        with tracer.sub_step(item_type) as step:
+            results = handler(provider_api)
+            step.set_output(results)
+            return {
+                "line_item": item_type,
+                "results": results
+            }
     except Exception as e:
         logging.warning(f"error while handling '{item_type}': {e}\n{stackprinter.format()}")
         return {
@@ -97,28 +107,13 @@ def item_handler(item_type: str, provider_api: providers.Base):
         }
 
 
-@app.route("/financial_data", methods=["POST"])
-@request_handler(schema={
-    "type": "object",
-    "additionalProperties": False,
-    "required": ["provider", "credentials", "items"],
-    "properties": {
-        "provider": {"type": "string"},
-        "credentials": {"type": ["null", "object"]},
-        "items": {"type": "array", "items": {"type": "string"}}
-    }
-})
-def get_financial_data():
-    request_data = request.json
-    provider_id = request_data["provider"]
-    provider = get_provider(provider_id)
-    logging.info(f"initializing provider {provider_id}")
+def get_financial_data_impl(provider, credentials, line_items):
     with closing(provider.api_module.Api()) as provider_api:
         try:
-            credentials = provider.api_module.Credentials.init(
-                request_data["credentials"])
-            logging.info(f"authenticating {credentials.user_id}")
-            provider_api.authenticate(credentials)
+            with tracer.sub_step("authentication") as step:
+                step.metadata["user_id"] = credentials.user_id
+                logging.info(f"authenticating {credentials.user_id}")
+                provider_api.authenticate(credentials)
         except AuthFailure as e:
             logging.warning(f"authentication failure: {e}, trace:\n{format_stacktrace_for_logs()}")
             return make_error_response(
@@ -135,6 +130,27 @@ def get_financial_data():
         return jsonify({
             "financial_data": [
                 item_handler(line_item, provider_api)
-                for line_item in set(request_data["items"])
+                for line_item in set(line_items)
             ]
         })
+
+
+@app.route("/financial_data", methods=["POST"])
+@request_handler(schema={
+    "type": "object",
+    "required": ["provider", "credentials", "items"],
+    "properties": {
+        "provider": {"type": "string"},
+        "credentials": {"type": ["null", "object"]},
+        "items": {"type": "array", "items": {"type": "string"}}
+    }
+})
+def get_financial_data():
+    request_data = request.json
+    provider_id = request_data["provider"]
+    provider = get_provider(provider_id)
+    credentials = provider.api_module.Credentials.init(
+        request_data["credentials"])
+    line_items = request_data["items"]
+    tracer.current().metadata["provider_id"] = provider_id
+    return get_financial_data_impl(provider, credentials, line_items)

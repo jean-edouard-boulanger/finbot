@@ -1,3 +1,4 @@
+from finbot.core import tracer
 from flask import jsonify, request
 from contextlib import contextmanager
 from datetime import datetime, timedelta
@@ -55,6 +56,15 @@ class ApplicationError(Error):
     pass
 
 
+def _get_tracer_context(request_payload):
+    if request_payload is None:
+        return None
+    data = request_payload.get(tracer.CONTEXT_TAG)
+    if data is None:
+        return None
+    return tracer.FlatContext(**data)
+
+
 def request_handler(show_vals=False, schema=None):
     def impl(func):
         @functools.wraps(func)
@@ -63,15 +73,17 @@ def request_handler(show_vals=False, schema=None):
             with time_elapsed():
                 try:
                     logging.info(f"process {func.__name__} request")
+                    payload = request.get_json(silent=True)
                     if schema:
                         try:
-                            request_data = request.json
-                            jsonschema.validate(instance=request_data, schema=schema)
+                            jsonschema.validate(instance=payload, schema=schema)
                         except jsonschema.ValidationError as e:
                             raise Error(f"failed to validate request: {e}")
-                    response = func(*args, **kwargs)
-                    logging.info("request processed successfully")
-                    return response
+                    flat_context = _get_tracer_context(payload)
+                    with tracer.adopt(flat_context, func.__name__):
+                        response = func(*args, **kwargs)
+                        logging.info("request processed successfully")
+                        return response
                 except ApplicationError as e:
                     logging.warning(f"request processed with error: {e}\n{stackprinter.format(style='darkbg3', show_vals=sp_show_vals)}")
                     return make_error_response(

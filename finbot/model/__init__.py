@@ -372,3 +372,27 @@ class SubAccountItemValuationHistoryEntry(Base):
             ]
         ),
     )
+
+
+class DistributedTrace(Base):
+    __tablename__ = "finbot_distributed_traces"
+    guid = Column(String(36), primary_key=True)
+    path = Column(String(64), primary_key=True)
+    name = Column(String(64), primary_key=True)
+    user_data = Column(JSONEncoded)
+    start_time = Column(DateTimeTz)
+    end_time = Column(DateTimeTz)
+    created_at = Column(DateTimeTz, server_default=func.now())
+    updated_at = Column(DateTimeTz, onupdate=func.now())
+
+    def serialize(self):
+        return {
+            "guid": self.guid,
+            "path": [int(c) for c in self.path.split(".")],
+            "name": self.name,
+            "metadata": self.user_data,
+            "start_time": self.start_time,
+            "end_time": self.end_time,
+            "created_at": self.created_at,
+            "updated_at": self.updated_at
+        }

@@ -12,12 +12,16 @@ class FinbotClient {
     if (app_data.hasOwnProperty("error")) {
       throw app_data.error.debug_message;
     }
-    console.log("APPDATERWS", app_data)
     return app_data;
   }
 
+  async getTraces({guid}) {
+    const endpoint = `${this.endpoint}/admin/traces/${guid}`;
+    const response = await axios.get(endpoint);
+    return this.handle_response(response);
+  }
+
   async registerAccount(data) {
-    console.log("in registeraccount")
     const { email, full_name, password } = data;
     const settings = { "valuation_ccy": data.settings }
     const response = await axios.post(`${this.endpoint}/accounts`, { email, full_name, password, settings });
@@ -25,7 +29,6 @@ class FinbotClient {
   }
 
   async logInAccount(data) {
-    console.log("in login");
     const { email, password } = data;
     const response = await axios.post(`${this.endpoint}/auth/login`, { email, password });
     return this.handle_response(response);

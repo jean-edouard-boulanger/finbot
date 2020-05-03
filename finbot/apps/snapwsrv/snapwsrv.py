@@ -5,7 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker, joinedload
 from copy import deepcopy
 from finbot.clients.finbot import FinbotClient, LineItem
-from finbot.core import secure, utils, dbutils, fx_market
+from finbot.core import secure, utils, dbutils, fx_market, tracer
 from finbot.apps.support import request_handler, make_error
 from finbot.model import (
     UserAccount,
@@ -49,6 +49,7 @@ def load_secret(path):
 secret = load_secret(os.environ["FINBOT_SECRET_PATH"])
 db_engine = create_engine(os.environ['FINBOT_DB_URL'])
 db_session = dbutils.add_persist_utilities(scoped_session(sessionmaker(bind=db_engine)))
+tracer.set_persistence_layer(tracer.DBPersistenceLayer(db_session))
 
 app = Flask(__name__)
 
@@ -215,11 +216,12 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
 
 
 class AccountSnapshotRequest(object):
-    def __init__(self, account_id, provider_id, credentials_data, line_items):
+    def __init__(self, account_id, provider_id, credentials_data, line_items, tracer_context=None):
         self.account_id = account_id
         self.provider_id = provider_id
         self.credentials_data = credentials_data
         self.line_items = line_items
+        self.tracer_context = tracer_context
 
 
 def dispatch_snapshot_entry(request: AccountSnapshotRequest):
@@ -231,7 +233,8 @@ def dispatch_snapshot_entry(request: AccountSnapshotRequest):
         account_snapshot = finbot_client.get_financial_data(
             provider=request.provider_id,
             credentials_data=request.credentials_data,
-            line_items=request.line_items)
+            line_items=request.line_items,
+            tracer_context=request.tracer_context)
 
         logging.info(f"snapshot complete for for account_id={request.account_id}'"
                      f" provider_id={request.provider_id}")
@@ -264,7 +267,8 @@ def take_raw_snapshot(user_account):
                     LineItem.Balances,
                     LineItem.Assets,
                     LineItem.Liabilities
-                ]
+                ],
+                tracer_context=tracer.propagate()
             )
             for linked_account in user_account.linked_accounts
             if not linked_account.deleted
@@ -284,9 +288,7 @@ def take_raw_snapshot(user_account):
         ]
 
 
-@app.route("/snapshot/<user_account_id>/take", methods=["POST"])
-@request_handler()
-def take_snapshot(user_account_id):
+def take_snapshot_impl(user_account_id):
     logging.info(f"fetching user information for user account id {user_account_id}")
 
     user_account = (db_session.query(UserAccount)
@@ -309,8 +311,10 @@ def take_snapshot(user_account_id):
 
     logging.info(f"blank snapshot {new_snapshot.id} created")
 
-    raw_snapshot = take_raw_snapshot(user_account)
-    logging.info(utils.pretty_dump(raw_snapshot))
+    with tracer.sub_step("raw snapshot") as step:
+        raw_snapshot = take_raw_snapshot(user_account)
+        logging.info(utils.pretty_dump(raw_snapshot))
+        step.metadata["raw_snapshot"] = raw_snapshot
 
     logging.info(f"collecting currency pairs from raw snapshot")
 
@@ -336,8 +340,8 @@ def take_snapshot(user_account_id):
     logging.info("building final snapshot")
 
     snapshot_builder = SnapshotBuilderVisitor(
-        new_snapshot, 
-        CachedXccyRatesGetter(xccy_rates), 
+        new_snapshot,
+        CachedXccyRatesGetter(xccy_rates),
         new_snapshot.requested_ccy)
 
     with db_session.persist(new_snapshot):
@@ -357,3 +361,9 @@ def take_snapshot(user_account_id):
             }
         }
     })
+
+
+@app.route("/snapshot/<user_account_id>/take", methods=["POST"])
+@request_handler()
+def take_snapshot(user_account_id):
+    return take_snapshot_impl(user_account_id)

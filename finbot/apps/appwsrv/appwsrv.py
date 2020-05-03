@@ -23,6 +23,7 @@ from finbot.model import (
     LinkedAccount,
     UserAccountHistoryEntry,
     LinkedAccountValuationHistoryEntry,
+    DistributedTrace
 )
 import logging.config
 import logging
@@ -75,6 +76,20 @@ def cleanup_context(*args, **kwargs):
 
 
 API_V1 = Route("/api/v1")
+
+
+ADMIN = API_V1.admin
+
+
+@app.route(ADMIN.traces.p("guid")._, methods=["GET"])
+def get_traces(guid):
+    traces = db_session.query(DistributedTrace).filter_by(guid=guid).all()
+    return jsonify(serialize({
+        "traces": [
+            trace
+            for trace in traces
+        ]
+    }))
 
 
 AUTH = API_V1.auth

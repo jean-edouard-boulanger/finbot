@@ -5,7 +5,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from finbot.apps.support import request_handler
 from finbot.apps.histwsrv import repository
 from finbot.core.utils import serialize, pretty_dump
-from finbot.core import dbutils
+from finbot.core import dbutils, tracer
 from finbot.model import (
     UserAccountSnapshot,
     UserAccountHistoryEntry,
@@ -39,6 +39,7 @@ logging.config.dictConfig({
 
 db_engine = create_engine(os.environ['FINBOT_DB_URL'])
 db_session = dbutils.add_persist_utilities(scoped_session(sessionmaker(bind=db_engine)))
+tracer.set_persistence_layer(tracer.DBPersistenceLayer(db_session))
 
 app = Flask(__name__)
 
