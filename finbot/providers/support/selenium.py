@@ -3,14 +3,12 @@ from functools import wraps
 from selenium.webdriver.support.expected_conditions import presence_of_element_located
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.remote.webelement import WebElement
-from finbot.providers.support.selenium_tracer import EnableTracing
 
 
 class DefaultBrowserFactory(object):
-    def __init__(self, headless=True, developer_tools=False, enable_tracing=False):
+    def __init__(self, headless=True, developer_tools=False):
         self.headless = headless
         self.developer_tools = developer_tools
-        self.enable_tracing = enable_tracing
 
     def __call__(self):
         from selenium.webdriver import Chrome
@@ -24,8 +22,6 @@ class DefaultBrowserFactory(object):
             opts.add_argument("--auto-open-devtools-for-tabs")
         opts.headless = self.headless
         driver = Chrome(options=opts)
-        if self.enable_tracing:
-            return EnableTracing(driver)
         return driver
 
 
