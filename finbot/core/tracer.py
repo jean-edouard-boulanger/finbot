@@ -6,6 +6,7 @@ import contextlib
 import threading
 import uuid
 import logging
+import os
 
 
 CONTEXT_TAG = "__tracer_context__"
@@ -30,6 +31,15 @@ class Step(object):
 
     def set_failure(self, message):
         self.metadata["error"] = message
+
+    def set_origin(self, origin):
+        self.metadata["origin"] = origin
+
+    def set_pid(self, pid):
+        self.metadata["pid"] = pid
+
+    def set_description(self, description):
+        self.metadata["description"] = description
 
     @property
     def guid(self) -> str:
@@ -89,11 +99,59 @@ def _dummy_step() -> Step:
     return Step(guid=str(), path=[], name="dummy", start_time=datetime.now())
 
 
+class Config(object):
+    def __init__(self, identity=None, persistence_layer=None):
+        self.identity = identity
+        self.persistence_layer = persistence_layer
+
+
+class ThreadLogFilter(logging.Filter):
+    def __init__(self, thread_name):
+        super().__init__()
+        self.thread_name = thread_name
+
+    def filter(self, record):
+        return record.threadName == self.thread_name
+
+
+class ExcludeFileLogFilter(logging.Filter):
+    def __init__(self, file_name):
+        super().__init__()
+        self.file_name = file_name
+
+    def filter(self, record):
+        return record.filename != self.file_name
+
+
+class LogHandler(logging.StreamHandler):
+    def __init__(self, step_accessor):
+        super().__init__()
+        self._step_accessor = step_accessor
+
+    def emit(self, record):
+        step = self._step_accessor()
+        step.metadata.setdefault("logs", []).append({
+            "time": record.asctime,
+            "level": record.levelname,
+            "filename": record.filename,
+            "line": record.lineno,
+            "function": record.funcName,
+            "message": record.message,
+            "thread": record.threadName
+        })
+
+
 class TracerContext(object):
-    def __init__(self, persistence_layer):
-        self._persistence_layer = persistence_layer
+    def __init__(self, config: Config):
+        self._config = config
         self._steps: List[Step] = []
         self._path: List[int] = []
+
+    def _new_step(self, guid, path, name):
+        step = Step(guid=guid, path=path, name=name, start_time=datetime.now())
+        step.set_origin(self._config.identity)
+        step.set_pid(os.getpid())
+        return step
 
     def has_root(self) -> bool:
         return len(self._steps) > 0
@@ -110,26 +168,24 @@ class TracerContext(object):
             return _dummy_step()
         self._path = flat_context.path + [0]
         self._steps = [
-            Step(guid=flat_context.guid,
-                 path=flat_context.path,
-                 name=name,
-                 start_time=datetime.now())
+            self._new_step(guid=flat_context.guid,
+                           path=flat_context.path,
+                           name=name)
         ]
         step = self._steps[-1]
-        self._persistence_layer.persist(step)
+        self._config.persistence_layer.persist(step)
         logging.info(f"adopted tracer context name='{step.name}' guid={step.guid} path={step.pretty_path}")
         return step
 
     def new_root(self, name):
         self._path = [0, 0]
         self._steps = [
-            Step(guid=str(uuid.uuid4()),
-                 path=self._path[:-1],
-                 name=name,
-                 start_time=datetime.now())
+            self._new_step(guid=str(uuid.uuid4()),
+                           path=self._path[:-1],
+                           name=name)
         ]
         step = self._steps[-1]
-        self._persistence_layer.persist(step)
+        self._config.persistence_layer.persist(step)
         logging.info(f"new tracer root name='{step.name}' guid={step.guid} path={step.pretty_path}")
         return step
 
@@ -137,13 +193,12 @@ class TracerContext(object):
         if not self.has_root():
             return _dummy_step()
         self._steps.append(
-            Step(guid=self._steps[0].guid,
-                 path=self._path[:],
-                 name=name,
-                 start_time=datetime.now())
+            self._new_step(guid=self._steps[0].guid,
+                           path=self._path[:],
+                           name=name)
         )
         step = self._steps[-1]
-        self._persistence_layer.persist(step)
+        self._config.persistence_layer.persist(step)
         logging.info(f"new tracer child name='{step.name}' guid={step.guid} path={step.pretty_path}")
         self._path += [0]
         return self._steps[-1]
@@ -154,7 +209,7 @@ class TracerContext(object):
         self._path.pop()
         step = self._steps.pop()
         step.end_time = datetime.now()
-        self._persistence_layer.persist(step)
+        self._config.persistence_layer.persist(step)
         if len(self._steps) == 0:
             self._steps = []
             self._path = []
@@ -167,22 +222,32 @@ class TracerContext(object):
         return self._steps[-1]
 
 
-def _get_persistence_layer():
-    return _get_persistence_layer.layer
+def _get_default_config() -> Config:
+    return Config(persistence_layer=NoopPersistenceLayer)
 
 
-_get_persistence_layer.layer = NoopPersistenceLayer()
+def _get_config() -> Config:
+    return _get_config.it
 
 
-def set_persistence_layer(layer):
-    _get_persistence_layer.layer = layer
+_get_config.it = _get_default_config()
+
+
+def configure(identity=None, persistence_layer=None):
+    _get_config.it = Config(
+        identity=identity,
+        persistence_layer=persistence_layer or NoopPersistenceLayer())
 
 
 def _get_tracer_context() -> TracerContext:
     tls = _get_tracer_context.tls
     tracer_context = getattr(tls, "tracer_context", None)
     if not tracer_context:
-        tls.tracer_context = TracerContext(_get_persistence_layer())
+        tls.tracer_context = TracerContext(_get_config())
+        log_handler = LogHandler(current)
+        log_handler.addFilter(ThreadLogFilter(threading.current_thread().name))
+        log_handler.addFilter(ExcludeFileLogFilter(os.path.basename(__file__)))
+        logging.getLogger().addHandler(log_handler)
     return tls.tracer_context
 
 

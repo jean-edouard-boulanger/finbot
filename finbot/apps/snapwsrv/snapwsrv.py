@@ -49,7 +49,10 @@ def load_secret(path):
 secret = load_secret(os.environ["FINBOT_SECRET_PATH"])
 db_engine = create_engine(os.environ['FINBOT_DB_URL'])
 db_session = dbutils.add_persist_utilities(scoped_session(sessionmaker(bind=db_engine)))
-tracer.set_persistence_layer(tracer.DBPersistenceLayer(db_session))
+tracer.configure(
+    identity="snapwsrv",
+    persistence_layer=tracer.DBPersistenceLayer(db_session)
+)
 
 app = Flask(__name__)
 
@@ -77,6 +80,12 @@ class Xccy(object):
 
     def __str__(self):
         return f"{self.domestic}{self.foreign}"
+
+    def serialize(self):
+        return {
+            "domestic": self.domestic,
+            "foreign": self.foreign
+        }
 
 
 def visit_snapshot_tree(raw_snapshot, visitor):
@@ -288,7 +297,7 @@ def take_raw_snapshot(user_account):
         ]
 
 
-def take_snapshot_impl(user_account_id):
+def take_snapshot_impl(user_account_id: int):
     logging.info(f"fetching user information for user account id {user_account_id}")
 
     user_account = (db_session.query(UserAccount)
@@ -314,20 +323,15 @@ def take_snapshot_impl(user_account_id):
     with tracer.sub_step("raw snapshot") as step:
         raw_snapshot = take_raw_snapshot(user_account)
         logging.info(utils.pretty_dump(raw_snapshot))
-        step.metadata["raw_snapshot"] = raw_snapshot
+        step.set_output(raw_snapshot)
 
-    logging.info(f"collecting currency pairs from raw snapshot")
-
-    xccy_collector = XccyCollector(requested_ccy)
-    visit_snapshot_tree(raw_snapshot, xccy_collector)
-
-    logging.info("fetching cross currency rates for: "
-                 f"{', '.join(str(xccy) for xccy in xccy_collector.xccys)}")
-
-    xccy_rates = {
-        xccy: fx_market.get_xccy_rate(xccy.domestic, xccy.foreign)
-        for xccy in xccy_collector.xccys
-    }
+    with tracer.sub_step("fetch currency pairs"):
+        xccy_collector = XccyCollector(requested_ccy)
+        visit_snapshot_tree(raw_snapshot, xccy_collector)
+        xccy_rates = {
+            xccy: fx_market.get_xccy_rate(xccy.domestic, xccy.foreign)
+            for xccy in xccy_collector.xccys
+        }
 
     logging.info(f"adding cross currency rates to snapshot")
 

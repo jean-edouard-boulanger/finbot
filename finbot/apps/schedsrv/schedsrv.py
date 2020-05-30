@@ -13,7 +13,10 @@ import os
 
 db_engine = create_engine(os.environ['FINBOT_DB_URL'])
 db_session = dbutils.add_persist_utilities(scoped_session(sessionmaker(bind=db_engine)))
-tracer.set_persistence_layer(tracer.DBPersistenceLayer(db_session))
+tracer.configure(
+    identity="schedsrv",
+    persistence_layer=tracer.DBPersistenceLayer(db_session)
+)
 
 logging.config.dictConfig({
     'version': 1,

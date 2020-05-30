@@ -39,7 +39,10 @@ logging.config.dictConfig({
 
 db_engine = create_engine(os.environ['FINBOT_DB_URL'])
 db_session = dbutils.add_persist_utilities(scoped_session(sessionmaker(bind=db_engine)))
-tracer.set_persistence_layer(tracer.DBPersistenceLayer(db_session))
+tracer.configure(
+    identity="hitwsrv",
+    persistence_layer=tracer.DBPersistenceLayer(db_session)
+)
 
 app = Flask(__name__)
 
@@ -112,7 +115,9 @@ def write_history(snapshot_id):
     logging.info(f"snapshot is effective_at={valuation_date}")
     logging.info(f"fetching consistent snapshot")
 
-    snapshot_data = repo.get_consistent_snapshot_data(snapshot_id)
+    with tracer.sub_step("get consistent snapshot") as step:
+        snapshot_data = repo.get_consistent_snapshot_data(snapshot_id)
+        step.set_output(snapshot_data.to_csv())
 
     logging.debug(snapshot_data.to_csv())
 
