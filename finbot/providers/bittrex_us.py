@@ -6,6 +6,7 @@ from bittrex.bittrex import Bittrex
 
 
 OWNERSHIP_UNITS_THRESHOLD = 0.00001
+BITTREX_REWARDS_TOKEN = "BTXCRD"
 
 
 class Credentials(object):
@@ -39,9 +40,10 @@ class Api(providers.Base):
 
     def _iter_balances(self):
         for entry in self._api.get_balances()["result"]:
+            logging.info(entry)
             units = entry["Available"]
-            if units > OWNERSHIP_UNITS_THRESHOLD:
-                symbol = entry["Currency"]
+            symbol = entry["Currency"]
+            if units > OWNERSHIP_UNITS_THRESHOLD and symbol != BITTREX_REWARDS_TOKEN:
                 value = units * self._spot_api.get_spot_cached(
                     symbol, self._account_ccy)
                 yield symbol, units, value
