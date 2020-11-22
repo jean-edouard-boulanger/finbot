@@ -40,7 +40,7 @@ alembic-history:
 	alembic history
 
 run-schedsrv-dev:
-	python3.7 finbot/apps/schedsrv/schedsrv.py
+	python3.9 finbot/apps/schedsrv/schedsrv.py
 
 run-histwsrv-dev:
 	env FLASK_APP=finbot/apps/histwsrv/histwsrv.py \
@@ -101,7 +101,7 @@ trigger-valuation-docker:
 		make trigger-valuation accounts=${accounts}
 
 trigger-valuation:
-	python3.7 finbot/apps/schedsrv/schedsrv.py \
+	python3.9 finbot/apps/schedsrv/schedsrv.py \
 		--mode one_shot \
 		--accounts ${accounts}
 
@@ -112,14 +112,14 @@ test-providers-docker:
 		--env PYTHONPATH='${PYTONPATH}:/finbot' \
 		--rm -it \
 		finbot/providers-tester:latest \
-		python3.7 tools/providers-tester \
+		python3.9 tools/providers-tester \
 			--dump-balances --dump-assets --dump-liabilities --dump-transactions \
 			--secret-file ${FINBOT_SECRET_PATH} \
 			--accounts-file ${FINBOT_ACCOUNT_PATH} \
 			--providers ${providers}
 
 test-providers-debug:
-	python3.7 tools/providers-tester \
+	python3.9 tools/providers-tester \
 			--dump-balances --dump-assets --dump-liabilities --dump-transactions \
 			--secret-file ${FINBOT_SECRET_PATH} \
 			--accounts-file ${FINBOT_ACCOUNT_PATH} \
@@ -130,73 +130,73 @@ test-providers-debug:
 			--providers ${providers}
 
 test-providers:
-	python3.7 tools/providers-tester \
+	python3.9 tools/providers-tester \
 			--dump-balances --dump-assets --dump-liabilities --dump-transactions \
 			--secret-file ${FINBOT_SECRET_PATH} \
 			--accounts-file ${FINBOT_ACCOUNT_PATH} \
 			--providers ${providers}
 
 test-snapwsrv:
-	python3.7 tools/snapwsrv-tester \
+	python3.9 tools/snapwsrv-tester \
 		--endpoint ${FINBOT_SNAPWSRV_ENDPOINT} \
 		--account-id ${ACCOUNT_ID}
 
 test-histwsrv:
-	python3.7 tools/histwsrv-tester \
+	python3.9 tools/histwsrv-tester \
 		--endpoint ${FINBOT_HISTWSRV_ENDPOINT} \
 		--snapshot-id ${SNAPSHOT_ID}
 
 init-vault:
 	mkdir -p .secure && \
-	python3.7 tools/crypt fernet-key > ${FINBOT_SECRET_PATH} && \
+	python3.9 tools/crypt fernet-key > ${FINBOT_SECRET_PATH} && \
 	chmod 600 ${FINBOT_SECRET_PATH}
 
 init-account:
-	python3.7 tools/crypt fernet-encrypt \
+	python3.9 tools/crypt fernet-encrypt \
 		-k ${FINBOT_SECRET_PATH} \
 		-i tools/accounts.tpl.json > ${FINBOT_ACCOUNT_PATH} && \
 	echo "created default account, run 'make edit-account' to configure"
 
 show-account:
-	python3.7 tools/crypt fernet-decrypt \
+	python3.9 tools/crypt fernet-decrypt \
 		-k ${FINBOT_SECRET_PATH} \
 		-i ${FINBOT_ACCOUNT_PATH} | less
 
 edit-account:
-	python3.7 tools/crypt fernet-decrypt \
+	python3.9 tools/crypt fernet-decrypt \
 		-k ${FINBOT_SECRET_PATH} \
 		-i ${FINBOT_ACCOUNT_PATH} > .accounts.tmp.json && \
 	chmod 600 .accounts.tmp.json && \
 	${FINBOT_EDIT_CMD} .accounts.tmp.json && \
-	python3.7 tools/crypt fernet-encrypt \
+	python3.9 tools/crypt fernet-encrypt \
 		-k ${FINBOT_SECRET_PATH} \
 		-i .accounts.tmp.json > ${FINBOT_ACCOUNT_PATH} && \
 	rm .accounts.tmp.json
 
 finbotdb-wait:
-	python3.7 tools/finbotdb --database ${FINBOT_DB_URL} wait
+	python3.9 tools/finbotdb --database ${FINBOT_DB_URL} wait
 
 finbotdb-build:
-	python3.7 tools/finbotdb --database ${FINBOT_DB_URL} build
+	python3.9 tools/finbotdb --database ${FINBOT_DB_URL} build
 
 finbotdb-destroy:
-	python3.7 tools/finbotdb --database ${FINBOT_DB_URL} destroy
+	python3.9 tools/finbotdb --database ${FINBOT_DB_URL} destroy
 
 finbotdb-rebuild:
-	python3.7 tools/finbotdb --database ${FINBOT_DB_URL} destroy && \
-	python3.7 tools/finbotdb --database ${FINBOT_DB_URL} build
+	python3.9 tools/finbotdb --database ${FINBOT_DB_URL} destroy && \
+	python3.9 tools/finbotdb --database ${FINBOT_DB_URL} build
 
 finbotdb-hydrate:
-	python3.7 tools/finbotdb --database ${FINBOT_DB_URL} hydrate \
+	python3.9 tools/finbotdb --database ${FINBOT_DB_URL} hydrate \
 		--data-file ./tools/hydrate.json
 
 finbotdb-add-account:
-	python3.7 tools/finbotdb --database ${FINBOT_DB_URL} add-account \
+	python3.9 tools/finbotdb --database ${FINBOT_DB_URL} add-account \
 		--secret ${FINBOT_SECRET_PATH} \
 		--account ${FINBOT_ACCOUNT_PATH}
 
 finbotdb-dump-account:
-	python3.7 tools/finbotdb --database ${FINBOT_DB_URL} dump-account \
+	python3.9 tools/finbotdb --database ${FINBOT_DB_URL} dump-account \
 		--secret ${FINBOT_SECRET_PATH} \
 		--account-id ${account_id}
 

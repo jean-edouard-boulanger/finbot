@@ -6,8 +6,8 @@ RUN apt-get update
 
 RUN apt-get install -y \
     curl \
-    python3.7 \
-    python3.7-dev \
+    python3.9 \
+    python3.9-dev \
     python3-pip \
     unzip \
     xvfb \
@@ -15,7 +15,7 @@ RUN apt-get install -y \
     libgconf-2-4 \
     libpq-dev
 
-RUN python3.7 -m pip install --upgrade pip
+RUN python3.9 -m pip install --upgrade pip
 
 RUN curl -sS -o - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add && \
     echo "deb [arch=amd64]  http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list && \
