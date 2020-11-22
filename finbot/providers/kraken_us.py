@@ -2,8 +2,6 @@ from finbot import providers
 from finbot.providers.errors import AuthFailure
 import krakenex
 
-import logging
-
 
 OWNERSHIP_UNITS_THRESHOLD = 0.00001
 
@@ -40,7 +38,6 @@ class Api(providers.Base):
         price_fetcher = KrakenPriceFetcher(self._api)
         results = self._api.query_private("Balance")["result"]
         for symbol, units in results.items():
-            logging.info((symbol, units))
             units = float(units)
             if units > OWNERSHIP_UNITS_THRESHOLD:
                 demangled_symbol = _format_symbol(symbol)
