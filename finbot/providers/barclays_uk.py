@@ -9,6 +9,7 @@ from finbot.core.utils import in_range
 from datetime import datetime
 import re
 import hashlib
+import logging
 
 
 AUTH_URL = "https://bank.barclays.co.uk/olb/authlogin/loginAppContainer.do"
@@ -68,6 +69,10 @@ class Api(providers.SeleniumBased):
                 combo.send_keys(Keys.DOWN)
             combo.send_keys(Keys.ENTER)
         self._do.get(AUTH_URL)
+
+        # Step 0: accept cookies
+
+        _accept_cookies(self._do)
 
         # Step 1: last name + card number
 
@@ -209,8 +214,9 @@ class Api(providers.SeleniumBased):
 def _iter_accounts(accounts_area):
     for row in accounts_area.find_elements_by_css_selector("div.o-account__head"):
         account_cell = row.find_element_by_css_selector("div.account-link")
-        # TODO also handle investment accounts
-        if "investment" in account_cell.text.lower():
+        account_name = account_cell.text.strip()
+        if "investment" in account_name.lower() or len(account_name) == 0:
+            logging.info(f"skipping unsupported account: '{account_name}'")
             continue
         account_link_element = account_cell.find_element_by_tag_name("a")
         account_details = row.find_element_by_css_selector("div.o-account__details-body").text.strip().split("\n")
@@ -218,7 +224,7 @@ def _iter_accounts(accounts_area):
         yield {
             "account": {
                 "id": account_details[0],
-                "name": account_cell.text.strip(),
+                "name": account_name,
                 "iso_currency": "GBP",
                 "type": "cash"
             },
@@ -227,6 +233,14 @@ def _iter_accounts(accounts_area):
                 "account_link": account_link_element
             }
         }
+
+
+def _accept_cookies(do: SeleniumHelper):
+    buttons = (do.wait_element(By.CLASS_NAME, "m-cookie-prompt")
+                 .find_elements_by_tag_name("button"))
+    for button in buttons:
+        if "accept" in button.text.lower():
+            button.click()
 
 
 def _wait_accounts(do: SeleniumHelper):
