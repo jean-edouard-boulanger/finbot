@@ -279,6 +279,23 @@ def add_account_tool(settings, engine, session):
     return True
 
 
+def update_account_tool(settings, engine, session):
+    from finbot.core import secure
+    with open(settings.secret_file) as kf:
+        secret = kf.read()
+        with open(settings.account_file, "rb") as af:
+            account_data = json.loads(secure.fernet_decrypt(af.read(), secret))
+    local_linked_accounts: list = account_data["linked_accounts"]
+    local_linked_account = [account for account in local_linked_accounts if account["provider_id"] == settings.provider][0]
+    logging.info(local_linked_account)
+    remote_linked_account: LinkedAccount = session.query(LinkedAccount).filter_by(user_account_id=settings.user_id, provider_id=settings.provider).first()
+    remote_linked_account.account_name = local_linked_account["description"]
+    remote_linked_account.encrypted_credentials = secure.fernet_encrypt(
+        json.dumps(local_linked_account["credentials"]).encode(), secret).decode()
+    session.add(remote_linked_account)
+    session.commit()
+
+
 def dump_account_tool(settings, engine, session):
     from finbot.core import secure
     account = session.query(UserAccount).filter_by(id=settings.account_id).first()
@@ -313,6 +330,13 @@ def dump_account_tool(settings, engine, session):
     return True
 
 
+def disable_history_entry_tool(settings, engine, session):
+    history_entry = session.query(UserAccountHistoryEntry).filter_by(id=settings.history_entry_id).first()
+    history_entry.available = False
+    session.add(history_entry)
+    session.commit()
+
+
 def wait_tool(settings, engine, session):
     while True:
         try:
@@ -335,6 +359,13 @@ def destroy_tool(settings, engine, session):
     return True
 
 
+def setup_update_account_subparser(parser):
+    parser.add_argument("--secret-file", type=str, help="path to secret key", required=True)
+    parser.add_argument("--account-file", type=str, help="path to account file", required=True)
+    parser.add_argument("--provider", type=str, help="updated provider id", required=True)
+    parser.add_argument("--user-id", type=int, help="updated user id", required=True)
+
+
 def setup_add_account_subparser(parser):
     parser.add_argument("-k", "--secret", type=str, help="path to secret key", required=True)
     parser.add_argument("-A", "--account", type=str, help="path to account file", required=True)
@@ -347,6 +378,10 @@ def setup_hydrate_subparser(parser):
 def setup_dump_account_subparser(parser):
     parser.add_argument("-k", "--secret", type=str, help="path to secret key", required=True)
     parser.add_argument("--account-id", type=int, required=True)
+
+
+def setup_disable_history_entry_subparser(parser):
+    parser.add_argument("--history-entry-id", type=int, required=True)
 
 
 def create_parser():
@@ -387,9 +422,19 @@ all_tools = {
         "handler": add_account_tool
     },
     "dump-account": {
-        "description": "dump account dadat",
+        "description": "dump account dada",
         "parser_builder": setup_dump_account_subparser,
         "handler": dump_account_tool
+    },
+    "update-account": {
+        "description": "update account",
+        "parser_builder": setup_update_account_subparser,
+        "handler": update_account_tool
+    },
+    "disable-history-entry": {
+        "description": "mark history entry as unavailable",
+        "parser_builder": setup_disable_history_entry_subparser,
+        "handler": disable_history_entry_tool
     }
 }
 
