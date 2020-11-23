@@ -40,7 +40,6 @@ class Api(providers.Base):
 
     def _iter_balances(self):
         for entry in self._api.get_balances()["result"]:
-            logging.info(entry)
             units = entry["Available"]
             symbol = entry["Currency"]
             if units > OWNERSHIP_UNITS_THRESHOLD and symbol != BITTREX_REWARDS_TOKEN:

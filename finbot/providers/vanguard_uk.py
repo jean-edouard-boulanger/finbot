@@ -5,8 +5,8 @@ from finbot.providers.support.selenium import SeleniumHelper
 from finbot.providers.errors import AuthFailure
 from finbot.core.utils import swallow_exc
 from finbot import providers
+from datetime import datetime, timedelta
 from copy import deepcopy
-from datetime import datetime
 import contextlib
 import hashlib
 import json
@@ -101,7 +101,8 @@ class Api(providers.SeleniumBased):
         for section in investments_table.find_elements_by_css_selector("tbody.group-content"):
             group_row = section.find_element_by_css_selector("tr.group-row")
             product_type = group_row.text.strip().split()[0].lower()
-            for product_row in section.find_elements_by_css_selector("tr.product-row"):
+            product_rows = _get_product_rows(section, timedelta(seconds=60))
+            for product_row in product_rows:
                 all_assets.append(_extract_asset(product_type, product_row))
         return {
             "account": deepcopy(account["description"]),
@@ -174,6 +175,15 @@ class _StalenessDetector(object):
         self.wait_refreshed(element)
         yield
         self.mark_visited(element)
+
+
+def _get_product_rows(section, timeout: timedelta):
+    cutoff = datetime.now() + timeout
+    while datetime.now() < cutoff:
+        product_rows = section.find_elements_by_css_selector("tr.product-row")
+        if len(product_rows) > 0:
+            return product_rows
+    raise RuntimeError("could not find product rows in section")
 
 
 def _extract_cash_asset(product_row):
