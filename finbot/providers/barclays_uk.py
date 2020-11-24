@@ -2,8 +2,8 @@ from typing import Optional
 from copy import deepcopy
 from price_parser import Price
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
 from finbot import providers
+from finbot.core import tracer
 from finbot.providers.support.selenium import any_of, SeleniumHelper
 from finbot.providers.errors import AuthFailure, Error
 from finbot.core.utils import in_range
@@ -11,7 +11,7 @@ from datetime import datetime
 import re
 import hashlib
 import logging
-import time
+
 
 AUTH_URL = "https://bank.barclays.co.uk/olb/authlogin/loginAppContainer.do"
 HOME_URL = "https://bank.barclays.co.uk/olb/balances/PersonalFinancialSummary.action"
@@ -65,39 +65,37 @@ class Api(providers.SeleniumBased):
         raise Error(f"unable to switch to account '{account_id}'")
 
     def authenticate(self, credentials: Credentials):
-        def select_combo_item(combo, idx):
-            for _ in range(idx + 1):
-                combo.send_keys(Keys.DOWN)
-            combo.send_keys(Keys.ENTER)
+        # Step 0: accept cookies
         self._do.get(AUTH_URL)
 
-        # Step 0: accept cookies
-
-        _accept_cookies(self._do)
+        with tracer.sub_step("accept cookies"):
+            _accept_cookies(self._do)
 
         # Step 1: last name + card number
 
-        self._do.wait_element(By.ID, "surnameMem").send_keys(credentials.last_name)
-        self._do.wait_element(By.ID, "membership0").send_keys(credentials.membership_number)
-        self._do.click(self._do.wait_element(By.CSS_SELECTOR, "button#continue"))
+        with tracer.sub_step("user input"):
+            self._do.wait_element(By.ID, "surnameMem").send_keys(credentials.last_name)
+            self._do.wait_element(By.ID, "membership0").send_keys(credentials.membership_number)
+            self._do.click(self._do.wait_element(By.CSS_SELECTOR, "button#continue"))
 
-        self._do.assert_success(_reached_auth_step2, _get_login_error,
-                                on_failure=_report_auth_error)
+            self._do.assert_success(_reached_auth_step2, _get_login_error,
+                                    on_failure=_report_auth_error)
 
         # Step 2: passcode + memorable
 
-        self._do.wait_element(By.ID, "loginStep2")
-        self._do.click(self._do.wait_element(By.ID, "athenticationType_tab_button_2"))
-        self._do.wait_element(By.ID, "passcode").send_keys(credentials.passcode)
+        with tracer.sub_step("password input"):
+            self._do.wait_element(By.ID, "loginStep2")
+            self._do.click(self._do.wait_element(By.ID, "athenticationType_tab_button_2"))
+            self._do.wait_element(By.ID, "passcode").send_keys(credentials.passcode)
 
-        mem_area1 = self._do.wait_element(By.CLASS_NAME, "memorableWordInputSpaceFirst")
-        pos1 = int(mem_area1.find_element_by_css_selector("span.sub-label").text.strip()[0])
-        mem_area1.find_element_by_tag_name("input").send_keys(credentials.memorable_word[pos1 - 1])
+            mem_area1 = self._do.wait_element(By.CLASS_NAME, "memorableWordInputSpaceFirst")
+            pos1 = int(mem_area1.find_element_by_css_selector("span.sub-label").text.strip()[0])
+            mem_area1.find_element_by_tag_name("input").send_keys(credentials.memorable_word[pos1 - 1])
 
-        mem_area2 = self._do.wait_element(By.CLASS_NAME, "memorableWordInputSpace")
-        pos2 = int(mem_area2.find_element_by_css_selector("span.sub-label").text.strip()[0])
-        mem_area2.find_element_by_tag_name("input").send_keys(credentials.memorable_word[pos2 - 1])
-        self._do.wait_element(By.ID, "submitAuthentication").click()
+            mem_area2 = self._do.wait_element(By.CLASS_NAME, "memorableWordInputSpace")
+            pos2 = int(mem_area2.find_element_by_css_selector("span.sub-label").text.strip()[0])
+            mem_area2.find_element_by_tag_name("input").send_keys(credentials.memorable_word[pos2 - 1])
+            self._do.wait_element(By.ID, "submitAuthentication").click()
 
         # Step 3: Provide CVV + last 4 card digits if needed
 
@@ -108,21 +106,24 @@ class Api(providers.SeleniumBased):
 
         auth_protect_form = _get_auth_protect_form(self._do)
         if auth_protect_form:
-            auth_protect_form.submit(credentials)
-            self._do.wait_cond(any_of(
-                lambda _: _is_logged_in(self._do),
-                lambda _: _get_login_error(self._do)))
+            with tracer.sub_step("extra protection"):
+                auth_protect_form.submit(credentials)
+                self._do.wait_cond(any_of(
+                    lambda _: _is_logged_in(self._do),
+                    lambda _: _get_login_error(self._do)))
 
         # Step 4: Check authentication
 
-        self._do.assert_success(_is_logged_in, _get_login_error,
-                                on_failure=_report_auth_error)
+        with tracer.sub_step("finalize") as t:
+            self._do.assert_success(_is_logged_in, _get_login_error,
+                                    on_failure=_report_auth_error)
 
-        accounts_area = _wait_accounts(self._do)
-        self.accounts = {
-            entry["account"]["id"]: entry["account"]
-            for entry in _iter_accounts(accounts_area)
-        }
+            accounts_area = _wait_accounts(self._do)
+            self.accounts = {
+                entry["account"]["id"]: entry["account"]
+                for entry in _iter_accounts(accounts_area)
+            }
+            t.set_output(deepcopy(self.accounts))
 
     def _get_account_transactions(self, account_id, from_date, to_date):
         all_txn = []
@@ -233,7 +234,7 @@ def _accept_cookies(do: SeleniumHelper):
                  .find_elements_by_tag_name("button"))
     for button in buttons:
         if "accept" in button.text.lower():
-            button.click()
+            do.click(button)
 
 
 def _wait_accounts(do: SeleniumHelper):
