@@ -35,12 +35,10 @@ class Api(providers.SeleniumBased):
 
     def authenticate(self, credentials):
         self._do.get(AUTH_URL)
-        cookies_button = self._do.wait_element(By.ID, "sprite-ContinueButton_EN")
-        cookies_button.click()
 
-        self._do.find(By.ID, "eliloUserID").send_keys(credentials.user_id)
-        self._do.find(By.ID, "eliloPassword").send_keys(credentials.password)
-        self._do.find(By.ID, "loginSubmit").click()
+        self._do.wait_element(By.ID, "eliloUserID").send_keys(credentials.user_id)
+        self._do.wait_element(By.ID, "eliloPassword").send_keys(credentials.password)
+        self._do.wait_element(By.ID, "loginSubmit").click()
 
         self._do.wait_cond(any_of(
             presence_of_element_located((By.CSS_SELECTOR, "section.balance-container")),
@@ -49,6 +47,8 @@ class Api(providers.SeleniumBased):
         error_message = _get_login_error(self._do)
         if error_message:
             raise AuthFailure(error_message)
+
+        self._do.wait_element(By.ID, "sprite-AcceptButton_EN").click()
 
         self.accounts = {
             entry["account"]["id"]: deepcopy(entry["account"])
@@ -158,13 +158,13 @@ class Api(providers.SeleniumBased):
         }
 
 
-def _iter_accounts(browser_helper: SeleniumHelper):
-    accounts_switcher_area = browser_helper.wait_element(
-        By.CSS_SELECTOR, "section.axp-account-switcher")
+def _iter_accounts(do: SeleniumHelper):
+    accounts_switcher_area = do.wait_element(
+        By.XPATH, "//section[@data-module-name='axp-account-switcher']")
     accounts_switcher = accounts_switcher_area.find_element_by_tag_name("button")
-    browser_helper.click(accounts_switcher)
+    do.click(accounts_switcher)
 
-    accounts_area = browser_helper.wait_element(By.ID, "accounts")
+    accounts_area = do.wait_element(By.ID, "accounts")
     account_rows = accounts_area.find_elements_by_css_selector("section.account-row")
 
     for account_row in account_rows:
@@ -185,7 +185,7 @@ def _iter_accounts(browser_helper: SeleniumHelper):
             }
         }
 
-    browser_helper.click(accounts_switcher)
+    do.click(accounts_switcher)
 
 
 def _get_balance(balance_area):
@@ -213,6 +213,6 @@ class Credentials(object):
 
 
 def _get_login_error(browser_helper: SeleniumHelper):
-    alert_area = browser_helper.find_maybe(By.CSS_SELECTOR, "div.alert")
+    alert_area = browser_helper.find_maybe(By.CSS_SELECTOR, "div.alert-warn")
     if alert_area:
         return alert_area.text

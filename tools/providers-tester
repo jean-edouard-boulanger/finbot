@@ -6,7 +6,6 @@ from finbot.providers.support.selenium import DefaultBrowserFactory
 from finbot.providers.factory import get_provider
 from finbot.core import secure, fx_market
 from finbot.core.utils import pretty_dump
-from datetime import datetime, timedelta
 import functools
 import stackprinter
 import argparse
