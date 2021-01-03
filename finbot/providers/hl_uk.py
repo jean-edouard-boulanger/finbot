@@ -3,7 +3,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from finbot.providers.support.selenium import SeleniumHelper
 from finbot.providers.errors import Error
-from finbot import providers
+from finbot.providers.selenium_based import SeleniumBased
 from finbot.providers.errors import AuthFailure
 import re
 
@@ -30,7 +30,7 @@ class Credentials(object):
                            data["secret_number"])
 
 
-class Api(providers.SeleniumBased):
+class Api(SeleniumBased):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.accounts = None

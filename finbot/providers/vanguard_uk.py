@@ -1,10 +1,10 @@
 from price_parser import Price
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import StaleElementReferenceException
+from finbot.providers.selenium_based import SeleniumBased
 from finbot.providers.support.selenium import SeleniumHelper
 from finbot.providers.errors import AuthFailure
 from finbot.core.utils import swallow_exc
-from finbot import providers
 from datetime import datetime, timedelta
 from copy import deepcopy
 import contextlib
@@ -30,7 +30,7 @@ class Credentials(object):
         return Credentials(data["username"], data["password"])
 
 
-class Api(providers.SeleniumBased):
+class Api(SeleniumBased):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.home_url = None

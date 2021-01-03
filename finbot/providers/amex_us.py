@@ -1,4 +1,4 @@
-from finbot import providers
+from finbot.providers.selenium_based import SeleniumBased
 from finbot.providers.support.selenium import any_of, SeleniumHelper
 from finbot.providers.errors import AuthFailure, Error
 from finbot.core.utils import in_range
@@ -14,7 +14,7 @@ AUTH_URL = "https://global.americanexpress.com/login"
 HOME_URL = "https://global.americanexpress.com/dashboard"
 
 
-class Api(providers.SeleniumBased):
+class Api(SeleniumBased):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.accounts = None

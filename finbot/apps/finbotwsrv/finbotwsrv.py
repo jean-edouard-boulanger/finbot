@@ -145,7 +145,7 @@ def get_financial_data_impl(provider, credentials, line_items):
     "properties": {
         "provider": {"type": "string"},
         "credentials": {"type": ["null", "object"]},
-        "items": {"type": "array", "items": {"type": "string"}}
+        "items": {"type": "array", "items": {"type": "string"}},
     }
 })
 def get_financial_data():

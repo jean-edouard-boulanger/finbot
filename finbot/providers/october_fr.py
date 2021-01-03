@@ -1,6 +1,6 @@
 from price_parser import Price
 from selenium.webdriver.common.by import By
-from finbot import providers
+from finbot.providers.selenium_based import SeleniumBased
 from finbot.providers.support.selenium import SeleniumHelper
 from finbot.providers.errors import AuthFailure
 
@@ -24,7 +24,7 @@ class Credentials(object):
         return Credentials(data["username"], data["password"])
 
 
-class Api(providers.SeleniumBased):
+class Api(SeleniumBased):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 

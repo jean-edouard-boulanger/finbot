@@ -2,10 +2,10 @@ from copy import deepcopy
 from price_parser import Price
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
+from finbot.providers.selenium_based import SeleniumBased
 from finbot.providers.support.selenium import any_of, SeleniumHelper
 from finbot.providers.errors import AuthFailure
 from finbot.core.utils import swallow_exc
-from finbot import providers
 import logging
 import time
 import traceback
@@ -29,7 +29,7 @@ class Credentials(object):
         return Credentials(data["username"], data["password"])
 
 
-class Api(providers.SeleniumBased):
+class Api(SeleniumBased):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.accounts = None

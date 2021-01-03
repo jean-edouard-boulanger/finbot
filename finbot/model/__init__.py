@@ -35,6 +35,10 @@ class UserAccount(Base):
         "UserAccountSettings", 
         uselist=False, 
         back_populates="user_account")
+    plaid_settings = relationship(
+        "UserAccountPlaidSettings",
+        uselist=False,
+        back_populates="user_account")
 
 
 class UserAccountSettings(Base):
@@ -45,6 +49,36 @@ class UserAccountSettings(Base):
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
     user_account = relationship(UserAccount, uselist=False, back_populates="settings")
+
+    def serialize(self):
+        return {
+            "valuation_ccy": self.valuation_ccy,
+            "created_at": self.created_at,
+            "updated_at": self.updated_at,
+        }
+
+
+class UserAccountPlaidSettings(Base):
+    __tablename__ = "finbot_user_accounts_plaid_settings"
+    user_account_id = Column(Integer, ForeignKey(UserAccount.id, ondelete='CASCADE'), primary_key=True)
+    env = Column(String(32), nullable=False)
+    client_id = Column(String(64), nullable=False)
+    public_key = Column(String(64), nullable=False)
+    secret_key = Column(String(64), nullable=False)
+    created_at = Column(DateTimeTz, server_default=func.now())
+    updated_at = Column(DateTimeTz, onupdate=func.now())
+
+    user_account = relationship(UserAccount, uselist=False, back_populates="plaid_settings")
+
+    def serialize(self):
+        return {
+            "env": self.env,
+            "client_id": self.client_id,
+            "public_key": self.public_key,
+            "secret_key": self.secret_key,
+            "created_at": self.created_at,
+            "updated_at": self.updated_at,
+        }
 
 
 class Provider(Base):
