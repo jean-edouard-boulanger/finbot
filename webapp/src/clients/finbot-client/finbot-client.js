@@ -40,6 +40,12 @@ class FinbotClient {
     return this.handle_response(response).result;
   }
 
+  async getAccountSettings(settings) {
+    const { account_id } = settings;
+    const response = await axios.get(`${this.endpoint}/accounts/${account_id}/settings`);
+    return this.handle_response(response).settings;
+  }
+
   async getAccountHistoricalValuation(settings) {
     const { account_id } = settings;
     const response = await axios.get(`${this.endpoint}/accounts/${account_id}/history`);

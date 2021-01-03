@@ -5,12 +5,14 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker, joinedload
 from copy import deepcopy
 from finbot.clients.finbot import FinbotClient, LineItem
+from finbot.providers.plaid_us import pack_credentials as pack_plaid_credentials
 from finbot.core import secure, utils, dbutils, fx_market, tracer
 from finbot.apps.support import request_handler, make_error
 from finbot.model import (
     UserAccount,
     UserAccountSnapshot,
     SnapshotStatus,
+    LinkedAccount,
     LinkedAccountSnapshotEntry,
     SubAccountSnapshotEntry,
     SubAccountItemSnapshotEntry,
@@ -261,6 +263,16 @@ def dispatch_snapshot_entry(request: AccountSnapshotRequest):
             trace=trace)
 
 
+def get_credentials_data(linked_account: LinkedAccount, user_account: UserAccount):
+    credentials = json.loads(secure.fernet_decrypt(
+        linked_account.encrypted_credentials.encode(),
+        secret).decode())
+    if linked_account.provider_id == "plaid_us":
+        logging.info(credentials)
+        return pack_plaid_credentials(credentials, user_account.plaid_settings)
+    return credentials
+
+
 def take_raw_snapshot(user_account):
     with ThreadPoolExecutor(max_workers=4) as executor:
         logging.info("initializing accounts snapshot requests")
@@ -268,10 +280,7 @@ def take_raw_snapshot(user_account):
             AccountSnapshotRequest(
                 account_id=linked_account.id,
                 provider_id=linked_account.provider_id,
-                credentials_data=json.loads(
-                    secure.fernet_decrypt(
-                        linked_account.encrypted_credentials.encode(),
-                        secret).decode()),
+                credentials_data=get_credentials_data(linked_account, user_account),
                 line_items=[
                     LineItem.Balances,
                     LineItem.Assets,
@@ -303,6 +312,7 @@ def take_snapshot_impl(user_account_id: int):
     user_account = (db_session.query(UserAccount)
                               .options(joinedload(UserAccount.linked_accounts))
                               .options(joinedload(UserAccount.settings))
+                              .options(joinedload(UserAccount.plaid_settings))
                               .filter_by(id=user_account_id)
                               .first())
 

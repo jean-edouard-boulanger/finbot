@@ -367,6 +367,7 @@ def create_linked_account(user_account_id):
 
     user_account = (db_session.query(UserAccount)
                               .filter_by(id=user_account_id)
+                              .options(joinedload(UserAccount.plaid_settings))
                               .first())
 
     if not user_account:
@@ -380,17 +381,31 @@ def create_linked_account(user_account_id):
     if not provider:
         raise ApplicationError(f"could not find provider with id '{provider_id}'")
 
+    is_plaid = provider.id == "plaid_us"
+    if is_plaid and not user_account.plaid_settings:
+        raise ApplicationError("user account is not setup for Plaid")
+
+    credentials = request_data["credentials"]
+    if is_plaid:
+        credentials = core.make_plaid_credentials(
+            credentials, user_account.plaid_settings)
+        logging.info(credentials)
+
     if do_validate:
         logging.info(f"validating authentication details for "
                      f"account_id={user_account_id} and provider_id={provider_id}")
-        core.validate_credentials(get_finbot_client(), provider_id, request_data.get("credentials"))
+        core.validate_credentials(
+            finbot_client=get_finbot_client(),
+            plaid_settings=user_account.plaid_settings,
+            provider_id=provider_id,
+            credentials=credentials)
 
     if do_persist:
         logging.info(f"Linking external account (provider_id={provider.id}) to user account_id={user_account.id}")
         try:
             with db_session.persist(user_account):
                 encrypted_credentials = secure.fernet_encrypt(
-                    json.dumps(request_data["credentials"]).encode(), SECRET).decode()
+                    json.dumps(credentials).encode(), SECRET).decode()
                 user_account.linked_accounts.append(
                     LinkedAccount(
                         provider_id=request_data["provider_id"],

@@ -1,5 +1,4 @@
 from typing import Dict
-from finbot.providers.support.selenium import DefaultBrowserFactory, SeleniumHelper
 from datetime import datetime
 
 
@@ -40,14 +39,3 @@ class Base(object):
         """ Implement to release any used resource at the end of the session
         """
         pass
-
-
-class SeleniumBased(Base):
-    def __init__(self, browser_factory=None, **kwargs):
-        super().__init__(**kwargs)
-        browser_factory = browser_factory or DefaultBrowserFactory()
-        self.browser = browser_factory()
-        self._do = SeleniumHelper(self.browser)
-
-    def close(self):
-        self.browser.quit()

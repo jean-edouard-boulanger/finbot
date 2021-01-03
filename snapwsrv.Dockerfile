@@ -3,8 +3,6 @@ FROM ubuntu:latest
 ENV TZ=Europe/Paris
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-RUN apt-get upgrade
-
 RUN apt-get update
 
 RUN apt-get install -y \
@@ -24,6 +22,7 @@ RUN pip3 install \
     requests \
     cryptography \
     cffi \
+    plaid-python \
     psycopg2 \
     sqlalchemy \
     pytz \

@@ -48,6 +48,7 @@ RUN pip3 install \
     selenium \
     terminaltables \
     price-parser \
+    plaid-python \
     krakenex \
     python-bittrex \
     python-binance \

@@ -1,6 +1,14 @@
 {
     "providers": [
         {
+            "id": "plaid_us",
+            "description": "Open banking via Plaid",
+            "webside_url": "https://plaid.com/",
+            "credentials_schema": {
+                "json_schema": {}
+            }
+        },
+        {
             "id": "amex_us",
             "description": "American express (US)",
             "website_url": "https://www.americanexpress.com/",

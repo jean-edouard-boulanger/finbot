@@ -1,4 +1,5 @@
 from finbot.providers import (
+    plaid_us,
     amex_us,
     binance_us,
     hl_uk,
@@ -30,6 +31,10 @@ def get_provider(provider_id):
 
 
 get_provider.providers = {
+    "plaid_us": Provider(
+        description="Plaid (US)",
+        api_module=plaid_us
+    ),
     "amex_us": Provider(
         description="American express (US)",
         api_module=amex_us

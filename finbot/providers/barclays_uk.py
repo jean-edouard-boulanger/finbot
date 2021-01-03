@@ -2,7 +2,7 @@ from typing import Optional
 from copy import deepcopy
 from price_parser import Price
 from selenium.webdriver.common.by import By
-from finbot import providers
+from finbot.providers.selenium_based import SeleniumBased
 from finbot.core import tracer
 from finbot.providers.support.selenium import any_of, SeleniumHelper
 from finbot.providers.errors import AuthFailure, Error
@@ -47,7 +47,7 @@ class Credentials(object):
             memorable_word=data["memorable_word"])
 
 
-class Api(providers.SeleniumBased):
+class Api(SeleniumBased):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.accounts = None
