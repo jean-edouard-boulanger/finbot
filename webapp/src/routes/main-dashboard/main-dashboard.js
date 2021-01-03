@@ -1,8 +1,6 @@
 import FinbotClient from "../../clients/finbot-client";
-import Container from 'react-bootstrap/Container';
-import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
-import Card from 'react-bootstrap/Card';
+
+import { Row, Col, Card } from 'react-bootstrap';
 import Chart from "react-apexcharts";
 import Money from "../../components/money"
 import HoldingsTable from "../../components/holdings-table";

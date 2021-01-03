@@ -4,7 +4,7 @@ import { default as DataDrivenForm } from "react-jsonschema-form";
 
 import FinbotClient from "clients/finbot-client";
 
-import AuthContext from "context/auth-context";
+import AuthContext from "context/auth/auth-context";
 
 import {Row, Col, Form, Button, Alert} from "react-bootstrap";
 import { PlaidLink } from 'react-plaid-link';
@@ -147,7 +147,7 @@ const LinkAccount = (props) => {
           </Row>
           {
             (selectedProvider !== null && !isPlaidSelected(selectedProvider)) &&
-              <Row>
+              <Row className={"mb-4"}>
                 <Col><h3>3. Account settings</h3></Col>
               </Row>
           }
@@ -193,7 +193,7 @@ const LinkAccount = (props) => {
                     value={accountName}
                     onChange={(event) => { setAccountName(event.target.value); }} />
                   <Form.Text className="text-muted">
-                    The chosen account name will appear on the finbot report
+                    The chosen account name will appear on the finbot report, it needs to be unique per provider.
                   </Form.Text>
                 </Form.Group>
               </Row>
