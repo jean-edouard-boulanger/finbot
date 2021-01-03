@@ -2,7 +2,7 @@ import React, {useState, useEffect} from 'react';
 import AceEditor from "react-ace";
 import "ace-builds/src-noconflict/theme-github";
 import "ace-builds/src-noconflict/mode-json";
-import {Container, Col, Row, Card, Table, Button, Alert, Badge} from 'react-bootstrap';
+import {Col, Row, Card, Table, Button, Alert, Badge} from 'react-bootstrap';
 import {useParams} from 'react-router-dom';
 import {FaCube} from 'react-icons/fa';
 
@@ -82,7 +82,6 @@ function getEditorLanguage(data) {
   if (data === null || data === undefined) {
     return null;
   }
-  const [_, payload] = data;
   if (typeof (data) === 'object') {
     return "json";
   }
@@ -90,7 +89,7 @@ function getEditorLanguage(data) {
 }
 
 function getEditorData(data) {
-  const [_, payload] = data;
+  const payload = data[1];
   if (typeof (payload) === 'object') {
     return JSON.stringify(payload, null, 2);
   }
@@ -172,7 +171,7 @@ function getInspectorMode(data) {
   if (data === null || data === undefined) {
     return "hint";
   }
-  const [key, _] = data;
+  const key = data[0];
   if (key === "logs") {
     return "logs";
   }
@@ -229,7 +228,7 @@ export default function Admin() {
       }
     }
     setSelectedData(null);
-  }, [selectedSpan])
+  }, [selectedSpan, selectedData])
 
   return (
     <>

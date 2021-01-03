@@ -1,10 +1,10 @@
-import React, {useEffect, useContext} from "react";
+import React, {useContext} from "react";
 import {NavLink} from 'react-router-dom'
 
 import NavBar from 'react-bootstrap/NavBar';
 import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
-import AuthContext from "../../context/auth/auth-context";
+import AuthContext from "context/auth/auth-context";
 
 const Navigation = props => {
   const authContext = useContext(AuthContext);

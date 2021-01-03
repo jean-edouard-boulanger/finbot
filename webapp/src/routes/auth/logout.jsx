@@ -1,18 +1,17 @@
-import React from 'react'
-import PropTypes from "prop-types";
-import { Redirect } from 'react-router-dom'
-import { withRouter } from "react-router";
+import React, {useContext} from "react";
+
+import AuthContext from "context/auth/auth-context";
+
+import {Redirect} from 'react-router-dom'
+import {withRouter} from "react-router";
 
 
-const Logout = props => {
-
-    props._exit()
-
-    return <Redirect to="/auth/log-in" />
+const Logout = () => {
+  const authContext = useContext(AuthContext);
+  authContext.logout();
+  return (
+    <Redirect to="/auth/log-in"/>
+  );
 }
-
-Logout.propTypes = {
-    _exit: PropTypes.func,
-};
 
 export default withRouter(Logout)

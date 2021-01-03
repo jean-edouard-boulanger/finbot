@@ -11,7 +11,7 @@ import 'datejs';
 import AuthState from "context/auth/auth-state";
 import MainContainer from "components/main-container";
 
-import Home from "./routes/main-dashboard";
+import { MainDashboard } from "./routes/main-dashboard";
 import Admin from "./routes/admin";
 import Navbar from "./components/navigation";
 import Auth from "./routes/auth";
@@ -29,7 +29,7 @@ const App = () => {
         <Navbar />
         <MainContainer>
           <Switch>
-            <Route exact path="/" render={() => <Home />} />
+            <Route exact path="/" render={() => <MainDashboard />} />
             <Route exact path="/admin/traces/:guid" render={() => <Admin />} />
             <Route path="/auth" render={() => <Auth />} />
             <Route path="/linked-account" render={() => <LinkAccounts />} />

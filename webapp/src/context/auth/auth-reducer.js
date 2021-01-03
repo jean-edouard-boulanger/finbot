@@ -1,3 +1,4 @@
+import axios from 'axios';
 import {
   RESTORE_IDENTITY,
   REGISTER_SUCCESS,
@@ -9,6 +10,15 @@ import {
   CLEAR_ERRORS
 } from './auth-types';
 import { persistLocal, clearLocal, restoreLocal } from "./auth-storage";
+
+
+const setAuthHeader = (token) => {
+  axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+}
+
+const resetAuthHeader = () => {
+  delete axios.defaults.headers.common['Authorization'];
+}
 
 
 export default (state, action) => {
@@ -25,11 +35,13 @@ export default (state, action) => {
       };
     }
     case LOGIN_SUCCESS: {
+      const accessToken = action.payload.auth.access_token;
+      setAuthHeader(accessToken);
       const newState = {
         ...state,
         isAuthenticated: true,
         loading: false,
-        token: action.payload.auth.access_token,
+        token: accessToken,
         accountID: action.payload.account.id
       };
       persistLocal(newState);
@@ -39,6 +51,7 @@ export default (state, action) => {
     case AUTH_ERROR:
     case LOGIN_FAIL: {
       clearLocal();
+      resetAuthHeader();
       return {
         ...state,
         token: null,
@@ -50,6 +63,7 @@ export default (state, action) => {
     }
     case LOGOUT: {
       clearLocal();
+      resetAuthHeader();
       return {
         ...state,
         token: null,

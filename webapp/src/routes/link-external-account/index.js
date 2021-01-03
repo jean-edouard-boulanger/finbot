@@ -78,7 +78,7 @@ const LinkAccount = (props) => {
       setSettings(await client.getAccountSettings({account_id: accountID}))
     }
     fetch();
-  }, [client])
+  }, [client, accountID])
 
   const onSelectedProviderChanged = (event) => {
     const providerId = event.target.value;
