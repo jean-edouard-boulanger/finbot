@@ -1,6 +1,7 @@
 from typing import Optional
 from copy import deepcopy
 from price_parser import Price
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from finbot import providers
 from finbot.core import tracer
@@ -64,16 +65,54 @@ class Api(providers.SeleniumBased):
                 return self._do.wait_element(By.CSS_SELECTOR, "div.transactions-table")
         raise Error(f"unable to switch to account '{account_id}'")
 
-    def authenticate(self, credentials: Credentials):
-        # Step 0: accept cookies
-        self._do.get(AUTH_URL)
+    def _authenticate_legacy(self, credentials: Credentials):
+        def select_combo_item(combo, idx):
+            for _ in range(idx + 1):
+                combo.send_keys(Keys.DOWN)
+            combo.send_keys(Keys.ENTER)
 
-        with tracer.sub_step("accept cookies"):
-            _accept_cookies(self._do)
+        with tracer.sub_step("identity"):
+            step1_form = self._do.wait_element(By.NAME, "loginStep1")
+            step1_form.find_element_by_css_selector("input#surname0").send_keys(
+                credentials.last_name)
+            card_radio = step1_form.find_element_by_css_selector("input#radio-c1")
+            self._do.click(card_radio)
+            step1_form.find_element_by_id(f"membershipNum0").send_keys(credentials.membership_number)
+            step1_form.find_element_by_tag_name("button").click()
 
-        # Step 1: last name + card number
+            self._do.assert_success(_reached_auth_step2_legacy, _get_login_error,
+                                    on_failure=_report_auth_error)
 
-        with tracer.sub_step("user input"):
+        passcode_button = _get_passcode_button(self._do)
+        if passcode_button:
+            passcode_button.click()
+
+        with tracer.sub_step("password"):
+            passcode_input = self._do.wait_element(By.ID, "passcode0")
+            passcode_input.send_keys(credentials.passcode)
+            memorable_label = self._do.find(By.ID, "label-memorableCharacters").text.strip()
+            char_combos = self._do.find_many(By.ID, "idForScrollFeature")
+            for index, i_str in enumerate(re.findall(r"\d", memorable_label)):
+                i = int(i_str) - 1
+                item_idx = ord(credentials.memorable_word[i]) - ord('a')
+                select_combo_item(char_combos[index], item_idx)
+            self._do.find(By.CSS_SELECTOR, "button.btn--login").click()
+
+        # step 3: provide card digits and security code if required
+        self._do.wait_cond(any_of(
+            lambda _: _is_logged_in(self._do),
+            lambda _: _get_login_error(self._do),
+            lambda _: _reached_auth_protect_step_legacy(self._do)))
+
+        card_digits_input, sec_code_input = _get_auth_protect_inputs(self._do)
+        if card_digits_input and sec_code_input:
+            with tracer.sub_step("security check"):
+                card_digits_input.send_keys(credentials.card_last_4_digits)
+                sec_code_input.send_keys(credentials.card_security_code)
+                self._do.wait_element(By.ID, "btn-login-authSFA").click()
+
+    def _authenticate(self, credentials: Credentials):
+        with tracer.sub_step("identity"):
             self._do.wait_element(By.ID, "surnameMem").send_keys(credentials.last_name)
             self._do.wait_element(By.ID, "membership0").send_keys(credentials.membership_number)
             self._do.click(self._do.wait_element(By.CSS_SELECTOR, "button#continue"))
@@ -81,9 +120,7 @@ class Api(providers.SeleniumBased):
             self._do.assert_success(_reached_auth_step2, _get_login_error,
                                     on_failure=_report_auth_error)
 
-        # Step 2: passcode + memorable
-
-        with tracer.sub_step("password input"):
+        with tracer.sub_step("password"):
             self._do.wait_element(By.ID, "loginStep2")
             self._do.click(self._do.wait_element(By.ID, "athenticationType_tab_button_2"))
             self._do.wait_element(By.ID, "passcode").send_keys(credentials.passcode)
@@ -97,8 +134,6 @@ class Api(providers.SeleniumBased):
             mem_area2.find_element_by_tag_name("input").send_keys(credentials.memorable_word[pos2 - 1])
             self._do.wait_element(By.ID, "submitAuthentication").click()
 
-        # Step 3: Provide CVV + last 4 card digits if needed
-
         self._do.wait_cond(any_of(
             lambda _: _is_logged_in(self._do),
             lambda _: _reached_auth_protect_step(self._do),
@@ -106,13 +141,18 @@ class Api(providers.SeleniumBased):
 
         auth_protect_form = _get_auth_protect_form(self._do)
         if auth_protect_form:
-            with tracer.sub_step("extra protection"):
+            with tracer.sub_step("security check"):
                 auth_protect_form.submit(credentials)
-                self._do.wait_cond(any_of(
-                    lambda _: _is_logged_in(self._do),
-                    lambda _: _get_login_error(self._do)))
 
-        # Step 4: Check authentication
+    def authenticate(self, credentials: Credentials):
+        # Step 0: accept cookies
+        self._do.get(AUTH_URL)
+
+        with tracer.sub_step("accept cookies"):
+            _accept_cookies(self._do)
+
+        with tracer.sub_step("legacy authentication"):
+            self._authenticate_legacy(credentials)
 
         with tracer.sub_step("finalize") as t:
             self._do.assert_success(_is_logged_in, _get_login_error,
@@ -229,6 +269,21 @@ def _iter_accounts(accounts_area):
         }
 
 
+def _get_auth_protect_inputs(do: SeleniumHelper):
+    return do.find_maybe(By.ID, "lastDigits0"), do.find_maybe(By.ID, "secCode0")
+
+
+def _reached_auth_protect_step_legacy(do: SeleniumHelper) -> bool:
+    return all(elem is not None for elem in _get_auth_protect_inputs(do))
+
+
+def _get_passcode_button(do: SeleniumHelper):
+    buttons = do.find_many(By.CSS_SELECTOR, "button.btn--login")
+    for button in buttons:
+        if "passcode" in button.text:
+            return button
+
+
 def _accept_cookies(do: SeleniumHelper):
     buttons = (do.wait_element(By.CLASS_NAME, "m-cookie-prompt")
                  .find_elements_by_tag_name("button"))
@@ -243,6 +298,11 @@ def _wait_accounts(do: SeleniumHelper):
 
 def _reached_auth_step2(do: SeleniumHelper) -> bool:
     return do.find_maybe(By.ID, "loginStep2") is not None
+
+
+def _reached_auth_step2_legacy(do: SeleniumHelper):
+    return (do.find_maybe(By.ID, "passcode0") is not None
+            or _get_passcode_button(do) is not None)
 
 
 class _AuthProtectForm(object):
