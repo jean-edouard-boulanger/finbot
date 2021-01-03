@@ -1,24 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import AceEditor from "react-ace";
 import "ace-builds/src-noconflict/theme-github";
 import "ace-builds/src-noconflict/mode-json";
-import { Container, Col, Row, Card, Table, Button, Alert, Badge } from 'react-bootstrap';
-import { useParams } from 'react-router-dom';
-import { FaCube } from 'react-icons/fa';
+import {Container, Col, Row, Card, Table, Button, Alert, Badge} from 'react-bootstrap';
+import {useParams} from 'react-router-dom';
+import {FaCube} from 'react-icons/fa';
 
 import TreeGrid from 'components/tree-grid';
 import FinbotClient from "clients/finbot-client";
 
-const { DateTime } = require('luxon');
+const {DateTime} = require('luxon');
 
 function hasError(node) {
   return node.metadata.error !== undefined;
 }
 
 function backPropagateError(node) {
-  while(node.parent !== undefined) {
+  while (node.parent !== undefined) {
     node = node.parent;
-    if(node.error !== null) {
+    if (node.error !== null) {
       break;
     }
     node.error = 'inherit';
@@ -47,10 +47,10 @@ function buildTree(traces) {
     }
   });
   traces.forEach((t) => {
-    if(t.error === undefined) {
+    if (t.error === undefined) {
       t.error = null;
     }
-    if(hasError(t)) {
+    if (hasError(t)) {
       t.error = 'self';
       backPropagateError(t);
     }
@@ -59,31 +59,31 @@ function buildTree(traces) {
 }
 
 function ellipsis(text, max) {
-  if(text.length < max) {
+  if (text.length < max) {
     return text;
   }
   return text.slice(0, max) + "..."
 }
 
 function formatInlineData(data) {
-  if(data === null || data === undefined) {
+  if (data === null || data === undefined) {
     return 'null';
   }
-  if(typeof(data) === 'object') {
-    return <span><FaCube />{' payload'}</span>;
+  if (typeof (data) === 'object') {
+    return <span><FaCube/>{' payload'}</span>;
   }
-  if(typeof(data) === 'string') {
+  if (typeof (data) === 'string') {
     return ellipsis(data, 80);
   }
   return data;
 }
 
 function getEditorLanguage(data) {
-  if(data === null || data === undefined) {
+  if (data === null || data === undefined) {
     return null;
   }
   const [_, payload] = data;
-  if(typeof(data) === 'object') {
+  if (typeof (data) === 'object') {
     return "json";
   }
   return null;
@@ -91,17 +91,17 @@ function getEditorLanguage(data) {
 
 function getEditorData(data) {
   const [_, payload] = data;
-  if(typeof(payload) === 'object') {
+  if (typeof (payload) === 'object') {
     return JSON.stringify(payload, null, 2);
   }
   return `${payload}`
 }
 
 function GridRow(callback) {
-  function impl (props) {
+  function impl(props) {
     const data = props.data;
     const duration = data.end_time.diff(data.start_time, 'seconds');
-    const className = data.error === null 
+    const className = data.error === null
       ? '' : (data.error === 'self' ? 'bg-danger' : 'text-danger');
     const metadata = data.metadata;
     return (
@@ -127,18 +127,19 @@ function GridRow(callback) {
       </tr>
     )
   }
+
   return impl;
 }
 
 
 function getLogRowStyle(entry) {
-  if(entry.level === "FATAL") {
+  if (entry.level === "FATAL") {
     return "bg-dark";
   }
-  if(entry.level === "ERROR") {
+  if (entry.level === "ERROR") {
     return "bg-error";
   }
-  if(entry.level === "WARNING") {
+  if (entry.level === "WARNING") {
     return "bg-warning";
   }
   return "bg-white";
@@ -149,18 +150,18 @@ function LogsViewer({logs}) {
   return (
     <Table style={{tableLayout: 'fixed', wordWrap: 'break-word'}}>
       <tbody>
-        {
-          logs.map((entry) => {
-            return (
-              <tr className={getLogRowStyle(entry)}>
-                <td>{entry.time}</td>
-                <td>{entry.level}</td>
-                <td style={{width: '500px'}}>{entry.message}</td>
-                <td>{`${entry.filename}:${entry.line}`}</td>
-              </tr>
-            )
-          })
-        }
+      {
+        logs.map((entry) => {
+          return (
+            <tr className={getLogRowStyle(entry)}>
+              <td>{entry.time}</td>
+              <td>{entry.level}</td>
+              <td style={{width: '500px'}}>{entry.message}</td>
+              <td>{`${entry.filename}:${entry.line}`}</td>
+            </tr>
+          )
+        })
+      }
       </tbody>
     </Table>
   )
@@ -168,11 +169,11 @@ function LogsViewer({logs}) {
 
 
 function getInspectorMode(data) {
-  if(data === null || data === undefined) {
+  if (data === null || data === undefined) {
     return "hint";
   }
   const [key, _] = data;
-  if(key === "logs") {
+  if (key === "logs") {
     return "logs";
   }
   return "editor";
@@ -181,29 +182,27 @@ function getInspectorMode(data) {
 
 function Inspector({data}) {
   const mode = getInspectorMode(data);
-  if(mode === "hint") {
+  if (mode === "hint") {
     return (
       <Alert variant="primary">Select a span attribute ...</Alert>
     )
-  }
-  else if(mode === "editor") {
+  } else if (mode === "editor") {
     return (
-      <AceEditor value={getEditorData(data)} 
+      <AceEditor value={getEditorData(data)}
                  mode={getEditorLanguage(data)}
                  theme="github"
                  width="100%"
                  showGutter={true}
                  showPrintMargin={true}
-                 readOnly={true} />
-    )  
-  }
-  else if(mode === "logs") {
-    return <LogsViewer logs={data[1]} />
+                 readOnly={true}/>
+    )
+  } else if (mode === "logs") {
+    return <LogsViewer logs={data[1]}/>
   }
 }
 
 export default function Admin() {
-  const { guid } = useParams();
+  const {guid} = useParams();
   const [tree, setTree] = useState(null);
   const [selectedSpan, setSelectedSpan] = useState(null);
   const [selectedData, setSelectedData] = useState(null);
@@ -211,7 +210,7 @@ export default function Admin() {
   useEffect(() => {
     const impl = async function () {
       const client = new FinbotClient();
-      const response = await client.getTraces({ guid });
+      const response = await client.getTraces({guid});
       response.traces.forEach((t) => {
         t.start_time = DateTime.fromISO(t.start_time);
         t.end_time = DateTime.fromISO(t.end_time);
@@ -222,9 +221,9 @@ export default function Admin() {
   }, [guid]);
 
   useEffect(() => {
-    if(selectedData !== null) {
+    if (selectedData !== null) {
       const key = selectedData[0];
-      if(selectedSpan.metadata[key] !== undefined) {
+      if (selectedSpan.metadata[key] !== undefined) {
         setSelectedData([key, selectedSpan.metadata[key]]);
         return;
       }
@@ -233,71 +232,71 @@ export default function Admin() {
   }, [selectedSpan])
 
   return (
-    <div className="main-wrapper">
-      <Container fluid>
-        <Row className="mb-4">
-          <Col><h1>{guid}</h1></Col>
-        </Row>
-        {(tree !== null) &&
+    <>
+      <Row className="mb-4">
+        <Col><h1>{guid}</h1></Col>
+      </Row>
+      {(tree !== null) &&
+      <Row>
+        <Col lg={6}>
+          <Card>
+            <Card.Header>Distributed trace</Card.Header>
+            <Card.Body>
+              <TreeGrid rowAs={GridRow(setSelectedSpan)}
+                        tree={tree}/>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col>
           <Row>
-            <Col lg={6}>
+            <Col>
               <Card>
-                <Card.Header>Distributed trace</Card.Header>
+                <Card.Header>Span metadata{selectedSpan !== null && ` (${selectedSpan.name})`}</Card.Header>
                 <Card.Body>
-                  <TreeGrid rowAs={GridRow(setSelectedSpan)} 
-                            tree={tree} />
+                  {selectedSpan !== null &&
+                  <Table hover size="sm">
+                    <tbody>
+                    {
+                      Object.keys(selectedSpan.metadata).map((k) => {
+                        const data = selectedSpan.metadata[k];
+                        return (
+                          <tr key={k}>
+                            <td style={{width: '25%'}}>
+                              <Button variant="link" size="sm" className="text-reset"
+                                      onClick={() => setSelectedData([k, data])}>
+                                {k}
+                              </Button>
+                            </td>
+                            <td>
+                              <Button variant="link" size="sm" className="text-reset"
+                                      onClick={() => setSelectedData([k, data])}>
+                                {formatInlineData(data)}
+                              </Button>
+                            </td>
+                          </tr>
+                        )
+                      })
+                    }
+                    </tbody>
+                  </Table>
+                  }
                 </Card.Body>
               </Card>
             </Col>
+          </Row>
+          <Row className="mt-3">
             <Col>
-              <Row>
-                <Col>
-                  <Card>
-                      <Card.Header>Span metadata{selectedSpan !== null && ` (${selectedSpan.name})`}</Card.Header>
-                      <Card.Body>
-                        {selectedSpan !== null &&
-                          <Table hover size="sm">
-                            <tbody>
-                            {
-                              Object.keys(selectedSpan.metadata).map((k) => {
-                                const data = selectedSpan.metadata[k];
-                                return (
-                                  <tr key={k}>
-                                    <td style={{width: '25%'}}>
-                                      <Button variant="link" size="sm" className="text-reset" onClick={() => setSelectedData([k, data])}>
-                                        {k}
-                                      </Button>
-                                    </td>
-                                    <td>
-                                      <Button variant="link" size="sm" className="text-reset" onClick={() => setSelectedData([k, data])}>
-                                        {formatInlineData(data)}
-                                      </Button>
-                                    </td>
-                                  </tr>
-                                )
-                              })
-                            }
-                            </tbody>
-                          </Table>
-                        }
-                      </Card.Body>
-                  </Card>
-                </Col>
-              </Row>
-              <Row className="mt-3">
-                <Col>
-                  <Card>
-                    <Card.Header>Inspector{selectedData !== null && ` (${selectedData[0]})`}</Card.Header>
-                    <Card.Body>
-                      <Inspector data={selectedData} />
-                    </Card.Body>
-                  </Card>
-                </Col>
-              </Row>
+              <Card>
+                <Card.Header>Inspector{selectedData !== null && ` (${selectedData[0]})`}</Card.Header>
+                <Card.Body>
+                  <Inspector data={selectedData}/>
+                </Card.Body>
+              </Card>
             </Col>
           </Row>
-        }
-      </Container>
-    </div>
+        </Col>
+      </Row>
+      }
+    </>
   )
 }

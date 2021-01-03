@@ -37,18 +37,9 @@ const LinkedAccounts = props => {
                 exact
                 path="/linked-account/create"
                 render={() => (
-                    <LinkExternalAccount
-                    />
+                    <LinkExternalAccount />
                 )}
             />
-            {/* <Route  
-                exact
-                path="/linked-account/:id"
-                render={() => (
-                    <LinkedExternalAccount
-                    />
-                )}
-            /> */}
         </Switch>
     );
 }
