@@ -20,6 +20,7 @@ from finbot.model import (
     Provider,
     UserAccount,
     UserAccountSettings,
+    UserAccountPlaidSettings,
     LinkedAccount,
     UserAccountHistoryEntry,
     LinkedAccountValuationHistoryEntry,
@@ -260,15 +261,25 @@ def get_user_account(user_account_id):
                 "id": account.id,
                 "email": account.email,
                 "full_name": account.full_name,
-                "settings": {
-                    "valuation_ccy": account.settings.valuation_ccy,
-                    "created_at": account.settings.created_at,
-                    "updated_at": account.settings.updated_at
-                },
+                "settings": account.settings,
                 "created_at": account.created_at,
                 "updated_at": account.updated_at
             },
             "valuation": serialize_valuation(valuation) if valuation else None
+        }
+    }))
+
+
+@app.route(ACCOUNT.settings._, methods=["GET"])
+@request_handler()
+def get_user_account_settings(user_account_id):
+    settings = db_session.query(UserAccountSettings).filter_by(user_account_id=user_account_id).first()
+    plaid_settings = db_session.query(UserAccountPlaidSettings).filter_by(user_account_id=user_account_id).first()
+
+    return jsonify(serialize({
+        "settings": {
+            "settings": settings,
+            "plaid_settings": plaid_settings
         }
     }))
 
