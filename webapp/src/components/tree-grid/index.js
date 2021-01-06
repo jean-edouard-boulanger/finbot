@@ -37,12 +37,11 @@ function refreshModel(model) {
   let displayLimit = null;
   model.forEach((node) => {
     if (displayLimit === null) { node.visible = true; }
-    else if (displayLimit !== null && node.level <= displayLimit) {
+    else if (node.level <= displayLimit) {
       node.visible = true;
       displayLimit = null;
-
     }
-    else if (displayLimit !== null && node.level > displayLimit) {
+    else if (node.level > displayLimit) {
       node.visible = false;
     }
     if (!node.expanded && displayLimit === null) {
@@ -52,7 +51,7 @@ function refreshModel(model) {
 }
 
 function getExpanderIcon(node) {
-  if (node.data.children.length === 0) { return () => { return (null); } }
+  if (node.data.children.length === 0) { return () => null }
   if (node.expanded) { return FaCaretDown; }
   return FaCaretRight;
 }

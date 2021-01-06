@@ -1,13 +1,13 @@
 import React, {useEffect, useState, useContext} from "react";
 import {withRouter} from "react-router";
-import { default as DataDrivenForm } from "react-jsonschema-form";
+import {default as DataDrivenForm} from "react-jsonschema-form";
 
 import FinbotClient from "clients/finbot-client";
 
 import AuthContext from "context/auth/auth-context";
 
 import {Row, Col, Form, Button, Alert} from "react-bootstrap";
-import { PlaidLink } from 'react-plaid-link';
+import {PlaidLink} from 'react-plaid-link';
 
 const NO_PROVIDER_SELECTED = "NO_PROVIDER_SELECTED";
 const PLAID_PROVIDER_ID = "plaid_us"
@@ -18,8 +18,10 @@ const StandardAccountForm = ({schema, onSubmit}) => {
     <DataDrivenForm
       schema={schema.json_schema ?? {}}
       uiSchema={schema.ui_schema ?? {}}
-      onSubmit={(data) => { onSubmit(data.formData || {}) }}
-      showErrorList={false} >
+      onSubmit={(data) => {
+        onSubmit(data.formData || {})
+      }}
+      showErrorList={false}>
       <div>
         <Button className="bg-dark" type="submit">Link Account</Button>
       </div>
@@ -36,7 +38,8 @@ const PlaidForm = ({settings, onSubmit}) => {
       }}
       publicKey={settings.public_key}
       env={settings.env}
-      product={["auth", "transactions", "identity"]}
+      countryCodes={["GB", "US", "CA", "IE", "FR", "ES", "NL"]}
+      product={["transactions", "identity"]}
     >
       Link Account via Plaid
     </PlaidLink>
@@ -60,9 +63,12 @@ const LinkAccount = (props) => {
   const [settings, setSettings] = useState(null);
   const [selectedProvider, setSelectedProvider] = useState(null);
   const [accountName, setAccountName] = useState(null);
+  const [operation, setOperation] = useState(null);
 
   useEffect(() => {
-    if(client === null) { return; }
+    if (client === null) {
+      return;
+    }
     const fetch = async () => {
       const providersPayload = await client.getProviders();
       setProviders(providersPayload.sort((p1, p2) => {
@@ -73,7 +79,9 @@ const LinkAccount = (props) => {
   }, [client]);
 
   useEffect(() => {
-    if(client === null) { return; }
+    if (client === null) {
+      return;
+    }
     const fetch = async () => {
       setSettings(await client.getAccountSettings({account_id: accountID}))
     }
@@ -82,7 +90,7 @@ const LinkAccount = (props) => {
 
   const onSelectedProviderChanged = (event) => {
     const providerId = event.target.value;
-    if(providerId === NO_PROVIDER_SELECTED) {
+    if (providerId === NO_PROVIDER_SELECTED) {
       setSelectedProvider(null);
       return;
     }
@@ -100,11 +108,11 @@ const LinkAccount = (props) => {
       credentials
     };
     const validated = await client.validateExternalAccountCredentials(link_settings);
-    if(!validated) {
+    if (!validated) {
       return;
     }
     const results = await client.linkAccount(link_settings);
-    if(!results.persisted) {
+    if (!results.persisted) {
 
     }
   }
@@ -146,59 +154,61 @@ const LinkAccount = (props) => {
             </Col>
           </Row>
           {
-            (selectedProvider !== null && !isPlaidSelected(selectedProvider)) &&
-              <Row className={"mb-4"}>
-                <Col><h3>3. Account settings</h3></Col>
-              </Row>
-          }
-          <Row>
-            <Col>
-            {
-              (selectedProvider !== null && !isPlaidSelected(selectedProvider)) &&
-                <StandardAccountForm
-                  schema={selectedProvider.credentials_schema}
-                  onSubmit={(credentials) => {
-                    console.log(credentials);
-                    requestLinkAccount({...selectedProvider}, credentials)
-                  }} />
-            }
-            {
-              (isPlaidSelected(selectedProvider) && isPlaidSupported(settings)) &&
-                <PlaidForm
-                  settings={settings.plaid_settings}
-                  onSubmit={(credentials) => {
-                    requestLinkAccount({...selectedProvider}, credentials)
-                  }} />
-            }
-            {
-              (isPlaidSelected(selectedProvider) && !isPlaidSupported(settings)) &&
-                <Alert variant={"warning"}>To link an external account via Plaid (open banking), please first provide your Plaid API details in your account settings.</Alert>
-            }
-            </Col>
-          </Row>
-        </Col>
-        {
-          (selectedProvider !== null) &&
-            <Col md={6}>
+            (selectedProvider !== null) &&
+            <>
               <Row className={"mb-4"}>
                 <Col>
                   <h3>2. Account name</h3>
                 </Col>
               </Row>
               <Row>
-                <Form.Group controlId="formBasicEmail">
-                  <Form.Control
-                    type="email"
-                    placeholder="Account name"
-                    value={accountName}
-                    onChange={(event) => { setAccountName(event.target.value); }} />
-                  <Form.Text className="text-muted">
-                    The chosen account name will appear on the finbot report, it needs to be unique per provider.
-                  </Form.Text>
-                </Form.Group>
+                <Col>
+                  <Form.Group controlId="formBasicEmail">
+                    <Form.Control
+                      type="email"
+                      placeholder="Account name"
+                      value={accountName}
+                      onChange={(event) => {
+                        setAccountName(event.target.value);
+                      }}/>
+                  </Form.Group>
+                </Col>
               </Row>
+            </>
+          }
+          {
+            (selectedProvider !== null && !isPlaidSelected(selectedProvider)) &&
+            <Row className={"mb-4"}>
+              <Col><h3>3. Account settings</h3></Col>
+            </Row>
+          }
+          <Row>
+            <Col>
+              {
+                (selectedProvider !== null && !isPlaidSelected(selectedProvider)) &&
+                <StandardAccountForm
+                  schema={selectedProvider.credentials_schema}
+                  onSubmit={(credentials) => {
+                    console.log(credentials);
+                    requestLinkAccount({...selectedProvider}, credentials)
+                  }}/>
+              }
+              {
+                (isPlaidSelected(selectedProvider) && isPlaidSupported(settings)) &&
+                <PlaidForm
+                  settings={settings.plaid_settings}
+                  onSubmit={(credentials) => {
+                    requestLinkAccount({...selectedProvider}, credentials)
+                  }}/>
+              }
+              {
+                (isPlaidSelected(selectedProvider) && !isPlaidSupported(settings)) &&
+                <Alert variant={"warning"}>To link an external account via Plaid (open banking), please first provide
+                  your Plaid API details in your account settings.</Alert>
+              }
             </Col>
-        }
+          </Row>
+        </Col>
       </Row>
     </>
   )

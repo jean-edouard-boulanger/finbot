@@ -97,9 +97,10 @@ function getEditorData(data) {
 }
 
 function GridRow(callback) {
-  function impl(props) {
+  return (props) => {
     const data = props.data;
     const duration = data.end_time.diff(data.start_time, 'seconds');
+    const durationSeconds = duration.toObject().seconds;
     const className = data.error === null
       ? '' : (data.error === 'self' ? 'bg-danger' : 'text-danger');
     const metadata = data.metadata;
@@ -121,13 +122,11 @@ function GridRow(callback) {
           {data.metadata.origin}
         </td>
         <td>
-          {duration.toObject().seconds.toFixed(1)}s
+          {(durationSeconds ?? null) !== null && durationSeconds.toFixed(1)}s
         </td>
       </tr>
     )
-  }
-
-  return impl;
+  };
 }
 
 

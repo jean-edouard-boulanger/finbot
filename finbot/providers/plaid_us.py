@@ -74,7 +74,6 @@ class Api(providers.Base):
         plaid_settings = credentials.plaid_settings
         self.client = create_plaid_client(plaid_settings)
         self.accounts = self.client.Accounts.get(self.access_token)
-        logging.info(self.accounts)
 
     def get_balances(self) -> Dict:
         return {
