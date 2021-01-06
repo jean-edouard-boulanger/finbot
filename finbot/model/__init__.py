@@ -194,7 +194,7 @@ class SubAccountSnapshotEntry(Base):
     __tablename__ = "finbot_sub_accounts_snapshot_entries"
     id = Column(Integer, primary_key=True)
     linked_account_snapshot_entry_id = Column(Integer, ForeignKey(LinkedAccountSnapshotEntry.id, ondelete="CASCADE"))
-    sub_account_id = Column(String(32), nullable=False)
+    sub_account_id = Column(String(64), nullable=False)
     sub_account_ccy = Column(String(3), nullable=False)
     sub_account_description = Column(String(256), nullable=False)
     sub_account_type = Column(String(32), nullable=False)
@@ -333,7 +333,7 @@ class SubAccountValuationHistoryEntry(Base):
     __tablename__ = "finbot_sub_accounts_valuation_history_entries"
     history_entry_id = Column(Integer, ForeignKey(UserAccountHistoryEntry.id, ondelete="CASCADE"), primary_key=True)
     linked_account_id = Column(Integer, ForeignKey(LinkedAccount.id, ondelete="CASCADE"), primary_key=True)
-    sub_account_id = Column(String(32), primary_key=True)
+    sub_account_id = Column(String(64), primary_key=True)
     sub_account_ccy = Column(String(3), nullable=False)
     sub_account_description = Column(String(256), nullable=False)
     sub_account_type = Column(String(32), nullable=False)
@@ -363,7 +363,7 @@ class SubAccountItemValuationHistoryEntry(Base):
     __tablename__ = "finbot_sub_accounts_items_valuation_history_entries"
     history_entry_id = Column(Integer, ForeignKey(UserAccountHistoryEntry.id, ondelete="CASCADE"), primary_key=True)
     linked_account_id = Column(Integer, ForeignKey(LinkedAccount.id, ondelete="CASCADE"), primary_key=True)
-    sub_account_id = Column(String(32), primary_key=True)
+    sub_account_id = Column(String(64), primary_key=True)
     item_type = Column(Enum(SubAccountItemType), primary_key=True)
     name = Column(String(256), primary_key=True)
     item_subtype = Column(String(32), nullable=False)
