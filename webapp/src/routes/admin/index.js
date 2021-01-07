@@ -122,7 +122,14 @@ function GridRow(callback) {
           {data.metadata.origin}
         </td>
         <td>
-          {(durationSeconds ?? null) !== null && durationSeconds.toFixed(1)}s
+          {
+            (durationSeconds ?? null) !== null
+              && `${durationSeconds.toFixed(1)}s`
+          }
+          {
+            (durationSeconds ?? null) === null
+              && `N/A`
+          }
         </td>
       </tr>
     )

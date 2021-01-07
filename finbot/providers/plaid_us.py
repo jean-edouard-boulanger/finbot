@@ -1,5 +1,5 @@
 from finbot.model import UserAccountPlaidSettings
-from finbot.core.utils import serialize, pretty_dump
+from finbot.core.utils import serialize
 
 from plaid import Client as PlaidClient
 
@@ -7,7 +7,6 @@ from typing import Dict, Optional
 from finbot import providers
 
 from datetime import datetime
-import logging
 
 
 def pack_credentials(db_settings: Dict, plaid_settings: UserAccountPlaidSettings) -> Dict:
@@ -80,7 +79,7 @@ class Api(providers.Base):
             "accounts": [
                 {
                     "account": make_account(account),
-                    "balance": account["balances"]["current"]
+                    "balance": account["balances"]["current"] * (-1.0 if account["type"] == "credit" else 1.0)
                 }
                 for account in self.accounts["accounts"]
             ]
@@ -98,5 +97,22 @@ class Api(providers.Base):
                     }]
                 }
                 for account in self.accounts["accounts"]
+                if account["type"] == "depository"
+            ]
+        }
+
+    def get_liabilities(self) -> Dict:
+        return {
+            "accounts": [
+                {
+                    "account": make_account(account),
+                    "liabilities": [{
+                        "name": "credit",
+                        "type": "credit",
+                        "value": -1.0 * account["balances"]["current"]
+                    }]
+                }
+                for account in self.accounts["accounts"]
+                if account["type"] == "credit"
             ]
         }
