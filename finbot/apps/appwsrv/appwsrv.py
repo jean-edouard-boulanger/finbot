@@ -316,35 +316,7 @@ def get_linked_accounts_valuation(user_account_id):
     history_entry = repository.find_last_history_entry(db_session, user_account_id)
     if not history_entry:
         raise ApplicationError(f"No valuation available for user account '{user_account_id}'")
-
-    results = (db_session.query(LinkedAccountValuationHistoryEntry)
-                         .filter_by(history_entry_id=history_entry.id)
-                         .options(joinedload(LinkedAccountValuationHistoryEntry.valuation_change))
-                         .options(joinedload(LinkedAccountValuationHistoryEntry.linked_account))
-                         .options(joinedload(LinkedAccountValuationHistoryEntry.effective_snapshot))
-                         .all())
-
-    return jsonify(serialize({
-        "linked_accounts": [
-            {
-                "linked_account": {
-                    "id": entry.linked_account.id,
-                    "provider_id": entry.linked_account.provider_id,
-                    "description": entry.linked_account.account_name,
-                },
-                "valuation": {
-                    "date": (entry.effective_snapshot.effective_at 
-                             if entry.effective_snapshot
-                             else history_entry.effective_at),
-                    "currency": history_entry.valuation_ccy,
-                    "value": entry.valuation,
-                    "change": entry.valuation_change
-                }
-            }
-            for entry in results
-            if not entry.linked_account.deleted
-        ]
-    }))
+    return jsonify(serialize(repository.load_valuation_tree(db_session, history_entry)))
 
 
 @app.route(ACCOUNT.linked_accounts._, methods=["POST"])
@@ -522,7 +494,7 @@ def get_linked_account_sub_accounts(user_account_id, linked_account_id):
     if not history_entry:
         raise ApplicationError(f"No valuation available for user account '{user_account_id}'")
     linked_account_id = int(linked_account_id)
-    results = repository.find_sub_accounts_history_entries(db_session, history_entry.id, linked_account_id)
+    results = repository.find_sub_accounts_valuation(db_session, history_entry.id, linked_account_id)
 
     return jsonify(serialize({
         "sub_accounts": [

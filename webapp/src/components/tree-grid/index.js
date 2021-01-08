@@ -3,7 +3,7 @@ import { Table } from 'react-bootstrap';
 import { FaCaretDown, FaCaretRight } from 'react-icons/fa';
 
 
-function topologicalSort(tree) {
+function topologicalSort(tree, sortBy) {
   function dfs(node, res, level, order) {
     res.push({
       data: node,
@@ -11,8 +11,8 @@ function topologicalSort(tree) {
       order
     });
     let cOrder = 0;
-    node.children.sort((c1, c2) => {
-      return c1.path[c1.path.length - 1] - c2.path[c2.path.length - 1];
+    (node.children ?? []).sort((c1, c2) => {
+      return sortBy(c2) - sortBy(c1);
     }).forEach((c) => {
       dfs(c, res, level + 1, cOrder);
       cOrder += 1;
@@ -51,7 +51,7 @@ function refreshModel(model) {
 }
 
 function getExpanderIcon(node) {
-  if (node.data.children.length === 0) { return () => null }
+  if ((node.data.children ?? []).length === 0) { return () => null }
   if (node.expanded) { return FaCaretDown; }
   return FaCaretRight;
 }
@@ -61,8 +61,12 @@ function Expander (props) {
   const level = self.level;
   const leaf = self.leaf;
   const offset = (leaf) ? 20 : 0;
+  const style = {
+    marginLeft: `${level * 20 + offset}px`,
+    marginRight: "5px"
+  }
   return (
-    <span style={{ marginLeft: `${level * 20 + offset}px` }}>
+    <span style={style}>
       <self.Icon onClick={self.cb} />
     </span>
   );
@@ -71,14 +75,16 @@ function Expander (props) {
 export default function TreeGrid(props) {
   const {
     tree,
-    expanded = false
+    sortBy = (() => 0),
+    expanded = false,
   } = props;
   const Row = props.rowAs;
+  const Header = props.headerAs;
 
   const [model, setModel] = useState(null);
 
   useEffect(() => {
-    const topology = topologicalSort(tree);
+    const topology = topologicalSort(tree, sortBy);
     setModel(configureModel(topology, expanded));
   }, [tree, expanded]);
 
@@ -94,6 +100,12 @@ export default function TreeGrid(props) {
 
   return (
     <Table hover size="sm">
+      {
+        ((Header ?? null) !== null) &&
+          <thead>
+            <Header />
+          </thead>
+      }
       <tbody>
         {
           model.filter(n => n.visible).map((n) => {
@@ -102,7 +114,7 @@ export default function TreeGrid(props) {
               __expander: {
                 Icon: getExpanderIcon(n),
                 level: n.level,
-                leaf: (n.data.children.length === 0),
+                leaf: ((n.data.children ?? []).length === 0),
                 cb: () => { onNodeExpandClick(n) }
               }
             };

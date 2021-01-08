@@ -33,7 +33,7 @@ function buildTree(traces) {
     t.children = []
     t.error = null;
     mappedTraces[t.prettyPath] = t
-    if (t.path.length === 1) {
+  if (t.path.length === 1) {
       root = t;
     }
   });

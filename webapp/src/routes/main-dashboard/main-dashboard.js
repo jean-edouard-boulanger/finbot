@@ -7,8 +7,8 @@ import AuthContext from "context/auth/auth-context";
 import {Row, Col, Card} from 'react-bootstrap';
 import Chart from "react-apexcharts";
 import Money from "components/money"
-import HoldingsTable from "components/holdings-table";
 import BarLoader from "react-spinners/BarLoader";
+import ValuationTree from "./valuation-tree";
 import queryString from 'query-string';
 
 
@@ -21,11 +21,6 @@ function formatRelChange(val) {
   } else {
     return (<span className="text-success">+{(val * 100).toFixed(2)}%</span>)
   }
-}
-
-
-function byValuation(item1, item2) {
-  return item2.valuation.value - item1.valuation.value
 }
 
 
@@ -82,7 +77,7 @@ export let MainDashboard = () => {
       setValuation(account_data.valuation)
 
       const linked_accounts = await client.getLinkedAccounts({account_id: accountId});
-      setLinkedAccounts(linked_accounts.sort(byValuation));
+      setLinkedAccounts(linked_accounts);
 
       const historical_valuation = await client.getAccountHistoricalValuation({account_id: accountId});
       setHistoricalValuation({
@@ -271,12 +266,23 @@ export let MainDashboard = () => {
           </Card>
         </Col>
       </Row>
-      <HoldingsTable
-        linked_accounts={linkedAccounts}
-        locale={locale}
-        moneyFormatter={moneyFormatter}
-        valuation={valuation}
-        valuationIsLoaded={valuationIsLoaded}/>
+      <Row className="mt-3">
+        <Col>
+          <Card>
+            <Card.Header>Holdings Summary</Card.Header>
+            <Card.Body>
+              {
+                (valuationIsLoaded) &&
+                  <ValuationTree
+                    valuation={valuation}
+                    linkedAccounts={linkedAccounts}
+                    locale={locale}
+                    moneyFormatter={moneyFormatter} />
+              }
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
     </>
   );
 }
