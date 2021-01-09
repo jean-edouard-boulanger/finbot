@@ -1,9 +1,11 @@
 import React from "react";
 
-import { TreeGrid, Money, ValuationChange, DurationBadge } from 'components';
+import { TreeGrid, Money, ValuationChange } from 'components';
+import { FaExclamationCircle } from 'react-icons/fa';
+import { Tooltip } from "react-bootstrap";
 
 
-function getRowMetadata(data) {
+function getRowMetadata(totalValuation, data) {
   if(data.role === "_root") {
     return {
       label: "Holdings",
@@ -14,6 +16,9 @@ function getRowMetadata(data) {
     return {
       label: data.linked_account.description,
       height: "4em",
+      warning: (totalValuation.date !== data.valuation.date)
+        ? "The valuation for this account is outdated"
+        : undefined
       /*duration: {
         from: Date.parse(data.valuation.date)
       }*/
@@ -34,22 +39,20 @@ function getRowMetadata(data) {
 }
 
 
-const GridRow = (locale, moneyFormatter) => {
+const GridRow = (locale, moneyFormatter, totalValuation) => {
   return (props) => {
     const data = props.data;
     const valuation = data.valuation;
     const change = valuation.change;
-    const metadata = getRowMetadata(data);
+    const metadata = getRowMetadata(totalValuation, data);
 
     return (
       <tr style={{height: metadata.height}}>
         <td>
-          <TreeGrid.Expander {...props} />{metadata.label}
+          <TreeGrid.Expander {...props} />{metadata.label}{" "}
           {
-            (metadata.duration !== undefined) &&
-              <h6>
-                <DurationBadge from={metadata.duration.from} />
-              </h6>
+            (metadata.warning !== undefined) &&
+                <FaExclamationCircle />
           }
         </td>
         <td>
@@ -99,7 +102,7 @@ const ValuationTree = (props) => {
 
   return (
     <TreeGrid
-      rowAs={GridRow(locale, moneyFormatter)}
+      rowAs={GridRow(locale, moneyFormatter, valuation)}
       headerAs={Header}
       tree={tree}
       sortBy={(data) => data.valuation.value}  />
