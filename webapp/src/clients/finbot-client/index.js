@@ -72,18 +72,18 @@ class FinbotClient {
     return this.handleResponse(response).providers;
   }
 
-  async validateExternalAccountCredentials(data) {
+  async validateExternalAccountCredentials(account_id, data) {
     const { provider_id, credentials, account_name } = data;
     const response = await axios.post(
-      `${this.endpoint}/accounts/1/linked_accounts?persist=0`,
+      `${this.endpoint}/accounts/${account_id}/linked_accounts?persist=0`,
       { provider_id, credentials, account_name });
     return this.handleResponse(response).result.validated;
   }
 
-  async linkAccount(data) {
+  async linkAccount(account_id, data) {
     const { provider_id, credentials, account_name } = data;
     const response = await axios.post(
-      `${this.endpoint}/accounts/1/linked_accounts?validate=0`,
+      `${this.endpoint}/accounts/${account_id}/linked_accounts?validate=0`,
       { provider_id, credentials, account_name });
     return this.handleResponse(response).result;
   }

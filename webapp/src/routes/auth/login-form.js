@@ -53,39 +53,47 @@ export const LoginForm = () => {
   }
 
   return (
-    <Row>
-      <Col md={6}>
-        <Row>
-          <Col>
-            <h2>Sign in</h2>
-          </Col>
-        </Row>
-        <Row>
-          <Col>
-            <DataDrivenForm
-              schema={LOGIN_DATA_SCHEMA}
-              uiSchema={LOGIN_UI_SCHEMA}
-              onSubmit={handleLogin}
-              showErrorList={false} >
-              <div>
-                <LoadingButton
-                  variant={"dark"}
-                  type="submit"
-                  loading={loading} >
-                  Sign In
-                </LoadingButton>
-                {" "}
-                <Link to={"/signup"}>
-                  <Button variant={"dark"}>
-                    Sign up
-                  </Button>
-                </Link>
+    <>
+      <Row>
+        <Col md={12}>
+          <Row>
+            <Col>
+              <div className={"page-header"}>
+                <h1>Sign in <small>to my finbot account</small></h1>
               </div>
-            </DataDrivenForm>
-          </Col>
-        </Row>
-      </Col>
-    </Row>
+            </Col>
+          </Row>
+        </Col>
+      </Row>
+      <Row>
+        <Col md={6}>
+          <Row>
+            <Col>
+              <DataDrivenForm
+                schema={LOGIN_DATA_SCHEMA}
+                uiSchema={LOGIN_UI_SCHEMA}
+                onSubmit={handleLogin}
+                showErrorList={false} >
+                <div>
+                  <LoadingButton
+                    variant={"dark"}
+                    type="submit"
+                    loading={loading} >
+                    Sign In
+                  </LoadingButton>
+                  {" "}
+                  <Link to={"/signup"}>
+                    <Button variant={"dark"}>
+                      Sign up
+                    </Button>
+                  </Link>
+                </div>
+              </DataDrivenForm>
+            </Col>
+          </Row>
+        </Col>
+      </Row>
+    </>
   )
 }
 

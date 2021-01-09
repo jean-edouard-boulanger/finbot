@@ -89,30 +89,38 @@ export const SignupForm = () => {
   }
 
   return (
-    <Row>
-      <Col md={6}>
-        <Row>
-          <Col>
-            <h2>Sign up</h2>
-          </Col>
-        </Row>
-        <Row>
-          <Col>
-            <DataDrivenForm
-              schema={SIGNUP_DATA_SCHEMA}
-              uiSchema={SIGNUP_UI_SCHEMA}
-              onSubmit={handleSignup}
-              showErrorList={false}>
-                <LoadingButton
-                  variant={"dark"}
-                  type="submit"
-                  loading={loading} >
-                  Sign up
-                </LoadingButton>
-            </DataDrivenForm>
-          </Col>
-        </Row>
-      </Col>
-    </Row>
+    <>
+      <Row>
+         <Col md={12}>
+          <Row>
+            <Col>
+              <div className={"page-header"}>
+                <h1>Register <small>a new finbot account</small></h1>
+              </div>
+            </Col>
+          </Row>
+        </Col>
+      </Row>
+      <Row>
+        <Col md={6}>
+          <Row>
+            <Col>
+              <DataDrivenForm
+                schema={SIGNUP_DATA_SCHEMA}
+                uiSchema={SIGNUP_UI_SCHEMA}
+                onSubmit={handleSignup}
+                showErrorList={false}>
+                  <LoadingButton
+                    variant={"dark"}
+                    type="submit"
+                    loading={loading} >
+                    Sign up
+                  </LoadingButton>
+              </DataDrivenForm>
+            </Col>
+          </Row>
+        </Col>
+      </Row>
+    </>
   )
 }

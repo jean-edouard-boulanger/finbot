@@ -1,16 +1,19 @@
 import React, {useEffect, useState, useContext} from "react";
-import {default as DataDrivenForm} from "react-jsonschema-form";
+import { Redirect } from "react-router-dom";
 
 import { AuthContext, ServicesContext } from "contexts";
 
-import {Row, Col, Form, Button, Alert} from "react-bootstrap";
-import {PlaidLink} from 'react-plaid-link';
+import {default as DataDrivenForm} from "react-jsonschema-form";
+import { toast } from "react-toastify";
+import { LoadingButton } from "components";
+import { Row, Col, Form, Button, Alert } from "react-bootstrap";
+import { PlaidLink } from 'react-plaid-link';
 
 const NO_PROVIDER_SELECTED = "NO_PROVIDER_SELECTED";
 const PLAID_PROVIDER_ID = "plaid_us"
 
 
-const StandardAccountForm = ({schema, onSubmit}) => {
+const DataDrivenAccountForm = ({operation, schema, onSubmit}) => {
   return (
     <DataDrivenForm
       schema={schema.json_schema ?? {}}
@@ -19,14 +22,22 @@ const StandardAccountForm = ({schema, onSubmit}) => {
         onSubmit(data.formData || {})
       }}
       showErrorList={false}>
-      <div>
-        <Button className="bg-dark" type="submit">Link Account</Button>
-      </div>
+      <LoadingButton loading={operation !== null} variant={"dark"} type="submit">
+        {operation || "Link account"}
+      </LoadingButton>
     </DataDrivenForm>
   );
 }
 
-const PlaidForm = ({settings, onSubmit}) => {
+const PlaidForm = ({operation, settings, onSubmit}) => {
+  if(operation !== null) {
+    return (
+      <LoadingButton variant={"dark"} loading={true}>
+        {operation}
+      </LoadingButton>
+    )
+  }
+
   return (
     <PlaidLink
       clientName="Finbot"
@@ -59,11 +70,10 @@ export const LinkAccount = (props) => {
   const [settings, setSettings] = useState(null);
   const [selectedProvider, setSelectedProvider] = useState(null);
   const [accountName, setAccountName] = useState(null);
+  const [operation, setOperation] = useState(null);
+  const [linked, setLinked] = useState(false);
 
   useEffect(() => {
-    if (finbotClient === null) {
-      return;
-    }
     const fetch = async () => {
       const providersPayload = await finbotClient.getProviders();
       setProviders(providersPayload.sort((p1, p2) => {
@@ -74,9 +84,6 @@ export const LinkAccount = (props) => {
   }, [finbotClient]);
 
   useEffect(() => {
-    if (finbotClient === null) {
-      return;
-    }
     const fetch = async () => {
       setSettings(await finbotClient.getAccountSettings({
         account_id: account.id
@@ -104,21 +111,51 @@ export const LinkAccount = (props) => {
       account_name: (accountName || provider.description),
       credentials
     };
-    const validated = await finbotClient.validateExternalAccountCredentials(link_settings);
-    if (!validated) {
+
+    setOperation("Validating credentials");
+
+    try {
+      const validated = await finbotClient.validateExternalAccountCredentials(
+        account.id, link_settings);
+      if (!validated) {
+        toast.error(`Could not validate credentials: unknown error`)
+        setOperation(null);
+        return;
+      }
+    }
+    catch(e) {
+      toast.error(`${e}`)
+      setOperation(null);
       return;
     }
-    const results = await finbotClient.linkAccount(link_settings);
-    if (!results.persisted) {
-
+    setOperation("Linking account");
+    try {
+      const results = await finbotClient.linkAccount(account.id, link_settings);
+      if (!results.persisted) {
+        toast.error(`Could not link account: unknown error`)
+        setOperation(null);
+        return;
+      }
     }
+    catch (e) {
+      toast.error(`${e}`);
+      setOperation(null);
+      return;
+    }
+    setLinked(true);
+  }
+
+  if(linked) {
+    return <Redirect to={"/dashboard"}  />
   }
 
   return (
     <>
       <Row className={"mb-4"}>
         <Col>
-          <h2>Link a new account</h2>
+          <div className={"page-header"}>
+            <h1>Link <small>a new external account</small></h1>
+          </div>
         </Col>
       </Row>
       <Row>
@@ -183,16 +220,17 @@ export const LinkAccount = (props) => {
             <Col>
               {
                 (selectedProvider !== null && !isPlaidSelected(selectedProvider)) &&
-                <StandardAccountForm
+                <DataDrivenAccountForm
+                  operation={operation}
                   schema={selectedProvider.credentials_schema}
                   onSubmit={(credentials) => {
-                    console.log(credentials);
                     requestLinkAccount({...selectedProvider}, credentials)
                   }}/>
               }
               {
                 (isPlaidSelected(selectedProvider) && isPlaidSupported(settings)) &&
                 <PlaidForm
+                  operation={operation}
                   settings={settings.plaid_settings}
                   onSubmit={(credentials) => {
                     requestLinkAccount({...selectedProvider}, credentials)
@@ -205,6 +243,8 @@ export const LinkAccount = (props) => {
               }
             </Col>
           </Row>
+        </Col>
+        <Col md={1}>
         </Col>
       </Row>
     </>
