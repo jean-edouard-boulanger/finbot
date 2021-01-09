@@ -72,7 +72,7 @@ function Expander (props) {
   );
 }
 
-export default function TreeGrid(props) {
+export function TreeGrid(props) {
   const {
     tree,
     sortBy = (() => 0),
@@ -86,7 +86,7 @@ export default function TreeGrid(props) {
   useEffect(() => {
     const topology = topologicalSort(tree, sortBy);
     setModel(configureModel(topology, expanded));
-  }, [tree, expanded]);
+  }, [tree, expanded, sortBy]);
 
   function onNodeExpandClick(node) {
     node.expanded = !node.expanded;
@@ -127,3 +127,5 @@ export default function TreeGrid(props) {
 }
 
 TreeGrid.Expander = Expander;
+
+export default TreeGrid;

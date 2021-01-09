@@ -1,15 +1,18 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useContext} from 'react';
+import {useParams} from 'react-router-dom';
+
+import { ServicesContext } from "contexts";
+
 import AceEditor from "react-ace";
+import {Col, Row, Card, Table, Button, Alert, Badge} from 'react-bootstrap';
+import {FaCube} from 'react-icons/fa';
+import { TreeGrid } from 'components';
+
 import "ace-builds/src-noconflict/theme-github";
 import "ace-builds/src-noconflict/mode-json";
-import {Col, Row, Card, Table, Button, Alert, Badge} from 'react-bootstrap';
-import {useParams} from 'react-router-dom';
-import {FaCube} from 'react-icons/fa';
-
-import TreeGrid from 'components/tree-grid';
-import FinbotClient from "clients/finbot-client";
 
 const {DateTime} = require('luxon');
+
 
 function hasError(node) {
   return node.metadata.error !== undefined;
@@ -206,16 +209,16 @@ function Inspector({data}) {
   }
 }
 
-export default function Admin() {
+export function Admin() {
   const {guid} = useParams();
+  const {finbotClient} = useContext(ServicesContext);
   const [tree, setTree] = useState(null);
   const [selectedSpan, setSelectedSpan] = useState(null);
   const [selectedData, setSelectedData] = useState(null);
 
   useEffect(() => {
     const impl = async function () {
-      const client = new FinbotClient();
-      const response = await client.getTraces({guid});
+      const response = await finbotClient.getTraces({guid});
       response.traces.forEach((t) => {
         t.start_time = DateTime.fromISO(t.start_time);
         t.end_time = DateTime.fromISO(t.end_time);
@@ -223,7 +226,7 @@ export default function Admin() {
       setTree(buildTree(response.traces));
     }
     impl();
-  }, [guid]);
+  }, [finbotClient, guid]);
 
   useEffect(() => {
     if (selectedData !== null) {
@@ -305,3 +308,5 @@ export default function Admin() {
     </>
   )
 }
+
+export default Admin;

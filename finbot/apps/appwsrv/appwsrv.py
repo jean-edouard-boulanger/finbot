@@ -110,13 +110,13 @@ def auth_login():
     data = request.json
     account = db_session.query(UserAccount).filter_by(email=data["email"]).first()
     if not account:
-        raise ApplicationError("invalid email or password")
+        raise ApplicationError("Invalid email or password")
     
     # TODO: password should be hashed, not encrypted/decrypted with secret
     account_password = secure.fernet_decrypt(
         account.encrypted_password.encode(), SECRET.encode()).decode()
     if account_password != data["password"]:
-        raise ApplicationError("invalid email or password")
+        raise ApplicationError("Invalid email or password")
 
     return jsonify({
         "auth": {
@@ -315,7 +315,7 @@ def get_user_account_valuation_history(user_account_id):
 def get_linked_accounts_valuation(user_account_id):
     history_entry = repository.find_last_history_entry(db_session, user_account_id)
     if not history_entry:
-        raise ApplicationError(f"No valuation available for user account '{user_account_id}'")
+        return jsonify({"linked_accounts": []})
     return jsonify(serialize(repository.load_valuation_tree(db_session, history_entry)))
 
 

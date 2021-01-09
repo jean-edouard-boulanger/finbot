@@ -2,7 +2,7 @@ import {Container} from "react-bootstrap";
 import React from "react";
 
 
-export default function MainContainer(props) {
+export function MainContainer(props) {
     return (
       <div className="main-wrapper">
         <Container fluid>
@@ -11,3 +11,5 @@ export default function MainContainer(props) {
       </div>
     );
 }
+
+export default MainContainer;

@@ -1,10 +1,7 @@
 import React, {useEffect, useState, useContext} from "react";
-import {withRouter} from "react-router";
 import {default as DataDrivenForm} from "react-jsonschema-form";
 
-import FinbotClient from "clients/finbot-client";
-
-import AuthContext from "context/auth/auth-context";
+import { AuthContext, ServicesContext } from "contexts";
 
 import {Row, Col, Form, Button, Alert} from "react-bootstrap";
 import {PlaidLink} from 'react-plaid-link';
@@ -54,39 +51,39 @@ const isPlaidSupported = (settings) => {
   return settings !== null && settings.plaid_settings !== null;
 }
 
-const LinkAccount = (props) => {
-  const authContext = useContext(AuthContext);
-  const accountID = authContext.accountID
+export const LinkAccount = (props) => {
+  const {account} = useContext(AuthContext);
+  const {finbotClient} = useContext(ServicesContext);
 
-  const [client] = useState(() => new FinbotClient());
   const [providers, setProviders] = useState([]);
   const [settings, setSettings] = useState(null);
   const [selectedProvider, setSelectedProvider] = useState(null);
   const [accountName, setAccountName] = useState(null);
-  const [operation, setOperation] = useState(null);
 
   useEffect(() => {
-    if (client === null) {
+    if (finbotClient === null) {
       return;
     }
     const fetch = async () => {
-      const providersPayload = await client.getProviders();
+      const providersPayload = await finbotClient.getProviders();
       setProviders(providersPayload.sort((p1, p2) => {
         return p1.description.localeCompare(p2.description);
       }));
     };
     fetch();
-  }, [client]);
+  }, [finbotClient]);
 
   useEffect(() => {
-    if (client === null) {
+    if (finbotClient === null) {
       return;
     }
     const fetch = async () => {
-      setSettings(await client.getAccountSettings({account_id: accountID}))
+      setSettings(await finbotClient.getAccountSettings({
+        account_id: account.id
+      }))
     }
     fetch();
-  }, [client, accountID])
+  }, [finbotClient, account])
 
   const onSelectedProviderChanged = (event) => {
     const providerId = event.target.value;
@@ -107,11 +104,11 @@ const LinkAccount = (props) => {
       account_name: (accountName || provider.description),
       credentials
     };
-    const validated = await client.validateExternalAccountCredentials(link_settings);
+    const validated = await finbotClient.validateExternalAccountCredentials(link_settings);
     if (!validated) {
       return;
     }
-    const results = await client.linkAccount(link_settings);
+    const results = await finbotClient.linkAccount(link_settings);
     if (!results.persisted) {
 
     }
@@ -214,4 +211,4 @@ const LinkAccount = (props) => {
   )
 }
 
-export default withRouter(LinkAccount);
+export default LinkAccount;

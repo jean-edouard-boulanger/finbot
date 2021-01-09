@@ -1,20 +1,20 @@
-import React, {useContext} from "react";
+import React, {useContext, useState} from "react";
+import { Redirect } from "react-router-dom";
 
-import AuthContext from "context/auth/auth-context";
+import {ServicesContext} from "contexts";
 
-import StyledAuthContainer from "./styled";
+import { toast } from "react-toastify";
+import { LoadingButton } from "components";
+import { default as DataDrivenForm } from "react-jsonschema-form";
+import { Row, Col } from "react-bootstrap";
 
-import Form from "react-jsonschema-form";
-import Button from "react-bootstrap/Button";
 
-
-const schema = {
-  "title": "SIGN UP",
+const SIGNUP_DATA_SCHEMA = {
   "type": "object",
   "required": [
     "full_name",
     "password",
-    "settings",
+    "valuation_ccy",
     "email"
   ],
   "properties": {
@@ -28,9 +28,9 @@ const schema = {
       "title": "E-Mail",
       "format": "email"
     },
-    "settings": {
+    "valuation_ccy": {
       "type": "string",
-      "title": "Settings",
+      "title": "Valuation currency",
       "enum": [
         "EUR",
         "GBP",
@@ -51,7 +51,7 @@ const schema = {
   }
 }
 
-const uiSchema = {
+const SIGNUP_UI_SCHEMA = {
   "full_name": {
     "ui:autofocus": true,
     "ui:emptyValue": "",
@@ -62,33 +62,57 @@ const uiSchema = {
   },
   "password": {
     "ui:widget": "password",
-    "ui:help": "Hint: Make it strong!"
-  },
-  "settings": {
-    "ui:placeholder": "Choose currency",
   }
 }
 
-const SignupForm = props => {
-  const authContext = useContext(AuthContext);
+export const SignupForm = () => {
+  const {finbotClient} = useContext(ServicesContext);
+  const [loading, setLoading] = useState(false);
+  const [registered, setRegistered] = useState(false);
+
+  const handleSignup = async (data) => {
+    try {
+      setLoading(true);
+      const result = await finbotClient.registerAccount(data.formData);
+      console.log(result);
+      setLoading(false);
+      setRegistered(true);
+    }
+    catch(e) {
+      setLoading(false);
+      toast.error(e)
+    }
+  };
+
+  if(registered) {
+    return <Redirect to={"/login"} />
+  }
 
   return (
-    <StyledAuthContainer>
-      <Form
-        className="border border-secondary p-4 text-center opaque-background sign-form"
-        schema={schema}
-        uiSchema={uiSchema}
-        onSubmit={(data) => {
-          authContext.register(data.formData)
-        }}
-        showErrorList={false}>
-        <div className="d-flex flex-column align-items-center">
-          <Button className="bg-dark col-md-6 m-1" type="submit">Submit</Button>
-          <Button className="bg-dark col-md-6 m-1" type="button">Log In</Button>
-        </div>
-      </Form>
-    </StyledAuthContainer>
+    <Row>
+      <Col md={6}>
+        <Row>
+          <Col>
+            <h2>Sign up</h2>
+          </Col>
+        </Row>
+        <Row>
+          <Col>
+            <DataDrivenForm
+              schema={SIGNUP_DATA_SCHEMA}
+              uiSchema={SIGNUP_UI_SCHEMA}
+              onSubmit={handleSignup}
+              showErrorList={false}>
+                <LoadingButton
+                  variant={"dark"}
+                  type="submit"
+                  loading={loading} >
+                  Sign up
+                </LoadingButton>
+            </DataDrivenForm>
+          </Col>
+        </Row>
+      </Col>
+    </Row>
   )
 }
-
-export default SignupForm;

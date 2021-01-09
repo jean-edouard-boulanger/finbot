@@ -1,42 +1,70 @@
-import React from 'react';
-import { Route, Switch, BrowserRouter } from "react-router-dom";
-import 'bootswatch/dist/lux/bootstrap.min.css';
-import "./assets/css/index.css"
+import React, { useContext } from 'react';
+import { Route, Switch, Redirect } from "react-router-dom";
+
+import { AuthProvider, AuthContext, ServicesProvider } from 'contexts';
 
 import { ToastContainer, Slide, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { MainContainer, Navigation } from "components";
+import {
+  Admin,
+  LoginForm,
+  SignupForm,
+  Logout,
+  LinkAccount,
+  MainDashboard
+} from "routes";
 
 import 'datejs';
 
-import AuthState from "context/auth/auth-state";
-import MainContainer from "components/main-container";
+import 'react-toastify/dist/ReactToastify.css';
+import 'bootswatch/dist/lux/bootstrap.min.css';
+import "./assets/css/index.css"
 
-import { MainDashboard } from "./routes/main-dashboard";
-import Admin from "./routes/admin";
-import Navbar from "./components/navigation";
-import Auth from "./routes/auth";
-import LinkAccounts from "./routes/link-external-account";
 
 toast.configure({
   delay: 500,
 });
 
+const GuestRouter = () => {
+  return (
+    <Switch>
+      <Route exact path="/login" render={() => <LoginForm />} />
+      <Route exact path="/signup" render={() => <SignupForm />} />
+      <Redirect to={"/login"} />
+    </Switch>
+  );
+}
+
+const UserRouter = () => {
+  return (
+    <Switch>
+      <Route exact path="/dashboard" render={() => <MainDashboard />} />
+      <Route exact path="/logout" render={() => <Logout />} />
+      <Route exact path="/admin/traces/:guid" render={() => <Admin />} />
+      <Route path="/settings/accounts/link" render={() => <LinkAccount />} />
+      <Redirect to={"/dashboard"} />
+    </Switch>
+  );
+}
+
+const AppRouter = () => {
+  const { isAuthenticated } = useContext(AuthContext);
+  return (isAuthenticated)
+    ? <UserRouter />
+    : <GuestRouter />;
+}
+
 const App = () => {
   return (
-    <AuthState>
-      <BrowserRouter>
+    <ServicesProvider>
+      <AuthProvider>
         <ToastContainer autoClose={7000} transition={Slide} position="bottom-right" />
-        <Navbar />
+        <Navigation />
         <MainContainer>
-          <Switch>
-            <Route exact path="/" render={() => <MainDashboard />} />
-            <Route exact path="/admin/traces/:guid" render={() => <Admin />} />
-            <Route path="/auth" render={() => <Auth />} />
-            <Route path="/linked-account" render={() => <LinkAccounts />} />
-          </Switch>
+          <AppRouter />
         </MainContainer>
-      </BrowserRouter>
-    </AuthState>
+      </AuthProvider>
+    </ServicesProvider>
   )
 }
 

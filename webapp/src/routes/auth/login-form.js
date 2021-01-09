@@ -1,14 +1,16 @@
-import React, {useContext} from "react";
+import React, {useContext, useState} from "react";
+import { Link } from "react-router-dom";
 
-import AuthContext from "context/auth/auth-context";
+import { AuthContext } from "contexts";
 
-import StyledAuthContainer from "./styled";
-import Form from "react-jsonschema-form";
-import {Button} from "react-bootstrap";
+import { toast } from "react-toastify";
+import { LoadingButton } from "components";
+import { Row, Col, Button } from "react-bootstrap";
+
+import { default as DataDrivenForm } from "react-jsonschema-form";
 
 
-const schema = {
-  "title": "LOG IN",
+const LOGIN_DATA_SCHEMA = {
   "type": "object",
   "required": [
     "password",
@@ -27,7 +29,7 @@ const schema = {
   }
 }
 
-const uiSchema = {
+const LOGIN_UI_SCHEMA = {
   "email": {
     "ui:emptyValue": "",
     "ui:autofocus": true,
@@ -37,24 +39,53 @@ const uiSchema = {
   }
 }
 
-const LoginForm = () => {
-  const authContext = useContext(AuthContext)
+export const LoginForm = () => {
+  const {login} = useContext(AuthContext)
+  const [loading] = useState(false);
+
+  const handleLogin = async (data) => {
+    try {
+      await login(data.formData);
+    }
+    catch(e) {
+      toast.error(e);
+    }
+  }
 
   return (
-    <StyledAuthContainer>
-      <Form
-        className="border border-secondary p-4 text-center opaque-background sign-form"
-        schema={schema}
-        uiSchema={uiSchema}
-        onSubmit={(data) => {
-          authContext.login(data.formData);
-        }}
-        showErrorList={false}>
-        <div>
-          <Button className="bg-dark col-md-6" type="submit">Log In</Button>
-        </div>
-      </Form>
-    </StyledAuthContainer>
+    <Row>
+      <Col md={6}>
+        <Row>
+          <Col>
+            <h2>Sign in</h2>
+          </Col>
+        </Row>
+        <Row>
+          <Col>
+            <DataDrivenForm
+              schema={LOGIN_DATA_SCHEMA}
+              uiSchema={LOGIN_UI_SCHEMA}
+              onSubmit={handleLogin}
+              showErrorList={false} >
+              <div>
+                <LoadingButton
+                  variant={"dark"}
+                  type="submit"
+                  loading={loading} >
+                  Sign In
+                </LoadingButton>
+                {" "}
+                <Link to={"/signup"}>
+                  <Button variant={"dark"}>
+                    Sign up
+                  </Button>
+                </Link>
+              </div>
+            </DataDrivenForm>
+          </Col>
+        </Row>
+      </Col>
+    </Row>
   )
 }
 

@@ -1,9 +1,6 @@
 import React from "react";
 
-import TreeGrid from 'components/tree-grid';
-import Money from "components/money";
-import ValuationChange from "components/valuation-change";
-import DurationBadge from "components/duration-badge";
+import { TreeGrid, Money, ValuationChange, DurationBadge } from 'components';
 
 
 function getRowMetadata(data) {
@@ -110,3 +107,4 @@ const ValuationTree = (props) => {
 }
 
 export default ValuationTree;
+export { ValuationTree };

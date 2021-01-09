@@ -5,7 +5,7 @@ export function persistLocal(state) {
     IDENTITY_LOCAL_KEY,
     JSON.stringify({
       token: state.token,
-      accountID: state.accountID
+      account: state.account
     })
   )
 }
@@ -19,10 +19,8 @@ export function restoreLocal(state) {
     const data = JSON.parse(jsonData);
     return {
       ...state,
-      isAuthenticated: true,
-      loading: false,
       token: data.token,
-      accountID: data.accountID
+      account: data.account
     }
   }
   catch {
