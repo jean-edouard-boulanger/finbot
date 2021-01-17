@@ -1,15 +1,11 @@
 from finbot.providers import (
     plaid_us,
-    amex_us,
     binance_us,
-    hl_uk,
     credit_agricole_fr,
     vanguard_uk,
     october_fr,
     aegon_targetplan_uk,
     lending_works_uk,
-    barclays_uk,
-    barclaycard_uk,
     kraken_us,
     bittrex_us,
     google_sheets,
@@ -35,10 +31,6 @@ get_provider.providers = {
         description="Plaid (US)",
         api_module=plaid_us
     ),
-    "amex_us": Provider(
-        description="American express (US)",
-        api_module=amex_us
-    ),
     "binance_us": Provider(
         description="Binance (US)",
         api_module=binance_us
@@ -46,10 +38,6 @@ get_provider.providers = {
     "ca_fr": Provider(
         description="Credit agricole (FR)",
         api_module=credit_agricole_fr
-    ),
-    "hl_uk": Provider(
-        description="Hargreaves Lansdown (UK)",
-        api_module=hl_uk
     ),
     "vanguard_uk": Provider(
         description="Vanguard (UK)",
@@ -66,14 +54,6 @@ get_provider.providers = {
     "lending_works_uk": Provider(
         description="Lending Works (UK)",
         api_module=lending_works_uk
-    ),
-    "barclays_uk": Provider(
-        description="Barclays (UK)",
-        api_module=barclays_uk
-    ),
-    "barclaycard_uk": Provider(
-        description="Barclaydcard (UK)",
-        api_module=barclaycard_uk
     ),
     "kraken_us": Provider(
         description="Kraken (US)",
