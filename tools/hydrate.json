@@ -9,37 +9,6 @@
             }
         },
         {
-            "id": "amex_us",
-            "description": "American express (US)",
-            "website_url": "https://www.americanexpress.com/",
-            "credentials_schema": {
-                "json_schema": {
-                    "$schema": "http://json-schema.org/draft-07/schema#",
-                    "type": "object",
-                    "required": ["user_id", "password"],
-                    "properties": {
-                        "user_id": {
-                            "title": "User ID",
-                            "type": "string"
-                        },
-                        "password": {
-                            "title": "Password",
-                            "type": "string"
-                        }
-                    }
-                },
-                "ui_schema": {
-                    "password": {
-                        "ui:widget": "password"
-                    },
-                    "ui:order": [
-                        "user_id", 
-                        "password"
-                    ]
-                }
-            }
-        },
-        {
             "id": "vanguard_uk",
             "description": "Vanguard Investors (UK)",
             "website_url": "https://www.vanguardinvestor.co.uk/",
@@ -97,103 +66,6 @@
                     "ui:order": [
                         "email",
                         "password"
-                    ]
-                }
-            }
-        },
-        {
-            "id": "barclays_uk",
-            "description": "Barclays (UK)",
-            "website_url": "https://www.barclays.co.uk/",
-            "credentials_schema": {
-                "json_schema": {
-                    "$schema": "http://json-schema.org/draft-07/schema#",
-                    "type": "object",
-                    "required": [
-                        "auth_method", 
-                        "last_name", 
-                        "passcode", 
-                        "memorable_word"
-                    ],
-                    "properties": {
-                        "last_name": {
-                            "title": "Last name",
-                            "type": "string"
-                        },
-                        "membership_number": {
-                            "title": "Membership number",
-                            "type": "string",
-                            "pattern": "\\d+"
-                        },
-                        "card_last_4_digits": {
-                            "title": "Last 4 card digits",
-                            "type": "string",
-                            "pattern": "\\d{4}"
-                        },
-                        "card_security_code": {
-                            "title": "Card security code",
-                            "type": "string",
-                            "pattern": "\\d+"
-                        },
-                        "passcode": {
-                            "title": "Passcode",
-                            "type": "string",
-                            "pattern": "\\d{5}"
-                        },
-                        "memorable_word": {
-                            "title": "Memorable word",
-                            "type": "string"
-                        }
-                    }
-                },
-                "ui_schema": {
-                    "card_number": {
-                        "ui:placeholder": "0000-0000-0000-0000"
-                    },
-                    "passcode": {
-                        "ui:widget": "password"
-                    },
-                    "ui:order": [
-                        "last_name",
-                        "auth_method",
-                        "passcode",
-                        "memorable_word"
-                    ]
-                }
-            }
-        },
-        {
-            "id": "barclaycard_uk",
-            "description": "Barclaycard (UK)",
-            "website_url": "https://www.barclaycard.co.uk/personal/customer",
-            "credentials_schema": {
-                "json_schema": {
-                    "$schema": "http://json-schema.org/draft-07/schema#",
-                    "type": "object",
-                    "properties": {
-                        "username": {
-                            "title": "Username",
-                            "type": "string"
-                        },
-                        "passcode": {
-                            "title": "Passcode",
-                            "type": "string",
-                            "pattern": "\\d{6}"
-                        },
-                        "memorable_word": {
-                            "title": "Memorable word",
-                            "type": "string"
-                        }
-                    }
-                },
-                "ui_schema": {
-                    "passcode": {
-                        "ui:widget": "password"
-                    },
-                    "ui:order": [
-                        "username",
-                        "passcode",
-                        "memorable_word"
                     ]
                 }
             }
@@ -495,52 +367,6 @@
                         "sheet_key",
                         "google_api_credentials"
                     ]
-                }
-            }
-        },
-        {
-            "id": "hl_uk",
-            "description": "Hargreaves Lansdown (UK)",
-            "website_url": "https://online.hl.co.uk/",
-            "credentials_schema": {
-                "json_schema": {
-                    "$schema": "http://json-schema.org/draft-07/schema#",
-                    "type": "object",
-                    "required": ["username", "birth_date", "online_password", "secret_number"],
-                    "properties": {
-                        "username": {
-                            "title": "Username",
-                            "type": "string"
-                        },
-                        "birth_date": {
-                            "title": "Birth date",
-                            "type": "string",
-                            "pattern": "\\d{6}"
-                        },
-                        "online_password": {
-                            "title": "Online password",
-                            "type": "string"
-                        },
-                        "secret_number": {
-                            "title": "Secret number",
-                            "type": "string",
-                            "pattern": "\\d{6}"
-                        }
-                    }
-                },
-                "ui_schema": {
-                    "ui:order": [
-                        "username",
-                        "birth_date",
-                        "online_password",
-                        "secret_number"
-                    ],
-                    "online_password": {
-                        "ui:widget": "password"
-                    },
-                    "secret_number": {
-                        "ui:widget": "password"
-                    }
                 }
             }
         },
