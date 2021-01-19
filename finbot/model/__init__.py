@@ -90,6 +90,10 @@ class Provider(Base):
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
+    linked_accounts = relationship(
+        "LinkedAccount",
+        uselist=True)
+
     def serialize(self):
         return {
             "id": self.id,

@@ -13,6 +13,7 @@ const UserNavbar = (props) => {
     <Navbar.Collapse id="responsive-navbar-nav">
       <Nav activeKey={props.location.pathname} className="ml-auto">
         <NavLink className="px-5 nav-link" to="/dashboard" exact>Dashboard</NavLink>
+        <NavLink className="px-5 nav-link" to="/settings" exact>Settings</NavLink>
         <NavLink className="px-5 nav-link" to="/logout">Logout</NavLink>
       </Nav>
     </Navbar.Collapse>
@@ -34,7 +35,7 @@ export const Navigation = withRouter((props) => {
   const {isAuthenticated} = useContext(AuthContext);
   return (
     <NavBar className="box-shadow" collapseOnSelect expand="md" bg="dark" variant="dark">
-      <NavLink className="px-5 navbar-brand" to="/">Finbot</NavLink>
+      <NavLink className="px-5 navbar-brand" to={isAuthenticated ? `/dashboard` : "/loading"}>Finbot</NavLink>
       <Navbar.Toggle aria-controls="responsive-navbar-nav"/>
       {
         isAuthenticated ? <UserNavbar {...props} /> : <GuestNavbar {...props} />

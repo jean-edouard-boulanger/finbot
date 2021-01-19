@@ -6,7 +6,7 @@ import { Button, Spinner } from "react-bootstrap";
 export const LoadingButton = (props) => {
   const {children, loading = true, ...buttonProps} = props;
   return (
-    <Button {...buttonProps} disabled={loading}>
+    <Button disabled={loading} {...buttonProps}>
       {(loading)
           && <Spinner size={"sm"} animation={"border"} />}
       {" "}

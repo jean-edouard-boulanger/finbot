@@ -66,10 +66,43 @@ class FinbotClient {
     return this.handleResponse(response).linked_accounts;
   }
 
+  async getLinkedAccountsValuation(settings) {
+    const { account_id } = settings;
+    const response = await axios.get(
+      `${this.endpoint}/accounts/${account_id}/linked_accounts/valuation`);
+    return this.handleResponse(response).linked_accounts;
+  }
+
+  async deleteLinkedAccount(settings) {
+    const { account_id, linked_account_id } = settings;
+    const response = await axios.delete(
+      `${this.endpoint}/accounts/${account_id}/linked_accounts/${linked_account_id}`);
+    return this.handleResponse(response);
+  }
+
   async getProviders() {
     const response = await axios.get(
       `${this.endpoint}/providers`);
     return this.handleResponse(response).providers;
+  }
+
+  async saveProvider(provider) {
+    const response = await axios.put(
+      `${this.endpoint}/providers`,
+      provider);
+    return this.handleResponse(response);
+  }
+
+  async deleteProvider(provider_id) {
+    const response = await axios.delete(
+      `${this.endpoint}/providers/${provider_id}`);
+    return this.handleResponse(response);
+  }
+
+  async getProvider(providerId) {
+    const response = await axios.get(
+      `${this.endpoint}/providers/${providerId}`);
+    return this.handleResponse(response);
   }
 
   async validateExternalAccountCredentials(account_id, data) {

@@ -4,11 +4,24 @@ from sqlalchemy import desc
 from sqlalchemy.orm import joinedload
 from finbot.model import (
     LinkedAccount,
+    Provider,
     UserAccountHistoryEntry,
     LinkedAccountValuationHistoryEntry,
     SubAccountValuationHistoryEntry,
     SubAccountItemValuationHistoryEntry
 )
+
+
+def find_provider(session, provider_id: str) -> Provider:
+    return session.query(Provider).filter_by(id=provider_id).first()
+
+
+def find_linked_accounts(session, user_account_id: int) -> List[LinkedAccount]:
+    return (session.query(LinkedAccount)
+                   .filter_by(user_account_id=user_account_id)
+                   .filter_by(deleted=False)
+                   .options(joinedload(LinkedAccount.provider))
+                   .all())
 
 
 def find_last_history_entry(session,
@@ -55,8 +68,11 @@ def find_items_valuation(session,
     return query.all()
 
 
-def find_linked_account(session, linked_account_id: int) -> LinkedAccount:
-    return session.query(LinkedAccount).filter_by(id=linked_account_id).first()
+def find_linked_account(session, user_account_id: int, linked_account_id: int) -> LinkedAccount:
+    return (session.query(LinkedAccount)
+                   .filter_by(id=linked_account_id)
+                   .filter_by(user_account_id=user_account_id)
+                   .first())
 
 
 def load_valuation_tree(session, history_entry: UserAccountHistoryEntry):
@@ -117,7 +133,20 @@ def load_valuation_tree(session, history_entry: UserAccountHistoryEntry):
                                     "value_self_currency": item_v.valuation_sub_account_ccy,
                                     "change": item_v.valuation_change,
                                     "currency": history_entry.valuation_ccy
-                                }
+                                },
+                                "children": [
+                                    {
+                                        "role": "metadata",
+                                        "label": key,
+                                        "value": value
+                                    }
+                                    for (key, value) in [
+                                        ("Units", f"{item_v.units:.2f}" if item_v.units else None),
+                                        (f"Value ({sa_v.sub_account_ccy})", f"{item_v.valuation_sub_account_ccy:.2f}"),
+                                        ("Type", item_v.item_subtype)
+                                    ]
+                                    if value is not None
+                                ]
                             }
                             for item_v in mapped_items.get((sa_v.linked_account_id, sa_v.sub_account_id), [])
                         ]

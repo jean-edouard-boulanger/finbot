@@ -1,9 +1,9 @@
-import React, {useEffect, useState, useContext} from "react";
+import React, {useEffect, useState, useContext, useRef} from "react";
 import { Redirect } from "react-router-dom";
 
 import { AuthContext, ServicesContext } from "contexts";
 
-import {default as DataDrivenForm} from "react-jsonschema-form";
+import { default as DataDrivenForm } from "react-jsonschema-form";
 import { toast } from "react-toastify";
 import { LoadingButton } from "components";
 import { Row, Col, Form, Button, Alert } from "react-bootstrap";
@@ -21,7 +21,7 @@ const DataDrivenAccountForm = ({operation, schema, onSubmit}) => {
       onSubmit={(data) => {
         onSubmit(data.formData || {})
       }}
-      showErrorList={false}>
+      showErrorList={false} >
       <LoadingButton loading={operation !== null} variant={"dark"} type="submit">
         {operation || "Link account"}
       </LoadingButton>
@@ -72,6 +72,7 @@ export const LinkAccount = (props) => {
   const [accountName, setAccountName] = useState(null);
   const [operation, setOperation] = useState(null);
   const [linked, setLinked] = useState(false);
+  const accountNameRef = useRef(accountName);
 
   useEffect(() => {
     const fetch = async () => {
@@ -92,6 +93,11 @@ export const LinkAccount = (props) => {
     fetch();
   }, [finbotClient, account])
 
+  const updateAccountName = (newName) => {
+    setAccountName(newName);
+    accountNameRef.current = newName;
+  }
+
   const onSelectedProviderChanged = (event) => {
     const providerId = event.target.value;
     if (providerId === NO_PROVIDER_SELECTED) {
@@ -101,16 +107,17 @@ export const LinkAccount = (props) => {
     const provider = providers.find((provider) => {
       return provider.id === providerId;
     });
-    setAccountName(provider.description);
+    updateAccountName(provider.description);
     setSelectedProvider(provider);
   }
 
   const requestLinkAccount = async (provider, credentials) => {
     const link_settings = {
       provider_id: provider.id,
-      account_name: (accountName || provider.description),
+      account_name: accountNameRef.current,
       credentials
     };
+    console.log(link_settings);
 
     setOperation("Validating credentials");
 
@@ -146,23 +153,16 @@ export const LinkAccount = (props) => {
   }
 
   if(linked) {
-    return <Redirect to={"/dashboard"}  />
+    return <Redirect to={"/settings/linked"}  />
   }
 
   return (
     <>
-      <Row className={"mb-4"}>
-        <Col>
-          <div className={"page-header"}>
-            <h1>Link <small>a new external account</small></h1>
-          </div>
-        </Col>
-      </Row>
       <Row>
-        <Col md={6}>
+        <Col>
           <Row className={"mb-4"}>
             <Col>
-              <h3>1. Provider selection</h3>
+              <h5>1. Provider selection</h5>
             </Col>
           </Row>
           <Row className={"mb-4"}>
@@ -192,18 +192,18 @@ export const LinkAccount = (props) => {
             <>
               <Row className={"mb-4"}>
                 <Col>
-                  <h3>2. Account name</h3>
+                  <h5>2. Account name</h5>
                 </Col>
               </Row>
-              <Row>
+              <Row className={"mb-4"}>
                 <Col>
                   <Form.Group controlId="formBasicEmail">
                     <Form.Control
-                      type="email"
+                      type="text"
                       placeholder="Account name"
                       value={accountName}
                       onChange={(event) => {
-                        setAccountName(event.target.value);
+                        updateAccountName(event.target.value);
                       }}/>
                   </Form.Group>
                 </Col>
@@ -213,7 +213,7 @@ export const LinkAccount = (props) => {
           {
             (selectedProvider !== null && !isPlaidSelected(selectedProvider)) &&
             <Row className={"mb-4"}>
-              <Col><h3>3. Account settings</h3></Col>
+              <Col><h5>3. Account settings</h5></Col>
             </Row>
           }
           <Row>
@@ -250,5 +250,3 @@ export const LinkAccount = (props) => {
     </>
   )
 }
-
-export default LinkAccount;

@@ -133,7 +133,7 @@ def auth_login():
     })
 
 
-@app.route(API_V1.providers._, methods=["POST"])
+@app.route(API_V1.providers._, methods=["PUT"])
 @request_handler(schema={
     "type": "object",
     "additionalProperties": False,
@@ -145,9 +145,10 @@ def auth_login():
         "credentials_schema": {"type": "object"}
     }
 })
-def create_provider():
+def update_or_create_provider():
     data = request.json
-    with db_session.persist(Provider()) as provider:
+    existing_provider = repository.find_provider(db_session, data["id"])
+    with db_session.persist(existing_provider or Provider()) as provider:
         provider.id = data["id"]
         provider.description = data["description"]
         provider.website_url = data["website_url"]
@@ -164,13 +165,27 @@ def get_providers():
     }))
 
 
+@app.route(API_V1.providers.p("provider_id")._, methods=["GET"])
+@request_handler()
+def get_provider(provider_id: str):
+    provider = repository.find_provider(db_session, provider_id)
+    if not provider:
+        raise ApplicationError(f"Provider with id '${provider_id}' does not exist")
+    return jsonify(serialize(provider))
+
+
 @app.route(API_V1.providers.p("provider_id")._, methods=["DELETE"])
 @request_handler()
-def delete_provider(provider_id):
-    count = db_session.query(Provider).filter_by(id=provider_id).delete()
+def delete_provider(provider_id: str):
+    provider = repository.find_provider(db_session, provider_id)
+    if not Provider:
+        raise ApplicationError(f"Provider with id '${provider_id}' does not exist")
+    if len(provider.linked_accounts) > 0:
+        raise ApplicationError("This provider is still in use")
+    db_session.delete(provider)
     db_session.commit()
     logging.info(f"deleted provider_id={provider_id}")
-    return jsonify({"deleted": count})
+    return jsonify({})
 
 
 ACCOUNTS = API_V1.accounts
@@ -312,6 +327,25 @@ def get_user_account_valuation_history(user_account_id):
 
 @app.route(ACCOUNT.linked_accounts._, methods=["GET"])
 @request_handler()
+def get_linked_accounts(user_account_id):
+    results = repository.find_linked_accounts(db_session, user_account_id)
+    return jsonify(serialize({
+        "linked_accounts": [
+            {
+                "id": entry.id,
+                "account_name": entry.account_name,
+                "deleted": entry.deleted,
+                "provider": entry.provider,
+                "created_at": entry.created_at,
+                "updated_at": entry.updated_at
+            }
+            for entry in results
+        ]
+    }))
+
+
+@app.route(ACCOUNT.linked_accounts.valuation._, methods=["GET"])
+@request_handler()
 def get_linked_accounts_valuation(user_account_id):
     history_entry = repository.find_last_history_entry(db_session, user_account_id)
     if not history_entry:
@@ -411,7 +445,7 @@ LINKED_ACCOUNT = ACCOUNT.linked_accounts.p("linked_account_id")
 def update_linked_account(user_account_id, linked_account_id):
     request_data = request.json
     linked_account_id = int(linked_account_id)
-    linked_account = repository.find_linked_account(db_session, linked_account_id)
+    linked_account = repository.find_linked_account(db_session, user_account_id, linked_account_id)
 
     if not linked_account:
         raise ApplicationError(f"could not find linked account with id '{linked_account_id}'")
@@ -449,7 +483,7 @@ def update_linked_account(user_account_id, linked_account_id):
 @request_handler()
 def delete_linked_account(user_account_id, linked_account_id):
     linked_account_id = int(linked_account_id)
-    linked_account = repository.find_linked_account(db_session, linked_account_id)
+    linked_account = repository.find_linked_account(db_session, user_account_id, linked_account_id)
     if not linked_account:
         raise ApplicationError(f"could not find linked account with id '{linked_account_id}'")
 

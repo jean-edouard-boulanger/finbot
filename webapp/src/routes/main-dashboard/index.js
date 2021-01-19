@@ -76,7 +76,7 @@ export const MainDashboard = () => {
       const account_data = await finbotClient.getAccount({account_id: accountId});
       setValuation(account_data.valuation)
 
-      const linked_accounts = await finbotClient.getLinkedAccounts({account_id: accountId});
+      const linked_accounts = await finbotClient.getLinkedAccountsValuation({account_id: accountId});
       setLinkedAccounts(linked_accounts);
 
       const historical_valuation = await finbotClient.getAccountHistoricalValuation({account_id: accountId});

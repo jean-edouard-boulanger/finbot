@@ -10,8 +10,8 @@ import {
   LoginForm,
   SignupForm,
   Logout,
-  LinkAccount,
-  MainDashboard
+  MainDashboard,
+  Settings
 } from "routes";
 
 import 'datejs';
@@ -41,7 +41,8 @@ const UserRouter = () => {
       <Route exact path="/dashboard" render={() => <MainDashboard />} />
       <Route exact path="/logout" render={() => <Logout />} />
       <Route exact path="/admin/traces/:guid" render={() => <Admin />} />
-      <Route path="/settings/accounts/link" render={() => <LinkAccount />} />
+      <Route path="/settings" render={() => <Settings />} />
+
       <Redirect to={"/dashboard"} />
     </Switch>
   );
