@@ -18,8 +18,7 @@ class Route(object):
     def __getattr__(self, path):
         return Route(str(f"{self.base}/{path}"))
 
-    @property
-    def _(self):
+    def __call__(self):
         return str(self.base)
 
 
@@ -65,11 +64,11 @@ def _get_tracer_context(request_payload):
     return tracer.FlatContext(**data)
 
 
-def request_handler(show_vals=False, schema=None):
+def request_handler(trace_values=False, schema=None):
     def impl(func):
         @functools.wraps(func)
         def handler(*args, **kwargs):
-            sp_show_vals = "all" if show_vals else None
+            sp_trace_values = "all" if trace_values else None
             with time_elapsed():
                 try:
                     logging.info(f"process {func.__name__} request")
@@ -85,16 +84,16 @@ def request_handler(show_vals=False, schema=None):
                         logging.info("request processed successfully")
                         return response
                 except ApplicationError as e:
-                    logging.warning(f"request processed with error: {e}\n{stackprinter.format(style='darkbg3', show_vals=sp_show_vals)}")
+                    logging.warning(f"request processed with error: {e}\n{stackprinter.format(style='darkbg3', show_vals=sp_trace_values)}")
                     return make_error_response(
                         user_message=str(e),
                         debug_message=str(e),
-                        trace=stackprinter.format(show_vals=sp_show_vals))
+                        trace=stackprinter.format(show_vals=sp_trace_values))
                 except Exception as e:
-                    logging.warning(f"request processed with error: {e}\n{stackprinter.format(style='darkbg3', show_vals=sp_show_vals)}")
+                    logging.warning(f"request processed with error: {e}\n{stackprinter.format(style='darkbg3', show_vals=sp_trace_values)}")
                     return make_error_response(
                         user_message="operation failed (unknown error)",
                         debug_message=str(e),
-                        trace=stackprinter.format(show_vals=sp_show_vals))
+                        trace=stackprinter.format(show_vals=sp_trace_values))
         return handler
     return impl

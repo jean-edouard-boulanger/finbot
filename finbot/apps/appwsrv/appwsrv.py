@@ -83,7 +83,7 @@ API_V1 = Route("/api/v1")
 ADMIN = API_V1.admin
 
 
-@app.route(ADMIN.traces.p("guid")._, methods=["GET"])
+@app.route(ADMIN.traces.p("guid")(), methods=["GET"])
 def get_traces(guid):
     traces = db_session.query(DistributedTrace).filter_by(guid=guid).all()
     return jsonify(serialize({
@@ -97,7 +97,7 @@ def get_traces(guid):
 AUTH = API_V1.auth
 
 
-@app.route(AUTH.login._, methods=["POST"])
+@app.route(AUTH.login(), methods=["POST"])
 @request_handler(schema={
     "type": "object",
     "additionalProperties": False,
@@ -134,7 +134,7 @@ def auth_login():
     })
 
 
-@app.route(API_V1.providers._, methods=["PUT"])
+@app.route(API_V1.providers(), methods=["PUT"])
 @request_handler(schema={
     "type": "object",
     "additionalProperties": False,
@@ -157,7 +157,7 @@ def update_or_create_provider():
     return jsonify(provider.serialize())
 
 
-@app.route(API_V1.providers._, methods=["GET"])
+@app.route(API_V1.providers(), methods=["GET"])
 @request_handler()
 def get_providers():
     providers = db_session.query(Provider).all()
@@ -166,7 +166,7 @@ def get_providers():
     }))
 
 
-@app.route(API_V1.providers.p("provider_id")._, methods=["GET"])
+@app.route(API_V1.providers.p("provider_id")(), methods=["GET"])
 @request_handler()
 def get_provider(provider_id: str):
     provider = repository.find_provider(db_session, provider_id)
@@ -175,7 +175,7 @@ def get_provider(provider_id: str):
     return jsonify(serialize(provider))
 
 
-@app.route(API_V1.providers.p("provider_id")._, methods=["DELETE"])
+@app.route(API_V1.providers.p("provider_id")(), methods=["DELETE"])
 @request_handler()
 def delete_provider(provider_id: str):
     provider = repository.find_provider(db_session, provider_id)
@@ -193,8 +193,8 @@ def delete_provider(provider_id: str):
 ACCOUNTS = API_V1.accounts
 
 
-@app.route(ACCOUNTS._, methods=["POST"])
-@request_handler(show_vals=False, schema={
+@app.route(ACCOUNTS(), methods=["POST"])
+@request_handler(trace_values=False, schema={
     "type": "object",
     "additionalProperties": False,
     "required": ["email", "password", "full_name", "settings"],
@@ -244,7 +244,7 @@ def create_user_account():
 ACCOUNT = ACCOUNTS.p("user_account_id")
 
 
-@app.route(ACCOUNT._, methods=["GET"])
+@app.route(ACCOUNT(), methods=["GET"])
 @request_handler()
 def get_user_account(user_account_id):
     def serialize_valuation(entry):
@@ -287,7 +287,7 @@ def get_user_account(user_account_id):
     }))
 
 
-@app.route(ACCOUNT.settings._, methods=["GET"])
+@app.route(ACCOUNT.settings(), methods=["GET"])
 @request_handler()
 def get_user_account_settings(user_account_id):
     settings = db_session.query(UserAccountSettings).filter_by(user_account_id=user_account_id).first()
@@ -301,7 +301,7 @@ def get_user_account_settings(user_account_id):
     }))
 
 
-@app.route(ACCOUNT.history._, methods=["GET"])
+@app.route(ACCOUNT.history(), methods=["GET"])
 @request_handler()
 def get_user_account_valuation_history(user_account_id):
     history_entries = (db_session.query(UserAccountHistoryEntry)
@@ -327,7 +327,7 @@ def get_user_account_valuation_history(user_account_id):
     }))
 
 
-@app.route(ACCOUNT.linked_accounts._, methods=["GET"])
+@app.route(ACCOUNT.linked_accounts(), methods=["GET"])
 @request_handler()
 def get_linked_accounts(user_account_id):
     results = repository.find_linked_accounts(db_session, user_account_id)
@@ -346,7 +346,7 @@ def get_linked_accounts(user_account_id):
     }))
 
 
-@app.route(ACCOUNT.linked_accounts.valuation._, methods=["GET"])
+@app.route(ACCOUNT.linked_accounts.valuation(), methods=["GET"])
 @request_handler()
 def get_linked_accounts_valuation(user_account_id):
     history_entry = repository.find_last_history_entry(db_session, user_account_id)
@@ -356,8 +356,8 @@ def get_linked_accounts_valuation(user_account_id):
     return jsonify(serialize(valuation_tree))
 
 
-@app.route(ACCOUNT.linked_accounts._, methods=["POST"])
-@request_handler(show_vals=False, schema={
+@app.route(ACCOUNT.linked_accounts(), methods=["POST"])
+@request_handler(trace_values=False, schema={
     "type": "object",
     "additionalProperties": False,
     "required": ["provider_id", "credentials", "account_name"],
@@ -435,8 +435,8 @@ def create_linked_account(user_account_id):
 LINKED_ACCOUNT = ACCOUNT.linked_accounts.p("linked_account_id")
 
 
-@app.route(LINKED_ACCOUNT._, methods=["PUT"])
-@request_handler(show_vals=False, schema={
+@app.route(LINKED_ACCOUNT(), methods=["PUT"])
+@request_handler(trace_values=False, schema={
     "type": "object",
     "additionalProperties": False,
     "properties": {
@@ -482,7 +482,7 @@ def update_linked_account(user_account_id, linked_account_id):
     return jsonify({})
 
 
-@app.route(LINKED_ACCOUNT._, methods=["DELETE"])
+@app.route(LINKED_ACCOUNT(), methods=["DELETE"])
 @request_handler()
 def delete_linked_account(user_account_id, linked_account_id):
     linked_account_id = int(linked_account_id)
@@ -496,7 +496,7 @@ def delete_linked_account(user_account_id, linked_account_id):
     return jsonify({})
 
 
-@app.route(LINKED_ACCOUNT.history._, methods=["GET"])
+@app.route(LINKED_ACCOUNT.history(), methods=["GET"])
 @request_handler()
 def get_linked_account_historical_valuation(user_account_id, linked_account_id):
     linked_account_id = int(linked_account_id)
@@ -524,7 +524,7 @@ def get_linked_account_historical_valuation(user_account_id, linked_account_id):
     return jsonify(serialize(output_entries))
 
 
-@app.route(LINKED_ACCOUNT.sub_accounts._, methods=["GET"])
+@app.route(LINKED_ACCOUNT.sub_accounts(), methods=["GET"])
 @request_handler()
 def get_linked_account_sub_accounts(user_account_id, linked_account_id):
     history_entry = repository.find_last_history_entry(db_session, user_account_id)
