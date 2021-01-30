@@ -128,7 +128,7 @@ export const MainDashboard = () => {
           <Card>
             <Card.Body>
               <Card.Title>24h Change</Card.Title>
-              {(valuation !== null) ?
+              {(valuation?.change?.change_1day) ?
                 <strong>{
                   formatRelChange(
                     getRelativeChange(

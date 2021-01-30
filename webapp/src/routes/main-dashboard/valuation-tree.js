@@ -1,9 +1,7 @@
 import React from "react";
 
-import { TreeGrid, Money, ValuationChange } from 'components';
+import { TreeGrid, Money, SparkLine, ValuationChange } from 'components';
 import { FaExclamationCircle } from 'react-icons/fa';
-import Chart from "react-apexcharts";
-import {Card} from "react-bootstrap";
 
 
 function getRowMetadata(totalValuation, data) {
@@ -47,75 +45,11 @@ const GridMetadataRow = (props) => {
       <td>&nbsp;</td>
       <td>&nbsp;</td>
       <td>&nbsp;</td>
+      <td>&nbsp;</td>
     </tr>
   )
 }
 
-const getSparkLineColor = (diff) => {
-  if(diff === 0) {
-    return "#cccccc";
-  }
-  else if(diff > 0) {
-    return "#6cbc7b";
-  }
-  else {
-    return "#ca5c54";
-  }
-}
-
-const SparkLine = (props) => {
-  const series = props.series.filter((value) => value !== null);
-  const change = series[series.length - 1] - series[0];
-  console.log(change);
-  return (
-    <Chart
-      options={{
-        chart: {
-          sparkline: {
-            enabled: true
-          }
-        },
-        colors: [getSparkLineColor(change)],
-        xaxis: {},
-        yaxis: {},
-        tooltip: {
-          fixed: {
-            enabled: false
-          },
-          x: {
-            show: false
-          },
-          y: {
-            title: {
-              formatter: function () {
-                return '';
-              }
-            }
-          },
-          marker: {
-            show: false
-          }
-        },
-        fill: {
-          opacity: 0.5,
-          type: "solid"
-        },
-        stroke: {
-          width: 1.5,
-        }
-      }}
-      series={[
-        {
-          name: "value",
-          data: props.series.filter((value) => value !== null)
-        }
-      ]}
-      type="line"
-      width="70px"
-      height="20em"
-    />
-  )
-}
 
 const GridRow = (locale, moneyFormatter, totalValuation) => {
   return (props) => {
@@ -164,7 +98,7 @@ const Header = () => {
     <tr>
       <th style={{width: "40em"}}>&nbsp;</th>
       <th>Value</th>
-      <th>&nbsp;</th>
+      <th style={{width: "10em"}}>&nbsp;</th>
       <th>1D</th>
       <th>1W</th>
       <th>1M</th>
@@ -174,7 +108,7 @@ const Header = () => {
   )
 }
 
-const ValuationTree = (props) => {
+export const ValuationTree = (props) => {
   const {
     linkedAccounts,
     locale,
@@ -198,6 +132,3 @@ const ValuationTree = (props) => {
       sortBy={(data) => (data.valuation ?? {}).value}  />
   );
 }
-
-export default ValuationTree;
-export { ValuationTree };
