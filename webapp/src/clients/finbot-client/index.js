@@ -15,66 +15,64 @@ class FinbotClient {
     return app_data;
   }
 
-  async getTraces({guid}) {
+  async getTraces({ guid }) {
     const endpoint = `${this.endpoint}/admin/traces/${guid}`;
     const response = await axios.get(endpoint);
     return this.handleResponse(response);
   }
 
-  async registerAccount(data) {
-    const { email, full_name, password } = data;
-    const settings = { "valuation_ccy": data.valuation_ccy }
+  async registerAccount({ email, full_name, password, valuation_ccy }) {
+    const settings = { "valuation_ccy": valuation_ccy }
     const response = await axios.post(
       `${this.endpoint}/accounts`,
       { email, full_name, password, settings });
     return this.handleResponse(response);
   }
 
-  async logInAccount(data) {
-    const { email, password } = data;
+  async logInAccount({ email, password }) {
     const response = await axios.post(
       `${this.endpoint}/auth/login`,
       { email, password });
     return this.handleResponse(response);
   }
 
-  async getAccount(settings) {
-    const { account_id } = settings;
+  async getAccount({ account_id }) {
     const response = await axios.get(
       `${this.endpoint}/accounts/${account_id}`);
     return this.handleResponse(response).result;
   }
 
-  async getAccountSettings(settings) {
-    const { account_id } = settings;
+  async isAccountConfigured({ account_id }) {
+      const response = await axios.get(
+    `${this.endpoint}/accounts/${account_id}/is_configured`);
+      return this.handleResponse(response).configured;
+  }
+
+  async getAccountSettings({ account_id }) {
     const response = await axios.get(
       `${this.endpoint}/accounts/${account_id}/settings`);
     return this.handleResponse(response).settings;
   }
 
-  async getAccountHistoricalValuation(settings) {
-    const { account_id } = settings;
+  async getAccountHistoricalValuation({ account_id }) {
     const response = await axios.get(
       `${this.endpoint}/accounts/${account_id}/history`);
     return this.handleResponse(response).historical_valuation;
   }
 
-  async getLinkedAccounts(settings) {
-    const { account_id } = settings;
+  async getLinkedAccounts({ account_id }) {
     const response = await axios.get(
       `${this.endpoint}/accounts/${account_id}/linked_accounts`);
     return this.handleResponse(response).linked_accounts;
   }
 
-  async getLinkedAccountsValuation(settings) {
-    const { account_id } = settings;
+  async getLinkedAccountsValuation({ account_id }) {
     const response = await axios.get(
       `${this.endpoint}/accounts/${account_id}/linked_accounts/valuation`);
     return this.handleResponse(response).linked_accounts;
   }
 
-  async deleteLinkedAccount(settings) {
-    const { account_id, linked_account_id } = settings;
+  async deleteLinkedAccount({ account_id, linked_account_id }) {
     const response = await axios.delete(
       `${this.endpoint}/accounts/${account_id}/linked_accounts/${linked_account_id}`);
     return this.handleResponse(response);

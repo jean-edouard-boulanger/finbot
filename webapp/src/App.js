@@ -11,7 +11,8 @@ import {
   SignupForm,
   Logout,
   MainDashboard,
-  Settings
+  Settings,
+  Welcome
 } from "routes";
 
 import 'datejs';
@@ -38,6 +39,7 @@ const GuestRouter = () => {
 const UserRouter = () => {
   return (
     <Switch>
+      <Route exact path="/welcome" render={() => <Welcome />} />
       <Route exact path="/dashboard" render={() => <MainDashboard />} />
       <Route exact path="/logout" render={() => <Logout />} />
       <Route exact path="/admin/traces/:guid" render={() => <Admin />} />

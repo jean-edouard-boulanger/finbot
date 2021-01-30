@@ -268,17 +268,20 @@ def serialize_use_account_valuation(entry: UserAccountHistoryEntry,
     }
 
 
+@app.route(ACCOUNT.is_configured())
+@request_handler()
+def is_user_account_configured(user_account_id: int):
+    account = repository.get_user_account(db_session, user_account_id)
+    configured = len(account.linked_accounts) > 0
+    return jsonify({
+        "configured": configured
+    })
+
+
 @app.route(ACCOUNT(), methods=["GET"])
 @request_handler()
 def get_user_account(user_account_id):
-    account = (db_session.query(UserAccount)
-                         .filter_by(id=user_account_id)
-                         .options(joinedload(UserAccount.settings))
-                         .first())
-
-    if not account:
-        raise ApplicationError(f"user account '{user_account_id}' not found")
-
+    account = repository.get_user_account(db_session, user_account_id)
     to_time = now_utc()
     from_time = to_time - timedelta(days=30)
     valuation_history = repository.find_user_account_historical_valuation(

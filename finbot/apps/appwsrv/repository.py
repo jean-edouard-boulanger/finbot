@@ -4,16 +4,28 @@ from typing import List, Optional, Dict, Tuple
 from sqlalchemy import asc, desc
 from sqlalchemy.orm import joinedload
 
-from finbot.core import utils
+from finbot.apps.appwsrv.exceptions import ApplicationError
 from finbot.apps.appwsrv import timeseries
+from finbot.core import utils
 from finbot.model import (
     LinkedAccount,
     Provider,
+    UserAccount,
     UserAccountHistoryEntry,
     LinkedAccountValuationHistoryEntry,
     SubAccountValuationHistoryEntry,
     SubAccountItemValuationHistoryEntry
 )
+
+
+def get_user_account(session, user_account_id: int) -> UserAccount:
+    account = (session.query(UserAccount)
+                      .filter_by(id=user_account_id)
+                      .options(joinedload(UserAccount.settings))
+                      .first())
+    if not account:
+        raise ApplicationError(f"user account '{user_account_id}' not found")
+    return account
 
 
 def find_provider(session, provider_id: str) -> Provider:

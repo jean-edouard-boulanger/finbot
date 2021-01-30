@@ -1,4 +1,6 @@
+from finbot.apps.appwsrv.exceptions import Error, ApplicationError
 from finbot.core import tracer
+
 from flask import jsonify, request
 from contextlib import contextmanager
 from datetime import datetime, timedelta
@@ -45,14 +47,6 @@ def make_error(user_message, debug_message=None, trace=None):
 
 def make_error_response(user_message, debug_message=None, trace=None):
     return jsonify({"error": make_error(user_message, debug_message, trace)})
-
-
-class Error(RuntimeError):
-    pass
-
-
-class ApplicationError(Error):
-    pass
 
 
 def _get_tracer_context(request_payload):

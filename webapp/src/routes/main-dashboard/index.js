@@ -1,4 +1,5 @@
-import React, {useState, useEffect, useContext} from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import { Redirect } from 'react-router-dom';
 
 import { AuthContext, ServicesContext } from "contexts";
 
@@ -67,11 +68,21 @@ export const MainDashboard = () => {
     }
     return account.id;
   });
+  const [configured, setConfigured] = useState(null);
   const [valuation, setValuation] = useState(null);
   const [linkedAccounts, setLinkedAccounts] = useState([]);
   const [historicalValuation, setHistoricalValuation] = useState({data: [], high: 0});
 
   useEffect(() => {
+    let fetch = async () => {
+      const configured = await finbotClient.isAccountConfigured({account_id: accountId});
+      setConfigured(configured);
+    };
+    fetch();
+  }, [finbotClient, accountId])
+
+  useEffect(() => {
+    if(!configured) { return; }
     let fetch = async () => {
       const account_data = await finbotClient.getAccount({account_id: accountId});
       setValuation(account_data.valuation)
@@ -91,9 +102,13 @@ export const MainDashboard = () => {
       });
     };
     fetch();
-  }, [finbotClient, accountId]);
+  }, [finbotClient, configured, accountId]);
 
   const valuationIsLoaded = valuation !== null && valuation.change !== null
+
+  if(configured === false) {
+    return <Redirect to={"/welcome"} />
+  }
 
   return (
     <>
