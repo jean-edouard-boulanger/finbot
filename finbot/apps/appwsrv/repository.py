@@ -37,6 +37,20 @@ def find_last_history_entry(session,
                    .first())
 
 
+def find_user_account_historical_valuation(session,
+                                           user_account_id: int,
+                                           from_time: datetime,
+                                           to_time: datetime) -> List[UserAccountHistoryEntry]:
+    return (session.query(UserAccountHistoryEntry)
+                   .filter_by(user_account_id=user_account_id)
+                   .filter_by(available=True)
+                   .filter(UserAccountHistoryEntry.effective_at >= from_time)
+                   .filter(UserAccountHistoryEntry.effective_at <= to_time)
+                   .order_by(asc(UserAccountHistoryEntry.effective_at))
+                   .options(joinedload(UserAccountHistoryEntry.user_account_valuation_history_entry))
+                   .all())
+
+
 def find_linked_accounts_historical_valuation(session,
                                               user_account_id: int,
                                               from_time: datetime,

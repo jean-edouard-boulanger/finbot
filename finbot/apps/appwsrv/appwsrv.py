@@ -1,5 +1,5 @@
 from typing import List
-from datetime import timedelta
+from datetime import datetime, timedelta
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_jwt_extended import (
@@ -14,7 +14,7 @@ from sqlalchemy.exc import IntegrityError
 from finbot.clients.finbot import FinbotClient
 from finbot.apps.appwsrv import timeseries, repository, core
 from finbot.apps.support import request_handler, Route, ApplicationError
-from finbot.core.utils import serialize, pretty_dump
+from finbot.core.utils import serialize, now_utc
 from finbot.core import secure
 from finbot.core import dbutils
 from finbot.model import (
@@ -244,19 +244,33 @@ def create_user_account():
 ACCOUNT = ACCOUNTS.p("user_account_id")
 
 
+def serialize_use_account_valuation(entry: UserAccountHistoryEntry,
+                                    history: List[UserAccountHistoryEntry],
+                                    sparkline_schedule: List[datetime]):
+    valuation_entry = entry.user_account_valuation_history_entry
+    return {
+        "history_entry_id": entry.id,
+        "date": entry.effective_at,
+        "currency": entry.valuation_ccy,
+        "value": valuation_entry.valuation,
+        "total_liabilities": valuation_entry.total_liabilities,
+        "change": valuation_entry.valuation_change,
+        "sparkline": [
+            {
+                "effective_at": valuation_time,
+                "value": uas_v.user_account_valuation_history_entry.valuation
+                if uas_v is not None else None
+            }
+            for valuation_time, uas_v in timeseries.schedulify(
+                sparkline_schedule, history,
+                lambda uas_v: uas_v.effective_at)
+        ]
+    }
+
+
 @app.route(ACCOUNT(), methods=["GET"])
 @request_handler()
 def get_user_account(user_account_id):
-    def serialize_valuation(entry):
-        return {
-            "history_entry_id": entry.id,
-            "date": entry.effective_at,
-            "currency": entry.valuation_ccy,
-            "value": entry.user_account_valuation_history_entry.valuation,
-            "total_liabilities": entry.user_account_valuation_history_entry.total_liabilities,
-            "change": entry.user_account_valuation_history_entry.valuation_change
-        }
-
     account = (db_session.query(UserAccount)
                          .filter_by(id=user_account_id)
                          .options(joinedload(UserAccount.settings))
@@ -265,12 +279,18 @@ def get_user_account(user_account_id):
     if not account:
         raise ApplicationError(f"user account '{user_account_id}' not found")
 
-    valuation = (db_session.query(UserAccountHistoryEntry)
-                           .filter_by(user_account_id=user_account_id)
-                           .filter_by(available=True)
-                           .order_by(desc(UserAccountHistoryEntry.effective_at))
-                           .options(joinedload(UserAccountHistoryEntry.user_account_valuation_history_entry))
-                           .first())
+    to_time = now_utc()
+    from_time = to_time - timedelta(days=30)
+    valuation_history = repository.find_user_account_historical_valuation(
+        session=db_session,
+        user_account_id=user_account_id,
+        from_time=from_time, to_time=to_time)
+    sparkline_schedule = timeseries.create_schedule(
+        from_time=from_time,
+        to_time=to_time,
+        frequency=timeseries.ScheduleFrequency.Daily)
+
+    valuation = valuation_history[-1] if len(valuation_history) > 0 else None
 
     return jsonify(serialize({
         "result": {
@@ -282,7 +302,8 @@ def get_user_account(user_account_id):
                 "created_at": account.created_at,
                 "updated_at": account.updated_at
             },
-            "valuation": serialize_valuation(valuation) if valuation else None
+            "valuation": serialize_use_account_valuation(valuation, valuation_history, sparkline_schedule)
+            if valuation else None
         }
     }))
 

@@ -3,8 +3,8 @@ import React from "react";
 
 
 const getSparkLineColor = (series) => {
-  const loss_color = "#ca5c54";
-  const gain_color = "#6cbc7b";
+  const loss_color = "#e34f44";
+  const gain_color = "#94e5a3";
   const last = series[series.length - 1];
   if(last < 0) {
     return loss_color;
@@ -45,11 +45,11 @@ export const SparkLine = (props) => {
           }
         },
         fill: {
-          opacity: 0.5,
+          opacity: 1,
           type: "solid"
         },
         stroke: {
-          width: 1.5,
+          width: 1.1,
         }
       }}
       series={[
