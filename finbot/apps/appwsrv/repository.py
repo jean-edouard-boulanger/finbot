@@ -1,7 +1,11 @@
 from collections import defaultdict
+from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Tuple
-from sqlalchemy import desc
+from sqlalchemy import asc, desc
 from sqlalchemy.orm import joinedload
+
+from finbot.core import utils
+from finbot.apps.appwsrv import timeseries
 from finbot.model import (
     LinkedAccount,
     Provider,
@@ -31,6 +35,27 @@ def find_last_history_entry(session,
                    .filter_by(available=True)
                    .order_by(desc(UserAccountHistoryEntry.effective_at))
                    .first())
+
+
+def find_linked_accounts_historical_valuation(session,
+                                              user_account_id: int,
+                                              from_time: datetime,
+                                              to_time: datetime) -> Dict[int, List[LinkedAccountValuationHistoryEntry]]:
+    history_entries = (session.query(UserAccountHistoryEntry)
+                              .filter_by(user_account_id=user_account_id)
+                              .filter_by(available=True)
+                              .filter(UserAccountHistoryEntry.effective_at >= from_time)
+                              .filter(UserAccountHistoryEntry.effective_at <= to_time)
+                              .order_by(asc(UserAccountHistoryEntry.effective_at))
+                              .options(joinedload(UserAccountHistoryEntry.linked_accounts_valuation_history_entries))
+                              .all())
+    results = defaultdict(list)
+    history_entry: UserAccountHistoryEntry
+    for history_entry in history_entries:
+        valuation: LinkedAccountValuationHistoryEntry
+        for valuation in history_entry.linked_accounts_valuation_history_entries:
+            results[valuation.linked_account_id].append(valuation)
+    return results
 
 
 def find_linked_accounts_valuation(session,
@@ -86,6 +111,18 @@ def load_valuation_tree(session, history_entry: UserAccountHistoryEntry):
     for item in items_valuation:
         mapped_items[(item.linked_account_id, item.sub_account_id)].append(item)
 
+    to_time = utils.now_utc()
+    from_time = to_time - timedelta(days=30)
+    historical_valuation_by_account = find_linked_accounts_historical_valuation(
+        session=session,
+        user_account_id=history_entry.user_account_id,
+        from_time=from_time,
+        to_time=to_time)
+    sparkline_schedule = timeseries.create_schedule(
+        from_time=from_time,
+        to_time=to_time,
+        frequency=timeseries.ScheduleFrequency.Daily)
+
     return {
         "linked_accounts": [
             {
@@ -101,7 +138,17 @@ def load_valuation_tree(session, history_entry: UserAccountHistoryEntry):
                              else history_entry.effective_at),
                     "currency": history_entry.valuation_ccy,
                     "value": la_v.valuation,
-                    "change": la_v.valuation_change
+                    "change": la_v.valuation_change,
+                    "sparkline": [
+                        {
+                            "effective_at": valuation_time,
+                            "value": las_v.valuation if las_v is not None else None
+                        }
+                        for valuation_time, las_v in timeseries.schedulify(
+                            sparkline_schedule,
+                            historical_valuation_by_account.get(la_v.linked_account_id),
+                            lambda las_v: las_v.account_valuation_history_entry.effective_at)
+                    ]
                 },
                 "children": [
                     {
@@ -143,7 +190,8 @@ def load_valuation_tree(session, history_entry: UserAccountHistoryEntry):
                                     for (key, value) in [
                                         ("Units", f"{item_v.units:.2f}" if item_v.units else None),
                                         (f"Value ({sa_v.sub_account_ccy})", f"{item_v.valuation_sub_account_ccy:.2f}"),
-                                        ("Type", item_v.item_subtype)
+                                        ("Type", item_v.item_subtype),
+                                        ("Account currency", sa_v.sub_account_ccy)
                                     ]
                                     if value is not None
                                 ]

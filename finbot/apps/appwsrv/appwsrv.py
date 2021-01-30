@@ -1,3 +1,4 @@
+from typing import List
 from datetime import timedelta
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -13,7 +14,7 @@ from sqlalchemy.exc import IntegrityError
 from finbot.clients.finbot import FinbotClient
 from finbot.apps.appwsrv import timeseries, repository, core
 from finbot.apps.support import request_handler, Route, ApplicationError
-from finbot.core.utils import serialize
+from finbot.core.utils import serialize, pretty_dump
 from finbot.core import secure
 from finbot.core import dbutils
 from finbot.model import (
@@ -180,7 +181,8 @@ def delete_provider(provider_id: str):
     provider = repository.find_provider(db_session, provider_id)
     if not Provider:
         raise ApplicationError(f"Provider with id '${provider_id}' does not exist")
-    if len(provider.linked_accounts) > 0:
+    linked_accounts: List[LinkedAccount] = provider.linked_accounts
+    if len(linked_accounts) > 0:
         raise ApplicationError("This provider is still in use")
     db_session.delete(provider)
     db_session.commit()
@@ -320,7 +322,7 @@ def get_user_account_valuation_history(user_account_id):
                 for entry in timeseries.sample_time_series(
                     history_entries,
                     time_getter=(lambda item: item.effective_at),
-                    frequency=timedelta(days=1))
+                    interval=timedelta(days=1))
         ]
     }))
 
@@ -350,7 +352,8 @@ def get_linked_accounts_valuation(user_account_id):
     history_entry = repository.find_last_history_entry(db_session, user_account_id)
     if not history_entry:
         return jsonify({"linked_accounts": []})
-    return jsonify(serialize(repository.load_valuation_tree(db_session, history_entry)))
+    valuation_tree = serialize(repository.load_valuation_tree(db_session, history_entry))
+    return jsonify(serialize(valuation_tree))
 
 
 @app.route(ACCOUNT.linked_accounts._, methods=["POST"])

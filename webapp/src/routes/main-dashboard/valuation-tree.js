@@ -2,6 +2,8 @@ import React from "react";
 
 import { TreeGrid, Money, ValuationChange } from 'components';
 import { FaExclamationCircle } from 'react-icons/fa';
+import Chart from "react-apexcharts";
+import {Card} from "react-bootstrap";
 
 
 function getRowMetadata(totalValuation, data) {
@@ -49,6 +51,72 @@ const GridMetadataRow = (props) => {
   )
 }
 
+const getSparkLineColor = (diff) => {
+  if(diff === 0) {
+    return "#cccccc";
+  }
+  else if(diff > 0) {
+    return "#6cbc7b";
+  }
+  else {
+    return "#ca5c54";
+  }
+}
+
+const SparkLine = (props) => {
+  const series = props.series.filter((value) => value !== null);
+  const change = series[series.length - 1] - series[0];
+  console.log(change);
+  return (
+    <Chart
+      options={{
+        chart: {
+          sparkline: {
+            enabled: true
+          }
+        },
+        colors: [getSparkLineColor(change)],
+        xaxis: {},
+        yaxis: {},
+        tooltip: {
+          fixed: {
+            enabled: false
+          },
+          x: {
+            show: false
+          },
+          y: {
+            title: {
+              formatter: function () {
+                return '';
+              }
+            }
+          },
+          marker: {
+            show: false
+          }
+        },
+        fill: {
+          opacity: 0.5,
+          type: "solid"
+        },
+        stroke: {
+          width: 1.5,
+        }
+      }}
+      series={[
+        {
+          name: "value",
+          data: props.series.filter((value) => value !== null)
+        }
+      ]}
+      type="line"
+      width="70px"
+      height="20em"
+    />
+  )
+}
+
 const GridRow = (locale, moneyFormatter, totalValuation) => {
   return (props) => {
     const data = props.data;
@@ -60,6 +128,7 @@ const GridRow = (locale, moneyFormatter, totalValuation) => {
 
     const valuation = data.valuation;
     const change = valuation.change;
+    const sparkline = valuation.sparkline;
 
     return (
       <tr style={{height: metadata.height}}>
@@ -77,6 +146,9 @@ const GridRow = (locale, moneyFormatter, totalValuation) => {
             ccy={valuation.currency}
             moneyFormatter={moneyFormatter} />
         </td>
+        <td>
+          {(sparkline !== undefined) && <SparkLine series={sparkline.map((item) => item.value)} />}
+        </td>
         <td>{change ? <ValuationChange amount={change.change_1day}/> : "-"}</td>
         <td>{change ? <ValuationChange amount={change.change_1week}/> : "-"}</td>
         <td>{change ? <ValuationChange amount={change.change_1month}/> : "-"}</td>
@@ -92,6 +164,7 @@ const Header = () => {
     <tr>
       <th style={{width: "40em"}}>&nbsp;</th>
       <th>Value</th>
+      <th>&nbsp;</th>
       <th>1D</th>
       <th>1W</th>
       <th>1M</th>
