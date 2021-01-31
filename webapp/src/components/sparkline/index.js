@@ -21,6 +21,9 @@ export const SparkLine = (props) => {
         chart: {
           sparkline: {
             enabled: true
+          },
+          animations: {
+            enabled: false
           }
         },
         colors: [getSparkLineColor(series)],

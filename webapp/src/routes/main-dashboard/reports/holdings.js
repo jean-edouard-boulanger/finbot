@@ -37,7 +37,7 @@ const GridMetadataRow = (props) => {
   const {label, value, ...rest} = props;
   return (
     <tr>
-      <td>
+      <td colspan="8">
         <TreeGrid.Expander {...rest} />
         <strong>{`${props.label}: `}</strong>{props.value}
       </td>

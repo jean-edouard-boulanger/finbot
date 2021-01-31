@@ -78,7 +78,7 @@ export const MainDashboard = () => {
   const [valuation, setValuation] = useState(null);
   const [linkedAccounts, setLinkedAccounts] = useState([]);
   const [historicalValuation, setHistoricalValuation] = useState({data: [], high: 0});
-  const [selectedReport, setSelectedReport] = useState(REPORTS.EARNINGS);
+  const [selectedReport, setSelectedReport] = useState(REPORTS.HOLDINGS);
 
   useEffect(() => {
     let fetch = async () => {
