@@ -78,24 +78,6 @@ run-appwsrv-dev:
 			--extra-files 'finbot/**/*.py' \
 			-h 0.0.0.0
 
-build-appwsrv-docker:
-	docker build -t finbot/appwsrv:latest -f appwsrv.Dockerfile --no-cache .
-
-build-schedsrv-docker:
-	docker build -t finbot/schedsrv:latest -f schedsrv.Dockerfile --no-cache .
-
-build-snapwsrv-docker:
-	docker build -t finbot/snapwsrv:latest -f snapwsrv.Dockerfile --no-cache .
-
-build-histwsrv-docker:
-	docker build -t finbot/histwsrv:latest -f histwsrv.Dockerfile --no-cache .
-
-build-finbotwsrv-docker:
-	docker build -t finbot/finbotwsrv:latest -f finbotwsrv.Dockerfile --no-cache .
-
-build-providers-tester-docker: build-finbotwsrv-docker
-	docker build -t finbot/providers-tester:latest -f tester.Dockerfile  --no-cache .
-
 trigger-valuation-docker:
 	docker-compose run schedsrv \
 		make trigger-valuation accounts=${accounts}
@@ -111,7 +93,7 @@ test-providers-docker:
 		--workdir /finbot \
 		--env PYTHONPATH='${PYTONPATH}:/finbot' \
 		--rm -it \
-		finbot/providers-tester:latest \
+		finbot/runtime-selenium:latest \
 		python3.9 tools/providers-tester \
 			--dump-balances --dump-assets --dump-liabilities --dump-transactions \
 			--secret-file ${FINBOT_SECRET_PATH} \

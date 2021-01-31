@@ -17,9 +17,7 @@ services:
       - .finbotdb:/var/lib/postgresql/data
 
   finbotwsrv:
-    build:
-      context: .
-      dockerfile: finbotwsrv.Dockerfile
+    image: "finbot/runtime-selenium:latest"
     depends_on:
       - finbotdb
       - dev
@@ -35,9 +33,7 @@ services:
       FINBOT_DB_HOSTNAME: finbotdb
 
   snapwsrv:
-    build:
-      context: .
-      dockerfile: snapwsrv.Dockerfile
+    image: "finbot/runtime:latest"
     container_name: snapwsrv
     depends_on: 
       - finbotdb
@@ -55,9 +51,7 @@ services:
       FINBOT_DB_HOSTNAME: finbotdb
 
   histwsrv:
-    build:
-      context: .
-      dockerfile: histwsrv.Dockerfile
+    image: "finbot/runtime:latest"
     container_name: histwsrv
     depends_on: 
       - finbotdb
@@ -73,29 +67,24 @@ services:
       FINBOT_DB_HOSTNAME: finbotdb
 
   schedsrv:
-    build:
-      context: .
-      dockerfile: schedsrv.Dockerfile
+    image: "finbot/runtime:latest"
     container_name: schedsrv
     depends_on: 
       - snapwsrv
       - histwsrv
       - dev
     working_dir: /finbot
-    command: sh -c "make finbotdb-wait && /usr/bin/wait && make run-schedsrv-dev"
+    command: sh -c "make finbotdb-wait && make run-schedsrv-dev"
     tty: true
     volumes:
       - .:/finbot
     environment:
-      WAIT_HOSTS: histwsrv:5002, snapwsrv:5000
       FINBOT_DB_HOSTNAME: finbotdb
       FINBOT_SNAPWSRV_ENDPOINT: "http://snapwsrv:5000"
       FINBOT_HISTWSRV_ENDPOINT: "http://histwsrv:5002"
 
   appwsrv:
-    build:
-      context: .
-      dockerfile: appwsrv.Dockerfile
+    image: "finbot/runtime:latest"
     container_name: appwsrv
     depends_on: 
       - finbotdb
@@ -127,9 +116,7 @@ services:
       - "5005:5005"
 
   dev:
-    build:
-      context: .
-      dockerfile: dev.Dockerfile
+    image: "finbot/runtime-selenium:latest"
     container_name: dev
     depends_on: 
       - finbotdb

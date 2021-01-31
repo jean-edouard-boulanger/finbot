@@ -1,1 +1,0 @@
-FROM finbot/finbotwsrv:latest
