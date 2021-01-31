@@ -3,9 +3,9 @@ import { Redirect } from 'react-router-dom';
 
 import { AuthContext, ServicesContext } from "contexts";
 
-import { Row, Col, Card } from 'react-bootstrap';
+import { Row, Col, Card, Nav, Tabs, Tab } from 'react-bootstrap';
 import { Money } from "components"
-import { ValuationTree } from "./valuation-tree";
+import { HoldingsReport } from "./reports";
 import Chart from "react-apexcharts";
 import BarLoader from "react-spinners/BarLoader";
 
@@ -48,6 +48,11 @@ function maxValue(list, accessor) {
     }
   }
   return currentMax;
+}
+
+const REPORTS = {
+  HOLDINGS: "holdings",
+  EARNINGS: "Earnings"
 }
 
 function getAccountIdOverride() {
@@ -103,8 +108,6 @@ export const MainDashboard = () => {
     };
     fetch();
   }, [finbotClient, configured, accountId]);
-
-  const valuationIsLoaded = valuation !== null && valuation.change !== null
 
   if(configured === false) {
     return <Redirect to={"/welcome"} />
@@ -164,6 +167,9 @@ export const MainDashboard = () => {
               <Chart
                 options={{
                   chart: {
+                    animations: {
+                      enabled: false
+                    },
                     stacked: false,
                     zoom: {
                       enabled: false,
@@ -284,16 +290,16 @@ export const MainDashboard = () => {
       <Row className="mt-3">
         <Col>
           <Card>
-            <Card.Header>Holdings Summary</Card.Header>
+            <Card.Header>
+              <Tabs id={"reports-nav"}>
+                <Tab eventKey={REPORTS.HOLDINGS} title={"Holdings"}/>
+              </Tabs>
+            </Card.Header>
             <Card.Body>
-              {
-                (valuationIsLoaded) &&
-                  <ValuationTree
-                    valuation={valuation}
-                    linkedAccounts={linkedAccounts}
-                    locale={locale}
-                    moneyFormatter={moneyFormatter} />
-              }
+              <HoldingsReport
+                accountId={accountId}
+                locale={locale}
+                moneyFormatter={moneyFormatter} />
             </Card.Body>
           </Card>
         </Col>

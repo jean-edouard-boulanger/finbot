@@ -1,11 +1,14 @@
-import React from "react";
+import React, {useContext, useEffect, useState} from "react";
 
-import { TreeGrid, Money, SparkLine, ValuationChange } from 'components';
-import { FaExclamationCircle } from 'react-icons/fa';
+import { TreeGrid, Money, SparkLine, ValuationChange, StackedBarLoader } from "components";
+import { Alert } from "react-bootstrap";
+import { FaExclamationCircle } from "react-icons/fa";
+import { ServicesContext } from "contexts/services/services-context";
+import { BarLoader } from "react-spinners";
 
 
-function getRowMetadata(totalValuation, data) {
-  if(data.role === "_root") {
+function getRowMetadata(data) {
+  if(data.role === "user_account") {
     return {
       label: "Holdings",
       height: "4em"
@@ -50,11 +53,10 @@ const GridMetadataRow = (props) => {
   )
 }
 
-
-const GridRow = (locale, moneyFormatter, totalValuation) => {
+const GridRow = (locale, moneyFormatter) => {
   return (props) => {
     const data = props.data;
-    const metadata = getRowMetadata(totalValuation, data);
+    const metadata = getRowMetadata(data);
 
     if(data.role === "metadata") {
       return <GridMetadataRow {...data} {...props} />
@@ -81,7 +83,7 @@ const GridRow = (locale, moneyFormatter, totalValuation) => {
             moneyFormatter={moneyFormatter} />
         </td>
         <td>
-          {(sparkline !== undefined) && <SparkLine series={sparkline.map((item) => item.value)} />}
+          {(sparkline !== undefined) && <SparkLine series={sparkline} />}
         </td>
         <td>{change ? <ValuationChange amount={change.change_1day}/> : "-"}</td>
         <td>{change ? <ValuationChange amount={change.change_1week}/> : "-"}</td>
@@ -108,27 +110,63 @@ const Header = () => {
   )
 }
 
-export const ValuationTree = (props) => {
+export const HoldingsReport = (props) => {
   const {
-    linkedAccounts,
+    accountId,
     locale,
-    moneyFormatter,
-    valuation,
+    moneyFormatter
   } = props;
 
-  const tree = {
-    role: "_root",
-    children: linkedAccounts,
-    valuation
-  };
+  const {finbotClient} = useContext(ServicesContext);
+  const [loading, setLoading] = useState(false);
+  const [report, setReport] = useState(null);
+  const [error, setError] = useState(null);
 
-  console.log(linkedAccounts);
+  useEffect(() => {
+    const fetch = async () => {
+      try {
+        setLoading(true);
+        const report = await finbotClient.getHoldingsReport();
+        setReport(report);
+      }
+      catch(e) {
+        setError(`${e}`);
+      }
+      setLoading(false);
+    }
+    fetch();
+  }, [finbotClient, accountId])
+
+  if(error !== null) {
+    return (
+      <Alert variant={"danger"}>
+        <Alert.Heading>
+          Snap! An error occurred while generating your report
+        </Alert.Heading>
+        <hr />
+        <p>
+          {error}
+        </p>
+      </Alert>
+    )
+  }
+
+  if(loading || !report) {
+    return (
+      <StackedBarLoader
+        count={4}
+        color={"#FBFBFB"}
+        spacing={"0.8em"}
+        height={"1em"}
+        width={"100%"} />
+    )
+  }
 
   return (
     <TreeGrid
-      rowAs={GridRow(locale, moneyFormatter, valuation)}
+      rowAs={GridRow(locale, moneyFormatter)}
       headerAs={Header}
-      tree={tree}
-      sortBy={(data) => (data.valuation ?? {}).value}  />
-  );
+      tree={report.valuation_tree}
+      sortBy={(data) => data?.valuation?.value} />
+  )
 }

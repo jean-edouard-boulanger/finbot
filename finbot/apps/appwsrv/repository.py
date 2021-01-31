@@ -12,6 +12,7 @@ from finbot.model import (
     Provider,
     UserAccount,
     UserAccountHistoryEntry,
+    UserAccountValuationHistoryEntry,
     LinkedAccountValuationHistoryEntry,
     SubAccountValuationHistoryEntry,
     SubAccountItemValuationHistoryEntry
@@ -84,6 +85,15 @@ def find_linked_accounts_historical_valuation(session,
     return results
 
 
+def find_user_account_valuation(session,
+                                history_entry_id: int) -> UserAccountValuationHistoryEntry:
+    return (session.query(UserAccountValuationHistoryEntry)
+                   .filter_by(history_entry_id=history_entry_id)
+                   .options(joinedload(UserAccountValuationHistoryEntry.valuation_change))
+                   .options(joinedload(UserAccountValuationHistoryEntry.account_valuation_history_entry))
+                   .one())
+
+
 def find_linked_accounts_valuation(session,
                                    history_entry_id: int) -> List[LinkedAccountValuationHistoryEntry]:
     return (session.query(LinkedAccountValuationHistoryEntry)
@@ -126,7 +136,8 @@ def find_linked_account(session, user_account_id: int, linked_account_id: int) -
                    .first())
 
 
-def load_valuation_tree(session, history_entry: UserAccountHistoryEntry):
+def get_holdings_report(session, history_entry: UserAccountHistoryEntry):
+    user_account_valuation = find_user_account_valuation(session, history_entry.id)
     linked_accounts_valuation = find_linked_accounts_valuation(session, history_entry.id)
     sub_accounts_valuation = find_sub_accounts_valuation(session, history_entry.id)
     mapped_sub_accounts: Dict[int, List[SubAccountValuationHistoryEntry]] = defaultdict(list)
@@ -139,6 +150,11 @@ def load_valuation_tree(session, history_entry: UserAccountHistoryEntry):
 
     to_time = utils.now_utc()
     from_time = to_time - timedelta(days=30)
+    user_account_historical_valuation = find_user_account_historical_valuation(
+        session=session,
+        user_account_id=history_entry.user_account_id,
+        from_time=from_time,
+        to_time=to_time)
     historical_valuation_by_account = find_linked_accounts_historical_valuation(
         session=session,
         user_account_id=history_entry.user_account_id,
@@ -149,8 +165,25 @@ def load_valuation_tree(session, history_entry: UserAccountHistoryEntry):
         to_time=to_time,
         frequency=timeseries.ScheduleFrequency.Daily)
 
-    return {
-        "linked_accounts": [
+    account_valuation_history_entry = user_account_valuation.account_valuation_history_entry
+    valuation_currency = account_valuation_history_entry.valuation_ccy
+
+    valuation_tree = {
+        "role": "user_account",
+        "valuation": {
+            "currency": valuation_currency,
+            "value": user_account_valuation.valuation,
+            "change": user_account_valuation.valuation_change,
+            "sparkline": [
+                uas_v.user_account_valuation_history_entry.valuation
+                if uas_v is not None else None
+                for valuation_time, uas_v in timeseries.schedulify(
+                    sparkline_schedule,
+                    user_account_historical_valuation,
+                    lambda uas_v: uas_v.effective_at)
+            ]
+        },
+        "children": [
             {
                 "role": "linked_account",
                 "linked_account": {
@@ -159,17 +192,11 @@ def load_valuation_tree(session, history_entry: UserAccountHistoryEntry):
                     "description": la_v.linked_account.account_name,
                 },
                 "valuation": {
-                    "date": (la_v.effective_snapshot.effective_at
-                             if la_v.effective_snapshot
-                             else history_entry.effective_at),
-                    "currency": history_entry.valuation_ccy,
+                    "currency": valuation_currency,
                     "value": la_v.valuation,
                     "change": la_v.valuation_change,
                     "sparkline": [
-                        {
-                            "effective_at": valuation_time,
-                            "value": las_v.valuation if las_v is not None else None
-                        }
+                        las_v.valuation if las_v is not None else None
                         for valuation_time, las_v in timeseries.schedulify(
                             sparkline_schedule,
                             historical_valuation_by_account.get(la_v.linked_account_id),
@@ -187,10 +214,10 @@ def load_valuation_tree(session, history_entry: UserAccountHistoryEntry):
                         },
                         "valuation": {
                             "value": sa_v.valuation,
-                            "value_self_currency": sa_v.valuation_sub_account_ccy,
+                            "value_account_currency": sa_v.valuation_sub_account_ccy,
                             "change": sa_v.valuation_change,
                             "total_liabilities": sa_v.total_liabilities,
-                            "currency": history_entry.valuation_ccy,
+                            "currency": valuation_currency,
                         },
                         "children": [
                             {
@@ -203,9 +230,9 @@ def load_valuation_tree(session, history_entry: UserAccountHistoryEntry):
                                 "valuation": {
                                     "units": item_v.units,
                                     "value": item_v.valuation,
-                                    "value_self_currency": item_v.valuation_sub_account_ccy,
+                                    "value_account_currency": item_v.valuation_sub_account_ccy,
                                     "change": item_v.valuation_change,
-                                    "currency": history_entry.valuation_ccy
+                                    "currency": valuation_currency
                                 },
                                 "children": [
                                     {
@@ -214,10 +241,14 @@ def load_valuation_tree(session, history_entry: UserAccountHistoryEntry):
                                         "value": value
                                     }
                                     for (key, value) in [
-                                        ("Units", f"{item_v.units:.2f}" if item_v.units else None),
-                                        (f"Value ({sa_v.sub_account_ccy})", f"{item_v.valuation_sub_account_ccy:.2f}"),
-                                        ("Type", item_v.item_subtype),
-                                        ("Account currency", sa_v.sub_account_ccy)
+                                        (f"Units",
+                                         f"{item_v.units:.2f}" if item_v.units else None),
+                                        (f"Value ({sa_v.sub_account_ccy})",
+                                         f"{item_v.valuation_sub_account_ccy:.2f}"),
+                                        (f"Unit value ({sa_v.sub_account_ccy})",
+                                         f"{sa_v.valuation_sub_account_ccy / item_v.units:.2f}" if item_v.units else None),
+                                        (f"Type", item_v.item_subtype),
+                                        (f"Account currency", sa_v.sub_account_ccy)
                                     ]
                                     if value is not None
                                 ]
@@ -231,4 +262,8 @@ def load_valuation_tree(session, history_entry: UserAccountHistoryEntry):
             for la_v in linked_accounts_valuation
             if not la_v.linked_account.deleted
         ]
+    }
+
+    return {
+        "valuation_tree": valuation_tree
     }

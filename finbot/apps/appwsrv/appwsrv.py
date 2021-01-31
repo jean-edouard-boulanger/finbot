@@ -6,6 +6,7 @@ from flask_jwt_extended import (
     JWTManager,
     create_access_token,
     create_refresh_token,
+    get_jwt_identity,
     jwt_required,
 )
 from sqlalchemy import create_engine, desc, asc
@@ -119,10 +120,11 @@ def auth_login():
     if account_password != data["password"]:
         raise ApplicationError("Invalid email or password")
 
+    # TODO: expires_delta should be set to a reasonable time interval
     return jsonify({
         "auth": {
-            "access_token": create_access_token(identity=account.id),
-            "refresh_token": create_refresh_token(identity=account.id),
+            "access_token": create_access_token(identity=account.id, expires_delta=False),
+            "refresh_token": create_refresh_token(identity=account.id, expires_delta=False),
         },
         "account": {
             "id": account.id,
@@ -269,6 +271,7 @@ def serialize_use_account_valuation(entry: UserAccountHistoryEntry,
 
 
 @app.route(ACCOUNT.is_configured())
+@jwt_required
 @request_handler()
 def is_user_account_configured(user_account_id: int):
     account = repository.get_user_account(db_session, user_account_id)
@@ -279,6 +282,7 @@ def is_user_account_configured(user_account_id: int):
 
 
 @app.route(ACCOUNT(), methods=["GET"])
+@jwt_required
 @request_handler()
 def get_user_account(user_account_id):
     account = repository.get_user_account(db_session, user_account_id)
@@ -312,6 +316,7 @@ def get_user_account(user_account_id):
 
 
 @app.route(ACCOUNT.settings(), methods=["GET"])
+@jwt_required
 @request_handler()
 def get_user_account_settings(user_account_id):
     settings = db_session.query(UserAccountSettings).filter_by(user_account_id=user_account_id).first()
@@ -326,6 +331,7 @@ def get_user_account_settings(user_account_id):
 
 
 @app.route(ACCOUNT.history(), methods=["GET"])
+@jwt_required
 @request_handler()
 def get_user_account_valuation_history(user_account_id):
     history_entries = (db_session.query(UserAccountHistoryEntry)
@@ -352,6 +358,7 @@ def get_user_account_valuation_history(user_account_id):
 
 
 @app.route(ACCOUNT.linked_accounts(), methods=["GET"])
+@jwt_required
 @request_handler()
 def get_linked_accounts(user_account_id):
     results = repository.find_linked_accounts(db_session, user_account_id)
@@ -371,16 +378,38 @@ def get_linked_accounts(user_account_id):
 
 
 @app.route(ACCOUNT.linked_accounts.valuation(), methods=["GET"])
+@jwt_required
 @request_handler()
 def get_linked_accounts_valuation(user_account_id):
     history_entry = repository.find_last_history_entry(db_session, user_account_id)
     if not history_entry:
-        return jsonify({"linked_accounts": []})
-    valuation_tree = serialize(repository.load_valuation_tree(db_session, history_entry))
-    return jsonify(serialize(valuation_tree))
+        raise ApplicationError("No data to report")
+    results = repository.find_linked_accounts_valuation(db_session, history_entry.id)
+    return jsonify(serialize({
+        "linked_accounts": [
+            {
+                "linked_account": {
+                    "id": entry.linked_account.id,
+                    "provider_id": entry.linked_account.provider_id,
+                    "description": entry.linked_account.account_name,
+                },
+                "valuation": {
+                    "date": (entry.effective_snapshot.effective_at
+                             if entry.effective_snapshot
+                             else history_entry.effective_at),
+                    "currency": history_entry.valuation_ccy,
+                    "value": entry.valuation,
+                    "change": entry.valuation_change
+                }
+            }
+            for entry in results
+            if not entry.linked_account.deleted
+        ]
+    }))
 
 
 @app.route(ACCOUNT.linked_accounts(), methods=["POST"])
+@jwt_required
 @request_handler(trace_values=False, schema={
     "type": "object",
     "additionalProperties": False,
@@ -460,6 +489,7 @@ LINKED_ACCOUNT = ACCOUNT.linked_accounts.p("linked_account_id")
 
 
 @app.route(LINKED_ACCOUNT(), methods=["PUT"])
+@jwt_required
 @request_handler(trace_values=False, schema={
     "type": "object",
     "additionalProperties": False,
@@ -507,6 +537,7 @@ def update_linked_account(user_account_id, linked_account_id):
 
 
 @app.route(LINKED_ACCOUNT(), methods=["DELETE"])
+@jwt_required
 @request_handler()
 def delete_linked_account(user_account_id, linked_account_id):
     linked_account_id = int(linked_account_id)
@@ -521,6 +552,7 @@ def delete_linked_account(user_account_id, linked_account_id):
 
 
 @app.route(LINKED_ACCOUNT.history(), methods=["GET"])
+@jwt_required
 @request_handler()
 def get_linked_account_historical_valuation(user_account_id, linked_account_id):
     linked_account_id = int(linked_account_id)
@@ -549,6 +581,7 @@ def get_linked_account_historical_valuation(user_account_id, linked_account_id):
 
 
 @app.route(LINKED_ACCOUNT.sub_accounts(), methods=["GET"])
+@jwt_required
 @request_handler()
 def get_linked_account_sub_accounts(user_account_id, linked_account_id):
     history_entry = repository.find_last_history_entry(db_session, user_account_id)
@@ -575,4 +608,23 @@ def get_linked_account_sub_accounts(user_account_id, linked_account_id):
             }
             for entry in results
         ]
+    }))
+
+
+REPORTS = API_V1.reports
+
+
+@app.route(REPORTS.holdings(), methods=["GET"])
+@jwt_required
+@request_handler()
+def get_holdings_report():
+    user_account_id = get_jwt_identity()
+    history_entry = repository.find_last_history_entry(db_session, user_account_id)
+    if not history_entry:
+        raise ApplicationError("No data to report")
+    return jsonify(serialize({
+        "report": repository.get_holdings_report(
+            session=db_session,
+            history_entry=history_entry
+        )
     }))

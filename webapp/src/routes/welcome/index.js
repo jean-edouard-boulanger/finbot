@@ -23,6 +23,9 @@ export const Welcome = () => {
         </Col>
       </Row>
       <Row>
+        <Col md={2} className={"mr-4"}>
+          <img src={"/finbot_medium.png"} alt={"finbot"} />
+        </Col>
         <Col md={6}>
           <Card>
             <Card.Body>

@@ -4,6 +4,7 @@ import { ServicesContext } from "contexts";
 
 import AuthContext from './auth-context';
 import authReducer from './auth-reducer';
+import { resetAuthHeader, setAuthHeader } from './auth-globals'
 import {
   LOGIN_SUCCESS,
   LOGOUT,
@@ -35,6 +36,7 @@ export const AuthProvider = props => {
   if(!isValidAuthState(initialState)) {
     initialState = makeFreshAuthState();
   }
+  setAuthHeader(initialState.token);
 
   const {finbotClient} = useContext(ServicesContext);
   const [state, dispatch] = useReducer(authReducer, initialState);

@@ -1,18 +1,10 @@
-import axios from 'axios';
+import { setAuthHeader } from "./auth-globals";
 import {
   LOGIN_SUCCESS,
   LOGOUT
 } from './auth-actions';
 import { persistLocal, clearLocal } from "./auth-storage";
 
-
-const setAuthHeader = (token) => {
-  axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-}
-
-const resetAuthHeader = () => {
-  delete axios.defaults.headers.common['Authorization'];
-}
 
 export default (state, action) => {
   switch (action.type) {
@@ -25,11 +17,12 @@ export default (state, action) => {
         account: action.payload.account
       };
       persistLocal(newState);
+      console.log(newState);
       return newState;
     }
     case LOGOUT: {
       clearLocal();
-      resetAuthHeader();
+      setAuthHeader(null);
       return {
         ...state,
         token: null,

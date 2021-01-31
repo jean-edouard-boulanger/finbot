@@ -118,7 +118,12 @@ class FinbotClient {
       { provider_id, credentials, account_name });
     return this.handleResponse(response).result;
   }
-};
+
+  async getHoldingsReport() {
+    const response = await axios.get(`${this.endpoint}/reports/holdings`);
+    return this.handleResponse(response).report;
+  }
+}
 
 
 export { FinbotClient };
