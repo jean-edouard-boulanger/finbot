@@ -41,13 +41,6 @@ const GridMetadataRow = (props) => {
         <TreeGrid.Expander {...rest} />
         <strong>{`${props.label}: `}</strong>{props.value}
       </td>
-      <td>&nbsp;</td>
-      <td>&nbsp;</td>
-      <td>&nbsp;</td>
-      <td>&nbsp;</td>
-      <td>&nbsp;</td>
-      <td>&nbsp;</td>
-      <td>&nbsp;</td>
     </tr>
   )
 }
