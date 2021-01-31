@@ -109,7 +109,6 @@ def generate(session,
     for entry in historical_valuation:
         agg = ByMonth(entry.effective_at.year, entry.effective_at.month)
         aggregated_entries[agg].append(entry)
-
     entries = [
         ReportEntry(
             aggregation=agg,
@@ -117,7 +116,6 @@ def generate(session,
         )
         for agg, entries in aggregated_entries.items()
     ]
-
     return Report(
         currency=user_settings.settings.valuation_ccy,
         entries=list(reversed(entries)),

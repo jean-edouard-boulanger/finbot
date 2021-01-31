@@ -64,9 +64,10 @@ const GridRow = (locale, moneyFormatter) => {
     const valuation = data.valuation;
     const change = valuation.change;
     const sparkline = valuation.sparkline;
+    const fontWeight = data.role === "user_account" ? "bold" : null;
 
     return (
-      <tr style={{height: metadata.height}}>
+      <tr style={{height: metadata.height, fontWeight}}>
         <td>
           <TreeGrid.Expander {...props} />{metadata.label}{" "}
           {

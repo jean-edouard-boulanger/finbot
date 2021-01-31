@@ -76,7 +76,7 @@ export const EarningsReport = (props) => {
         report.entries.map((entry) => {
           return (
             <tr>
-              <td>{entry.aggregation.as_str}</td>
+              <td><strong>{entry.aggregation.as_str}</strong></td>
               <td>
                 <Money
                   amount={entry.metrics.first_value}
@@ -105,15 +105,25 @@ export const EarningsReport = (props) => {
                   ccy={currency}
                   moneyFormatter={moneyFormatter} />
               </td>
-              <td><ValuationChange amount={entry.metrics.abs_change} /></td>
-              <td><ValuationChange.Relative amount={entry.metrics.rel_change} /></td>
+              <td>
+                <strong>
+                  <ValuationChange amount={entry.metrics.abs_change} />
+                </strong>
+              </td>
+              <td>
+                <strong>
+                  <ValuationChange.Relative amount={entry.metrics.rel_change} />
+                </strong>
+              </td>
             </tr>
           )
         })
       }
       </tbody>
       <tfoot>
-        <tr className={(report.rollup.abs_change >= 0) ? "table-success" : "table-danger"}>
+        <tr
+          style={{fontWeight: "bold"}}
+          className={(report.rollup.abs_change >= 0) ? "table-success" : "table-danger"}>
           <td><strong>Summary</strong></td>
           <td>
             <strong>
