@@ -4,7 +4,6 @@ import { TreeGrid, Money, SparkLine, ValuationChange, StackedBarLoader } from "c
 import { Alert } from "react-bootstrap";
 import { FaExclamationCircle } from "react-icons/fa";
 import { ServicesContext } from "contexts/services/services-context";
-import { BarLoader } from "react-spinners";
 
 
 function getRowMetadata(data) {
@@ -143,7 +142,6 @@ export const HoldingsReport = (props) => {
         <Alert.Heading>
           Snap! An error occurred while generating your report
         </Alert.Heading>
-        <hr />
         <p>
           {error}
         </p>

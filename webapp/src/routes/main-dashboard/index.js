@@ -3,9 +3,10 @@ import { Redirect } from 'react-router-dom';
 
 import { AuthContext, ServicesContext } from "contexts";
 
-import { Row, Col, Card, Nav, Tabs, Tab } from 'react-bootstrap';
-import { Money } from "components"
-import { HoldingsReport } from "./reports";
+import { Money, ValuationChange } from "components"
+import { EarningsReport, HoldingsReport } from "./reports";
+
+import { Row, Col, Card, Tabs, Tab } from 'react-bootstrap';
 import Chart from "react-apexcharts";
 import BarLoader from "react-spinners/BarLoader";
 
@@ -77,6 +78,7 @@ export const MainDashboard = () => {
   const [valuation, setValuation] = useState(null);
   const [linkedAccounts, setLinkedAccounts] = useState([]);
   const [historicalValuation, setHistoricalValuation] = useState({data: [], high: 0});
+  const [selectedReport, setSelectedReport] = useState(REPORTS.EARNINGS);
 
   useEffect(() => {
     let fetch = async () => {
@@ -147,12 +149,10 @@ export const MainDashboard = () => {
             <Card.Body>
               <Card.Title>24h Change</Card.Title>
               {(valuation?.change?.change_1day) ?
-                <strong>{
-                  formatRelChange(
-                    getRelativeChange(
-                      valuation.value - valuation.change.change_1day,
-                      valuation.value))}
-                </strong> :
+                <ValuationChange.Relative
+                  amount={getRelativeChange(
+                    valuation.value - valuation.change.change_1day,
+                    valuation.value)} /> :
                 <BarLoader color={"#F0F0F0"}/>
               }
             </Card.Body>
@@ -291,15 +291,26 @@ export const MainDashboard = () => {
         <Col>
           <Card>
             <Card.Header>
-              <Tabs id={"reports-nav"}>
+              <Tabs id={"reports-nav"} activeKey={selectedReport} onSelect={(key) => setSelectedReport(key)}>
                 <Tab eventKey={REPORTS.HOLDINGS} title={"Holdings"}/>
+                <Tab eventKey={REPORTS.EARNINGS} title={"Earnings"}/>
               </Tabs>
             </Card.Header>
             <Card.Body>
-              <HoldingsReport
-                accountId={accountId}
-                locale={locale}
-                moneyFormatter={moneyFormatter} />
+              {
+                (selectedReport === REPORTS.HOLDINGS) &&
+                  <HoldingsReport
+                    accountId={accountId}
+                    locale={locale}
+                    moneyFormatter={moneyFormatter} />
+              }
+              {
+                (selectedReport === REPORTS.EARNINGS) &&
+                  <EarningsReport
+                    accountId={accountId}
+                    locale={locale}
+                    moneyFormatter={moneyFormatter}/>
+              }
             </Card.Body>
           </Card>
         </Col>

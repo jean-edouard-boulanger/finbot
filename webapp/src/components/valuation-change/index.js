@@ -1,7 +1,7 @@
 import React from "react";
 
 
-export const ValuationChange = props => {
+export const ValuationChange = (props) => {
     const {
         amount,
         currentValue,
@@ -44,6 +44,24 @@ export const ValuationChange = props => {
     else {
         return impl(null);
     }
+}
+
+ValuationChange.Relative = (props) => {
+  const { amount } = props;
+  if (!amount || amount === 0.0) {
+    return (
+      <span className="text-muted">-</span>
+    );
+  }
+  if (amount < 0) {
+    return (
+      <span className="text-danger">{(amount * 100).toFixed(2)}%</span>
+    )
+  } else {
+    return (
+      <span className="text-success">+{(amount * 100).toFixed(2)}%</span>
+    )
+  }
 }
 
 export default ValuationChange;

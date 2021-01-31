@@ -123,6 +123,11 @@ class FinbotClient {
     const response = await axios.get(`${this.endpoint}/reports/holdings`);
     return this.handleResponse(response).report;
   }
+
+  async getEarningsReport() {
+    const response = await axios.get(`${this.endpoint}/reports/earnings`);
+    return this.handleResponse(response).report;
+  }
 }
 
 

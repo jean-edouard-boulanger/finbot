@@ -12,8 +12,11 @@ from flask_jwt_extended import (
 from sqlalchemy import create_engine, desc, asc
 from sqlalchemy.orm import scoped_session, sessionmaker, joinedload, contains_eager
 from sqlalchemy.exc import IntegrityError
+
 from finbot.clients.finbot import FinbotClient
 from finbot.apps.appwsrv import timeseries, repository, core
+from finbot.apps.appwsrv.reports import holdings as holdings_report
+from finbot.apps.appwsrv.reports import earnings as earnings_report
 from finbot.apps.support import request_handler, Route, ApplicationError
 from finbot.core.utils import serialize, now_utc
 from finbot.core import secure
@@ -28,13 +31,14 @@ from finbot.model import (
     LinkedAccountValuationHistoryEntry,
     DistributedTrace
 )
+
 import logging.config
 import logging
 import json
 import os
 
 
-#logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 
 SECRET = open(os.environ["FINBOT_SECRET_PATH"], "r").read()
@@ -623,8 +627,24 @@ def get_holdings_report():
     if not history_entry:
         raise ApplicationError("No data to report")
     return jsonify(serialize({
-        "report": repository.get_holdings_report(
+        "report": holdings_report.generate(
             session=db_session,
             history_entry=history_entry
+        )
+    }))
+
+
+@app.route(REPORTS.earnings(), methods=["GET"])
+@jwt_required
+@request_handler()
+def get_earnings_report():
+    user_account_id = get_jwt_identity()
+    to_time = now_utc()
+    return jsonify(serialize({
+        "report": earnings_report.generate(
+            session=db_session,
+            user_account_id=user_account_id,
+            from_time=to_time - timedelta(days=365),
+            to_time=to_time
         )
     }))
