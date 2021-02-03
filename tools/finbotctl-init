@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+OWN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source ${OWN_DIR}/bash-utils.sh
+
+
+log_info initializing finbot environment
+
+log_info checking docker availability
+which docker >/dev/null 2>&1 || die "'docker' is not available in this machine, install and try again"
+log_info docker is available
+
+log_info checking docker-compose availability
+which docker-compose  >/dev/null 2>&1 || die "'docker-compose' is not available on this machine, install and try again"
+log_info docker-compose is available
+
+runtime_image="finbot/runtime:latest"
+if ! docker_image_exists ${runtime_image}
+then
+  log_info "finbot runtime image (${runtime_image}) does not exist, building"
+  make docker-build-runtime
+else
+  log_info "finbot runtime image (${runtime_image}) already exists, skipping build"
+fi
+
+runtime_selenium_image="finbot/runtime-selenium:latest"
+if ! docker_image_exists ${runtime_selenium_image}
+then
+  log_info "finbot selenium runtime image (${runtime_selenium_image}) does not exist, building"
+  make docker-build-runtime-selenium
+else
+  log_info "finbot selenium runtime image (${runtime_selenium_image}) already exists, skipping build"
+fi
+
+operator=operator
+log_info "starting finbot ${operator} container in the background"
+docker-compose up -d ${operator}
+
+log_info "initializing vault"
+docker exec ${operator} make init-vault
+
+log_info "starting finbot database container"
+docker-compose up -d finbotdb
+env FINBOT_WAIT_DEPS=db make finbot-wait
+
+log_info "creating finbot database schema"
+docker exec ${operator} make finbotdb-rebuild
+
+log_info "hydrating finbotdb with default data"
+docker exec ${operator} make finbotdb-hydrate
+
+log_info "stopping containers"
+docker-compose down
+
+log_info "finbot is ready to use"
+log_info "start with ./finbotctl start"

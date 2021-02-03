@@ -1,8 +1,7 @@
 #!/usr/bin/env python3.9
-from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
-from finbot.core.utils import pretty_dump
+from finbot.core.utils import pretty_dump, configure_logging
 from finbot.model import (
     Base,
     Provider,
@@ -23,25 +22,9 @@ import datetime
 import argparse
 import json
 import sys
-import time
 
 
-logging.config.dictConfig({
-    'version': 1,
-    'formatters': {'default': {
-        'format': '%(asctime)s [%(levelname)s] %(message)s (%(filename)s:%(lineno)d)',
-    }},
-    'handlers': {'wsgi': {
-        'class': 'logging.StreamHandler',
-        'stream': 'ext://sys.stdout',
-        'formatter': 'default'
-    }},
-    'root': {
-        'level': 'DEBUG',
-        'handlers': ['wsgi']
-    }
-})
-
+configure_logging()
 
 # will be fixed when needed
 """
@@ -337,18 +320,6 @@ def disable_history_entry_tool(settings, engine, session):
     session.commit()
 
 
-def wait_tool(settings, engine, session):
-    while True:
-        try:
-            session.execute("SELECT 1")
-            logging.info("finbotdb is operational")
-            break
-        except OperationalError:
-            logging.warning("finbotdb is not yet available")
-            time.sleep(2)
-    return True
-
-
 def build_tool(settings, engine, session):
     Base.metadata.create_all(engine)
     return True
@@ -410,11 +381,6 @@ all_tools = {
         "description": "hydrate database with minimal data",
         "parser_builder": setup_hydrate_subparser,
         "handler": hydrate_tool
-    },
-    "wait": {
-        "description": "wait until finbotdb becomes available",
-        "parser_builder": (lambda _: None),
-        "handler": wait_tool
     },
     "add-account": {
         "description": "adds the current test account to the database",

@@ -1,0 +1,130 @@
+#!/usr/bin/env python3.9
+import os
+import sys
+import enum
+import time
+import json
+import requests
+import logging
+import logging.config
+
+from sqlalchemy.exc import OperationalError
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine
+
+from finbot.core.utils import configure_logging
+
+
+configure_logging()
+
+
+class ExitCode(enum.Enum):
+    Ok = 0
+    Timeout = 1
+    Error = 2
+
+
+class Error(RuntimeError):
+    pass
+
+
+class ClientChecker(object):
+    def __init__(self, endpoint: str):
+        self._endpoint = endpoint
+
+    def __call__(self) -> bool:
+        try:
+            response = requests.get(f"{self._endpoint}/healthy")
+            if not response:
+                return False
+            return json.loads(response.content)["healthy"]
+        except requests.RequestException as e:
+            logging.info(e)
+            return False
+
+
+class WebsiteChecker(object):
+    def __init__(self, url: str):
+        self._url = url
+
+    def __call__(self) -> bool:
+        try:
+            requests.get(f"{self._url}")
+            return True
+        except requests.RequestException as e:
+            logging.info(e)
+            return False
+
+
+class DbChecker(object):
+    def __init__(self, db_url):
+        engine = create_engine(db_url)
+        self._session = sessionmaker(bind=engine)()
+
+    def __call__(self) -> bool:
+        try:
+            self._session.execute("SELECT 1")
+            return True
+        except OperationalError:
+            return False
+
+
+def get_env_for_dep(dep_name: str, var_name: str) -> str:
+    val = os.environ.get(var_name)
+    if val is None:
+        raise Error(f"environment variable '{var_name}' not defined"
+                    f" (needed by dependency: '{dep_name}')")
+    logging.info(f"environment variable '{var_name}' resolved to '{val}'"
+                 f" (needed by dependency: '{dep_name}')")
+    return val
+
+
+def get_checker(dep_name: str):
+    if dep_name == "db":
+        return DbChecker(get_env_for_dep(dep_name, "FINBOT_DB_URL"))
+    if dep_name == "api":
+        return ClientChecker(get_env_for_dep(dep_name, "FINBOT_APPWSRV_ENDPOINT"))
+    if dep_name == "finbot":
+        return ClientChecker(get_env_for_dep(dep_name, "FINBOT_FINBOTWSRV_ENDPOINT"))
+    if dep_name == "hist":
+        return ClientChecker(get_env_for_dep(dep_name, "FINBOT_HISTWSRV_ENDPOINT"))
+    if dep_name == "snap":
+        return ClientChecker(get_env_for_dep(dep_name, "FINBOT_SNAPWSRV_ENDPOINT"))
+    if dep_name == "webapp":
+        return WebsiteChecker(get_env_for_dep(dep_name, "FINBOT_WEBAPP_ENDPOINT"))
+    raise Error(f"Unknown dependency: {dep_name}")
+
+
+def main_impl() -> ExitCode:
+    raw_deps = os.environ.get("FINBOT_WAIT_DEPS")
+    if not raw_deps:
+        logging.warning("No dependencies to wait on (FINBOT_WAIT_DEPS not defined)")
+        return ExitCode.Ok
+    deps = list(set(os.environ.get("FINBOT_WAIT_DEPS", "").split(",")))
+    resolved = set()
+    checkers = {dep: get_checker(dep) for dep in deps}
+    wait_interval = int(os.environ.get("FINBOT_WAIT_INTERVAL", 3))
+    logging.info(f"waiting on the following dependencies: {', '.join(checkers.keys())}")
+    while len(resolved) < len(checkers):
+        for dep, checker in checkers.items():
+            if dep not in resolved:
+                if checker():
+                    resolved.add(dep)
+                    logging.info(f"dependency {dep} is now available")
+                else:
+                    logging.info(f"dependency {dep} is not yet available")
+        time.sleep(wait_interval)
+    logging.info(f"all dependencies available: {', '.join(deps)}")
+    return ExitCode.Ok
+
+
+def main() -> ExitCode:
+    try:
+        return main_impl()
+    except Exception as e:
+        logging.error(str(e))
+        return ExitCode.Error
+
+
+if __name__ == "__main__":
+    sys.exit(main().value)

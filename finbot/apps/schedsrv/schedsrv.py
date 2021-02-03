@@ -1,38 +1,23 @@
 from finbot.clients.snap import SnapClient
 from finbot.clients.history import HistoryClient
 from finbot.core import dbutils, utils, tracer
+from finbot.core.utils import configure_logging
 from finbot.model import UserAccount
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 import argparse
 import time
 import stackprinter
-import logging.config
 import logging
 import os
 
+configure_logging()
 db_engine = create_engine(os.environ['FINBOT_DB_URL'])
 db_session = dbutils.add_persist_utilities(scoped_session(sessionmaker(bind=db_engine)))
 tracer.configure(
     identity="schedsrv",
     persistence_layer=tracer.DBPersistenceLayer(db_session)
 )
-
-logging.config.dictConfig({
-    'version': 1,
-    'formatters': {'default': {
-        'format': '%(asctime)s (%(threadName)s) [%(levelname)s] %(message)s (%(filename)s:%(lineno)d)',
-    }},
-    'handlers': {'wsgi': {
-        'class': 'logging.StreamHandler',
-        'stream': 'ext://sys.stdout',
-        'formatter': 'default'
-    }},
-    'root': {
-        'level': 'DEBUG',
-        'handlers': ['wsgi']
-    }
-})
 
 
 def run_workflow_impl(user_account_id: int,
@@ -58,8 +43,7 @@ def run_workflow_impl(user_account_id: int,
 
     history_entry_id = history_metadata["report"]["history_entry_id"]
     logging.info(f"history report written with id={history_entry_id}")
-    logging.debug(utils.pretty_dump(history_metadata))
-
+    logging.info(utils.pretty_dump(history_metadata))
     logging.info(f"workflow done for user_id={user_account_id}")
 
 

@@ -4,6 +4,7 @@ from flask import Flask, jsonify, request
 from contextlib import closing
 from finbot import providers
 from finbot.core import tracer, dbutils
+from finbot.core.utils import configure_logging
 from finbot.providers.factory import get_provider
 from finbot.providers.errors import AuthFailure
 from finbot.apps.support import (
@@ -12,27 +13,11 @@ from finbot.apps.support import (
     make_error
 )
 import stackprinter
-import logging.config
 import logging
 import os
 
 
-logging.config.dictConfig({
-    'version': 1,
-    'formatters': {'default': {
-        'format': '%(asctime)s (%(threadName)s) [%(levelname)s] %(message)s (%(filename)s:%(lineno)d)',
-    }},
-    'handlers': {'wsgi': {
-        'class': 'logging.StreamHandler',
-        'stream': 'ext://sys.stdout',
-        'formatter': 'default'
-    }},
-    'root': {
-        'level': 'INFO',
-        'handlers': ['wsgi']
-    }
-})
-
+configure_logging()
 db_engine = create_engine(os.environ['FINBOT_DB_URL'])
 db_session = dbutils.add_persist_utilities(scoped_session(sessionmaker(bind=db_engine)))
 tracer.configure(
@@ -136,6 +121,14 @@ def get_financial_data_impl(provider, credentials, line_items):
                 for line_item in set(line_items)
             ]
         })
+
+
+@app.route("/healthy", methods=["GET"])
+@request_handler()
+def healthy():
+    return jsonify({
+        "healthy": True
+    })
 
 
 @app.route("/financial_data", methods=["POST"])

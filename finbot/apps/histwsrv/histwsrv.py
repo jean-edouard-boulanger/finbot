@@ -4,7 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from finbot.apps.support import request_handler
 from finbot.apps.histwsrv import repository
-from finbot.core.utils import serialize, pretty_dump
+from finbot.core.utils import serialize, pretty_dump, configure_logging
 from finbot.core import dbutils, tracer
 from finbot.model import (
     UserAccountSnapshot,
@@ -15,28 +15,11 @@ from finbot.model import (
     SubAccountItemValuationHistoryEntry
 )
 import pandas as pd
-import logging.config
 import logging
 import os
 
 
-logging.config.dictConfig({
-    'version': 1,
-    'formatters': {'default': {
-        'format': '%(asctime)s (%(threadName)s) [%(levelname)s] %(message)s (%(filename)s:%(lineno)d)',
-    }},
-    'handlers': {'wsgi': {
-        'class': 'logging.StreamHandler',
-        'stream': 'ext://sys.stdout',
-        'formatter': 'default'
-    }},
-    'root': {
-        'level': 'DEBUG',
-        'handlers': ['wsgi']
-    }
-})
-
-
+configure_logging()
 db_engine = create_engine(os.environ['FINBOT_DB_URL'])
 db_session = dbutils.add_persist_utilities(scoped_session(sessionmaker(bind=db_engine)))
 tracer.configure(
@@ -99,6 +82,14 @@ def iter_sub_accounts_valuation_history_entries(data: pd.DataFrame):
 @app.teardown_appcontext
 def cleanup_context(*args, **kwargs):
     db_session.remove()
+
+
+@app.route("/healthy", methods=["GET"])
+@request_handler()
+def healthy():
+    return jsonify({
+        "healthy": True
+    })
 
 
 @app.route("/history/<snapshot_id>/write", methods=["POST"])

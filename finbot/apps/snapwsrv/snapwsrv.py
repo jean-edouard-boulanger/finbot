@@ -7,6 +7,7 @@ from copy import deepcopy
 from finbot.clients.finbot import FinbotClient, LineItem
 from finbot.providers.plaid_us import pack_credentials as pack_plaid_credentials
 from finbot.core import secure, utils, dbutils, fx_market, tracer
+from finbot.core.utils import configure_logging
 from finbot.apps.support import request_handler, make_error
 from finbot.model import (
     UserAccount,
@@ -26,28 +27,12 @@ import json
 import stackprinter
 
 
-logging.config.dictConfig({
-    'version': 1,
-    'formatters': {'default': {
-        'format': '%(asctime)s (%(threadName)s) [%(levelname)s] %(message)s (%(filename)s:%(lineno)d)',
-    }},
-    'handlers': {'wsgi': {
-        'class': 'logging.StreamHandler',
-        'stream': 'ext://sys.stdout',
-        'formatter': 'default'
-    }},
-    'root': {
-        'level': 'DEBUG',
-        'handlers': ['wsgi']
-    }
-})
-
-
 def load_secret(path):
     with open(path) as secret_file:
         return secret_file.read()
 
 
+configure_logging()
 secret = load_secret(os.environ["FINBOT_SECRET_PATH"])
 db_engine = create_engine(os.environ['FINBOT_DB_URL'])
 db_session = dbutils.add_persist_utilities(scoped_session(sessionmaker(bind=db_engine)))
@@ -374,6 +359,14 @@ def take_snapshot_impl(user_account_id: int):
                 "failures": snapshot_builder.results_count.failures
             }
         }
+    })
+
+
+@app.route("/healthy", methods=["GET"])
+@request_handler()
+def healthy():
+    return jsonify({
+        "healthy": True
     })
 
 

@@ -18,12 +18,9 @@ services:
 
   finbotwsrv:
     image: "finbot/runtime-selenium:latest"
-    depends_on:
-      - finbotdb
-      - dev
     container_name: finbotwsrv
     working_dir: /finbot
-    command: sh -c "make finbotdb-wait && make run-finbotwsrv-dev"
+    command: sh -c "make run-finbotwsrv-dev"
     tty: true
     ports:
       - "5001:5001"
@@ -31,6 +28,7 @@ services:
       - .:/finbot
     environment:
       FINBOT_DB_HOSTNAME: finbotdb
+      FINBOT_WAIT_DEPS: "db"
 
   snapwsrv:
     image: "finbot/runtime:latest"
@@ -38,9 +36,8 @@ services:
     depends_on: 
       - finbotdb
       - finbotwsrv
-      - dev
     working_dir: /finbot
-    command: sh -c "make finbotdb-wait && make run-snapwsrv-dev"
+    command: sh -c "make finbot-wait && make run-snapwsrv-dev"
     tty: true
     ports:
       - "5000:5000"
@@ -49,15 +46,15 @@ services:
     environment:
       FINBOT_FINBOTWSRV_ENDPOINT: "http://finbotwsrv:5001"
       FINBOT_DB_HOSTNAME: finbotdb
+      FINBOT_WAIT_DEPS: "db,finbot"
 
   histwsrv:
     image: "finbot/runtime:latest"
     container_name: histwsrv
     depends_on: 
       - finbotdb
-      - dev
     working_dir: /finbot
-    command: sh -c "make finbotdb-wait && make run-histwsrv-dev"
+    command: sh -c "make finbot-wait && make run-histwsrv-dev"
     tty: true
     ports:
       - "5002:5002"
@@ -65,6 +62,7 @@ services:
       - .:/finbot
     environment:
       FINBOT_DB_HOSTNAME: finbotdb
+      FINBOT_WAIT_DEPS: "db"
 
   schedsrv:
     image: "finbot/runtime:latest"
@@ -72,9 +70,8 @@ services:
     depends_on: 
       - snapwsrv
       - histwsrv
-      - dev
     working_dir: /finbot
-    command: sh -c "make finbotdb-wait && make run-schedsrv-dev"
+    command: sh -c "make finbot-wait && make run-schedsrv-dev"
     tty: true
     volumes:
       - .:/finbot
@@ -82,6 +79,7 @@ services:
       FINBOT_DB_HOSTNAME: finbotdb
       FINBOT_SNAPWSRV_ENDPOINT: "http://snapwsrv:5000"
       FINBOT_HISTWSRV_ENDPOINT: "http://histwsrv:5002"
+      FINBOT_WAIT_DEPS: "db,snap,hist"
 
   appwsrv:
     image: "finbot/runtime:latest"
@@ -89,9 +87,8 @@ services:
     depends_on: 
       - finbotdb
       - finbotwsrv
-      - dev
     working_dir: /finbot
-    command: sh -c "make finbotdb-wait && make run-appwsrv-dev"
+    command: sh -c "make finbot-wait && make run-appwsrv-dev"
     tty: true
     ports:
       - "5003:5003"
@@ -100,13 +97,13 @@ services:
     environment:
       FINBOT_DB_HOSTNAME: finbotdb
       FINBOT_FINBOTWSRV_ENDPOINT: "http://finbotwsrv:5001"
+      FINBOT_WAIT_DEPS: "finbot,db"
 
   webapp:
     image: "node:13-alpine3.10"
     container_name: webapp
     depends_on: 
       - appwsrv
-      - dev
     volumes:
       - ./webapp:/webapp
     working_dir: /webapp
@@ -115,9 +112,9 @@ services:
     ports:
       - "5005:5005"
 
-  dev:
+  operator:
     image: "finbot/runtime-selenium:latest"
-    container_name: dev
+    container_name: operator
     depends_on: 
       - finbotdb
     working_dir: /finbot

@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+OWN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+. ${OWN_DIR}/bash-utils.sh
+
+log_info "stopping finbot containers"
+docker-compose down

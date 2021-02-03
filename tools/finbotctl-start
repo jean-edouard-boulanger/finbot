@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+OWN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+. ${OWN_DIR}/bash-utils.sh
+
+log_info "starting finbot containers"
+docker-compose up -d \
+  webapp appwsrv histwsrv snapwsrv finbotwsrv finbotdb \
+  || die failed to start containers
+
+log_info "waiting for webapp availability (this could take a few minutes)"
+env FINBOT_WAIT_DEPS=webapp make finbot-wait >/dev/null 2>&1

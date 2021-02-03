@@ -1,5 +1,6 @@
 from pytz import timezone
 from datetime import datetime
+import logging.config
 import functools
 import decimal
 import json
@@ -53,3 +54,21 @@ def swallow_exc(*exc_types, default=None):
                 return default
         return impl
     return decorator
+
+
+def configure_logging():
+    logging.config.dictConfig({
+        'version': 1,
+        'formatters': {'default': {
+            'format': '%(asctime)s (%(threadName)s) [%(levelname)s] %(message)s (%(filename)s:%(lineno)d)',
+        }},
+        'handlers': {'wsgi': {
+            'class': 'logging.StreamHandler',
+            'stream': 'ext://sys.stdout',
+            'formatter': 'default'
+        }},
+        'root': {
+            'level': 'INFO',
+            'handlers': ['wsgi']
+        }
+    })

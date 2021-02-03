@@ -18,9 +18,11 @@ die () {
 
 log_info checking docker availability
 which docker >/dev/null 2>&1 || die "'docker' is not available in this machine, install and try again"
+log_info docker is available
 
 log_info checking docker-compose availability
 which docker-compose  >/dev/null 2>&1 || die "'docker-compose' is not available on this machine, install and try again"
+log_info docker-compose is available
 
 if [[ "${rebuild_images}" == "1" ]]
 then

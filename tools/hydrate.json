@@ -3,7 +3,7 @@
         {
             "id": "plaid_us",
             "description": "Open banking via Plaid",
-            "webside_url": "https://plaid.com/",
+            "website_url": "https://plaid.com/",
             "credentials_schema": {
                 "json_schema": {}
             }

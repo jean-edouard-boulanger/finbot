@@ -8,9 +8,11 @@ export FINBOT_DB_USER ?= finbot
 export FINBOT_DB_PASSWORD ?= finbot
 export FINBOT_DB_DBNAME ?= finbot
 export FINBOT_DB_URL := postgresql+psycopg2://${FINBOT_DB_USER}:${FINBOT_DB_PASSWORD}@${FINBOT_DB_HOSTNAME}:${FINBOT_DB_PORT}/${FINBOT_DB_DBNAME}
-export FINBOT_FINBOTWSRV_ENDPOINT ?= http://127.0.0.1:5001
 export FINBOT_SNAPWSRV_ENDPOINT ?= http://127.0.0.1:5000
+export FINBOT_FINBOTWSRV_ENDPOINT ?= http://127.0.0.1:5001
 export FINBOT_HISTWSRV_ENDPOINT ?= http://127.0.0.1:5002
+export FINBOT_APPWSRV_ENDPOINT ?= http://127.0.0.1:5003
+export FINBOT_WEBAPP_ENDPOINT ?= http://127.0.0.1:5005
 export FINBOT_EDIT_CMD ?= code --wait
 
 info:
@@ -78,6 +80,14 @@ run-appwsrv-dev:
 			--extra-files 'finbot/**/*.py' \
 			-h 0.0.0.0
 
+docker-build-runtime:
+	docker build -t finbot/runtime:latest -f runtime.Dockerfile --no-cache .
+
+docker-build-runtime-selenium:
+	docker build -t finbot/runtime-selenium:latest -f runtime-selenium.Dockerfile --no-cache .
+
+docker-build: docker-build-runtime docker-build-runtime-selenium
+
 trigger-valuation-docker:
 	docker-compose run schedsrv \
 		make trigger-valuation accounts=${accounts}
@@ -129,9 +139,7 @@ test-histwsrv:
 		--snapshot-id ${SNAPSHOT_ID}
 
 init-vault:
-	mkdir -p .secure && \
-	python3.9 tools/crypt fernet-key > ${FINBOT_SECRET_PATH} && \
-	chmod 600 ${FINBOT_SECRET_PATH}
+	tools/init-vault.sh
 
 init-account:
 	python3.9 tools/crypt fernet-encrypt \
@@ -154,9 +162,6 @@ edit-account:
 		-k ${FINBOT_SECRET_PATH} \
 		-i .accounts.tmp.json > ${FINBOT_ACCOUNT_PATH} && \
 	rm .accounts.tmp.json
-
-finbotdb-wait:
-	python3.9 tools/finbotdb --database ${FINBOT_DB_URL} wait
 
 finbotdb-build:
 	python3.9 tools/finbotdb --database ${FINBOT_DB_URL} build
@@ -185,6 +190,9 @@ finbotdb-dump-account:
 finbotdb-psql:
 	env PGPASSWORD=${FINBOT_DB_PASSWORD} \
 		psql -h ${FINBOT_DB_HOSTNAME} -U ${FINBOT_DB_USER} -d ${FINBOT_DB_DBNAME}
+
+finbot-wait:
+	tools/finbot-wait
 
 init-dev:
 	tools/init-dev.sh

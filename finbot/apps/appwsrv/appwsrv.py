@@ -18,7 +18,7 @@ from finbot.apps.appwsrv import timeseries, repository, core
 from finbot.apps.appwsrv.reports import holdings as holdings_report
 from finbot.apps.appwsrv.reports import earnings as earnings_report
 from finbot.apps.support import request_handler, Route, ApplicationError
-from finbot.core.utils import serialize, now_utc
+from finbot.core.utils import serialize, now_utc, configure_logging
 from finbot.core import secure
 from finbot.core import dbutils
 from finbot.model import (
@@ -38,9 +38,6 @@ import json
 import os
 
 
-logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
-
-
 SECRET = open(os.environ["FINBOT_SECRET_PATH"], "r").read()
 FINBOT_FINBOTWSRV_ENDPOINT = os.environ["FINBOT_FINBOTWSRV_ENDPOINT"]
 
@@ -49,21 +46,8 @@ def get_finbot_client():
     return FinbotClient(FINBOT_FINBOTWSRV_ENDPOINT)
 
 
-logging.config.dictConfig({
-    'version': 1,
-    'formatters': {'default': {
-        'format': '%(asctime)s (%(threadName)s) [%(levelname)s] %(message)s (%(filename)s:%(lineno)d)',
-    }},
-    'handlers': {'wsgi': {
-        'class': 'logging.StreamHandler',
-        'stream': 'ext://sys.stdout',
-        'formatter': 'default'
-    }},
-    'root': {
-        'level': 'DEBUG',
-        'handlers': ['wsgi']
-    }
-})
+logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+configure_logging()
 
 
 db_engine = create_engine(os.environ['FINBOT_DB_URL'])
@@ -83,6 +67,13 @@ def cleanup_context(*args, **kwargs):
 
 
 API_V1 = Route("/api/v1")
+
+
+@app.route(API_V1.healthy(), methods=["GET"])
+def healthy():
+    return jsonify({
+        "healthy": True
+    })
 
 
 ADMIN = API_V1.admin
