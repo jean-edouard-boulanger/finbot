@@ -52,6 +52,13 @@ def get_sched_client() -> SchedClient:
     return SchedClient(FINBOT_SCHEDSRV_ENDPOINT)
 
 
+def trigger_valuation(user_account_id: int):
+    account = repository.get_user_account(db_session, user_account_id)
+    with closing(get_sched_client()) as client:
+        client.trigger_valuation(account.id)
+        return {}
+
+
 #logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 configure_logging()
 
@@ -320,10 +327,7 @@ def get_user_account(user_account_id):
 @jwt_required
 @request_handler()
 def trigger_user_account_valuation(user_account_id):
-    account = repository.get_user_account(db_session, user_account_id)
-    with closing(get_sched_client()) as client:
-        client.trigger_valuation(account.id)
-        return jsonify({})
+    return jsonify(trigger_valuation(user_account_id))
 
 
 @app.route(ACCOUNT.settings(), methods=["GET"])
@@ -431,7 +435,7 @@ def get_linked_accounts_valuation(user_account_id):
         "account_name": {"type": "string"}
     }
 })
-def create_linked_account(user_account_id):
+def link_new_account(user_account_id):
     do_validate = bool(int(request.args.get("validate", 1)))
     do_persist = bool(int(request.args.get("persist", 1)))
     request_data = request.json
@@ -487,6 +491,13 @@ def create_linked_account(user_account_id):
         except IntegrityError:
             raise ApplicationError(f"Provider '{provider.description}' was already linked "
                                    f"as '{request_data['account_name']}' in this account")
+
+    if do_persist:
+        try:
+            logging.info(f"triggering valuation for account_id={user_account.id}")
+            trigger_valuation(user_account_id)
+        except Exception as e:
+            logging.warning(f"failed to trigger valuation for account_id={user_account.id}: {e}")
 
     return jsonify({
         "result": {
@@ -558,6 +569,12 @@ def delete_linked_account(user_account_id, linked_account_id):
 
     with db_session.persist(linked_account):
         linked_account.deleted = True
+
+    try:
+        logging.info(f"triggering full valuation for account_id={user_account_id}")
+        trigger_valuation(user_account_id)
+    except Exception as e:
+        logging.warning(f"failed to trigger valuation for account_id={user_account_id}: {e}")
 
     return jsonify({})
 
