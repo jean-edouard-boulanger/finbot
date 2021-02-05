@@ -87,6 +87,7 @@ services:
     depends_on: 
       - finbotdb
       - finbotwsrv
+      - schedsrv
     working_dir: /finbot
     command: sh -c "make finbot-wait && make run-appwsrv-dev"
     tty: true
@@ -97,6 +98,7 @@ services:
     environment:
       FINBOT_DB_HOSTNAME: finbotdb
       FINBOT_FINBOTWSRV_ENDPOINT: "http://finbotwsrv:5001"
+      FINBOT_SCHEDSRV_ENDPOINT: "tcp://schedsrv:5006"
       FINBOT_WAIT_DEPS: "finbot,db"
 
   webapp:
@@ -115,7 +117,7 @@ services:
   operator:
     image: "finbot/runtime-selenium:latest"
     container_name: operator
-    depends_on: 
+    depends_on:
       - finbotdb
     working_dir: /finbot
     command: sleep infinity

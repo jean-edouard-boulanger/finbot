@@ -16,6 +16,7 @@ pycoingecko
 python-binance
 python-bittrex
 pytz
+pyzmq
 requests
 schedule
 selenium

@@ -5,10 +5,6 @@ import json
 import requests
 
 
-def json_dumps(data):
-    return json.dumps(data, indent=4)
-
-
 class LineItem(Enum):
     Balances = "balances"
     Assets = "assets"

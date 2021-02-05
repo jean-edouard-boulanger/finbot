@@ -1,6 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
-from flask import Flask, jsonify
+from typing import List, Optional
+from flask import Flask, jsonify, request
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker, joinedload
 from copy import deepcopy
@@ -258,7 +259,7 @@ def get_credentials_data(linked_account: LinkedAccount, user_account: UserAccoun
     return credentials
 
 
-def take_raw_snapshot(user_account):
+def take_raw_snapshot(user_account, linked_accounts: Optional[List[int]]):
     with ThreadPoolExecutor(max_workers=4) as executor:
         logging.info("initializing accounts snapshot requests")
         requests = [
@@ -275,6 +276,7 @@ def take_raw_snapshot(user_account):
             )
             for linked_account in user_account.linked_accounts
             if not linked_account.deleted
+            and (not linked_accounts or linked_account.id in linked_accounts)
         ]
 
         logging.info(f"starting snapshot with {len(requests)} request(s)")
@@ -291,7 +293,7 @@ def take_raw_snapshot(user_account):
         ]
 
 
-def take_snapshot_impl(user_account_id: int):
+def take_snapshot_impl(user_account_id: int, linked_accounts: Optional[List[int]]):
     logging.info(f"fetching user information for user account id {user_account_id}")
 
     user_account = (db_session.query(UserAccount)
@@ -316,7 +318,9 @@ def take_snapshot_impl(user_account_id: int):
     logging.info(f"blank snapshot {new_snapshot.id} created")
 
     with tracer.sub_step("raw snapshot") as step:
-        raw_snapshot = take_raw_snapshot(user_account)
+        raw_snapshot = take_raw_snapshot(
+            user_account=user_account,
+            linked_accounts=linked_accounts)
         logging.info(utils.pretty_dump(raw_snapshot))
         step.set_output(raw_snapshot)
 
@@ -371,6 +375,21 @@ def healthy():
 
 
 @app.route("/snapshot/<user_account_id>/take", methods=["POST"])
-@request_handler()
+@request_handler(schema={
+    "type": "object",
+    "additionalProperties": True,
+    "required": [],
+    "properties": {
+        "linked_accounts": {
+            "type": ["array", "null"],
+            "items": {
+                "type": "number"
+            }
+        }
+    }
+})
 def take_snapshot(user_account_id):
-    return take_snapshot_impl(user_account_id)
+    data = request.json
+    return take_snapshot_impl(
+        user_account_id=user_account_id,
+        linked_accounts=data.get("linked_accounts"))

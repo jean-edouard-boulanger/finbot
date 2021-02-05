@@ -105,7 +105,7 @@ def main_impl() -> ExitCode:
     checkers = {dep: get_checker(dep) for dep in deps}
     wait_interval = int(os.environ.get("FINBOT_WAIT_INTERVAL", 3))
     logging.info(f"waiting on the following dependencies: {', '.join(checkers.keys())}")
-    while len(resolved) < len(checkers):
+    while True:
         for dep, checker in checkers.items():
             if dep not in resolved:
                 if checker():
@@ -113,6 +113,8 @@ def main_impl() -> ExitCode:
                     logging.info(f"dependency {dep} is now available")
                 else:
                     logging.info(f"dependency {dep} is not yet available")
+        if len(resolved) == len(checkers):
+            break
         time.sleep(wait_interval)
     logging.info(f"all dependencies available: {', '.join(deps)}")
     return ExitCode.Ok

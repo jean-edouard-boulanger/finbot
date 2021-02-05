@@ -13,7 +13,7 @@ from sqlalchemy import create_engine, desc, asc
 from sqlalchemy.orm import scoped_session, sessionmaker, joinedload, contains_eager
 from sqlalchemy.exc import IntegrityError
 
-from finbot.clients.finbot import FinbotClient
+from finbot.clients import FinbotClient, SchedClient
 from finbot.apps.appwsrv import timeseries, repository, core
 from finbot.apps.appwsrv.reports import holdings as holdings_report
 from finbot.apps.appwsrv.reports import earnings as earnings_report
@@ -32,6 +32,7 @@ from finbot.model import (
     DistributedTrace
 )
 
+from contextlib import closing
 import logging.config
 import logging
 import json
@@ -40,13 +41,18 @@ import os
 
 SECRET = open(os.environ["FINBOT_SECRET_PATH"], "r").read()
 FINBOT_FINBOTWSRV_ENDPOINT = os.environ["FINBOT_FINBOTWSRV_ENDPOINT"]
+FINBOT_SCHEDSRV_ENDPOINT = os.environ["FINBOT_SCHEDSRV_ENDPOINT"]
 
 
-def get_finbot_client():
+def get_finbot_client() -> FinbotClient:
     return FinbotClient(FINBOT_FINBOTWSRV_ENDPOINT)
 
 
-logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+def get_sched_client() -> SchedClient:
+    return SchedClient(FINBOT_SCHEDSRV_ENDPOINT)
+
+
+#logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 configure_logging()
 
 
@@ -241,7 +247,18 @@ def create_user_account():
 ACCOUNT = ACCOUNTS.p("user_account_id")
 
 
-def serialize_use_account_valuation(entry: UserAccountHistoryEntry,
+@app.route(ACCOUNT.is_configured())
+@jwt_required
+@request_handler()
+def is_user_account_configured(user_account_id: int):
+    account = repository.get_user_account(db_session, user_account_id)
+    configured = len(account.linked_accounts) > 0
+    return jsonify({
+        "configured": configured
+    })
+
+
+def serialize_user_account_valuation(entry: UserAccountHistoryEntry,
                                     history: List[UserAccountHistoryEntry],
                                     sparkline_schedule: List[datetime]):
     valuation_entry = entry.user_account_valuation_history_entry
@@ -263,17 +280,6 @@ def serialize_use_account_valuation(entry: UserAccountHistoryEntry,
                 lambda uas_v: uas_v.effective_at)
         ]
     }
-
-
-@app.route(ACCOUNT.is_configured())
-@jwt_required
-@request_handler()
-def is_user_account_configured(user_account_id: int):
-    account = repository.get_user_account(db_session, user_account_id)
-    configured = len(account.linked_accounts) > 0
-    return jsonify({
-        "configured": configured
-    })
 
 
 @app.route(ACCOUNT(), methods=["GET"])
@@ -304,10 +310,20 @@ def get_user_account(user_account_id):
                 "created_at": account.created_at,
                 "updated_at": account.updated_at
             },
-            "valuation": serialize_use_account_valuation(valuation, valuation_history, sparkline_schedule)
+            "valuation": serialize_user_account_valuation(valuation, valuation_history, sparkline_schedule)
             if valuation else None
         }
     }))
+
+
+@app.route(ACCOUNT.valuation.trigger(), methods=["POST"])
+@jwt_required
+@request_handler()
+def trigger_user_account_valuation(user_account_id):
+    account = repository.get_user_account(db_session, user_account_id)
+    with closing(get_sched_client()) as client:
+        client.trigger_valuation(account.id)
+        return jsonify({})
 
 
 @app.route(ACCOUNT.settings(), methods=["GET"])
