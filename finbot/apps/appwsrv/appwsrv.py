@@ -35,6 +35,7 @@ from finbot.model import (
 from contextlib import closing
 import logging.config
 import logging
+import uuid
 import json
 import os
 
@@ -528,7 +529,7 @@ LINKED_ACCOUNT = ACCOUNT.linked_accounts.p("linked_account_id")
 def update_linked_account(user_account_id, linked_account_id):
     request_data = request.json
     linked_account_id = int(linked_account_id)
-    linked_account = repository.find_linked_account(db_session, user_account_id, linked_account_id)
+    linked_account = repository.get_linked_account(db_session, user_account_id, linked_account_id)
 
     if not linked_account:
         raise ApplicationError(f"could not find linked account with id '{linked_account_id}'")
@@ -567,11 +568,12 @@ def update_linked_account(user_account_id, linked_account_id):
 @request_handler()
 def delete_linked_account(user_account_id, linked_account_id):
     linked_account_id = int(linked_account_id)
-    linked_account = repository.find_linked_account(db_session, user_account_id, linked_account_id)
+    linked_account = repository.get_linked_account(db_session, user_account_id, linked_account_id)
     if not linked_account:
         raise ApplicationError(f"could not find linked account with id '{linked_account_id}'")
 
     with db_session.persist(linked_account):
+        linked_account.account_name = f"DELETED {uuid.uuid4()} / {linked_account.account_name}"
         linked_account.deleted = True
 
     try:

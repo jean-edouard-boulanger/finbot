@@ -129,8 +129,11 @@ def find_items_valuation(session,
     return query.all()
 
 
-def find_linked_account(session, user_account_id: int, linked_account_id: int) -> LinkedAccount:
-    return (session.query(LinkedAccount)
-                   .filter_by(id=linked_account_id)
-                   .filter_by(user_account_id=user_account_id)
-                   .first())
+def get_linked_account(session, user_account_id: int, linked_account_id: int) -> LinkedAccount:
+    linked_account = (session.query(LinkedAccount)
+                             .filter_by(id=linked_account_id)
+                             .filter_by(user_account_id=user_account_id)
+                             .first())
+    if not linked_account:
+        raise ApplicationError(f"linked account {linked_account} not found")
+    return linked_account

@@ -110,7 +110,7 @@ class LinkedAccount(Base):
     id = Column(Integer, primary_key=True)
     user_account_id = Column(Integer, ForeignKey(UserAccount.id, ondelete="CASCADE"), nullable=False)
     provider_id = Column(String(64), ForeignKey(Provider.id, ondelete="CASCADE"), nullable=False)
-    account_name = Column(String(64), nullable=False)
+    account_name = Column(String(256), nullable=False)
     encrypted_credentials = Column(Text)
     deleted = Column(Boolean, nullable=False, default=False)
     created_at = Column(DateTimeTz, server_default=func.now())
