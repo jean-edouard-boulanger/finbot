@@ -204,4 +204,7 @@ init-dev:
 	tools/init-dev.sh
 
 docker-dev:
-	docker exec -it dev /bin/bash
+	docker exec -it operator /bin/bash
+
+unit-tests:
+	python3.9 -m pytest tests/unit_tests

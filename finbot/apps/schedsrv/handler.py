@@ -1,5 +1,5 @@
 from finbot.apps.schedsrv.errors import WorkflowError
-from finbot.apps.schedsrv.request import Request
+from finbot.clients import sched as sched_client
 from finbot.clients import SnapClient, HistoryClient
 from finbot.core import utils, tracer
 
@@ -11,7 +11,7 @@ class RequestHandler(object):
         self.snap_client = snap_client
         self.hist_client = hist_client
 
-    def _run_workflow(self, valuation_request: Request):
+    def _run_workflow(self, valuation_request: sched_client.TriggerValuationRequest):
         user_account_id = valuation_request.user_account_id
         logging.info(f"starting workflow for user_id={user_account_id}")
 
@@ -48,7 +48,7 @@ class RequestHandler(object):
                      f" {utils.pretty_dump(history_metadata)}")
         logging.info(f"valuation workflow done for user_id={user_account_id}")
 
-    def handle_valuation(self, valuation_request: Request):
+    def handle_valuation(self, valuation_request: sched_client.TriggerValuationRequest):
         with tracer.root("valuation") as step:
-            step.metadata["request"] = valuation_request.serialize()
+            step.metadata["request"] = sched_client.serialize(valuation_request)
             self._run_workflow(valuation_request)

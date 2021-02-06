@@ -1,4 +1,4 @@
-from finbot.apps.schedsrv.request import Request
+from finbot.clients import sched as sched_client
 from finbot.apps.schedsrv.handler import RequestHandler
 from finbot.clients import SnapClient, HistoryClient
 from finbot.core import dbutils, tracer, environment
@@ -8,7 +8,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
 from datetime import timedelta
-from typing import List
+from typing import List, Optional
 import sys
 import queue
 import threading
@@ -43,7 +43,8 @@ def run_one_shot(handler: RequestHandler, accounts_ids: List[int]):
     for user_account in db_session.query(UserAccount).all():
         if not accounts_ids or user_account.id in accounts_ids:
             try:
-                request = Request(user_account.id)
+                request = sched_client.TriggerValuationRequest(
+                    user_account_id=user_account.id)
                 handler.handle_valuation(request)
             except Exception as e:
                 logging.warning(f"failure while running workflow for "
@@ -66,17 +67,18 @@ class ValuationWorkerThread(threading.Thread):
         self._handler = request_handler
         self._stop_event = threading.Event()
 
-    def _consume(self, request: Request):
+    def _consume(self, request: sched_client.Request):
         try:
-            logging.info(f"handling request: {request.serialize()}")
-            self._handler.handle_valuation(request)
+            logging.info(f"handling request: {sched_client.serialize(request)}")
+            self._handler.handle_valuation(request.trigger_valuation)
         except Exception as e:
-            logging.warning(f"swallowed exception while handling valuation in worker thread: {e}")
+            logging.warning(f"swallowed exception while handling valuation in worker thread: {e}, "
+                            f"trace: \n{stackprinter.format()}")
 
     def run(self):
         logging.info("starting worker thread")
         while not self._stop_event.isSet():
-            request: Request = pop_queue(self._work_queue, timeout=timedelta(seconds=1))
+            request: sched_client.Request = pop_queue(self._work_queue, timeout=timedelta(seconds=1))
             if request is not None:
                 self._consume(request)
         logging.info("worker thread going down now")
@@ -90,7 +92,7 @@ class WorkDispatcher(object):
     def __init__(self, work_queue: queue.Queue):
         self._queue = work_queue
 
-    def dispatch(self, request: Request):
+    def dispatch(self, request: sched_client.Request):
         self._queue.put(request)
 
 
@@ -99,11 +101,12 @@ class TriggerReceiver(object):
         self._socket = zmq.Context().socket(zmq.PULL)
         self._socket.bind(f"tcp://*:{port}")
 
-    def receive(self):
+    def receive(self) -> Optional[sched_client.Request]:
         events = self._socket.poll(timeout=1000)
         if not events:
             return None
-        return self._socket.recv_json()
+        data = self._socket.recv_json()
+        return sched_client.deserialize(sched_client.Request, data)
 
 
 class TriggerListenerThread(threading.Thread):
@@ -116,9 +119,8 @@ class TriggerListenerThread(threading.Thread):
     def run(self):
         logging.info("starting consumer thread")
         while not self._stop_event.isSet():
-            data = self._receiver.receive()
-            if data:
-                request = Request.deserialize(data)
+            request = self._receiver.receive()
+            if request:
                 self._dispatcher.dispatch(request)
         logging.info("consumer thread going down now")
 

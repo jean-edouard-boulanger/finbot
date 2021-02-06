@@ -13,7 +13,7 @@ from sqlalchemy import create_engine, desc, asc
 from sqlalchemy.orm import scoped_session, sessionmaker, joinedload, contains_eager
 from sqlalchemy.exc import IntegrityError
 
-from finbot.clients import FinbotClient, SchedClient
+from finbot.clients import FinbotClient, sched as sched_client
 from finbot.apps.appwsrv import timeseries, repository, core
 from finbot.apps.appwsrv.reports import holdings as holdings_report
 from finbot.apps.appwsrv.reports import earnings as earnings_report
@@ -50,17 +50,17 @@ def get_finbot_client() -> FinbotClient:
     return FinbotClient(FINBOT_ENV.finbotwsrv_endpoint)
 
 
-def get_sched_client() -> SchedClient:
-    return SchedClient(FINBOT_ENV.schedsrv_endpoint)
+def get_sched_client() -> sched_client.SchedClient:
+    return sched_client.SchedClient(FINBOT_ENV.schedsrv_endpoint)
 
 
 def trigger_valuation(user_account_id: int, linked_accounts: Optional[List[int]] = None):
     account = repository.get_user_account(db_session, user_account_id)
     with closing(get_sched_client()) as client:
-        client.trigger_valuation(
+        valuation_request = sched_client.TriggerValuationRequest(
             user_account_id=account.id,
             linked_accounts=linked_accounts)
-        return {}
+        client.trigger_valuation(valuation_request)
 
 
 db_engine = create_engine(FINBOT_ENV.database_url)
