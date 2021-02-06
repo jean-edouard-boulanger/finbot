@@ -95,7 +95,7 @@ docker-build-runtime-selenium:
 docker-build: docker-build-runtime docker-build-runtime-selenium
 
 trigger-valuation-docker:
-	docker-compose run schedsrv \
+	docker-compose run --rm schedsrv \
 		make trigger-valuation accounts=${accounts}
 
 trigger-valuation:
@@ -134,15 +134,15 @@ test-providers:
 			--accounts-file ${FINBOT_ACCOUNT_PATH} \
 			--providers ${providers}
 
-test-snapwsrv:
+test-snap:
 	python3.9 tools/snapwsrv-tester \
 		--endpoint ${FINBOT_SNAPWSRV_ENDPOINT} \
-		--account-id ${ACCOUNT_ID}
+		--account-id ${account}
 
-test-histwsrv:
+test-hist:
 	python3.9 tools/histwsrv-tester \
 		--endpoint ${FINBOT_HISTWSRV_ENDPOINT} \
-		--snapshot-id ${SNAPSHOT_ID}
+		--snapshot-id ${snapshot}
 
 init-vault:
 	tools/init-vault.sh

@@ -1,14 +1,14 @@
 from finbot.apps.schedsrv.request import Request
 from finbot.apps.schedsrv.handler import RequestHandler
 from finbot.clients import SnapClient, HistoryClient
-from finbot.core import dbutils, tracer
+from finbot.core import dbutils, tracer, environment
 from finbot.core.utils import configure_logging
 from finbot.model import UserAccount
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
 from datetime import timedelta
-from typing import List, Dict
+from typing import List
 import sys
 import queue
 import threading
@@ -16,12 +16,14 @@ import argparse
 import stackprinter
 import signal
 import logging
-import os
 import zmq
 
 
 configure_logging()
-db_engine = create_engine(os.environ['FINBOT_DB_URL'])
+
+
+FINBOT_ENV = environment.get()
+db_engine = create_engine(FINBOT_ENV.database_url)
 db_session = dbutils.add_persist_utilities(scoped_session(sessionmaker(bind=db_engine)))
 tracer.configure(
     identity="schedsrv",
@@ -139,11 +141,11 @@ class StopHandler(object):
 def main_impl():
     settings = create_parser().parse_args()
 
-    snapwsrv_endpoint = os.environ["FINBOT_SNAPWSRV_ENDPOINT"]
+    snapwsrv_endpoint = FINBOT_ENV.snapwsrv_endpoint
     snap_client = SnapClient(snapwsrv_endpoint)
     logging.info(f"snapshot client created with {snapwsrv_endpoint} endpoint")
 
-    histwsrv_endpoint = os.environ["FINBOT_HISTWSRV_ENDPOINT"]
+    histwsrv_endpoint = FINBOT_ENV.histwsrv_endpoint
     hist_client = HistoryClient(histwsrv_endpoint)
     logging.info(f"history report client created with {histwsrv_endpoint} endpoint")
 
@@ -153,9 +155,8 @@ def main_impl():
         run_one_shot(request_handler, settings.accounts)
         return
 
-    schedsrv_port = int(os.environ["FINBOT_SCHEDSRV_PORT"])
-    receiver = TriggerReceiver(schedsrv_port)
-    logging.info(f"receiver listening on port {schedsrv_port}")
+    receiver = TriggerReceiver(FINBOT_ENV.schedsrv_port)
+    logging.info(f"receiver listening on port {FINBOT_ENV.schedsrv_port}")
 
     threads = []
     work_queue = queue.Queue()

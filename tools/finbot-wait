@@ -13,9 +13,13 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 
 from finbot.core.utils import configure_logging
+from finbot.core import environment
 
 
 configure_logging()
+
+
+FINBOT_ENV = environment.get()
 
 
 class ExitCode(enum.Enum):
@@ -69,29 +73,19 @@ class DbChecker(object):
             return False
 
 
-def get_env_for_dep(dep_name: str, var_name: str) -> str:
-    val = os.environ.get(var_name)
-    if val is None:
-        raise Error(f"environment variable '{var_name}' not defined"
-                    f" (needed by dependency: '{dep_name}')")
-    logging.info(f"environment variable '{var_name}' resolved to '{val}'"
-                 f" (needed by dependency: '{dep_name}')")
-    return val
-
-
 def get_checker(dep_name: str):
     if dep_name == "db":
-        return DbChecker(get_env_for_dep(dep_name, "FINBOT_DB_URL"))
+        return DbChecker(FINBOT_ENV.database_url)
     if dep_name == "api":
-        return ClientChecker(get_env_for_dep(dep_name, "FINBOT_APPWSRV_ENDPOINT"))
+        return ClientChecker(FINBOT_ENV.appwsrv_endpoint)
     if dep_name == "finbot":
-        return ClientChecker(get_env_for_dep(dep_name, "FINBOT_FINBOTWSRV_ENDPOINT"))
+        return ClientChecker(FINBOT_ENV.finbotwsrv_endpoint)
     if dep_name == "hist":
-        return ClientChecker(get_env_for_dep(dep_name, "FINBOT_HISTWSRV_ENDPOINT"))
+        return ClientChecker(FINBOT_ENV.histwsrv_endpoint)
     if dep_name == "snap":
-        return ClientChecker(get_env_for_dep(dep_name, "FINBOT_SNAPWSRV_ENDPOINT"))
+        return ClientChecker(FINBOT_ENV.snapwsrv_endpoint)
     if dep_name == "webapp":
-        return WebsiteChecker(get_env_for_dep(dep_name, "FINBOT_WEBAPP_ENDPOINT"))
+        return WebsiteChecker(FINBOT_ENV.webapp_endpoint)
     raise Error(f"Unknown dependency: {dep_name}")
 
 

@@ -1,3 +1,4 @@
+from finbot.core import environment
 from finbot import model as finbot_model
 
 from logging.config import fileConfig
@@ -7,7 +8,6 @@ from sqlalchemy import pool
 
 from alembic import context
 
-import os
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -23,7 +23,7 @@ fileConfig(config.config_file_name)
 # target_metadata = mymodel.Base.metadata
 target_metadata = finbot_model.Base.metadata
 
-config.set_main_option('sqlalchemy.url', os.environ["FINBOT_DB_URL"])
+config.set_main_option('sqlalchemy.url', environment.get_database_url())
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

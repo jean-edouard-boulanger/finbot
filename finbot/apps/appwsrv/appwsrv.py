@@ -19,8 +19,7 @@ from finbot.apps.appwsrv.reports import holdings as holdings_report
 from finbot.apps.appwsrv.reports import earnings as earnings_report
 from finbot.apps.support import request_handler, Route, ApplicationError
 from finbot.core.utils import serialize, now_utc, configure_logging
-from finbot.core import secure
-from finbot.core import dbutils
+from finbot.core import secure, dbutils, environment
 from finbot.model import (
     Provider,
     UserAccount,
@@ -37,20 +36,22 @@ import logging.config
 import logging
 import uuid
 import json
-import os
 
 
-SECRET = open(os.environ["FINBOT_SECRET_PATH"], "r").read()
-FINBOT_FINBOTWSRV_ENDPOINT = os.environ["FINBOT_FINBOTWSRV_ENDPOINT"]
-FINBOT_SCHEDSRV_ENDPOINT = os.environ["FINBOT_SCHEDSRV_ENDPOINT"]
+#logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+configure_logging()
+
+
+FINBOT_ENV = environment.get()
+SECRET = FINBOT_ENV.secret_path.open().read()
 
 
 def get_finbot_client() -> FinbotClient:
-    return FinbotClient(FINBOT_FINBOTWSRV_ENDPOINT)
+    return FinbotClient(FINBOT_ENV.finbotwsrv_endpoint)
 
 
 def get_sched_client() -> SchedClient:
-    return SchedClient(FINBOT_SCHEDSRV_ENDPOINT)
+    return SchedClient(FINBOT_ENV.schedsrv_endpoint)
 
 
 def trigger_valuation(user_account_id: int, linked_accounts: Optional[List[int]] = None):
@@ -62,11 +63,7 @@ def trigger_valuation(user_account_id: int, linked_accounts: Optional[List[int]]
         return {}
 
 
-#logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
-configure_logging()
-
-
-db_engine = create_engine(os.environ['FINBOT_DB_URL'])
+db_engine = create_engine(FINBOT_ENV.database_url)
 db_session = dbutils.add_persist_utilities(scoped_session(sessionmaker(bind=db_engine)))
 
 

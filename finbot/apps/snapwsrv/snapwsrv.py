@@ -5,9 +5,10 @@ from flask import Flask, jsonify, request
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker, joinedload
 from copy import deepcopy
+
 from finbot.clients.finbot import FinbotClient, LineItem
 from finbot.providers.plaid_us import pack_credentials as pack_plaid_credentials
-from finbot.core import secure, utils, dbutils, fx_market, tracer
+from finbot.core import secure, utils, dbutils, fx_market, tracer, environment
 from finbot.core.utils import configure_logging
 from finbot.apps.support import request_handler, make_error
 from finbot.model import (
@@ -23,19 +24,16 @@ from finbot.model import (
 )
 import logging.config
 import logging
-import os
 import json
 import stackprinter
 
 
-def load_secret(path):
-    with open(path) as secret_file:
-        return secret_file.read()
-
-
 configure_logging()
-secret = load_secret(os.environ["FINBOT_SECRET_PATH"])
-db_engine = create_engine(os.environ['FINBOT_DB_URL'])
+
+
+FINBOT_ENV = environment.get()
+secret = FINBOT_ENV.secret_path.open().read()
+db_engine = create_engine(FINBOT_ENV.database_url)
 db_session = dbutils.add_persist_utilities(scoped_session(sessionmaker(bind=db_engine)))
 tracer.configure(
     identity="snapwsrv",
@@ -226,7 +224,7 @@ def dispatch_snapshot_entry(request: AccountSnapshotRequest):
         logging.info(f"starting snapshot for account_id={request.account_id}'"
                      f" provider_id={request.provider_id}")
 
-        finbot_client = FinbotClient(os.environ["FINBOT_FINBOTWSRV_ENDPOINT"])
+        finbot_client = FinbotClient(FINBOT_ENV.finbotwsrv_endpoint)
         account_snapshot = finbot_client.get_financial_data(
             provider=request.provider_id,
             credentials_data=request.credentials_data,

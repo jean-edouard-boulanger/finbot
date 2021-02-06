@@ -3,7 +3,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from flask import Flask, jsonify, request
 from contextlib import closing
 from finbot import providers
-from finbot.core import tracer, dbutils
+from finbot.core import tracer, dbutils, environment
 from finbot.core.utils import configure_logging
 from finbot.providers.factory import get_provider
 from finbot.providers.errors import AuthFailure
@@ -14,11 +14,13 @@ from finbot.apps.support import (
 )
 import stackprinter
 import logging
-import os
 
 
 configure_logging()
-db_engine = create_engine(os.environ['FINBOT_DB_URL'])
+
+
+FINBOT_ENV = environment.get()
+db_engine = create_engine(FINBOT_ENV.database_url)
 db_session = dbutils.add_persist_utilities(scoped_session(sessionmaker(bind=db_engine)))
 tracer.configure(
     identity="finbotwsrv",
