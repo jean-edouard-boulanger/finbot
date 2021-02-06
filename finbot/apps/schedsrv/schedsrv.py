@@ -37,10 +37,11 @@ def create_parser() -> argparse.ArgumentParser:
 
 
 def run_one_shot(handler: RequestHandler, accounts_ids: List[int]):
+    user_account: UserAccount
     for user_account in db_session.query(UserAccount).all():
         if not accounts_ids or user_account.id in accounts_ids:
             try:
-                request = Request(user_account)
+                request = Request(user_account.id)
                 handler.handle_valuation(request)
             except Exception as e:
                 logging.warning(f"failure while running workflow for "

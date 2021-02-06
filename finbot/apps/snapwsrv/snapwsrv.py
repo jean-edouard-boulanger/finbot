@@ -376,7 +376,7 @@ def healthy():
 
 @app.route("/snapshot/<user_account_id>/take", methods=["POST"])
 @request_handler(schema={
-    "type": "object",
+    "type": ["object", "null"],
     "additionalProperties": True,
     "required": [],
     "properties": {
@@ -388,8 +388,8 @@ def healthy():
         }
     }
 })
-def take_snapshot(user_account_id):
-    data = request.json
+def take_snapshot(user_account_id: int):
+    data = request.json or {}
     return take_snapshot_impl(
         user_account_id=user_account_id,
         linked_accounts=data.get("linked_accounts"))
