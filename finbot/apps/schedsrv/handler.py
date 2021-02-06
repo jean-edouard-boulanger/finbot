@@ -12,13 +12,15 @@ class RequestHandler(object):
         self.hist_client = hist_client
 
     def _run_workflow(self, valuation_request: Request):
-        user_account_id = valuation_request.user_account.id
+        user_account_id = valuation_request.user_account_id
         logging.info(f"starting workflow for user_id={user_account_id}")
 
         with tracer.sub_step("snapshot") as step:
             logging.info("taking snapshot")
             snapshot_metadata = self.snap_client.take_snapshot(
-                user_account_id, tracer_context=tracer.propagate())
+                account_id=user_account_id,
+                linked_accounts=valuation_request.linked_accounts,
+                tracer_context=tracer.propagate())
             step.set_output(snapshot_metadata)
 
         logging.debug(snapshot_metadata)
@@ -32,6 +34,7 @@ class RequestHandler(object):
 
         with tracer.sub_step("history report") as step:
             logging.info("taking history report")
+            step.metadata["snapshot_id"] = snapshot_id
             history_metadata = self.hist_client.write_history(
                 snapshot_id, tracer_context=tracer.propagate())
             step.set_output(history_metadata)
@@ -47,5 +50,5 @@ class RequestHandler(object):
 
     def handle_valuation(self, valuation_request: Request):
         with tracer.root("valuation") as step:
-            step.metadata["user_account_id"] = valuation_request.user_account.id
+            step.metadata["request"] = valuation_request.serialize()
             self._run_workflow(valuation_request)

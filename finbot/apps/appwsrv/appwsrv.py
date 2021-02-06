@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from datetime import datetime, timedelta
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -52,10 +52,12 @@ def get_sched_client() -> SchedClient:
     return SchedClient(FINBOT_SCHEDSRV_ENDPOINT)
 
 
-def trigger_valuation(user_account_id: int):
+def trigger_valuation(user_account_id: int, linked_accounts: Optional[List[int]] = None):
     account = repository.get_user_account(db_session, user_account_id)
     with closing(get_sched_client()) as client:
-        client.trigger_valuation(account.id)
+        client.trigger_valuation(
+            user_account_id=account.id,
+            linked_accounts=linked_accounts)
         return {}
 
 
@@ -466,7 +468,6 @@ def link_new_account(user_account_id):
     if is_plaid:
         credentials = core.make_plaid_credentials(
             credentials, user_account.plaid_settings)
-        logging.info(credentials)
 
     if do_validate:
         logging.info(f"validating authentication details for "
@@ -494,8 +495,11 @@ def link_new_account(user_account_id):
 
     if do_persist:
         try:
-            logging.info(f"triggering valuation for account_id={user_account.id}")
-            trigger_valuation(user_account_id)
+            linked_account_id = user_account.linked_accounts[-1].id
+            logging.info(f"triggering partial valuation for"
+                         f" account_id={user_account.id}"
+                         f" linked_account_id={linked_account_id}")
+            trigger_valuation(user_account_id, linked_accounts=[linked_account_id])
         except Exception as e:
             logging.warning(f"failed to trigger valuation for account_id={user_account.id}: {e}")
 

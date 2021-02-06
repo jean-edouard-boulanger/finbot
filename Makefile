@@ -46,7 +46,9 @@ alembic-history:
 	alembic history
 
 run-schedsrv-dev:
-	python3.9 finbot/apps/schedsrv/schedsrv.py
+	tools/autorestart.sh \
+		finbot/apps/schedsrv \
+		python3.9 finbot/apps/schedsrv/schedsrv.py
 
 run-histwsrv-dev:
 	env FLASK_APP=finbot/apps/histwsrv/histwsrv.py \

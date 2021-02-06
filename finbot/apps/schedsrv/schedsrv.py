@@ -63,11 +63,9 @@ class ValuationWorkerThread(threading.Thread):
         self._handler = request_handler
         self._stop_event = threading.Event()
 
-    def _consume(self, request: Dict):
+    def _consume(self, request: Request):
         try:
-            user_account_id = request["user_account_id"]
-            user_account = self._session.query(UserAccount).filter_by(id=user_account_id).one()
-            request = Request(user_account=user_account)
+            logging.info(f"handling request: {request.serialize()}")
             self._handler.handle_valuation(request)
         except Exception as e:
             logging.warning(f"swallowed exception while handling valuation in worker thread: {e}")
@@ -75,7 +73,7 @@ class ValuationWorkerThread(threading.Thread):
     def run(self):
         logging.info("starting worker thread")
         while not self._stop_event.isSet():
-            request = pop_queue(self._work_queue, timeout=timedelta(seconds=1))
+            request: Request = pop_queue(self._work_queue, timeout=timedelta(seconds=1))
             if request is not None:
                 self._consume(request)
         logging.info("worker thread going down now")
@@ -116,8 +114,9 @@ class TriggerListenerThread(threading.Thread):
         logging.info("starting consumer thread")
         while not self._stop_event.isSet():
             data = self._receiver.receive()
-            if data is not None:
-                self._dispatcher.dispatch(data)
+            if data:
+                request = Request.deserialize(data)
+                self._dispatcher.dispatch(request)
         logging.info("consumer thread going down now")
 
     def stop(self):
