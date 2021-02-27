@@ -1,12 +1,22 @@
 # finbot
 
+![Screenshot 2021-02-27 at 12 20 56](https://user-images.githubusercontent.com/4021545/109386980-6105f380-78f6-11eb-9e40-d6b9c6b3d51b.png)
+
 ## 1. Introduction
 
 Open-source personal wealth & financial data aggregation and reporting platform.
+Currently supports the following data providers:
+
+- Any provider available [via Plaid](https://plaid.com/uk/) (open banking)
+- Vanguard (via Selenium)
+- Credit agricole (via Selenium)
+- Aegon Targetplan (via Seleniun)
+- Kraken, Binance, Bittrex (via respective APIs)
+- Manually managed via Google sheet
 
 ### 1.1 Important disclaimer
 
-This software is **intended to be self-hosted** (_i.e. will not and should not 
+This platform is **intended to be self-hosted** (_i.e. will not and should not 
 not be made available as a public service_) as it stores and uses personal 
 credentials to access external financial platforms and services.
 This software is built as a proof of concept, **use at your own risk!**
