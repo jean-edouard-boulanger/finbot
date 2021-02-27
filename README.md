@@ -1,6 +1,6 @@
-# finbot
-
 ![Screenshot 2021-02-27 at 12 20 56](https://user-images.githubusercontent.com/4021545/109386980-6105f380-78f6-11eb-9e40-d6b9c6b3d51b.png)
+
+# finbot
 
 ## 1. Introduction
 
