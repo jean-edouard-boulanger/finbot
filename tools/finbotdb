@@ -2,6 +2,7 @@
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from finbot.core.utils import pretty_dump, configure_logging
+from finbot.core.environment import get_database_url
 from finbot.model import (
     Base,
     Provider,
@@ -357,7 +358,7 @@ def setup_disable_history_entry_subparser(parser):
 
 def create_parser():
     parser = argparse.ArgumentParser(prog='finbotdb utility')
-    parser.add_argument("--database", type=str, required=True)
+    parser.add_argument("--database", type=str, default=get_database_url())
     subparsers = parser.add_subparsers(help='tools')
     for tool_name, tool in all_tools.items():
         subparser = subparsers.add_parser(tool_name, help=tool["description"])

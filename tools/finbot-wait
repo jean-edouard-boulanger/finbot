@@ -75,16 +75,22 @@ class DbChecker(object):
 
 def get_checker(dep_name: str):
     if dep_name == "db":
+        logging.info(f"will wait on 'db': {FINBOT_ENV.database_url}")
         return DbChecker(FINBOT_ENV.database_url)
     if dep_name == "api":
+        logging.info(f"will wait on 'api': {FINBOT_ENV.appwsrv_endpoint}")
         return ClientChecker(FINBOT_ENV.appwsrv_endpoint)
     if dep_name == "finbot":
+        logging.info(f"will wait on 'finbot': {FINBOT_ENV.finbotwsrv_endpoint}")
         return ClientChecker(FINBOT_ENV.finbotwsrv_endpoint)
     if dep_name == "hist":
+        logging.info(f"will wait on 'hist': {FINBOT_ENV.histwsrv_endpoint}")
         return ClientChecker(FINBOT_ENV.histwsrv_endpoint)
     if dep_name == "snap":
+        logging.info(f"will wait on 'snap': {FINBOT_ENV.snapwsrv_endpoint}")
         return ClientChecker(FINBOT_ENV.snapwsrv_endpoint)
     if dep_name == "webapp":
+        logging.info(f"will wait on 'webapp': {FINBOT_ENV.webapp_endpoint}")
         return WebsiteChecker(FINBOT_ENV.webapp_endpoint)
     raise Error(f"Unknown dependency: {dep_name}")
 

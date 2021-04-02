@@ -1,12 +1,13 @@
 #!/usr/bin/env python3.9
 from finbot.clients.snap import SnapClient
 from finbot.core.utils import pretty_dump
+from finbot.core.environment import get_snapwsrv_endpoint
 import argparse
 
 
 def create_parser():
     parser = argparse.ArgumentParser("snapwsrv tester")
-    parser.add_argument("--endpoint", type=str)
+    parser.add_argument("--endpoint", type=str, default=get_snapwsrv_endpoint())
     parser.add_argument("--account-id", type=int)
     return parser
 

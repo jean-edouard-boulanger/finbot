@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-
 log () {
   log_level=$1
   shift
@@ -19,4 +18,11 @@ docker_image_exists () {
     return 1
   fi
   return 0
+}
+add_to_python_path () {
+  value=$1
+  if [ -d "${value}" ] && [[ ":${PATH}:" != *":${value}:"* ]]
+  then
+      export PYTHONPATH="${PYTHONPATH:+"$PATH:"}$1"
+  fi
 }

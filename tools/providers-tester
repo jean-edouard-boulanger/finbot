@@ -1,9 +1,10 @@
 #!/usr/bin/env python3.9
 from finbot.providers.support.selenium import DefaultBrowserFactory
 from finbot.providers.factory import get_provider
-from finbot.core import secure, fx_market
+from finbot.core import secure, fx_market, environment
 from finbot.core.utils import pretty_dump
 
+from typing import Optional
 from functools import partial
 from contextlib import closing
 from multiprocessing.pool import ThreadPool
@@ -19,8 +20,8 @@ import os
 
 
 @functools.lru_cache(128)
-def get_fx_rate(home_ccy, foreign_ccy):
-    return fx_market.get_xccy_rate(home_ccy, foreign_ccy)
+def get_fx_rate(home_ccy, foreign_ccy) -> Optional[float]:
+    return fx_market.get_rate(fx_market.Xccy(home_ccy, foreign_ccy))
 
 
 def wait_forever():
@@ -95,15 +96,6 @@ def fetch_data(settings, browser_factory, account):
 
             provider_data = ProviderData(name=provider.description)
 
-            #txn_to_date = datetime.now()
-            #txn_from_date = (txn_to_date - timedelta(days=7))
-            #logging.info(f"[{provider.description}] fetching transactions "
-            #             f"from {txn_from_date.date().isoformat()} to {txn_to_date.date().isoformat()}")
-            #transactions = api.get_transactions(txn_from_date, txn_to_date)
-            #if settings.dump_transactions:
-            #    logging.info(f"[{provider.description}] transactions {pretty_dump(transactions)}")
-            #logging.info(f"[{provider.description}] fetching transactions - done")
-
             logging.info(f"[{provider.description}] fetching balances")
             balances = api.get_balances()
             if settings.dump_balances:
@@ -150,12 +142,12 @@ def fetch_data(settings, browser_factory, account):
 
 def create_arguments_parser():
     parser = argparse.ArgumentParser("finance automation tester")
-    parser.add_argument("--secret-file", required=True)
+    parser.add_argument("--secret-file", default=environment.get_secret_path())
+    parser.add_argument("--accounts-file", default=environment.get_account_path())
     parser.add_argument("--dump-balances", action="store_true", default=False)
     parser.add_argument("--dump-assets", action="store_true", default=False)
     parser.add_argument("--dump-liabilities", action="store_true", default=False)
     parser.add_argument("--dump-transactions", action="store_true", default=False)
-    parser.add_argument("--accounts-file", required=True)
     parser.add_argument("--show-browser", action="store_false", default=True, dest="headless")
     parser.add_argument("--no-threadpool", action="store_false", default=True, dest="threadpool")
     parser.add_argument("--pause-on-error", action="store_true", default=False, dest="pause_on_error")

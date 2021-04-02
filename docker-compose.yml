@@ -20,14 +20,13 @@ services:
     image: "finbot/runtime-selenium:latest"
     container_name: finbotwsrv
     working_dir: /finbot
-    command: bash -c "source secret.env && make run-finbotwsrv-dev"
+    command: bash -c "source docker.env.sh && make run-finbotwsrv-dev"
     tty: true
     ports:
       - "5001:5001"
     volumes:
       - .:/finbot
     environment:
-      FINBOT_DB_HOSTNAME: finbotdb
       FINBOT_WAIT_DEPS: "db"
 
   snapwsrv:
@@ -37,15 +36,13 @@ services:
       - finbotdb
       - finbotwsrv
     working_dir: /finbot
-    command: bash -c "source secret.env && make finbot-wait && make run-snapwsrv-dev"
+    command: bash -c "source docker.env.sh && make finbot-wait && make run-snapwsrv-dev"
     tty: true
     ports:
       - "5000:5000"
     volumes:
       - .:/finbot
     environment:
-      FINBOT_FINBOTWSRV_ENDPOINT: "http://finbotwsrv:5001"
-      FINBOT_DB_HOSTNAME: finbotdb
       FINBOT_WAIT_DEPS: "db,finbot"
 
   histwsrv:
@@ -54,14 +51,13 @@ services:
     depends_on: 
       - finbotdb
     working_dir: /finbot
-    command: bash -c "source secret.env && make finbot-wait && make run-histwsrv-dev"
+    command: bash -c "source docker.env.sh && make finbot-wait && make run-histwsrv-dev"
     tty: true
     ports:
       - "5002:5002"
     volumes:
       - .:/finbot
     environment:
-      FINBOT_DB_HOSTNAME: finbotdb
       FINBOT_WAIT_DEPS: "db"
 
   schedsrv:
@@ -71,14 +67,11 @@ services:
       - snapwsrv
       - histwsrv
     working_dir: /finbot
-    command: bash -c "source secret.env && make finbot-wait && make run-schedsrv-dev"
+    command: bash -c "source docker.env.sh && make finbot-wait && make run-schedsrv-dev"
     tty: true
     volumes:
       - .:/finbot
     environment:
-      FINBOT_DB_HOSTNAME: finbotdb
-      FINBOT_SNAPWSRV_ENDPOINT: "http://snapwsrv:5000"
-      FINBOT_HISTWSRV_ENDPOINT: "http://histwsrv:5002"
       FINBOT_WAIT_DEPS: "db,snap,hist"
 
   appwsrv:
@@ -89,16 +82,13 @@ services:
       - finbotwsrv
       - schedsrv
     working_dir: /finbot
-    command: bash -c "source secret.env && make finbot-wait && make run-appwsrv-dev"
+    command: bash -c "source docker.env.sh && make finbot-wait && make run-appwsrv-dev"
     tty: true
     ports:
       - "5003:5003"
     volumes:
       - .:/finbot
     environment:
-      FINBOT_DB_HOSTNAME: finbotdb
-      FINBOT_FINBOTWSRV_ENDPOINT: "http://finbotwsrv:5001"
-      FINBOT_SCHEDSRV_ENDPOINT: "tcp://schedsrv:5006"
       FINBOT_WAIT_DEPS: "finbot,db"
 
   webapp:
@@ -120,7 +110,7 @@ services:
     depends_on:
       - finbotdb
     working_dir: /finbot
-    command: bash -c "source secret.env && sleep infinity"
+    command: bash -c "source docker.env.sh && sleep infinity"
     stdin_open: true
     tty: true
     volumes:
