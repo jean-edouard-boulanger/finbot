@@ -1,8 +1,4 @@
 import { EarningsReport } from "./earnings";
-import { HoldingsReport } from './holdings'
+import { HoldingsReport } from "./holdings";
 
-
-export {
-  EarningsReport,
-  HoldingsReport
-}
+export { EarningsReport, HoldingsReport };

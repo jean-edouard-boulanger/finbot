@@ -1,7 +1,7 @@
-import { DurationBadge } from './duration-badge';
-import { LoadingButton } from './loading-button';
+import { DurationBadge } from "./duration-badge";
+import { LoadingButton } from "./loading-button";
 import { MainContainer } from "./main-container";
-import { Money } from './money';
+import { Money } from "./money";
 import { Navigation } from "./navigation";
 import { SparkLine } from "./sparkline";
 import { StackedBarLoader } from "./stacked-bar-loader";
@@ -17,5 +17,5 @@ export {
   SparkLine,
   StackedBarLoader,
   TreeGrid,
-  ValuationChange
+  ValuationChange,
 };

@@ -1,2 +1,2 @@
-import { FinbotClient } from './finbot-client';
+import { FinbotClient } from "./finbot-client";
 export { FinbotClient };
