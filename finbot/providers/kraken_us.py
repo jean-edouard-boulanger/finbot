@@ -31,7 +31,7 @@ class Api(providers.Base):
             "id": "portfolio",
             "name": "Portfolio",
             "iso_currency": self._account_ccy,
-            "type": "investment"
+            "type": "investment",
         }
 
     def _iter_balances(self):
@@ -53,12 +53,7 @@ class Api(providers.Base):
     def get_balances(self):
         balance = sum(value for (_, _, value) in self._iter_balances())
         return {
-            "accounts": [
-                {
-                    "account": self._account_description(),
-                    "balance": balance
-                }
-            ]
+            "accounts": [{"account": self._account_description(), "balance": balance}]
         }
 
     def get_assets(self):
@@ -71,9 +66,9 @@ class Api(providers.Base):
                             "name": _format_symbol(symbol),
                             "type": _classify_asset(symbol),
                             "units": units,
-                            "value": value
+                            "value": value,
                         }
-                    ]
+                    ],
                 }
                 for symbol, units, value in self._iter_balances()
             ]
@@ -104,9 +99,7 @@ class KrakenPriceFetcher(object):
         if source_crypto_asset == target_ccy:
             return 1.0
         pair = f"{source_crypto_asset}{target_ccy}"
-        results = self.api.query_public("Ticker", {
-            "pair": pair
-        })
+        results = self.api.query_public("Ticker", {"pair": pair})
         if results["error"]:
             raise RuntimeError(f"{pair} " + _format_error(results["error"]))
         return float(results["result"][list(results["result"].keys())[0]]["c"][0])

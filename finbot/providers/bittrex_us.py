@@ -35,7 +35,7 @@ class Api(providers.Base):
             "id": "portfolio",
             "name": "Portfolio",
             "iso_currency": self._account_ccy,
-            "type": "investment"
+            "type": "investment",
         }
 
     def _iter_balances(self):
@@ -44,7 +44,8 @@ class Api(providers.Base):
             symbol = entry["Currency"]
             if units > OWNERSHIP_UNITS_THRESHOLD and symbol != BITTREX_REWARDS_TOKEN:
                 value = units * self._spot_api.get_spot_cached(
-                    symbol, self._account_ccy)
+                    symbol, self._account_ccy
+                )
                 yield symbol, units, value
 
     def authenticate(self, credentials):
@@ -56,12 +57,7 @@ class Api(providers.Base):
     def get_balances(self):
         balance = sum(value for (_, _, value) in self._iter_balances())
         return {
-            "accounts": [
-                {
-                    "account": self._account_description(),
-                    "balance": balance
-                }
-            ]
+            "accounts": [{"account": self._account_description(), "balance": balance}]
         }
 
     def get_assets(self):
@@ -74,10 +70,10 @@ class Api(providers.Base):
                             "name": symbol,
                             "type": "cryptocurrency",
                             "units": units,
-                            "value": value
+                            "value": value,
                         }
                         for symbol, units, value in self._iter_balances()
-                    ]
+                    ],
                 }
             ]
         }

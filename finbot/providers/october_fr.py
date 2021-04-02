@@ -38,7 +38,7 @@ class Api(SeleniumBased):
             "id": "portfolio",
             "name": "Portfolio",
             "iso_currency": "EUR",
-            "type": "investment"
+            "type": "investment",
         }
 
     def authenticate(self, credentials):
@@ -50,42 +50,49 @@ class Api(SeleniumBased):
         actions_area = self._do.wait_element(By.CSS_SELECTOR, "div.actions")
         actions_area.find_element_by_css_selector("button.action-button").click()
 
-        self._do.assert_success(_is_logged_in, _get_login_error,
-                                _report_auth_error)
+        self._do.assert_success(_is_logged_in, _get_login_error, _report_auth_error)
 
     def get_balances(self):
         summary_area = self._go_home()
         loan_amount, cash_amount = _get_accounts_amount(summary_area)
         return {
-            "accounts": [{
-                "account": Api._get_account_description(),
-                "balance": cash_amount + loan_amount
-            }]
+            "accounts": [
+                {
+                    "account": Api._get_account_description(),
+                    "balance": cash_amount + loan_amount,
+                }
+            ]
         }
 
     def _get_cash_assets(self):
         summary_area = self._go_home()
         _, cash_amount = _get_accounts_amount(summary_area)
-        return [{
-            "name": "Cash",
-            "type": "currency",
-            "current_weight": 1.0,
-            "value": cash_amount,
-            "provider_specific": None
-        }]
+        return [
+            {
+                "name": "Cash",
+                "type": "currency",
+                "current_weight": 1.0,
+                "value": cash_amount,
+                "provider_specific": None,
+            }
+        ]
 
     def _get_loan_assets(self):
         def extract_loan(loan_row):
             items = loan_row.find_elements_by_tag_name("li")
-            loan_name = items[0].find_element_by_css_selector("strong.project-name").text.strip()
-            loan_rate = float(items[2].text.strip()[:-1]) / 100.
+            loan_name = (
+                items[0]
+                .find_element_by_css_selector("strong.project-name")
+                .text.strip()
+            )
+            loan_rate = float(items[2].text.strip()[:-1]) / 100.0
             loan_outstanding = Price.fromstring(items[5].text.strip())
             return {
                 "name": loan_name,
                 "type": "loan",
                 "annual_rate": loan_rate,
                 "value": loan_outstanding.amount_float,
-                "provider_specific": None
+                "provider_specific": None,
             }
 
         self._do.get(LOANS_URL)
@@ -95,16 +102,17 @@ class Api(SeleniumBased):
             load_button.click()
 
         return [
-            extract_loan(row)
-            for row in table.find_elements_by_css_selector("ul.entry")
+            extract_loan(row) for row in table.find_elements_by_css_selector("ul.entry")
         ]
 
     def get_assets(self):
         return {
-            "accounts": [{
-                "account": self._get_account_description(),
-                "assets": self._get_cash_assets() + self._get_loan_assets()
-            }]
+            "accounts": [
+                {
+                    "account": self._get_account_description(),
+                    "assets": self._get_cash_assets() + self._get_loan_assets(),
+                }
+            ]
         }
 
 

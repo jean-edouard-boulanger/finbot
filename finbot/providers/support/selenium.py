@@ -13,6 +13,7 @@ class DefaultBrowserFactory(object):
     def __call__(self):
         from selenium.webdriver import Chrome
         from selenium.webdriver.chrome.options import Options
+
         opts = Options()
         opts.add_argument("--window-size=1920,1080")
         opts.add_argument("--start-maximized")
@@ -32,6 +33,7 @@ def _safe_cond(cond):
             return cond(*args, **kwargs)
         except Exception:
             return None
+
     return impl
 
 
@@ -56,7 +58,7 @@ class negate(object):
         self.cond = _safe_cond(cond)
 
     def __call__(self, driver):
-        return not(self.cond(driver))
+        return not (self.cond(driver))
 
 
 class SeleniumHelper(object):
@@ -81,8 +83,7 @@ class SeleniumHelper(object):
         return WebDriverWait(self.browser, timeout)
 
     def wait_element(self, by, selector, timeout=60) -> WebElement:
-        return self.wait(timeout).until(
-            presence_of_element_located((by, selector)))
+        return self.wait(timeout).until(presence_of_element_located((by, selector)))
 
     def wait_cond(self, cond, timeout=60):
         return self.wait(timeout).until(cond)
@@ -105,11 +106,16 @@ class SeleniumHelper(object):
     def click(self, element):
         self.execute_script("arguments[0].click();", element)
 
-    def assert_success(self, success_predicate, failure_predicate, on_failure=None, timeout=60):
+    def assert_success(
+        self, success_predicate, failure_predicate, on_failure=None, timeout=60
+    ):
         on_failure = on_failure or (lambda _: None)
-        self.wait_cond(any_of(
-            lambda _: success_predicate(self),
-            lambda _: failure_predicate(self)), timeout=timeout)
+        self.wait_cond(
+            any_of(
+                lambda _: success_predicate(self), lambda _: failure_predicate(self)
+            ),
+            timeout=timeout,
+        )
         failure_data = failure_predicate(self)
         if failure_data:
             return on_failure(failure_data)

@@ -36,6 +36,7 @@ class Api(SeleniumBased):
     def _get_loans(self, account_type):
         def _chunk_outstanding(row):
             return float(row["Chunk Amount"]) - float(row["Chunk Capital Repaid"])
+
         cookies = self._do.cookies
         loans_endpoint = LOANS_EXPORT_URL.format(ns=account_type)
         response = requests.get(loans_endpoint, cookies=cookies)
@@ -57,13 +58,14 @@ class Api(SeleniumBased):
             if "total_account_balance" in account_data:
                 return account_data
             return None
+
         account_type, _ = account_key
         if not self._accounts[account_key]:
             account_url = DASHBOARD_URL.format(ns=account_type)
             self._do.get(account_url)
             self._accounts[account_key] = {
                 "summary": self._do.wait_cond(do_get_account_data),
-                "loans": self._get_loans(account_type)
+                "loans": self._get_loans(account_type),
             }
         return self._accounts[account_key]
 
@@ -76,21 +78,22 @@ class Api(SeleniumBased):
                     "id": account_type,
                     "name": account_name,
                     "iso_currency": "GBP",
-                    "type": "investment"
+                    "type": "investment",
                 },
                 "balance": data["summary"]["total_account_balance"],
                 "assets": [
                     {
                         "name": "Offers",
-                        "type": "currency", 
-                        "value": data["summary"]["total_offers"]
+                        "type": "currency",
+                        "value": data["summary"]["total_offers"],
                     },
                     {
                         "name": "Wallet",
                         "type": "currency",
-                        "value": data["summary"]["wallet_total"]
-                    }
-                ] + data["loans"]
+                        "value": data["summary"]["wallet_total"],
+                    },
+                ]
+                + data["loans"],
             }
 
     def authenticate(self, credentials):
@@ -99,7 +102,9 @@ class Api(SeleniumBased):
         # 1. Enter credentials and validate
 
         login_block = self._do.wait_element(By.CSS_SELECTOR, "div.m-lw-login-block")
-        username_input, password_input, *_ = login_block.find_elements_by_tag_name("input")
+        username_input, password_input, *_ = login_block.find_elements_by_tag_name(
+            "input"
+        )
         username_input.send_keys(credentials.username)
         password_input.send_keys(credentials.password)
         submit_button = self._do.find(By.CSS_SELECTOR, "button.form-submit")
@@ -107,8 +112,7 @@ class Api(SeleniumBased):
 
         # 2. Wait logged-in or error
 
-        self._do.assert_success(_is_logged_in, _get_login_error,
-                                _report_auth_error)
+        self._do.assert_success(_is_logged_in, _get_login_error, _report_auth_error)
 
         # 3. Register available accounts types
 
@@ -123,10 +127,7 @@ class Api(SeleniumBased):
     def get_balances(self):
         return {
             "accounts": [
-                {
-                    "account": entry["account"],
-                    "balance": entry["balance"]
-                }
+                {"account": entry["account"], "balance": entry["balance"]}
                 for entry in self._iter_accounts()
             ]
         }
@@ -134,10 +135,7 @@ class Api(SeleniumBased):
     def get_assets(self):
         return {
             "accounts": [
-                {
-                    "account": entry["account"],
-                    "assets": entry["assets"]
-                }
+                {"account": entry["account"], "assets": entry["assets"]}
                 for entry in self._iter_accounts()
             ]
         }

@@ -17,7 +17,7 @@ DUMMY_ACCOUNT = {
     "id": "dummy",
     "name": "Dummy account",
     "iso_currency": "GBP",
-    "type": "cash"
+    "type": "cash",
 }
 
 
@@ -43,11 +43,13 @@ class Api(providers.Base):
             "accounts": [
                 {
                     "account": deepcopy(DUMMY_ACCOUNT),
-                    "assets": [{
-                        "name": "Cash",
-                        "type": "currency",
-                        "value": DUMMY_BALANCE,
-                    }]
+                    "assets": [
+                        {
+                            "name": "Cash",
+                            "type": "currency",
+                            "value": DUMMY_BALANCE,
+                        }
+                    ],
                 }
             ]
         }

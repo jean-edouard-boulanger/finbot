@@ -19,7 +19,7 @@ from finbot.model import (
     SubAccountSnapshotEntry,
     SubAccountItemSnapshotEntry,
     SubAccountItemType,
-    XccyRateSnapshotEntry
+    XccyRateSnapshotEntry,
 )
 import logging.config
 import logging
@@ -35,8 +35,7 @@ secret = FINBOT_ENV.secret_path.open().read()
 db_engine = create_engine(FINBOT_ENV.database_url)
 db_session = dbutils.add_persist_utilities(scoped_session(sessionmaker(bind=db_engine)))
 tracer.configure(
-    identity="snapwsrv",
-    persistence_layer=tracer.DBPersistenceLayer(db_session)
+    identity="snapwsrv", persistence_layer=tracer.DBPersistenceLayer(db_session)
 )
 
 app = Flask(__name__)
@@ -66,16 +65,13 @@ def visit_snapshot_tree(raw_snapshot, visitor):
 
     def iter_errors(account_data):
         if "error" in account_data:
-            yield {
-                "scope": "linked_account",
-                "error": account_data["error"]
-            }
+            yield {"scope": "linked_account", "error": account_data["error"]}
             return
         for data_entry in account_data["financial_data"]:
             if "error" in data_entry:
                 yield {
                     "scope": f"linked_account.{data_entry['line_item']}",
-                    "error": data_entry["error"]
+                    "error": data_entry["error"],
                 }
 
     for account in raw_snapshot:
@@ -84,29 +80,32 @@ def visit_snapshot_tree(raw_snapshot, visitor):
         visitor.visit_account(real_account, account_errors)
         if account_errors:
             continue
-        for entry in sorted(account["data"]["financial_data"], key=balance_has_priority):
+        for entry in sorted(
+            account["data"]["financial_data"], key=balance_has_priority
+        ):
             line_item = entry["line_item"]
             for result in entry["results"]:
                 sub_account = deepcopy(result["account"])
                 if line_item == "balances":
                     visitor.visit_sub_account(
-                        real_account,
-                        sub_account,
-                        result["balance"])
+                        real_account, sub_account, result["balance"]
+                    )
                 elif line_item == "assets":
                     for asset in result["assets"]:
                         visitor.visit_item(
                             real_account,
                             sub_account,
                             SubAccountItemType.Asset,
-                            deepcopy(asset))
+                            deepcopy(asset),
+                        )
                 elif line_item == "liabilities":
                     for liability in result["liabilities"]:
                         visitor.visit_item(
                             real_account,
                             sub_account,
                             SubAccountItemType.Liability,
-                            deepcopy(liability))
+                            deepcopy(liability),
+                        )
 
 
 class XccyCollector(SnapshotTreeVisitor):
@@ -118,8 +117,9 @@ class XccyCollector(SnapshotTreeVisitor):
         if sub_account["iso_currency"] != self.target_ccy:
             self.xccys.add(
                 fx_market.Xccy(
-                    domestic=sub_account["iso_currency"],
-                    foreign=self.target_ccy))
+                    domestic=sub_account["iso_currency"], foreign=self.target_ccy
+                )
+            )
 
 
 class CachedXccyRatesGetter(object):
@@ -143,10 +143,7 @@ class SnapshotResultsCount(object):
 
 
 class SnapshotBuilderVisitor(SnapshotTreeVisitor):
-    def __init__(self,
-                 snapshot: UserAccountSnapshot,
-                 xccy_rates_getter,
-                 target_ccy):
+    def __init__(self, snapshot: UserAccountSnapshot, xccy_rates_getter, target_ccy):
         self.snapshot = snapshot
         self.xccy_rates_getter = xccy_rates_getter
         self.target_ccy = target_ccy
@@ -158,8 +155,7 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
         snapshot = self.snapshot
         account_id = account["id"]
         assert account_id not in self.linked_accounts
-        linked_account_entry = LinkedAccountSnapshotEntry(
-            linked_account_id=account_id)
+        linked_account_entry = LinkedAccountSnapshotEntry(linked_account_id=account_id)
         linked_account_entry.success = not bool(errors)
         self.results_count.total += 1
         if errors:
@@ -177,7 +173,8 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
             sub_account_id=sub_account_id,
             sub_account_ccy=sub_account["iso_currency"],
             sub_account_description=sub_account["name"],
-            sub_account_type=sub_account["type"])
+            sub_account_type=sub_account["type"],
+        )
         linked_account.sub_accounts_entries.append(sub_account_entry)
         self.sub_accounts[(account_id, sub_account_id)] = sub_account_entry
 
@@ -192,15 +189,20 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
             item_subtype=item["type"],
             units=item.get("units"),
             value_sub_account_ccy=item_value,
-            value_snapshot_ccy=item_value * self.xccy_rates_getter(
+            value_snapshot_ccy=item_value
+            * self.xccy_rates_getter(
                 fx_market.Xccy(
-                    domestic=sub_account["iso_currency"],
-                    foreign=self.target_ccy)))
+                    domestic=sub_account["iso_currency"], foreign=self.target_ccy
+                )
+            ),
+        )
         sub_account_entry.items_entries.append(new_item)
 
 
 class AccountSnapshotRequest(object):
-    def __init__(self, account_id, provider_id, credentials_data, line_items, tracer_context=None):
+    def __init__(
+        self, account_id, provider_id, credentials_data, line_items, tracer_context=None
+    ):
         self.account_id = account_id
         self.provider_id = provider_id
         self.credentials_data = credentials_data
@@ -210,36 +212,46 @@ class AccountSnapshotRequest(object):
 
 def dispatch_snapshot_entry(snap_request: AccountSnapshotRequest):
     try:
-        logging.info(f"starting snapshot for account_id={snap_request.account_id}'"
-                     f" provider_id={snap_request.provider_id}")
+        logging.info(
+            f"starting snapshot for account_id={snap_request.account_id}'"
+            f" provider_id={snap_request.provider_id}"
+        )
 
         finbot_client = FinbotClient(FINBOT_ENV.finbotwsrv_endpoint)
         account_snapshot = finbot_client.get_financial_data(
             provider=snap_request.provider_id,
             credentials_data=snap_request.credentials_data,
             line_items=snap_request.line_items,
-            tracer_context=snap_request.tracer_context)
+            tracer_context=snap_request.tracer_context,
+        )
 
-        logging.info(f"snapshot complete for for account_id={snap_request.account_id}'"
-                     f" provider_id={snap_request.provider_id}")
+        logging.info(
+            f"snapshot complete for for account_id={snap_request.account_id}'"
+            f" provider_id={snap_request.provider_id}"
+        )
 
         return snap_request, account_snapshot
     except Exception as e:
         trace = stackprinter.format()
-        logging.warning(f"fatal error while taking snapshot for account_id={snap_request.account_id}"
-                        f" provider_id={snap_request.provider_id}"
-                        f" error: {e}"
-                        f" trace:\n{trace}")
+        logging.warning(
+            f"fatal error while taking snapshot for account_id={snap_request.account_id}"
+            f" provider_id={snap_request.provider_id}"
+            f" error: {e}"
+            f" trace:\n{trace}"
+        )
         return snap_request, make_error(
             user_message="error while taking account snapshot",
             debug_message=str(e),
-            trace=trace)
+            trace=trace,
+        )
 
 
 def get_credentials_data(linked_account: LinkedAccount, user_account: UserAccount):
-    credentials = json.loads(secure.fernet_decrypt(
-        linked_account.encrypted_credentials.encode(),
-        secret).decode())
+    credentials = json.loads(
+        secure.fernet_decrypt(
+            linked_account.encrypted_credentials.encode(), secret
+        ).decode()
+    )
     if linked_account.provider_id == "plaid_us":
         logging.info(credentials)
         return pack_plaid_credentials(credentials, user_account.plaid_settings)
@@ -254,12 +266,8 @@ def take_raw_snapshot(user_account, linked_accounts: Optional[List[int]]):
                 account_id=linked_account.id,
                 provider_id=linked_account.provider_id,
                 credentials_data=get_credentials_data(linked_account, user_account),
-                line_items=[
-                    LineItem.Balances,
-                    LineItem.Assets,
-                    LineItem.Liabilities
-                ],
-                tracer_context=tracer.propagate()
+                line_items=[LineItem.Balances, LineItem.Assets, LineItem.Liabilities],
+                tracer_context=tracer.propagate(),
             )
             for linked_account in user_account.linked_accounts
             if not linked_account.deleted
@@ -274,7 +282,7 @@ def take_raw_snapshot(user_account, linked_accounts: Optional[List[int]]):
             {
                 "provider": snap_request.provider_id,
                 "account_id": snap_request.account_id,
-                "data": account_snapshot
+                "data": account_snapshot,
             }
             for snap_request, account_snapshot in snapshot_entries
         ]
@@ -283,21 +291,27 @@ def take_raw_snapshot(user_account, linked_accounts: Optional[List[int]]):
 def validate_fx_rates(rates: dict[fx_market.Xccy, float]):
     missing_rates = [str(pair) for (pair, rate) in rates.items() if rate is None]
     if missing_rates:
-        raise RuntimeError(f"Rate is missing for the following FX pair(s): {', '.join(missing_rates)}")
+        raise RuntimeError(
+            f"Rate is missing for the following FX pair(s): {', '.join(missing_rates)}"
+        )
 
 
 def take_snapshot_impl(user_account_id: int, linked_accounts: Optional[List[int]]):
     logging.info(f"fetching user information for user account id {user_account_id}")
 
-    user_account = (db_session.query(UserAccount)
-                              .options(joinedload(UserAccount.linked_accounts))
-                              .options(joinedload(UserAccount.settings))
-                              .options(joinedload(UserAccount.plaid_settings))
-                              .filter_by(id=user_account_id)
-                              .first())
+    user_account = (
+        db_session.query(UserAccount)
+        .options(joinedload(UserAccount.linked_accounts))
+        .options(joinedload(UserAccount.settings))
+        .options(joinedload(UserAccount.plaid_settings))
+        .filter_by(id=user_account_id)
+        .first()
+    )
 
-    logging.info(f"starting snapshot for user account "
-                 f"linked to {len(user_account.linked_accounts)} external accounts")
+    logging.info(
+        f"starting snapshot for user account "
+        f"linked to {len(user_account.linked_accounts)} external accounts"
+    )
 
     requested_ccy = user_account.settings.valuation_ccy
     logging.info(f"requested valuation currency is {requested_ccy}")
@@ -312,8 +326,8 @@ def take_snapshot_impl(user_account_id: int, linked_accounts: Optional[List[int]
 
     with tracer.sub_step("raw snapshot") as step:
         raw_snapshot = take_raw_snapshot(
-            user_account=user_account,
-            linked_accounts=linked_accounts)
+            user_account=user_account, linked_accounts=linked_accounts
+        )
         logging.info(utils.pretty_dump(raw_snapshot))
         step.set_output(raw_snapshot)
 
@@ -324,64 +338,62 @@ def take_snapshot_impl(user_account_id: int, linked_accounts: Optional[List[int]
         step.set_output({str(xccy): rate for (xccy, rate) in xccy_rates.items()})
         validate_fx_rates(xccy_rates)
 
-    logging.info(f"adding cross currency rates to snapshot")
+    logging.info("adding cross currency rates to snapshot")
 
     with db_session.persist(new_snapshot):
-        new_snapshot.xccy_rates_entries.extend([
-            XccyRateSnapshotEntry(xccy_pair=str(xccy), rate=rate)
-            for xccy, rate in xccy_rates.items()
-        ])
+        new_snapshot.xccy_rates_entries.extend(
+            [
+                XccyRateSnapshotEntry(xccy_pair=str(xccy), rate=rate)
+                for xccy, rate in xccy_rates.items()
+            ]
+        )
 
     logging.info("building final snapshot")
 
     snapshot_builder = SnapshotBuilderVisitor(
-        new_snapshot,
-        CachedXccyRatesGetter(xccy_rates),
-        new_snapshot.requested_ccy)
+        new_snapshot, CachedXccyRatesGetter(xccy_rates), new_snapshot.requested_ccy
+    )
 
     with db_session.persist(new_snapshot):
         visit_snapshot_tree(raw_snapshot, snapshot_builder)
         new_snapshot.status = SnapshotStatus.Success
         new_snapshot.end_time = utils.now_utc()
 
-    return jsonify({
-        "snapshot": {
-            "identifier": new_snapshot.id,
-            "start_time": new_snapshot.start_time.isoformat(),
-            "end_time": new_snapshot.end_time.isoformat(),
-            "results_count": {
-                "total": snapshot_builder.results_count.total,
-                "success": snapshot_builder.results_count.success,
-                "failures": snapshot_builder.results_count.failures
+    return jsonify(
+        {
+            "snapshot": {
+                "identifier": new_snapshot.id,
+                "start_time": new_snapshot.start_time.isoformat(),
+                "end_time": new_snapshot.end_time.isoformat(),
+                "results_count": {
+                    "total": snapshot_builder.results_count.total,
+                    "success": snapshot_builder.results_count.success,
+                    "failures": snapshot_builder.results_count.failures,
+                },
             }
         }
-    })
+    )
 
 
 @app.route("/healthy", methods=["GET"])
 @request_handler()
 def healthy():
-    return jsonify({
-        "healthy": True
-    })
+    return jsonify({"healthy": True})
 
 
 @app.route("/snapshot/<user_account_id>/take", methods=["POST"])
-@request_handler(schema={
-    "type": ["object", "null"],
-    "additionalProperties": True,
-    "required": [],
-    "properties": {
-        "linked_accounts": {
-            "type": ["array", "null"],
-            "items": {
-                "type": "number"
-            }
-        }
+@request_handler(
+    schema={
+        "type": ["object", "null"],
+        "additionalProperties": True,
+        "required": [],
+        "properties": {
+            "linked_accounts": {"type": ["array", "null"], "items": {"type": "number"}}
+        },
     }
-})
+)
 def take_snapshot(user_account_id: int):
     data = request.json or {}
     return take_snapshot_impl(
-        user_account_id=user_account_id,
-        linked_accounts=data.get("linked_accounts"))
+        user_account_id=user_account_id, linked_accounts=data.get("linked_accounts")
+    )

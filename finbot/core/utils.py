@@ -13,6 +13,7 @@ def serialize(data):
         if not isinstance(key, (str, int, float, bool)):
             return str(key)
         return key
+
     if hasattr(data, "serialize"):
         return serialize(data.serialize())
     if isinstance(data, decimal.Decimal):
@@ -29,11 +30,12 @@ def serialize(data):
 def pretty_dump(data) -> str:
     def fallback(unhandled_data):
         return f"<not serializable {type(unhandled_data)} {unhandled_data}>"
+
     return json.dumps(serialize(data), indent=4, default=fallback)
 
 
 def now_utc() -> datetime:
-    return datetime.now(timezone('UTC'))
+    return datetime.now(timezone("UTC"))
 
 
 def in_range(value, from_value, to_value) -> bool:
@@ -52,23 +54,32 @@ def swallow_exc(*exc_types, default=None):
                 return func(*args, **kwargs)
             except exc_types:
                 return default
+
         return impl
+
     return decorator
 
 
 def configure_logging():
-    logging.config.dictConfig({
-        'version': 1,
-        'formatters': {'default': {
-            'format': '%(asctime)s (%(threadName)s) [%(levelname)s] %(message)s (%(filename)s:%(lineno)d)',
-        }},
-        'handlers': {'wsgi': {
-            'class': 'logging.StreamHandler',
-            'stream': 'ext://sys.stdout',
-            'formatter': 'default'
-        }},
-        'root': {
-            'level': 'INFO',
-            'handlers': ['wsgi']
+    logging.config.dictConfig(
+        {
+            "version": 1,
+            "formatters": {
+                "default": {
+                    "format": "%(asctime)s"
+                    " (%(threadName)s)"
+                    " [%(levelname)s]"
+                    " %(message)s"
+                    " (%(filename)s:%(lineno)d)",
+                }
+            },
+            "handlers": {
+                "wsgi": {
+                    "class": "logging.StreamHandler",
+                    "stream": "ext://sys.stdout",
+                    "formatter": "default",
+                }
+            },
+            "root": {"level": "INFO", "handlers": ["wsgi"]},
         }
-    })
+    )

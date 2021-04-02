@@ -16,9 +16,7 @@ class Credentials(object):
 
     @staticmethod
     def init(data):
-        return Credentials(
-             data["google_api_credentials"],
-             data["sheet_key"])
+        return Credentials(data["google_api_credentials"], data["sheet_key"])
 
 
 class Api(providers.Base):
@@ -39,19 +37,22 @@ class Api(providers.Base):
                     "id": entry["identifier"],
                     "name": entry["description"],
                     "iso_currency": entry["currency"],
-                    "type": entry["type"]
+                    "type": entry["type"],
                 },
                 "holdings": [
-                    holding for holding in holdings_table
+                    holding
+                    for holding in holdings_table
                     if holding["account"] == entry["identifier"]
-                ]
+                ],
             }
 
     def authenticate(self, credentials: Credentials):
-        scope = ['https://www.googleapis.com/auth/spreadsheets']
+        scope = ["https://www.googleapis.com/auth/spreadsheets"]
         self._api = gspread.authorize(
             ServiceAccountCredentials.from_json_keyfile_dict(
-                credentials.google_api_credentials, scope))
+                credentials.google_api_credentials, scope
+            )
+        )
         self._sheet = self._api.open_by_key(credentials.sheet_key)
 
     def get_balances(self):
@@ -59,7 +60,7 @@ class Api(providers.Base):
             "accounts": [
                 {
                     "account": entry["account"],
-                    "balance": sum(holding["value"] for holding in entry["holdings"])
+                    "balance": sum(holding["value"] for holding in entry["holdings"]),
                 }
                 for entry in self._iter_accounts()
             ]
@@ -74,10 +75,10 @@ class Api(providers.Base):
                         {
                             "name": holding["symbol"],
                             "type": holding["type"],
-                            "value": holding["value"]
+                            "value": holding["value"],
                         }
                         for holding in entry["holdings"]
-                    ]
+                    ],
                 }
                 for entry in self._iter_accounts()
             ]
@@ -101,8 +102,8 @@ class Schema(object):
     @property
     def required_attributes(self):
         return {
-            attribute for (attribute, entry)
-            in self.attributes.items()
+            attribute
+            for (attribute, entry) in self.attributes.items()
             if entry.get("required", False)
         }
 
@@ -116,55 +117,31 @@ def union(*values):
         if value not in values:
             raise ValidationError(f"should be either {', '.join(values)}")
         return value
+
     return validate
 
 
 ACCOUNT_SCHEMA = Schema(
     type_identifier="ACCOUNTS",
     attributes={
-        "identifier": {
-            "type": str,
-            "required": True
-        },
-        "description": {
-            "type": str,
-            "required": True
-        },
-        "currency": {
-            "type": str,
-            "required": True
-        },
-        "type": {
-            "type": union("cash", "credit", "investment"),
-            "required": True
-        }
-    })
+        "identifier": {"type": str, "required": True},
+        "description": {"type": str, "required": True},
+        "currency": {"type": str, "required": True},
+        "type": {"type": union("cash", "credit", "investment"), "required": True},
+    },
+)
 
 
 HOLDING_SCHEMA = Schema(
     type_identifier="HOLDINGS",
     attributes={
-        "account": {
-            "type": str,
-            "required": True
-        },
-        "symbol": {
-            "type": str,
-            "required": True
-        },
-        "type": {
-            "type": str,
-            "required": True
-        },
-        "units": {
-            "type": float,
-            "required": True
-        },
-        "value": {
-            "type": float,
-            "required": True
-        }
-    })
+        "account": {"type": str, "required": True},
+        "symbol": {"type": str, "required": True},
+        "type": {"type": str, "required": True},
+        "units": {"type": float, "required": True},
+        "value": {"type": float, "required": True},
+    },
+)
 
 
 class Cell(object):
@@ -242,7 +219,10 @@ def _extract_generic_table(sheet: LocalSheet, marker_cell: Cell, schema):
             header[cell.val] = cell.col
     missing_attributes = schema.required_attributes.difference(set(header.keys()))
     if len(missing_attributes) > 0:
-        raise Error(f"missing attribute(s) '{','.join(missing_attributes)}' in header for '{schema.type_identifier}'")
+        raise Error(
+            f"missing attribute(s) '{','.join(missing_attributes)}'"
+            f" in header for '{schema.type_identifier}'"
+        )
 
     records = []
     data_start_cell = sheet.get_cell(header_start_cell.row + 1, marker_cell.col)
@@ -254,19 +234,28 @@ def _extract_generic_table(sheet: LocalSheet, marker_cell: Cell, schema):
         for attr, data_col in header.items():
             raw_value = sheet.get_cell(current_row, data_col).val
             if raw_value is None and schema.is_required(attr):
-                raise Error(f"cell for required attribute '{schema.type_identifier}.{attr}' is empty")
+                raise Error(
+                    f"cell for required attribute '{schema.type_identifier}.{attr}' is empty"
+                )
             converter = schema.get_type(attr)
             try:
                 current_record[attr] = converter(raw_value)
             except ValueError:
-                raise Error(f"unable to convert value '{raw_value}' to type '{converter.__name__}' "
-                            f"for attribute '{schema.type_identifier}.{attr}'")
+                raise Error(
+                    f"unable to convert value '{raw_value}' to type '{converter.__name__}' "
+                    f"for attribute '{schema.type_identifier}.{attr}'"
+                )
             except ValidationError as e:
-                raise Error(f"unable to convert value '{raw_value}' to type '{converter.__name__}' "
-                            f"for attribute '{schema.type_identifier}.{attr}' ({e})")
+                raise Error(
+                    f"unable to convert value '{raw_value}' to type '{converter.__name__}' "
+                    f"for attribute '{schema.type_identifier}.{attr}' ({e})"
+                )
         missing_attributes = schema.required_attributes.difference(
-            set(current_record.keys()))
+            set(current_record.keys())
+        )
         if len(missing_attributes) > 0:
-            raise Error(f"record is missing required attribute(s) '{', '.join(missing_attributes.keys())}'")
+            raise Error(
+                f"record is missing required attribute(s) '{', '.join(missing_attributes.keys())}'"
+            )
         records.append(current_record)
     return records

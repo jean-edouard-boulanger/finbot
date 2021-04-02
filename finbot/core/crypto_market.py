@@ -6,8 +6,7 @@ class CoinGeckoWrapper(object):
     def __init__(self, coingecko_api: CoinGeckoAPI):
         self._api = coingecko_api
         self._symbols_to_id = {
-            entry["symbol"]: entry["id"]
-            for entry in self._api.get_coins_list()
+            entry["symbol"]: entry["id"] for entry in self._api.get_coins_list()
         }
 
     @lru_cache(None)

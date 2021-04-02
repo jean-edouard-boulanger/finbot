@@ -18,10 +18,7 @@ class Xccy(object):
         return f"{self.domestic}{self.foreign}"
 
     def serialize(self):
-        return {
-            "domestic": self.domestic,
-            "foreign": self.foreign
-        }
+        return {"domestic": self.domestic, "foreign": self.foreign}
 
 
 def _get_api_key() -> str:
@@ -40,20 +37,17 @@ def _format_date(dt: date) -> str:
     return dt.strftime("%Y-%m-%d")
 
 
-def get_rates(pairs: set[Xccy],
-              fixing_date: Optional[date] = None) -> dict[Xccy, Optional[float]]:
+def get_rates(
+    pairs: set[Xccy], fixing_date: Optional[date] = None
+) -> dict[Xccy, Optional[float]]:
     resource_url = f"{API_URL}/convert?q={_format_pairs(pairs)}&compact=ultra"
     if fixing_date:
         resource_url += f"&date={_format_date(fixing_date)}"
     resource_url += f"&apiKey={_get_api_key()}"
     resp = requests.get(resource_url)
     data = resp.json()
-    return {
-        xccy: data.get(_format_pair(xccy))
-        for xccy in pairs
-    }
+    return {xccy: data.get(_format_pair(xccy)) for xccy in pairs}
 
 
-def get_rate(pair: Xccy,
-             fixing_date: Optional[date] = None) -> Optional[float]:
+def get_rate(pair: Xccy, fixing_date: Optional[date] = None) -> Optional[float]:
     return get_rates({pair}, fixing_date).get(pair)

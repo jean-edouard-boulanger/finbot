@@ -28,7 +28,7 @@ from finbot.model import (
     LinkedAccount,
     UserAccountHistoryEntry,
     LinkedAccountValuationHistoryEntry,
-    DistributedTrace
+    DistributedTrace,
 )
 
 from contextlib import closing
@@ -38,7 +38,7 @@ import uuid
 import json
 
 
-#logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+# logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 configure_logging()
 
 
@@ -54,12 +54,14 @@ def get_sched_client() -> sched_client.SchedClient:
     return sched_client.SchedClient(FINBOT_ENV.schedsrv_endpoint)
 
 
-def trigger_valuation(user_account_id: int, linked_accounts: Optional[List[int]] = None):
+def trigger_valuation(
+    user_account_id: int, linked_accounts: Optional[List[int]] = None
+):
     account = repository.get_user_account(db_session, user_account_id)
     with closing(get_sched_client()) as client:
         valuation_request = sched_client.TriggerValuationRequest(
-            user_account_id=account.id,
-            linked_accounts=linked_accounts)
+            user_account_id=account.id, linked_accounts=linked_accounts
+        )
         client.trigger_valuation(valuation_request)
 
 
@@ -84,9 +86,7 @@ API_V1 = Route("/api/v1")
 
 @app.route(API_V1.healthy(), methods=["GET"])
 def healthy():
-    return jsonify({
-        "healthy": True
-    })
+    return jsonify({"healthy": True})
 
 
 ADMIN = API_V1.admin
@@ -95,67 +95,70 @@ ADMIN = API_V1.admin
 @app.route(ADMIN.traces.p("guid")(), methods=["GET"])
 def get_traces(guid):
     traces = db_session.query(DistributedTrace).filter_by(guid=guid).all()
-    return jsonify(serialize({
-        "traces": [
-            trace
-            for trace in traces
-        ]
-    }))
+    return jsonify(serialize({"traces": [trace for trace in traces]}))
 
 
 AUTH = API_V1.auth
 
 
 @app.route(AUTH.login(), methods=["POST"])
-@request_handler(schema={
-    "type": "object",
-    "additionalProperties": False,
-    "required": ["email", "password"],
-    "properties": {
-        "email": {"type": "string"},
-        "password": {"type": "string"}
+@request_handler(
+    schema={
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["email", "password"],
+        "properties": {"email": {"type": "string"}, "password": {"type": "string"}},
     }
-})
+)
 def auth_login():
     data = request.json
     account = db_session.query(UserAccount).filter_by(email=data["email"]).first()
     if not account:
         raise ApplicationError("Invalid email or password")
-    
+
     # TODO: password should be hashed, not encrypted/decrypted with secret
     account_password = secure.fernet_decrypt(
-        account.encrypted_password.encode(), SECRET.encode()).decode()
+        account.encrypted_password.encode(), SECRET.encode()
+    ).decode()
     if account_password != data["password"]:
         raise ApplicationError("Invalid email or password")
 
     # TODO: expires_delta should be set to a reasonable time interval
-    return jsonify({
-        "auth": {
-            "access_token": create_access_token(identity=account.id, expires_delta=False),
-            "refresh_token": create_refresh_token(identity=account.id, expires_delta=False),
-        },
-        "account": {
-            "id": account.id,
-            "email": account.email,
-            "full_name": account.full_name,
-            "created_at": account.created_at,
-            "updated_at": account.updated_at
+    return jsonify(
+        {
+            "auth": {
+                "access_token": create_access_token(
+                    identity=account.id, expires_delta=False
+                ),
+                "refresh_token": create_refresh_token(
+                    identity=account.id, expires_delta=False
+                ),
+            },
+            "account": {
+                "id": account.id,
+                "email": account.email,
+                "full_name": account.full_name,
+                "created_at": account.created_at,
+                "updated_at": account.updated_at,
+            },
         }
-    })
+    )
 
 
 @app.route(API_V1.providers(), methods=["PUT"])
-@request_handler(schema={
-    "type": "object",
-    "additionalProperties": False,
-    "required": ["id", "description", "website_url", "credentials_schema"],
-    "properties": {
-        "id": {"type": "string"},
-        "description": {"type": "string"},
-        "website_url": {"type": "string"},
-        "credentials_schema": {"type": "object"}
+@request_handler(
+    schema={
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["id", "description", "website_url", "credentials_schema"],
+        "properties": {
+            "id": {"type": "string"},
+            "description": {"type": "string"},
+            "website_url": {"type": "string"},
+            "credentials_schema": {"type": "object"},
+        },
     }
-})
+)
 def update_or_create_provider():
     data = request.json
     existing_provider = repository.find_provider(db_session, data["id"])
@@ -171,9 +174,7 @@ def update_or_create_provider():
 @request_handler()
 def get_providers():
     providers = db_session.query(Provider).all()
-    return jsonify(serialize({
-        "providers": [provider for provider in providers]
-    }))
+    return jsonify(serialize({"providers": [provider for provider in providers]}))
 
 
 @app.route(API_V1.providers.p("provider_id")(), methods=["GET"])
@@ -204,51 +205,58 @@ ACCOUNTS = API_V1.accounts
 
 
 @app.route(ACCOUNTS(), methods=["POST"])
-@request_handler(trace_values=False, schema={
-    "type": "object",
-    "additionalProperties": False,
-    "required": ["email", "password", "full_name", "settings"],
-    "properties": {
-        "email": {"type": "string"},
-        "password": {"type": "string"},
-        "full_name": {"type": "string"},
-        "settings": {
-            "type": "object",
-            "required": ["valuation_ccy"],
-            "properties": {
-                "valuation_ccy": {"type": "string"}
-            }
-        }
-    }
-})
+@request_handler(
+    trace_values=False,
+    schema={
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["email", "password", "full_name", "settings"],
+        "properties": {
+            "email": {"type": "string"},
+            "password": {"type": "string"},
+            "full_name": {"type": "string"},
+            "settings": {
+                "type": "object",
+                "required": ["valuation_ccy"],
+                "properties": {"valuation_ccy": {"type": "string"}},
+            },
+        },
+    },
+)
 def create_user_account():
     data = request.json
     try:
         with db_session.persist(UserAccount()) as user_account:
             user_account.email = data["email"]
             user_account.encrypted_password = secure.fernet_encrypt(
-                    data["password"].encode(), SECRET).decode()
+                data["password"].encode(), SECRET
+            ).decode()
             user_account.full_name = data["full_name"]
             user_account.settings = UserAccountSettings(
-                valuation_ccy=data["settings"]["valuation_ccy"])
+                valuation_ccy=data["settings"]["valuation_ccy"]
+            )
     except IntegrityError as e:
         logging.warning(f"failed to create user account: {e}")
-        raise ApplicationError(f"User account with email '{user_account.email}' already exists")
+        raise ApplicationError(
+            f"User account with email '{user_account.email}' already exists"
+        )
 
-    return jsonify({
-        "user_account": {
-            "id": user_account.id,
-            "email": user_account.email,
-            "full_name": user_account.full_name,
-            "settings": {
-                "valuation_ccy": user_account.settings.valuation_ccy,
-                "created_at": user_account.settings.created_at,
-                "updated_at": user_account.settings.updated_at
-            },
-            "created_at": user_account.created_at,
-            "updated_at": user_account.updated_at
+    return jsonify(
+        {
+            "user_account": {
+                "id": user_account.id,
+                "email": user_account.email,
+                "full_name": user_account.full_name,
+                "settings": {
+                    "valuation_ccy": user_account.settings.valuation_ccy,
+                    "created_at": user_account.settings.created_at,
+                    "updated_at": user_account.settings.updated_at,
+                },
+                "created_at": user_account.created_at,
+                "updated_at": user_account.updated_at,
+            }
         }
-    })
+    )
 
 
 ACCOUNT = ACCOUNTS.p("user_account_id")
@@ -260,14 +268,14 @@ ACCOUNT = ACCOUNTS.p("user_account_id")
 def is_user_account_configured(user_account_id: int):
     account = repository.get_user_account(db_session, user_account_id)
     configured = len(account.linked_accounts) > 0
-    return jsonify({
-        "configured": configured
-    })
+    return jsonify({"configured": configured})
 
 
-def serialize_user_account_valuation(entry: UserAccountHistoryEntry,
-                                    history: List[UserAccountHistoryEntry],
-                                    sparkline_schedule: List[datetime]):
+def serialize_user_account_valuation(
+    entry: UserAccountHistoryEntry,
+    history: List[UserAccountHistoryEntry],
+    sparkline_schedule: List[datetime],
+):
     valuation_entry = entry.user_account_valuation_history_entry
     return {
         "history_entry_id": entry.id,
@@ -280,12 +288,13 @@ def serialize_user_account_valuation(entry: UserAccountHistoryEntry,
             {
                 "effective_at": valuation_time,
                 "value": uas_v.user_account_valuation_history_entry.valuation
-                if uas_v is not None else None
+                if uas_v is not None
+                else None,
             }
             for valuation_time, uas_v in timeseries.schedulify(
-                sparkline_schedule, history,
-                lambda uas_v: uas_v.effective_at)
-        ]
+                sparkline_schedule, history, lambda uas_v: uas_v.effective_at
+            )
+        ],
     }
 
 
@@ -299,28 +308,38 @@ def get_user_account(user_account_id):
     valuation_history = repository.find_user_account_historical_valuation(
         session=db_session,
         user_account_id=user_account_id,
-        from_time=from_time, to_time=to_time)
+        from_time=from_time,
+        to_time=to_time,
+    )
     sparkline_schedule = timeseries.create_schedule(
         from_time=from_time,
         to_time=to_time,
-        frequency=timeseries.ScheduleFrequency.Daily)
+        frequency=timeseries.ScheduleFrequency.Daily,
+    )
 
     valuation = valuation_history[-1] if len(valuation_history) > 0 else None
 
-    return jsonify(serialize({
-        "result": {
-            "user_account": {
-                "id": account.id,
-                "email": account.email,
-                "full_name": account.full_name,
-                "settings": account.settings,
-                "created_at": account.created_at,
-                "updated_at": account.updated_at
-            },
-            "valuation": serialize_user_account_valuation(valuation, valuation_history, sparkline_schedule)
-            if valuation else None
-        }
-    }))
+    return jsonify(
+        serialize(
+            {
+                "result": {
+                    "user_account": {
+                        "id": account.id,
+                        "email": account.email,
+                        "full_name": account.full_name,
+                        "settings": account.settings,
+                        "created_at": account.created_at,
+                        "updated_at": account.updated_at,
+                    },
+                    "valuation": serialize_user_account_valuation(
+                        valuation, valuation_history, sparkline_schedule
+                    )
+                    if valuation
+                    else None,
+                }
+            }
+        )
+    )
 
 
 @app.route(ACCOUNT.valuation.trigger(), methods=["POST"])
@@ -334,42 +353,60 @@ def trigger_user_account_valuation(user_account_id):
 @jwt_required
 @request_handler()
 def get_user_account_settings(user_account_id):
-    settings = db_session.query(UserAccountSettings).filter_by(user_account_id=user_account_id).first()
-    plaid_settings = db_session.query(UserAccountPlaidSettings).filter_by(user_account_id=user_account_id).first()
+    settings = (
+        db_session.query(UserAccountSettings)
+        .filter_by(user_account_id=user_account_id)
+        .first()
+    )
+    plaid_settings = (
+        db_session.query(UserAccountPlaidSettings)
+        .filter_by(user_account_id=user_account_id)
+        .first()
+    )
 
-    return jsonify(serialize({
-        "settings": {
-            "settings": settings,
-            "plaid_settings": plaid_settings
-        }
-    }))
+    return jsonify(
+        serialize(
+            {"settings": {"settings": settings, "plaid_settings": plaid_settings}}
+        )
+    )
 
 
 @app.route(ACCOUNT.history(), methods=["GET"])
 @jwt_required
 @request_handler()
 def get_user_account_valuation_history(user_account_id):
-    history_entries = (db_session.query(UserAccountHistoryEntry)
-                                 .filter_by(user_account_id=user_account_id)
-                                 .filter_by(available=True)
-                                 .order_by(asc(UserAccountHistoryEntry.effective_at))
-                                 .options(joinedload(UserAccountHistoryEntry.user_account_valuation_history_entry,
-                                                     innerjoin=True))
-                                 .all())
+    history_entries = (
+        db_session.query(UserAccountHistoryEntry)
+        .filter_by(user_account_id=user_account_id)
+        .filter_by(available=True)
+        .order_by(asc(UserAccountHistoryEntry.effective_at))
+        .options(
+            joinedload(
+                UserAccountHistoryEntry.user_account_valuation_history_entry,
+                innerjoin=True,
+            )
+        )
+        .all()
+    )
 
-    return jsonify(serialize({
-        "historical_valuation": [
-                {
-                    "date": entry.effective_at,
-                    "currency": entry.valuation_ccy,
-                    "value": entry.user_account_valuation_history_entry.valuation
-                }
-                for entry in timeseries.sample_time_series(
-                    history_entries,
-                    time_getter=(lambda item: item.effective_at),
-                    interval=timedelta(days=1))
-        ]
-    }))
+    return jsonify(
+        serialize(
+            {
+                "historical_valuation": [
+                    {
+                        "date": entry.effective_at,
+                        "currency": entry.valuation_ccy,
+                        "value": entry.user_account_valuation_history_entry.valuation,
+                    }
+                    for entry in timeseries.sample_time_series(
+                        history_entries,
+                        time_getter=(lambda item: item.effective_at),
+                        interval=timedelta(days=1),
+                    )
+                ]
+            }
+        )
+    )
 
 
 @app.route(ACCOUNT.linked_accounts(), methods=["GET"])
@@ -377,19 +414,23 @@ def get_user_account_valuation_history(user_account_id):
 @request_handler()
 def get_linked_accounts(user_account_id):
     results = repository.find_linked_accounts(db_session, user_account_id)
-    return jsonify(serialize({
-        "linked_accounts": [
+    return jsonify(
+        serialize(
             {
-                "id": entry.id,
-                "account_name": entry.account_name,
-                "deleted": entry.deleted,
-                "provider": entry.provider,
-                "created_at": entry.created_at,
-                "updated_at": entry.updated_at
+                "linked_accounts": [
+                    {
+                        "id": entry.id,
+                        "account_name": entry.account_name,
+                        "deleted": entry.deleted,
+                        "provider": entry.provider,
+                        "created_at": entry.created_at,
+                        "updated_at": entry.updated_at,
+                    }
+                    for entry in results
+                ]
             }
-            for entry in results
-        ]
-    }))
+        )
+    )
 
 
 @app.route(ACCOUNT.linked_accounts.valuation(), methods=["GET"])
@@ -400,41 +441,50 @@ def get_linked_accounts_valuation(user_account_id):
     if not history_entry:
         raise ApplicationError("No data to report")
     results = repository.find_linked_accounts_valuation(db_session, history_entry.id)
-    return jsonify(serialize({
-        "linked_accounts": [
+    return jsonify(
+        serialize(
             {
-                "linked_account": {
-                    "id": entry.linked_account.id,
-                    "provider_id": entry.linked_account.provider_id,
-                    "description": entry.linked_account.account_name,
-                },
-                "valuation": {
-                    "date": (entry.effective_snapshot.effective_at
-                             if entry.effective_snapshot
-                             else history_entry.effective_at),
-                    "currency": history_entry.valuation_ccy,
-                    "value": entry.valuation,
-                    "change": entry.valuation_change
-                }
+                "linked_accounts": [
+                    {
+                        "linked_account": {
+                            "id": entry.linked_account.id,
+                            "provider_id": entry.linked_account.provider_id,
+                            "description": entry.linked_account.account_name,
+                        },
+                        "valuation": {
+                            "date": (
+                                entry.effective_snapshot.effective_at
+                                if entry.effective_snapshot
+                                else history_entry.effective_at
+                            ),
+                            "currency": history_entry.valuation_ccy,
+                            "value": entry.valuation,
+                            "change": entry.valuation_change,
+                        },
+                    }
+                    for entry in results
+                    if not entry.linked_account.deleted
+                ]
             }
-            for entry in results
-            if not entry.linked_account.deleted
-        ]
-    }))
+        )
+    )
 
 
 @app.route(ACCOUNT.linked_accounts(), methods=["POST"])
 @jwt_required
-@request_handler(trace_values=False, schema={
-    "type": "object",
-    "additionalProperties": False,
-    "required": ["provider_id", "credentials", "account_name"],
-    "properties": {
-        "provider_id": {"type": "string"},
-        "credentials": {"type": ["null", "object"]},
-        "account_name": {"type": "string"}
-    }
-})
+@request_handler(
+    trace_values=False,
+    schema={
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["provider_id", "credentials", "account_name"],
+        "properties": {
+            "provider_id": {"type": "string"},
+            "credentials": {"type": ["null", "object"]},
+            "account_name": {"type": "string"},
+        },
+    },
+)
 def link_new_account(user_account_id):
     do_validate = bool(int(request.args.get("validate", 1)))
     do_persist = bool(int(request.args.get("persist", 1)))
@@ -442,18 +492,20 @@ def link_new_account(user_account_id):
 
     logging.info(f"validate={do_validate} persist={do_persist}")
 
-    user_account = (db_session.query(UserAccount)
-                              .filter_by(id=user_account_id)
-                              .options(joinedload(UserAccount.plaid_settings))
-                              .first())
+    user_account = (
+        db_session.query(UserAccount)
+        .filter_by(id=user_account_id)
+        .options(joinedload(UserAccount.plaid_settings))
+        .first()
+    )
 
     if not user_account:
-        raise ApplicationError(f"could not find user account with id '{user_account_id}'")
+        raise ApplicationError(
+            f"could not find user account with id '{user_account_id}'"
+        )
 
     provider_id = request_data["provider_id"]
-    provider = (db_session.query(Provider)
-                          .filter_by(id=provider_id)
-                          .first())
+    provider = db_session.query(Provider).filter_by(id=provider_id).first()
 
     if not provider:
         raise ApplicationError(f"could not find provider with id '{provider_id}'")
@@ -465,48 +517,59 @@ def link_new_account(user_account_id):
     credentials = request_data["credentials"]
     if is_plaid:
         credentials = core.make_plaid_credentials(
-            credentials, user_account.plaid_settings)
+            credentials, user_account.plaid_settings
+        )
 
     if do_validate:
-        logging.info(f"validating authentication details for "
-                     f"account_id={user_account_id} and provider_id={provider_id}")
+        logging.info(
+            f"validating authentication details for "
+            f"account_id={user_account_id} and provider_id={provider_id}"
+        )
         core.validate_credentials(
             finbot_client=get_finbot_client(),
             plaid_settings=user_account.plaid_settings,
             provider_id=provider_id,
-            credentials=credentials)
+            credentials=credentials,
+        )
 
     if do_persist:
-        logging.info(f"Linking external account (provider_id={provider.id}) to user account_id={user_account.id}")
+        logging.info(
+            f"Linking external account (provider_id={provider.id})"
+            f" to user account_id={user_account.id}"
+        )
         try:
             with db_session.persist(user_account):
                 encrypted_credentials = secure.fernet_encrypt(
-                    json.dumps(credentials).encode(), SECRET).decode()
+                    json.dumps(credentials).encode(), SECRET
+                ).decode()
                 user_account.linked_accounts.append(
                     LinkedAccount(
                         provider_id=request_data["provider_id"],
                         account_name=request_data["account_name"],
-                        encrypted_credentials=encrypted_credentials))
+                        encrypted_credentials=encrypted_credentials,
+                    )
+                )
         except IntegrityError:
-            raise ApplicationError(f"Provider '{provider.description}' was already linked "
-                                   f"as '{request_data['account_name']}' in this account")
+            raise ApplicationError(
+                f"Provider '{provider.description}' was already linked "
+                f"as '{request_data['account_name']}' in this account"
+            )
 
     if do_persist:
         try:
             linked_account_id = user_account.linked_accounts[-1].id
-            logging.info(f"triggering partial valuation for"
-                         f" account_id={user_account.id}"
-                         f" linked_account_id={linked_account_id}")
+            logging.info(
+                f"triggering partial valuation for"
+                f" account_id={user_account.id}"
+                f" linked_account_id={linked_account_id}"
+            )
             trigger_valuation(user_account_id, linked_accounts=[linked_account_id])
         except Exception as e:
-            logging.warning(f"failed to trigger valuation for account_id={user_account.id}: {e}")
+            logging.warning(
+                f"failed to trigger valuation for account_id={user_account.id}: {e}"
+            )
 
-    return jsonify({
-        "result": {
-            "validated": do_validate,
-            "persisted": do_persist
-        }
-    })
+    return jsonify({"result": {"validated": do_validate, "persisted": do_persist}})
 
 
 LINKED_ACCOUNT = ACCOUNT.linked_accounts.p("linked_account_id")
@@ -514,36 +577,51 @@ LINKED_ACCOUNT = ACCOUNT.linked_accounts.p("linked_account_id")
 
 @app.route(LINKED_ACCOUNT(), methods=["PUT"])
 @jwt_required
-@request_handler(trace_values=False, schema={
-    "type": "object",
-    "additionalProperties": False,
-    "properties": {
-        "provider_id": {"type": "string"},
-        "credentials": {"type": ["null", "object"]},
-        "account_name": {"type": "string"}
-    }
-})
+@request_handler(
+    trace_values=False,
+    schema={
+        "type": "object",
+        "additionalProperties": False,
+        "properties": {
+            "provider_id": {"type": "string"},
+            "credentials": {"type": ["null", "object"]},
+            "account_name": {"type": "string"},
+        },
+    },
+)
 def update_linked_account(user_account_id, linked_account_id):
     request_data = request.json
     linked_account_id = int(linked_account_id)
-    linked_account = repository.get_linked_account(db_session, user_account_id, linked_account_id)
+    linked_account = repository.get_linked_account(
+        db_session, user_account_id, linked_account_id
+    )
 
     if not linked_account:
-        raise ApplicationError(f"could not find linked account with id '{linked_account_id}'")
+        raise ApplicationError(
+            f"could not find linked account with id '{linked_account_id}'"
+        )
 
     new_provider_id = request_data.get("provider_id", linked_account.provider_id)
-    request_provider_update = "provider_id" in request_data and new_provider_id != linked_account.provider_id
+    request_provider_update = (
+        "provider_id" in request_data and new_provider_id != linked_account.provider_id
+    )
     request_has_credentials = "credentials" in request_data
 
     if request_provider_update and not request_has_credentials:
-        raise ApplicationError("new credentials must be provided when updating provider")
+        raise ApplicationError(
+            "new credentials must be provided when updating provider"
+        )
 
     credentials_need_validating = request_has_credentials or request_provider_update
 
     if credentials_need_validating:
-        logging.info(f"validating authentication details for "
-                     f"account_id={user_account_id} and provider_id={new_provider_id}")
-        core.validate_credentials(get_finbot_client(), new_provider_id, request_data["credentials"])
+        logging.info(
+            f"validating authentication details for "
+            f"account_id={user_account_id} and provider_id={new_provider_id}"
+        )
+        core.validate_credentials(
+            get_finbot_client(), new_provider_id, request_data["credentials"]
+        )
 
     try:
         with db_session.persist(linked_account):
@@ -552,7 +630,8 @@ def update_linked_account(user_account_id, linked_account_id):
                 linked_account.account_name = request_data["account_name"]
             if request_has_credentials:
                 encrypted_credentials = secure.fernet_encrypt(
-                    json.dumps(request_data["credentials"]).encode(), SECRET).decode()
+                    json.dumps(request_data["credentials"]).encode(), SECRET
+                ).decode()
                 linked_account.encrypted_credentials = encrypted_credentials
     except IntegrityError as e:
         raise ApplicationError(str(e))
@@ -565,19 +644,27 @@ def update_linked_account(user_account_id, linked_account_id):
 @request_handler()
 def delete_linked_account(user_account_id, linked_account_id):
     linked_account_id = int(linked_account_id)
-    linked_account = repository.get_linked_account(db_session, user_account_id, linked_account_id)
+    linked_account = repository.get_linked_account(
+        db_session, user_account_id, linked_account_id
+    )
     if not linked_account:
-        raise ApplicationError(f"could not find linked account with id '{linked_account_id}'")
+        raise ApplicationError(
+            f"could not find linked account with id '{linked_account_id}'"
+        )
 
     with db_session.persist(linked_account):
-        linked_account.account_name = f"DELETED {uuid.uuid4()} / {linked_account.account_name}"
+        linked_account.account_name = (
+            f"DELETED {uuid.uuid4()} / {linked_account.account_name}"
+        )
         linked_account.deleted = True
 
     try:
         logging.info(f"triggering full valuation for account_id={user_account_id}")
         trigger_valuation(user_account_id)
     except Exception as e:
-        logging.warning(f"failed to trigger valuation for account_id={user_account_id}: {e}")
+        logging.warning(
+            f"failed to trigger valuation for account_id={user_account_id}: {e}"
+        )
 
     return jsonify({})
 
@@ -587,27 +674,36 @@ def delete_linked_account(user_account_id, linked_account_id):
 @request_handler()
 def get_linked_account_historical_valuation(user_account_id, linked_account_id):
     linked_account_id = int(linked_account_id)
-    results = (db_session.query(UserAccountHistoryEntry)
-                         .filter_by(user_account_id=user_account_id)
-                         .filter_by(available=True)
-                         .join(UserAccountHistoryEntry.linked_accounts_valuation_history_entries)
-                         .options(
-                             contains_eager(UserAccountHistoryEntry.linked_accounts_valuation_history_entries))
-                         .filter(LinkedAccountValuationHistoryEntry.linked_account_id == linked_account_id)
-                         .order_by(desc(UserAccountHistoryEntry.effective_at))
-                         .all())
+    results = (
+        db_session.query(UserAccountHistoryEntry)
+        .filter_by(user_account_id=user_account_id)
+        .filter_by(available=True)
+        .join(UserAccountHistoryEntry.linked_accounts_valuation_history_entries)
+        .options(
+            contains_eager(
+                UserAccountHistoryEntry.linked_accounts_valuation_history_entries
+            )
+        )
+        .filter(
+            LinkedAccountValuationHistoryEntry.linked_account_id == linked_account_id
+        )
+        .order_by(desc(UserAccountHistoryEntry.effective_at))
+        .all()
+    )
 
     output_entries = []
     for account_entry in results:
         assert len(account_entry.linked_accounts_valuation_history_entries) == 1
         for entry in account_entry.linked_accounts_valuation_history_entries:
             assert entry.linked_account_id == linked_account_id
-            output_entries.append({
+            output_entries.append(
+                {
                     "linked_account_id": entry.linked_account_id,
                     "date": account_entry.effective_at,
                     "currency": account_entry.valuation_ccy,
-                    "value": entry.valuation
-                })
+                    "value": entry.valuation,
+                }
+            )
     return jsonify(serialize(output_entries))
 
 
@@ -617,29 +713,37 @@ def get_linked_account_historical_valuation(user_account_id, linked_account_id):
 def get_linked_account_sub_accounts(user_account_id, linked_account_id):
     history_entry = repository.find_last_history_entry(db_session, user_account_id)
     if not history_entry:
-        raise ApplicationError(f"No valuation available for user account '{user_account_id}'")
+        raise ApplicationError(
+            f"No valuation available for user account '{user_account_id}'"
+        )
     linked_account_id = int(linked_account_id)
-    results = repository.find_sub_accounts_valuation(db_session, history_entry.id, linked_account_id)
+    results = repository.find_sub_accounts_valuation(
+        db_session, history_entry.id, linked_account_id
+    )
 
-    return jsonify(serialize({
-        "sub_accounts": [
+    return jsonify(
+        serialize(
             {
-                "account": {
-                    "id": entry.sub_account_id,
-                    "iso_currency": entry.sub_account_ccy,
-                    "description": entry.sub_account_description,
-                    "type": entry.sub_account_type
-                },
-                "valuation": {
-                    "value": entry.valuation,
-                    "total_liabilities": entry.total_liabilities,
-                    "value_account_ccy": entry.valuation_sub_account_ccy,
-                    "change": entry.valuation_change
-                }
+                "sub_accounts": [
+                    {
+                        "account": {
+                            "id": entry.sub_account_id,
+                            "iso_currency": entry.sub_account_ccy,
+                            "description": entry.sub_account_description,
+                            "type": entry.sub_account_type,
+                        },
+                        "valuation": {
+                            "value": entry.valuation,
+                            "total_liabilities": entry.total_liabilities,
+                            "value_account_ccy": entry.valuation_sub_account_ccy,
+                            "change": entry.valuation_change,
+                        },
+                    }
+                    for entry in results
+                ]
             }
-            for entry in results
-        ]
-    }))
+        )
+    )
 
 
 REPORTS = API_V1.reports
@@ -653,12 +757,15 @@ def get_holdings_report():
     history_entry = repository.find_last_history_entry(db_session, user_account_id)
     if not history_entry:
         raise ApplicationError("No data to report")
-    return jsonify(serialize({
-        "report": holdings_report.generate(
-            session=db_session,
-            history_entry=history_entry
+    return jsonify(
+        serialize(
+            {
+                "report": holdings_report.generate(
+                    session=db_session, history_entry=history_entry
+                )
+            }
         )
-    }))
+    )
 
 
 @app.route(REPORTS.earnings(), methods=["GET"])
@@ -667,11 +774,15 @@ def get_holdings_report():
 def get_earnings_report():
     user_account_id = get_jwt_identity()
     to_time = now_utc()
-    return jsonify(serialize({
-        "report": earnings_report.generate(
-            session=db_session,
-            user_account_id=user_account_id,
-            from_time=to_time - timedelta(days=365),
-            to_time=to_time
+    return jsonify(
+        serialize(
+            {
+                "report": earnings_report.generate(
+                    session=db_session,
+                    user_account_id=user_account_id,
+                    from_time=to_time - timedelta(days=365),
+                    to_time=to_time,
+                )
+            }
         )
-    }))
+    )

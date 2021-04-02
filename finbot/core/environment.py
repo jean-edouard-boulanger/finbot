@@ -95,5 +95,5 @@ def get() -> Environment:
         webapp_endpoint=get_webapp_endpoint(),
         schedsrv_port=get_schedsrv_port(),
         schedsrv_endpoint=get_schedsrv_endpoint(),
-        currconv_api_key=get_currconv_api_key()
+        currconv_api_key=get_currconv_api_key(),
     )

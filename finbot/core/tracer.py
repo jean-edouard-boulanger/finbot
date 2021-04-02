@@ -13,12 +13,14 @@ CONTEXT_TAG = "__tracer_context__"
 
 
 class Step(object):
-    def __init__(self,
-                 guid: str,
-                 path: List[int],
-                 name: str,
-                 start_time: datetime,
-                 metadata: Dict = None):
+    def __init__(
+        self,
+        guid: str,
+        path: List[int],
+        name: str,
+        start_time: datetime,
+        metadata: Dict = None,
+    ):
         self._guid = guid
         self._path = path
         self._start_time = start_time
@@ -73,7 +75,8 @@ class DBPersistenceLayer(object):
             name=step.name,
             user_data=step.metadata,
             start_time=step.start_time,
-            end_time=step.end_time)
+            end_time=step.end_time,
+        )
         self.db_session.merge(dt)
         self.db_session.commit()
 
@@ -89,10 +92,7 @@ class FlatContext(object):
         self.path = path
 
     def serialize(self):
-        return {
-            "guid": self.guid,
-            "path": self.path
-        }
+        return {"guid": self.guid, "path": self.path}
 
 
 def _dummy_step() -> Step:
@@ -130,15 +130,17 @@ class LogHandler(logging.StreamHandler):
 
     def emit(self, record):
         step = self._step_accessor()
-        step.metadata.setdefault("logs", []).append({
-            "time": record.asctime,
-            "level": record.levelname,
-            "filename": record.filename,
-            "line": record.lineno,
-            "function": record.funcName,
-            "message": record.message,
-            "thread": record.threadName
-        })
+        step.metadata.setdefault("logs", []).append(
+            {
+                "time": record.asctime,
+                "level": record.levelname,
+                "filename": record.filename,
+                "line": record.lineno,
+                "function": record.funcName,
+                "message": record.message,
+                "thread": record.threadName,
+            }
+        )
 
 
 class TracerContext(object):
@@ -168,38 +170,38 @@ class TracerContext(object):
             return _dummy_step()
         self._path = flat_context.path + [0]
         self._steps = [
-            self._new_step(guid=flat_context.guid,
-                           path=flat_context.path,
-                           name=name)
+            self._new_step(guid=flat_context.guid, path=flat_context.path, name=name)
         ]
         step = self._steps[-1]
         self._config.persistence_layer.persist(step)
-        logging.info(f"adopted tracer context name='{step.name}' guid={step.guid} path={step.pretty_path}")
+        logging.info(
+            f"adopted tracer context name='{step.name}' guid={step.guid} path={step.pretty_path}"
+        )
         return step
 
     def new_root(self, name):
         self._path = [0, 0]
         self._steps = [
-            self._new_step(guid=str(uuid.uuid4()),
-                           path=self._path[:-1],
-                           name=name)
+            self._new_step(guid=str(uuid.uuid4()), path=self._path[:-1], name=name)
         ]
         step = self._steps[-1]
         self._config.persistence_layer.persist(step)
-        logging.info(f"new tracer root name='{step.name}' guid={step.guid} path={step.pretty_path}")
+        logging.info(
+            f"new tracer root name='{step.name}' guid={step.guid} path={step.pretty_path}"
+        )
         return step
 
     def new_child(self, name):
         if not self.has_root():
             return _dummy_step()
         self._steps.append(
-            self._new_step(guid=self._steps[0].guid,
-                           path=self._path[:],
-                           name=name)
+            self._new_step(guid=self._steps[0].guid, path=self._path[:], name=name)
         )
         step = self._steps[-1]
         self._config.persistence_layer.persist(step)
-        logging.info(f"new tracer child name='{step.name}' guid={step.guid} path={step.pretty_path}")
+        logging.info(
+            f"new tracer child name='{step.name}' guid={step.guid} path={step.pretty_path}"
+        )
         self._path += [0]
         return self._steps[-1]
 
@@ -235,8 +237,8 @@ _get_config.it = _get_default_config()
 
 def configure(identity=None, persistence_layer=None):
     _get_config.it = Config(
-        identity=identity,
-        persistence_layer=persistence_layer or NoopPersistenceLayer())
+        identity=identity, persistence_layer=persistence_layer or NoopPersistenceLayer()
+    )
 
 
 def _get_tracer_context() -> TracerContext:
