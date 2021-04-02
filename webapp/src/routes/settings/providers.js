@@ -2,7 +2,7 @@ import React, {useContext, useState, useEffect, useRef } from "react";
 
 import AceEditor from "react-ace";
 import { default as DataDrivenForm } from "react-jsonschema-form";
-import { Alert, Row, Col, Table, Button, Tabs, Tab, Form } from "react-bootstrap";
+import { Alert, Row, Col, Button, Tabs, Tab, Form } from "react-bootstrap";
 import { ServicesContext, AuthContext } from "contexts";
 import { LoadingButton } from "components";
 import { Formik, Form as MetaForm, Field, ErrorMessage } from 'formik';

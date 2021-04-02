@@ -6,7 +6,7 @@ import { AuthContext, ServicesContext } from "contexts";
 import { default as DataDrivenForm } from "react-jsonschema-form";
 import { toast } from "react-toastify";
 import { LoadingButton } from "components";
-import { Row, Col, Form, Button, Alert } from "react-bootstrap";
+import { Row, Col, Form, Alert } from "react-bootstrap";
 import { PlaidLink } from 'react-plaid-link';
 
 const NO_PROVIDER_SELECTED = "NO_PROVIDER_SELECTED";

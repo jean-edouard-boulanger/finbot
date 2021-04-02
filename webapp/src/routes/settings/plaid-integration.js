@@ -22,10 +22,6 @@ export const PlaidIntegrationSettings = () => {
     fetch();
   }, [account, finbotClient]);
 
-  const handleSave = () => {
-
-  };
-
   const resetPlaidSettings = ({env, client_id, public_key, secret_key}) => {
     setPlaidSettings({
       env: env || "production",

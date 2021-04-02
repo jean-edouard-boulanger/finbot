@@ -13,18 +13,6 @@ import BarLoader from "react-spinners/BarLoader";
 import queryString from 'query-string';
 
 
-function formatRelChange(val) {
-  if (val === null || val === undefined || val === 0.0) {
-    return (<span className="text-muted">-</span>);
-  }
-  if (val < 0) {
-    return (<span className="text-danger">{(val * 100).toFixed(2)}%</span>)
-  } else {
-    return (<span className="text-success">+{(val * 100).toFixed(2)}%</span>)
-  }
-}
-
-
 function getRelativeChange(startVal, finalVal) {
   return (finalVal - startVal) / startVal;
 }

@@ -4,7 +4,7 @@ import { ServicesContext } from "contexts";
 
 import AuthContext from './auth-context';
 import authReducer from './auth-reducer';
-import { resetAuthHeader, setAuthHeader } from './auth-globals'
+import { setAuthHeader } from './auth-globals'
 import {
   LOGIN_SUCCESS,
   LOGOUT,
