@@ -41,7 +41,7 @@ def make_error(user_message, debug_message=None, trace=None):
     return {
         "user_message": user_message,
         "debug_message": debug_message,
-        "trace": trace
+        "trace": trace,
     }
 
 
@@ -78,16 +78,26 @@ def request_handler(trace_values=False, schema=None):
                         logging.info("request processed successfully")
                         return response
                 except ApplicationError as e:
-                    logging.warning(f"request processed with error: {e}\n{stackprinter.format(style='darkbg3', show_vals=sp_trace_values)}")
+                    logging.warning(
+                        "request processed with error:"
+                        f" {e}\n{stackprinter.format(style='darkbg3', show_vals=sp_trace_values)}"
+                    )
                     return make_error_response(
                         user_message=str(e),
                         debug_message=str(e),
-                        trace=stackprinter.format(show_vals=sp_trace_values))
+                        trace=stackprinter.format(show_vals=sp_trace_values),
+                    )
                 except Exception as e:
-                    logging.warning(f"request processed with error: {e}\n{stackprinter.format(style='darkbg3', show_vals=sp_trace_values)}")
+                    logging.warning(
+                        f"request processed with error:"
+                        f" {e}\n{stackprinter.format(style='darkbg3', show_vals=sp_trace_values)}"
+                    )
                     return make_error_response(
                         user_message="operation failed (unknown error)",
                         debug_message=str(e),
-                        trace=stackprinter.format(show_vals=sp_trace_values))
+                        trace=stackprinter.format(show_vals=sp_trace_values),
+                    )
+
         return handler
+
     return impl

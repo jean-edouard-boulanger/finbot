@@ -32,7 +32,9 @@ class SchedClient(object):
         self._socket.set(zmq.LINGER, 1000)
 
     def trigger_valuation(self, request: TriggerValuationRequest):
-        self._socket.send_json(serialize(Request(trigger_valuation=request)), zmq.DONTWAIT)
+        self._socket.send_json(
+            serialize(Request(trigger_valuation=request)), zmq.DONTWAIT
+        )
 
     def close(self):
         self._socket.close()

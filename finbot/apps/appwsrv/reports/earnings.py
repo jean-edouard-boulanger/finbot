@@ -1,13 +1,10 @@
-from typing import List, Dict
 from dataclasses import dataclass
 from collections import defaultdict
 from datetime import datetime
 import calendar
 
 from finbot.apps.appwsrv import repository
-from finbot.model import (
-    UserAccountHistoryEntry
-)
+from finbot.model import UserAccountHistoryEntry
 
 
 @dataclass(frozen=True)
@@ -19,7 +16,7 @@ class ByMonth:
         return {
             "year": self.year,
             "month": self.month,
-            "as_str": f"{calendar.month_name[self.month]} {self.year}"
+            "as_str": f"{calendar.month_name[self.month]} {self.year}",
         }
 
 
@@ -41,27 +38,24 @@ class ReportEntry:
     metrics: Metrics
 
     def serialize(self):
-        return {
-            "aggregation": self.aggregation,
-            "metrics": self.metrics
-        }
+        return {"aggregation": self.aggregation, "metrics": self.metrics}
 
 
 @dataclass
 class Report:
     currency: str
-    entries: List[ReportEntry]
+    entries: list[ReportEntry]
     rollup: Metrics
 
     def serialize(self):
         return {
             "currency": self.currency,
             "entries": self.entries,
-            "rollup": self.rollup
+            "rollup": self.rollup,
         }
 
 
-def _get_aggregated_metrics(entries: List[UserAccountHistoryEntry]) -> Metrics:
+def _get_aggregated_metrics(entries: list[UserAccountHistoryEntry]) -> Metrics:
     first_value = float(entries[0].user_account_valuation_history_entry.valuation)
     last_value = float(entries[-1].user_account_valuation_history_entry.valuation)
     abs_change = last_value - first_value
@@ -71,14 +65,24 @@ def _get_aggregated_metrics(entries: List[UserAccountHistoryEntry]) -> Metrics:
         first_value=first_value,
         last_date=entries[-1].effective_at,
         last_value=last_value,
-        min_value=float(min(entry.user_account_valuation_history_entry.valuation for entry in entries)),
-        max_value=float(max(entry.user_account_valuation_history_entry.valuation for entry in entries)),
+        min_value=float(
+            min(
+                entry.user_account_valuation_history_entry.valuation
+                for entry in entries
+            )
+        ),
+        max_value=float(
+            max(
+                entry.user_account_valuation_history_entry.valuation
+                for entry in entries
+            )
+        ),
         abs_change=abs_change,
-        rel_change=rel_change
+        rel_change=rel_change,
     )
 
 
-def _get_rollup_metrics(all_entries: List[ReportEntry]) -> Metrics:
+def _get_rollup_metrics(all_entries: list[ReportEntry]) -> Metrics:
     first_value = all_entries[0].metrics.first_value
     last_value = all_entries[-1].metrics.last_value
     abs_change = last_value - first_value
@@ -91,33 +95,30 @@ def _get_rollup_metrics(all_entries: List[ReportEntry]) -> Metrics:
         min_value=min(entry.metrics.min_value for entry in all_entries),
         max_value=max(entry.metrics.max_value for entry in all_entries),
         abs_change=abs_change,
-        rel_change=rel_change
+        rel_change=rel_change,
     )
 
 
-def generate(session,
-             user_account_id: int,
-             from_time: datetime,
-             to_time: datetime) -> Report:
+def generate(
+    session, user_account_id: int, from_time: datetime, to_time: datetime
+) -> Report:
     user_settings = repository.get_user_account(session, user_account_id)
     historical_valuation = repository.find_user_account_historical_valuation(
         session=session,
         user_account_id=user_account_id,
         from_time=from_time,
-        to_time=to_time)
+        to_time=to_time,
+    )
     aggregated_entries = defaultdict(list)
     for entry in historical_valuation:
         agg = ByMonth(entry.effective_at.year, entry.effective_at.month)
         aggregated_entries[agg].append(entry)
     entries = [
-        ReportEntry(
-            aggregation=agg,
-            metrics=_get_aggregated_metrics(entries)
-        )
+        ReportEntry(aggregation=agg, metrics=_get_aggregated_metrics(entries))
         for agg, entries in aggregated_entries.items()
     ]
     return Report(
         currency=user_settings.settings.valuation_ccy,
         entries=list(reversed(entries)),
-        rollup=_get_rollup_metrics(entries)
+        rollup=_get_rollup_metrics(entries),
     )

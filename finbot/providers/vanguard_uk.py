@@ -46,17 +46,19 @@ class Api(SeleniumBased):
             accounts = []
             for account in context_data["Accounts"]:
                 for entry in account["SubAccounts"]:
-                    accounts.append({
-                        "description": {
-                            "id": entry["SubAccountId"].strip(),
-                            "name": entry["PreferredName"].strip(),
-                            "iso_currency": "GBP",
-                            "type": "investment"
-                        },
-                        "hierarchy_id": entry["HierarchyId"],
-                        "date_created": entry["DateCreated"],
-                        "home_url": entry["HomepageUrl"]
-                    })
+                    accounts.append(
+                        {
+                            "description": {
+                                "id": entry["SubAccountId"].strip(),
+                                "name": entry["PreferredName"].strip(),
+                                "iso_currency": "GBP",
+                                "type": "investment",
+                            },
+                            "hierarchy_id": entry["HierarchyId"],
+                            "date_created": entry["DateCreated"],
+                            "home_url": entry["HomepageUrl"],
+                        }
+                    )
             return accounts
 
         browser = self.browser
@@ -67,53 +69,61 @@ class Api(SeleniumBased):
         password_input.send_keys(credentials.password)
         auth_form.find_element_by_css_selector("div.submit button").click()
 
-        self._do.assert_success(_is_logged_in, lambda _: _get_login_error(auth_form),
-                                _report_auth_error)
+        self._do.assert_success(
+            _is_logged_in, lambda _: _get_login_error(auth_form), _report_auth_error
+        )
 
         self.home_url = self.browser.current_url
-        self.account_data = extract_accounts(json.loads(
-            self._do.find(By.XPATH, "//*[@data-available-context]")
-                    .get_attribute("data-available-context")))
+        self.account_data = extract_accounts(
+            json.loads(
+                self._do.find(By.XPATH, "//*[@data-available-context]").get_attribute(
+                    "data-available-context"
+                )
+            )
+        )
 
     def _get_account_balance(self, account):
         dashboard_url = f"{BASE_URL}{account['home_url']}/Dashboard"
         self._do.get(dashboard_url)
-        value_cell = self._do.wait_element(By.CSS_SELECTOR, "section.portfolio-header div.col-value div.value")
+        value_cell = self._do.wait_element(
+            By.CSS_SELECTOR, "section.portfolio-header div.col-value div.value"
+        )
         return {
             "account": deepcopy(account["description"]),
-            "balance": Price.fromstring(value_cell.text.strip()).amount_float
+            "balance": Price.fromstring(value_cell.text.strip()).amount_float,
         }
 
     def get_balances(self):
         return {
             "accounts": [
-                self._get_account_balance(account)
-                for account in self.account_data
+                self._get_account_balance(account) for account in self.account_data
             ]
         }
 
     def _get_account_assets(self, account):
         assets_url = f"{BASE_URL}{account['home_url']}/Investments/Holdings"
         self._do.get(assets_url)
-        self._do.wait_element(By.CSS_SELECTOR, "div.toggle-switch span.label-one").click()
-        investments_table = self._do.wait_element(By.CSS_SELECTOR, "table.table-investments-detailed")
+        self._do.wait_element(
+            By.CSS_SELECTOR, "div.toggle-switch span.label-one"
+        ).click()
+        investments_table = self._do.wait_element(
+            By.CSS_SELECTOR, "table.table-investments-detailed"
+        )
         all_assets = []
-        for section in investments_table.find_elements_by_css_selector("tbody.group-content"):
+        for section in investments_table.find_elements_by_css_selector(
+            "tbody.group-content"
+        ):
             group_row = section.find_element_by_css_selector("tr.group-row")
             product_type = group_row.text.strip().split()[0].lower()
             product_rows = _get_product_rows(section, timedelta(seconds=60))
             for product_row in product_rows:
                 all_assets.append(_extract_asset(product_type, product_row))
-        return {
-            "account": deepcopy(account["description"]),
-            "assets": all_assets
-        }
+        return {"account": deepcopy(account["description"]), "assets": all_assets}
 
     def get_assets(self):
         return {
             "accounts": [
-                self._get_account_assets(account)
-                for account in self.account_data
+                self._get_account_assets(account) for account in self.account_data
             ]
         }
 
@@ -121,13 +131,17 @@ class Api(SeleniumBased):
         cash_txn_url = f"{BASE_URL}{account['home_url']}/Transactions/Cash"
         self._do.get(cash_txn_url)
         staleness_detector = _StalenessDetector(self._do)
-        transactions_table = self._do.wait_element(By.CSS_SELECTOR, "table.table-transactions > tbody")
+        transactions_table = self._do.wait_element(
+            By.CSS_SELECTOR, "table.table-transactions > tbody"
+        )
         while True:
-            extractor = _extract_cash_transactions(transactions_table, staleness_detector)
+            extractor = _extract_cash_transactions(
+                transactions_table, staleness_detector
+            )
             try:
                 for transaction in extractor:
-                    # vanguard displays transactions latest first, if the current 
-                    # transaction's date is less than the lower bound, there is 
+                    # vanguard displays transactions latest first, if the current
+                    # transaction's date is less than the lower bound, there is
                     # no need to go further
                     if transaction["date"] < from_date:
                         return
@@ -147,7 +161,9 @@ class Api(SeleniumBased):
     def _get_account_transactions(self, account, from_date, to_date):
         return {
             "account": deepcopy(account["description"]),
-            "transactions": list(self._get_cash_transactions(account, from_date, to_date))
+            "transactions": list(
+                self._get_cash_transactions(account, from_date, to_date)
+            ),
         }
 
     def get_transactions(self, from_date, to_date):
@@ -165,7 +181,9 @@ class _StalenessDetector(object):
         self._marker = str(uuid.uuid4())
 
     def mark_visited(self, element):
-        self._browser_helper.execute_script(f"arguments[0].innerHTML = '{self._marker}'", element)
+        self._browser_helper.execute_script(
+            f"arguments[0].innerHTML = '{self._marker}'", element
+        )
 
     def wait_refreshed(self, element):
         self._browser_helper.wait_cond(lambda _: element.text.strip() != self._marker)
@@ -197,8 +215,7 @@ def _extract_cash_asset(product_row):
 
 def _extract_fund_asset(product_type, product_row):
     cells = product_row.find_elements_by_tag_name("td")
-    name_cell = cells[0].find_element_by_css_selector(
-        "p.content-product-name")
+    name_cell = cells[0].find_element_by_css_selector("p.content-product-name")
     product_name = name_cell.text.strip()
     ongoing_charges = float(cells[1].text.strip()[:-1]) / 100.0
     units = float(cells[2].text.strip())
@@ -215,12 +232,14 @@ def _extract_fund_asset(product_type, product_row):
             "Ongoing charges": ongoing_charges,
             "Last price": last_price,
             "Total cost": total_cost,
-            "Average unit cost": avg_unit_cost
-        }
+            "Average unit cost": avg_unit_cost,
+        },
     }
 
 
-def _extract_cash_transactions(transactions_table, staleness_detector: _StalenessDetector):
+def _extract_cash_transactions(
+    transactions_table, staleness_detector: _StalenessDetector
+):
     for row in transactions_table.find_elements_by_tag_name("tr"):
         cells = row.find_elements_by_tag_name("td")
         with staleness_detector.visit(cells[0]):
@@ -228,18 +247,31 @@ def _extract_cash_transactions(transactions_table, staleness_detector: _Stalenes
             txn_description = cells[1].text.strip()
             txn_in_amount = Price.fromstring(cells[2].text.strip()).amount_float
             txn_out_amount = Price.fromstring(cells[3].text.strip()).amount_float
-            txn_amount = txn_in_amount if txn_in_amount is not None else (txn_out_amount * -1.0)
+            txn_amount = (
+                txn_in_amount if txn_in_amount is not None else (txn_out_amount * -1.0)
+            )
             txn_type = "credit" if txn_in_amount is not None else "debit"
             txn_bal = Price.fromstring(cells[4].text.strip()).amount_float
-            txn_id = "VGXX-" + hashlib.sha224("/".join([
-                txn_date.isoformat(), txn_description, str(txn_amount), txn_type, str(txn_bal)
-            ]).encode()).hexdigest()
+            txn_id = (
+                "VGXX-"
+                + hashlib.sha224(
+                    "/".join(
+                        [
+                            txn_date.isoformat(),
+                            txn_description,
+                            str(txn_amount),
+                            txn_type,
+                            str(txn_bal),
+                        ]
+                    ).encode()
+                ).hexdigest()
+            )
             yield {
                 "id": txn_id,
                 "date": txn_date,
                 "description": txn_description,
                 "amount": txn_amount,
-                "type": txn_type
+                "type": txn_type,
             }
 
 

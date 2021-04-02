@@ -26,15 +26,18 @@ FINBOT_ENV = environment.get()
 db_engine = create_engine(FINBOT_ENV.database_url)
 db_session = dbutils.add_persist_utilities(scoped_session(sessionmaker(bind=db_engine)))
 tracer.configure(
-    identity="schedsrv",
-    persistence_layer=tracer.DBPersistenceLayer(db_session)
+    identity="schedsrv", persistence_layer=tracer.DBPersistenceLayer(db_session)
 )
 
 
 def create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="valuation and reporting scheduler")
-    parser.add_argument("--mode", choices={"server", "one_shot"}, type=str, default="server")
-    parser.add_argument("--accounts", type=lambda v: set(int(i) for i in v.split(",")), default=None)
+    parser.add_argument(
+        "--mode", choices={"server", "one_shot"}, type=str, default="server"
+    )
+    parser.add_argument(
+        "--accounts", type=lambda v: set(int(i) for i in v.split(",")), default=None
+    )
     return parser
 
 
@@ -44,12 +47,15 @@ def run_one_shot(handler: RequestHandler, accounts_ids: List[int]):
         if not accounts_ids or user_account.id in accounts_ids:
             try:
                 request = sched_client.TriggerValuationRequest(
-                    user_account_id=user_account.id)
+                    user_account_id=user_account.id
+                )
                 handler.handle_valuation(request)
             except Exception as e:
-                logging.warning(f"failure while running workflow for "
-                                f"user_id={user_account.id}: {e}, "
-                                f"trace: \n{stackprinter.format()}")
+                logging.warning(
+                    f"failure while running workflow for "
+                    f"user_id={user_account.id}: {e}, "
+                    f"trace: \n{stackprinter.format()}"
+                )
 
 
 def pop_queue(work_queue: queue.Queue, timeout: timedelta):
@@ -60,7 +66,9 @@ def pop_queue(work_queue: queue.Queue, timeout: timedelta):
 
 
 class ValuationWorkerThread(threading.Thread):
-    def __init__(self, session, work_queue: queue.Queue, request_handler: RequestHandler):
+    def __init__(
+        self, session, work_queue: queue.Queue, request_handler: RequestHandler
+    ):
         super().__init__()
         self._session = session
         self._work_queue = work_queue
@@ -72,13 +80,17 @@ class ValuationWorkerThread(threading.Thread):
             logging.info(f"handling request: {sched_client.serialize(request)}")
             self._handler.handle_valuation(request.trigger_valuation)
         except Exception as e:
-            logging.warning(f"swallowed exception while handling valuation in worker thread: {e}, "
-                            f"trace: \n{stackprinter.format()}")
+            logging.warning(
+                f"swallowed exception while handling valuation in worker thread: {e}, "
+                f"trace: \n{stackprinter.format()}"
+            )
 
     def run(self):
         logging.info("starting worker thread")
         while not self._stop_event.isSet():
-            request: sched_client.Request = pop_queue(self._work_queue, timeout=timedelta(seconds=1))
+            request: sched_client.Request = pop_queue(
+                self._work_queue, timeout=timedelta(seconds=1)
+            )
             if request is not None:
                 self._consume(request)
         logging.info("worker thread going down now")

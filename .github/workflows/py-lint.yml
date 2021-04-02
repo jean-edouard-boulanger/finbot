@@ -1,0 +1,40 @@
+name: Lint (Python)
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "**.py"
+  pull_request:
+    branches:
+      - master
+    paths:
+      - "**.py"
+
+jobs:
+  flake8-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out finbot source
+        uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: flake8 lint
+        uses: py-actions/flake8@v1
+        with:
+          ignore: "W503"
+          max-line-length: "100"
+          path: "finbot/"
+  black-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out finbot source
+        uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: black lint
+        uses: lgeiger/black-action@master
+        with:
+          args: '--check --exclude migrations/ webapp/ .'

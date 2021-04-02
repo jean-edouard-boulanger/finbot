@@ -20,14 +20,17 @@ class RequestHandler(object):
             snapshot_metadata = self.snap_client.take_snapshot(
                 account_id=user_account_id,
                 linked_accounts=valuation_request.linked_accounts,
-                tracer_context=tracer.propagate())
+                tracer_context=tracer.propagate(),
+            )
             step.set_output(snapshot_metadata)
 
         logging.debug(snapshot_metadata)
         snapshot_id = snapshot_metadata.get("snapshot", {}).get("identifier")
         if snapshot_id is None:
-            raise WorkflowError(f"missing snapshot_id in snapshot metadata: "
-                                f"{utils.pretty_dump(snapshot_metadata)}")
+            raise WorkflowError(
+                f"missing snapshot_id in snapshot metadata: "
+                f"{utils.pretty_dump(snapshot_metadata)}"
+            )
 
         logging.info(f"raw snapshot created with id={snapshot_id}")
         logging.debug(snapshot_metadata)
@@ -36,16 +39,21 @@ class RequestHandler(object):
             logging.info("taking history report")
             step.metadata["snapshot_id"] = snapshot_id
             history_metadata = self.hist_client.write_history(
-                snapshot_id, tracer_context=tracer.propagate())
+                snapshot_id, tracer_context=tracer.propagate()
+            )
             step.set_output(history_metadata)
 
         history_entry_id = history_metadata.get("report", {}).get("history_entry_id")
         if history_entry_id is None:
-            raise WorkflowError(f"missing history_entry_id in history metadata: "
-                                f"{utils.pretty_dump(history_metadata)}")
+            raise WorkflowError(
+                f"missing history_entry_id in history metadata: "
+                f"{utils.pretty_dump(history_metadata)}"
+            )
 
-        logging.info(f"history report written with id={history_entry_id}"
-                     f" {utils.pretty_dump(history_metadata)}")
+        logging.info(
+            f"history report written with id={history_entry_id}"
+            f" {utils.pretty_dump(history_metadata)}"
+        )
         logging.info(f"valuation workflow done for user_id={user_account_id}")
 
     def handle_valuation(self, valuation_request: sched_client.TriggerValuationRequest):

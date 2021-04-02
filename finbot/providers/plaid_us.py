@@ -9,19 +9,24 @@ from finbot import providers
 from datetime import datetime
 
 
-def pack_credentials(db_settings: Dict, plaid_settings: UserAccountPlaidSettings) -> Dict:
-    return serialize({
-        "access_token": str(db_settings["access_token"]),
-        "item_id": str(db_settings["item_id"]),
-        "plaid_settings": plaid_settings
-    })
+def pack_credentials(
+    db_settings: Dict, plaid_settings: UserAccountPlaidSettings
+) -> Dict:
+    return serialize(
+        {
+            "access_token": str(db_settings["access_token"]),
+            "item_id": str(db_settings["item_id"]),
+            "plaid_settings": plaid_settings,
+        }
+    )
 
 
 def create_plaid_client(plaid_settings: UserAccountPlaidSettings):
     return PlaidClient(
         client_id=plaid_settings.client_id,
         secret=plaid_settings.secret_key,
-        environment=plaid_settings.env)
+        environment=plaid_settings.env,
+    )
 
 
 def make_account(account: Dict):
@@ -29,12 +34,14 @@ def make_account(account: Dict):
         "id": account["name"],
         "name": account["name"],
         "iso_currency": account["balances"]["iso_currency_code"],
-        "type": account["type"]
+        "type": account["type"],
     }
 
 
 class Credentials(object):
-    def __init__(self, item_id: str, access_token: str, plaid_settings: UserAccountPlaidSettings):
+    def __init__(
+        self, item_id: str, access_token: str, plaid_settings: UserAccountPlaidSettings
+    ):
         self.item_id = item_id
         self.access_token = access_token
         self.plaid_settings = plaid_settings
@@ -56,8 +63,8 @@ class Credentials(object):
                 public_key=settings["public_key"],
                 secret_key=settings["secret_key"],
                 created_at=datetime.now(),
-                updated_at=None
-            )
+                updated_at=None,
+            ),
         )
 
 
@@ -79,7 +86,8 @@ class Api(providers.Base):
             "accounts": [
                 {
                     "account": make_account(account),
-                    "balance": account["balances"]["current"] * (-1.0 if account["type"] == "credit" else 1.0)
+                    "balance": account["balances"]["current"]
+                    * (-1.0 if account["type"] == "credit" else 1.0),
                 }
                 for account in self.accounts["accounts"]
             ]
@@ -90,11 +98,13 @@ class Api(providers.Base):
             "accounts": [
                 {
                     "account": make_account(account),
-                    "assets": [{
-                        "name": "Cash",
-                        "type": "currency",
-                        "value": account["balances"]["current"]
-                    }]
+                    "assets": [
+                        {
+                            "name": "Cash",
+                            "type": "currency",
+                            "value": account["balances"]["current"],
+                        }
+                    ],
                 }
                 for account in self.accounts["accounts"]
                 if account["type"] == "depository"
@@ -106,11 +116,13 @@ class Api(providers.Base):
             "accounts": [
                 {
                     "account": make_account(account),
-                    "liabilities": [{
-                        "name": "credit",
-                        "type": "credit",
-                        "value": -1.0 * account["balances"]["current"]
-                    }]
+                    "liabilities": [
+                        {
+                            "name": "credit",
+                            "type": "credit",
+                            "value": -1.0 * account["balances"]["current"],
+                        }
+                    ],
                 }
                 for account in self.accounts["accounts"]
                 if account["type"] == "credit"

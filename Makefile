@@ -187,3 +187,9 @@ docker-dev:
 
 unit-tests:
 	python3.9 -m pytest tests/unit_tests
+
+black:
+	black --exclude migrations/ webapp/ .
+
+flake8:
+	flake8 --exclude migrations/ --max-line-length 100
