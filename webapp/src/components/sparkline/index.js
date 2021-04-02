@@ -27,12 +27,13 @@ export const SparkLine = (props) => {
           }
         },
         colors: [getSparkLineColor(series)],
-        xaxis: {},
-        yaxis: {},
+        xaxis: {
+          show: false
+        },
+        yaxis: {
+          show: false
+        },
         tooltip: {
-          fixed: {
-            enabled: false
-          },
           x: {
             show: false
           },
@@ -41,7 +42,7 @@ export const SparkLine = (props) => {
               formatter: function () {
                 return '';
               }
-            }
+            },
           },
           marker: {
             show: false

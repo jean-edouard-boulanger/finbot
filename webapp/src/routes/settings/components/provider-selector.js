@@ -13,7 +13,7 @@ const isNewProvider = (value) => {
 
 export const ProviderSelector = (props) => {
   const {
-    onChange = ((value) => {}),
+    onChange = (() => {}),
     onNew = null,
     defaultValue = null
   } = props;

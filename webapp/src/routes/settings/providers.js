@@ -72,7 +72,7 @@ const useSchema = (rawSchema) => {
   }
 }
 
-export const EditProviderPanel = (props) => {
+export const EditProviderPanel = () => {
   const {finbotClient} = useContext(ServicesContext);
   const {account} = useContext(AuthContext);
   const [selectedProviderId, setSelectedProviderId] = useState(null);

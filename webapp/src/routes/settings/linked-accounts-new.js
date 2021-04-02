@@ -62,7 +62,7 @@ const isPlaidSupported = (settings) => {
   return settings !== null && settings.plaid_settings !== null;
 }
 
-export const LinkAccount = (props) => {
+export const LinkAccount = () => {
   const {account} = useContext(AuthContext);
   const {finbotClient} = useContext(ServicesContext);
 
@@ -177,7 +177,7 @@ export const LinkAccount = (props) => {
                   {
                     providers.map((provider) => {
                       return (
-                        <option value={provider.id}>
+                        <option key={`sel-${provider.id}`} value={provider.id}>
                           {provider.description}
                         </option>
                       )

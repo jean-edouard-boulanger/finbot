@@ -159,9 +159,9 @@ function LogsViewer({logs}) {
     <Table style={{tableLayout: 'fixed', wordWrap: 'break-word'}}>
       <tbody>
       {
-        logs.map((entry) => {
+        logs.map((entry, index) => {
           return (
-            <tr className={getLogRowStyle(entry)}>
+            <tr key={`entry-${index}`} className={getLogRowStyle(entry)}>
               <td>{entry.time}</td>
               <td>{entry.level}</td>
               <td style={{width: '500px'}}>{entry.message}</td>

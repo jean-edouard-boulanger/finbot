@@ -34,10 +34,12 @@ function getRowMetadata(data) {
 }
 
 const GridMetadataRow = (props) => {
-  const {label, value, ...rest} = props;
+  const rest = Object.assign({}, props);
+  delete rest.label;
+  delete rest.value;
   return (
     <tr>
-      <td colspan="8">
+      <td colSpan="8">
         <TreeGrid.Expander {...rest} />
         <strong>{`${props.label}: `}</strong>{props.value}
       </td>

@@ -73,9 +73,9 @@ export const EarningsReport = (props) => {
       </thead>
       <tbody>
       {
-        report.entries.map((entry) => {
+        report.entries.map((entry, index) => {
           return (
-            <tr>
+            <tr key={`entry-${index}`}>
               <td><strong>{entry.aggregation.as_str}</strong></td>
               <td>
                 <Money

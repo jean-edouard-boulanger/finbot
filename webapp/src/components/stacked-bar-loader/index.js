@@ -18,7 +18,7 @@ export const StackedBarLoader = (props) => {
       {
         (range.map((_, index) => {
           return (
-            <div id={`loader-${index}`} style={{marginBottom: spacing}} >
+            <div key={`loader-${index}`} style={{marginBottom: spacing}} >
               <BarLoader {...rest} />
             </div>
           )

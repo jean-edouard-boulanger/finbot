@@ -9,7 +9,7 @@ class FinbotClient {
 
   handleResponse(response) {
     const app_data = response.data;
-    if (app_data.hasOwnProperty("error")) {
+    if (Object.prototype.hasOwnProperty.call(app_data,"error")) {
       throw app_data.error.debug_message;
     }
     return app_data;

@@ -9,7 +9,7 @@ const limits = {
 };
 
 const formatDuration = (d) => {
-  const nowFmt = (_) => "now";
+  const nowFmt = () => "now";
   const secondsFmt = (val) => `${Math.trunc(val)}s ago`;
   const minutesFmt = (val) => `${Math.trunc(val / 60.0)}m ago`;
   const hoursFmt = (val) => `${Math.trunc(val / 3600.0)}h ago`;
