@@ -1,4 +1,4 @@
-import React, {useContext, useState} from "react";
+import React, { useContext, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { AuthContext } from "contexts";
@@ -9,48 +9,43 @@ import { Row, Col, Button } from "react-bootstrap";
 
 import { default as DataDrivenForm } from "react-jsonschema-form";
 
-
 const LOGIN_DATA_SCHEMA = {
-  "type": "object",
-  "required": [
-    "password",
-    "email"
-  ],
-  "properties": {
-    "email": {
-      "type": "string",
-      "title": "E-Mail",
-      "format": "email"
+  type: "object",
+  required: ["password", "email"],
+  properties: {
+    email: {
+      type: "string",
+      title: "E-Mail",
+      format: "email",
     },
-    "password": {
-      "type": "string",
-      "title": "Password",
-    }
-  }
-}
+    password: {
+      type: "string",
+      title: "Password",
+    },
+  },
+};
 
 const LOGIN_UI_SCHEMA = {
-  "email": {
+  email: {
     "ui:emptyValue": "",
     "ui:autofocus": true,
   },
-  "password": {
+  password: {
     "ui:widget": "password",
-  }
-}
+  },
+};
 
 export const LoginForm = () => {
-  const {login} = useContext(AuthContext)
+  const { login } = useContext(AuthContext);
   const [loading] = useState(false);
 
   const handleLogin = async (data) => {
     try {
       await login(data.formData);
-    }
-    catch(e) {
+    } catch (e) {
       toast.error(e);
     }
-  }
+  };
 
   return (
     <>
@@ -59,7 +54,9 @@ export const LoginForm = () => {
           <Row>
             <Col>
               <div className={"page-header"}>
-                <h1>Sign in <small>to my finbot account</small></h1>
+                <h1>
+                  Sign in <small>to my finbot account</small>
+                </h1>
               </div>
             </Col>
           </Row>
@@ -73,19 +70,18 @@ export const LoginForm = () => {
                 schema={LOGIN_DATA_SCHEMA}
                 uiSchema={LOGIN_UI_SCHEMA}
                 onSubmit={handleLogin}
-                showErrorList={false} >
+                showErrorList={false}
+              >
                 <div>
                   <LoadingButton
                     variant={"dark"}
                     type="submit"
-                    loading={loading} >
+                    loading={loading}
+                  >
                     Sign In
-                  </LoadingButton>
-                  {" "}
+                  </LoadingButton>{" "}
                   <Link to={"/signup"}>
-                    <Button variant={"dark"}>
-                      Sign up
-                    </Button>
+                    <Button variant={"dark"}>Sign up</Button>
                   </Link>
                 </div>
               </DataDrivenForm>
@@ -94,7 +90,7 @@ export const LoginForm = () => {
         </Col>
       </Row>
     </>
-  )
-}
+  );
+};
 
 export default LoginForm;

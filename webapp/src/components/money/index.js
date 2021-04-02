@@ -1,2 +1,2 @@
-import { Money } from './money';
-export { Money }
+import { Money } from "./money";
+export { Money };

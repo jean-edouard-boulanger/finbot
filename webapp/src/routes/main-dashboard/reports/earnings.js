@@ -4,15 +4,10 @@ import { StackedBarLoader, Money, ValuationChange } from "components";
 import { Alert, Table } from "react-bootstrap";
 import { ServicesContext } from "contexts/services/services-context";
 
-
 export const EarningsReport = (props) => {
-  const {
-    accountId,
-    locale,
-    moneyFormatter
-  } = props;
+  const { accountId, locale, moneyFormatter } = props;
 
-  const {finbotClient} = useContext(ServicesContext);
+  const { finbotClient } = useContext(ServicesContext);
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState(null);
   const [error, setError] = useState(null);
@@ -23,41 +18,39 @@ export const EarningsReport = (props) => {
         setLoading(true);
         const report = await finbotClient.getEarningsReport();
         setReport(report);
-      }
-      catch(e) {
+      } catch (e) {
         setError(`${e}`);
       }
       setLoading(false);
-    }
+    };
     fetch();
-  }, [finbotClient, accountId])
+  }, [finbotClient, accountId]);
 
-  if(error !== null) {
+  if (error !== null) {
     return (
       <Alert variant={"danger"}>
         <Alert.Heading>
           Snap! An error occurred while generating your report
         </Alert.Heading>
-        <p>
-          {error}
-        </p>
+        <p>{error}</p>
       </Alert>
-    )
+    );
   }
 
-  if(loading || !report) {
+  if (loading || !report) {
     return (
       <StackedBarLoader
         count={4}
         color={"#FBFBFB"}
         spacing={"0.8em"}
         height={"1em"}
-        width={"100%"} />
-    )
+        width={"100%"}
+      />
+    );
   }
-  
+
   const currency = report.currency;
-  
+
   return (
     <Table hover size="sm">
       <thead>
@@ -72,38 +65,43 @@ export const EarningsReport = (props) => {
         </tr>
       </thead>
       <tbody>
-      {
-        report.entries.map((entry, index) => {
+        {report.entries.map((entry, index) => {
           return (
             <tr key={`entry-${index}`}>
-              <td><strong>{entry.aggregation.as_str}</strong></td>
+              <td>
+                <strong>{entry.aggregation.as_str}</strong>
+              </td>
               <td>
                 <Money
                   amount={entry.metrics.first_value}
                   locale={locale}
                   ccy={currency}
-                  moneyFormatter={moneyFormatter} />
+                  moneyFormatter={moneyFormatter}
+                />
               </td>
               <td>
                 <Money
                   amount={entry.metrics.last_value}
                   locale={locale}
                   ccy={currency}
-                  moneyFormatter={moneyFormatter} />
+                  moneyFormatter={moneyFormatter}
+                />
               </td>
               <td>
                 <Money
                   amount={entry.metrics.min_value}
                   locale={locale}
                   ccy={currency}
-                  moneyFormatter={moneyFormatter} />
+                  moneyFormatter={moneyFormatter}
+                />
               </td>
               <td>
                 <Money
                   amount={entry.metrics.max_value}
                   locale={locale}
                   ccy={currency}
-                  moneyFormatter={moneyFormatter} />
+                  moneyFormatter={moneyFormatter}
+                />
               </td>
               <td>
                 <strong>
@@ -116,22 +114,27 @@ export const EarningsReport = (props) => {
                 </strong>
               </td>
             </tr>
-          )
-        })
-      }
+          );
+        })}
       </tbody>
       <tfoot>
         <tr
-          style={{fontWeight: "bold"}}
-          className={(report.rollup.abs_change >= 0) ? "table-success" : "table-danger"}>
-          <td><strong>Summary</strong></td>
+          style={{ fontWeight: "bold" }}
+          className={
+            report.rollup.abs_change >= 0 ? "table-success" : "table-danger"
+          }
+        >
+          <td>
+            <strong>Summary</strong>
+          </td>
           <td>
             <strong>
               <Money
                 amount={report.rollup.first_value}
                 locale={locale}
                 ccy={currency}
-                moneyFormatter={moneyFormatter} />
+                moneyFormatter={moneyFormatter}
+              />
             </strong>
           </td>
           <td>
@@ -140,7 +143,8 @@ export const EarningsReport = (props) => {
                 amount={report.rollup.last_value}
                 locale={locale}
                 ccy={currency}
-                moneyFormatter={moneyFormatter} />
+                moneyFormatter={moneyFormatter}
+              />
             </strong>
           </td>
           <td>
@@ -148,14 +152,16 @@ export const EarningsReport = (props) => {
               amount={report.rollup.min_value}
               locale={locale}
               ccy={currency}
-              moneyFormatter={moneyFormatter} />
+              moneyFormatter={moneyFormatter}
+            />
           </td>
           <td>
             <Money
               amount={report.rollup.max_value}
               locale={locale}
               ccy={currency}
-              moneyFormatter={moneyFormatter} />
+              moneyFormatter={moneyFormatter}
+            />
           </td>
           <td>
             <strong>
@@ -170,5 +176,5 @@ export const EarningsReport = (props) => {
         </tr>
       </tfoot>
     </Table>
-  )
-}
+  );
+};

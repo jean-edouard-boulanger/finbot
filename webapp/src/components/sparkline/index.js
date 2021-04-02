@@ -1,17 +1,16 @@
 import Chart from "react-apexcharts";
 import React from "react";
 
-
 const getSparkLineColor = (series) => {
   const loss_color = "#e34f44";
   const gain_color = "#94e5a3";
   const last = series[series.length - 1];
-  if(last < 0) {
+  if (last < 0) {
     return loss_color;
   }
   const change = last - series[0];
-  return (change >= 0) ? gain_color : loss_color;
-}
+  return change >= 0 ? gain_color : loss_color;
+};
 
 export const SparkLine = (props) => {
   const series = props.series.filter((value) => value !== null);
@@ -20,51 +19,51 @@ export const SparkLine = (props) => {
       options={{
         chart: {
           sparkline: {
-            enabled: true
+            enabled: true,
           },
           animations: {
-            enabled: false
-          }
+            enabled: false,
+          },
         },
         colors: [getSparkLineColor(series)],
         xaxis: {
-          show: false
+          show: false,
         },
         yaxis: {
-          show: false
+          show: false,
         },
         tooltip: {
           x: {
-            show: false
+            show: false,
           },
           y: {
             title: {
               formatter: function () {
-                return '';
-              }
+                return "";
+              },
             },
           },
           marker: {
-            show: false
-          }
+            show: false,
+          },
         },
         fill: {
           opacity: 1,
-          type: "solid"
+          type: "solid",
         },
         stroke: {
           width: 1.1,
-        }
+        },
       }}
       series={[
         {
           name: "value",
-          data: props.series.filter((value) => value !== null)
-        }
+          data: props.series.filter((value) => value !== null),
+        },
       ]}
       type="line"
       width="70px"
       height="20em"
     />
-  )
-}
+  );
+};

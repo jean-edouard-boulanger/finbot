@@ -1,10 +1,6 @@
 import { setAuthHeader } from "./auth-globals";
-import {
-  LOGIN_SUCCESS,
-  LOGOUT
-} from './auth-actions';
+import { LOGIN_SUCCESS, LOGOUT } from "./auth-actions";
 import { persistLocal, clearLocal } from "./auth-storage";
-
 
 export default (state, action) => {
   switch (action.type) {
@@ -14,7 +10,7 @@ export default (state, action) => {
       const newState = {
         ...state,
         token: accessToken,
-        account: action.payload.account
+        account: action.payload.account,
       };
       persistLocal(newState);
       console.log(newState);
@@ -26,10 +22,10 @@ export default (state, action) => {
       return {
         ...state,
         token: null,
-        account: null
+        account: null,
       };
     }
     default:
-      return {...state};
+      return { ...state };
   }
 };

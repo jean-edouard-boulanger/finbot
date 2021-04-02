@@ -1,9 +1,9 @@
-import React, { useContext } from 'react';
+import React, { useContext } from "react";
 import { Route, Switch, Redirect } from "react-router-dom";
 
-import { AuthProvider, AuthContext, ServicesProvider } from 'contexts';
+import { AuthProvider, AuthContext, ServicesProvider } from "contexts";
 
-import { ToastContainer, Slide, toast } from 'react-toastify';
+import { ToastContainer, Slide, toast } from "react-toastify";
 import { MainContainer, Navigation } from "components";
 import {
   Admin,
@@ -12,15 +12,14 @@ import {
   Logout,
   MainDashboard,
   Settings,
-  Welcome
+  Welcome,
 } from "routes";
 
-import 'datejs';
+import "datejs";
 
-import 'react-toastify/dist/ReactToastify.css';
-import 'bootswatch/dist/lux/bootstrap.min.css';
-import "./assets/css/index.css"
-
+import "react-toastify/dist/ReactToastify.css";
+import "bootswatch/dist/lux/bootstrap.min.css";
+import "./assets/css/index.css";
 
 toast.configure({
   delay: 500,
@@ -34,7 +33,7 @@ const GuestRouter = () => {
       <Redirect to={"/login"} />
     </Switch>
   );
-}
+};
 
 const UserRouter = () => {
   return (
@@ -48,27 +47,29 @@ const UserRouter = () => {
       <Redirect to={"/dashboard"} />
     </Switch>
   );
-}
+};
 
 const AppRouter = () => {
   const { isAuthenticated } = useContext(AuthContext);
-  return (isAuthenticated)
-    ? <UserRouter />
-    : <GuestRouter />;
-}
+  return isAuthenticated ? <UserRouter /> : <GuestRouter />;
+};
 
 const App = () => {
   return (
     <ServicesProvider>
       <AuthProvider>
-        <ToastContainer autoClose={7000} transition={Slide} position="bottom-right" />
+        <ToastContainer
+          autoClose={7000}
+          transition={Slide}
+          position="bottom-right"
+        />
         <Navigation />
         <MainContainer>
           <AppRouter />
         </MainContainer>
       </AuthProvider>
     </ServicesProvider>
-  )
-}
+  );
+};
 
 export default App;
