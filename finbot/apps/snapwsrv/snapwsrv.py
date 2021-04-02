@@ -1,5 +1,4 @@
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass
 from typing import List, Optional
 from flask import Flask, jsonify, request
 from sqlalchemy import create_engine
@@ -57,21 +56,6 @@ class SnapshotTreeVisitor(object):
 
     def visit_item(self, account, sub_account, item_type, item):
         pass
-
-
-@dataclass(frozen=True, eq=True)
-class Xccy(object):
-    domestic: str
-    foreign: str
-
-    def __str__(self):
-        return f"{self.domestic}{self.foreign}"
-
-    def serialize(self):
-        return {
-            "domestic": self.domestic,
-            "foreign": self.foreign
-        }
 
 
 def visit_snapshot_tree(raw_snapshot, visitor):
@@ -132,14 +116,17 @@ class XccyCollector(SnapshotTreeVisitor):
 
     def visit_sub_account(self, account, sub_account, balance):
         if sub_account["iso_currency"] != self.target_ccy:
-            self.xccys.add(Xccy(sub_account["iso_currency"], self.target_ccy))
+            self.xccys.add(
+                fx_market.Xccy(
+                    domestic=sub_account["iso_currency"],
+                    foreign=self.target_ccy))
 
 
 class CachedXccyRatesGetter(object):
     def __init__(self, xccy_rates):
         self.xccy_rates = xccy_rates
 
-    def __call__(self, xccy: Xccy):
+    def __call__(self, xccy: fx_market.Xccy):
         if xccy.foreign == xccy.domestic:
             return 1.0
         return self.xccy_rates[xccy]
@@ -206,7 +193,9 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
             units=item.get("units"),
             value_sub_account_ccy=item_value,
             value_snapshot_ccy=item_value * self.xccy_rates_getter(
-                Xccy(sub_account["iso_currency"], self.target_ccy)))
+                fx_market.Xccy(
+                    domestic=sub_account["iso_currency"],
+                    foreign=self.target_ccy)))
         sub_account_entry.items_entries.append(new_item)
 
 
@@ -219,29 +208,29 @@ class AccountSnapshotRequest(object):
         self.tracer_context = tracer_context
 
 
-def dispatch_snapshot_entry(request: AccountSnapshotRequest):
+def dispatch_snapshot_entry(snap_request: AccountSnapshotRequest):
     try:
-        logging.info(f"starting snapshot for account_id={request.account_id}'"
-                     f" provider_id={request.provider_id}")
+        logging.info(f"starting snapshot for account_id={snap_request.account_id}'"
+                     f" provider_id={snap_request.provider_id}")
 
         finbot_client = FinbotClient(FINBOT_ENV.finbotwsrv_endpoint)
         account_snapshot = finbot_client.get_financial_data(
-            provider=request.provider_id,
-            credentials_data=request.credentials_data,
-            line_items=request.line_items,
-            tracer_context=request.tracer_context)
+            provider=snap_request.provider_id,
+            credentials_data=snap_request.credentials_data,
+            line_items=snap_request.line_items,
+            tracer_context=snap_request.tracer_context)
 
-        logging.info(f"snapshot complete for for account_id={request.account_id}'"
-                     f" provider_id={request.provider_id}")
+        logging.info(f"snapshot complete for for account_id={snap_request.account_id}'"
+                     f" provider_id={snap_request.provider_id}")
 
-        return request, account_snapshot
+        return snap_request, account_snapshot
     except Exception as e:
         trace = stackprinter.format()
-        logging.warning(f"fatal error while taking snapshot for account_id={request.account_id}"
-                        f" provider_id={request.provider_id}"
+        logging.warning(f"fatal error while taking snapshot for account_id={snap_request.account_id}"
+                        f" provider_id={snap_request.provider_id}"
                         f" error: {e}"
                         f" trace:\n{trace}")
-        return request, make_error(
+        return snap_request, make_error(
             user_message="error while taking account snapshot",
             debug_message=str(e),
             trace=trace)
@@ -291,6 +280,12 @@ def take_raw_snapshot(user_account, linked_accounts: Optional[List[int]]):
         ]
 
 
+def validate_fx_rates(rates: dict[fx_market.Xccy, float]):
+    missing_rates = [str(pair) for (pair, rate) in rates.items() if rate is None]
+    if missing_rates:
+        raise RuntimeError(f"Rate is missing for the following FX pair(s): {', '.join(missing_rates)}")
+
+
 def take_snapshot_impl(user_account_id: int, linked_accounts: Optional[List[int]]):
     logging.info(f"fetching user information for user account id {user_account_id}")
 
@@ -322,13 +317,12 @@ def take_snapshot_impl(user_account_id: int, linked_accounts: Optional[List[int]
         logging.info(utils.pretty_dump(raw_snapshot))
         step.set_output(raw_snapshot)
 
-    with tracer.sub_step("fetch currency pairs"):
+    with tracer.sub_step("fetch currency pairs") as step:
         xccy_collector = XccyCollector(requested_ccy)
         visit_snapshot_tree(raw_snapshot, xccy_collector)
-        xccy_rates = {
-            xccy: fx_market.get_xccy_rate(xccy.domestic, xccy.foreign)
-            for xccy in xccy_collector.xccys
-        }
+        xccy_rates = fx_market.get_rates(xccy_collector.xccys)
+        step.set_output({str(xccy): rate for (xccy, rate) in xccy_rates.items()})
+        validate_fx_rates(xccy_rates)
 
     logging.info(f"adding cross currency rates to snapshot")
 

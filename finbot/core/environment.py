@@ -24,6 +24,7 @@ class Environment:
     webapp_endpoint: str
     schedsrv_port: int
     schedsrv_endpoint: str
+    currconv_api_key: str
 
 
 def get_environment_value(name: str, default: str = _Raises) -> str:
@@ -77,6 +78,10 @@ def get_schedsrv_endpoint() -> str:
     return get_environment_value("FINBOT_SCHEDSRV_ENDPOINT")
 
 
+def get_currconv_api_key() -> str:
+    return get_environment_value("FINBOT_CURRCONV_API_KEY", "")
+
+
 def get() -> Environment:
     return Environment(
         vault_path=get_vault_path(),
@@ -89,5 +94,6 @@ def get() -> Environment:
         appwsrv_endpoint=get_appwsrv_endpoint(),
         webapp_endpoint=get_webapp_endpoint(),
         schedsrv_port=get_schedsrv_port(),
-        schedsrv_endpoint=get_schedsrv_endpoint()
+        schedsrv_endpoint=get_schedsrv_endpoint(),
+        currconv_api_key=get_currconv_api_key()
     )
