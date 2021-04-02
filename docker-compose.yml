@@ -20,7 +20,7 @@ services:
     image: "finbot/runtime-selenium:latest"
     container_name: finbotwsrv
     working_dir: /finbot
-    command: sh -c "make run-finbotwsrv-dev"
+    command: bash -c "source secret.env && make run-finbotwsrv-dev"
     tty: true
     ports:
       - "5001:5001"
@@ -37,7 +37,7 @@ services:
       - finbotdb
       - finbotwsrv
     working_dir: /finbot
-    command: sh -c "make finbot-wait && make run-snapwsrv-dev"
+    command: bash -c "source secret.env && make finbot-wait && make run-snapwsrv-dev"
     tty: true
     ports:
       - "5000:5000"
@@ -54,7 +54,7 @@ services:
     depends_on: 
       - finbotdb
     working_dir: /finbot
-    command: sh -c "make finbot-wait && make run-histwsrv-dev"
+    command: bash -c "source secret.env && make finbot-wait && make run-histwsrv-dev"
     tty: true
     ports:
       - "5002:5002"
@@ -71,7 +71,7 @@ services:
       - snapwsrv
       - histwsrv
     working_dir: /finbot
-    command: sh -c "make finbot-wait && make run-schedsrv-dev"
+    command: bash -c "source secret.env && make finbot-wait && make run-schedsrv-dev"
     tty: true
     volumes:
       - .:/finbot
@@ -89,7 +89,7 @@ services:
       - finbotwsrv
       - schedsrv
     working_dir: /finbot
-    command: sh -c "make finbot-wait && make run-appwsrv-dev"
+    command: bash -c "source secret.env && make finbot-wait && make run-appwsrv-dev"
     tty: true
     ports:
       - "5003:5003"
@@ -120,7 +120,7 @@ services:
     depends_on:
       - finbotdb
     working_dir: /finbot
-    command: sleep infinity
+    command: bash -c "source secret.env && sleep infinity"
     stdin_open: true
     tty: true
     volumes:
