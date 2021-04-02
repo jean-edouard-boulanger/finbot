@@ -272,11 +272,11 @@ def take_raw_snapshot(user_account, linked_accounts: Optional[List[int]]):
 
         return [
             {
-                "provider": request.provider_id,
-                "account_id": request.account_id,
+                "provider": snap_request.provider_id,
+                "account_id": snap_request.account_id,
                 "data": account_snapshot
             }
-            for request, account_snapshot in snapshot_entries
+            for snap_request, account_snapshot in snapshot_entries
         ]
 
 
