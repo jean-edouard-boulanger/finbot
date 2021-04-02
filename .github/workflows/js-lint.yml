@@ -1,0 +1,38 @@
+name: Lint (JS)
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "**.js"
+      - "package.json"
+  pull_request:
+    branches:
+      - master
+    paths:
+      - "**.js"
+      - "package.json"
+
+jobs:
+  eslint-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out finbot source
+        uses: actions/checkout@v2
+      - name: Install JS dependencies
+        working-directory: webapp/
+        run: npm -i
+      - name: eslint check
+        working-directory: webapp/
+        run: npm run lint-check
+  prettier-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out finbot source
+        uses: actions/checkout@v2
+      - name: Install JS dependencies
+        working-directory: webapp/
+        run: npm -i
+      - name: prettier check
+        working-directory: webapp/
+        run: npm run prettier-check
