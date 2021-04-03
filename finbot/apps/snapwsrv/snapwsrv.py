@@ -31,7 +31,6 @@ configure_logging()
 
 
 FINBOT_ENV = environment.get()
-secret = FINBOT_ENV.secret_path.open().read()
 db_engine = create_engine(FINBOT_ENV.database_url)
 db_session = dbutils.add_persist_utilities(scoped_session(sessionmaker(bind=db_engine)))
 tracer.configure(
@@ -249,7 +248,7 @@ def dispatch_snapshot_entry(snap_request: AccountSnapshotRequest):
 def get_credentials_data(linked_account: LinkedAccount, user_account: UserAccount):
     credentials = json.loads(
         secure.fernet_decrypt(
-            linked_account.encrypted_credentials.encode(), secret
+            linked_account.encrypted_credentials.encode(), FINBOT_ENV.secret_key
         ).decode()
     )
     if linked_account.provider_id == "plaid_us":

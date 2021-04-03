@@ -43,7 +43,6 @@ configure_logging()
 
 
 FINBOT_ENV = environment.get()
-SECRET = FINBOT_ENV.secret_path.open().read()
 
 
 def get_finbot_client() -> FinbotClient:
@@ -70,7 +69,7 @@ db_session = dbutils.add_persist_utilities(scoped_session(sessionmaker(bind=db_e
 
 
 app = Flask(__name__)
-app.config["JWT_SECRET_KEY"] = str(SECRET)
+app.config["JWT_SECRET_KEY"] = environment.get_secret_key()
 
 CORS(app)
 JWTManager(app)
@@ -118,7 +117,7 @@ def auth_login():
 
     # TODO: password should be hashed, not encrypted/decrypted with secret
     account_password = secure.fernet_decrypt(
-        account.encrypted_password.encode(), SECRET.encode()
+        account.encrypted_password.encode(), FINBOT_ENV.secret_key.encode()
     ).decode()
     if account_password != data["password"]:
         raise ApplicationError("Invalid email or password")
@@ -229,7 +228,7 @@ def create_user_account():
         with db_session.persist(UserAccount()) as user_account:
             user_account.email = data["email"]
             user_account.encrypted_password = secure.fernet_encrypt(
-                data["password"].encode(), SECRET
+                data["password"].encode(), FINBOT_ENV.secret_key
             ).decode()
             user_account.full_name = data["full_name"]
             user_account.settings = UserAccountSettings(
@@ -540,7 +539,7 @@ def link_new_account(user_account_id):
         try:
             with db_session.persist(user_account):
                 encrypted_credentials = secure.fernet_encrypt(
-                    json.dumps(credentials).encode(), SECRET
+                    json.dumps(credentials).encode(), FINBOT_ENV.secret_key
                 ).decode()
                 user_account.linked_accounts.append(
                     LinkedAccount(
@@ -630,7 +629,8 @@ def update_linked_account(user_account_id, linked_account_id):
                 linked_account.account_name = request_data["account_name"]
             if request_has_credentials:
                 encrypted_credentials = secure.fernet_encrypt(
-                    json.dumps(request_data["credentials"]).encode(), SECRET
+                    json.dumps(request_data["credentials"]).encode(),
+                    FINBOT_ENV.secret_key,
                 ).decode()
                 linked_account.encrypted_credentials = encrypted_credentials
     except IntegrityError as e:

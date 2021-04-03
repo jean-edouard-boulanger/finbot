@@ -34,32 +34,18 @@ else
 fi
 
 log_info "creating secret environment script"
-cp secret.env.sh.tpl secret.env.sh && chmod +x secret.env.sh
-
-operator=operator
-log_info "starting finbot ${operator} container in the background"
-docker-compose up -d ${operator}
-
-log_info "initializing vault"
-docker exec ${operator} \
-  tools/with-env.sh docker \
-    make init-vault
+cp secret.env.sh.tpl secret.env.sh && chmod 700 secret.env.sh
+secret_key=$(docker_run_operator tools/crypt fernet-key | tail -n 1)
+sed -i'' "s/FINBOT_SECRET_KEY_PLACEHOLDER/${secret_key}/g" secret.env.sh
 
 log_info "starting finbot database container"
-docker-compose up -d finbotdb
-docker exec ${operator} \
-  tools/with-env.sh docker \
-    env FINBOT_WAIT_DEPS=db make finbot-wait
+docker_run_operator env FINBOT_WAIT_DEPS=db make finbot-wait
 
 log_info "creating finbot database schema"
-docker exec ${operator} \
-  tools/with-env.sh docker \
-    make finbotdb-rebuild
+docker_run_operator make finbotdb-rebuild
 
 log_info "hydrating finbotdb with default data"
-docker exec ${operator} \
-  tools/with-env.sh docker \
-    make finbotdb-hydrate
+docker_run_operator make finbotdb-hydrate
 
 log_info "stopping containers"
 docker-compose down
