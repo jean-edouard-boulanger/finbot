@@ -1,0 +1,28 @@
+name: Run system tests
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+jobs:
+  run-system-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out finbot source
+        uses: actions/checkout@v2
+      - uses: satackey/action-docker-layer-caching@v0.0.11
+        continue-on-error: true
+        with:
+          key: finbot-docker-${{ hashFiles('*.Dockerfile', 'docker-compose*') }}-{hash}
+          restore-keys: |
+            finbot-docker-${{ hashFiles('*.Dockerfile', 'docker-compose*') }}-
+      - name: Initialise finbot environment
+        run: ./finbotctl init
+      - name: Start finbot backend
+        run: ./finbotctl start --no-frontend
+      - name: Run system tests
+        run: make run-system-tests-docker
+      - name: Stop finbot backend
+        run: ./finbotctl stop

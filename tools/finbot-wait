@@ -42,8 +42,7 @@ class ClientChecker(object):
             if not response:
                 return False
             return json.loads(response.content)["healthy"]
-        except requests.RequestException as e:
-            logging.info(e)
+        except requests.RequestException:
             return False
 
 
@@ -55,8 +54,7 @@ class WebsiteChecker(object):
         try:
             requests.get(f"{self._url}")
             return True
-        except requests.RequestException as e:
-            logging.info(e)
+        except requests.RequestException:
             return False
 
 

@@ -2,10 +2,23 @@
 OWN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 . ${OWN_DIR}/bash-utils.sh
 
-log_info "starting finbot containers"
+log_info "starting finbot backend containers"
 docker-compose up -d \
-  webapp appwsrv histwsrv snapwsrv finbotwsrv finbotdb \
+  appwsrv histwsrv snapwsrv finbotwsrv finbotdb schedsrv \
   || die failed to start containers
+deps=api
 
-log_info "waiting for webapp availability (this could take a few minutes)"
-env FINBOT_WAIT_DEPS=webapp make finbot-wait >/dev/null 2>&1
+if [[ "${1}" != "--no-frontend" ]]
+then
+  log_info "starting finbot frontend container (webapp)"
+  docker-compose up -d webapp || die failed to start containers
+  deps="${deps},webapp"
+else
+  log_info "skipping frontend container (--no-frontend provided)"
+fi
+
+log_info "waiting for dependencies ${deps} to be available"
+
+docker-compose run --rm operator \
+  tools/with-env.sh docker \
+    env FINBOT_WAIT_DEPS=${deps} make finbot-wait

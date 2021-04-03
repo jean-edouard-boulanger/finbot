@@ -109,6 +109,11 @@ test-hist:
 	python3.9 tools/histwsrv-tester \
 		--snapshot-id ${snapshot}
 
+run-system-tests-docker:
+	docker-compose run --rm operator \
+		tools/with-env.sh docker \
+			python3.9 -m pytest tests/system/
+
 init-vault:
 	tools/init-vault.sh
 
@@ -151,20 +156,20 @@ finbotdb-rebuild:
 	python3.9 tools/finbotdb build
 
 finbotdb-hydrate:
-	python3.9 tools/finbotdb --database hydrate \
+	python3.9 tools/finbotdb hydrate \
 		--data-file ./tools/hydrate.json
 
 finbotdb-add-account:
 	tools/check-env.sh FINBOT_SECRET_PATH;
 	tools/check-env.sh FINBOT_ACCOUNT_PATH;
-	python3.9 tools/finbotdb --database add-account \
+	python3.9 tools/finbotdb add-account \
 		--secret ${FINBOT_SECRET_PATH} \
 		--account ${FINBOT_ACCOUNT_PATH}
 
 finbotdb-dump-account:
 	tools/check-env.sh FINBOT_SECRET_PATH;
 	tools/check-env.sh FINBOT_ACCOUNT_PATH;
-	python3.9 tools/finbotdb --database dump-account \
+	python3.9 tools/finbotdb dump-account \
 		--secret ${FINBOT_SECRET_PATH} \
 		--account-id ${account_id}
 

@@ -92,7 +92,7 @@ services:
       FINBOT_WAIT_DEPS: "finbot,db"
 
   webapp:
-    image: "node:13-alpine3.10"
+    image: "node:15-alpine3.10"
     container_name: webapp
     depends_on: 
       - appwsrv
@@ -115,8 +115,6 @@ services:
     tty: true
     volumes:
       - .:/finbot
-    environment:
-      FINBOT_DB_HOSTNAME: finbotdb
 
 volumes:
     .finbotdb:
