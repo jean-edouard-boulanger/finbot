@@ -1,24 +1,15 @@
 #!/usr/bin/env python3.9
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
-from finbot.core.utils import pretty_dump, configure_logging
+from finbot.core.utils import configure_logging
 from finbot.core.environment import get_database_url
 from finbot.model import (
     Base,
     Provider,
-    UserAccount,
-    UserAccountSettings,
-    LinkedAccount,
     UserAccountHistoryEntry,
-    UserAccountValuationHistoryEntry,
-    LinkedAccountValuationHistoryEntry,
-    SubAccountValuationHistoryEntry,
-    SubAccountItemValuationHistoryEntry,
-    SubAccountItemType
 )
 import logging.config
 import logging
-import random
 import datetime
 import argparse
 import json
@@ -26,89 +17,6 @@ import sys
 
 
 configure_logging()
-
-# will be fixed when needed
-"""
-def general_real_historical_valuation(history_file_path, 
-                                      user_account: UserAccount):
-    import pandas as pd
-
-    entries = []
-    valuation_ccy = user_account.settings.valuation_ccy
-    with open(history_file_path, "r") as f:
-        reader = csv.DictReader(f, delimiter=";")
-        for row in reader:
-            valuation_date = datetime.datetime(*list(reversed(list(int(v) for v in row["date"].split("-")))), tzinfo=pytz.utc)
-            entries.append([
-                valuation_date,
-                row["provider"],
-                row["account_id"],
-                float(row["amount"]),
-                row["ccy"],
-                float(row["amount"]) * fx.get_xccy_rate(row["ccy"], valuation_ccy, valuation_date),
-                valuation_ccy
-            ])
-
-    df = pd.DataFrame.from_records(entries, columns=[
-        "date", 
-        "provider", 
-        "account_id", 
-        "amount_account_ccy", 
-        "account_ccy",
-        "amount_snapshot_ccy",
-        "snapshot_ccy"
-    ]).sort_values(by=["date"])
-
-    val_by_date = df.groupby(["date"])["amount_snapshot_ccy"].sum()
-    val_by_date_provider = df.groupby(["date", "provider"])["amount_snapshot_ccy"].sum()
-    val_by_date_sub_account = df.groupby(["date", "provider", "account_id", "account_ccy"]).agg({
-        "amount_snapshot_ccy": "sum",
-        "amount_account_ccy": "sum"
-    }).to_dict()
-    val_by_date_sub_account = {
-        path: (acc_val, val_by_date_sub_account["amount_snapshot_ccy"][path])
-        for path, acc_val in val_by_date_sub_account["amount_account_ccy"].items()
-    }
-
-    linked_account_by_provider = {
-        linked_account.provider_id: linked_account
-        for linked_account in user_account.linked_accounts 
-    }
-
-    return [
-        UserAccountHistoryEntry(
-            user_account=user_account,
-            valuation_ccy=valuation_ccy,
-            effective_at=val_date,
-            available=True,
-            user_account_valuation_history_entry=UserAccountValuationHistoryEntry(
-                valuation=amount),
-            linked_accounts_valuation_history_entries=[
-                LinkedAccountValuationHistoryEntry(
-                    linked_account=linked_account_by_provider[provider_id],
-                    valuation=linked_amount
-                )
-                for (val_date0, provider_id), linked_amount 
-                in val_by_date_provider.iteritems()
-                if val_date0 == val_date
-            ],
-            sub_accounts_valuation_history_entries=[
-                SubAccountValuationHistoryEntry(
-                    linked_account=linked_account_by_provider[provider_id],
-                    sub_account_id=sub_account_id,
-                    sub_account_ccy=sub_account_ccy,
-                    sub_account_description=sub_account_id,
-                    valuation=snap_val,
-                    valuation_sub_account_ccy=acc_val
-                )
-                for (val_date0, provider_id, sub_account_id, sub_account_ccy), (acc_val, snap_val)
-                in val_by_date_sub_account.items()
-                if val_date0 == val_date
-            ]
-        )
-        for val_date, amount in val_by_date.iteritems()
-    ]
-"""
 
 
 def hydrate_tool(settings, engine, session):
@@ -131,189 +39,6 @@ def parse_input_date(date_str):
     return datetime.datetime.strptime(date_str, "%d-%b-%Y")
 
 
-def handle_fake_data_source(user_account: UserAccount,
-                            initial_amount,
-                            rate,
-                            contributions,
-                            period_days,
-                            start_date,
-                            end_date):
-    seconds_in_year = 3600 * 24 * 364
-    start_date = parse_input_date(start_date)
-    end_date = parse_input_date(end_date)
-    assert end_date > start_date
-    min_rate, max_rate = rate
-    min_contribution, max_contribution = contributions
-    period = datetime.timedelta(days=period_days)
-
-    linked_accounts = user_account.linked_accounts
-
-    valuations = [(start_date, [initial_amount] * len(linked_accounts))]
-    while True:
-        previous_time, previous_values = valuations[-1]
-        current_time = previous_time + period
-        if current_time > end_date:
-            break
-
-        current_values = []
-        for valuation_idx in range(len(linked_accounts)):
-            current_value =  previous_values[valuation_idx]
-            period_contribution = random.uniform(min_contribution, max_contribution)
-            yearly_rate = random.uniform(min_rate, max_rate)
-            period_rate = yearly_rate * (period.total_seconds() / seconds_in_year)
-            current_values.append((current_value * (1.0 + period_rate)) + period_contribution)
-        valuations.append((current_time, current_values))
-
-    currency = user_account.settings.valuation_ccy
-    sub_account_id = "checkings"
-
-    return [
-        UserAccountHistoryEntry(
-            user_account=user_account,
-            valuation_ccy=currency,
-            effective_at=valuation_date,
-            available=True,
-            user_account_valuation_history_entry=UserAccountValuationHistoryEntry(
-                valuation=sum(values)),
-            linked_accounts_valuation_history_entries=[
-                LinkedAccountValuationHistoryEntry(
-                    linked_account=linked_account,
-                    valuation=value
-                )
-                for value, linked_account in zip(values, linked_accounts)
-            ],
-            sub_accounts_valuation_history_entries=[
-                SubAccountValuationHistoryEntry(
-                    linked_account=linked_account,
-                    sub_account_id=sub_account_id,
-                    sub_account_ccy=currency,
-                    sub_account_description=sub_account_id,
-                    valuation=value,
-                    valuation_sub_account_ccy=value
-                )
-                for value, linked_account in zip(values, linked_accounts)
-            ],
-            sub_accounts_items_valuation_history_entries=[
-                SubAccountItemValuationHistoryEntry(
-                    linked_account=linked_account,
-                    sub_account_id=sub_account_id,
-                    item_type=SubAccountItemType.Asset,
-                    name="cash",
-                    item_subtype="currency",
-                    valuation=value,
-                    valuation_sub_account_ccy=value
-                )
-                for value, linked_account in zip(values, linked_accounts)
-            ]
-        )
-        for valuation_date, values in valuations
-    ]
-
-
-def add_account_tool(settings, engine, session):
-    from finbot.core import secure
-
-    with open(settings.secret) as kf:
-        secret = kf.read()
-        with open(settings.account, "rb") as af:
-            account_data = json.loads(secure.fernet_decrypt(af.read(), secret))
-
-    # 1. find all available providers
-
-    all_providers = {
-        provider.id: provider
-        for provider in  session.query(Provider).all()
-    }
-
-    # 2. create user account for account file
-    user_account_data = account_data["user_account"]
-    new_account = UserAccount(
-        email=user_account_data["email"],
-        encrypted_password=secure.fernet_encrypt(
-            user_account_data["password"].encode(), secret).decode(),
-        full_name=user_account_data["full_name"],
-        settings=UserAccountSettings(
-            valuation_ccy=user_account_data["settings"]["valuation_ccy"]
-        ),
-        linked_accounts=[
-            LinkedAccount(
-                provider=all_providers[linked_account["provider_id"]],
-                account_name=linked_account["description"],
-                encrypted_credentials=secure.fernet_encrypt(
-                    json.dumps(linked_account["credentials"]).encode(), secret).decode()
-            )
-            for linked_account in account_data["linked_accounts"]
-        ]
-    )
-
-    session.add(new_account)
-    session.commit()
-
-    data_source = account_data.get("data_source")
-    if data_source:
-        data_source_type = list(data_source.keys())[0]
-        data_source_handlers = {
-            "fake": handle_fake_data_source
-        }
-        handler = data_source_handlers[data_source_type]
-        session.add_all(handler(new_account, **data_source[data_source_type]))
-        session.commit()
-
-    logging.info(f"user account '{new_account.id}' created")
-    return True
-
-
-def update_account_tool(settings, engine, session):
-    from finbot.core import secure
-    with open(settings.secret_file) as kf:
-        secret = kf.read()
-        with open(settings.account_file, "rb") as af:
-            account_data = json.loads(secure.fernet_decrypt(af.read(), secret))
-    local_linked_accounts: list = account_data["linked_accounts"]
-    local_linked_account = [account for account in local_linked_accounts if account["provider_id"] == settings.provider][0]
-    logging.info(local_linked_account)
-    remote_linked_account: LinkedAccount = session.query(LinkedAccount).filter_by(user_account_id=settings.user_id, provider_id=settings.provider).first()
-    remote_linked_account.account_name = local_linked_account["description"]
-    remote_linked_account.encrypted_credentials = secure.fernet_encrypt(
-        json.dumps(local_linked_account["credentials"]).encode(), secret).decode()
-    session.add(remote_linked_account)
-    session.commit()
-
-
-def dump_account_tool(settings, engine, session):
-    from finbot.core import secure
-    account = session.query(UserAccount).filter_by(id=settings.account_id).first()
-    if not account:
-        logging.info(f"no such account: {settings.account_id}")
-        return False
-
-    with open(settings.secret) as kf:
-        secret = kf.read()
-
-    def decrypt(data):
-        return secure.fernet_decrypt(data.encode(), secret.encode()).decode()
-
-    print(pretty_dump({
-        "user_account": {
-            "email": account.email,
-            "full_name": account.full_name,
-            "password": decrypt(account.encrypted_password),
-            "settings": {
-                "valuation_ccy": account.settings.valuation_ccy
-            }
-        },
-        "linked_accounts": [
-            {
-                "provider_id": linked_account.provider_id,
-                "description": linked_account.account_name,
-                "credentials": json.loads(decrypt(linked_account.encrypted_credentials))
-            }
-            for linked_account in account.linked_accounts
-        ]
-    }))
-    return True
-
-
 def disable_history_entry_tool(settings, engine, session):
     history_entry = session.query(UserAccountHistoryEntry).filter_by(id=settings.history_entry_id).first()
     history_entry.available = False
@@ -331,25 +56,8 @@ def destroy_tool(settings, engine, session):
     return True
 
 
-def setup_update_account_subparser(parser):
-    parser.add_argument("--secret-file", type=str, help="path to secret key", required=True)
-    parser.add_argument("--account-file", type=str, help="path to account file", required=True)
-    parser.add_argument("--provider", type=str, help="updated provider id", required=True)
-    parser.add_argument("--user-id", type=int, help="updated user id", required=True)
-
-
-def setup_add_account_subparser(parser):
-    parser.add_argument("-k", "--secret", type=str, help="path to secret key", required=True)
-    parser.add_argument("-A", "--account", type=str, help="path to account file", required=True)
-
-
 def setup_hydrate_subparser(parser):
     parser.add_argument("-f", "--data-file", type=str, help="path to hydrate data file", required=True)
-
-
-def setup_dump_account_subparser(parser):
-    parser.add_argument("-k", "--secret", type=str, help="path to secret key", required=True)
-    parser.add_argument("--account-id", type=int, required=True)
 
 
 def setup_disable_history_entry_subparser(parser):
@@ -382,21 +90,6 @@ all_tools = {
         "description": "hydrate database with minimal data",
         "parser_builder": setup_hydrate_subparser,
         "handler": hydrate_tool
-    },
-    "add-account": {
-        "description": "adds the current test account to the database",
-        "parser_builder": setup_add_account_subparser,
-        "handler": add_account_tool
-    },
-    "dump-account": {
-        "description": "dump account dada",
-        "parser_builder": setup_dump_account_subparser,
-        "handler": dump_account_tool
-    },
-    "update-account": {
-        "description": "update account",
-        "parser_builder": setup_update_account_subparser,
-        "handler": update_account_tool
     },
     "disable-history-entry": {
         "description": "mark history entry as unavailable",

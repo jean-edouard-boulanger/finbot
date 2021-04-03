@@ -76,14 +76,17 @@ trigger-valuation:
 		--accounts ${accounts}
 
 test-providers-docker:
+	tools/check-env.sh account_id;
 	tools/check-env.sh providers;
 	docker-compose run --rm operator \
 		tools/with-env.sh docker \
 			python3.9 tools/providers-tester \
 				--dump-balances --dump-assets --dump-liabilities \
+				--account-id ${account_id} \
 				--providers ${providers}
 
 test-providers-debug:
+	tools/check-env.sh account_id;
 	tools/check-env.sh providers;
 	python3.9 tools/providers-tester \
 			--dump-balances --dump-assets --dump-liabilities \
@@ -91,12 +94,15 @@ test-providers-debug:
 			--pause-on-error \
 			--no-threadpool \
 			--developer-tools \
+			--account-id ${account_id} \
 			--providers ${providers}
 
 test-providers:
+	tools/check-env.sh account_id;
 	tools/check-env.sh providers;
 	python3.9 tools/providers-tester \
 			--dump-balances --dump-assets --dump-liabilities \
+			--account-id ${account_id} \
 			--providers ${providers}
 
 test-snap:
@@ -113,37 +119,6 @@ run-system-tests-docker:
 	docker-compose run --rm operator \
 		tools/with-env.sh docker \
 			python3.9 -m pytest tests/system/
-
-init-vault:
-	tools/init-vault.sh
-
-init-account:
-	tools/check-env.sh FINBOT_SECRET_PATH;
-	tools/check-env.sh FINBOT_ACCOUNT_PATH;
-	python3.9 tools/crypt fernet-encrypt \
-		-k ${FINBOT_SECRET_PATH} \
-		-i tools/accounts.tpl.json > ${FINBOT_ACCOUNT_PATH} && \
-	echo "created default account, run 'make edit-account' to configure"
-
-show-account:
-	tools/check-env.sh FINBOT_SECRET_PATH;
-	tools/check-env.sh FINBOT_ACCOUNT_PATH;
-	python3.9 tools/crypt fernet-decrypt \
-		-k ${FINBOT_SECRET_PATH} \
-		-i ${FINBOT_ACCOUNT_PATH} | less
-
-edit-account:
-	tools/check-env.sh FINBOT_SECRET_PATH;
-	tools/check-env.sh FINBOT_ACCOUNT_PATH;
-	python3.9 tools/crypt fernet-decrypt \
-		-k ${FINBOT_SECRET_PATH} \
-		-i ${FINBOT_ACCOUNT_PATH} > .accounts.tmp.json && \
-	chmod 600 .accounts.tmp.json && \
-	${FINBOT_EDIT_CMD} .accounts.tmp.json && \
-	python3.9 tools/crypt fernet-encrypt \
-		-k ${FINBOT_SECRET_PATH} \
-		-i .accounts.tmp.json > ${FINBOT_ACCOUNT_PATH} && \
-	rm .accounts.tmp.json
 
 finbotdb-build:
 	python3.9 tools/finbotdb build

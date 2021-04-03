@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from pathlib import Path
 import os
 
 
@@ -13,9 +12,7 @@ class _Raises(object):
 
 @dataclass
 class Environment:
-    vault_path: Path
-    secret_path: Path
-    account_path: Path
+    secret_key: str
     database_url: str
     finbotwsrv_endpoint: str
     snapwsrv_endpoint: str
@@ -34,16 +31,8 @@ def get_environment_value(name: str, default: str = _Raises) -> str:
     return value
 
 
-def get_vault_path() -> Path:
-    return Path(get_environment_value("FINBOT_VAULT_PATH"))
-
-
-def get_secret_path() -> Path:
-    return Path(get_environment_value("FINBOT_SECRET_PATH"))
-
-
-def get_account_path() -> Path:
-    return Path(get_environment_value("FINBOT_ACCOUNT_PATH"))
+def get_secret_key() -> str:
+    return get_environment_value("FINBOT_SECRET_KEY")
 
 
 def get_database_url() -> str:
@@ -84,9 +73,7 @@ def get_currconv_api_key() -> str:
 
 def get() -> Environment:
     return Environment(
-        vault_path=get_vault_path(),
-        secret_path=get_secret_path(),
-        account_path=get_account_path(),
+        secret_key=get_secret_key(),
         database_url=get_database_url(),
         finbotwsrv_endpoint=get_finbotwsrv_endpoint(),
         snapwsrv_endpoint=get_snapwsrv_endpoint(),

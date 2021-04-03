@@ -4,9 +4,6 @@ source ${SELF_DIR}/secret.env.sh
 source ${SELF_DIR}/tools/bash-utils.sh
 
 add_to_python_path ${SELF_DIR}
-export FINBOT_VAULT_PATH=${SELF_DIR}/.secure
-export FINBOT_SECRET_PATH=${FINBOT_VAULT_PATH}/secret.txt
-export FINBOT_ACCOUNT_PATH=${FINBOT_VAULT_PATH}/accounts
 export FINBOT_DB_HOSTNAME=127.0.0.1
 export FINBOT_DB_USER=finbot
 export FINBOT_DB_DBNAME=finbot
