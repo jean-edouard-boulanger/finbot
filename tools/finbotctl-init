@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+set -e
+
 OWN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source ${OWN_DIR}/bash-utils.sh
 
@@ -10,7 +12,7 @@ which docker >/dev/null 2>&1 || die "'docker' is not available in this machine, 
 log_info docker is available
 
 log_info checking docker-compose availability
-which docker-compose  >/dev/null 2>&1 || die "'docker-compose' is not available on this machine, install and try again"
+which docker-compose >/dev/null 2>&1 || die "'docker-compose' is not available on this machine, install and try again"
 log_info docker-compose is available
 
 runtime_image="finbot/runtime:latest"
@@ -31,22 +33,33 @@ else
   log_info "finbot selenium runtime image (${runtime_selenium_image}) already exists, skipping build"
 fi
 
+log_info "creating secret environment script"
+cp secret.env.sh.tpl secret.env.sh && chmod +x secret.env.sh
+
 operator=operator
 log_info "starting finbot ${operator} container in the background"
 docker-compose up -d ${operator}
 
 log_info "initializing vault"
-docker exec ${operator} make init-vault
+docker exec ${operator} \
+  tools/with-env.sh docker \
+    make init-vault
 
 log_info "starting finbot database container"
 docker-compose up -d finbotdb
-env FINBOT_WAIT_DEPS=db make finbot-wait
+docker exec ${operator} \
+  tools/with-env.sh docker \
+    env FINBOT_WAIT_DEPS=db make finbot-wait
 
 log_info "creating finbot database schema"
-docker exec ${operator} make finbotdb-rebuild
+docker exec ${operator} \
+  tools/with-env.sh docker \
+    make finbotdb-rebuild
 
 log_info "hydrating finbotdb with default data"
-docker exec ${operator} make finbotdb-hydrate
+docker exec ${operator} \
+  tools/with-env.sh docker \
+    make finbotdb-hydrate
 
 log_info "stopping containers"
 docker-compose down

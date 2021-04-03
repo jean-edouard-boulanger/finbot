@@ -259,18 +259,6 @@ def create_user_account():
     )
 
 
-ACCOUNT = ACCOUNTS.p("user_account_id")
-
-
-@app.route(ACCOUNT.is_configured())
-@jwt_required
-@request_handler()
-def is_user_account_configured(user_account_id: int):
-    account = repository.get_user_account(db_session, user_account_id)
-    configured = len(account.linked_accounts) > 0
-    return jsonify({"configured": configured})
-
-
 def serialize_user_account_valuation(
     entry: UserAccountHistoryEntry,
     history: List[UserAccountHistoryEntry],
@@ -298,8 +286,11 @@ def serialize_user_account_valuation(
     }
 
 
+ACCOUNT = ACCOUNTS.p("user_account_id")
+
+
 @app.route(ACCOUNT(), methods=["GET"])
-@jwt_required
+@jwt_required()
 @request_handler()
 def get_user_account(user_account_id):
     account = repository.get_user_account(db_session, user_account_id)
@@ -342,15 +333,24 @@ def get_user_account(user_account_id):
     )
 
 
+@app.route(ACCOUNT.is_configured())
+@jwt_required()
+@request_handler()
+def is_user_account_configured(user_account_id: int):
+    account = repository.get_user_account(db_session, user_account_id)
+    configured = len(account.linked_accounts) > 0
+    return jsonify({"configured": configured})
+
+
 @app.route(ACCOUNT.valuation.trigger(), methods=["POST"])
-@jwt_required
+@jwt_required()
 @request_handler()
 def trigger_user_account_valuation(user_account_id):
     return jsonify(trigger_valuation(user_account_id))
 
 
 @app.route(ACCOUNT.settings(), methods=["GET"])
-@jwt_required
+@jwt_required()
 @request_handler()
 def get_user_account_settings(user_account_id):
     settings = (
@@ -372,7 +372,7 @@ def get_user_account_settings(user_account_id):
 
 
 @app.route(ACCOUNT.history(), methods=["GET"])
-@jwt_required
+@jwt_required()
 @request_handler()
 def get_user_account_valuation_history(user_account_id):
     history_entries = (
@@ -410,7 +410,7 @@ def get_user_account_valuation_history(user_account_id):
 
 
 @app.route(ACCOUNT.linked_accounts(), methods=["GET"])
-@jwt_required
+@jwt_required()
 @request_handler()
 def get_linked_accounts(user_account_id):
     results = repository.find_linked_accounts(db_session, user_account_id)
@@ -434,7 +434,7 @@ def get_linked_accounts(user_account_id):
 
 
 @app.route(ACCOUNT.linked_accounts.valuation(), methods=["GET"])
-@jwt_required
+@jwt_required()
 @request_handler()
 def get_linked_accounts_valuation(user_account_id):
     history_entry = repository.find_last_history_entry(db_session, user_account_id)
@@ -471,7 +471,7 @@ def get_linked_accounts_valuation(user_account_id):
 
 
 @app.route(ACCOUNT.linked_accounts(), methods=["POST"])
-@jwt_required
+@jwt_required()
 @request_handler(
     trace_values=False,
     schema={
@@ -576,7 +576,7 @@ LINKED_ACCOUNT = ACCOUNT.linked_accounts.p("linked_account_id")
 
 
 @app.route(LINKED_ACCOUNT(), methods=["PUT"])
-@jwt_required
+@jwt_required()
 @request_handler(
     trace_values=False,
     schema={
@@ -640,7 +640,7 @@ def update_linked_account(user_account_id, linked_account_id):
 
 
 @app.route(LINKED_ACCOUNT(), methods=["DELETE"])
-@jwt_required
+@jwt_required()
 @request_handler()
 def delete_linked_account(user_account_id, linked_account_id):
     linked_account_id = int(linked_account_id)
@@ -670,7 +670,7 @@ def delete_linked_account(user_account_id, linked_account_id):
 
 
 @app.route(LINKED_ACCOUNT.history(), methods=["GET"])
-@jwt_required
+@jwt_required()
 @request_handler()
 def get_linked_account_historical_valuation(user_account_id, linked_account_id):
     linked_account_id = int(linked_account_id)
@@ -708,7 +708,7 @@ def get_linked_account_historical_valuation(user_account_id, linked_account_id):
 
 
 @app.route(LINKED_ACCOUNT.sub_accounts(), methods=["GET"])
-@jwt_required
+@jwt_required()
 @request_handler()
 def get_linked_account_sub_accounts(user_account_id, linked_account_id):
     history_entry = repository.find_last_history_entry(db_session, user_account_id)
@@ -750,7 +750,7 @@ REPORTS = API_V1.reports
 
 
 @app.route(REPORTS.holdings(), methods=["GET"])
-@jwt_required
+@jwt_required()
 @request_handler()
 def get_holdings_report():
     user_account_id = get_jwt_identity()
@@ -769,7 +769,7 @@ def get_holdings_report():
 
 
 @app.route(REPORTS.earnings(), methods=["GET"])
-@jwt_required
+@jwt_required()
 @request_handler()
 def get_earnings_report():
     user_account_id = get_jwt_identity()
