@@ -68,7 +68,7 @@ def get_schedsrv_endpoint() -> str:
 
 
 def get_currconv_api_key() -> str:
-    return get_environment_value("FINBOT_CURRCONV_API_KEY", "")
+    return get_environment_value("FINBOT_CURRCONV_API_KEY")
 
 
 def get() -> Environment:
