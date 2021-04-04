@@ -76,7 +76,7 @@ class Api(providers.Base):
     @property
     def accounts(self) -> dict:
         assert self._accounts is not None
-        return self._accounts
+        return self._accounts["accounts"]
 
     def authenticate(self, credentials: Credentials):
         plaid_settings = credentials.plaid_settings
@@ -108,7 +108,7 @@ class Api(providers.Base):
                         }
                     ],
                 }
-                for account in self.accounts["accounts"]
+                for account in self.accounts
                 if account["type"] == "depository"
             ]
         }
@@ -126,7 +126,7 @@ class Api(providers.Base):
                         }
                     ],
                 }
-                for account in self.accounts["accounts"]
+                for account in self.accounts
                 if account["type"] == "credit"
             ]
         }
