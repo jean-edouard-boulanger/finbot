@@ -8,7 +8,6 @@ from finbot.core.utils import swallow_exc
 from datetime import datetime, timedelta
 from copy import deepcopy
 import contextlib
-import hashlib
 import json
 import uuid
 
@@ -127,53 +126,6 @@ class Api(SeleniumBased):
             ]
         }
 
-    def _get_cash_transactions(self, account, from_date, to_date):
-        cash_txn_url = f"{BASE_URL}{account['home_url']}/Transactions/Cash"
-        self._do.get(cash_txn_url)
-        staleness_detector = _StalenessDetector(self._do)
-        transactions_table = self._do.wait_element(
-            By.CSS_SELECTOR, "table.table-transactions > tbody"
-        )
-        while True:
-            extractor = _extract_cash_transactions(
-                transactions_table, staleness_detector
-            )
-            try:
-                for transaction in extractor:
-                    # vanguard displays transactions latest first, if the current
-                    # transaction's date is less than the lower bound, there is
-                    # no need to go further
-                    if transaction["date"] < from_date:
-                        return
-                    if transaction["date"] <= to_date:
-                        yield transaction
-            except StaleElementReferenceException:
-                # When reaching the last page of transactions, some rows in the
-                # transactions table will become stale, raising this exception.
-                # TODO: until there is a better solution, this simply indicates
-                # the end of the transactions list
-                return
-            next_button = self._do.find(By.CSS_SELECTOR, "button.next")
-            if not next_button.is_enabled():
-                return
-            next_button.click()
-
-    def _get_account_transactions(self, account, from_date, to_date):
-        return {
-            "account": deepcopy(account["description"]),
-            "transactions": list(
-                self._get_cash_transactions(account, from_date, to_date)
-            ),
-        }
-
-    def get_transactions(self, from_date, to_date):
-        return {
-            "accounts": [
-                self._get_account_transactions(account, from_date, to_date)
-                for account in self.account_data
-            ]
-        }
-
 
 class _StalenessDetector(object):
     def __init__(self, browser_helper: SeleniumHelper):
@@ -235,44 +187,6 @@ def _extract_fund_asset(product_type, product_row):
             "Average unit cost": avg_unit_cost,
         },
     }
-
-
-def _extract_cash_transactions(
-    transactions_table, staleness_detector: _StalenessDetector
-):
-    for row in transactions_table.find_elements_by_tag_name("tr"):
-        cells = row.find_elements_by_tag_name("td")
-        with staleness_detector.visit(cells[0]):
-            txn_date = datetime.strptime(cells[0].text.strip(), "%d %B %Y")
-            txn_description = cells[1].text.strip()
-            txn_in_amount = Price.fromstring(cells[2].text.strip()).amount_float
-            txn_out_amount = Price.fromstring(cells[3].text.strip()).amount_float
-            txn_amount = (
-                txn_in_amount if txn_in_amount is not None else (txn_out_amount * -1.0)
-            )
-            txn_type = "credit" if txn_in_amount is not None else "debit"
-            txn_bal = Price.fromstring(cells[4].text.strip()).amount_float
-            txn_id = (
-                "VGXX-"
-                + hashlib.sha224(
-                    "/".join(
-                        [
-                            txn_date.isoformat(),
-                            txn_description,
-                            str(txn_amount),
-                            txn_type,
-                            str(txn_bal),
-                        ]
-                    ).encode()
-                ).hexdigest()
-            )
-            yield {
-                "id": txn_id,
-                "date": txn_date,
-                "description": txn_description,
-                "amount": txn_amount,
-                "type": txn_type,
-            }
 
 
 def _extract_asset(product_type, product_row):

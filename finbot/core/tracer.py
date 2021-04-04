@@ -1,5 +1,5 @@
 from finbot.model import DistributedTrace
-from typing import ContextManager, List, Optional, Dict
+from typing import Iterator, List, Optional, Dict
 from datetime import datetime
 import stackprinter
 import contextlib
@@ -10,6 +10,12 @@ import os
 
 
 CONTEXT_TAG = "__tracer_context__"
+
+
+class Config(object):
+    def __init__(self, identity=None, persistence_layer=None):
+        self.identity = identity
+        self.persistence_layer = persistence_layer
 
 
 class Step(object):
@@ -64,28 +70,6 @@ class Step(object):
         return self._name
 
 
-class DBPersistenceLayer(object):
-    def __init__(self, db_session):
-        self.db_session = db_session
-
-    def persist(self, step):
-        dt = DistributedTrace(
-            guid=step.guid,
-            path=step.pretty_path,
-            name=step.name,
-            user_data=step.metadata,
-            start_time=step.start_time,
-            end_time=step.end_time,
-        )
-        self.db_session.merge(dt)
-        self.db_session.commit()
-
-
-class NoopPersistenceLayer(object):
-    def persist(self, step: Step):
-        pass
-
-
 class FlatContext(object):
     def __init__(self, guid: str, path: List[int]):
         self.guid = guid
@@ -97,12 +81,6 @@ class FlatContext(object):
 
 def _dummy_step() -> Step:
     return Step(guid=str(), path=[], name="dummy", start_time=datetime.now())
-
-
-class Config(object):
-    def __init__(self, identity=None, persistence_layer=None):
-        self.identity = identity
-        self.persistence_layer = persistence_layer
 
 
 class ThreadLogFilter(logging.Filter):
@@ -224,26 +202,50 @@ class TracerContext(object):
         return self._steps[-1]
 
 
-def _get_default_config() -> Config:
-    return Config(persistence_layer=NoopPersistenceLayer)
+class DBPersistenceLayer(object):
+    def __init__(self, db_session):
+        self.db_session = db_session
+
+    def persist(self, step: Step):
+        dt = DistributedTrace(
+            guid=step.guid,
+            path=step.pretty_path,
+            name=step.name,
+            user_data=step.metadata,
+            start_time=step.start_time,
+            end_time=step.end_time,
+        )
+        self.db_session.merge(dt)
+        self.db_session.commit()
+
+
+class NoopPersistenceLayer(object):
+    def persist(self, step: Step):
+        pass
+
+
+class _Singleton(object):
+    def __init__(self):
+        self.config: Config = Config(persistence_layer=NoopPersistenceLayer)
+        self.tls = threading.local()
+
+
+_SINGLETON = _Singleton()
 
 
 def _get_config() -> Config:
-    return _get_config.it
-
-
-_get_config.it = _get_default_config()
+    return _SINGLETON.config
 
 
 def configure(identity=None, persistence_layer=None):
-    _get_config.it = Config(
+    _SINGLETON.config = Config(
         identity=identity, persistence_layer=persistence_layer or NoopPersistenceLayer()
     )
 
 
 def _get_tracer_context() -> TracerContext:
-    tls = _get_tracer_context.tls
-    tracer_context = getattr(tls, "tracer_context", None)
+    tls = _SINGLETON.tls
+    tracer_context: Optional[TracerContext] = getattr(tls, "tracer_context", None)
     if not tracer_context:
         tls.tracer_context = TracerContext(_get_config())
         log_handler = LogHandler(current)
@@ -253,11 +255,8 @@ def _get_tracer_context() -> TracerContext:
     return tls.tracer_context
 
 
-_get_tracer_context.tls = threading.local()
-
-
 @contextlib.contextmanager
-def adopt(flat_context: FlatContext, name: str) -> ContextManager[Step]:
+def adopt(flat_context: FlatContext, name: str) -> Iterator[Step]:
     context = _get_tracer_context()
     step = context.adopt(flat_context, name)
     try:
@@ -268,7 +267,7 @@ def adopt(flat_context: FlatContext, name: str) -> ContextManager[Step]:
 
 
 @contextlib.contextmanager
-def root(name: str) -> ContextManager[Step]:
+def root(name: str) -> Iterator[Step]:
     context = _get_tracer_context()
     step = context.new_root(name)
     try:
@@ -282,7 +281,7 @@ def root(name: str) -> ContextManager[Step]:
 
 
 @contextlib.contextmanager
-def sub_step(name: str) -> ContextManager[Step]:
+def sub_step(name: str) -> Iterator[Step]:
     context = _get_tracer_context()
     step = context.new_child(name)
     try:
@@ -298,5 +297,5 @@ def current() -> Step:
     return _get_tracer_context().current()
 
 
-def propagate() -> FlatContext:
+def propagate() -> Optional[FlatContext]:
     return _get_tracer_context().propagate()

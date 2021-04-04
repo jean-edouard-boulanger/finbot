@@ -1,6 +1,8 @@
 alembic
+black
 cffi
 cryptography
+flake8
 flask
 flask-cors
 flask-jwt-extended
@@ -9,12 +11,14 @@ jsonschema
 krakenex
 marshmallow
 marshmallow-dataclass
+mypy
 oauth2client
 pandas
 plaid-python
 price-parser
 psycopg2
 pycoingecko
+pytest
 python-binance
 python-bittrex
 pytz
@@ -23,6 +27,6 @@ requests
 schedule
 selenium
 sqlalchemy
+sqlalchemy-stubs
 stackprinter
 terminaltables
-pytest

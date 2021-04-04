@@ -1,3 +1,4 @@
+from typing import Union, Type, TypeVar
 from dataclasses import dataclass
 import os
 
@@ -24,11 +25,16 @@ class Environment:
     currconv_api_key: str
 
 
-def get_environment_value(name: str, default: str = _Raises) -> str:
+T = TypeVar("T")
+
+
+def get_environment_value(
+    name: str, default: Union[str, Type[_Raises]] = _Raises
+) -> str:
     value = os.environ.get(name, default)
     if value == _Raises:
         raise MissingEnvironment(f"environment variable {name} not available")
-    return value
+    return str(value)
 
 
 def get_secret_key() -> str:

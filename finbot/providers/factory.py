@@ -19,14 +19,7 @@ class Provider(object):
         self.api_module = api_module
 
 
-def get_provider(provider_id):
-    provider = get_provider.providers.get(provider_id)
-    if provider is None:
-        raise KeyError(f"unknown provider: {provider_id}")
-    return provider
-
-
-get_provider.providers = {
+PROVIDERS = {
     "plaid_us": Provider(description="Plaid (US)", api_module=plaid_us),
     "binance_us": Provider(description="Binance (US)", api_module=binance_us),
     "ca_fr": Provider(
@@ -45,3 +38,10 @@ get_provider.providers = {
     "google_sheets": Provider(description="Google Sheets", api_module=google_sheets),
     "dummy_uk": Provider(description="Dummy (fake) provider", api_module=dummy_uk),
 }
+
+
+def get_provider(provider_id):
+    provider = PROVIDERS.get(provider_id)
+    if provider is None:
+        raise KeyError(f"unknown provider: {provider_id}")
+    return provider

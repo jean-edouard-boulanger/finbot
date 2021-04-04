@@ -1,5 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor
-from typing import List, Optional
+from decimal import Decimal
+from typing import List, Optional, Tuple
 from flask import Flask, jsonify, request
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker, joinedload
@@ -8,7 +9,7 @@ from copy import deepcopy
 from finbot.clients.finbot import FinbotClient, LineItem
 from finbot.providers.plaid_us import pack_credentials as pack_plaid_credentials
 from finbot.core import secure, utils, dbutils, fx_market, tracer, environment
-from finbot.core.utils import configure_logging
+from finbot.core.utils import configure_logging, unwrap_optional
 from finbot.apps.support import request_handler, make_error
 from finbot.model import (
     UserAccount,
@@ -146,8 +147,12 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
         self.snapshot = snapshot
         self.xccy_rates_getter = xccy_rates_getter
         self.target_ccy = target_ccy
-        self.linked_accounts = {}  # linked_account_id -> account
-        self.sub_accounts = {}  # link_account_id, sub_account_id -> sub_account
+        self.linked_accounts: dict[
+            int, LinkedAccountSnapshotEntry
+        ] = {}  # linked_account_id -> account
+        self.sub_accounts: dict[
+            Tuple[str, str], SubAccountSnapshotEntry
+        ] = {}  # link_account_id, sub_account_id -> sub_account
         self.results_count = SnapshotResultsCount()
 
     def visit_account(self, account, errors):
@@ -246,6 +251,7 @@ def dispatch_snapshot_entry(snap_request: AccountSnapshotRequest):
 
 
 def get_credentials_data(linked_account: LinkedAccount, user_account: UserAccount):
+    assert linked_account.encrypted_credentials is not None
     credentials = json.loads(
         secure.fernet_decrypt(
             linked_account.encrypted_credentials.encode(), FINBOT_ENV.secret_key
@@ -287,7 +293,7 @@ def take_raw_snapshot(user_account, linked_accounts: Optional[List[int]]):
         ]
 
 
-def validate_fx_rates(rates: dict[fx_market.Xccy, float]):
+def validate_fx_rates(rates: dict[fx_market.Xccy, Optional[float]]):
     missing_rates = [str(pair) for (pair, rate) in rates.items() if rate is None]
     if missing_rates:
         raise RuntimeError(
@@ -342,7 +348,9 @@ def take_snapshot_impl(user_account_id: int, linked_accounts: Optional[List[int]
     with db_session.persist(new_snapshot):
         new_snapshot.xccy_rates_entries.extend(
             [
-                XccyRateSnapshotEntry(xccy_pair=str(xccy), rate=rate)
+                XccyRateSnapshotEntry(
+                    xccy_pair=str(xccy), rate=Decimal(unwrap_optional(rate))
+                )
                 for xccy, rate in xccy_rates.items()
             ]
         )

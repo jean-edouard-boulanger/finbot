@@ -1,4 +1,3 @@
-from typing import Dict, Optional
 from finbot.apps.support import ApplicationError
 from finbot.clients.finbot import FinbotClient
 from finbot.model import UserAccountPlaidSettings
@@ -11,7 +10,7 @@ def validate_credentials(
     finbot_client: FinbotClient,
     plaid_settings: UserAccountPlaidSettings,
     provider_id: str,
-    credentials: Optional[Dict],
+    credentials: dict,
 ) -> None:
     if provider_id == "plaid_us":
         credentials = pack_plaid_credentials(credentials, plaid_settings)
@@ -26,8 +25,8 @@ def validate_credentials(
 
 
 def make_plaid_credentials(
-    raw_credentials: Dict, plaid_settings: UserAccountPlaidSettings
-):
+    raw_credentials: dict, plaid_settings: UserAccountPlaidSettings
+) -> dict:
     plaid_client = PlaidClient(
         client_id=plaid_settings.client_id,
         secret=plaid_settings.secret_key,
