@@ -1,4 +1,4 @@
-from typing import TypeVar, Iterator, Optional, Any, TYPE_CHECKING
+from typing import Iterator, Optional, Any, TYPE_CHECKING
 from contextlib import contextmanager
 from functools import partial
 import json
@@ -9,6 +9,7 @@ from sqlalchemy import DateTime
 
 if TYPE_CHECKING:
     from finbot.model import Base
+
     JSONEngine = TypeDecorator[Any]
 else:
     JSONEngine = TypeDecorator
@@ -22,9 +23,7 @@ def add_persist_utilities(db_session: Any) -> Any:
         self.commit()
 
     @contextmanager
-    def persist_all(
-        self: Any, entities: list["Base"]
-    ) -> Iterator[list["Base"]]:
+    def persist_all(self: Any, entities: list["Base"]) -> Iterator[list["Base"]]:
         yield entities
         self.add_all(entities)
         self.commit()
