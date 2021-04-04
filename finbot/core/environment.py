@@ -28,7 +28,9 @@ class Environment:
 T = TypeVar("T")
 
 
-def get_environment_value(name: str, default: Union[str, Type[_Raises]] = _Raises) -> str:
+def get_environment_value(
+    name: str, default: Union[str, Type[_Raises]] = _Raises
+) -> str:
     value = os.environ.get(name, default)
     if value == _Raises:
         raise MissingEnvironment(f"environment variable {name} not available")

@@ -21,10 +21,14 @@ import enum
 
 if TYPE_CHECKING:
     from sqlalchemy.sql.type_api import TypeEngine
-    T = TypeVar('T')
+
+    T = TypeVar("T")
 
     class Enum(TypeEngine[T]):
-        def __init__(self, arg: Type[T], **kwargs: Any) -> None: ...
+        def __init__(self, arg: Type[T], **kwargs: Any) -> None:
+            pass
+
+
 else:
     from sqlalchemy import Enum
 
@@ -41,7 +45,9 @@ class UserAccount(Base):
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
-    linked_accounts = relationship("LinkedAccount", back_populates="user_account", uselist=True)
+    linked_accounts = relationship(
+        "LinkedAccount", back_populates="user_account", uselist=True
+    )
     settings = relationship(
         "UserAccountSettings", uselist=False, back_populates="user_account"
     )
@@ -312,22 +318,22 @@ class UserAccountHistoryEntry(Base):
     user_account_valuation_history_entry = relationship(
         "UserAccountValuationHistoryEntry",
         back_populates="account_valuation_history_entry",
-        uselist=False
+        uselist=False,
     )
     linked_accounts_valuation_history_entries = relationship(
         "LinkedAccountValuationHistoryEntry",
         back_populates="account_valuation_history_entry",
-        uselist=True
+        uselist=True,
     )
     sub_accounts_valuation_history_entries = relationship(
         "SubAccountValuationHistoryEntry",
         back_populates="account_valuation_history_entry",
-        uselist=True
+        uselist=True,
     )
     sub_accounts_items_valuation_history_entries = relationship(
         "SubAccountItemValuationHistoryEntry",
         back_populates="account_valuation_history_entry",
-        uselist=True
+        uselist=True,
     )
 
 

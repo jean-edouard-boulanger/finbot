@@ -95,7 +95,9 @@ def generate(session, history_entry: UserAccountHistoryEntry):
                         las_v.valuation if las_v is not None else None
                         for valuation_time, las_v in timeseries.schedulify(
                             sparkline_schedule,
-                            historical_valuation_by_account.get(la_v.linked_account_id, []),
+                            historical_valuation_by_account.get(
+                                la_v.linked_account_id, []
+                            ),
                             lambda las_v: las_v.account_valuation_history_entry.effective_at,
                         )
                     ],

@@ -47,6 +47,6 @@ jobs:
         with:
           python-version: 3.9
       - name: Install Python dependencies
-        run: python3.9 -m pip install requirements.txt
+        run: python3.9 -m pip install -r requirements.txt
       - name: Run mypy [appwsrv]
         run: mypy -m finbot.apps.appwsrv.appwsrv
