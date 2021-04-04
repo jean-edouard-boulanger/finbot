@@ -8,7 +8,6 @@ from finbot.core.utils import swallow_exc
 from datetime import datetime, timedelta
 from copy import deepcopy
 import contextlib
-import hashlib
 import json
 import uuid
 
