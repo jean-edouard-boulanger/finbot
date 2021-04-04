@@ -3,31 +3,28 @@ from contextlib import contextmanager
 from functools import partial
 import json
 
-from sqlalchemy.orm.session import Session
 from sqlalchemy.types import TypeDecorator, VARCHAR
 from sqlalchemy import DateTime
 
 
 if TYPE_CHECKING:
+    from finbot.model import Base
     JSONEngine = TypeDecorator[Any]
 else:
     JSONEngine = TypeDecorator
 
 
-EntityType = TypeVar("EntityType")
-
-
-def add_persist_utilities(db_session: Session) -> Session:
+def add_persist_utilities(db_session: Any) -> Any:
     @contextmanager
-    def persist(self: Session, entity: EntityType) -> Iterator[EntityType]:
+    def persist(self: Any, entity: "Base") -> Iterator["Base"]:
         yield entity
         self.add(entity)
         self.commit()
 
     @contextmanager
     def persist_all(
-        self: Session, entities: list[EntityType]
-    ) -> Iterator[list[EntityType]]:
+        self: Any, entities: list["Base"]
+    ) -> Iterator[list["Base"]]:
         yield entities
         self.add_all(entities)
         self.commit()
