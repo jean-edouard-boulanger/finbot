@@ -1,3 +1,4 @@
+from typing import TypeVar, Optional
 from pytz import timezone
 from datetime import datetime
 import logging.config
@@ -83,3 +84,11 @@ def configure_logging():
             "root": {"level": "INFO", "handlers": ["wsgi"]},
         }
     )
+
+
+T = TypeVar("T")
+
+
+def unwrap_optional(val: Optional[T]) -> T:
+    assert val is not None
+    return val

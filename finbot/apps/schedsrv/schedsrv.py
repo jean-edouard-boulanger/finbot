@@ -78,6 +78,8 @@ class ValuationWorkerThread(threading.Thread):
     def _consume(self, request: sched_client.Request):
         try:
             logging.info(f"handling request: {sched_client.serialize(request)}")
+            if request.trigger_valuation is None:
+                raise RuntimeError("received empty valuation request")
             self._handler.handle_valuation(request.trigger_valuation)
         except Exception as e:
             logging.warning(
