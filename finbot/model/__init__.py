@@ -67,7 +67,7 @@ class UserAccountSettings(Base):
 
     user_account = relationship(UserAccount, uselist=False, back_populates="settings")
 
-    def serialize(self):
+    def serialize(self) -> dict[str, Any]:
         return {
             "valuation_ccy": self.valuation_ccy,
             "created_at": self.created_at,
@@ -91,7 +91,7 @@ class UserAccountPlaidSettings(Base):
         UserAccount, uselist=False, back_populates="plaid_settings"
     )
 
-    def serialize(self):
+    def serialize(self) -> dict[str, Any]:
         return {
             "env": self.env,
             "client_id": self.client_id,
@@ -113,7 +113,7 @@ class Provider(Base):
 
     linked_accounts = relationship("LinkedAccount", uselist=True)
 
-    def serialize(self):
+    def serialize(self) -> dict[str, Any]:
         return {
             "id": self.id,
             "description": self.description,
@@ -286,7 +286,7 @@ class ValuationChangeEntry(Base):
     change_1year = Column(Numeric)
     change_2years = Column(Numeric)
 
-    def serialize(self):
+    def serialize(self) -> dict[str, Any]:
         return {
             "change_1hour": self.change_1hour,
             "change_1day": self.change_1day,
@@ -500,7 +500,7 @@ class DistributedTrace(Base):
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
-    def serialize(self):
+    def serialize(self) -> dict[str, Any]:
         return {
             "guid": self.guid,
             "path": [int(c) for c in self.path.split(".")],
