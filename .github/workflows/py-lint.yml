@@ -38,3 +38,15 @@ jobs:
         uses: lgeiger/black-action@master
         with:
           args: '--check --exclude migrations/ webapp/ .'
+  mypy-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out finbot source
+        uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: Install Python dependencies
+        run: python3.9 -m pip install requirements.txt
+      - name: Run mypy [appwsrv]
+        run: mypy -m finbot.apps.appwsrv.appwsrv

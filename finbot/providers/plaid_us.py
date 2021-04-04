@@ -3,15 +3,15 @@ from finbot.core.utils import serialize
 
 from plaid import Client as PlaidClient
 
-from typing import Dict, Optional
+from typing import Optional
 from finbot import providers
 
 from datetime import datetime
 
 
 def pack_credentials(
-    db_settings: Dict, plaid_settings: UserAccountPlaidSettings
-) -> Dict:
+    db_settings: dict, plaid_settings: UserAccountPlaidSettings
+) -> dict:
     return serialize(
         {
             "access_token": str(db_settings["access_token"]),
@@ -29,7 +29,7 @@ def create_plaid_client(plaid_settings: UserAccountPlaidSettings):
     )
 
 
-def make_account(account: Dict):
+def make_account(account: dict):
     return {
         "id": account["name"],
         "name": account["name"],
@@ -71,17 +71,19 @@ class Credentials(object):
 class Api(providers.Base):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.access_token: Optional[str] = None
-        self.client: Optional[PlaidClient] = None
-        self.accounts: Optional[Dict] = None
+        self._accounts: Optional[dict] = None
+
+    @property
+    def accounts(self) -> dict:
+        assert self._accounts is not None
+        return self._accounts
 
     def authenticate(self, credentials: Credentials):
-        self.access_token = credentials.access_token
         plaid_settings = credentials.plaid_settings
-        self.client = create_plaid_client(plaid_settings)
-        self.accounts = self.client.Accounts.get(self.access_token)
+        client = create_plaid_client(plaid_settings)
+        self._accounts = client.Accounts.get(credentials.access_token)
 
-    def get_balances(self) -> Dict:
+    def get_balances(self) -> dict:
         return {
             "accounts": [
                 {
@@ -89,11 +91,11 @@ class Api(providers.Base):
                     "balance": account["balances"]["current"]
                     * (-1.0 if account["type"] == "credit" else 1.0),
                 }
-                for account in self.accounts["accounts"]
+                for account in self.accounts
             ]
         }
 
-    def get_assets(self) -> Dict:
+    def get_assets(self) -> dict:
         return {
             "accounts": [
                 {
@@ -111,7 +113,7 @@ class Api(providers.Base):
             ]
         }
 
-    def get_liabilities(self) -> Dict:
+    def get_liabilities(self) -> dict:
         return {
             "accounts": [
                 {

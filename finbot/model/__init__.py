@@ -1,5 +1,7 @@
-from datetime import datetime
 from finbot.core.dbutils import JSONEncoded, DateTimeTz
+
+from typing import Optional, TypeVar, Type, TYPE_CHECKING, Any
+from datetime import datetime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import (
@@ -12,10 +14,19 @@ from sqlalchemy import (
     ForeignKey,
     ForeignKeyConstraint,
     UniqueConstraint,
-    Enum,
     func,
 )
 import enum
+
+
+if TYPE_CHECKING:
+    from sqlalchemy.sql.type_api import TypeEngine
+    T = TypeVar('T')
+
+    class Enum(TypeEngine[T]):
+        def __init__(self, arg: Type[T], **kwargs: Any) -> None: ...
+else:
+    from sqlalchemy import Enum
 
 
 Base = declarative_base()
@@ -30,7 +41,7 @@ class UserAccount(Base):
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
-    linked_accounts = relationship("LinkedAccount", back_populates="user_account")
+    linked_accounts = relationship("LinkedAccount", back_populates="user_account", uselist=True)
     settings = relationship(
         "UserAccountSettings", uselist=False, back_populates="user_account"
     )
@@ -167,7 +178,7 @@ class UserAccountSnapshot(Base):
     )
 
     @property
-    def effective_at(self) -> datetime:
+    def effective_at(self) -> Optional[datetime]:
         return self.end_time
 
 
@@ -300,20 +311,23 @@ class UserAccountHistoryEntry(Base):
     source_snapshot = relationship(UserAccountSnapshot, uselist=False)
     user_account_valuation_history_entry = relationship(
         "UserAccountValuationHistoryEntry",
-        uselist=False,
         back_populates="account_valuation_history_entry",
+        uselist=False
     )
     linked_accounts_valuation_history_entries = relationship(
         "LinkedAccountValuationHistoryEntry",
         back_populates="account_valuation_history_entry",
+        uselist=True
     )
     sub_accounts_valuation_history_entries = relationship(
         "SubAccountValuationHistoryEntry",
         back_populates="account_valuation_history_entry",
+        uselist=True
     )
     sub_accounts_items_valuation_history_entries = relationship(
         "SubAccountItemValuationHistoryEntry",
         back_populates="account_valuation_history_entry",
+        uselist=True
     )
 
 
@@ -341,7 +355,7 @@ class UserAccountValuationHistoryEntry(Base):
 
     @property
     def total_assets(self) -> float:
-        return self.valuation - self.total_liabilities
+        return float(self.valuation - self.total_liabilities)
 
 
 class LinkedAccountValuationHistoryEntry(Base):
@@ -376,7 +390,7 @@ class LinkedAccountValuationHistoryEntry(Base):
 
     @property
     def total_assets(self) -> float:
-        return self.valuation - self.total_liabilities
+        return float(self.valuation - self.total_liabilities)
 
 
 class SubAccountValuationHistoryEntry(Base):
@@ -416,7 +430,7 @@ class SubAccountValuationHistoryEntry(Base):
 
     @property
     def total_assets(self) -> float:
-        return self.valuation - self.total_liabilities
+        return float(self.valuation - self.total_liabilities)
 
 
 class SubAccountItemValuationHistoryEntry(Base):
@@ -459,7 +473,7 @@ class SubAccountItemValuationHistoryEntry(Base):
 
     __table_args__ = (
         ForeignKeyConstraint(
-            [history_entry_id, linked_account_id, sub_account_id],
+            ["history_entry_id", "linked_account_id", "sub_account_id"],
             [
                 SubAccountValuationHistoryEntry.history_entry_id,
                 SubAccountValuationHistoryEntry.linked_account_id,

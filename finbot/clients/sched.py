@@ -1,7 +1,13 @@
-from marshmallow_dataclass import dataclass
+from typing import TYPE_CHECKING
 from typing import Optional, List, Union, Type, Dict
 import marshmallow_dataclass
 import zmq
+
+
+if TYPE_CHECKING:
+    from dataclasses import dataclass
+else:
+    from marshmallow_dataclass import dataclass
 
 
 @dataclass

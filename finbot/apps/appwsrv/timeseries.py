@@ -70,7 +70,7 @@ def schedulify(
     last_closest = None
     next_closest = None
     items_iterator = iter(timed_items)
-    results = []
+    results: List[Tuple[datetime, Optional[ItemType]]] = []
     for schedule_time in schedule:
         if next_closest is not None and schedule_time >= time_getter(next_closest):
             last_closest = next_closest
