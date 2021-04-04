@@ -1,8 +1,9 @@
 from selenium.webdriver.common.by import By
+from selenium.common.exceptions import StaleElementReferenceException
 from finbot.providers.selenium_based import SeleniumBased
 from finbot.core.utils import swallow_exc
+from finbot.providers import retired
 from finbot.providers.support.selenium import SeleniumHelper
-from selenium.common.exceptions import StaleElementReferenceException
 from finbot.providers.errors import AuthFailure
 import requests
 import csv
@@ -28,6 +29,7 @@ class Credentials(object):
         return Credentials(data["username"], data["password"])
 
 
+@retired
 class Api(SeleniumBased):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

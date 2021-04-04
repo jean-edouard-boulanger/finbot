@@ -34,3 +34,15 @@ class Base(object):
     def close(self):
         """Implement to release any used resource at the end of the session"""
         pass
+
+
+class RetiredProviderError(RuntimeError):
+    pass
+
+
+def retired(cls):
+    def init_override(*args, **kwargs):
+        raise RetiredProviderError("This provider has been retired")
+
+    cls.__init__ = init_override
+    return cls
