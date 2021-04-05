@@ -1,4 +1,4 @@
-from typing import TypeVar, Optional
+from typing import TypeVar, Optional, Any, Union, Callable, Type
 from pytz import timezone
 from datetime import datetime
 import logging.config
@@ -7,8 +7,8 @@ import decimal
 import json
 
 
-def serialize(data):
-    def serialize_key(key):
+def serialize(data: Any) -> Any:
+    def serialize_key(key: Any) -> Optional[Union[str, int, float, bool]]:
         if key is None:
             return key
         if not isinstance(key, (str, int, float, bool)):
@@ -28,8 +28,8 @@ def serialize(data):
     return data
 
 
-def pretty_dump(data) -> str:
-    def fallback(unhandled_data):
+def pretty_dump(data: Any) -> str:
+    def fallback(unhandled_data: Any) -> str:
         return f"<not serializable {type(unhandled_data)} {unhandled_data}>"
 
     return json.dumps(serialize(data), indent=4, default=fallback)
@@ -39,18 +39,12 @@ def now_utc() -> datetime:
     return datetime.now(timezone("UTC"))
 
 
-def in_range(value, from_value, to_value) -> bool:
-    if from_value and value < from_value:
-        return False
-    if to_value and value > to_value:
-        return False
-    return True
-
-
-def swallow_exc(*exc_types, default=None):
-    def decorator(func):
+def swallow_exc(
+    *exc_types: Type[BaseException], default: Optional[Any] = None
+) -> Callable[..., Any]:
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         @functools.wraps(func)
-        def impl(*args, **kwargs):
+        def impl(*args: Any, **kwargs: Any) -> Any:
             try:
                 return func(*args, **kwargs)
             except exc_types:
@@ -61,7 +55,7 @@ def swallow_exc(*exc_types, default=None):
     return decorator
 
 
-def configure_logging():
+def configure_logging() -> None:
     logging.config.dictConfig(
         {
             "version": 1,

@@ -254,7 +254,8 @@ def get_credentials_data(linked_account: LinkedAccount, user_account: UserAccoun
     assert linked_account.encrypted_credentials is not None
     credentials = json.loads(
         secure.fernet_decrypt(
-            linked_account.encrypted_credentials.encode(), FINBOT_ENV.secret_key
+            linked_account.encrypted_credentials.encode(),
+            FINBOT_ENV.secret_key.encode(),
         ).decode()
     )
     if linked_account.provider_id == "plaid_us":
