@@ -180,7 +180,7 @@ flake8:
 	flake8 --exclude migrations/ --max-line-length 100
 
 mypy:
-	mypy -p finbot.apps;
+	mypy -p finbot;
 	mypy --strict -p finbot.core;
 	mypy --strict -p finbot.model;
 	mypy --strict -p finbot.apps.support;
