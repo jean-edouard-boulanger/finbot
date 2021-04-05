@@ -14,10 +14,10 @@ class Xccy(object):
     domestic: str
     foreign: str
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.domestic}{self.foreign}"
 
-    def serialize(self):
+    def serialize(self) -> dict[str, str]:
         return {"domestic": self.domestic, "foreign": self.foreign}
 
 
@@ -25,11 +25,11 @@ def _get_api_key() -> str:
     return get_currconv_api_key()
 
 
-def _format_pair(pair: Xccy):
+def _format_pair(pair: Xccy) -> str:
     return f"{pair.domestic}_{pair.foreign}"
 
 
-def _format_pairs(pairs: set[Xccy]):
+def _format_pairs(pairs: set[Xccy]) -> str:
     return ",".join(_format_pair(pair) for pair in pairs)
 
 

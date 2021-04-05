@@ -181,8 +181,8 @@ flake8:
 
 mypy:
 	mypy -p finbot.apps;
+	mypy --strict -p finbot.core;
 	mypy --strict -p finbot.model;
-	mypy --strict -m finbot.core.tracer;
 	mypy --strict -p finbot.apps.support;
 
 eslint:

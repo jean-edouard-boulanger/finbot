@@ -1,3 +1,4 @@
+from typing import Any
 from finbot.providers import (
     plaid_us,
     binance_us,
@@ -14,7 +15,7 @@ from finbot.providers import (
 
 
 class Provider(object):
-    def __init__(self, description, api_module):
+    def __init__(self, description: str, api_module: Any):
         self.description = description
         self.api_module = api_module
 
