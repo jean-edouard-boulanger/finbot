@@ -15,7 +15,7 @@ class FinbotClient {
   }
 
   async getTraces({ guid }) {
-    const endpoint = `${this.endpoint}/admin/traces/${guid}`;
+    const endpoint = `${this.endpoint}/admin/traces/${guid}?format=tree`;
     const response = await axios.get(endpoint);
     return this.handleResponse(response);
   }

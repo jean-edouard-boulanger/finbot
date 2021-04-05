@@ -13,53 +13,6 @@ import "ace-builds/src-noconflict/mode-json";
 
 const { DateTime } = require("luxon");
 
-function hasError(node) {
-  return node.metadata.error !== undefined;
-}
-
-function backPropagateError(node) {
-  while (node.parent !== undefined) {
-    node = node.parent;
-    if (node.error !== null) {
-      break;
-    }
-    node.error = "inherit";
-  }
-}
-
-function buildTree(traces) {
-  const mappedTraces = {};
-  let root = null;
-  traces.forEach((t) => {
-    t.prettyPath = t.path.join(".");
-    t.children = [];
-    t.error = null;
-    mappedTraces[t.prettyPath] = t;
-    if (t.path.length === 1) {
-      root = t;
-    }
-  });
-  traces.forEach((t) => {
-    const parentPath = t.path.slice(0, -1);
-    const prettyParentPath = parentPath.join(".");
-    const parent = mappedTraces[prettyParentPath];
-    if (parent !== undefined) {
-      t.parent = parent;
-      parent.children.push(t);
-    }
-  });
-  traces.forEach((t) => {
-    if (t.error === undefined) {
-      t.error = null;
-    }
-    if (hasError(t)) {
-      t.error = "self";
-      backPropagateError(t);
-    }
-  });
-  return root;
-}
-
 function ellipsis(text, max) {
   if (text.length < max) {
     return text;
@@ -108,10 +61,11 @@ function GridRow(callback) {
     const data = props.data;
     const duration = data.end_time.diff(data.start_time, "seconds");
     const durationSeconds = duration.toObject().seconds;
+    const errorState = data.extra_properties.error_state;
     const className =
-      data.error === null
+      errorState === null
         ? ""
-        : data.error === "self"
+        : errorState === "self"
         ? "bg-danger"
         : "text-danger";
     const metadata = data.metadata;
@@ -209,6 +163,13 @@ function Inspector({ data }) {
   }
 }
 
+function walkTree(node, handler) {
+  handler(node);
+  node.children.forEach((child) => {
+    walkTree(child, handler);
+  });
+}
+
 export function Admin() {
   const { guid } = useParams();
   const { finbotClient } = useContext(ServicesContext);
@@ -219,25 +180,19 @@ export function Admin() {
   useEffect(() => {
     const impl = async function () {
       const response = await finbotClient.getTraces({ guid });
-      response.traces.forEach((t) => {
-        t.start_time = DateTime.fromISO(t.start_time);
-        t.end_time = DateTime.fromISO(t.end_time);
+      const data = response.tree;
+      walkTree(data, (node) => {
+        node.start_time = DateTime.fromISO(node.start_time);
+        node.end_time = DateTime.fromISO(node.end_time);
       });
-      setTree(buildTree(response.traces));
+      setTree(data);
     };
     impl();
   }, [finbotClient, guid]);
 
   useEffect(() => {
-    if (selectedData !== null) {
-      const key = selectedData[0];
-      if (selectedSpan.metadata[key] !== undefined) {
-        setSelectedData([key, selectedSpan.metadata[key]]);
-        return;
-      }
-    }
     setSelectedData(null);
-  }, [selectedSpan, selectedData]);
+  }, [selectedSpan]);
 
   return (
     <>

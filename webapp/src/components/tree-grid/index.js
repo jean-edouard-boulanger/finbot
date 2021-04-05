@@ -10,7 +10,7 @@ function topologicalSort(tree, sortBy) {
       order,
     });
     let cOrder = 0;
-    (node.children ?? [])
+    [...(node.children ?? [])]
       .sort((c1, c2) => {
         return sortBy(c2) - sortBy(c1);
       })
@@ -87,7 +87,7 @@ export function TreeGrid(props) {
   useEffect(() => {
     const topology = topologicalSort(tree, sortBy);
     setModel(configureModel(topology, expanded));
-  }, [tree, expanded, sortBy]);
+  }, [tree, expanded]);
 
   function onNodeExpandClick(node) {
     node.expanded = !node.expanded;
