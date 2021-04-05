@@ -117,6 +117,7 @@ def write_history(snapshot_id):
         history_entry.valuation_ccy = snapshot.requested_ccy
         history_entry.user_account_id = snapshot.user_account_id
         history_entry.available = False
+        history_entry.trace_guid = tracer.context_identifier()
 
     logging.info(f"blank history entry created with id={history_entry.id}")
 
