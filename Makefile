@@ -171,5 +171,18 @@ unit-tests:
 black:
 	black --exclude migrations/ webapp/ .
 
+prettier:
+	cd webapp && npm run prettier
+
+format: black prettier
+
 flake8:
 	flake8 --exclude migrations/ --max-line-length 100
+
+mypy:
+	mypy -p finbot.apps;
+	mypy --strict -p finbot.model;
+	mypy --strict -m finbot.core.tracer;
+
+eslint:
+	cd webapp && npm run lint-check

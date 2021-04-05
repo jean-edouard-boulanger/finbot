@@ -23,7 +23,7 @@ def serialize(data):
         return data.isoformat()
     if isinstance(data, dict):
         return {serialize_key(k): serialize(v) for k, v in data.items()}
-    if isinstance(data, list):
+    if isinstance(data, (list, set, tuple)):
         return [serialize(v) for v in data]
     return data
 

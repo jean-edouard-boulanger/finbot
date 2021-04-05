@@ -19,7 +19,7 @@ from finbot.apps.appwsrv.reports import holdings as holdings_report
 from finbot.apps.appwsrv.reports import earnings as earnings_report
 from finbot.apps.support import request_handler, Route, ApplicationError
 from finbot.core.utils import serialize, now_utc, configure_logging
-from finbot.core import secure, dbutils, environment
+from finbot.core import secure, dbutils, environment, tracer
 from finbot.model import (
     Provider,
     UserAccount,
@@ -93,7 +93,10 @@ ADMIN = API_V1.admin
 
 @app.route(ADMIN.traces.p("guid")(), methods=["GET"])
 def get_traces(guid):
+    trace_format = request.args.get("format", default="list")
     traces = db_session.query(DistributedTrace).filter_by(guid=guid).all()
+    if trace_format == "tree":
+        return jsonify(serialize({"tree": tracer.build_tree(traces)}))
     return jsonify(serialize({"traces": [trace for trace in traces]}))
 
 
