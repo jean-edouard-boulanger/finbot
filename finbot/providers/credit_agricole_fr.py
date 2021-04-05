@@ -131,3 +131,6 @@ def _get_login_error(do: SeleniumHelper):
     ]
     if error_items:
         return error_items[0].text
+    strong_auth_items = do.find_many(By.XPATH, f"//*[contains(text(),'authentification forte')]")
+    if strong_auth_items:
+        return "strong authentication required"
