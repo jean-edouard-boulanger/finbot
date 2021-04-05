@@ -2,7 +2,6 @@ from finbot.model import DistributedTrace
 
 from sqlalchemy.orm.session import Session
 from typing import Iterator, Optional, Protocol, TypedDict, Callable, Any
-from weakref import ref, ReferenceType
 from dataclasses import dataclass, field
 from datetime import datetime
 from logging import LogRecord
