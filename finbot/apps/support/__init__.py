@@ -1,6 +1,7 @@
 from finbot.apps.appwsrv.exceptions import Error, ApplicationError
 from finbot.core import tracer
 
+from typing import Optional, Callable, Iterator, Any
 from flask import jsonify, request
 from contextlib import contextmanager
 from datetime import datetime, timedelta
@@ -11,25 +12,27 @@ import stackprinter
 
 
 class Route(object):
-    def __init__(self, base=None):
-        self.base = base
+    def __init__(self, base: Optional[str] = None):
+        self.base = base or str()
 
-    def p(self, identifier):
+    def p(self, identifier: str) -> "Route":
         return Route(str(f"{self.base}/<{identifier}>"))
 
-    def __getattr__(self, path):
+    def __getattr__(self, path: str) -> "Route":
         return Route(str(f"{self.base}/{path}"))
 
-    def __call__(self):
+    def __call__(self) -> str:
         return str(self.base)
 
 
-def log_time_elapsed(elapsed: timedelta):
+def log_time_elapsed(elapsed: timedelta) -> None:
     logging.info(f"time elapsed: {elapsed}")
 
 
 @contextmanager
-def time_elapsed(callback=log_time_elapsed):
+def time_elapsed(
+    callback: Callable[[timedelta], None] = log_time_elapsed
+) -> Iterator[None]:
     start = datetime.now()
     try:
         yield
@@ -37,7 +40,9 @@ def time_elapsed(callback=log_time_elapsed):
         callback(datetime.now() - start)
 
 
-def make_error(user_message, debug_message=None, trace=None):
+def make_error(
+    user_message: str, debug_message: Optional[str] = None, trace: Optional[str] = None
+) -> dict[str, Optional[str]]:
     return {
         "user_message": user_message,
         "debug_message": debug_message,
@@ -45,12 +50,16 @@ def make_error(user_message, debug_message=None, trace=None):
     }
 
 
-def make_error_response(user_message, debug_message=None, trace=None):
+def make_error_response(
+    user_message: str, debug_message: Optional[str] = None, trace: Optional[str] = None
+) -> Any:
     return jsonify({"error": make_error(user_message, debug_message, trace)})
 
 
-def _get_tracer_context(request_payload):
+def _get_tracer_context(request_payload: Optional[Any]) -> Optional[tracer.FlatContext]:
     if request_payload is None:
+        return None
+    if not isinstance(request_payload, dict):
         return None
     data = request_payload.get(tracer.CONTEXT_TAG)
     if data is None:
@@ -58,10 +67,12 @@ def _get_tracer_context(request_payload):
     return tracer.FlatContext(**data)
 
 
-def request_handler(trace_values=False, schema=None):
-    def impl(func):
+def request_handler(
+    trace_values: bool = False, schema: Optional[dict[Any, Any]] = None
+) -> Callable[..., Any]:
+    def impl(func: Callable[..., Any]) -> Callable[..., Any]:
         @functools.wraps(func)
-        def handler(*args, **kwargs):
+        def handler(*args: Any, **kwargs: Any) -> Any:
             sp_trace_values = "all" if trace_values else None
             with time_elapsed():
                 try:

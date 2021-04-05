@@ -326,6 +326,7 @@ def take_snapshot_impl(user_account_id: int, linked_accounts: Optional[List[int]
         new_snapshot.requested_ccy = requested_ccy
         new_snapshot.user_account_id = user_account_id
         new_snapshot.start_time = utils.now_utc()
+        new_snapshot.trace_guid = tracer.context_identifier()
 
     logging.info(f"blank snapshot {new_snapshot.id} created")
 

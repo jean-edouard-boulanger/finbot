@@ -245,6 +245,11 @@ class TracerContext(object):
             return _dummy_step()
         return self._steps[-1]
 
+    def guid(self) -> Optional[str]:
+        if not self.has_root():
+            return None
+        return self._steps[0].guid
+
 
 class _Singleton(object):
     def __init__(self) -> None:
@@ -282,7 +287,7 @@ def _get_tracer_context() -> TracerContext:
 
 
 @contextlib.contextmanager
-def adopt(flat_context: FlatContext, name: str) -> Iterator[Step]:
+def adopt(flat_context: Optional[FlatContext], name: str) -> Iterator[Step]:
     context = _get_tracer_context()
     step = context.adopt(flat_context, name)
     try:
@@ -325,6 +330,10 @@ def current() -> Step:
 
 def propagate() -> Optional[FlatContext]:
     return _get_tracer_context().propagate()
+
+
+def context_identifier() -> Optional[str]:
+    return _get_tracer_context().guid()
 
 
 @dataclass
