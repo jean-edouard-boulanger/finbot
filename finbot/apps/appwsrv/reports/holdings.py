@@ -148,7 +148,7 @@ def generate(session, history_entry: UserAccountHistoryEntry):
                                         ),
                                         (
                                             f"Unit value ({sa_v.sub_account_ccy})",
-                                            f"{sa_v.valuation_sub_account_ccy / item_v.units:.2f}"
+                                            f"{item_v.valuation_sub_account_ccy / item_v.units:.2f}"
                                             if item_v.units
                                             else None,
                                         ),
