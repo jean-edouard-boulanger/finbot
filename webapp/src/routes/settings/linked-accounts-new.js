@@ -48,6 +48,11 @@ const PlaidForm = ({ operation, settings, onSubmit }) => {
       onSuccess={(public_token) => {
         onSubmit({ public_token });
       }}
+      onEvent={(eventName, metadata) => {
+        if (metadata.error_message) {
+          toast.error(`Plaid error: ${metadata.error_message}`);
+        }
+      }}
       publicKey={settings.public_key}
       env={settings.env}
       countryCodes={["GB", "US", "CA", "IE", "FR", "ES", "NL"]}
@@ -62,8 +67,8 @@ const isPlaidSelected = (selectedProvider) => {
   return selectedProvider !== null && selectedProvider.id === PLAID_PROVIDER_ID;
 };
 
-const isPlaidSupported = (settings) => {
-  return settings !== null && settings.plaid_settings !== null;
+const isPlaidSupported = (plaidSettings) => {
+  return plaidSettings !== null;
 };
 
 export const LinkAccount = () => {
@@ -71,7 +76,7 @@ export const LinkAccount = () => {
   const { finbotClient } = useContext(ServicesContext);
 
   const [providers, setProviders] = useState([]);
-  const [settings, setSettings] = useState(null);
+  const [plaidSettings, setPlaidSettings] = useState(null);
   const [selectedProvider, setSelectedProvider] = useState(null);
   const [accountName, setAccountName] = useState(null);
   const [operation, setOperation] = useState(null);
@@ -92,8 +97,8 @@ export const LinkAccount = () => {
 
   useEffect(() => {
     const fetch = async () => {
-      setSettings(
-        await finbotClient.getAccountSettings({
+      setPlaidSettings(
+        await finbotClient.getAccountPlaidSettings({
           account_id: account.id,
         })
       );
@@ -237,17 +242,18 @@ export const LinkAccount = () => {
                   }}
                 />
               )}
-              {isPlaidSelected(selectedProvider) && isPlaidSupported(settings) && (
-                <PlaidForm
-                  operation={operation}
-                  settings={settings.plaid_settings}
-                  onSubmit={(credentials) => {
-                    requestLinkAccount({ ...selectedProvider }, credentials);
-                  }}
-                />
-              )}
               {isPlaidSelected(selectedProvider) &&
-                !isPlaidSupported(settings) && (
+                isPlaidSupported(plaidSettings) && (
+                  <PlaidForm
+                    operation={operation}
+                    settings={plaidSettings}
+                    onSubmit={(credentials) => {
+                      requestLinkAccount({ ...selectedProvider }, credentials);
+                    }}
+                  />
+                )}
+              {isPlaidSelected(selectedProvider) &&
+                !isPlaidSupported(plaidSettings) && (
                   <Alert variant={"warning"}>
                     To link an external account via Plaid (open banking), please
                     first provide your Plaid API details in your account
@@ -257,7 +263,6 @@ export const LinkAccount = () => {
             </Col>
           </Row>
         </Col>
-        <Col md={1}></Col>
       </Row>
     </>
   );

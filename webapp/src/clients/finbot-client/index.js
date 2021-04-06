@@ -41,7 +41,25 @@ class FinbotClient {
 
   async getAccount({ account_id }) {
     const response = await axios.get(`${this.endpoint}/accounts/${account_id}`);
-    return this.handleResponse(response).result;
+    return this.handleResponse(response).user_account;
+  }
+
+  async updateAccountProfile({ account_id, full_name, email }) {
+    const response = await axios.put(
+      `${this.endpoint}/accounts/${account_id}/profile`,
+      {
+        full_name,
+        email,
+      }
+    );
+    return this.handleResponse(response).user_account;
+  }
+
+  async getAccountValuation({ account_id }) {
+    const response = await axios.get(
+      `${this.endpoint}/accounts/${account_id}/valuation`
+    );
+    return this.handleResponse(response).valuation;
   }
 
   async isAccountConfigured({ account_id }) {
@@ -56,6 +74,39 @@ class FinbotClient {
       `${this.endpoint}/accounts/${account_id}/settings`
     );
     return this.handleResponse(response).settings;
+  }
+
+  async getAccountPlaidSettings({ account_id }) {
+    const response = await axios.get(
+      `${this.endpoint}/accounts/${account_id}/settings/plaid`
+    );
+    return this.handleResponse(response).plaid_settings;
+  }
+
+  async updateAccountPlaidSettings({
+    account_id,
+    env,
+    client_id,
+    public_key,
+    secret_key,
+  }) {
+    const response = await axios.post(
+      `${this.endpoint}/accounts/${account_id}/settings/plaid`,
+      {
+        env,
+        client_id,
+        public_key,
+        secret_key,
+      }
+    );
+    return this.handleResponse(response).plaid_settings;
+  }
+
+  async deleteAccountPlaidSettings({ account_id }) {
+    const response = await axios.delete(
+      `${this.endpoint}/accounts/${account_id}/settings/plaid`
+    );
+    return this.handleResponse(response);
   }
 
   async getAccountHistoricalValuation({ account_id }) {

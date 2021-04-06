@@ -24,7 +24,7 @@ jobs:
         run: npm install
       - name: eslint check
         working-directory: webapp/
-        run: npm run lint-check
+        run: 'npm run lint-check:prod'
   prettier-check:
     runs-on: ubuntu-latest
     steps:

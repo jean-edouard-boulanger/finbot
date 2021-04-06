@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional, Any
 from datetime import datetime, timedelta
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -54,7 +54,7 @@ def get_sched_client() -> sched_client.SchedClient:
 
 
 def trigger_valuation(
-    user_account_id: int, linked_accounts: Optional[List[int]] = None
+    user_account_id: int, linked_accounts: Optional[list[int]] = None
 ):
     account = repository.get_user_account(db_session, user_account_id)
     with closing(get_sched_client()) as client:
@@ -115,15 +115,16 @@ AUTH = API_V1.auth
 def auth_login():
     data = request.json
     account = db_session.query(UserAccount).filter_by(email=data["email"]).first()
+    not_found_message = "Invalid email or password"
     if not account:
-        raise ApplicationError("Invalid email or password")
+        raise ApplicationError(not_found_message)
 
     # TODO: password should be hashed, not encrypted/decrypted with secret
     account_password = secure.fernet_decrypt(
         account.encrypted_password.encode(), FINBOT_ENV.secret_key.encode()
     ).decode()
     if account_password != data["password"]:
-        raise ApplicationError("Invalid email or password")
+        raise ApplicationError(not_found_message)
 
     # TODO: expires_delta should be set to a reasonable time interval
     return jsonify(
@@ -194,7 +195,7 @@ def delete_provider(provider_id: str):
     provider = repository.find_provider(db_session, provider_id)
     if not Provider:
         raise ApplicationError(f"Provider with id '${provider_id}' does not exist")
-    linked_accounts: List[LinkedAccount] = provider.linked_accounts
+    linked_accounts: list[LinkedAccount] = provider.linked_accounts
     if len(linked_accounts) > 0:
         raise ApplicationError("This provider is still in use")
     db_session.delete(provider)
@@ -261,10 +262,31 @@ def create_user_account():
     )
 
 
+ACCOUNT = ACCOUNTS.p("user_account_id")
+
+
+def serialize_user_account(account: UserAccount) -> dict[str, Any]:
+    return {
+        "id": account.id,
+        "email": account.email,
+        "full_name": account.full_name,
+        "created_at": account.created_at,
+        "updated_at": account.updated_at,
+    }
+
+
+@app.route(ACCOUNT(), methods=["GET"])
+@jwt_required()
+@request_handler()
+def get_user_account(user_account_id):
+    account = repository.get_user_account(db_session, user_account_id)
+    return jsonify(serialize({"user_account": serialize_user_account(account)}))
+
+
 def serialize_user_account_valuation(
     entry: UserAccountHistoryEntry,
-    history: List[UserAccountHistoryEntry],
-    sparkline_schedule: List[datetime],
+    history: list[UserAccountHistoryEntry],
+    sparkline_schedule: list[datetime],
 ):
     valuation_entry = entry.user_account_valuation_history_entry
     return {
@@ -288,14 +310,10 @@ def serialize_user_account_valuation(
     }
 
 
-ACCOUNT = ACCOUNTS.p("user_account_id")
-
-
-@app.route(ACCOUNT(), methods=["GET"])
+@app.route(ACCOUNT.valuation(), methods=["GET"])
 @jwt_required()
 @request_handler()
-def get_user_account(user_account_id):
-    account = repository.get_user_account(db_session, user_account_id)
+def get_user_account_valuation(user_account_id):
     to_time = now_utc()
     from_time = to_time - timedelta(days=30)
     valuation_history = repository.find_user_account_historical_valuation(
@@ -315,24 +333,104 @@ def get_user_account(user_account_id):
     return jsonify(
         serialize(
             {
-                "result": {
-                    "user_account": {
-                        "id": account.id,
-                        "email": account.email,
-                        "full_name": account.full_name,
-                        "settings": account.settings,
-                        "created_at": account.created_at,
-                        "updated_at": account.updated_at,
-                    },
-                    "valuation": serialize_user_account_valuation(
-                        valuation, valuation_history, sparkline_schedule
-                    )
-                    if valuation
-                    else None,
-                }
+                "valuation": serialize_user_account_valuation(
+                    valuation, valuation_history, sparkline_schedule
+                )
+                if valuation
+                else None,
             }
         )
     )
+
+
+@app.route(ACCOUNT.profile(), methods=["PUT"])
+@jwt_required()
+@request_handler(
+    schema={
+        "type": "object",
+        "additionalProperties": False,
+        "properties": {"email": {"type": "string"}, "full_name": {"type": "string"}},
+    }
+)
+def update_user_account_profile(user_account_id):
+    data = request.json
+    account = repository.get_user_account(db_session, user_account_id)
+    with db_session.persist(account):
+        account.email = data["email"]
+        account.full_name = data["full_name"]
+    return jsonify(serialize({"user_account": serialize_user_account(account)}))
+
+
+def serialize_user_account_settings(settings: UserAccountSettings) -> dict[str, Any]:
+    return {
+        "valuation_ccy": settings.valuation_ccy,
+        "created_at": settings.created_at,
+        "updated_at": settings.updated_at,
+    }
+
+
+@app.route(ACCOUNT.settings(), methods=["GET"])
+@jwt_required()
+@request_handler()
+def get_user_account_settings(user_account_id):
+    settings = repository.get_user_account_settings(db_session, user_account_id)
+    return jsonify(serialize({"settings": serialize_user_account_settings(settings)}))
+
+
+@app.route(ACCOUNT.settings.plaid(), methods=["GET"])
+@jwt_required()
+@request_handler()
+def get_user_account_plaid_settings(user_account_id):
+    settings = repository.get_user_account_plaid_settings(db_session, user_account_id)
+    return jsonify(
+        serialize(
+            {"plaid_settings": settings.serialize() if settings is not None else None}
+        )
+    )
+
+
+@app.route(ACCOUNT.settings.plaid(), methods=["PUT", "POST"])
+@jwt_required()
+@request_handler(
+    trace_values=False,
+    schema={
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["env", "client_id", "public_key", "secret_key"],
+        "properties": {
+            "env": {"type": "string"},
+            "client_id": {"type": "string"},
+            "public_key": {"type": "string"},
+            "secret_key": {"type": "string"},
+        },
+    },
+)
+def update_user_account_plaid_settings(user_account_id):
+    existing_settings = repository.get_user_account_plaid_settings(
+        db_session, user_account_id
+    )
+    plaid_settings: UserAccountPlaidSettings
+    request_data = request.json
+    with db_session.persist(
+        existing_settings or UserAccountPlaidSettings()
+    ) as plaid_settings:
+        plaid_settings.user_account_id = user_account_id
+        plaid_settings.env = request_data["env"]
+        plaid_settings.client_id = request_data["client_id"]
+        plaid_settings.public_key = request_data["public_key"]
+        plaid_settings.secret_key = request_data["secret_key"]
+    return jsonify(serialize({"plaid_settings": plaid_settings}))
+
+
+@app.route(ACCOUNT.settings.plaid(), methods=["DELETE"])
+@jwt_required()
+@request_handler()
+def delete_user_account_plaid_settings(user_account_id):
+    settings = repository.get_user_account_plaid_settings(db_session, user_account_id)
+    if settings:
+        db_session.delete(settings)
+        db_session.commit()
+    return jsonify({})
 
 
 @app.route(ACCOUNT.is_configured())
@@ -349,28 +447,6 @@ def is_user_account_configured(user_account_id: int):
 @request_handler()
 def trigger_user_account_valuation(user_account_id):
     return jsonify(trigger_valuation(user_account_id))
-
-
-@app.route(ACCOUNT.settings(), methods=["GET"])
-@jwt_required()
-@request_handler()
-def get_user_account_settings(user_account_id):
-    settings = (
-        db_session.query(UserAccountSettings)
-        .filter_by(user_account_id=user_account_id)
-        .first()
-    )
-    plaid_settings = (
-        db_session.query(UserAccountPlaidSettings)
-        .filter_by(user_account_id=user_account_id)
-        .first()
-    )
-
-    return jsonify(
-        serialize(
-            {"settings": {"settings": settings, "plaid_settings": plaid_settings}}
-        )
-    )
 
 
 @app.route(ACCOUNT.history(), methods=["GET"])

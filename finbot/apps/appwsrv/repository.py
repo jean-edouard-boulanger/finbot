@@ -9,6 +9,8 @@ from finbot.model import (
     LinkedAccount,
     Provider,
     UserAccount,
+    UserAccountSettings,
+    UserAccountPlaidSettings,
     UserAccountHistoryEntry,
     UserAccountValuationHistoryEntry,
     LinkedAccountValuationHistoryEntry,
@@ -18,15 +20,31 @@ from finbot.model import (
 
 
 def get_user_account(session, user_account_id: int) -> UserAccount:
-    account = (
-        session.query(UserAccount)
-        .filter_by(id=user_account_id)
-        .options(joinedload(UserAccount.settings))
-        .first()
-    )
+    account = session.query(UserAccount).filter_by(id=user_account_id).first()
     if not account:
         raise ApplicationError(f"user account '{user_account_id}' not found")
     return account
+
+
+def get_user_account_settings(session, user_account_id: int) -> UserAccountSettings:
+    settings = (
+        session.query(UserAccountSettings)
+        .filter_by(user_account_id=user_account_id)
+        .first()
+    )
+    if not settings:
+        raise ApplicationError(f"user account '{user_account_id}' not found")
+    return settings
+
+
+def get_user_account_plaid_settings(
+    session, user_account_id: int
+) -> Optional[UserAccountPlaidSettings]:
+    return (
+        session.query(UserAccountPlaidSettings)
+        .filter_by(user_account_id=user_account_id)
+        .first()
+    )
 
 
 def find_provider(session, provider_id: str) -> Provider:
