@@ -2,33 +2,76 @@ import React, { useState, useEffect, useContext } from "react";
 
 import { AuthContext, ServicesContext } from "contexts";
 
+import { Formik, Form as MetaForm, Field, ErrorMessage } from "formik";
 import { LoadingButton } from "components";
 import { Col, Row, Form } from "react-bootstrap";
+import { toast } from "react-toastify";
+
+import * as Yup from "yup";
+
+const PLAID_ENVIRONMENTS = ["sandbox", "development", "production"];
+
+const SETTINGS_SCHEMA = Yup.object().shape({
+  env: Yup.string()
+    .oneOf(PLAID_ENVIRONMENTS)
+    .required()
+    .label("Plaid environment"),
+  client_id: Yup.string().required().min(1).label("Client identifier"),
+  public_key: Yup.string().required().min(1).label("Public key"),
+  secret_key: Yup.string().required().min(1).label("Secret key"),
+});
+
+const makePlaidSettings = (settings) => {
+  settings = settings ?? {};
+  return {
+    env: settings.env ?? PLAID_ENVIRONMENTS[PLAID_ENVIRONMENTS.length - 1],
+    client_id: settings.client_id ?? "",
+    public_key: settings.public_key ?? "",
+    secret_key: settings.secret_key ?? "",
+  };
+};
 
 export const PlaidIntegrationSettings = () => {
   const { account } = useContext(AuthContext);
   const { finbotClient } = useContext(ServicesContext);
 
+  const [enablePlaid, setEnablePlaid] = useState(false);
   const [plaidSettings, setPlaidSettings] = useState(null);
 
   useEffect(() => {
     const fetch = async () => {
-      const settings = await finbotClient.getAccountSettings({
+      const plaidSettings = await finbotClient.getAccountPlaidSettings({
         account_id: account.id,
       });
-      setPlaidSettings(settings.plaid_settings);
+      setEnablePlaid(plaidSettings !== null);
+      setPlaidSettings(makePlaidSettings(plaidSettings));
     };
     fetch();
   }, [account, finbotClient]);
 
-  const handleChange = (field, value) => {
-    if (plaidSettings !== null) {
-      const newSettings = {
-        ...plaidSettings,
-        [field]: value,
-      };
-      setPlaidSettings(newSettings);
+  const handleSubmit = async (values, { setSubmitting }) => {
+    try {
+      if (enablePlaid) {
+        const newSettings = await finbotClient.updateAccountPlaidSettings({
+          account_id: account.id,
+          env: values.env,
+          client_id: values.client_id,
+          public_key: values.public_key,
+          secret_key: values.secret_key,
+        });
+        console.log(newSettings);
+        setPlaidSettings(makePlaidSettings(newSettings));
+      } else {
+        await finbotClient.deleteAccountPlaidSettings({
+          account_id: account.id,
+        });
+        setPlaidSettings(makePlaidSettings());
+      }
+      toast.success("Plaid settings updated");
+    } catch (e) {
+      toast.error(`Failed to update Plaid settings: ${e}`);
     }
+    setSubmitting(false);
   };
 
   return (
@@ -40,75 +83,97 @@ export const PlaidIntegrationSettings = () => {
       </Row>
       <Row>
         <Col>
-          <Form>
-            <Form.Group>
-              <Form.Check
-                checked={plaidSettings !== null}
-                onChange={(event) => {
-                  if (event.target.checked) {
-                    return setPlaidSettings({});
-                  }
-                  setPlaidSettings(null);
-                }}
-                type="checkbox"
-                label="Enable Plaid integration"
-              />
-            </Form.Group>
-            <Form.Group>
-              <Form.Label>Environment</Form.Label>
-              <Form.Control
-                onChange={(event) => {
-                  handleChange("env", event.target.value);
-                }}
-                disabled={plaidSettings === null}
-                value={(plaidSettings ?? {}).env || "production"}
-                as="select"
-              >
-                <option value={"sandbox"}>Sandbox</option>
-                <option value={"development"}>Development</option>
-                <option value={"production"}>Production</option>
-              </Form.Control>
-            </Form.Group>
-            <Form.Group>
-              <Form.Label>Client identifier</Form.Label>
-              <Form.Control
-                type="text"
-                disabled={plaidSettings === null}
-                value={(plaidSettings ?? {}).client_id || ""}
-                onChange={(event) =>
-                  handleChange("client_id", event.target.value)
-                }
-                placeholder="client_id Plaid API key"
-              />
-            </Form.Group>
-            <Form.Group>
-              <Form.Label>Public key</Form.Label>
-              <Form.Control
-                type="text"
-                disabled={plaidSettings === null}
-                onChange={(event) =>
-                  handleChange("public_key", event.target.value)
-                }
-                value={(plaidSettings ?? {}).public_key || ""}
-                placeholder="public_key Plaid API key"
-              />
-            </Form.Group>
-            <Form.Group>
-              <Form.Label>Secret key</Form.Label>
-              <Form.Control
-                type="text"
-                disabled={plaidSettings === null}
-                onChange={(event) =>
-                  handleChange("secret_key", event.target.value)
-                }
-                value={(plaidSettings ?? {}).secret_key || ""}
-                placeholder="secret Plaid API key"
-              />
-            </Form.Group>
-            <LoadingButton size={"sm"} loading={false} variant="dark">
-              Save
-            </LoadingButton>
-          </Form>
+          <Formik
+            enableReinitialize
+            validationSchema={enablePlaid ? SETTINGS_SCHEMA : null}
+            initialValues={plaidSettings}
+            onSubmit={handleSubmit}
+          >
+            {({ isSubmitting, submitForm }) => (
+              <MetaForm>
+                <Form.Group>
+                  <Form.Check
+                    checked={enablePlaid}
+                    onChange={(event) => {
+                      setPlaidSettings(makePlaidSettings(plaidSettings));
+                      setEnablePlaid(event.target.checked);
+                    }}
+                    type="checkbox"
+                    label="Enable Plaid integration"
+                  />
+                </Form.Group>
+                <Form.Group>
+                  <Form.Label>Environment</Form.Label>
+                  <Field
+                    disabled={!enablePlaid}
+                    type="text"
+                    name="env"
+                    as="select"
+                    className="form-control"
+                  >
+                    <option value={"sandbox"}>Sandbox</option>
+                    <option value={"development"}>Development</option>
+                    <option value={"production"}>Production</option>
+                  </Field>
+                  <ErrorMessage
+                    className="text-danger"
+                    name="env"
+                    component="div"
+                  />
+                </Form.Group>
+                <Form.Group>
+                  <Form.Label>Client identifier</Form.Label>
+                  <Field
+                    disabled={!enablePlaid}
+                    type="text"
+                    name="client_id"
+                    className="form-control"
+                  />
+                  <ErrorMessage
+                    className="text-danger"
+                    name="client_id"
+                    component="div"
+                  />
+                </Form.Group>
+                <Form.Group>
+                  <Form.Label>Public key</Form.Label>
+                  <Field
+                    disabled={!enablePlaid}
+                    type="text"
+                    name="public_key"
+                    className="form-control"
+                  />
+                  <ErrorMessage
+                    className="text-danger"
+                    name="public_key"
+                    component="div"
+                  />
+                </Form.Group>
+                <Form.Group>
+                  <Form.Label>Secret key</Form.Label>
+                  <Field
+                    disabled={!enablePlaid}
+                    type="text"
+                    name="secret_key"
+                    className="form-control"
+                  />
+                  <ErrorMessage
+                    className="text-danger"
+                    name="secret_key"
+                    component="div"
+                  />
+                </Form.Group>
+                <LoadingButton
+                  size={"sm"}
+                  onClick={submitForm}
+                  loading={isSubmitting}
+                  variant="dark"
+                >
+                  Save
+                </LoadingButton>
+              </MetaForm>
+            )}
+          </Formik>
         </Col>
       </Row>
     </>

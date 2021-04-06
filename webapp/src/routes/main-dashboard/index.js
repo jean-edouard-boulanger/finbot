@@ -83,10 +83,10 @@ export const MainDashboard = () => {
       return;
     }
     let fetch = async () => {
-      const account_data = await finbotClient.getAccount({
+      const valuation = await finbotClient.getAccountValuation({
         account_id: accountId,
       });
-      setValuation(account_data.valuation);
+      setValuation(valuation);
 
       const linked_accounts = await finbotClient.getLinkedAccountsValuation({
         account_id: accountId,
