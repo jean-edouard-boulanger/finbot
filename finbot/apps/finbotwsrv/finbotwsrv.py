@@ -131,6 +131,7 @@ def healthy():
             "provider": {"type": "string"},
             "credentials": {"type": ["null", "object"]},
             "items": {"type": "array", "items": {"type": "string"}},
+            "account_metadata": {"type": ["null", "string"]},
         },
     }
 )
@@ -143,4 +144,5 @@ def get_financial_data():
     tracer.current().set_description(provider_id)
     tracer.current().metadata["provider_id"] = provider_id
     tracer.current().metadata["line_items"] = ", ".join(line_items)
+    tracer.current().metadata["account"] = request_data.get("account_metadata")
     return get_financial_data_impl(provider, credentials, line_items)

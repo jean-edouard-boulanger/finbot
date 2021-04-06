@@ -1,5 +1,7 @@
 from finbot.model import DistributedTrace
+from finbot.core.utils import serialize
 
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.session import Session
 from typing import Iterator, Optional, Protocol, TypedDict, Callable, Any
 from dataclasses import dataclass, field
@@ -31,6 +33,9 @@ class Step(object):
         self._name = name
         self.metadata = metadata or {}
         self.end_time: Optional[datetime] = None
+
+    def set_input(self, data: Any) -> None:
+        self.metadata["input"] = data
 
     def set_output(self, data: Any) -> None:
         self.metadata["output"] = data
@@ -85,17 +90,24 @@ class DBPersistenceLayer(PersistenceLayer):
     def __init__(self, db_session: Session):
         self.db_session = db_session
 
-    def persist(self, step: Step) -> None:
+    def _persist(self, step: Step) -> None:
         dt = DistributedTrace(
             guid=step.guid,
             path=step.pretty_path,
             name=step.name,
-            user_data=step.metadata,
+            user_data=serialize(step.metadata),
             start_time=step.start_time,
             end_time=step.end_time,
         )
         self.db_session.merge(dt)
         self.db_session.commit()
+
+    def persist(self, step: Step) -> None:
+        try:
+            self._persist(step)
+        except SQLAlchemyError as e:
+            logging.warning(f"failed to persist step '{step.name}': {e}")
+            self.db_session.rollback()
 
 
 class NoopPersistenceLayer(PersistenceLayer):
@@ -177,6 +189,12 @@ class TracerContext(object):
         step.set_pid(os.getpid())
         return step
 
+    def _safe_persist(self, step: Step) -> None:
+        try:
+            self._config.persistence_layer.persist(step)
+        except Exception as e:
+            logging.warning(f"failed to persist step {step.name}: {e}")
+
     def has_root(self) -> bool:
         return len(self._steps) > 0
 
@@ -195,7 +213,7 @@ class TracerContext(object):
             self._new_step(guid=flat_context.guid, path=flat_context.path, name=name)
         ]
         step = self._steps[-1]
-        self._config.persistence_layer.persist(step)
+        self._safe_persist(step)
         logging.info(
             f"adopted tracer context name='{step.name}' guid={step.guid} path={step.pretty_path}"
         )
@@ -207,7 +225,7 @@ class TracerContext(object):
             self._new_step(guid=str(uuid.uuid4()), path=self._path[:-1], name=name)
         ]
         step = self._steps[-1]
-        self._config.persistence_layer.persist(step)
+        self._safe_persist(step)
         logging.info(
             f"new tracer root name='{step.name}' guid={step.guid} path={step.pretty_path}"
         )
@@ -220,7 +238,7 @@ class TracerContext(object):
             self._new_step(guid=self._steps[0].guid, path=self._path[:], name=name)
         )
         step = self._steps[-1]
-        self._config.persistence_layer.persist(step)
+        self._safe_persist(step)
         logging.info(
             f"new tracer child name='{step.name}' guid={step.guid} path={step.pretty_path}"
         )
@@ -233,7 +251,7 @@ class TracerContext(object):
         self._path.pop()
         step = self._steps.pop()
         step.end_time = datetime.now()
-        self._config.persistence_layer.persist(step)
+        self._safe_persist(step)
         if len(self._steps) == 0:
             self._steps = []
             self._path = []
@@ -322,6 +340,12 @@ def sub_step(name: str) -> Iterator[Step]:
         raise
     finally:
         context.unwind()
+
+
+def milestone(name: str, **kwargs: Any) -> None:
+    with sub_step(name) as step:
+        for key, value in kwargs.items():
+            step.metadata[key] = value
 
 
 def current() -> Step:

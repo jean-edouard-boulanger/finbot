@@ -1,6 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor
 from decimal import Decimal
-from typing import List, Optional, Tuple
+from dataclasses import dataclass
+from typing import List, Optional, Tuple, Any
 from flask import Flask, jsonify, request
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker, joinedload
@@ -203,15 +204,14 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
         sub_account_entry.items_entries.append(new_item)
 
 
-class AccountSnapshotRequest(object):
-    def __init__(
-        self, account_id, provider_id, credentials_data, line_items, tracer_context=None
-    ):
-        self.account_id = account_id
-        self.provider_id = provider_id
-        self.credentials_data = credentials_data
-        self.line_items = line_items
-        self.tracer_context = tracer_context
+@dataclass
+class AccountSnapshotRequest:
+    account_id: int
+    provider_id: str
+    credentials_data: dict[Any, Any]
+    line_items: list[LineItem]
+    account_metadata: Optional[str] = None
+    tracer_context: Optional[tracer.FlatContext] = None
 
 
 def dispatch_snapshot_entry(snap_request: AccountSnapshotRequest):
@@ -226,6 +226,7 @@ def dispatch_snapshot_entry(snap_request: AccountSnapshotRequest):
             provider=snap_request.provider_id,
             credentials_data=snap_request.credentials_data,
             line_items=snap_request.line_items,
+            account_metadata=snap_request.account_metadata,
             tracer_context=snap_request.tracer_context,
         )
 
@@ -264,7 +265,7 @@ def get_credentials_data(linked_account: LinkedAccount, user_account: UserAccoun
     return credentials
 
 
-def take_raw_snapshot(user_account, linked_accounts: Optional[List[int]]):
+def take_raw_snapshot(user_account: UserAccount, linked_accounts: Optional[List[int]]):
     with ThreadPoolExecutor(max_workers=4) as executor:
         logging.info("initializing accounts snapshot requests")
         requests = [
@@ -273,6 +274,7 @@ def take_raw_snapshot(user_account, linked_accounts: Optional[List[int]]):
                 provider_id=linked_account.provider_id,
                 credentials_data=get_credentials_data(linked_account, user_account),
                 line_items=[LineItem.Balances, LineItem.Assets, LineItem.Liabilities],
+                account_metadata=f"{linked_account.account_name} (id: {linked_account.id})",
                 tracer_context=tracer.propagate(),
             )
             for linked_account in user_account.linked_accounts
@@ -298,12 +300,20 @@ def validate_fx_rates(rates: dict[fx_market.Xccy, Optional[float]]):
     missing_rates = [str(pair) for (pair, rate) in rates.items() if rate is None]
     if missing_rates:
         raise RuntimeError(
-            f"Rate is missing for the following FX pair(s): {', '.join(missing_rates)}"
+            f"rate is missing for the following FX pair(s): {', '.join(missing_rates)}"
         )
 
 
 def take_snapshot_impl(user_account_id: int, linked_accounts: Optional[List[int]]):
-    logging.info(f"fetching user information for user account id {user_account_id}")
+    logging.info(
+        f"fetching user information for"
+        f" user_account_id={user_account_id}"
+        f" linked_accounts={linked_accounts}"
+    )
+
+    tracer.current().set_input(
+        {"user_account_id": user_account_id, "linked_accounts": linked_accounts}
+    )
 
     user_account = (
         db_session.query(UserAccount)
@@ -329,18 +339,19 @@ def take_snapshot_impl(user_account_id: int, linked_accounts: Optional[List[int]
         new_snapshot.start_time = utils.now_utc()
         new_snapshot.trace_guid = tracer.context_identifier()
 
-    logging.info(f"blank snapshot {new_snapshot.id} created")
+    tracer.milestone("blank snapshot created", output={"id": new_snapshot.id})
 
     with tracer.sub_step("raw snapshot") as step:
         raw_snapshot = take_raw_snapshot(
             user_account=user_account, linked_accounts=linked_accounts
         )
-        logging.info(utils.pretty_dump(raw_snapshot))
+        logging.debug(utils.pretty_dump(raw_snapshot))
         step.set_output(raw_snapshot)
 
     with tracer.sub_step("fetch currency pairs") as step:
         xccy_collector = XccyCollector(requested_ccy)
         visit_snapshot_tree(raw_snapshot, xccy_collector)
+        step.set_input([str(pair) for pair in xccy_collector.xccys])
         xccy_rates = fx_market.get_rates(xccy_collector.xccys)
         step.set_output({str(xccy): rate for (xccy, rate) in xccy_rates.items()})
         validate_fx_rates(xccy_rates)
