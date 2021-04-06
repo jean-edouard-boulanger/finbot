@@ -5,6 +5,12 @@ import { ServicesContext, AuthContext } from "contexts";
 import { Row, Col, Form } from "react-bootstrap";
 import { LoadingButton } from "../../components/loading-button";
 
+import * as Yup from "yup";
+
+const PROFILE_SCHEMA = Yup.object().shape({
+
+})
+
 export const ProfileSettings = () => {
   const { finbotClient } = useContext(ServicesContext);
   const auth = useContext(AuthContext);

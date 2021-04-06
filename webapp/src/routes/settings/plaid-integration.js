@@ -16,19 +16,10 @@ export const PlaidIntegrationSettings = () => {
       const settings = await finbotClient.getAccountSettings({
         account_id: account.id,
       });
-      resetPlaidSettings(settings.plaid_settings);
+      setPlaidSettings(settings.plaid_settings);
     };
     fetch();
   }, [account, finbotClient]);
-
-  const resetPlaidSettings = ({ env, client_id, public_key, secret_key }) => {
-    setPlaidSettings({
-      env: env || "production",
-      client_id: client_id || null,
-      public_key: public_key || null,
-      secret_key: secret_key || null,
-    });
-  };
 
   const handleChange = (field, value) => {
     if (plaidSettings !== null) {
@@ -36,7 +27,6 @@ export const PlaidIntegrationSettings = () => {
         ...plaidSettings,
         [field]: value,
       };
-      console.log(newSettings);
       setPlaidSettings(newSettings);
     }
   };
@@ -58,7 +48,7 @@ export const PlaidIntegrationSettings = () => {
                   if (event.target.checked) {
                     return setPlaidSettings({});
                   }
-                  resetPlaidSettings({});
+                  setPlaidSettings(null);
                 }}
                 type="checkbox"
                 label="Enable Plaid integration"

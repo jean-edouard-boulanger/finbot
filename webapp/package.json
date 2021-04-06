@@ -41,6 +41,7 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "lint-check": "eslint .",
+    "lint-check:prod": "NODE_ENV=prod eslint .",
     "prettier": "prettier --write **.js",
     "prettier-check": "prettier -c **.js"
   },
