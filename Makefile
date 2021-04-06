@@ -1,4 +1,5 @@
 export FINBOT_EDIT_CMD ?= code --wait
+export BLACK_SETTINGS = --exclude migrations/ webapp/ .
 
 
 alembic-gen:
@@ -169,13 +170,18 @@ docker-dev:
 unit-tests:
 	python3.9 -m pytest tests/unit_tests
 
+black-check:
+	black --check $(BLACK_SETTINGS)
+
 black:
-	black --exclude migrations/ webapp/ .
+	black $(BLACK_SETTINGS)
+
 
 prettier:
 	cd webapp && npm run prettier
 
-format: black prettier
+prettier-check:
+	cd webapp && npm run prettier-check
 
 flake8:
 	flake8 --exclude migrations/ --max-line-length 100
@@ -187,4 +193,12 @@ mypy:
 	mypy --strict -p finbot.apps.support;
 
 eslint:
-	cd webapp && npm run lint-check
+	cd webapp && npm run lint-check:prod
+
+py-lint: mypy flake8 black-check
+js-lint: eslint prettier-check
+lint: py-lint js-lint
+
+py-format: black
+js-format: prettier
+format: py-format js-format
