@@ -71,6 +71,7 @@ trigger-valuation-docker:
 
 trigger-valuation:
 	tools/check-env.sh accounts;
+	env FINBOT_WAIT_DEPS=db,snap,hist make finbot-wait;
 	python3.9 finbot/apps/schedsrv/schedsrv.py \
 		--mode one_shot \
 		--accounts ${accounts}

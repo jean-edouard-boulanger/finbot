@@ -92,6 +92,7 @@ def healthy():
 @app.route("/history/<snapshot_id>/write", methods=["POST"])
 @request_handler()
 def write_history(snapshot_id):
+    tracer.current().set_input({"snapshot_id": snapshot_id})
     repo = repository.ReportRepository(db_session)
 
     logging.info("fetching snapshot_id={} metadata".format(snapshot_id))
@@ -119,15 +120,20 @@ def write_history(snapshot_id):
         history_entry.available = False
         history_entry.trace_guid = tracer.context_identifier()
 
-    logging.info(f"blank history entry created with id={history_entry.id}")
+    tracer.milestone("blank history entry created", output={"id": history_entry.id})
 
     logging.info("handling basic valuation")
 
     user_account_valuation = get_user_account_valuation(snapshot_data)
-    logging.info(f"user account valuation {user_account_valuation}")
+    tracer.milestone(
+        "user account valuation", output={"valuation": user_account_valuation}
+    )
 
     user_account_total_liabilities = get_user_account_liabilities(snapshot_data)
-    logging.info(f"user account liabilities {user_account_total_liabilities}")
+    tracer.milestone(
+        "user account liabilities",
+        output={"liabilities": user_account_total_liabilities},
+    )
 
     with db_session.persist(history_entry):
         history_entry.user_account_valuation_history_entry = (
@@ -138,7 +144,9 @@ def write_history(snapshot_id):
         )
 
     linked_accounts_valuation = get_linked_accounts_valuation(snapshot_data)
-    logging.info("fetched linked accounts valuation")
+    tracer.milestone(
+        "linked accounts valuation", output={"valuation": linked_accounts_valuation}
+    )
     logging.debug(pretty_dump(linked_accounts_valuation))
 
     with db_session.persist(history_entry):
@@ -157,7 +165,9 @@ def write_history(snapshot_id):
         )
 
     sub_accounts_valuation = get_sub_accounts_valuation(snapshot_data)
-    logging.info("fetched sub accounts valuation")
+    tracer.milestone(
+        "sub accounts valuation", output={"valuation": sub_accounts_valuation}
+    )
     logging.debug(pretty_dump(sub_accounts_valuation))
 
     with db_session.persist(history_entry):
