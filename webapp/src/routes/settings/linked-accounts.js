@@ -4,13 +4,58 @@ import { withRouter, Switch, Route, Redirect, Link } from "react-router-dom";
 import { ServicesContext, AuthContext } from "contexts";
 
 import { toast } from "react-toastify";
-import { Row, Col, Table, Button } from "react-bootstrap";
+import { Row, Col, Table, Button, Modal } from "react-bootstrap";
 import { LinkAccount } from "./linked-accounts-new";
+
+export const UnlinkAccountDialog = ({
+  show,
+  linkedAccount,
+  handleUnlink,
+  handleClose,
+}) => {
+  const accountName = (linkedAccount ?? {}).account_name;
+  return (
+    <Modal show={show}>
+      <Modal.Header closeButton>
+        <Modal.Title>Unlink account</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <p>
+          Are you sure you want to unlink account{" "}
+          <strong>{`"${accountName}"`}</strong>?
+        </p>
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="secondary" onClick={handleClose}>
+          Cancel
+        </Button>
+        <Button onClick={handleUnlink} variant="primary">
+          Unlink
+        </Button>
+      </Modal.Footer>
+    </Modal>
+  );
+};
 
 export const AccountsPanel = () => {
   const { finbotClient } = useContext(ServicesContext);
   const { account } = useContext(AuthContext);
   const [accounts, setAccounts] = useState([]);
+  const [dialog, setDialog] = useState({
+    show: false,
+    linkedAccount: null,
+    handleUnlink: null,
+    handleClose: null,
+  });
+
+  const hideDialog = () => {
+    setDialog({
+      show: false,
+      linkedAccount: null,
+      handleUnlink: null,
+      handleClose: null,
+    });
+  };
 
   const refreshAccounts = async () => {
     const results = await finbotClient.getLinkedAccounts({
@@ -39,7 +84,8 @@ export const AccountsPanel = () => {
   };
 
   return (
-    <div>
+    <>
+      <UnlinkAccountDialog {...dialog} />
       <Table hover size={"sm"}>
         <thead>
           <tr>
@@ -56,7 +102,19 @@ export const AccountsPanel = () => {
                 <td>{linkedAccount.provider.description}</td>
                 <td>
                   <Button
-                    onClick={() => handleUnlinkAccount(linkedAccount)}
+                    onClick={() => {
+                      setDialog({
+                        show: true,
+                        linkedAccount,
+                        handleUnlink: () => {
+                          hideDialog();
+                          handleUnlinkAccount(linkedAccount);
+                        },
+                        handleClose: () => {
+                          hideDialog();
+                        },
+                      });
+                    }}
                     size={"sm"}
                     variant={"dark"}
                   >
@@ -68,7 +126,7 @@ export const AccountsPanel = () => {
           })}
         </tbody>
       </Table>
-    </div>
+    </>
   );
 };
 
