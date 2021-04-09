@@ -1,11 +1,19 @@
 import React, { useContext, useEffect, useState } from "react";
-import { withRouter, Switch, Route, Redirect, Link } from "react-router-dom";
+import {
+  withRouter,
+  Switch,
+  Route,
+  Redirect,
+  Link,
+  matchPath,
+  useParams,
+} from "react-router-dom";
 
 import { ServicesContext, AuthContext } from "contexts";
 
 import { toast } from "react-toastify";
 import { Row, Col, Table, Button, Modal } from "react-bootstrap";
-import { LinkAccount } from "./linked-accounts-new";
+import { LinkAccount } from "./link-account";
 
 export const UnlinkAccountDialog = ({
   show,
@@ -36,6 +44,24 @@ export const UnlinkAccountDialog = ({
     </Modal>
   );
 };
+
+const UpdateLinkedAccount = withRouter(() => {
+  const { finbotClient } = useContext(ServicesContext);
+  const { account } = useContext(AuthContext);
+  const { linkedAccountId } = useParams();
+  const [linkedAccount, setLinkedAccount] = useState(null);
+  useEffect(() => {
+    const fetch = async () => {
+      const linkedAccount = await finbotClient.getLinkedAccount({
+        account_id: account.id,
+        linked_account_id: linkedAccountId,
+      });
+      setLinkedAccount(linkedAccount);
+    };
+    fetch();
+  }, [finbotClient, account, linkedAccountId]);
+  return <LinkAccount linkedAccount={linkedAccount} />;
+});
 
 export const AccountsPanel = () => {
   const { finbotClient } = useContext(ServicesContext);
@@ -98,7 +124,11 @@ export const AccountsPanel = () => {
           {accounts.map((linkedAccount) => {
             return (
               <tr key={`account-${linkedAccount.id}`}>
-                <td>{linkedAccount.account_name}</td>
+                <td>
+                  <Link to={`/settings/linked/${linkedAccount.id}`}>
+                    {linkedAccount.account_name}
+                  </Link>
+                </td>
                 <td>{linkedAccount.provider.description}</td>
                 <td>
                   <Button
@@ -138,8 +168,20 @@ export const LinkedAccountsSettings = withRouter((props) => {
         <Col>
           <h3>
             <Link to={"/settings/linked"}>Linked accounts</Link>{" "}
-            {route.startsWith("/settings/linked/new") && (
+            {matchPath(route, {
+              path: "/settings/linked/new",
+              exact: true,
+              strict: true,
+            }) ? (
               <small>{"| New"}</small>
+            ) : matchPath(route, {
+                path: "/settings/linked/:id",
+                exact: true,
+                strict: true,
+              }) ? (
+              <small>{"| Update"}</small>
+            ) : (
+              <></>
             )}
           </h3>
         </Col>
@@ -162,6 +204,11 @@ export const LinkedAccountsSettings = withRouter((props) => {
               exact
               path="/settings/linked/new"
               render={() => <LinkAccount />}
+            />
+            <Route
+              exact
+              path="/settings/linked/:linkedAccountId"
+              render={() => <UpdateLinkedAccount />}
             />
             <Route
               exact
