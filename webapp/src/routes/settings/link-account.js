@@ -161,15 +161,18 @@ export const LinkAccount = (props) => {
 
   const requestUpdateCredentials = async (credentials) => {
     setOperation("Validating credentials");
-    const settings = {account_id: account.id, linked_account_id: linkedAccount.id, credentials: credentials};
+    const settings = {
+      account_id: account.id,
+      linked_account_id: linkedAccount.id,
+      credentials: credentials,
+    };
     try {
       await finbotClient.updateLinkedAccountCredentials({
         ...settings,
         validate: true,
         persist: false,
       });
-    }
-    catch(e) {
+    } catch (e) {
       toast.error(`Error validating credentials: ${e}`);
       setOperation(null);
       return;
@@ -181,13 +184,14 @@ export const LinkAccount = (props) => {
         validate: false,
         persist: true,
       });
-      toast.success(`Credentials for linked account '${linkedAccount.account_name}' updated`);
-    }
-    catch(e) {
+      toast.success(
+        `Credentials for linked account '${linkedAccount.account_name}' updated`
+      );
+    } catch (e) {
       toast.error(`Error updating credentials: ${e}`);
     }
     setOperation(null);
-  }
+  };
 
   const requestLinkAccount = async (provider, credentials) => {
     const link_settings = {
