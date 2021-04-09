@@ -279,6 +279,7 @@ def take_raw_snapshot(user_account: UserAccount, linked_accounts: Optional[List[
             )
             for linked_account in user_account.linked_accounts
             if not linked_account.deleted
+            and not linked_account.frozen
             and (not linked_accounts or linked_account.id in linked_accounts)
         ]
 

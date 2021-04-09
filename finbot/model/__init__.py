@@ -2,6 +2,7 @@ from finbot.core.dbutils import JSONEncoded, DateTimeTz
 
 from typing import Optional, TypeVar, Type, TYPE_CHECKING, Any
 from datetime import datetime
+from sqlalchemy.sql import expression
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import (
@@ -136,6 +137,9 @@ class LinkedAccount(Base):
     account_name = Column(String(256), nullable=False)
     encrypted_credentials = Column(Text)
     deleted = Column(Boolean, nullable=False, default=False)
+    frozen = Column(
+        Boolean, nullable=False, default=True, server_default=expression.false()
+    )
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
