@@ -618,7 +618,7 @@ def link_new_account(user_account_id):
         try:
             with db_session.persist(user_account):
                 encrypted_credentials = secure.fernet_encrypt(
-                    json.dumps(credentials).encode(), FINBOT_ENV.secret_key
+                    json.dumps(credentials).encode(), FINBOT_ENV.secret_key.encode()
                 ).decode()
                 user_account.linked_accounts.append(
                     LinkedAccount(
@@ -653,69 +653,116 @@ def link_new_account(user_account_id):
 LINKED_ACCOUNT = ACCOUNT.linked_accounts.p("linked_account_id")
 
 
-@app.route(LINKED_ACCOUNT(), methods=["PUT"])
+@app.route(LINKED_ACCOUNT(), methods=["GET"])
+@jwt_required()
+@request_handler()
+def get_linked_account(user_account_id, linked_account_id):
+    linked_account = repository.get_linked_account(
+        db_session, user_account_id, linked_account_id
+    )
+    credentials = None
+    if linked_account.provider.id == "plaid_us":
+        plaid_settings = repository.get_user_account_plaid_settings(
+            db_session, user_account_id
+        )
+        credentials = json.loads(
+            secure.fernet_decrypt(
+                linked_account.encrypted_credentials.encode(),
+                FINBOT_ENV.secret_key.encode(),
+            ).decode()
+        )
+        credentials["link_token"] = core.create_plaid_link_token(
+            credentials, plaid_settings
+        )
+    return jsonify(
+        serialize(
+            {
+                "linked_account": {
+                    "id": linked_account.id,
+                    "user_account_id": linked_account.user_account_id,
+                    "provider_id": linked_account.provider_id,
+                    "account_name": linked_account.account_name,
+                    "credentials": credentials,
+                    "deleted": linked_account.deleted,
+                    "created_at": linked_account.created_at,
+                    "updated_at": linked_account.updated_at,
+                }
+            }
+        )
+    )
+
+
+@app.route(LINKED_ACCOUNT.metadata(), methods=["PUT"])
 @jwt_required()
 @request_handler(
-    trace_values=False,
     schema={
         "type": "object",
         "additionalProperties": False,
-        "properties": {
-            "provider_id": {"type": "string"},
-            "credentials": {"type": ["null", "object"]},
-            "account_name": {"type": "string"},
-        },
-    },
+        "properties": {"account_name": {"type": "string"}},
+    }
 )
-def update_linked_account(user_account_id, linked_account_id):
+def update_linked_account_metadata(user_account_id, linked_account_id):
+    request_data = request.json
+    linked_account_id = int(linked_account_id)
+    linked_account = repository.get_linked_account(
+        db_session, user_account_id, linked_account_id
+    )
+    with db_session.persist(linked_account):
+        linked_account.account_name = request_data["account_name"]
+    return jsonify({})
+
+
+@app.route(LINKED_ACCOUNT.credentials(), methods=["PUT"])
+@jwt_required()
+@request_handler(
+    schema={
+        "type": "object",
+        "additionalProperties": False,
+        "properties": {"credentials": {"type": ["object", "null"]}},
+    }
+)
+def update_linked_account_credentials(user_account_id, linked_account_id):
+    do_validate = bool(int(request.args.get("validate", 1)))
+    do_persist = bool(int(request.args.get("persist", 1)))
+
     request_data = request.json
     linked_account_id = int(linked_account_id)
     linked_account = repository.get_linked_account(
         db_session, user_account_id, linked_account_id
     )
 
-    if not linked_account:
-        raise ApplicationError(
-            f"could not find linked account with id '{linked_account_id}'"
-        )
-
-    new_provider_id = request_data.get("provider_id", linked_account.provider_id)
-    request_provider_update = (
-        "provider_id" in request_data and new_provider_id != linked_account.provider_id
+    plaid_settings = repository.get_user_account_plaid_settings(
+        db_session, user_account_id
     )
-    request_has_credentials = "credentials" in request_data
 
-    if request_provider_update and not request_has_credentials:
-        raise ApplicationError(
-            "new credentials must be provided when updating provider"
+    is_plaid = linked_account.provider_id == "plaid_us"
+    if is_plaid and not plaid_settings:
+        raise ApplicationError("user account is not setup for Plaid")
+
+    credentials = request_data["credentials"]
+    if linked_account.provider.id == "plaid_us":
+        credentials = json.loads(
+            secure.fernet_decrypt(
+                linked_account.encrypted_credentials.encode(),
+                FINBOT_ENV.secret_key.encode(),
+            ).decode()
         )
 
-    credentials_need_validating = request_has_credentials or request_provider_update
-
-    if credentials_need_validating:
-        logging.info(
-            f"validating authentication details for "
-            f"account_id={user_account_id} and provider_id={new_provider_id}"
-        )
+    if do_validate:
         core.validate_credentials(
-            get_finbot_client(), new_provider_id, request_data["credentials"]
+            finbot_client=get_finbot_client(),
+            plaid_settings=plaid_settings,
+            provider_id=linked_account.provider_id,
+            credentials=credentials,
         )
 
-    try:
+    if do_persist:
         with db_session.persist(linked_account):
-            linked_account.provider_id = new_provider_id
-            if "account_name" in request_data:
-                linked_account.account_name = request_data["account_name"]
-            if request_has_credentials:
-                encrypted_credentials = secure.fernet_encrypt(
-                    json.dumps(request_data["credentials"]).encode(),
-                    FINBOT_ENV.secret_key,
-                ).decode()
-                linked_account.encrypted_credentials = encrypted_credentials
-    except IntegrityError as e:
-        raise ApplicationError(str(e))
+            linked_account.encrypted_credentials = secure.fernet_encrypt(
+                json.dumps(credentials).encode(), FINBOT_ENV.secret_key.encode()
+            ).decode()
 
-    return jsonify({})
+    return jsonify({"result": {"validated": do_validate, "persisted": do_persist}})
 
 
 @app.route(LINKED_ACCOUNT(), methods=["DELETE"])
@@ -726,10 +773,6 @@ def delete_linked_account(user_account_id, linked_account_id):
     linked_account = repository.get_linked_account(
         db_session, user_account_id, linked_account_id
     )
-    if not linked_account:
-        raise ApplicationError(
-            f"could not find linked account with id '{linked_account_id}'"
-        )
 
     with db_session.persist(linked_account):
         linked_account.account_name = (

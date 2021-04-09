@@ -123,11 +123,52 @@ class FinbotClient {
     return this.handleResponse(response).linked_accounts;
   }
 
+  async getLinkedAccount({ account_id, linked_account_id }) {
+    const response = await axios.get(
+      `${this.endpoint}/accounts/${account_id}/linked_accounts/${linked_account_id}`
+    );
+    return this.handleResponse(response).linked_account;
+  }
+
   async getLinkedAccountsValuation({ account_id }) {
     const response = await axios.get(
       `${this.endpoint}/accounts/${account_id}/linked_accounts/valuation`
     );
     return this.handleResponse(response).linked_accounts;
+  }
+
+  async updateLinkedAccountMetadata({
+    account_id,
+    linked_account_id,
+    account_name,
+  }) {
+    const response = await axios.put(
+      `${this.endpoint}/accounts/${account_id}/linked_accounts/${linked_account_id}/metadata`,
+      {
+        account_name,
+      }
+    );
+    return this.handleResponse(response);
+  }
+
+  async updateLinkedAccountCredentials({
+    account_id,
+    linked_account_id,
+    validate,
+    persist,
+    credentials,
+  }) {
+    const response = await axios.put(
+      `${
+        this.endpoint
+      }/accounts/${account_id}/linked_accounts/${linked_account_id}/credentials?validate=${
+        validate | 0
+      }&persist=${persist | 0}`,
+      {
+        credentials,
+      }
+    );
+    return this.handleResponse(response);
   }
 
   async deleteLinkedAccount({ account_id, linked_account_id }) {

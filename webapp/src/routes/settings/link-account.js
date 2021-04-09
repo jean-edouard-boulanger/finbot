@@ -6,13 +6,14 @@ import { AuthContext, ServicesContext } from "contexts";
 import { default as DataDrivenForm } from "react-jsonschema-form";
 import { toast } from "react-toastify";
 import { LoadingButton } from "components";
-import { Row, Col, Form, Alert } from "react-bootstrap";
+import { Row, Col, Form, Alert, InputGroup, Button } from "react-bootstrap";
+import { FaCheck } from "react-icons/fa";
 import { PlaidLink } from "react-plaid-link";
 
 const NO_PROVIDER_SELECTED = "NO_PROVIDER_SELECTED";
 const PLAID_PROVIDER_ID = "plaid_us";
 
-const DataDrivenAccountForm = ({ operation, schema, onSubmit }) => {
+const DataDrivenAccountForm = ({ operation, schema, onSubmit, updateMode }) => {
   return (
     <DataDrivenForm
       schema={schema.json_schema ?? {}}
@@ -26,14 +27,17 @@ const DataDrivenAccountForm = ({ operation, schema, onSubmit }) => {
         loading={operation !== null}
         variant={"dark"}
         type="submit"
+        size={"sm"}
       >
-        {operation || "Link account"}
+        {operation || (updateMode ? "Update credentials" : "Link account")}
       </LoadingButton>
     </DataDrivenForm>
   );
 };
 
-const PlaidForm = ({ operation, settings, onSubmit }) => {
+const PlaidForm = ({ operation, settings, onSubmit, linkToken }) => {
+  const updateMode = !!linkToken;
+
   if (operation !== null) {
     return (
       <LoadingButton variant={"dark"} loading={true}>
@@ -53,12 +57,13 @@ const PlaidForm = ({ operation, settings, onSubmit }) => {
           toast.error(`Plaid error: ${metadata.error_message}`);
         }
       }}
+      token={updateMode ? linkToken : undefined}
       publicKey={settings.public_key}
       env={settings.env}
       countryCodes={["GB", "US", "CA", "IE", "FR", "ES", "NL"]}
-      product={["transactions", "identity"]}
+      product={updateMode ? [] : ["transactions", "identity"]}
     >
-      Link Account via Plaid
+      {updateMode ? "Update account" : "Link account"}&nbsp;via Plaid
     </PlaidLink>
   );
 };
@@ -71,10 +76,11 @@ const isPlaidSupported = (plaidSettings) => {
   return plaidSettings !== null;
 };
 
-export const LinkAccount = () => {
+export const LinkAccount = (props) => {
   const { account } = useContext(AuthContext);
   const { finbotClient } = useContext(ServicesContext);
 
+  const [linkedAccount, setLinkedAccount] = useState(null);
   const [providers, setProviders] = useState([]);
   const [plaidSettings, setPlaidSettings] = useState(null);
   const [selectedProvider, setSelectedProvider] = useState(null);
@@ -82,6 +88,7 @@ export const LinkAccount = () => {
   const [operation, setOperation] = useState(null);
   const [linked, setLinked] = useState(false);
   const accountNameRef = useRef(accountName);
+  const updateMode = linkedAccount !== null;
 
   useEffect(() => {
     const fetch = async () => {
@@ -106,6 +113,19 @@ export const LinkAccount = () => {
     fetch();
   }, [finbotClient, account]);
 
+  useEffect(() => {
+    if (props.linkedAccount) {
+      const existingLinkedAccount = { ...props.linkedAccount };
+      providers.forEach((provider) => {
+        if (existingLinkedAccount.provider_id === provider.id) {
+          setSelectedProvider(provider);
+        }
+      });
+      setLinkedAccount(existingLinkedAccount);
+      updateAccountName(existingLinkedAccount.account_name);
+    }
+  }, [providers, props.linkedAccount]);
+
   const updateAccountName = (newName) => {
     setAccountName(newName);
     accountNameRef.current = newName;
@@ -124,44 +144,77 @@ export const LinkAccount = () => {
     setSelectedProvider(provider);
   };
 
+  const onUpdateExistingAccountMetadata = async () => {
+    try {
+      const newAccountName = accountNameRef.current;
+      await finbotClient.updateLinkedAccountMetadata({
+        account_id: account.id,
+        linked_account_id: linkedAccount.id,
+        account_name: newAccountName,
+      });
+      setLinkedAccount({ ...linkedAccount, account_name: newAccountName });
+      toast.success(`Linked account renamed to '${newAccountName}'`);
+    } catch (e) {
+      toast.error(`Failed to update account name: '${e}'`);
+    }
+  };
+
+  const requestUpdateCredentials = async (credentials) => {
+    setOperation("Validating credentials");
+    const settings = {account_id: account.id, linked_account_id: linkedAccount.id, credentials: credentials};
+    try {
+      await finbotClient.updateLinkedAccountCredentials({
+        ...settings,
+        validate: true,
+        persist: false,
+      });
+    }
+    catch(e) {
+      toast.error(`Error validating credentials: ${e}`);
+      setOperation(null);
+      return;
+    }
+    setOperation("Updating credentials");
+    try {
+      await finbotClient.updateLinkedAccountCredentials({
+        ...settings,
+        validate: false,
+        persist: true,
+      });
+      toast.success(`Credentials for linked account '${linkedAccount.account_name}' updated`);
+    }
+    catch(e) {
+      toast.error(`Error updating credentials: ${e}`);
+    }
+    setOperation(null);
+  }
+
   const requestLinkAccount = async (provider, credentials) => {
     const link_settings = {
       provider_id: provider.id,
       account_name: accountNameRef.current,
       credentials,
     };
-    console.log(link_settings);
-
     setOperation("Validating credentials");
-
     try {
-      const validated = await finbotClient.validateExternalAccountCredentials(
+      await finbotClient.validateExternalAccountCredentials(
         account.id,
         link_settings
       );
-      if (!validated) {
-        toast.error(`Could not validate credentials: unknown error`);
-        setOperation(null);
-        return;
-      }
     } catch (e) {
-      toast.error(`${e}`);
+      toast.error(`Error validating credentials: ${e}`);
       setOperation(null);
       return;
     }
     setOperation("Linking account");
     try {
-      const results = await finbotClient.linkAccount(account.id, link_settings);
-      if (!results.persisted) {
-        toast.error(`Could not link account: unknown error`);
-        setOperation(null);
-        return;
-      }
+      await finbotClient.linkAccount(account.id, link_settings);
     } catch (e) {
-      toast.error(`${e}`);
+      toast.error(`Error updating credentials: ${e}`);
       setOperation(null);
       return;
     }
+    setOperation(null);
     setLinked(true);
   };
 
@@ -186,6 +239,7 @@ export const LinkAccount = () => {
                   as="select"
                   size="md"
                   onChange={onSelectedProviderChanged}
+                  disabled={updateMode}
                 >
                   <option value={NO_PROVIDER_SELECTED}>
                     Select a provider
@@ -210,16 +264,27 @@ export const LinkAccount = () => {
               </Row>
               <Row className={"mb-4"}>
                 <Col>
-                  <Form.Group controlId="formBasicEmail">
+                  <InputGroup>
                     <Form.Control
                       type="text"
                       placeholder="Account name"
+                      aria-describedby="basic-addon1"
                       value={accountName}
                       onChange={(event) => {
                         updateAccountName(event.target.value);
                       }}
                     />
-                  </Form.Group>
+                    {updateMode && accountName !== linkedAccount.account_name && (
+                      <InputGroup.Append>
+                        <Button
+                          variant={"secondary"}
+                          onClick={onUpdateExistingAccountMetadata}
+                        >
+                          <FaCheck />
+                        </Button>
+                      </InputGroup.Append>
+                    )}
+                  </InputGroup>
                 </Col>
               </Row>
             </>
@@ -227,7 +292,7 @@ export const LinkAccount = () => {
           {selectedProvider !== null && !isPlaidSelected(selectedProvider) && (
             <Row className={"mb-4"}>
               <Col>
-                <h5>3. Account settings</h5>
+                <h5>3. Credentials</h5>
               </Col>
             </Row>
           )}
@@ -237,8 +302,13 @@ export const LinkAccount = () => {
                 <DataDrivenAccountForm
                   operation={operation}
                   schema={selectedProvider.credentials_schema}
+                  updateMode={updateMode}
                   onSubmit={(credentials) => {
-                    requestLinkAccount({ ...selectedProvider }, credentials);
+                    if (updateMode) {
+                      requestUpdateCredentials(credentials);
+                    } else {
+                      requestLinkAccount({ ...selectedProvider }, credentials);
+                    }
                   }}
                 />
               )}
@@ -247,8 +317,18 @@ export const LinkAccount = () => {
                   <PlaidForm
                     operation={operation}
                     settings={plaidSettings}
+                    linkToken={
+                      updateMode ? linkedAccount.credentials.link_token : null
+                    }
                     onSubmit={(credentials) => {
-                      requestLinkAccount({ ...selectedProvider }, credentials);
+                      if (updateMode) {
+                        requestUpdateCredentials(credentials);
+                      } else {
+                        requestLinkAccount(
+                          { ...selectedProvider },
+                          credentials
+                        );
+                      }
                     }}
                   />
                 )}
