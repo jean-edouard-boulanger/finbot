@@ -275,6 +275,7 @@ def write_history(snapshot_id):
                 "report": {
                     "history_entry_id": history_entry.id,
                     "valuation_date": valuation_date,
+                    "valuation_currency": history_entry.valuation_ccy,
                     "user_account_valuation": user_account_valuation,
                     "valuation_change": user_account_valuation_change,
                 }

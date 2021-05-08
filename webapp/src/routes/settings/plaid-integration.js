@@ -3,7 +3,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { AuthContext, ServicesContext } from "contexts";
 
 import { Formik, Form as MetaForm, Field, ErrorMessage } from "formik";
-import { LoadingButton } from "components";
+import { LoadingButton, ToggleSecret } from "components";
 import { Col, Row, Form } from "react-bootstrap";
 import { toast } from "react-toastify";
 
@@ -59,7 +59,6 @@ export const PlaidIntegrationSettings = () => {
           public_key: values.public_key,
           secret_key: values.secret_key,
         });
-        console.log(newSettings);
         setPlaidSettings(makePlaidSettings(newSettings));
       } else {
         await finbotClient.deleteAccountPlaidSettings({
@@ -123,9 +122,9 @@ export const PlaidIntegrationSettings = () => {
                 </Form.Group>
                 <Form.Group>
                   <Form.Label>Client identifier</Form.Label>
-                  <Field
+                  <ToggleSecret
+                    renderAs={Field}
                     disabled={!enablePlaid}
-                    type="text"
                     name="client_id"
                     className="form-control"
                   />
@@ -137,9 +136,9 @@ export const PlaidIntegrationSettings = () => {
                 </Form.Group>
                 <Form.Group>
                   <Form.Label>Public key</Form.Label>
-                  <Field
+                  <ToggleSecret
+                    renderAs={Field}
                     disabled={!enablePlaid}
-                    type="text"
                     name="public_key"
                     className="form-control"
                   />
@@ -151,9 +150,9 @@ export const PlaidIntegrationSettings = () => {
                 </Form.Group>
                 <Form.Group>
                   <Form.Label>Secret key</Form.Label>
-                  <Field
+                  <ToggleSecret
+                    renderAs={Field}
                     disabled={!enablePlaid}
-                    type="text"
                     name="secret_key"
                     className="form-control"
                   />

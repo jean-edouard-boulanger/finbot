@@ -288,6 +288,9 @@ export const MainDashboard = () => {
                       },
                     },
                   },
+                  stroke: {
+                    width: 0,
+                  },
                   responsive: [
                     {
                       breakpoint: 765,

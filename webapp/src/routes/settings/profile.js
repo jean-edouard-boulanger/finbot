@@ -12,6 +12,10 @@ import * as Yup from "yup";
 const PROFILE_SCHEMA = Yup.object().shape({
   full_name: Yup.string().required().min(3).max(128).label("Full name"),
   email: Yup.string().required().max(128).email().label("Email"),
+  mobile_phone_number: Yup.string()
+    .max(64)
+    .nullable()
+    .label("Mobile phone number"),
 });
 
 export const ProfileSettings = () => {
@@ -31,10 +35,13 @@ export const ProfileSettings = () => {
 
   const handleSubmit = async (values, { setSubmitting }) => {
     try {
+      const mobilePhoneNumber = values.mobile_phone_number;
       const userAccount = await finbotClient.updateAccountProfile({
         account_id: auth.account.id,
         email: values.email,
         full_name: values.full_name,
+        mobile_phone_number:
+          mobilePhoneNumber.length === 0 ? null : mobilePhoneNumber,
       });
       setAccount(userAccount);
       toast.success("Profile updated");
@@ -80,6 +87,19 @@ export const ProfileSettings = () => {
                   <ErrorMessage
                     className="text-danger"
                     name="email"
+                    component="div"
+                  />
+                </Form.Group>
+                <Form.Group>
+                  <Form.Label>Mobile phone number</Form.Label>
+                  <Field
+                    type="text"
+                    name="mobile_phone_number"
+                    className="form-control"
+                  />
+                  <ErrorMessage
+                    className="text-danger"
+                    name="mobile_phone_number"
                     component="div"
                   />
                 </Form.Group>
