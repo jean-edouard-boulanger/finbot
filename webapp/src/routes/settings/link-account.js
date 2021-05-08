@@ -272,7 +272,6 @@ export const LinkAccount = (props) => {
                     <Form.Control
                       type="text"
                       placeholder="Account name"
-                      aria-describedby="basic-addon1"
                       value={accountName}
                       onChange={(event) => {
                         updateAccountName(event.target.value);

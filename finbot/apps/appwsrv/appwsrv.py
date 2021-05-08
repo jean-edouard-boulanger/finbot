@@ -270,6 +270,7 @@ def serialize_user_account(account: UserAccount) -> dict[str, Any]:
         "id": account.id,
         "email": account.email,
         "full_name": account.full_name,
+        "mobile_phone_number": account.mobile_phone_number,
         "created_at": account.created_at,
         "updated_at": account.updated_at,
     }
@@ -349,7 +350,11 @@ def get_user_account_valuation(user_account_id):
     schema={
         "type": "object",
         "additionalProperties": False,
-        "properties": {"email": {"type": "string"}, "full_name": {"type": "string"}},
+        "properties": {
+            "email": {"type": "string"},
+            "full_name": {"type": "string"},
+            "mobile_phone_number": {"type": ["string", "null"]},
+        },
     }
 )
 def update_user_account_profile(user_account_id):
@@ -358,12 +363,14 @@ def update_user_account_profile(user_account_id):
     with db_session.persist(account):
         account.email = data["email"]
         account.full_name = data["full_name"]
+        account.mobile_phone_number = data["mobile_phone_number"]
     return jsonify(serialize({"user_account": serialize_user_account(account)}))
 
 
 def serialize_user_account_settings(settings: UserAccountSettings) -> dict[str, Any]:
     return {
         "valuation_ccy": settings.valuation_ccy,
+        "twilio_settings": settings.twilio_settings,
         "created_at": settings.created_at,
         "updated_at": settings.updated_at,
     }
@@ -374,6 +381,40 @@ def serialize_user_account_settings(settings: UserAccountSettings) -> dict[str, 
 @request_handler()
 def get_user_account_settings(user_account_id):
     settings = repository.get_user_account_settings(db_session, user_account_id)
+    return jsonify(serialize({"settings": serialize_user_account_settings(settings)}))
+
+
+@app.route(ACCOUNT.settings(), methods=["PUT"])
+@jwt_required()
+@request_handler(
+    schema={
+        "type": "object",
+        "additionalProperties": False,
+        "properties": {
+            "valuation_ccy": {"type": "string"},
+            "twilio_settings": {
+                "type": ["object", "null"],
+                "additionalProperties": False,
+                "requiredProperties": ["account_sid", "auth_token", "phone_number"],
+                "properties": {
+                    "account_sid": {"type": "string"},
+                    "auth_token": {"type": "string"},
+                    "phone_number": {"type": "string"},
+                },
+            },
+        },
+    }
+)
+def update_user_account_settings(user_account_id):
+    data = request.json
+    settings = repository.get_user_account_settings(db_session, user_account_id)
+    if "valuation_ccy" in data:
+        raise ApplicationError(
+            "Valuation currency cannot be updated after account creation"
+        )
+    with db_session.persist(settings):
+        if "twilio_settings" in data:
+            settings.twilio_settings = data["twilio_settings"]
     return jsonify(serialize({"settings": serialize_user_account_settings(settings)}))
 
 
@@ -389,7 +430,7 @@ def get_user_account_plaid_settings(user_account_id):
     )
 
 
-@app.route(ACCOUNT.settings.plaid(), methods=["PUT", "POST"])
+@app.route(ACCOUNT.settings.plaid(), methods=["PUT"])
 @jwt_required()
 @request_handler(
     trace_values=False,

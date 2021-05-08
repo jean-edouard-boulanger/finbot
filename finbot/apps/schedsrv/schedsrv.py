@@ -166,7 +166,7 @@ def main_impl():
     logging.info(f"history report client created with {histwsrv_endpoint} endpoint")
 
     logging.info(f"running in mode: {settings.mode}")
-    request_handler = RequestHandler(snap_client, hist_client)
+    request_handler = RequestHandler(snap_client, hist_client, db_session)
     if settings.mode == "one_shot":
         run_one_shot(request_handler, settings.accounts)
         return

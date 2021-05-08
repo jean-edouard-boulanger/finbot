@@ -43,6 +43,7 @@ class UserAccount(Base):
     email = Column(String(128), nullable=False, unique=True)
     encrypted_password = Column(Text, nullable=False)
     full_name = Column(String(128), nullable=False)
+    mobile_phone_number = Column(String(128))
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
@@ -63,6 +64,7 @@ class UserAccountSettings(Base):
         Integer, ForeignKey(UserAccount.id, ondelete="CASCADE"), primary_key=True
     )
     valuation_ccy = Column(String(3), nullable=False)
+    twilio_settings = Column(JSONEncoded)
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
 

@@ -5,6 +5,7 @@ import { ProfileSettings } from "./profile";
 import { LinkedAccountsSettings } from "./linked-accounts";
 import { ProvidersSettings } from "./providers";
 import { PlaidIntegrationSettings } from "./plaid-integration";
+import { TwilioIntegrationSettings } from "./twilio-integration";
 
 import { ListGroup, Row, Col } from "react-bootstrap";
 
@@ -32,6 +33,15 @@ export const NavigationPanel = withRouter((props) => {
         action
       >
         Linked accounts
+      </ListGroup.Item>
+      <ListGroup.Item
+        active={route.startsWith("/settings/twilio")}
+        onClick={() => {
+          props.history.push("/settings/twilio");
+        }}
+        action
+      >
+        Twilio integration
       </ListGroup.Item>
       <ListGroup.Item
         active={route.startsWith("/settings/plaid")}
@@ -74,6 +84,10 @@ export const Settings = () => {
           <Route
             path="/settings/linked"
             render={() => <LinkedAccountsSettings />}
+          />
+          <Route
+            path="/settings/twilio"
+            render={() => <TwilioIntegrationSettings />}
           />
           <Route
             path="/settings/plaid"

@@ -44,12 +44,18 @@ class FinbotClient {
     return this.handleResponse(response).user_account;
   }
 
-  async updateAccountProfile({ account_id, full_name, email }) {
+  async updateAccountProfile({
+    account_id,
+    full_name,
+    email,
+    mobile_phone_number,
+  }) {
     const response = await axios.put(
       `${this.endpoint}/accounts/${account_id}/profile`,
       {
         full_name,
         email,
+        mobile_phone_number,
       }
     );
     return this.handleResponse(response).user_account;
@@ -72,6 +78,14 @@ class FinbotClient {
   async getAccountSettings({ account_id }) {
     const response = await axios.get(
       `${this.endpoint}/accounts/${account_id}/settings`
+    );
+    return this.handleResponse(response).settings;
+  }
+
+  async updateTwilioAccountSettings({ account_id, twilio_settings }) {
+    const response = await axios.put(
+      `${this.endpoint}/accounts/${account_id}/settings`,
+      { twilio_settings }
     );
     return this.handleResponse(response).settings;
   }
