@@ -16,19 +16,19 @@ class Base(object):
         pass
 
     def get_balances(self) -> Dict:
-        """"""
+        """ """
         return {"accounts": []}
 
     def get_assets(self) -> Dict:
-        """"""
+        """ """
         return {"accounts": []}
 
     def get_liabilities(self) -> Dict:
-        """"""
+        """ """
         return {"accounts": []}
 
     def get_transactions(self, from_date: datetime, to_date: datetime) -> Dict:
-        """"""
+        """ """
         return {"accounts": []}
 
     def close(self):
