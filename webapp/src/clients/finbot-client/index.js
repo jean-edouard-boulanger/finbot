@@ -1,9 +1,16 @@
 import axios from "axios";
 
+function getEndpoint() {
+  const endpoint = process.env.REACT_APP_FINBOT_SERVER_ENDPOINT;
+  if (endpoint !== undefined) {
+    return endpoint;
+  }
+  return "http://127.0.0.1:5003/api/v1";
+}
+
 class FinbotClient {
-  constructor(settings) {
-    settings = settings || {};
-    this.endpoint = settings.endpoint || "http://127.0.0.1:5003/api/v1";
+  constructor() {
+    this.endpoint = getEndpoint();
   }
 
   handleResponse(response) {
