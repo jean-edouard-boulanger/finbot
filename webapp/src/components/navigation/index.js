@@ -3,7 +3,6 @@ import { withRouter, NavLink } from "react-router-dom";
 
 import AuthContext from "contexts/auth/auth-context";
 
-import NavBar from "react-bootstrap/NavBar";
 import Navbar from "react-bootstrap/Navbar";
 import Nav from "react-bootstrap/Nav";
 
@@ -43,7 +42,7 @@ const GuestNavbar = (props) => {
 export const Navigation = withRouter((props) => {
   const { isAuthenticated } = useContext(AuthContext);
   return (
-    <NavBar
+    <Navbar
       className="box-shadow"
       collapseOnSelect
       expand="md"
@@ -58,7 +57,7 @@ export const Navigation = withRouter((props) => {
       </NavLink>
       <Navbar.Toggle aria-controls="responsive-navbar-nav" />
       {isAuthenticated ? <UserNavbar {...props} /> : <GuestNavbar {...props} />}
-    </NavBar>
+    </Navbar>
   );
 });
 
