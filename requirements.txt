@@ -33,3 +33,4 @@ terminaltables
 twilio
 types-requests
 types-pytz
+types-Flask
