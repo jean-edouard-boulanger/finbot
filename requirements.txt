@@ -31,3 +31,5 @@ sqlalchemy-stubs
 stackprinter
 terminaltables
 twilio
+types-requests
+types-pytz
