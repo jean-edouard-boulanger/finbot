@@ -11,6 +11,7 @@ from datetime import timedelta
 from typing import List, Optional
 import sys
 import queue
+import schedule
 import threading
 import argparse
 import stackprinter
@@ -41,9 +42,14 @@ def create_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def iter_user_accounts():
+    for user_account in db_session.query(UserAccount).all():
+        yield user_account
+
+
 def run_one_shot(handler: RequestHandler, accounts_ids: List[int]):
     user_account: UserAccount
-    for user_account in db_session.query(UserAccount).all():
+    for user_account in iter_user_accounts():
         if not accounts_ids or user_account.id in accounts_ids:
             try:
                 request = sched_client.TriggerValuationRequest(
@@ -77,28 +83,31 @@ class ValuationWorkerThread(threading.Thread):
 
     def _consume(self, request: sched_client.Request):
         try:
-            logging.info(f"handling request: {sched_client.serialize(request)}")
+            logging.info(
+                f"[valuation worker thread] handling request: {sched_client.serialize(request)}"
+            )
             if request.trigger_valuation is None:
                 raise RuntimeError("received empty valuation request")
             self._handler.handle_valuation(request.trigger_valuation)
         except Exception as e:
             logging.warning(
-                f"swallowed exception while handling valuation in worker thread: {e}, "
+                f"[valuation worker thread] swallowed exception "
+                f"while handling valuation in worker thread: {e}, "
                 f"trace: \n{stackprinter.format()}"
             )
 
     def run(self):
-        logging.info("starting worker thread")
+        logging.info("[valuation worker thread] starting")
         while not self._stop_event.isSet():
             request: sched_client.Request = pop_queue(
                 self._work_queue, timeout=timedelta(seconds=1)
             )
             if request is not None:
                 self._consume(request)
-        logging.info("worker thread going down now")
+        logging.info("[valuation worker thread] going down now")
 
     def stop(self):
-        logging.info("stopping worker thread")
+        logging.info("[valuation worker thread] stop requested")
         self._stop_event.set()
 
 
@@ -131,15 +140,60 @@ class TriggerListenerThread(threading.Thread):
         self._stop_event = threading.Event()
 
     def run(self):
-        logging.info("starting consumer thread")
-        while not self._stop_event.isSet():
+        logging.info("[valuation trigger listener thread] starting")
+        while not self._stop_event.is_set():
             request = self._receiver.receive()
             if request:
+                logging.info(
+                    f"[valuation trigger listener thread] received valuation request"
+                    f" {sched_client.serialize(request)}"
+                )
                 self._dispatcher.dispatch(request)
-        logging.info("consumer thread going down now")
+        logging.info("[valuation trigger listener thread] going down now")
 
     def stop(self):
-        logging.info("stopping consumer thread")
+        logging.info("[valuation trigger listener thread] stop requested")
+        self._stop_event.set()
+
+
+class SchedulerThread(threading.Thread):
+    def __init__(self, dispatcher: WorkDispatcher):
+        super().__init__()
+        self._dispatcher = dispatcher
+        self._scheduler = schedule.Scheduler()
+        self._stop_event = threading.Event()
+        self._scheduler.every().day.at("09:00").do(self._dispatch_valuation)
+        self._scheduler.every().day.at("18:00").do(self._dispatch_valuation)
+
+    def _dispatch_valuation(self):
+        logging.info("[scheduler thread] dispatching valuation for all accounts")
+        user_account: UserAccount
+        for user_account in iter_user_accounts():
+            user_account_id = user_account.id
+            logging.info(
+                f"[scheduler thread] dispatching valuation for user_account_id={user_account_id}"
+            )
+            self._dispatcher.dispatch(
+                sched_client.Request(
+                    trigger_valuation=sched_client.TriggerValuationRequest(
+                        user_account_id=user_account_id
+                    )
+                )
+            )
+
+    def run(self) -> None:
+        logging.info("[scheduler thread] starting")
+        while not self._stop_event.is_set():
+            self._scheduler.run_pending()
+            logging.info(
+                f"[scheduler thread] sleeping {self._scheduler.idle_seconds}s "
+                f"until next job at {self._scheduler.next_run.isoformat()}"
+            )
+            self._stop_event.wait(self._scheduler.idle_seconds)
+        logging.info("[scheduler thread] going down now")
+
+    def stop(self):
+        logging.info("[scheduler thread] stop requested")
         self._stop_event.set()
 
 
@@ -150,7 +204,7 @@ class StopHandler(object):
         signal.signal(signal.SIGTERM, self.handle_stop)
 
     def handle_stop(self, signum, frame):
-        logging.info(f"received signal ({signum}), stopping all threads")
+        logging.info(f"received signal ({signum}), stopping all worker threads")
         [t.stop() for t in self._threads]
 
 
@@ -176,16 +230,28 @@ def main_impl():
 
     threads = []
     work_queue = queue.Queue()
-    worker_thread = ValuationWorkerThread(db_session, work_queue, request_handler)
-    threads.append(worker_thread)
-
     dispatcher = WorkDispatcher(work_queue)
+
+    logging.info("initializing valuation worker thread")
+    valuation_worker_thread = ValuationWorkerThread(
+        db_session, work_queue, request_handler
+    )
+    threads.append(valuation_worker_thread)
+
+    logging.info("initializing external valuation trigger listener thread")
     consumer_thread = TriggerListenerThread(receiver, dispatcher)
     threads.append(consumer_thread)
 
+    logging.info("initializing scheduler thread")
+    scheduler_thread = SchedulerThread(dispatcher)
+    threads.append(scheduler_thread)
+
     StopHandler(threads)
 
+    logging.info("starting all worker threads")
     [t.start() for t in threads]
+
+    logging.info("scheduler service is ready")
     [t.join() for t in threads]
 
 

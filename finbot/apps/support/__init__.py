@@ -2,7 +2,7 @@ from finbot.apps.appwsrv.exceptions import Error, ApplicationError
 from finbot.core import tracer
 
 from typing import Optional, Callable, Iterator, Any
-from flask import jsonify, request
+from flask import jsonify, request  # type: ignore
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 import functools
