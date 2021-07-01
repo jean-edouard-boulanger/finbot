@@ -23,7 +23,6 @@ export function restoreLocal(state) {
       account: data.account,
     };
   } catch {
-    console.log("failed to get identity from local storage");
     return { ...state };
   }
 }

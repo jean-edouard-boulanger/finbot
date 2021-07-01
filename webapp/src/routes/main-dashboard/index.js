@@ -69,8 +69,6 @@ export const MainDashboard = () => {
   });
   const [selectedReport, setSelectedReport] = useState(REPORTS.HOLDINGS);
 
-  console.log(valuation);
-
   useEffect(() => {
     let fetch = async () => {
       const configured = await finbotClient.isAccountConfigured({

@@ -13,7 +13,6 @@ export default (state, action) => {
         account: action.payload.account,
       };
       persistLocal(newState);
-      console.log(newState);
       return newState;
     }
     case LOGOUT: {

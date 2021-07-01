@@ -57,8 +57,7 @@ export const SignupForm = () => {
   const handleSignup = async (data) => {
     try {
       setLoading(true);
-      const result = await finbotClient.registerAccount(data.formData);
-      console.log(result);
+      await finbotClient.registerAccount(data.formData);
       setLoading(false);
       setRegistered(true);
     } catch (e) {
