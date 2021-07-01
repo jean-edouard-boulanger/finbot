@@ -11,6 +11,7 @@ import Chart from "react-apexcharts";
 import BarLoader from "react-spinners/BarLoader";
 
 import queryString from "query-string";
+import { DateTime } from "luxon";
 
 function getRelativeChange(startVal, finalVal) {
   return (finalVal - startVal) / startVal;
@@ -68,6 +69,8 @@ export const MainDashboard = () => {
   });
   const [selectedReport, setSelectedReport] = useState(REPORTS.HOLDINGS);
 
+  console.log(valuation);
+
   useEffect(() => {
     let fetch = async () => {
       const configured = await finbotClient.isAccountConfigured({
@@ -119,7 +122,13 @@ export const MainDashboard = () => {
         <Col md={4} className="mt-3">
           <Card>
             <Card.Body>
-              <Card.Title>Net Worth</Card.Title>
+              <Card.Title>
+                Net Worth{" "}
+                {valuation !== null &&
+                  `(${DateTime.fromISO(valuation.date).toLocaleString(
+                    DateTime.DATETIME_FULL
+                  )})`}
+              </Card.Title>
               {valuation === null ? (
                 <BarLoader color={"#F0F0F0"} />
               ) : (
