@@ -162,7 +162,8 @@ class SchedulerThread(threading.Thread):
         self._dispatcher = dispatcher
         self._scheduler = schedule.Scheduler()
         self._stop_event = threading.Event()
-        self._scheduler.every().day.at("09:00").do(self._dispatch_valuation)
+        self._scheduler.every().day.at("08:00").do(self._dispatch_valuation)
+        self._scheduler.every().day.at("13:00").do(self._dispatch_valuation)
         self._scheduler.every().day.at("18:00").do(self._dispatch_valuation)
 
     def _dispatch_valuation(self):
