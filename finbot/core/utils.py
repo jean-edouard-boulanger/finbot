@@ -61,7 +61,12 @@ def configure_logging() -> None:
             "version": 1,
             "formatters": {
                 "default": {
-                    "format": "%(asctime)s (%(threadName)s) [%(levelname)s] %(message)s (%(filename)s:%(lineno)d)",
+                    "format":
+                        "%(asctime)s"
+                        " (%(threadName)s)"
+                        " [%(levelname)s]"
+                        " %(message)s"
+                        " (%(filename)s:%(lineno)d)",
                 }
             },
             "handlers": {
