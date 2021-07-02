@@ -533,6 +533,7 @@ def get_user_account_valuation_history(user_account_id):
 @request_handler()
 def get_linked_accounts(user_account_id):
     results = repository.find_linked_accounts(db_session, user_account_id)
+    statuses = repository.get_linked_accounts_statuses(db_session, user_account_id)
     return jsonify(
         serialize(
             {
@@ -544,8 +545,9 @@ def get_linked_accounts(user_account_id):
                         "provider": entry.provider,
                         "created_at": entry.created_at,
                         "updated_at": entry.updated_at,
+                        "status": statuses.get(entry.id),
                     }
-                    for entry in results
+                    for entry in sorted(results, key=lambda entry: entry.account_name)
                 ]
             }
         )

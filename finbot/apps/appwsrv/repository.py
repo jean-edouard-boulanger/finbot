@@ -1,22 +1,28 @@
-from collections import defaultdict
-from datetime import datetime
-from typing import List, Optional, Dict
-from sqlalchemy import asc, desc
-from sqlalchemy.orm import joinedload
-
 from finbot.apps.appwsrv.exceptions import ApplicationError
 from finbot.model import (
     LinkedAccount,
     Provider,
     UserAccount,
     UserAccountSettings,
+    UserAccountSnapshot,
     UserAccountPlaidSettings,
     UserAccountHistoryEntry,
     UserAccountValuationHistoryEntry,
     LinkedAccountValuationHistoryEntry,
+    SnapshotStatus,
     SubAccountValuationHistoryEntry,
     SubAccountItemValuationHistoryEntry,
 )
+
+from collections import defaultdict
+from datetime import datetime
+from typing import List, Optional, Dict
+from sqlalchemy import asc, desc
+from sqlalchemy.orm import joinedload
+import logging
+
+
+logger = logging.getLogger()
 
 
 def get_user_account(session, user_account_id: int) -> UserAccount:
@@ -112,6 +118,27 @@ def find_linked_accounts_historical_valuation(
         for valuation in history_entry.linked_accounts_valuation_history_entries:
             results[valuation.linked_account_id].append(valuation)
     return results
+
+
+def get_linked_accounts_statuses(session, user_account_id: int) -> dict[int, str]:
+    last_snapshot = (
+        session.query(UserAccountSnapshot)
+        .filter_by(user_account_id=user_account_id)
+        .filter_by(status=SnapshotStatus.Success)
+        .options(joinedload(UserAccountSnapshot.linked_accounts_entries))
+        .order_by(desc(UserAccountSnapshot.start_time))
+        .limit(1)
+        .one()
+    )
+    logger.info(last_snapshot)
+    output = {}
+    for entry in last_snapshot.linked_accounts_entries:
+        linked_account_id = entry.linked_account_id
+        if entry.success:
+            output[linked_account_id] = "stable"
+        else:
+            output[linked_account_id] = "unstable"
+    return output
 
 
 def find_user_account_valuation(
