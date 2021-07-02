@@ -29,3 +29,7 @@ add_to_python_path() {
     export PYTHONPATH="${PYTHONPATH:+"$PATH:"}$1"
   fi
 }
+run() {
+  echo "running: $@"
+  exec $@
+}

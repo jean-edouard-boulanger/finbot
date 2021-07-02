@@ -21,40 +21,25 @@ run-schedsrv-dev:
 		python3.9 finbot/apps/schedsrv/schedsrv.py
 
 run-histwsrv-dev:
-	env FLASK_APP=finbot/apps/histwsrv/histwsrv.py \
-		FLASK_ENV=development \
-		flask run \
-			--port 5002 \
-			--without-threads \
-			--extra-files 'finbot/**/*.py' \
-			-h 0.0.0.0
+	tools/run-web-app.sh \
+		--app histwsrv \
+		--port 5002
 
 run-finbotwsrv-dev:
-	env FLASK_APP=finbot/apps/finbotwsrv/finbotwsrv.py \
-		FLASK_ENV=development \
-		flask run \
-			--port 5001 \
-			--with-threads \
-			--extra-files 'finfinbot/**/*.py' \
-			-h 0.0.0.0
+	tools/run-web-app.sh \
+		--app finbotwsrv \
+		--workers 4 \
+		--port 5001
 
 run-snapwsrv-dev:
-	env FLASK_APP=finbot/apps/snapwsrv/snapwsrv.py \
-		FLASK_ENV=development \
-		flask run \
-			--port 5000 \
-			--without-threads \
-			--extra-files 'finbot/**/*.py' \
-			-h 0.0.0.0
+	tools/run-web-app.sh \
+		--app snapwsrv \
+		--port 5000
 
 run-appwsrv-dev:
-	env FLASK_APP=finbot/apps/appwsrv/appwsrv.py \
-		FLASK_ENV=development \
-		flask run \
-			--port 5003 \
-			--without-threads \
-			--extra-files 'finbot/**/*.py' \
-			-h 0.0.0.0
+	tools/run-web-app.sh \
+		--app appwsrv \
+		--port 5003
 
 docker-build-runtime:
 	docker build -t finbot/runtime:latest -f runtime.Dockerfile --no-cache .
