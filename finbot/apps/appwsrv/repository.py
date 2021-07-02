@@ -120,7 +120,7 @@ def find_linked_accounts_historical_valuation(
     return results
 
 
-def get_linked_accounts_statuses(session, user_account_id: int) -> dict[int, dict]:
+def get_linked_accounts_statuses(session, user_account_id: int) -> dict[int, str]:
     last_snapshot = (
         session.query(UserAccountSnapshot)
         .filter_by(user_account_id=user_account_id)

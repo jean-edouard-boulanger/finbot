@@ -56,21 +56,24 @@ def swallow_exc(
 
 
 def configure_logging() -> None:
-    logging.config.dictConfig({
-        'version': 1,
-        'formatters': {'default': {
-            'format': '%(asctime)s (%(threadName)s) [%(levelname)s] %(message)s (%(filename)s:%(lineno)d)',
-        }},
-        'handlers': {'wsgi': {
-            'class': 'logging.StreamHandler',
-            'stream': 'ext://sys.stdout',
-            'formatter': 'default'
-        }},
-        'root': {
-            'level': "INFO",
-            'handlers': ['wsgi']
+    logging.config.dictConfig(
+        {
+            "version": 1,
+            "formatters": {
+                "default": {
+                    "format": "%(asctime)s (%(threadName)s) [%(levelname)s] %(message)s (%(filename)s:%(lineno)d)",
+                }
+            },
+            "handlers": {
+                "wsgi": {
+                    "class": "logging.StreamHandler",
+                    "stream": "ext://sys.stdout",
+                    "formatter": "default",
+                }
+            },
+            "root": {"level": "INFO", "handlers": ["wsgi"]},
         }
-    })
+    )
 
 
 T = TypeVar("T")

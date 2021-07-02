@@ -8,7 +8,11 @@ import {
   matchPath,
   useParams,
 } from "react-router-dom";
-import { FaExclamationCircle, FaCheckCircle, FaQuestionCircle } from "react-icons/fa";
+import {
+  FaExclamationCircle,
+  FaCheckCircle,
+  FaQuestionCircle,
+} from "react-icons/fa";
 
 import { ServicesContext, AuthContext } from "contexts";
 
@@ -133,9 +137,17 @@ export const AccountsPanel = () => {
                 </td>
                 <td>{linkedAccount.provider.description}</td>
                 <td>
-                  {(linkedAccount.status === "stable") && <span className={"text-success"}><FaCheckCircle /></span>}
-                  {(linkedAccount.status === "unstable") && <span className={"text-danger"}><FaExclamationCircle /></span>}
-                  {(linkedAccount.status === null) && <FaQuestionCircle />}
+                  {linkedAccount.status === "stable" && (
+                    <span className={"text-success"}>
+                      <FaCheckCircle />
+                    </span>
+                  )}
+                  {linkedAccount.status === "unstable" && (
+                    <span className={"text-danger"}>
+                      <FaExclamationCircle />
+                    </span>
+                  )}
+                  {linkedAccount.status === null && <FaQuestionCircle />}
                 </td>
                 <td>
                   <Button

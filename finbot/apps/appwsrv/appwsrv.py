@@ -545,7 +545,7 @@ def get_linked_accounts(user_account_id):
                         "provider": entry.provider,
                         "created_at": entry.created_at,
                         "updated_at": entry.updated_at,
-                        "status": statuses.get(entry.id)
+                        "status": statuses.get(entry.id),
                     }
                     for entry in sorted(results, key=lambda entry: entry.account_name)
                 ]
