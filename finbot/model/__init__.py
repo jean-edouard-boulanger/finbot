@@ -140,7 +140,7 @@ class LinkedAccount(Base):
     encrypted_credentials = Column(Text)
     deleted = Column(Boolean, nullable=False, default=False)
     frozen = Column(
-        Boolean, nullable=False, default=True, server_default=expression.false()
+        Boolean, nullable=False, default=False, server_default=expression.false()
     )
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
