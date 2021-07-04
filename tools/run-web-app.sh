@@ -49,8 +49,8 @@ then
   run flask run \
 			--port ${port} \
 			${threads_args} \
-			--extra-files 'finbot/**/*.py' \
-			-h 0.0.0.0
+			-h 0.0.0.0 \
+			--extra-files 'finbot/\*\*/\*.py'
 else
   echo "running ${app_name} with gunicorn (environment: ${finbot_env})"
   run gunicorn \

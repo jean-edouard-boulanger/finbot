@@ -15,3 +15,5 @@ export FINBOT_HISTWSRV_ENDPOINT=http://histwsrv:5002
 export FINBOT_WEBAPP_ENDPOINT=http://webapp:5005
 export FINBOT_SCHEDSRV_PORT=5006
 export FINBOT_SCHEDSRV_ENDPOINT=tcp://schedsrv:${FINBOT_SCHEDSRV_PORT}
+export FINBOT_ENV=development
+
