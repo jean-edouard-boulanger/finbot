@@ -22,7 +22,7 @@ class Environment:
     webapp_endpoint: str
     schedsrv_port: int
     schedsrv_endpoint: str
-    currconv_api_key: str
+    fcsapi_key: str
 
 
 T = TypeVar("T")
@@ -73,8 +73,8 @@ def get_schedsrv_endpoint() -> str:
     return get_environment_value("FINBOT_SCHEDSRV_ENDPOINT")
 
 
-def get_currconv_api_key() -> str:
-    return get_environment_value("FINBOT_CURRCONV_API_KEY")
+def get_fcsapi_key() -> str:
+    return get_environment_value("FINBOT_FCSAPI_KEY")
 
 
 def get() -> Environment:
@@ -88,5 +88,5 @@ def get() -> Environment:
         webapp_endpoint=get_webapp_endpoint(),
         schedsrv_port=get_schedsrv_port(),
         schedsrv_endpoint=get_schedsrv_endpoint(),
-        currconv_api_key=get_currconv_api_key(),
+        fcsapi_key=get_fcsapi_key(),
     )
