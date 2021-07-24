@@ -38,7 +38,3 @@ def get_rates(pairs: set[Xccy]) -> dict[Xccy, Optional[float]]:
 
 def get_rate(pair: Xccy) -> Optional[float]:
     return get_rates({pair}).get(pair)
-
-
-if __name__ == "__main__":
-    print(get_rate(Xccy("EUR", "USD")))
