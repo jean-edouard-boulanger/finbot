@@ -128,10 +128,11 @@ def get_linked_accounts_statuses(session, user_account_id: int) -> dict[int, str
         .options(joinedload(UserAccountSnapshot.linked_accounts_entries))
         .order_by(desc(UserAccountSnapshot.start_time))
         .limit(1)
-        .one()
+        .one_or_none()
     )
-    logger.info(last_snapshot)
-    output = {}
+    output: dict[int, str] = {}
+    if not last_snapshot:
+        return output
     for entry in last_snapshot.linked_accounts_entries:
         linked_account_id = entry.linked_account_id
         if entry.success:
