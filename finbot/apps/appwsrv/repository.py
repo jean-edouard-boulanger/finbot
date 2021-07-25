@@ -130,7 +130,7 @@ def get_linked_accounts_statuses(session, user_account_id: int) -> dict[int, str
         .limit(1)
         .one_or_none()
     )
-    output = {}
+    output: dict[int, str] = {}
     if not last_snapshot:
         return output
     for entry in last_snapshot.linked_accounts_entries:
