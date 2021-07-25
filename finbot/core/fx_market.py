@@ -33,7 +33,7 @@ def get_rates(pairs: set[Xccy]) -> dict[Xccy, Optional[float]]:
     resource_url += f"&access_key={get_fcsapi_key()}"
     resp = requests.get(resource_url)
     data = resp.json()["response"]
-    return {Xccy(*entry["s"].split("/")): entry["c"] for entry in data}
+    return {Xccy(*entry["s"].split("/")): float(entry["c"]) for entry in data}
 
 
 def get_rate(pair: Xccy) -> Optional[float]:
