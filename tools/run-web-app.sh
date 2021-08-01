@@ -29,6 +29,7 @@ do
     --timeout)
       timeout="$2"
       shift 2
+    ;;
     *)
       echo "unknown argument: ${key}"
       exit 1
