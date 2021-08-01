@@ -8,6 +8,43 @@ docker-compose run --rm operator \
     env FINBOT_WAIT_DEPS=${1} make finbot-wait >/dev/null 2>&1
 }
 
+start_frontend=1
+export FINBOT_ENV=production
+
+usage () {
+  echo
+  echo "finbotctl start: start finbot"
+  echo "  Arguments"
+  echo "    --env          finbot environment (development / production)"
+  echo "    --no-frontend  don't start the finbot GUI (backend only)"
+}
+
+while [[ $# -gt 0 ]]
+do
+  key="$1"
+  case $key in
+    --env)
+      export FINBOT_ENV="$2"
+      shift 2
+    ;;
+    --no-frontend)
+      start_frontend=0
+      shift
+    ;;
+    --help)
+      usage
+      exit 0
+    ;;
+    *)
+      echo "unknown argument: ${key}"
+      usage
+      exit 1
+    ;;
+  esac
+done
+
+log_info "starting finbot (environment: ${FINBOT_ENV})"
+
 log_info "starting finbot backend containers"
 docker-compose up -d \
   appwsrv histwsrv snapwsrv finbotwsrv finbotdb schedsrv \
@@ -16,7 +53,7 @@ docker-compose up -d \
 log_info "waiting for finbot endpoints"
 wait_dep api,hist,snap,finbot
 
-if [[ "${1}" != "--no-frontend" ]]
+if [[ "${start_frontend}" == "1" ]]
 then
   log_info "starting finbot frontend container (webapp)"
   docker-compose up -d webapp || die failed to start containers

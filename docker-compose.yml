@@ -27,12 +27,13 @@ services:
     volumes:
       - .:/finbot
     environment:
+      FINBOT_ENV: ${FINBOT_ENV}
       FINBOT_WAIT_DEPS: "db"
 
   snapwsrv:
     image: "finbot/runtime:latest"
     container_name: snapwsrv
-    depends_on: 
+    depends_on:
       - finbotdb
       - finbotwsrv
     working_dir: /finbot
@@ -43,12 +44,13 @@ services:
     volumes:
       - .:/finbot
     environment:
+      FINBOT_ENV: ${FINBOT_ENV}
       FINBOT_WAIT_DEPS: "db,finbot"
 
   histwsrv:
     image: "finbot/runtime:latest"
     container_name: histwsrv
-    depends_on: 
+    depends_on:
       - finbotdb
     working_dir: /finbot
     command: bash -c "source docker.env.sh && make finbot-wait && make run-histwsrv-dev"
@@ -58,12 +60,13 @@ services:
     volumes:
       - .:/finbot
     environment:
+      FINBOT_ENV: ${FINBOT_ENV}
       FINBOT_WAIT_DEPS: "db"
 
   schedsrv:
     image: "finbot/runtime:latest"
     container_name: schedsrv
-    depends_on: 
+    depends_on:
       - snapwsrv
       - histwsrv
     working_dir: /finbot
@@ -72,12 +75,13 @@ services:
     volumes:
       - .:/finbot
     environment:
+      FINBOT_ENV: ${FINBOT_ENV}
       FINBOT_WAIT_DEPS: "db,snap,hist"
 
   appwsrv:
     image: "finbot/runtime:latest"
     container_name: appwsrv
-    depends_on: 
+    depends_on:
       - finbotdb
       - finbotwsrv
       - schedsrv
@@ -89,12 +93,13 @@ services:
     volumes:
       - .:/finbot
     environment:
+      FINBOT_ENV: ${FINBOT_ENV}
       FINBOT_WAIT_DEPS: "finbot,db"
 
   webapp:
     image: "node:15-alpine3.10"
     container_name: webapp
-    depends_on: 
+    depends_on:
       - appwsrv
     volumes:
       - ./webapp:/webapp
