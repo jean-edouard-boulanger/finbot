@@ -23,22 +23,26 @@ run-schedsrv-dev:
 run-histwsrv-dev:
 	tools/run-web-app.sh \
 		--app histwsrv \
+		--timeout 30 \
 		--port 5002
 
 run-finbotwsrv-dev:
 	tools/run-web-app.sh \
 		--app finbotwsrv \
 		--workers 4 \
+		--timeout 300 \
 		--port 5001
 
 run-snapwsrv-dev:
 	tools/run-web-app.sh \
 		--app snapwsrv \
+		--timeout 1200 \
 		--port 5000
 
 run-appwsrv-dev:
 	tools/run-web-app.sh \
 		--app appwsrv \
+  		--timeout 5 \
 		--port 5003
 
 docker-build-runtime:
