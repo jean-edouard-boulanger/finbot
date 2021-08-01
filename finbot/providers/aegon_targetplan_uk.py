@@ -159,8 +159,8 @@ class Api(SeleniumBased):
 
 
 @swallow_exc(StaleElementReferenceException)
-def _get_login_error(browser_helper: SeleniumHelper):
-    error_area = browser_helper.find_maybe(By.ID, "error-container-wrapper")
+def _get_login_error(do: SeleniumHelper):
+    error_area = do.find_maybe(By.ID, "error-container-wrapper")
     if error_area and error_area.is_displayed():
         return error_area.text.strip()
 

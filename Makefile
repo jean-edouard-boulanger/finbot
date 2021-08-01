@@ -103,6 +103,7 @@ test-hist:
 		--snapshot-id ${snapshot}
 
 run-system-tests-docker:
+	env FINBOT_WAIT_DEPS=api make finbot-wait-docker;
 	docker-compose run --rm operator \
 		tools/with-env.sh docker \
 			python3.9 -m pytest tests/system/
@@ -144,7 +145,17 @@ finbotdb-psql:
 		psql -h ${FINBOT_DB_HOSTNAME} -U ${FINBOT_DB_USER} -d ${FINBOT_DB_DBNAME}
 
 finbot-wait:
+	tools/check-env.sh FINBOT_WAIT_DEPS;
 	tools/finbot-wait
+
+finbot-wait-docker:
+	tools/check-env.sh FINBOT_WAIT_DEPS;
+	docker-compose run \
+		-e FINBOT_WAIT_DEPS=${FINBOT_WAIT_DEPS} \
+		-e FINBOT_WAIT_TIMEOUT=${FINBOT_WAIT_TIMEOUT} \
+		--rm operator \
+		tools/with-env.sh docker \
+			python3.9 tools/finbot-wait
 
 init-dev:
 	tools/init-dev.sh

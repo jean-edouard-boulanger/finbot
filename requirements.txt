@@ -2,6 +2,7 @@ alembic
 black
 cffi
 cryptography
+filelock
 flake8
 flask
 flask-cors
@@ -32,6 +33,8 @@ sqlalchemy-stubs
 stackprinter
 terminaltables
 twilio
-types-requests
-types-pytz
 types-Flask
+types-filelock
+types-pytz
+types-requests
+undetected-chromedriver

@@ -13,8 +13,8 @@ docker-compose up -d \
   appwsrv histwsrv snapwsrv finbotwsrv finbotdb schedsrv \
   || die failed to start containers
 
-log_info "waiting for public endpoint availability"
-wait_dep appwsrv
+log_info "waiting for finbot endpoints"
+wait_dep api,hist,snap,finbot
 
 if [[ "${1}" != "--no-frontend" ]]
 then

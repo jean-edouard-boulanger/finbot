@@ -9,5 +9,9 @@ class SeleniumBased(providers.Base):
         self.browser = browser_factory()
         self._do = SeleniumHelper(self.browser)
 
+    @property
+    def user_agent(self) -> str:
+        return self._do.execute_script("return navigator.userAgent")
+
     def close(self):
         self.browser.quit()
