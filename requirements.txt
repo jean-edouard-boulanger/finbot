@@ -33,7 +33,8 @@ sqlalchemy-stubs
 stackprinter
 terminaltables
 twilio
-types-requests
-types-pytz
 types-Flask
+types-filelock
+types-pytz
+types-requests
 undetected-chromedriver
