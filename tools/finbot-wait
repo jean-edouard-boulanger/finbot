@@ -97,7 +97,7 @@ def get_checker(dep_name: str):
 def main_impl() -> ExitCode:
     raw_deps = os.environ.get("FINBOT_WAIT_DEPS")
     raw_timeout = os.environ.get("FINBOT_WAIT_TIMEOUT")
-    timeout = raw_timeout if raw_timeout is None else timedelta(seconds=float(raw_timeout))
+    timeout = raw_timeout if not raw_timeout else timedelta(seconds=float(raw_timeout))
     if not timeout:
         logging.warning("no timeout specified")
     start_time = datetime.now()
