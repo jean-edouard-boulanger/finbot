@@ -29,7 +29,7 @@ do
     ;;
     --no-frontend)
       start_frontend=0
-      shift 2
+      shift
     ;;
     --help)
       usage
