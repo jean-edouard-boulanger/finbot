@@ -1,8 +1,13 @@
 from typing import List, Optional, Dict
 from functools import wraps
+from os.path import expanduser
+
+from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.expected_conditions import presence_of_element_located
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.remote.webelement import WebElement
+
+import filelock
 
 
 class DefaultBrowserFactory(object):
@@ -11,19 +16,23 @@ class DefaultBrowserFactory(object):
         self.developer_tools = developer_tools
 
     def __call__(self):
-        from selenium.webdriver import Chrome
-        from selenium.webdriver.chrome.options import Options
+        from undetected_chromedriver.v2 import Chrome, ChromeOptions
 
-        opts = Options()
-        opts.add_argument("--window-size=1920,1080")
-        opts.add_argument("--start-maximized")
-        opts.add_argument("--disable-dev-shm-usage")
-        opts.add_argument("--no-sandbox")
+        options = ChromeOptions()
+        options.add_argument("--no-first-run")
+        options.add_argument("--password-store=basic")
+        options.add_argument("--window-size=1920,1080")
+        options.add_argument("--start-maximized")
+        options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--no-sandbox")
         if self.developer_tools:
-            opts.add_argument("--auto-open-devtools-for-tabs")
-        opts.headless = self.headless
-        driver = Chrome(options=opts)
-        return driver
+            options.add_argument("--auto-open-devtools-for-tabs")
+        options.headless = self.headless
+
+        # Prevents multiple processes from patching the chromedriver executable at once
+        # Review: possibly over-engineered
+        with filelock.FileLock(expanduser("~/.finbot.undetected_chromedriver.lock")):
+            return Chrome(options=options)
 
 
 def _safe_cond(cond):
@@ -62,7 +71,7 @@ class negate(object):
 
 
 class SeleniumHelper(object):
-    def __init__(self, browser):
+    def __init__(self, browser: WebDriver):
         self.browser = browser
 
     @property
@@ -103,8 +112,14 @@ class SeleniumHelper(object):
     def execute_script(self, *args, **kwargs):
         return self.browser.execute_script(*args, **kwargs)
 
-    def click(self, element):
+    def click(self, element: WebElement):
         self.execute_script("arguments[0].click();", element)
+
+    def dump_html(self, element: WebElement):
+        return element.get_attribute("innerHTML")
+
+    def save_screenshot(self, name: str):
+        return self.browser.save_screenshot(name)
 
     def assert_success(
         self, success_predicate, failure_predicate, on_failure=None, timeout=60

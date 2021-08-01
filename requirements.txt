@@ -2,6 +2,7 @@ alembic
 black
 cffi
 cryptography
+filelock
 flake8
 flask
 flask-cors
@@ -35,3 +36,4 @@ twilio
 types-requests
 types-pytz
 types-Flask
+undetected-chromedriver

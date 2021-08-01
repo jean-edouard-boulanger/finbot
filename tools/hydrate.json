@@ -26,14 +26,14 @@
                             "title": "Password",
                             "type": "string"
                         }
-                    }    
+                    }
                 },
                 "ui_schema": {
                     "password": {
                         "ui:widget": "password"
                     },
                     "ui:order": [
-                        "username", 
+                        "username",
                         "password"
                     ]
                 }
@@ -49,7 +49,7 @@
                     "type": "object",
                     "required": ["email", "password"],
                     "properties": {
-                        "email": {
+                        "username": {
                             "title": "Email",
                             "type": "string"
                         },
@@ -57,14 +57,14 @@
                             "title": "Password",
                             "type": "string"
                         }
-                    }    
+                    }
                 },
                 "ui_schema": {
                     "password": {
                         "ui:widget": "password"
                     },
                     "ui:order": [
-                        "email",
+                        "username",
                         "password"
                     ]
                 }
@@ -184,7 +184,7 @@
                         "account_number",
                         "password"
                     ]
-                }    
+                }
             }
         },
         {
@@ -205,7 +205,7 @@
                             "title": "Password",
                             "type": "string"
                         }
-                    }    
+                    }
                 },
                 "ui_schema": {
                     "email": {
@@ -329,7 +329,7 @@
                             "title": "Private key",
                             "type": "string"
                         }
-                    }    
+                    }
                 },
                 "ui_schema": {
                     "ui:order": [
