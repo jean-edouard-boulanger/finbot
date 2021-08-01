@@ -4,6 +4,7 @@ source ${SELF_DIR}/bash-utils.sh
 
 finbot_env=${FINBOT_ENV:-production}
 workers=1
+timeout=30
 
 while [[ $# -gt 0 ]]
 do
@@ -23,6 +24,10 @@ do
     ;;
     --workers)
       workers="$2"
+      shift 2
+    ;;
+    --timeout)
+      timeout="$2"
       shift 2
     ;;
     *)
@@ -56,5 +61,6 @@ else
   run gunicorn \
     finbot.apps.${app_name}.${app_name}:app \
       --workers ${workers} \
+      --timeout ${timeout} \
       --bind 0.0.0.0:${port}
 fi
