@@ -107,7 +107,7 @@ test-hist:
 		--snapshot-id ${snapshot}
 
 run-system-tests-docker:
-	env FINBOT_WAIT_DEPS=api make finbot-wait-docker;
+	env FINBOT_WAIT_DEPS=api,finbot,hist,snap make finbot-wait-docker;
 	docker-compose run --rm operator \
 		tools/with-env.sh docker \
 			python3.9 -m pytest tests/system/

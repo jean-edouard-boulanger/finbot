@@ -9,4 +9,4 @@ def api() -> AppClient:
 
 
 def test_healthy(api: AppClient):
-    assert api.is_healthy()
+    assert api.healthy

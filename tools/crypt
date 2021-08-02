@@ -68,5 +68,6 @@ def main():
         return
     return all_tools[settings.tool_name]["handler"](settings)
 
+
 if __name__ == "__main__":
     main()

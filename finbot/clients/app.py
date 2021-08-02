@@ -1,9 +1,6 @@
-from finbot.clients import Base
+from finbot.clients.base import Base as ClientBase
 
 
-class AppClient(Base):
+class AppClient(ClientBase):
     def __init__(self, server_endpoint: str):
         super().__init__(server_endpoint)
-
-    def is_healthy(self) -> bool:
-        return self.get("healthy")["healthy"]
