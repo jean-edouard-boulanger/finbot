@@ -19,18 +19,18 @@ RULES: list[Rule] = [
     Rule(
         match_files=["*.py"],
         banned_pattern=re.compile(r"find_elements_by_[^(]+"),
-        message="Selenium find_elements_by_* commands are deprecated. Please use find_elements(...) instead."
+        message="Selenium find_elements_by_* commands are deprecated. Please use find_elements(...) instead.",
     ),
     Rule(
         match_files=["*.py"],
         banned_pattern=re.compile(r"find_element_by_[^(]+"),
-        message="Selenium find_element_by_* commands are deprecated. Please use find_element(...) instead."
+        message="Selenium find_element_by_* commands are deprecated. Please use find_element(...) instead.",
     ),
     Rule(
         match_files=["*.py"],
         banned_pattern=re.compile(r"import(.+)(List|(?<!Typed)Dict)|Dict\[|List\["),
-        message="As of python3.9, dict and list type hints may be used installed of Dict and List"
-    )
+        message="As of python3.9, dict and list type hints may be used installed of Dict and List",
+    ),
 ]
 
 
@@ -57,7 +57,7 @@ def check_source_file(file_path: Path, rules: list[Rule]) -> list[Error]:
                             line_number=line_index + 1,
                             start_column=match.start(),
                             end_column=match.end(),
-                            error_message=rule.message
+                            error_message=rule.message,
                         )
                     )
     return errors
@@ -85,11 +85,7 @@ def handle_source_dir(source_dir: Path) -> list[Error]:
 def create_arguments_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--source-dirs",
-        nargs='+',
-        action='extend',
-        required=True,
-        default=[]
+        "--source-dirs", nargs="+", action="extend", required=True, default=[]
     )
     return parser
 
@@ -103,10 +99,17 @@ def main():
         print(f"!! Found {len(errors)} error(s) while scanning project")
         print()
         for error in errors:
-            print(f"{error.file_path}:{error.line_number}:{error.start_column}: error: {error.error_message}")
+            print(
+                f"{error.file_path}:{error.line_number}:{error.start_column}: error: {error.error_message}"
+            )
             print(f"{error.line_number} | {error.line.rstrip()}")
             spacing = len(f"{error.line_number} | ") + error.start_column
-            print((" " * spacing) + "^" + ("~" * (error.end_column - error.start_column - 2)) + "+")
+            print(
+                (" " * spacing)
+                + "^"
+                + ("~" * (error.end_column - error.start_column - 2))
+                + "+"
+            )
             print()
         return 1
     else:

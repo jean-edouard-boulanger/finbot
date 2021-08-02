@@ -89,8 +89,7 @@ class Api(SeleniumBased):
 
             login_area = self._do.wait_element(By.CSS_SELECTOR, "form#login")
             username_input, password_input = login_area.find_elements(
-                By.CSS_SELECTOR,
-                "input.form-control"
+                By.CSS_SELECTOR, "input.form-control"
             )
             username_input.send_keys(credentials.username)
             password_input.send_keys(credentials.password)
@@ -190,13 +189,12 @@ def _iter_accounts(accounts_elements):
         card_body = account_card.find_element(By.CSS_SELECTOR, "div.card-body")
         card_footer = account_card.find_element(By.CSS_SELECTOR, "div.card-footer")
         account_id = card_footer.text.strip().split(" ")[-1]
-        account_link = card_body.find_element(
-            By.TAG_NAME, "h3"
-        ).find_element(By.CSS_SELECTOR, "a.view-manage-btn")
+        account_link = card_body.find_element(By.TAG_NAME, "h3").find_element(
+            By.CSS_SELECTOR, "a.view-manage-btn"
+        )
         account_name = account_link.text.strip()
         balance_str = card_body.find_element(
-            By.CSS_SELECTOR,
-            "div.h1 > span.currency-hero"
+            By.CSS_SELECTOR, "div.h1 > span.currency-hero"
         ).text.strip()
         return {
             "account": {
