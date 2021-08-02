@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 OWN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-. ${OWN_DIR}/bash-utils.sh
+source "${OWN_DIR}/bash-utils.sh"
 
 log_info "restarting finbot"
 
-${OWN_DIR}/finbotctl-stop
-${OWN_DIR}/finbotctl-start
+"${OWN_DIR}/finbotctl-stop"
+"${OWN_DIR}/finbotctl-start"

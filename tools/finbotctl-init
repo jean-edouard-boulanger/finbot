@@ -2,8 +2,7 @@
 set -e
 
 OWN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-source ${OWN_DIR}/bash-utils.sh
-
+source "${OWN_DIR}/bash-utils.sh"
 
 log_info initializing finbot environment
 
