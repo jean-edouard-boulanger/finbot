@@ -47,7 +47,7 @@ then
   export FLASK_APP=finbot/apps/${app_name}/${app_name}.py
   export FLASK_ENV=development
   threads_args="--without-threads"
-  if [[ workers > 1 ]]
+  if [[ "${workers}" -gt 1 ]]
   then
     threads_args="--with-threads"
   fi

@@ -19,8 +19,8 @@ shift
 
 log_info "watching directory: ${watched}"
 while true; do
-  log_info "running: $@"
-  $@ &
+  log_info "running: ${*}"
+  "$@" &
   PID=$!
   inotifywait -e modify -e move -e create -e delete -e attrib -r ${watched}
   log_info "changes detected, restarting ..."

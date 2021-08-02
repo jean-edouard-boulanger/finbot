@@ -200,9 +200,12 @@ py-mypy:
 py-banned-keywords-check:
 	tools/banned-keywords.py --source-dirs finbot
 
+sh-lint:
+	find . -name '*.sh' -not -path './webapp/*' | xargs shellcheck -S warning -e SC1090
+
 py-lint: py-mypy py-flake8 py-black-check py-banned-keywords-check
 js-lint: js-eslint js-prettier-check js-banned-keywords-check
-lint: py-lint js-lint
+lint: py-lint js-lint sh-lint
 
 py-format: py-black
 js-format: js-prettier
