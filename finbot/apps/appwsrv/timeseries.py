@@ -1,4 +1,4 @@
-from typing import List, Iterator, TypeVar, Callable, Tuple, Optional
+from typing import Iterator, TypeVar, Callable, Tuple, Optional
 from datetime import datetime, timedelta
 import enum
 
@@ -32,7 +32,7 @@ def _find_next_close_item(
 
 
 def sample_time_series(
-    timed_items: List[ItemType],
+    timed_items: list[ItemType],
     time_getter: Callable[[ItemType], datetime],
     interval: timedelta,
 ):
@@ -63,14 +63,14 @@ def create_schedule(
 
 
 def schedulify(
-    schedule: List[datetime],
-    timed_items: List[ItemType],
+    schedule: list[datetime],
+    timed_items: list[ItemType],
     time_getter: Callable[[ItemType], datetime],
-) -> List[Tuple[datetime, Optional[ItemType]]]:
+) -> list[Tuple[datetime, Optional[ItemType]]]:
     last_closest = None
     next_closest = None
     items_iterator = iter(timed_items)
-    results: List[Tuple[datetime, Optional[ItemType]]] = []
+    results: list[Tuple[datetime, Optional[ItemType]]] = []
     for schedule_time in schedule:
         if next_closest is not None and schedule_time >= time_getter(next_closest):
             last_closest = next_closest

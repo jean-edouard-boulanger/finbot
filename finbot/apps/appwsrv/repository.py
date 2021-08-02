@@ -16,7 +16,7 @@ from finbot.model import (
 
 from collections import defaultdict
 from datetime import datetime
-from typing import List, Optional, Dict
+from typing import Optional
 from sqlalchemy import asc, desc
 from sqlalchemy.orm import joinedload
 import logging
@@ -57,7 +57,7 @@ def find_provider(session, provider_id: str) -> Provider:
     return session.query(Provider).filter_by(id=provider_id).first()
 
 
-def find_linked_accounts(session, user_account_id: int) -> List[LinkedAccount]:
+def find_linked_accounts(session, user_account_id: int) -> list[LinkedAccount]:
     return (
         session.query(LinkedAccount)
         .filter_by(user_account_id=user_account_id)
@@ -79,7 +79,7 @@ def find_last_history_entry(session, user_account_id: int) -> UserAccountHistory
 
 def find_user_account_historical_valuation(
     session, user_account_id: int, from_time: datetime, to_time: datetime
-) -> List[UserAccountHistoryEntry]:
+) -> list[UserAccountHistoryEntry]:
     return (
         session.query(UserAccountHistoryEntry)
         .filter_by(user_account_id=user_account_id)
@@ -96,7 +96,7 @@ def find_user_account_historical_valuation(
 
 def find_linked_accounts_historical_valuation(
     session, user_account_id: int, from_time: datetime, to_time: datetime
-) -> Dict[int, List[LinkedAccountValuationHistoryEntry]]:
+) -> dict[int, list[LinkedAccountValuationHistoryEntry]]:
     history_entries = (
         session.query(UserAccountHistoryEntry)
         .filter_by(user_account_id=user_account_id)
@@ -158,7 +158,7 @@ def find_user_account_valuation(
 
 def find_linked_accounts_valuation(
     session, history_entry_id: int
-) -> List[LinkedAccountValuationHistoryEntry]:
+) -> list[LinkedAccountValuationHistoryEntry]:
     return (
         session.query(LinkedAccountValuationHistoryEntry)
         .filter_by(history_entry_id=history_entry_id)
@@ -171,7 +171,7 @@ def find_linked_accounts_valuation(
 
 def find_sub_accounts_valuation(
     session, history_entry_id: int, linked_account_id: Optional[int] = None
-) -> List[SubAccountValuationHistoryEntry]:
+) -> list[SubAccountValuationHistoryEntry]:
     query = session.query(SubAccountValuationHistoryEntry).filter_by(
         history_entry_id=history_entry_id
     )
@@ -186,7 +186,7 @@ def find_items_valuation(
     history_entry_id: int,
     linked_account_id: Optional[int] = None,
     sub_account_id: Optional[str] = None,
-) -> List[SubAccountItemValuationHistoryEntry]:
+) -> list[SubAccountItemValuationHistoryEntry]:
     query = session.query(SubAccountItemValuationHistoryEntry).filter_by(
         history_entry_id=history_entry_id
     )

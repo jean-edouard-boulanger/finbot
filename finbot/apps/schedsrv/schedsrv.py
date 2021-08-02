@@ -7,17 +7,18 @@ from finbot.model import UserAccount
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
+import zmq
+import schedule
+import stackprinter
+
 from datetime import timedelta
-from typing import List, Optional
+from typing import Optional
 import sys
 import queue
-import schedule
 import threading
 import argparse
-import stackprinter
 import signal
 import logging
-import zmq
 
 
 configure_logging()
@@ -47,7 +48,7 @@ def iter_user_accounts():
         yield user_account
 
 
-def run_one_shot(handler: RequestHandler, accounts_ids: List[int]):
+def run_one_shot(handler: RequestHandler, accounts_ids: list[int]):
     user_account: UserAccount
     for user_account in iter_user_accounts():
         if not accounts_ids or user_account.id in accounts_ids:

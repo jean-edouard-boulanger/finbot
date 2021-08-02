@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Any
 from datetime import datetime
 
 
@@ -15,19 +15,21 @@ class Base(object):
         """
         pass
 
-    def get_balances(self) -> Dict:
+    def get_balances(self) -> dict[Any, Any]:
         """ """
         return {"accounts": []}
 
-    def get_assets(self) -> Dict:
+    def get_assets(self) -> dict[Any, Any]:
         """ """
         return {"accounts": []}
 
-    def get_liabilities(self) -> Dict:
+    def get_liabilities(self) -> dict[Any, Any]:
         """ """
         return {"accounts": []}
 
-    def get_transactions(self, from_date: datetime, to_date: datetime) -> Dict:
+    def get_transactions(
+        self, from_date: datetime, to_date: datetime
+    ) -> dict[Any, Any]:
         """ """
         return {"accounts": []}
 

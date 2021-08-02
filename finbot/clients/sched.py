@@ -1,5 +1,5 @@
 from typing import TYPE_CHECKING
-from typing import Optional, List, Union, Type, Dict
+from typing import Optional, Union, Type, Any
 import marshmallow_dataclass
 import zmq
 
@@ -13,7 +13,7 @@ else:
 @dataclass
 class TriggerValuationRequest:
     user_account_id: int
-    linked_accounts: Optional[List[int]] = None
+    linked_accounts: Optional[list[int]] = None
 
 
 @dataclass
@@ -21,12 +21,12 @@ class Request:
     trigger_valuation: Optional[TriggerValuationRequest] = None
 
 
-def serialize(obj: Union[Request, TriggerValuationRequest]) -> Dict:
+def serialize(obj: Union[Request, TriggerValuationRequest]) -> dict[Any, Any]:
     schema = marshmallow_dataclass.class_schema(type(obj))()
     return schema.dump(obj)
 
 
-def deserialize(obj_type: Type, data: Dict):
+def deserialize(obj_type: Type, data: dict[Any, Any]) -> Any:
     schema = marshmallow_dataclass.class_schema(obj_type)()
     return schema.load(data)
 

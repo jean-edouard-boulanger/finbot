@@ -1,4 +1,4 @@
-from typing import Dict, Tuple, List
+from typing import Tuple
 from collections import defaultdict
 from datetime import timedelta
 
@@ -21,14 +21,14 @@ def generate(session, history_entry: UserAccountHistoryEntry):
     sub_accounts_valuation = repository.find_sub_accounts_valuation(
         session, history_entry.id
     )
-    mapped_sub_accounts: Dict[int, List[SubAccountValuationHistoryEntry]] = defaultdict(
+    mapped_sub_accounts: dict[int, list[SubAccountValuationHistoryEntry]] = defaultdict(
         list
     )
     for sub_account in sub_accounts_valuation:
         mapped_sub_accounts[sub_account.linked_account_id].append(sub_account)
     items_valuation = repository.find_items_valuation(session, history_entry.id)
-    mapped_items: Dict[
-        Tuple[int, str], List[SubAccountItemValuationHistoryEntry]
+    mapped_items: dict[
+        Tuple[int, str], list[SubAccountItemValuationHistoryEntry]
     ] = defaultdict(list)
     for item in items_valuation:
         mapped_items[(item.linked_account_id, item.sub_account_id)].append(item)

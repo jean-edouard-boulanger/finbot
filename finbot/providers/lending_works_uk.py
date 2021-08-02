@@ -1,10 +1,12 @@
-from selenium.webdriver.common.by import By
-from selenium.common.exceptions import StaleElementReferenceException
 from finbot.providers.selenium_based import SeleniumBased
 from finbot.core.utils import swallow_exc
 from finbot.providers import retired
 from finbot.providers.support.selenium import SeleniumHelper
 from finbot.providers.errors import AuthFailure
+
+from selenium.webdriver.common.by import By
+from selenium.common.exceptions import StaleElementReferenceException
+
 import requests
 import csv
 import io

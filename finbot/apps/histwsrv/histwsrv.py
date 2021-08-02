@@ -1,7 +1,3 @@
-from typing import Dict
-from flask import Flask, jsonify
-from sqlalchemy import create_engine
-from sqlalchemy.orm import scoped_session, sessionmaker
 from finbot.apps.support import request_handler
 from finbot.apps.histwsrv import repository
 from finbot.core.utils import serialize, pretty_dump, configure_logging
@@ -14,7 +10,13 @@ from finbot.model import (
     SubAccountValuationHistoryEntry,
     SubAccountItemValuationHistoryEntry,
 )
+
+from flask import Flask, jsonify
+from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session, sessionmaker
 import pandas as pd
+
+from typing import Any
 import logging
 
 
@@ -39,7 +41,7 @@ def get_user_account_liabilities(data: pd.DataFrame) -> float:
     return data.loc[data["value_snapshot_ccy"] < 0, "value_snapshot_ccy"].sum()
 
 
-def get_linked_accounts_valuation(data: pd.DataFrame) -> Dict:
+def get_linked_accounts_valuation(data: pd.DataFrame) -> dict[Any, Any]:
     groups = ["linked_account_id", "snapshot_id"]
     return data.groupby(groups)["value_snapshot_ccy"].sum().to_dict()
 

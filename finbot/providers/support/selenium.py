@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict
+from typing import Optional
 from functools import wraps
 from os.path import expanduser
 
@@ -79,7 +79,7 @@ class SeleniumHelper(object):
         return self.browser.current_url
 
     @property
-    def cookies(self) -> Dict[str, str]:
+    def cookies(self) -> dict[str, str]:
         return {
             str(cookie["name"]): str(cookie["value"])
             for cookie in self.browser.get_cookies()
@@ -100,7 +100,7 @@ class SeleniumHelper(object):
     def find(self, by, selector) -> WebElement:
         return self.browser.find_element(by, selector)
 
-    def find_many(self, by, selector) -> List[WebElement]:
+    def find_many(self, by, selector) -> list[WebElement]:
         return self.browser.find_elements(by, selector)
 
     def find_maybe(self, by, selector) -> Optional[WebElement]:
