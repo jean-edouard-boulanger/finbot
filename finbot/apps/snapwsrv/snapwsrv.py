@@ -1,7 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor
 from decimal import Decimal
 from dataclasses import dataclass
-from typing import List, Optional, Tuple, Any
+from typing import Optional, Tuple, Any
 from flask import Flask, jsonify, request
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker, joinedload
@@ -265,7 +265,7 @@ def get_credentials_data(linked_account: LinkedAccount, user_account: UserAccoun
     return credentials
 
 
-def take_raw_snapshot(user_account: UserAccount, linked_accounts: Optional[List[int]]):
+def take_raw_snapshot(user_account: UserAccount, linked_accounts: Optional[list[int]]):
     with ThreadPoolExecutor(max_workers=4) as executor:
         logging.info("initializing accounts snapshot requests")
         requests = [
@@ -305,7 +305,7 @@ def validate_fx_rates(rates: dict[fx_market.Xccy, Optional[float]]):
         )
 
 
-def take_snapshot_impl(user_account_id: int, linked_accounts: Optional[List[int]]):
+def take_snapshot_impl(user_account_id: int, linked_accounts: Optional[list[int]]):
     logging.info(
         f"fetching user information for"
         f" user_account_id={user_account_id}"
