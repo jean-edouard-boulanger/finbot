@@ -43,6 +43,8 @@ do
   esac
 done
 
+finbot_is_valid_env "${FINBOT_ENV}" || die "'${FINBOT_ENV}' is not a valid environment"
+
 log_info "starting finbot (environment: ${FINBOT_ENV})"
 
 log_info "starting finbot backend containers"

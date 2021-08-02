@@ -1,5 +1,7 @@
 from finbot import providers
 from finbot.providers.errors import AuthFailure
+from finbot.core import tracer
+
 import krakenex
 
 
@@ -75,31 +77,41 @@ class Api(providers.Base):
         }
 
 
-def _format_error(errors):
+def _format_error(errors: list[str]) -> str:
     return ", ".join(errors)
 
 
-def _classify_asset(symbol):
+def _classify_asset(symbol: str) -> str:
     if symbol.startswith("Z"):
         return "currency"
     return "crypto"
 
 
-def _format_symbol(symbol):
+def _format_symbol(symbol: str) -> str:
     if symbol[0] in {"Z", "X"} and len(symbol) == 4:
         return symbol[1:]
     return symbol
 
 
 class KrakenPriceFetcher(object):
-    def __init__(self, kraken_api):
+    class Error(RuntimeError):
+        pass
+
+    def __init__(self, kraken_api: krakenex.API):
         self.api = kraken_api
 
-    def get_last_price(self, source_crypto_asset, target_ccy):
+    def get_last_price(self, source_crypto_asset: str, target_ccy: str) -> float:
         if source_crypto_asset == target_ccy:
             return 1.0
-        pair = f"{source_crypto_asset}{target_ccy}"
-        results = self.api.query_public("Ticker", {"pair": pair})
+        pair_str = f"{source_crypto_asset}/{target_ccy}"
+        with tracer.sub_step(f"Query {pair_str} rate from Kraken") as step:
+            pair = f"{source_crypto_asset}{target_ccy}"
+            args = "Ticker", {"pair": pair}
+            step.set_input(args)
+            results = self.api.query_public(*args)
+            step.set_output(results)
         if results["error"]:
-            raise RuntimeError(f"{pair} " + _format_error(results["error"]))
+            raise KrakenPriceFetcher.Error(
+                f"{pair_str} " + _format_error(results["error"])
+            )
         return float(results["result"][list(results["result"].keys())[0]]["c"][0])

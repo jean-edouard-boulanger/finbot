@@ -2,7 +2,6 @@
 OWN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source ${OWN_DIR}/bash-utils.sh
 
-
 [[ -n "${FINBOT_VAULT_PATH}" ]] || die "FINBOT_VAULT_PATH is not set"
 [[ -n "${FINBOT_SECRET_PATH}" ]] || die "FINBOT_SECRET_PATH is not set"
 

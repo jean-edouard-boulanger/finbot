@@ -29,7 +29,17 @@ add_to_python_path() {
     export PYTHONPATH="${PYTHONPATH:+"$PATH:"}$1"
   fi
 }
-run() {
+run_and_trace() {
   echo "running: $@"
   exec $@
+}
+finbot_is_valid_env() {
+  case "$1" in
+    production|development)
+      return 0
+    ;;
+    *)
+      return 1
+    ;;
+  esac
 }

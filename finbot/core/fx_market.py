@@ -1,7 +1,9 @@
 from finbot.core.environment import get_fcsapi_key
+from finbot.core import tracer
 
 from dataclasses import dataclass
 from typing import Optional
+from requests import Response
 import requests
 
 
@@ -20,6 +22,10 @@ class Xccy(object):
         return {"domestic": self.domestic, "foreign": self.foreign}
 
 
+class Error(RuntimeError):
+    pass
+
+
 def _format_pair(pair: Xccy) -> str:
     return f"{pair.domestic}/{pair.foreign}"
 
@@ -28,12 +34,42 @@ def _format_pairs(pairs: set[Xccy]) -> str:
     return ",".join(_format_pair(pair) for pair in pairs)
 
 
+def _handle_fcsapi_response(response: Response, resource: str):
+    response.raise_for_status()
+    payload = response.json()
+    print(tracer.current().name)
+    tracer.current().set_output(payload)
+    if "status" not in payload:
+        raise Error(
+            f"failure while querying fcsapi ({resource}): "
+            f"missing 'status' in payload"
+        )
+    if not payload["status"]:
+        raise Error(
+            f"failure while querying fcsapi ({resource}): "
+            f"{payload['msg']} (code: {payload['code']})"
+        )
+    if "response" not in payload:
+        raise Error(
+            f"failure while querying fcsapi ({resource}): "
+            f"missing 'response' in payload"
+        )
+    return payload["response"]
+
+
 def get_rates(pairs: set[Xccy]) -> dict[Xccy, Optional[float]]:
-    resource_url = f"{API_URL}/latest?symbol={_format_pairs(pairs)}"
-    resource_url += f"&access_key={get_fcsapi_key()}"
-    resp = requests.get(resource_url)
-    data = resp.json()["response"]
-    return {Xccy(*entry["s"].split("/")): float(entry["c"]) for entry in data}
+    pairs_str = _format_pairs(pairs)
+    resource = f"{API_URL}/latest?symbol={pairs_str}"
+    resource += f"&access_key={get_fcsapi_key()}"
+    with tracer.sub_step(f"Query {pairs_str} rate(s) from fcsapi") as step:
+        step.set_input({"resource": resource})
+        response = requests.get(resource)
+        rates_data = _handle_fcsapi_response(response, resource)
+    rates = {Xccy(*entry["s"].split("/")): float(entry["c"]) for entry in rates_data}
+    for pair in pairs:
+        if pair not in rates:
+            raise Error(f"rate missing for {pair}")
+    return rates
 
 
 def get_rate(pair: Xccy) -> Optional[float]:
