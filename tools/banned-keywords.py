@@ -21,13 +21,13 @@ RULES: list[Rule] = [
         match_files=["*.py"],
         banned_pattern=re.compile(r"find_elements_by_[^(]+"),
         message="Selenium find_elements_by_* commands are deprecated. "
-                "Please use find_elements(...) instead.",
+        "Please use find_elements(...) instead.",
     ),
     Rule(
         match_files=["*.py"],
         banned_pattern=re.compile(r"find_element_by_[^(]+"),
         message="Selenium find_element_by_* commands are deprecated. "
-                "Please use find_element(...) instead.",
+        "Please use find_element(...) instead.",
     ),
     Rule(
         match_files=["*.py"],
@@ -97,20 +97,21 @@ def is_github_action() -> bool:
     return "GITHUB_ACTIONS" in os.environ
 
 
-def format_error_message(error: Error) -> str:
+def display_error_message(error: Error):
     relative_path = error.file_path.relative_to(Path.cwd())
     if is_github_action():
-        return (f"::error file={relative_path},"
-                f"line={error.line_number},"
-                f"col={error.start_column}::"
-                f"{error.error_message}")
-    else:
-        return (
-            f"{relative_path}:"
-            f"{error.line_number}:"
-            f"{error.start_column}: "
-            f"error: {error.error_message}"
+        print(
+            f"::error file={relative_path},"
+            f"line={error.line_number},"
+            f"col={error.start_column}::"
+            f"{error.error_message}"
         )
+    print(
+        f"{relative_path}:"
+        f"{error.line_number}:"
+        f"{error.start_column}: "
+        f"error: {error.error_message}"
+    )
 
 
 def main():
@@ -120,7 +121,7 @@ def main():
         errors += handle_source_dir(Path(source_dir))
     if errors:
         for error in errors:
-            print(format_error_message(error))
+            print(display_error_message(error))
             print(f"{error.line_number} | {error.line.rstrip()}")
             spacing = len(f"{error.line_number} | ") + error.start_column
             print(
