@@ -51,14 +51,14 @@ then
   then
     threads_args="--with-threads"
   fi
-  run flask run \
+  run_and_trace flask run \
 			--port ${port} \
 			${threads_args} \
 			-h 0.0.0.0 \
 			--extra-files 'finbot/\*\*/\*.py'
 else
   echo "running ${app_name} with gunicorn (environment: ${finbot_env})"
-  run gunicorn \
+  run_and_trace gunicorn \
     finbot.apps.${app_name}.${app_name}:app \
       --workers ${workers} \
       --timeout ${timeout} \
