@@ -28,10 +28,10 @@ class Base(object):
             raise Error(f"error while sending request to {resource}: {e}")
         return json.loads(response.content)
 
-    def get(self, route: str) -> dict:
+    def get(self, route: str) -> dict[Any, Any]:
         return self.send_request("get", route)
 
-    def post(self, route: str, payload: Optional[Any] = None) -> dict:
+    def post(self, route: str, payload: Optional[Any] = None) -> dict[Any, Any]:
         return self.send_request("post", route, payload)
 
     @property

@@ -29,10 +29,13 @@ class FinbotClient(ClientBase):
     ) -> dict:
         return self.post(
             "financial_data",
-            payload=tracer.pack_context({
-                "provider": provider,
-                "credentials": credentials_data,
-                "items": [item.value for item in line_items],
-                "account_metadata": account_metadata
-            }, tracer_context),
+            payload=tracer.pack_context(
+                {
+                    "provider": provider,
+                    "credentials": credentials_data,
+                    "items": [item.value for item in line_items],
+                    "account_metadata": account_metadata,
+                },
+                tracer_context,
+            ),
         )

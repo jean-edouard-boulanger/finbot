@@ -360,7 +360,9 @@ def context_identifier() -> Optional[str]:
     return _get_tracer_context().guid()
 
 
-def pack_context(request: dict[Any, Any], context: Optional[FlatContext]) -> dict[Any, Any]:
+def pack_context(
+    request: dict[Any, Any], context: Optional[FlatContext]
+) -> dict[Any, Any]:
     if context:
         request[CONTEXT_TAG] = context.serialize()
     return request

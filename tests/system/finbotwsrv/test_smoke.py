@@ -44,7 +44,7 @@ def test_get_financial_data(api: FinbotClient):
         line_items=[
             LineItem.Assets,
             LineItem.Balances,
-        ]
+        ],
     )
     assert "financial_data" in response
     financial_data = response["financial_data"]

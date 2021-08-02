@@ -14,6 +14,7 @@ class SnapClient(ClientBase):
         linked_accounts: Optional[list[int]] = None,
         tracer_context: Optional[tracer.FlatContext] = None,
     ) -> dict:
-        return self.post(f"snapshot/{account_id}/take", tracer.pack_context({
-            "linked_accounts": linked_accounts
-        }, tracer_context))
+        return self.post(
+            f"snapshot/{account_id}/take",
+            tracer.pack_context({"linked_accounts": linked_accounts}, tracer_context),
+        )

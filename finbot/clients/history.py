@@ -15,6 +15,7 @@ class HistoryClient(ClientBase):
     def write_history(
         self, snapshot_id: str, tracer_context: Optional[tracer.FlatContext] = None
     ) -> dict[Any, Any]:
-        return self.post(f"history/{snapshot_id}/write", payload=tracer.pack_context(
-            {}, tracer_context)
+        return self.post(
+            f"history/{snapshot_id}/write",
+            payload=tracer.pack_context({}, tracer_context),
         )
