@@ -2,7 +2,7 @@ from finbot.core.environment import get_fcsapi_key
 from finbot.core import tracer
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Any
 from requests import Response
 import requests
 
@@ -34,7 +34,7 @@ def _format_pairs(pairs: set[Xccy]) -> str:
     return ",".join(_format_pair(pair) for pair in pairs)
 
 
-def _handle_fcsapi_response(response: Response, resource: str):
+def _handle_fcsapi_response(response: Response, resource: str) -> Any:
     response.raise_for_status()
     payload = response.json()
     print(tracer.current().name)
@@ -65,10 +65,12 @@ def get_rates(pairs: set[Xccy]) -> dict[Xccy, Optional[float]]:
         step.set_input({"resource": resource})
         response = requests.get(resource)
         rates_data = _handle_fcsapi_response(response, resource)
-    rates = {Xccy(*entry["s"].split("/")): float(entry["c"]) for entry in rates_data}
+    rates: dict[Xccy, Optional[float]] = {
+        Xccy(*entry["s"].split("/")): float(entry["c"]) for entry in rates_data
+    }
     for pair in pairs:
         if pair not in rates:
-            raise Error(f"rate missing for {pair}")
+            rates[pair] = None
     return rates
 
 
