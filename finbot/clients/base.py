@@ -1,8 +1,13 @@
 from finbot.core.utils import serialize
 
 from typing import Optional, Any
+from requests.exceptions import RequestException
 import requests
 import json
+
+
+class Error(RuntimeError):
+    pass
 
 
 class Base(object):
@@ -12,10 +17,15 @@ class Base(object):
     def send_request(
         self, verb: str, route: str, payload: Optional[Any] = None
     ) -> dict:
-        dispatcher = getattr(requests, verb.lower())
         resource = f"{self._endpoint}/{route}"
-        response = dispatcher(resource, json=serialize(payload))
-        response.raise_for_status()
+        if not hasattr(requests, verb.lower()):
+            raise Error(f"unexpected verb: {verb} (while calling {resource})")
+        dispatcher = getattr(requests, verb.lower())
+        try:
+            response = dispatcher(resource, json=serialize(payload))
+            response.raise_for_status()
+        except RequestException as e:
+            raise Error(f"error while sending request to {resource}: {e}")
         return json.loads(response.content)
 
     def get(self, route: str) -> dict:
