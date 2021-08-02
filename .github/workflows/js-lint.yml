@@ -36,3 +36,13 @@ jobs:
       - name: prettier check
         working-directory: webapp/
         run: npm run prettier-check
+  banned-keywords-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out finbot source
+        uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: Check banned keywords (JS)
+        run: make js-banned-keywords-check

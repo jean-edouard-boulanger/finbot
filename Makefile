@@ -167,38 +167,43 @@ init-dev:
 docker-dev:
 	docker exec -it operator /bin/bash
 
-unit-tests:
+py-unit-tests:
 	python3.9 -m pytest tests/unit_tests
 
-black-check:
-	black --check $(BLACK_SETTINGS)
-
-black:
-	black $(BLACK_SETTINGS)
-
-
-prettier:
+js-prettier:
 	cd webapp && npm run prettier
 
-prettier-check:
+js-prettier-check:
 	cd webapp && npm run prettier-check
 
-flake8:
+js-eslint:
+	cd webapp && npm run lint-check:prod
+
+js-banned-keywords-check:
+	tools/banned-keywords.py --source-dirs webapp/src
+
+py-flake8:
 	flake8 --exclude migrations/ --max-line-length 100
 
-mypy:
+py-black-check:
+	black --check $(BLACK_SETTINGS)
+
+py-black:
+	black $(BLACK_SETTINGS)
+
+py-mypy:
 	mypy -p finbot;
 	mypy --strict -p finbot.core;
 	mypy --strict -p finbot.model;
 	mypy --strict -p finbot.apps.support;
 
-eslint:
-	cd webapp && npm run lint-check:prod
+py-banned-keywords-check:
+	tools/banned-keywords.py --source-dirs finbot
 
-py-lint: mypy flake8 black-check
-js-lint: eslint prettier-check
+py-lint: py-mypy py-flake8 py-black-check py-banned-keywords-check
+js-lint: js-eslint js-prettier-check js-banned-keywords-check
 lint: py-lint js-lint
 
-py-format: black
-js-format: prettier
+py-format: py-black
+js-format: js-prettier
 format: py-format js-format

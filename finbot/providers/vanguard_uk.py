@@ -63,10 +63,10 @@ class Api(SeleniumBased):
         browser = self.browser
         browser.get(f"{BASE_URL}/Login")
         auth_form = self._do.wait_element(By.CSS_SELECTOR, "form.form-login")
-        user_input, password_input, *_ = auth_form.find_elements_by_tag_name("input")
+        user_input, password_input, *_ = auth_form.find_elements(By.TAG_NAME, "input")
         user_input.send_keys(credentials.username)
         password_input.send_keys(credentials.password)
-        auth_form.find_element_by_css_selector("div.submit button").click()
+        auth_form.find_element(By.CSS_SELECTOR, "div.submit button").click()
 
         self._do.assert_success(
             _is_logged_in, lambda _: _get_login_error(auth_form), _report_auth_error
@@ -109,10 +109,10 @@ class Api(SeleniumBased):
             By.CSS_SELECTOR, "table.table-investments-detailed"
         )
         all_assets = []
-        for section in investments_table.find_elements_by_css_selector(
-            "tbody.group-content"
+        for section in investments_table.find_elements(
+            By.CSS_SELECTOR, "tbody.group-content"
         ):
-            group_row = section.find_element_by_css_selector("tr.group-row")
+            group_row = section.find_element(By.CSS_SELECTOR, "tr.group-row")
             product_type = group_row.text.strip().split()[0].lower()
             product_rows = _get_product_rows(section, timedelta(seconds=60))
             for product_row in product_rows:
@@ -150,14 +150,14 @@ class _StalenessDetector(object):
 def _get_product_rows(section, timeout: timedelta):
     cutoff = datetime.now() + timeout
     while datetime.now() < cutoff:
-        product_rows = section.find_elements_by_css_selector("tr.product-row")
+        product_rows = section.find_elements(By.CSS_SELECTOR, "tr.product-row")
         if len(product_rows) > 0:
             return product_rows
     raise RuntimeError("could not find product rows in section")
 
 
 def _extract_cash_asset(product_row):
-    amount_str = product_row.find_elements_by_tag_name("td")[5].text.strip()
+    amount_str = product_row.find_elements(By.TAG_NAME, "td")[5].text.strip()
     return {
         "name": "Cash",
         "type": "currency",
@@ -166,8 +166,8 @@ def _extract_cash_asset(product_row):
 
 
 def _extract_fund_asset(product_type, product_row):
-    cells = product_row.find_elements_by_tag_name("td")
-    name_cell = cells[0].find_element_by_css_selector("p.content-product-name")
+    cells = product_row.find_elements(By.TAG_NAME, "td")
+    name_cell = cells[0].find_element(By.CSS_SELECTOR, "p.content-product-name")
     product_name = name_cell.text.strip()
     ongoing_charges = float(cells[1].text.strip()[:-1]) / 100.0
     units = float(cells[2].text.strip())
@@ -197,7 +197,7 @@ def _extract_asset(product_type, product_row):
 
 @swallow_exc(StaleElementReferenceException)
 def _get_login_error(auth_form):
-    error_area = auth_form.find_elements_by_class_name("error-message")
+    error_area = auth_form.find_elements(By.CLASS_NAME, "error-message")
     if error_area and error_area[0].is_displayed():
         return error_area[0].text.strip()
 
