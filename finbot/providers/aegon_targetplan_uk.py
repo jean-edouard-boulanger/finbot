@@ -37,8 +37,8 @@ class Api(SeleniumBased):
     def _go_home(self):
         (
             self._do.find(By.CSS_SELECTOR, "div#navbarSupportedContent")
-            .find_element_by_css_selector("div.dropdown")
-            .find_element_by_tag_name("a")
+            .find_element(By.CSS_SELECTOR, "div.dropdown")
+            .find_element(By.TAG_NAME, "a")
             .click()
         )
 
@@ -88,12 +88,13 @@ class Api(SeleniumBased):
             # 1. Enter credentials and submit (after specified time period)
 
             login_area = self._do.wait_element(By.CSS_SELECTOR, "form#login")
-            username_input, password_input = login_area.find_elements_by_css_selector(
+            username_input, password_input = login_area.find_elements(
+                By.CSS_SELECTOR,
                 "input.form-control"
             )
             username_input.send_keys(credentials.username)
             password_input.send_keys(credentials.password)
-            submit_button = login_area.find_element_by_tag_name("button")
+            submit_button = login_area.find_element(By.TAG_NAME, "button")
             time.sleep(wait_time)
             submit_button.click()
 
@@ -186,14 +187,15 @@ def _wait_accounts(do: SeleniumHelper):
 
 def _iter_accounts(accounts_elements):
     def extract_account(account_card):
-        card_body = account_card.find_element_by_css_selector("div.card-body")
-        card_footer = account_card.find_element_by_css_selector("div.card-footer")
+        card_body = account_card.find_element(By.CSS_SELECTOR, "div.card-body")
+        card_footer = account_card.find_element(By.CSS_SELECTOR, "div.card-footer")
         account_id = card_footer.text.strip().split(" ")[-1]
-        account_link = card_body.find_element_by_tag_name(
-            "h3"
-        ).find_element_by_css_selector("a.view-manage-btn")
+        account_link = card_body.find_element(
+            By.TAG_NAME, "h3"
+        ).find_element(By.CSS_SELECTOR, "a.view-manage-btn")
         account_name = account_link.text.strip()
-        balance_str = card_body.find_element_by_css_selector(
+        balance_str = card_body.find_element(
+            By.CSS_SELECTOR,
             "div.h1 > span.currency-hero"
         ).text.strip()
         return {
@@ -212,11 +214,11 @@ def _iter_accounts(accounts_elements):
 
 def _iter_assets(assets_table_body):
     for row in assets_table_body.find_elements_by_tag_name("tr"):
-        cells = row.find_elements_by_tag_name("td")
+        cells = row.find_elements(By.TAG_NAME, "td")
         asset_name = (
             cells[0]
-            .find_element_by_tag_name("a")
-            .find_elements_by_tag_name("span")[1]
+            .find_element(By.TAG_NAME, "a")
+            .find_elements(By.TAG_NAME, "span")[1]
             .text.strip()
         )
         yield {

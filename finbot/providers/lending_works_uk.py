@@ -106,8 +106,8 @@ class Api(SeleniumBased):
         # 1. Enter credentials and validate
 
         login_block = self._do.wait_element(By.CSS_SELECTOR, "div.m-lw-login-block")
-        username_input, password_input, *_ = login_block.find_elements_by_tag_name(
-            "input"
+        username_input, password_input, *_ = login_block.find_elements(
+            By.TAG_NAME, "input"
         )
         username_input.send_keys(credentials.username)
         password_input.send_keys(credentials.password)
