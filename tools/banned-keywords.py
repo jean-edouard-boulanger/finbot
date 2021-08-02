@@ -6,6 +6,7 @@ import argparse
 import fnmatch
 import re
 import sys
+import os
 
 
 @dataclass
@@ -19,12 +20,14 @@ RULES: list[Rule] = [
     Rule(
         match_files=["*.py"],
         banned_pattern=re.compile(r"find_elements_by_[^(]+"),
-        message="Selenium find_elements_by_* commands are deprecated. Please use find_elements(...) instead.",
+        message="Selenium find_elements_by_* commands are deprecated. "
+                "Please use find_elements(...) instead.",
     ),
     Rule(
         match_files=["*.py"],
         banned_pattern=re.compile(r"find_element_by_[^(]+"),
-        message="Selenium find_element_by_* commands are deprecated. Please use find_element(...) instead.",
+        message="Selenium find_element_by_* commands are deprecated. "
+                "Please use find_element(...) instead.",
     ),
     Rule(
         match_files=["*.py"],
@@ -90,18 +93,34 @@ def create_arguments_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def is_github_action() -> bool:
+    return "GITHUB_ACTIONS" in os.environ
+
+
+def format_error_message(error: Error) -> str:
+    relative_path = error.file_path.relative_to(Path.cwd())
+    if is_github_action():
+        return (f"::error file={relative_path},"
+                f"line={error.line_number},"
+                f"col={error.start_column}::"
+                f"{error.error_message}")
+    else:
+        return (
+            f"{relative_path}:"
+            f"{error.line_number}:"
+            f"{error.start_column}: "
+            f"error: {error.error_message}"
+        )
+
+
 def main():
     settings = create_arguments_parser().parse_args()
     errors: list[Error] = []
     for source_dir in settings.source_dirs:
         errors += handle_source_dir(Path(source_dir))
     if errors:
-        print(f"!! Found {len(errors)} error(s) while scanning project")
-        print()
         for error in errors:
-            print(
-                f"{error.file_path}:{error.line_number}:{error.start_column}: error: {error.error_message}"
-            )
+            print(format_error_message(error))
             print(f"{error.line_number} | {error.line.rstrip()}")
             spacing = len(f"{error.line_number} | ") + error.start_column
             print(
