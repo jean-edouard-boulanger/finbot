@@ -201,7 +201,8 @@ py-banned-keywords-check:
 	tools/banned-keywords.py --source-dirs finbot
 
 sh-lint:
-	find . -name '*.sh' -not -path './webapp/*' | xargs shellcheck -S warning -e SC1090
+	grep -rl '^#!/.*bash' --exclude-dir=webapp --exclude-dir='./.*' . |\
+ 		xargs shellcheck -e SC1090 -e SC1091 -S style
 
 py-lint: py-mypy py-flake8 py-black-check py-banned-keywords-check
 js-lint: js-eslint js-prettier-check js-banned-keywords-check

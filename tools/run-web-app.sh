@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 SELF_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-source ${SELF_DIR}/bash-utils.sh
+source "${SELF_DIR}/bash-utils.sh"
 
 finbot_env=${FINBOT_ENV:-production}
 workers=1
@@ -52,15 +52,15 @@ then
     threads_args="--with-threads"
   fi
   run_and_trace flask run \
-			--port ${port} \
-			${threads_args} \
+			--port "${port}" \
+			"${threads_args}" \
 			-h 0.0.0.0 \
 			--extra-files 'finbot/\*\*/\*.py'
 else
   echo "running ${app_name} with gunicorn (environment: ${finbot_env})"
   run_and_trace gunicorn \
-    finbot.apps.${app_name}.${app_name}:app \
-      --workers ${workers} \
-      --timeout ${timeout} \
-      --bind 0.0.0.0:${port}
+    "finbot.apps.${app_name}.${app_name}:app" \
+      --workers "${workers}" \
+      --timeout "${timeout}" \
+      --bind "0.0.0.0:${port}"
 fi
