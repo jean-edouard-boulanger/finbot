@@ -99,6 +99,12 @@ def is_github_action() -> bool:
 
 def display_error_message(error: Error):
     relative_path = error.file_path.relative_to(Path.cwd())
+    print(
+        f"{relative_path}:"
+        f"{error.line_number}:"
+        f"{error.start_column}: "
+        f"error: {error.error_message}"
+    )
     if is_github_action():
         print(
             f"::error file={relative_path},"
@@ -106,12 +112,6 @@ def display_error_message(error: Error):
             f"col={error.start_column}::"
             f"{error.error_message}"
         )
-    print(
-        f"{relative_path}:"
-        f"{error.line_number}:"
-        f"{error.start_column}: "
-        f"error: {error.error_message}"
-    )
 
 
 def main():

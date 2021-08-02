@@ -211,7 +211,7 @@ def _iter_accounts(accounts_elements):
 
 
 def _iter_assets(assets_table_body):
-    for row in assets_table_body.find_elements_by_tag_name("tr"):
+    for row in assets_table_body.find_elements(By.TAG_NAME, "tr"):
         cells = row.find_elements(By.TAG_NAME, "td")
         asset_name = (
             cells[0]
