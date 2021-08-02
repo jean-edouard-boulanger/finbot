@@ -1,0 +1,27 @@
+name: Lint (Shell)
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "**.sh"
+  pull_request:
+    branches:
+      - master
+    paths:
+      - "**.sh"
+
+
+jobs:
+  shellcheck:
+    name: Shellcheck
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run ShellCheck
+      uses: ludeeus/action-shellcheck@master
+      env:
+        SHELLCHECK_OPTS: -e SC1090
+      with:
+        ignore: webapp
+        severity: warning

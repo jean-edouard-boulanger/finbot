@@ -3,13 +3,13 @@
 log() {
   log_level=$1
   shift
-  echo >&2 "$(date) [ ${log_level} ] ${@}"
+  echo >&2 "$(date) [ ${log_level} ] ${*}"
 }
-log_info() { log INFO $@; }
-log_warn() { log WARN $@; }
-log_error() { log ERROR $@; }
+log_info() { log INFO "$@"; }
+log_warn() { log WARN "$@"; }
+log_error() { log ERROR "$@"; }
 die() {
-  log_error ${@}
+  log_error "${@}"
   exit 1
 }
 docker_image_exists() {
@@ -19,9 +19,9 @@ docker_image_exists() {
   return 0
 }
 docker_run_operator() {
-  echo $@
+  echo "$@"
   docker-compose run --rm operator \
-    tools/with-env.sh docker $@
+    tools/with-env.sh docker "$@"
 }
 add_to_python_path() {
   value=$1
@@ -30,8 +30,8 @@ add_to_python_path() {
   fi
 }
 run_and_trace() {
-  echo "running: $@"
-  exec $@
+  echo "running: ${*}"
+  exec "$@"
 }
 finbot_is_valid_env() {
   case "$1" in
