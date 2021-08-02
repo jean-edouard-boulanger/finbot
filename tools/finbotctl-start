@@ -5,7 +5,7 @@ OWN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 wait_dep () {
 docker-compose run --rm operator \
   tools/with-env.sh docker \
-    env FINBOT_WAIT_DEPS=${1} make finbot-wait >/dev/null 2>&1
+    env FINBOT_WAIT_DEPS=${1} make finbot-wait
 }
 
 start_frontend=1
