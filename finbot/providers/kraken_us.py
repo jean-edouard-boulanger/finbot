@@ -4,31 +4,33 @@ from finbot.core import tracer
 
 import krakenex
 
+from typing import Optional, Iterator, Tuple, Any
+
 
 OWNERSHIP_UNITS_THRESHOLD = 0.00001
 
 
 class Credentials(object):
-    def __init__(self, api_key, private_key):
+    def __init__(self, api_key: str, private_key: str) -> None:
         self.api_key = api_key
         self.private_key = private_key
 
     @property
-    def user_id(self):
+    def user_id(self) -> str:
         return "<private>"
 
     @staticmethod
-    def init(data):
+    def init(data: dict[Any, Any]) -> "Credentials":
         return Credentials(data["api_key"], data["private_key"])
 
 
 class Api(providers.Base):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self._api = None
+    def __init__(self) -> None:
+        super().__init__()
+        self._api: Optional[krakenex.API] = None
         self._account_ccy = "EUR"
 
-    def _account_description(self):
+    def _account_description(self) -> providers.Account:
         return {
             "id": "portfolio",
             "name": "Portfolio",
@@ -36,8 +38,9 @@ class Api(providers.Base):
             "type": "investment",
         }
 
-    def _iter_balances(self):
+    def _iter_balances(self) -> Iterator[Tuple[str, float, float]]:
         price_fetcher = KrakenPriceFetcher(self._api)
+        assert self._api is not None
         results = self._api.query_private("Balance")["result"]
         for symbol, units in results.items():
             units = float(units)
@@ -46,19 +49,19 @@ class Api(providers.Base):
                 rate = price_fetcher.get_last_price(demangled_symbol, self._account_ccy)
                 yield symbol, units, units * rate
 
-    def authenticate(self, credentials):
+    def authenticate(self, credentials: Credentials) -> None:
         self._api = krakenex.API(credentials.api_key, credentials.private_key)
         results = self._api.query_private("Balance")
         if results["error"]:
             raise AuthFailure(_format_error(results["error"]))
 
-    def get_balances(self):
+    def get_balances(self) -> providers.Balances:
         balance = sum(value for (_, _, value) in self._iter_balances())
         return {
             "accounts": [{"account": self._account_description(), "balance": balance}]
         }
 
-    def get_assets(self):
+    def get_assets(self) -> providers.Assets:
         return {
             "accounts": [
                 {

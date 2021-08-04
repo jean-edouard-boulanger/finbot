@@ -1,9 +1,13 @@
-from selenium.webdriver.common.by import By
-from selenium.common.exceptions import StaleElementReferenceException
 from finbot.providers.support.selenium import SeleniumHelper
 from finbot.providers.selenium_based import SeleniumBased
-from finbot.core.utils import swallow_exc
 from finbot.providers.errors import AuthFailure
+from finbot import providers
+from finbot.core.utils import swallow_exc
+
+from selenium.webdriver.common.by import By
+from selenium.common.exceptions import StaleElementReferenceException
+
+from typing import Any, Optional, Iterator
 import json
 
 
@@ -13,27 +17,27 @@ AUTH_URL = (
 
 
 class Credentials(object):
-    def __init__(self, region, account_number, password):
+    def __init__(self, region: str, account_number: str, password: str):
         self.region = region
         self.account_number = account_number
         self.password = password
 
     @property
-    def user_id(self):
+    def user_id(self) -> str:
         return self.account_number
 
     @staticmethod
-    def init(data):
+    def init(data: dict[str, Any]) -> "Credentials":
         return Credentials(data["region"], data["account_number"], data["password"])
 
 
 class Api(SeleniumBased):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.account_data = None
+    def __init__(self) -> None:
+        super().__init__()
+        self.account_data: Optional[dict[str, Any]] = None
 
-    def _iter_accounts(self):
-        def handle_account(data):
+    def _iter_accounts(self) -> Iterator[providers.BalanceEntry]:
+        def handle_account(data: dict[str, Any]) -> providers.BalanceEntry:
             return {
                 "account": {
                     "id": data["numeroCompte"].strip(),
@@ -44,12 +48,13 @@ class Api(SeleniumBased):
                 "balance": data["solde"],
             }
 
+        assert self.account_data is not None
         yield handle_account(self.account_data["comptePrincipal"])
         for line_item in self.account_data["grandesFamilles"]:
             for account_data in line_item["elementsContrats"]:
                 yield handle_account(account_data)
 
-    def authenticate(self, credentials):
+    def authenticate(self, credentials: Credentials) -> None:
         self._do.get(AUTH_URL.format(region=credentials.region))
         self._do.assert_success(
             lambda _: self._do.find_maybe(By.ID, "Login-account"),
@@ -90,7 +95,7 @@ class Api(SeleniumBased):
         ]
         self.account_data = json.loads("[" + account_data_str + "]")[0]
 
-    def get_balances(self):
+    def get_balances(self) -> providers.Balances:
         return {
             "accounts": [
                 {"account": entry["account"], "balance": entry["balance"]}
@@ -98,7 +103,7 @@ class Api(SeleniumBased):
             ]
         }
 
-    def get_assets(self):
+    def get_assets(self) -> providers.Assets:
         return {
             "accounts": [
                 {
@@ -112,27 +117,29 @@ class Api(SeleniumBased):
         }
 
 
-def _report_auth_error(error_message):
+def _report_auth_error(error_message: str) -> None:
     raise AuthFailure(error_message.replace("\n", " ").strip())
 
 
-def _get_region_error(do: SeleniumHelper):
+def _get_region_error(do: SeleniumHelper) -> Optional[str]:
     message = do.find_maybe(By.CSS_SELECTOR, "div.AemBug-content")
     if message:
-        return "La region sélectionnée est invalide"
+        return "invalid region selected"
+    return None
 
 
 @swallow_exc(StaleElementReferenceException)
-def _get_login_error(do: SeleniumHelper):
+def _get_login_error(do: SeleniumHelper) -> Optional[str]:
     error_items = [
         item
         for item in do.find_many(By.CSS_SELECTOR, "div.error")
         if item.is_displayed()
     ]
     if error_items:
-        return error_items[0].text
+        return str(error_items[0].text)
     strong_auth_items = do.find_many(
         By.XPATH, "//*[contains(text(),'authentification forte')]"
     )
     if strong_auth_items:
         return "strong authentication required"
+    return None

@@ -1,11 +1,17 @@
-from copy import deepcopy
-from price_parser import Price
-from selenium.webdriver.common.by import By
-from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
+from finbot.core.utils import swallow_exc
 from finbot.providers.selenium_based import SeleniumBased
 from finbot.providers.support.selenium import any_of, SeleniumHelper
 from finbot.providers.errors import AuthFailure
-from finbot.core.utils import swallow_exc
+from finbot import providers
+
+from price_parser import Price  # type: ignore
+
+from selenium.webdriver.common.by import By
+from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
+from selenium.webdriver.remote.webelement import WebElement
+
+from typing import Any, Optional, Iterator
+from copy import deepcopy
 import logging
 import time
 import traceback
@@ -16,25 +22,25 @@ BALANCES_URL = "https://lwp.aegon.co.uk/targetplanUI/investments"
 
 
 class Credentials(object):
-    def __init__(self, username, password):
+    def __init__(self, username: str, password: str) -> None:
         self.username = username
         self.password = password
 
     @property
-    def user_id(self):
+    def user_id(self) -> str:
         return self.username
 
     @staticmethod
-    def init(data):
+    def init(data: dict[str, Any]) -> "Credentials":
         return Credentials(data["username"], data["password"])
 
 
 class Api(SeleniumBased):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.accounts = None
+    def __init__(self) -> None:
+        super().__init__()
+        self.accounts: Optional[dict[str, providers.Account]] = None
 
-    def _go_home(self):
+    def _go_home(self) -> None:
         (
             self._do.find(By.CSS_SELECTOR, "div#navbarSupportedContent")
             .find_element(By.CSS_SELECTOR, "div.dropdown")
@@ -42,7 +48,7 @@ class Api(SeleniumBased):
             .click()
         )
 
-    def _switch_account(self, account_id):
+    def _switch_account(self, account_id: str) -> Any:
         self._go_home()
         accounts_elements = _wait_accounts(self._do)
         for entry in _iter_accounts(accounts_elements):
@@ -81,8 +87,8 @@ class Api(SeleniumBased):
                         )
         raise RuntimeError(f"unknown account {account_id}")
 
-    def authenticate(self, credentials):
-        def impl(wait_time):
+    def authenticate(self, credentials: Credentials) -> None:
+        def impl(wait_time: float) -> None:
             self._do.get(AUTH_URL)
 
             # 1. Enter credentials and submit (after specified time period)
@@ -129,7 +135,7 @@ class Api(SeleniumBased):
                 pass
         raise RuntimeError(f"unable to login after {trials} trials")
 
-    def get_balances(self):
+    def get_balances(self) -> providers.Balances:
         self._go_home()
         accounts_elements = _wait_accounts(self._do)
         return {
@@ -139,8 +145,10 @@ class Api(SeleniumBased):
             ]
         }
 
-    def get_assets(self):
-        def get_account_assets(account_id, account):
+    def get_assets(self) -> providers.Assets:
+        def get_account_assets(
+            account_id: str, account: providers.Account
+        ) -> providers.AssetEntry:
             self._switch_account(account_id)
             assets_table_body = self._do.find(
                 By.CSS_SELECTOR, "table.table-invs-allocation > tbody"
@@ -150,6 +158,7 @@ class Api(SeleniumBased):
                 "assets": [asset for asset in _iter_assets(assets_table_body)],
             }
 
+        assert self.accounts is not None
         return {
             "accounts": [
                 get_account_assets(account_id, account)
@@ -159,13 +168,15 @@ class Api(SeleniumBased):
 
 
 @swallow_exc(StaleElementReferenceException)
-def _get_login_error(do: SeleniumHelper):
+def _get_login_error(do: SeleniumHelper) -> Optional[str]:
     error_area = do.find_maybe(By.ID, "error-container-wrapper")
     if error_area and error_area.is_displayed():
-        return error_area.text.strip()
+        error_message: str = error_area.text.strip()
+        return error_message
+    return None
 
 
-def _get_allocations_table(do: SeleniumHelper):
+def _get_allocations_table(do: SeleniumHelper) -> Optional[WebElement]:
     return do.find_maybe(By.CSS_SELECTOR, "table.table-invs-allocation")
 
 
@@ -173,19 +184,19 @@ def _is_maintenance(current_url: str) -> bool:
     return "maintenance" in current_url
 
 
-def _is_logged_in(do: SeleniumHelper):
+def _is_logged_in(do: SeleniumHelper) -> bool:
     avatar_area = do.find_maybe(By.CSS_SELECTOR, "a#nav-primary-profile")
     return avatar_area is not None
 
 
-def _wait_accounts(do: SeleniumHelper):
+def _wait_accounts(do: SeleniumHelper) -> list[WebElement]:
     accounts_xpath = "//div[contains(@class,'card-product-')]"
     do.wait_element(By.XPATH, accounts_xpath, timeout=120)
     return do.find_many(By.XPATH, accounts_xpath)
 
 
-def _iter_accounts(accounts_elements):
-    def extract_account(account_card):
+def _iter_accounts(accounts_elements: list[WebElement]) -> list[dict[str, Any]]:
+    def extract_account(account_card: WebElement) -> dict[str, Any]:
         card_body = account_card.find_element(By.CSS_SELECTOR, "div.card-body")
         card_footer = account_card.find_element(By.CSS_SELECTOR, "div.card-footer")
         account_id = card_footer.text.strip().split(" ")[-1]
@@ -210,7 +221,7 @@ def _iter_accounts(accounts_elements):
     return [extract_account(account_card) for account_card in accounts_elements]
 
 
-def _iter_assets(assets_table_body):
+def _iter_assets(assets_table_body: WebElement) -> Iterator[providers.Asset]:
     for row in assets_table_body.find_elements(By.TAG_NAME, "tr"):
         cells = row.find_elements(By.TAG_NAME, "td")
         asset_name = (
