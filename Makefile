@@ -196,6 +196,7 @@ py-mypy:
 	mypy --strict -p finbot.core;
 	mypy --strict -p finbot.model;
 	mypy --strict -p finbot.apps.support;
+	mypy --strict -p finbot.providers;
 
 py-banned-keywords-check:
 	tools/banned-keywords.py --source-dirs finbot

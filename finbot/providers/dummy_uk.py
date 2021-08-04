@@ -1,19 +1,21 @@
 from finbot import providers
+
 from copy import deepcopy
+from typing import Any
 
 
 class Credentials(object):
     @property
-    def user_id(self):
+    def user_id(self) -> str:
         return "dummy"
 
     @staticmethod
-    def init(_):
+    def init(_: Any) -> "Credentials":
         return Credentials()
 
 
-DUMMY_BALANCE = 1000.0
-DUMMY_ACCOUNT = {
+DUMMY_BALANCE: float = 1000.0
+DUMMY_ACCOUNT: providers.Account = {
     "id": "dummy",
     "name": "Dummy account",
     "iso_currency": "GBP",
@@ -22,13 +24,13 @@ DUMMY_ACCOUNT = {
 
 
 class Api(providers.Base):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self) -> None:
+        super().__init__()
 
-    def authenticate(self, _):
+    def authenticate(self, _: Any) -> None:
         pass
 
-    def get_balances(self):
+    def get_balances(self) -> providers.Balances:
         return {
             "accounts": [
                 {
@@ -38,7 +40,7 @@ class Api(providers.Base):
             ]
         }
 
-    def get_assets(self):
+    def get_assets(self) -> providers.Assets:
         return {
             "accounts": [
                 {

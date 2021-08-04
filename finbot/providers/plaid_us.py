@@ -1,27 +1,27 @@
+from finbot import providers
 from finbot.model import UserAccountPlaidSettings
 from finbot.core.utils import serialize
 
 from plaid import Client as PlaidClient
 
-from typing import Optional
-from finbot import providers
-
+from typing import Optional, Any
 from datetime import datetime
 
 
 def pack_credentials(
-    db_settings: dict, plaid_settings: UserAccountPlaidSettings
-) -> dict:
-    return serialize(
+    db_settings: dict[Any, Any], plaid_settings: UserAccountPlaidSettings
+) -> dict[str, Any]:
+    output: dict[str, Any] = serialize(
         {
             "access_token": str(db_settings["access_token"]),
             "item_id": str(db_settings["item_id"]),
             "plaid_settings": plaid_settings,
         }
     )
+    return output
 
 
-def create_plaid_client(plaid_settings: UserAccountPlaidSettings):
+def create_plaid_client(plaid_settings: UserAccountPlaidSettings) -> PlaidClient:
     return PlaidClient(
         client_id=plaid_settings.client_id,
         secret=plaid_settings.secret_key,
@@ -29,7 +29,7 @@ def create_plaid_client(plaid_settings: UserAccountPlaidSettings):
     )
 
 
-def make_account(account: dict):
+def make_account(account: dict[str, Any]) -> providers.Account:
     return {
         "id": account["name"],
         "name": account["name"],
@@ -41,17 +41,17 @@ def make_account(account: dict):
 class Credentials(object):
     def __init__(
         self, item_id: str, access_token: str, plaid_settings: UserAccountPlaidSettings
-    ):
+    ) -> None:
         self.item_id = item_id
         self.access_token = access_token
         self.plaid_settings = plaid_settings
 
     @property
-    def user_id(self):
+    def user_id(self) -> str:
         return "<private>"
 
     @staticmethod
-    def init(data):
+    def init(data: dict[Any, Any]) -> "Credentials":
         settings = data["plaid_settings"]
         return Credentials(
             item_id=data["item_id"],
@@ -69,21 +69,22 @@ class Credentials(object):
 
 
 class Api(providers.Base):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self._accounts: Optional[dict] = None
+    def __init__(self) -> None:
+        super().__init__()
+        self._accounts: Optional[dict[Any, Any]] = None
 
     @property
-    def accounts(self) -> dict:
+    def accounts(self) -> list[dict[str, Any]]:
         assert self._accounts is not None
-        return self._accounts["accounts"]
+        accounts: list[dict[Any, Any]] = self._accounts["accounts"]
+        return accounts
 
-    def authenticate(self, credentials: Credentials):
+    def authenticate(self, credentials: Credentials) -> None:
         plaid_settings = credentials.plaid_settings
         client = create_plaid_client(plaid_settings)
         self._accounts = client.Accounts.get(credentials.access_token)
 
-    def get_balances(self) -> dict:
+    def get_balances(self) -> providers.Balances:
         return {
             "accounts": [
                 {
@@ -95,7 +96,7 @@ class Api(providers.Base):
             ]
         }
 
-    def get_assets(self) -> dict:
+    def get_assets(self) -> providers.Assets:
         return {
             "accounts": [
                 {
@@ -113,7 +114,7 @@ class Api(providers.Base):
             ]
         }
 
-    def get_liabilities(self) -> dict:
+    def get_liabilities(self) -> providers.Liabilities:
         return {
             "accounts": [
                 {

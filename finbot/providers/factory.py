@@ -15,7 +15,7 @@ from finbot.providers import (
 
 
 class Provider(object):
-    def __init__(self, description: str, api_module: Any):
+    def __init__(self, description: str, api_module: Any) -> None:
         self.description = description
         self.api_module = api_module
 
@@ -41,7 +41,7 @@ PROVIDERS = {
 }
 
 
-def get_provider(provider_id):
+def get_provider(provider_id: str) -> Provider:
     provider = PROVIDERS.get(provider_id)
     if provider is None:
         raise KeyError(f"unknown provider: {provider_id}")

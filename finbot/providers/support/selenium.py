@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Callable, Any
 from functools import wraps
 from os.path import expanduser
 
@@ -7,17 +7,16 @@ from selenium.webdriver.support.expected_conditions import presence_of_element_l
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.remote.webelement import WebElement
 
+from undetected_chromedriver.v2 import Chrome, ChromeOptions
 import filelock
 
 
 class DefaultBrowserFactory(object):
-    def __init__(self, headless=True, developer_tools=False):
+    def __init__(self, headless: bool = True, developer_tools: bool = False) -> None:
         self.headless = headless
         self.developer_tools = developer_tools
 
-    def __call__(self):
-        from undetected_chromedriver.v2 import Chrome, ChromeOptions
-
+    def __call__(self) -> Chrome:
         options = ChromeOptions()
         options.add_argument("--no-first-run")
         options.add_argument("--password-store=basic")
@@ -35,9 +34,9 @@ class DefaultBrowserFactory(object):
             return Chrome(options=options)
 
 
-def _safe_cond(cond):
+def _safe_cond(cond: Callable[..., Any]) -> Callable[..., Any]:
     @wraps(cond)
-    def impl(*args, **kwargs):
+    def impl(*args: Any, **kwargs: Any) -> Any:
         try:
             return cond(*args, **kwargs)
         except Exception:
@@ -47,27 +46,11 @@ def _safe_cond(cond):
 
 
 class any_of(object):
-    def __init__(self, *args):
+    def __init__(self, *args: Any) -> None:
         self.conds = [_safe_cond(cond) for cond in args]
 
-    def __call__(self, driver):
+    def __call__(self, driver: WebDriver) -> bool:
         return any(cond(driver) for cond in self.conds)
-
-
-class all_of(object):
-    def __init__(self, *args):
-        self.conds = [_safe_cond(cond) for cond in args]
-
-    def __call__(self, driver):
-        return all(cond(driver) for cond in self.conds)
-
-
-class negate(object):
-    def __init__(self, cond):
-        self.cond = _safe_cond(cond)
-
-    def __call__(self, driver):
-        return not (self.cond(driver))
 
 
 class SeleniumHelper(object):
@@ -75,7 +58,7 @@ class SeleniumHelper(object):
         self.browser = browser
 
     @property
-    def current_url(self):
+    def current_url(self) -> Any:
         return self.browser.current_url
 
     @property
@@ -85,45 +68,51 @@ class SeleniumHelper(object):
             for cookie in self.browser.get_cookies()
         }
 
-    def get(self, url) -> None:
+    def get(self, url: str) -> None:
         self.browser.get(url)
 
-    def wait(self, timeout=60):
+    def wait(self, timeout: int = 60) -> WebDriverWait:
         return WebDriverWait(self.browser, timeout)
 
-    def wait_element(self, by, selector, timeout=60) -> WebElement:
+    def wait_element(self, by: str, selector: str, timeout: int = 60) -> WebElement:
         return self.wait(timeout).until(presence_of_element_located((by, selector)))
 
-    def wait_cond(self, cond, timeout=60):
+    def wait_cond(self, cond: Callable[..., Optional[Any]], timeout: int = 60) -> Any:
         return self.wait(timeout).until(cond)
 
-    def find(self, by, selector) -> WebElement:
+    def find(self, by: str, selector: str) -> WebElement:
         return self.browser.find_element(by, selector)
 
-    def find_many(self, by, selector) -> list[WebElement]:
-        return self.browser.find_elements(by, selector)
+    def find_many(self, by: str, selector: str) -> list[WebElement]:
+        results: list[WebElement] = self.browser.find_elements(by, selector)
+        return results
 
-    def find_maybe(self, by, selector) -> Optional[WebElement]:
+    def find_maybe(self, by: str, selector: str) -> Optional[WebElement]:
         all_elements = self.find_many(by, selector)
         if not all_elements:
             return None
         return all_elements[0]
 
-    def execute_script(self, *args, **kwargs):
+    def execute_script(self, *args: Any, **kwargs: Any) -> Any:
         return self.browser.execute_script(*args, **kwargs)
 
-    def click(self, element: WebElement):
+    def click(self, element: WebElement) -> None:
         self.execute_script("arguments[0].click();", element)
 
-    def dump_html(self, element: WebElement):
-        return element.get_attribute("innerHTML")
+    def dump_html(self, element: WebElement) -> str:
+        result: str = element.get_attribute("innerHTML")
+        return result
 
-    def save_screenshot(self, name: str):
+    def save_screenshot(self, name: str) -> Any:
         return self.browser.save_screenshot(name)
 
     def assert_success(
-        self, success_predicate, failure_predicate, on_failure=None, timeout=60
-    ):
+        self,
+        success_predicate: Callable[..., Optional[Any]],
+        failure_predicate: Callable[..., Optional[Any]],
+        on_failure: Optional[Callable[..., Any]] = None,
+        timeout: int = 60,
+    ) -> Any:
         on_failure = on_failure or (lambda _: None)
         self.wait_cond(
             any_of(
