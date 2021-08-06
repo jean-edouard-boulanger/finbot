@@ -9,6 +9,7 @@ from finbot.providers import (
     lending_works_uk,
     kraken_us,
     bittrex_us,
+    qonto_us,
     google_sheets,
     dummy_uk,
 )
@@ -38,6 +39,7 @@ PROVIDERS = {
     "bittrex_us": Provider(description="Bittrex (US)", api_module=bittrex_us),
     "google_sheets": Provider(description="Google Sheets", api_module=google_sheets),
     "dummy_uk": Provider(description="Dummy (fake) provider", api_module=dummy_uk),
+    "qonto_us": Provider(description="Qonto (US)", api_module=qonto_us),
 }
 
 
