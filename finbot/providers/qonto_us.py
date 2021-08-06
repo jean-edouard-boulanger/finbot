@@ -103,8 +103,8 @@ def _get_accounts(header_elem: WebElement) -> providers.Balances:
 def _get_login_error(do: SeleniumHelper) -> Optional[str]:
     error_elem = do.find_maybe(By.CSS_SELECTOR, "div.x-error__message")
     if error_elem and error_elem.is_displayed():
-        result: str = error_elem.text.replace("\n", " ").strip()
-        return result
+        error_message: str = error_elem.text.replace("\n", " ").strip()
+        return error_message
     return None
 
 
