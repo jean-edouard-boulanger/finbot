@@ -42,7 +42,7 @@ run-snapwsrv-dev:
 run-appwsrv-dev:
 	tools/run-web-app.sh \
 		--app appwsrv \
-  		--timeout 5 \
+  		--timeout 600 \
 		--port 5003
 
 docker-build-runtime:
