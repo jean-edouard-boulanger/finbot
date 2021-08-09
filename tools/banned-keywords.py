@@ -14,6 +14,7 @@ class Rule:
     match_files: list[str]
     banned_pattern: Pattern[str]
     message: Optional[str] = None
+    ignore_files: Optional[list[str]] = None
 
 
 RULES: list[Rule] = [
@@ -33,6 +34,18 @@ RULES: list[Rule] = [
         match_files=["*.py"],
         banned_pattern=re.compile(r"import(.+)(List|(?<!Typed)Dict)|Dict\[|List\["),
         message="As of python3.9, dict and list type hints may be used installed of Dict and List",
+    ),
+    Rule(
+        match_files=["*.py"],
+        ignore_files=["finbot/core/web_service.py"],
+        banned_pattern=re.compile(r"jsonify\("),
+        message="Finbot web services should not call Flask jsonify (this is automatically done upstream)",
+    ),
+    Rule(
+        match_files=["*.py"],
+        ignore_files=["finbot/core/utils.py"],
+        banned_pattern=re.compile("stackprinter"),
+        message="Please use utils.format_stack instead of stackprinter",
     ),
 ]
 
@@ -66,11 +79,26 @@ def check_source_file(file_path: Path, rules: list[Rule]) -> list[Error]:
     return errors
 
 
+def file_matches_any_pattern(file_path: Path, patterns: Optional[list[str]]):
+    if not patterns:
+        return None
+    for pattern in patterns:
+        if fnmatch.fnmatch(str(file_path), pattern):
+            return True
+        return False
+
+
+def should_match_file_against_rule(file_path: Path, rule: Rule):
+    return file_matches_any_pattern(
+        file_path, rule.match_files
+    ) and not file_matches_any_pattern(file_path, rule.ignore_files)
+
+
 def handle_source_file(file_path: Path) -> list[Error]:
     errors = []
     matching_rules = []
     for rule in RULES:
-        if any(fnmatch.fnmatch(file_path, pattern) for pattern in rule.match_files):
+        if should_match_file_against_rule(file_path, rule):
             matching_rules.append(rule)
     if matching_rules:
         errors += check_source_file(file_path, matching_rules)
@@ -121,7 +149,7 @@ def main():
         errors += handle_source_dir(Path(source_dir))
     if errors:
         for error in errors:
-            print(display_error_message(error))
+            display_error_message(error)
             print(f"{error.line_number} | {error.line.rstrip()}")
             spacing = len(f"{error.line_number} | ") + error.start_column
             print(

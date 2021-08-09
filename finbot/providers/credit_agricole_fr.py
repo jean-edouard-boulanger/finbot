@@ -1,6 +1,6 @@
 from finbot.providers.support.selenium import SeleniumHelper
 from finbot.providers.selenium_based import SeleniumBased
-from finbot.providers.errors import AuthFailure
+from finbot.providers.errors import AuthenticationFailure
 from finbot import providers
 from finbot.core.utils import swallow_exc
 
@@ -118,7 +118,7 @@ class Api(SeleniumBased):
 
 
 def _report_auth_error(error_message: str) -> None:
-    raise AuthFailure(error_message.replace("\n", " ").strip())
+    raise AuthenticationFailure(error_message.replace("\n", " ").strip())
 
 
 def _get_region_error(do: SeleniumHelper) -> Optional[str]:

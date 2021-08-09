@@ -1,14 +1,15 @@
 #!/usr/bin/env python3.9
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
-from finbot.core.utils import configure_logging
+from finbot.core.logging import configure_logging
 from finbot.core.environment import get_database_url
 from finbot.model import (
     Base,
     Provider,
     UserAccountHistoryEntry,
 )
-import logging.config
+
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine
+
 import logging
 import datetime
 import argparse

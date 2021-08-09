@@ -11,10 +11,6 @@ class LineItem(Enum):
     Liabilities = "liabilities"
 
 
-class Error(RuntimeError):
-    pass
-
-
 class FinbotClient(ClientBase):
     def __init__(self, server_endpoint: str):
         super().__init__(server_endpoint)

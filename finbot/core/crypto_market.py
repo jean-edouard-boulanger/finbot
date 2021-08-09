@@ -1,10 +1,11 @@
+from finbot.core.errors import FinbotError
 from finbot.core import tracer
 
 from functools import lru_cache
 from pycoingecko import CoinGeckoAPI
 
 
-class Error(RuntimeError):
+class Error(FinbotError):
     pass
 
 

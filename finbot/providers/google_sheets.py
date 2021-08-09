@@ -1,11 +1,16 @@
+from finbot.core.errors import FinbotError
 from finbot import providers
-from finbot.providers.errors import Error
 
 from oauth2client.service_account import ServiceAccountCredentials
 import gspread
 
 from typing import Any, Optional, Iterator, TypedDict, Callable, Union, Type
 from collections import defaultdict
+
+
+class Error(FinbotError):
+    def __init__(self, error_message: str):
+        super().__init__(error_message)
 
 
 class Credentials(object):

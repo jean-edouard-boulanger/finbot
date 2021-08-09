@@ -2,14 +2,14 @@ from finbot.clients import sched as sched_client
 from finbot.apps.schedsrv.handler import RequestHandler
 from finbot.clients import SnapClient, HistoryClient
 from finbot.core import dbutils, tracer, environment
-from finbot.core.utils import configure_logging
+from finbot.core.logging import configure_logging
+from finbot.core.utils import format_stack
 from finbot.model import UserAccount
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
 import zmq
 import schedule
-import stackprinter
 
 from datetime import timedelta
 from typing import Optional
@@ -21,10 +21,9 @@ import signal
 import logging
 
 
-configure_logging()
-
-
 FINBOT_ENV = environment.get()
+configure_logging(FINBOT_ENV.desired_log_level)
+
 db_engine = create_engine(FINBOT_ENV.database_url)
 db_session = dbutils.add_persist_utilities(scoped_session(sessionmaker(bind=db_engine)))
 tracer.configure(
@@ -61,7 +60,7 @@ def run_one_shot(handler: RequestHandler, accounts_ids: list[int]):
                 logging.warning(
                     f"failure while running workflow for "
                     f"user_id={user_account.id}: {e}, "
-                    f"trace: \n{stackprinter.format()}"
+                    f"trace: \n{format_stack()}"
                 )
 
 
@@ -94,7 +93,7 @@ class ValuationWorkerThread(threading.Thread):
             logging.warning(
                 f"[valuation worker thread] swallowed exception "
                 f"while handling valuation in worker thread: {e}, "
-                f"trace: \n{stackprinter.format()}"
+                f"trace: \n{format_stack()}"
             )
 
     def run(self):
@@ -262,7 +261,7 @@ def main():
         main_impl()
         return 0
     except Exception:
-        logging.error(f"fatal error while running schedsrv: \n{stackprinter.format()}")
+        logging.error(f"fatal error while running schedsrv: \n{format_stack()}")
         return 1
 
 

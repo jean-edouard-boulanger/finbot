@@ -1,6 +1,6 @@
 from finbot import providers
 from finbot.core.crypto_market import CoinGeckoWrapper
-from finbot.providers.errors import AuthFailure
+from finbot.providers.errors import AuthenticationFailure
 
 from pycoingecko import CoinGeckoAPI
 from bittrex.bittrex import Bittrex
@@ -56,7 +56,7 @@ class Api(providers.Base):
         self._api = Bittrex(credentials.api_key, credentials.private_key)
         results = self._api.get_balances()
         if not results["success"]:
-            raise AuthFailure(results["message"])
+            raise AuthenticationFailure(results["message"])
 
     def get_balances(self) -> providers.Balances:
         balance = sum(value for (_, _, value) in self._iter_balances())

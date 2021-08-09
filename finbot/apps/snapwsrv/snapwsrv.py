@@ -1,17 +1,10 @@
-from concurrent.futures import ThreadPoolExecutor
-from decimal import Decimal
-from dataclasses import dataclass
-from typing import Optional, Tuple, Any
-from flask import Flask, jsonify, request
-from sqlalchemy import create_engine
-from sqlalchemy.orm import scoped_session, sessionmaker, joinedload
-from copy import deepcopy
-
 from finbot.clients.finbot import FinbotClient, LineItem
 from finbot.providers.plaid_us import pack_credentials as pack_plaid_credentials
 from finbot.core import secure, utils, dbutils, fx_market, tracer, environment
-from finbot.core.utils import configure_logging, unwrap_optional
-from finbot.apps.support import request_handler, make_error
+from finbot.core.utils import unwrap_optional, format_stack
+from finbot.core.logging import configure_logging
+from finbot.core.web_service import service_endpoint, ApplicationErrorData
+from finbot.core.serialization import pretty_dump
 from finbot.model import (
     UserAccount,
     UserAccountSnapshot,
@@ -23,16 +16,24 @@ from finbot.model import (
     SubAccountItemType,
     XccyRateSnapshotEntry,
 )
-import logging.config
+
+from flask import Flask, request
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session, sessionmaker, joinedload
+
+from concurrent.futures import ThreadPoolExecutor
+from decimal import Decimal
+from dataclasses import dataclass
+from typing import Optional, Tuple, Any
+from copy import deepcopy
 import logging
 import json
-import stackprinter
-
-
-configure_logging()
 
 
 FINBOT_ENV = environment.get()
+configure_logging(FINBOT_ENV.desired_log_level)
+
 db_engine = create_engine(FINBOT_ENV.database_url)
 db_session = dbutils.add_persist_utilities(scoped_session(sessionmaker(bind=db_engine)))
 tracer.configure(
@@ -237,18 +238,14 @@ def dispatch_snapshot_entry(snap_request: AccountSnapshotRequest):
 
         return snap_request, account_snapshot
     except Exception as e:
-        trace = stackprinter.format()
+        trace = format_stack(e)
         logging.warning(
             f"fatal error while taking snapshot for account_id={snap_request.account_id}"
             f" provider_id={snap_request.provider_id}"
             f" error: {e}"
             f" trace:\n{trace}"
         )
-        return snap_request, make_error(
-            user_message="error while taking account snapshot",
-            debug_message=str(e),
-            trace=trace,
-        )
+        return snap_request, ApplicationErrorData.from_exception(e)
 
 
 def get_credentials_data(linked_account: LinkedAccount, user_account: UserAccount):
@@ -346,7 +343,7 @@ def take_snapshot_impl(user_account_id: int, linked_accounts: Optional[list[int]
         raw_snapshot = take_raw_snapshot(
             user_account=user_account, linked_accounts=linked_accounts
         )
-        logging.debug(utils.pretty_dump(raw_snapshot))
+        logging.debug(pretty_dump(raw_snapshot))
         step.set_output(raw_snapshot)
 
     with tracer.sub_step("fetch currency pairs") as step:
@@ -380,30 +377,28 @@ def take_snapshot_impl(user_account_id: int, linked_accounts: Optional[list[int]
         new_snapshot.status = SnapshotStatus.Success
         new_snapshot.end_time = utils.now_utc()
 
-    return jsonify(
-        {
-            "snapshot": {
-                "identifier": new_snapshot.id,
-                "start_time": new_snapshot.start_time.isoformat(),
-                "end_time": new_snapshot.end_time.isoformat(),
-                "results_count": {
-                    "total": snapshot_builder.results_count.total,
-                    "success": snapshot_builder.results_count.success,
-                    "failures": snapshot_builder.results_count.failures,
-                },
-            }
+    return {
+        "snapshot": {
+            "identifier": new_snapshot.id,
+            "start_time": new_snapshot.start_time.isoformat(),
+            "end_time": new_snapshot.end_time.isoformat(),
+            "results_count": {
+                "total": snapshot_builder.results_count.total,
+                "success": snapshot_builder.results_count.success,
+                "failures": snapshot_builder.results_count.failures,
+            },
         }
-    )
+    }
 
 
 @app.route("/healthy", methods=["GET"])
-@request_handler()
+@service_endpoint()
 def healthy():
-    return jsonify({"healthy": True})
+    return {"healthy": True}
 
 
 @app.route("/snapshot/<user_account_id>/take", methods=["POST"])
-@request_handler(
+@service_endpoint(
     schema={
         "type": ["object", "null"],
         "additionalProperties": True,

@@ -1,11 +1,13 @@
 from typing import Optional
 
-from finbot.apps.support import ApplicationError
 from finbot.clients.finbot import FinbotClient
 from finbot.model import UserAccountPlaidSettings
+from finbot.apps.finbotwsrv.errors import AuthenticationFailure
 from finbot.providers.plaid_us import pack_credentials as pack_plaid_credentials
 
 from plaid import Client as PlaidClient
+
+import logging
 
 
 def validate_credentials(
@@ -21,8 +23,9 @@ def validate_credentials(
         provider=provider_id, credentials_data=credentials, line_items=[]
     )
     if "error" in finbot_response:
+        logging.info(finbot_response)
         user_message = finbot_response["error"]["user_message"]
-        raise ApplicationError(
+        raise AuthenticationFailure(
             f"Unable to validate provided credentials ({user_message})"
         )
 

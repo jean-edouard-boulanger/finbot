@@ -1,6 +1,7 @@
-from finbot.apps.support import request_handler
 from finbot.apps.histwsrv import repository
-from finbot.core.utils import serialize, pretty_dump, configure_logging
+from finbot.core.web_service import service_endpoint
+from finbot.core.serialization import pretty_dump
+from finbot.core.logging import configure_logging
 from finbot.core import dbutils, tracer, environment
 from finbot.model import (
     UserAccountSnapshot,
@@ -11,7 +12,7 @@ from finbot.model import (
     SubAccountItemValuationHistoryEntry,
 )
 
-from flask import Flask, jsonify
+from flask import Flask
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 import pandas as pd
@@ -20,10 +21,9 @@ from typing import Any
 import logging
 
 
-configure_logging()
-
-
 FINBOT_ENV = environment.get()
+configure_logging(FINBOT_ENV.desired_log_level)
+
 db_engine = create_engine(FINBOT_ENV.database_url)
 db_session = dbutils.add_persist_utilities(scoped_session(sessionmaker(bind=db_engine)))
 tracer.configure(
@@ -86,13 +86,13 @@ def cleanup_context(*args, **kwargs):
 
 
 @app.route("/healthy", methods=["GET"])
-@request_handler()
+@service_endpoint()
 def healthy():
-    return jsonify({"healthy": True})
+    return {"healthy": True}
 
 
 @app.route("/history/<snapshot_id>/write", methods=["POST"])
-@request_handler()
+@service_endpoint()
 def write_history(snapshot_id):
     tracer.current().set_input({"snapshot_id": snapshot_id})
     repo = repository.ReportRepository(db_session)
@@ -271,16 +271,12 @@ def write_history(snapshot_id):
 
     logging.info("new history entry added and enabled successfully")
 
-    return jsonify(
-        serialize(
-            {
-                "report": {
-                    "history_entry_id": history_entry.id,
-                    "valuation_date": valuation_date,
-                    "valuation_currency": history_entry.valuation_ccy,
-                    "user_account_valuation": user_account_valuation,
-                    "valuation_change": user_account_valuation_change,
-                }
-            }
-        )
-    )
+    return {
+        "report": {
+            "history_entry_id": history_entry.id,
+            "valuation_date": valuation_date,
+            "valuation_currency": history_entry.valuation_ccy,
+            "user_account_valuation": user_account_valuation,
+            "valuation_change": user_account_valuation_change,
+        }
+    }

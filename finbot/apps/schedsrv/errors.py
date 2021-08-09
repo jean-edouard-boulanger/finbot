@@ -1,6 +1,5 @@
-class Error(RuntimeError):
-    pass
+from finbot.core.errors import FinbotError
 
 
-class WorkflowError(Error):
+class WorkflowError(FinbotError):
     pass

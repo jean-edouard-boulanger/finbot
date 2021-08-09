@@ -1,12 +1,13 @@
-from finbot.core.utils import serialize
+from finbot.core.errors import FinbotError
+from finbot.core.serialization import serialize
 
 from typing import Optional, Any
-from requests.exceptions import RequestException
+import requests.exceptions
 import requests
 import json
 
 
-class Error(RuntimeError):
+class ClientError(FinbotError):
     pass
 
 
@@ -19,13 +20,13 @@ class Base(object):
     ) -> dict:
         resource = f"{self._endpoint}/{route}"
         if not hasattr(requests, verb.lower()):
-            raise Error(f"unexpected verb: {verb} (while calling {resource})")
+            raise ClientError(f"unexpected verb: {verb} (while calling {resource})")
         dispatcher = getattr(requests, verb.lower())
         try:
             response = dispatcher(resource, json=serialize(payload))
             response.raise_for_status()
-        except RequestException as e:
-            raise Error(f"error while sending request to {resource}: {e}")
+        except requests.exceptions.RequestException as e:
+            raise ClientError(f"error while sending request to {resource}: {e}")
         return json.loads(response.content)
 
     def get(self, route: str) -> dict[Any, Any]:

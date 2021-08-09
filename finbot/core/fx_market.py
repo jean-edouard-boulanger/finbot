@@ -1,3 +1,4 @@
+from finbot.core.errors import FinbotError
 from finbot.core.environment import get_fcsapi_key
 from finbot.core import tracer
 
@@ -22,7 +23,7 @@ class Xccy(object):
         return {"domestic": self.domestic, "foreign": self.foreign}
 
 
-class Error(RuntimeError):
+class Error(FinbotError):
     pass
 
 
