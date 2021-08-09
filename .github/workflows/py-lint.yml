@@ -49,7 +49,7 @@ jobs:
       - name: Install Python dependencies
         run: python3.9 -m pip install -r requirements.txt
       - name: mypy lint
-        run: make py-mypy
+        run: make mypy
   banned-keywords-check:
     runs-on: ubuntu-latest
     steps:
@@ -59,4 +59,4 @@ jobs:
         with:
           python-version: 3.9
       - name: Check banned keywords (Python)
-        run: make py-banned-keywords-check
+        run: make banned-keywords-check-py

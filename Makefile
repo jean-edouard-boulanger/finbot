@@ -170,45 +170,45 @@ docker-dev:
 py-unit-tests:
 	python3.9 -m pytest tests/unit_tests
 
-js-prettier:
+prettier-js:
 	cd webapp && npm run prettier
 
-js-prettier-check:
+prettier-check-js:
 	cd webapp && npm run prettier-check
 
-js-eslint:
+eslint:
 	cd webapp && npm run lint-check:prod
 
-js-banned-keywords-check:
+banned-keywords-check-js:
 	tools/banned-keywords.py --source-dirs webapp/src
 
-py-flake8:
+flake8:
 	flake8 --exclude migrations/ --max-line-length 100
 
-py-black-check:
+black-check:
 	black --check $(BLACK_SETTINGS)
 
-py-black:
+black:
 	black $(BLACK_SETTINGS)
 
-py-mypy:
+mypy:
 	mypy -p finbot;
 	mypy --strict -p finbot.core;
 	mypy --strict -p finbot.model;
 	mypy --strict -p finbot.apps.support;
 	mypy --strict -p finbot.providers;
 
-py-banned-keywords-check:
+banned-keywords-check-py:
 	tools/banned-keywords.py --source-dirs finbot
 
-sh-lint:
+lint-sh:
 	grep -rl '^#!/.*bash' --exclude-dir=webapp --exclude-dir='./.*' . |\
  		xargs shellcheck -e SC1090 -e SC1091 -S style
 
-py-lint: py-mypy py-flake8 py-black-check py-banned-keywords-check
-js-lint: js-eslint js-prettier-check js-banned-keywords-check
-lint: py-lint js-lint sh-lint
+lint-js: mypy flake8 black-check banned-keywords-check-py
+lint-py: eslint prettier-check-js banned-keywords-check-js
+lint: lint-py lint-js lint-sh
 
-py-format: py-black
-js-format: js-prettier
-format: py-format js-format
+format-py: black
+format-js: prettier-js
+format-all: format-py format-js
