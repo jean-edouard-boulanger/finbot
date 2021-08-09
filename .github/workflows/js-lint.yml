@@ -45,4 +45,4 @@ jobs:
         with:
           python-version: 3.9
       - name: Check banned keywords (JS)
-        run: make js-banned-keywords-check
+        run: make banned-keywords-check-js

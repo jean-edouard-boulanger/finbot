@@ -5,6 +5,7 @@ from finbot.model import (
     UserAccount,
     UserAccountSettings,
     UserAccountSnapshot,
+    LinkedAccountSnapshotEntry,
     UserAccountPlaidSettings,
     UserAccountHistoryEntry,
     UserAccountValuationHistoryEntry,
@@ -16,7 +17,7 @@ from finbot.model import (
 
 from collections import defaultdict
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Any
 from sqlalchemy import asc, desc
 from sqlalchemy.orm import joinedload
 import logging
@@ -120,7 +121,9 @@ def find_linked_accounts_historical_valuation(
     return results
 
 
-def get_linked_accounts_statuses(session, user_account_id: int) -> dict[int, str]:
+def get_linked_accounts_statuses(
+    session, user_account_id: int
+) -> dict[int, dict[str, Any]]:
     last_snapshot = (
         session.query(UserAccountSnapshot)
         .filter_by(user_account_id=user_account_id)
@@ -130,15 +133,20 @@ def get_linked_accounts_statuses(session, user_account_id: int) -> dict[int, str
         .limit(1)
         .one_or_none()
     )
-    output: dict[int, str] = {}
+    output: dict[int, dict[str, Any]] = {}
     if not last_snapshot:
         return output
+    entry: LinkedAccountSnapshotEntry
     for entry in last_snapshot.linked_accounts_entries:
         linked_account_id = entry.linked_account_id
-        if entry.success:
-            output[linked_account_id] = "stable"
-        else:
-            output[linked_account_id] = "unstable"
+        if linked_account_id is not None:
+            if entry.success:
+                output[linked_account_id] = {"status": "stable", "errors": None}
+            else:
+                output[linked_account_id] = {
+                    "status": "unstable",
+                    "errors": entry.failure_details,
+                }
     return output
 
 

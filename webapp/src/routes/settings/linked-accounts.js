@@ -7,6 +7,7 @@ import {
   Link,
   matchPath,
   useParams,
+  useHistory,
 } from "react-router-dom";
 import {
   FaExclamationCircle,
@@ -17,8 +18,9 @@ import {
 import { ServicesContext, AuthContext } from "contexts";
 
 import { toast } from "react-toastify";
-import { Row, Col, Table, Button, Modal } from "react-bootstrap";
+import { Row, Col, Table, Button, Modal, SplitButton } from "react-bootstrap";
 import { LinkAccount } from "./link-account";
+import DropdownItem from "react-bootstrap/DropdownItem";
 
 export const UnlinkAccountDialog = ({
   show,
@@ -39,10 +41,10 @@ export const UnlinkAccountDialog = ({
         </p>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="secondary" onClick={handleClose}>
+        <Button variant="dark" onClick={handleClose} size={"sm"}>
           Cancel
         </Button>
-        <Button onClick={handleUnlink} variant="primary">
+        <Button onClick={handleUnlink} variant="danger" size={"sm"}>
           Unlink
         </Button>
       </Modal.Footer>
@@ -68,7 +70,50 @@ const UpdateLinkedAccount = withRouter(() => {
   return <LinkAccount linkedAccount={linkedAccount} />;
 });
 
+const LinkedAccountStatus = withRouter(() => {
+  const { finbotClient } = useContext(ServicesContext);
+  const { account } = useContext(AuthContext);
+  const { linkedAccountId } = useParams();
+  const [linkedAccount, setLinkedAccount] = useState(null);
+  useEffect(() => {
+    const fetch = async () => {
+      const linkedAccount = await finbotClient.getLinkedAccount({
+        account_id: account.id,
+        linked_account_id: linkedAccountId,
+      });
+      setLinkedAccount(linkedAccount);
+    };
+    fetch();
+  }, [finbotClient, account, linkedAccountId]);
+  return (
+    <>
+      <Row className={"mb-4"}>
+        <Col>
+          <h4>{(linkedAccount ?? { account_name: "" }).account_name}</h4>
+        </Col>
+      </Row>
+      <Row className={"mb-4"}>
+        <Col sm={4}>
+          <Table size="sm">
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>
+                  <span className={"text-success"}>
+                    <FaCheckCircle />
+                  </span>
+                </th>
+              </tr>
+            </thead>
+          </Table>
+        </Col>
+      </Row>
+    </>
+  );
+});
+
 export const AccountsPanel = () => {
+  const { push } = useHistory();
   const { finbotClient } = useContext(ServicesContext);
   const { account } = useContext(AuthContext);
   const [accounts, setAccounts] = useState([]);
@@ -122,53 +167,65 @@ export const AccountsPanel = () => {
           <tr>
             <th>Account name</th>
             <th>Provider</th>
-            <th>Status</th>
-            <th>&nbsp;</th>
+            <th style={{ width: "6em" }}>Status</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           {accounts.map((linkedAccount) => {
+            console.log(linkedAccount.status);
+            const status = (linkedAccount.status ?? { status: null }).status;
             return (
               <tr key={`account-${linkedAccount.id}`}>
                 <td>
-                  <Link to={`/settings/linked/${linkedAccount.id}`}>
+                  <Link to={`/settings/linked/${linkedAccount.id}/edit`}>
                     {linkedAccount.account_name}
                   </Link>
                 </td>
                 <td>{linkedAccount.provider.description}</td>
-                <td>
-                  {linkedAccount.status === "stable" && (
-                    <span className={"text-success"}>
-                      <FaCheckCircle />
-                    </span>
-                  )}
-                  {linkedAccount.status === "unstable" && (
-                    <span className={"text-danger"}>
-                      <FaExclamationCircle />
-                    </span>
-                  )}
-                  {linkedAccount.status === null && <FaQuestionCircle />}
+                <td style={{ textAlign: "center" }}>
+                  <Link to={`/settings/linked/${linkedAccount.id}/status`}>
+                    {status === "stable" && (
+                      <span className={"text-success"}>
+                        <FaCheckCircle />
+                      </span>
+                    )}
+                    {status === "unstable" && (
+                      <span className={"text-danger"}>
+                        <FaExclamationCircle />
+                      </span>
+                    )}
+                    {status === null && <FaQuestionCircle />}
+                  </Link>
                 </td>
                 <td>
-                  <Button
-                    onClick={() => {
-                      setDialog({
-                        show: true,
-                        linkedAccount,
-                        handleUnlink: () => {
-                          hideDialog();
-                          handleUnlinkAccount(linkedAccount);
-                        },
-                        handleClose: () => {
-                          hideDialog();
-                        },
-                      });
-                    }}
-                    size={"sm"}
+                  <SplitButton
+                    id={`action-${linkedAccount.id}`}
                     variant={"dark"}
+                    title={"Edit"}
+                    size={"sm"}
+                    onClick={() => {
+                      push(`/settings/linked/${linkedAccount.id}/edit`);
+                    }}
                   >
-                    Unlink
-                  </Button>
+                    <DropdownItem
+                      onClick={() => {
+                        setDialog({
+                          show: true,
+                          linkedAccount,
+                          handleUnlink: () => {
+                            hideDialog();
+                            handleUnlinkAccount(linkedAccount);
+                          },
+                          handleClose: () => {
+                            hideDialog();
+                          },
+                        });
+                      }}
+                    >
+                      Unlink
+                    </DropdownItem>
+                  </SplitButton>
                 </td>
               </tr>
             );
@@ -194,11 +251,17 @@ export const LinkedAccountsSettings = withRouter((props) => {
             }) ? (
               <small>{"| New"}</small>
             ) : matchPath(route, {
-                path: "/settings/linked/:id",
+                path: "/settings/linked/:id/edit",
                 exact: true,
                 strict: true,
               }) ? (
               <small>{"| Update"}</small>
+            ) : matchPath(route, {
+                path: "/settings/linked/:id/status",
+                exact: true,
+                strict: true,
+              }) ? (
+              <small>{"| Status"}</small>
             ) : (
               <></>
             )}
@@ -226,8 +289,13 @@ export const LinkedAccountsSettings = withRouter((props) => {
             />
             <Route
               exact
-              path="/settings/linked/:linkedAccountId"
+              path="/settings/linked/:linkedAccountId/edit"
               render={() => <UpdateLinkedAccount />}
+            />
+            <Route
+              exact
+              path="/settings/linked/:linkedAccountId/status"
+              render={() => <LinkedAccountStatus />}
             />
             <Route
               exact
