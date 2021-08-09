@@ -1,5 +1,5 @@
 from finbot import providers
-from finbot.providers.errors import AuthFailure
+from finbot.providers.errors import AuthenticationFailure
 from finbot.core.crypto_market import CoinGeckoWrapper
 
 from pycoingecko import CoinGeckoAPI
@@ -52,7 +52,7 @@ class Api(providers.Base):
             self._api = Binance(credentials.api_key, credentials.secret_key)
             self._get_account()
         except BinanceAPIException as e:
-            raise AuthFailure(str(e))
+            raise AuthenticationFailure(str(e))
 
     def _iter_balances(self) -> Iterator[Tuple[str, float, float]]:
         for entry in self._get_account()["balances"]:

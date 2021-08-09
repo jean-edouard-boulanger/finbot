@@ -1,5 +1,6 @@
 from finbot import providers
-from finbot.providers.errors import AuthFailure
+from finbot.core.errors import FinbotError
+from finbot.providers.errors import AuthenticationFailure
 from finbot.core import tracer
 
 import krakenex
@@ -53,7 +54,7 @@ class Api(providers.Base):
         self._api = krakenex.API(credentials.api_key, credentials.private_key)
         results = self._api.query_private("Balance")
         if results["error"]:
-            raise AuthFailure(_format_error(results["error"]))
+            raise AuthenticationFailure(_format_error(results["error"]))
 
     def get_balances(self) -> providers.Balances:
         balance = sum(value for (_, _, value) in self._iter_balances())
@@ -97,7 +98,7 @@ def _format_symbol(symbol: str) -> str:
 
 
 class KrakenPriceFetcher(object):
-    class Error(RuntimeError):
+    class Error(FinbotError):
         pass
 
     def __init__(self, kraken_api: krakenex.API):

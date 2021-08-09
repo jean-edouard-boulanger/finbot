@@ -195,7 +195,6 @@ mypy:
 	mypy -p finbot;
 	mypy --strict -p finbot.core;
 	mypy --strict -p finbot.model;
-	mypy --strict -p finbot.apps.support;
 	mypy --strict -p finbot.providers;
 
 banned-keywords-check-py:
@@ -205,8 +204,8 @@ lint-sh:
 	grep -rl '^#!/.*bash' --exclude-dir=webapp --exclude-dir='./.*' . |\
  		xargs shellcheck -e SC1090 -e SC1091 -S style
 
-lint-js: mypy flake8 black-check banned-keywords-check-py
-lint-py: eslint prettier-check-js banned-keywords-check-js
+lint-py: mypy flake8 black-check banned-keywords-check-py
+lint-js: eslint prettier-check-js banned-keywords-check-js
 lint: lint-py lint-js lint-sh
 
 format-py: black

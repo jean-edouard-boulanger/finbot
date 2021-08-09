@@ -1,38 +1,11 @@
-from typing import TypeVar, Optional, Any, Union, Callable, Type
+import stackprinter
+
+from typing import TypeVar, Optional, Any, Callable, Type, Iterator
 from pytz import timezone
 from datetime import datetime
-import logging.config
+from dataclasses import dataclass, field, asdict
+from contextlib import contextmanager
 import functools
-import decimal
-import json
-
-
-def serialize(data: Any) -> Any:
-    def serialize_key(key: Any) -> Optional[Union[str, int, float, bool]]:
-        if key is None:
-            return key
-        if not isinstance(key, (str, int, float, bool)):
-            return str(key)
-        return key
-
-    if hasattr(data, "serialize"):
-        return serialize(data.serialize())
-    if isinstance(data, decimal.Decimal):
-        return float(data)
-    if isinstance(data, datetime):
-        return data.isoformat()
-    if isinstance(data, dict):
-        return {serialize_key(k): serialize(v) for k, v in data.items()}
-    if isinstance(data, (list, set, tuple)):
-        return [serialize(v) for v in data]
-    return data
-
-
-def pretty_dump(data: Any) -> str:
-    def fallback(unhandled_data: Any) -> str:
-        return f"<not serializable {type(unhandled_data)} {unhandled_data}>"
-
-    return json.dumps(serialize(data), indent=4, default=fallback)
 
 
 def now_utc() -> datetime:
@@ -55,29 +28,9 @@ def swallow_exc(
     return decorator
 
 
-def configure_logging() -> None:
-    logging.config.dictConfig(
-        {
-            "version": 1,
-            "formatters": {
-                "default": {
-                    "format": "%(asctime)s"
-                    " (%(threadName)s)"
-                    " [%(levelname)s]"
-                    " %(message)s"
-                    " (%(filename)s:%(lineno)d)",
-                }
-            },
-            "handlers": {
-                "wsgi": {
-                    "class": "logging.StreamHandler",
-                    "stream": "ext://sys.stdout",
-                    "formatter": "default",
-                }
-            },
-            "root": {"level": "INFO", "handlers": ["wsgi"]},
-        }
-    )
+def fully_qualified_type_name(obj: Any) -> str:
+    t = type(obj)
+    return f"{t.__module__}.{t.__qualname__}"
 
 
 T = TypeVar("T")
@@ -86,3 +39,44 @@ T = TypeVar("T")
 def unwrap_optional(val: Optional[T]) -> T:
     assert val is not None
     return val
+
+
+@dataclass
+class StackPrinterSettings:
+    show_vals: Optional[str] = field(default_factory=lambda: "all")
+    style: str = field(default_factory=lambda: "plaintext")
+
+    def as_kwargs(self) -> dict[str, Any]:
+        return asdict(self)
+
+    def clone(self) -> "StackPrinterSettings":
+        return StackPrinterSettings(**asdict(self))
+
+
+STACK_PRINTER_SETTINGS = StackPrinterSettings()
+
+
+def configure_stack_printer(**kwargs: Any) -> None:
+    global STACK_PRINTER_SETTINGS
+    STACK_PRINTER_SETTINGS = StackPrinterSettings(**kwargs)
+
+
+def _get_stack_printer_settings() -> StackPrinterSettings:
+    global STACK_PRINTER_SETTINGS
+    return STACK_PRINTER_SETTINGS
+
+
+@contextmanager
+def scoped_stack_printer_configuration(**kwargs: Any) -> Iterator[None]:
+    old_settings = _get_stack_printer_settings().clone()
+    try:
+        configure_stack_printer(**kwargs)
+        yield
+    finally:
+        configure_stack_printer(**old_settings.as_kwargs())
+
+
+def format_stack(thing: Optional[Exception] = None, **kwargs: Any) -> str:
+    sp_settings = _get_stack_printer_settings()
+    output: str = stackprinter.format(thing, **{**sp_settings.as_kwargs(), **kwargs})
+    return output

@@ -1,8 +1,9 @@
 from finbot import providers
 from finbot.model import UserAccountPlaidSettings
-from finbot.core.utils import serialize
+from finbot.providers.errors import AuthenticationFailure
+from finbot.core.serialization import serialize
 
-from plaid import Client as PlaidClient
+from plaid import Client as PlaidClient, errors as plaid_errors
 
 from typing import Optional, Any
 from datetime import datetime
@@ -80,9 +81,12 @@ class Api(providers.Base):
         return accounts
 
     def authenticate(self, credentials: Credentials) -> None:
-        plaid_settings = credentials.plaid_settings
-        client = create_plaid_client(plaid_settings)
-        self._accounts = client.Accounts.get(credentials.access_token)
+        try:
+            plaid_settings = credentials.plaid_settings
+            client = create_plaid_client(plaid_settings)
+            self._accounts = client.Accounts.get(credentials.access_token)
+        except plaid_errors.ItemError as e:
+            raise AuthenticationFailure(str(e))
 
     def get_balances(self) -> providers.Balances:
         return {

@@ -1,4 +1,4 @@
-from finbot.apps.appwsrv.exceptions import ApplicationError
+from finbot.core.errors import InvalidUserInput
 from finbot.model import (
     LinkedAccount,
     Provider,
@@ -29,7 +29,7 @@ logger = logging.getLogger()
 def get_user_account(session, user_account_id: int) -> UserAccount:
     account = session.query(UserAccount).filter_by(id=user_account_id).first()
     if not account:
-        raise ApplicationError(f"user account '{user_account_id}' not found")
+        raise InvalidUserInput(f"user account '{user_account_id}' not found")
     return account
 
 
@@ -40,7 +40,7 @@ def get_user_account_settings(session, user_account_id: int) -> UserAccountSetti
         .first()
     )
     if not settings:
-        raise ApplicationError(f"user account '{user_account_id}' not found")
+        raise InvalidUserInput(f"user account '{user_account_id}' not found")
     return settings
 
 
@@ -218,5 +218,5 @@ def get_linked_account(
         .first()
     )
     if not linked_account:
-        raise ApplicationError(f"linked account {linked_account} not found")
+        raise InvalidUserInput(f"linked account {linked_account} not found")
     return linked_account

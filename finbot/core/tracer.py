@@ -1,13 +1,14 @@
 from finbot.model import DistributedTrace
-from finbot.core.utils import serialize
+from finbot.core.utils import format_stack
+from finbot.core.serialization import serialize
 
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.session import Session
+
 from typing import Iterator, Optional, Protocol, TypedDict, Callable, Any
 from dataclasses import dataclass, field
 from datetime import datetime
 from logging import LogRecord
-import stackprinter
 import contextlib
 import threading
 import uuid
@@ -19,6 +20,20 @@ CONTEXT_TAG = "__tracer_context__"
 
 
 class Step(object):
+    @dataclass
+    class Key:
+        guid: str
+        path: list[int]
+
+        def clone(self) -> "Step.Key":
+            return Step.Key(self.guid, self.path)
+
+        def serialize(self) -> dict[str, str]:
+            return {
+                "guid": self.guid,
+                "path": ".".join(str(item) for item in self.path),
+            }
+
     def __init__(
         self,
         guid: str,
@@ -27,8 +42,7 @@ class Step(object):
         start_time: datetime,
         metadata: Optional[dict[str, Any]] = None,
     ):
-        self._guid = guid
-        self._path = path
+        self._key = Step.Key(guid, path)
         self._start_time = start_time
         self._name = name
         self.metadata = metadata or {}
@@ -58,19 +72,19 @@ class Step(object):
 
     @property
     def parent_path(self) -> Optional[list[int]]:
-        return None if self.is_root else self.path[:-1]
+        return None if self.is_root else list(self.path[:-1])
 
     @property
     def guid(self) -> str:
-        return self._guid
+        return str(self._key.guid)
 
     @property
     def pretty_path(self) -> str:
-        return ".".join(str(c) for c in self._path)
+        return ".".join(str(c) for c in self._key.path)
 
     @property
     def path(self) -> list[int]:
-        return self._path
+        return list(self._key.path)
 
     @property
     def start_time(self) -> datetime:
@@ -80,10 +94,14 @@ class Step(object):
     def name(self) -> str:
         return self._name
 
+    @property
+    def key(self) -> "Step.Key":
+        return self._key.clone()
+
 
 class PersistenceLayer(Protocol):
     def persist(self, step: Step) -> None:
-        pass
+        ...
 
 
 class DBPersistenceLayer(PersistenceLayer):
@@ -263,6 +281,11 @@ class TracerContext(object):
             return _dummy_step()
         return self._steps[-1]
 
+    def current_key(self) -> Optional[Step.Key]:
+        if not self.has_root():
+            return None
+        return self.current().key
+
     def guid(self) -> Optional[str]:
         if not self.has_root():
             return None
@@ -321,8 +344,8 @@ def root(name: str) -> Iterator[Step]:
     step = context.new_root(name)
     try:
         yield step
-    except Exception:
-        step.set_failure(stackprinter.format())
+    except Exception as e:
+        step.set_failure(format_stack(e))
         raise
     finally:
         context.unwind()
@@ -335,8 +358,8 @@ def sub_step(name: str) -> Iterator[Step]:
     step = context.new_child(name)
     try:
         yield step
-    except Exception:
-        step.set_failure(stackprinter.format())
+    except Exception as e:
+        step.set_failure(format_stack(e))
         raise
     finally:
         context.unwind()
@@ -350,6 +373,14 @@ def milestone(name: str, **kwargs: Any) -> None:
 
 def current() -> Step:
     return _get_tracer_context().current()
+
+
+def current_key() -> Optional[Step.Key]:
+    return _get_tracer_context().current_key()
+
+
+def has_root() -> bool:
+    return _get_tracer_context().has_root()
 
 
 def propagate() -> Optional[FlatContext]:

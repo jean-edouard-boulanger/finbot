@@ -1,3 +1,4 @@
+from finbot.providers.errors import RetiredProviderError
 from typing import Any, Type, TypeVar, TypedDict, Optional
 
 
@@ -76,16 +77,12 @@ class Base(object):
         pass
 
 
-class RetiredProviderError(RuntimeError):
-    pass
-
-
 T = TypeVar("T")
 
 
 def retired(cls: Type[T]) -> Type[T]:
     def init_override(*args: Any, **kwargs: Any) -> None:
-        raise RetiredProviderError("This provider has been retired")
+        raise RetiredProviderError()
 
     cls.__init__ = init_override  # type: ignore
     return cls

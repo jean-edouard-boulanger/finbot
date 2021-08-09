@@ -1,6 +1,6 @@
 from finbot.providers.selenium_based import SeleniumBased
 from finbot.providers.support.selenium import SeleniumHelper
-from finbot.providers.errors import AuthFailure
+from finbot.providers.errors import AuthenticationFailure
 from finbot import providers
 
 from price_parser import Price  # type: ignore
@@ -109,4 +109,4 @@ def _get_login_error(do: SeleniumHelper) -> Optional[str]:
 
 
 def _report_auth_error(error_message: str) -> None:
-    raise AuthFailure(error_message)
+    raise AuthenticationFailure(error_message)

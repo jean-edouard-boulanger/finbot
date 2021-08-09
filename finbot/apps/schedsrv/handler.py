@@ -1,4 +1,6 @@
 from finbot.apps.schedsrv.errors import WorkflowError
+from finbot.core.serialization import pretty_dump
+from finbot.core import tracer
 from finbot.core.notifier import (
     Notifier,
     CompositeNotifier,
@@ -8,7 +10,6 @@ from finbot.core.notifier import (
 from finbot.model import UserAccount
 from finbot.clients import sched as sched_client
 from finbot.clients import SnapClient, HistoryClient
-from finbot.core import utils, tracer
 
 import logging
 
@@ -59,7 +60,7 @@ class RequestHandler(object):
         if snapshot_id is None:
             raise WorkflowError(
                 f"missing snapshot_id in snapshot metadata: "
-                f"{utils.pretty_dump(snapshot_metadata)}"
+                f"{pretty_dump(snapshot_metadata)}"
             )
 
         logging.info(f"raw snapshot created with id={snapshot_id}")
@@ -77,12 +78,12 @@ class RequestHandler(object):
         if history_entry_id is None:
             raise WorkflowError(
                 f"missing history_entry_id in history metadata: "
-                f"{utils.pretty_dump(history_metadata)}"
+                f"{pretty_dump(history_metadata)}"
             )
 
         logging.info(
             f"history report written with id={history_entry_id}"
-            f" {utils.pretty_dump(history_metadata)}"
+            f" {pretty_dump(history_metadata)}"
         )
         logging.info(f"valuation workflow done for user_id={user_account_id}")
 

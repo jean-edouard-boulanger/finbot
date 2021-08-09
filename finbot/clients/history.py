@@ -4,10 +4,6 @@ from finbot.core import tracer
 from typing import Any, Optional
 
 
-class Error(RuntimeError):
-    pass
-
-
 class HistoryClient(ClientBase):
     def __init__(self, server_endpoint: str):
         super().__init__(server_endpoint)

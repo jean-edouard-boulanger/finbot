@@ -1,7 +1,7 @@
 from finbot.core.utils import swallow_exc
 from finbot.providers.selenium_based import SeleniumBased
 from finbot.providers.support.selenium import any_of, SeleniumHelper
-from finbot.providers.errors import AuthFailure
+from finbot.providers.errors import AuthenticationFailure
 from finbot import providers
 
 from price_parser import Price  # type: ignore
@@ -114,7 +114,7 @@ class Api(SeleniumBased):
 
             error_message = _get_login_error(self._do)
             if error_message:
-                raise AuthFailure(error_message)
+                raise AuthenticationFailure(error_message)
 
             # 3. Get accounts data
 
