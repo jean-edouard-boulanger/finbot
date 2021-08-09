@@ -83,7 +83,7 @@ def get_fcsapi_key() -> str:
 
 
 def get_finbot_runtime() -> str:
-    return get_environment_value("FINBOT_ENV")
+    return get_environment_value("FINBOT_ENV", "production")
 
 
 def get() -> Environment:
