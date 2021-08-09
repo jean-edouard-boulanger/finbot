@@ -8,4 +8,4 @@ class AuthenticationFailure(ApplicationError):
 
 class RetiredProviderError(ApplicationError):
     def __init__(self):
-        super().__init__(f"This provider has been retired", "P002")
+        super().__init__("This provider has been retired", "P002")
