@@ -22,7 +22,6 @@ class Environment:
     webapp_endpoint: str
     schedsrv_port: int
     schedsrv_endpoint: str
-    fcsapi_key: str
     runtime: str
 
     @property
@@ -78,10 +77,6 @@ def get_schedsrv_endpoint() -> str:
     return get_environment_value("FINBOT_SCHEDSRV_ENDPOINT")
 
 
-def get_fcsapi_key() -> str:
-    return get_environment_value("FINBOT_FCSAPI_KEY")
-
-
 def get_finbot_runtime() -> str:
     return get_environment_value("FINBOT_ENV", "production")
 
@@ -97,6 +92,5 @@ def get() -> Environment:
         webapp_endpoint=get_webapp_endpoint(),
         schedsrv_port=get_schedsrv_port(),
         schedsrv_endpoint=get_schedsrv_endpoint(),
-        fcsapi_key=get_fcsapi_key(),
         runtime=get_finbot_runtime(),
     )

@@ -39,7 +39,8 @@ RULES: list[Rule] = [
         match_files=["*.py"],
         ignore_files=["finbot/core/web_service.py"],
         banned_pattern=re.compile(r"jsonify\("),
-        message="Finbot web services should not call Flask jsonify (this is automatically done upstream)",
+        message="Finbot web services should not call Flask jsonify"
+        " (this is automatically done upstream)",
     ),
     Rule(
         match_files=["*.py"],
