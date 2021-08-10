@@ -51,8 +51,8 @@ RULES: list[Rule] = [
     Rule(
         match_files=["*.js"],
         banned_pattern=re.compile(r"console.log\("),
-        message="Please remove calls to console.log"
-    )
+        message="Please remove calls to console.log",
+    ),
 ]
 
 
