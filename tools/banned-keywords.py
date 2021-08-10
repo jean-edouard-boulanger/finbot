@@ -48,6 +48,11 @@ RULES: list[Rule] = [
         banned_pattern=re.compile("stackprinter"),
         message="Please use utils.format_stack instead of stackprinter",
     ),
+    Rule(
+        match_files=["*.js"],
+        banned_pattern=re.compile(r"console.log\("),
+        message="Please remove calls to console.log"
+    )
 ]
 
 
