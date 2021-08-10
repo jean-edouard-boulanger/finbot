@@ -135,10 +135,10 @@ def auth_login():
         "auth": {
             "access_token": create_access_token(
                 identity=account.id, expires_delta=False
-            ),
+            ).decode(),
             "refresh_token": create_refresh_token(
                 identity=account.id, expires_delta=False
-            ),
+            ).decode(),
         },
         "account": {
             "id": account.id,

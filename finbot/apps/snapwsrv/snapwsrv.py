@@ -349,10 +349,9 @@ def take_snapshot_impl(user_account_id: int, linked_accounts: Optional[list[int]
     with tracer.sub_step("fetch currency pairs") as step:
         xccy_collector = XccyCollector(requested_ccy)
         visit_snapshot_tree(raw_snapshot, xccy_collector)
-        step.set_input([str(pair) for pair in xccy_collector.xccys])
+        step.set_input(xccy_collector.xccys)
         xccy_rates = fx_market.get_rates(xccy_collector.xccys)
-        step.set_output({str(xccy): rate for (xccy, rate) in xccy_rates.items()})
-        validate_fx_rates(xccy_rates)
+        step.set_output(xccy_rates)
 
     logging.info("adding cross currency rates to snapshot")
 

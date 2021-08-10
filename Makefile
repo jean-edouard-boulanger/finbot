@@ -206,7 +206,7 @@ lint-sh:
 
 lint-py: mypy flake8 black-check banned-keywords-check-py
 lint-js: eslint prettier-check-js banned-keywords-check-js
-lint: lint-py lint-js lint-sh
+lint-all: lint-py lint-js lint-sh
 
 format-py: black
 format-js: prettier-js
