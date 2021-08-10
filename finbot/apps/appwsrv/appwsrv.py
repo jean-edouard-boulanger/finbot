@@ -2,6 +2,7 @@ from finbot.clients import FinbotClient, sched as sched_client
 from finbot.apps.appwsrv import timeseries, repository, core
 from finbot.apps.appwsrv.reports import holdings as holdings_report
 from finbot.apps.appwsrv.reports import earnings as earnings_report
+from finbot.core.notifier import TwilioNotifier, TwilioSettings
 from finbot.core.web_service import service_endpoint, Route
 from finbot.core.errors import InvalidUserInput, InvalidOperation, MissingUserData
 from finbot.core.serialization import serialize
@@ -403,14 +404,20 @@ def get_user_account_settings(user_account_id):
 )
 def update_user_account_settings(user_account_id):
     data = request.json
+    user_account = repository.get_user_account(db_session, user_account_id)
     settings = repository.get_user_account_settings(db_session, user_account_id)
     if "valuation_ccy" in data:
         raise InvalidUserInput(
             "Valuation currency cannot be updated after account creation"
         )
-    with db_session.persist(settings):
-        if "twilio_settings" in data:
-            settings.twilio_settings = data["twilio_settings"]
+    if "twilio_settings" in data:
+        with db_session.persist(settings):
+            serialized_twilio_settings = data["twilio_settings"]
+            settings.twilio_settings = serialized_twilio_settings
+        if serialized_twilio_settings:
+            twilio_settings = TwilioSettings.deserialize(serialized_twilio_settings)
+            notifier = TwilioNotifier(twilio_settings, user_account.mobile_phone_number)
+            notifier.notify_twilio_settings_updated()
     return {"settings": serialize_user_account_settings(settings)}
 
 
