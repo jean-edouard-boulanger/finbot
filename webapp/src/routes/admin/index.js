@@ -5,7 +5,7 @@ import { ServicesContext } from "contexts";
 
 import AceEditor from "react-ace";
 import { Col, Row, Card, Table, Button, Alert, Badge } from "react-bootstrap";
-import { FaCube } from "react-icons/fa";
+import { FaCube, FaSpinner } from "react-icons/fa";
 import { TreeGrid } from "components";
 
 import "ace-builds/src-noconflict/theme-github";
@@ -92,7 +92,7 @@ function GridRow(callback) {
         <td>
           {(durationSeconds ?? null) !== null &&
             `${durationSeconds.toFixed(1)}s`}
-          {(durationSeconds ?? null) === null && `N/A`}
+          {(durationSeconds ?? null) === null && <FaSpinner />}
         </td>
       </tr>
     );

@@ -262,7 +262,7 @@ def create_user_account():
     }
 
 
-ACCOUNT = ACCOUNTS.p("user_account_id")
+ACCOUNT = ACCOUNTS.p("int:user_account_id")
 
 
 def serialize_user_account(account: UserAccount) -> dict[str, Any]:
@@ -673,7 +673,7 @@ def link_new_account(user_account_id):
     return {"result": {"validated": do_validate, "persisted": do_persist}}
 
 
-LINKED_ACCOUNT = ACCOUNT.linked_accounts.p("linked_account_id")
+LINKED_ACCOUNT = ACCOUNT.linked_accounts.p("int:linked_account_id")
 
 
 @app.route(LINKED_ACCOUNT(), methods=["GET"])
@@ -697,6 +697,9 @@ def get_linked_account(user_account_id, linked_account_id):
         credentials["link_token"] = core.create_plaid_link_token(
             credentials, plaid_settings
         )
+    linked_account_status = repository.get_linked_account_status(
+        db_session, user_account_id, linked_account_id
+    )
     return {
         "linked_account": {
             "id": linked_account.id,
@@ -705,6 +708,7 @@ def get_linked_account(user_account_id, linked_account_id):
             "account_name": linked_account.account_name,
             "credentials": credentials,
             "deleted": linked_account.deleted,
+            "status": linked_account_status,
             "created_at": linked_account.created_at,
             "updated_at": linked_account.updated_at,
         }

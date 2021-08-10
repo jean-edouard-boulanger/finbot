@@ -150,6 +150,12 @@ def get_linked_accounts_statuses(
     return output
 
 
+def get_linked_account_status(
+    session, user_account_id: int, linked_account_id: int
+) -> Optional[dict[str, Any]]:
+    return get_linked_accounts_statuses(session, user_account_id).get(linked_account_id)
+
+
 def find_user_account_valuation(
     session, history_entry_id: int
 ) -> UserAccountValuationHistoryEntry:

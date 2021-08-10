@@ -18,9 +18,19 @@ import {
 import { ServicesContext, AuthContext } from "contexts";
 
 import { toast } from "react-toastify";
-import { Row, Col, Table, Button, Modal, SplitButton } from "react-bootstrap";
+import {
+  Alert,
+  Row,
+  Col,
+  Table,
+  Button,
+  Modal,
+  SplitButton,
+  Dropdown,
+} from "react-bootstrap";
 import { LinkAccount } from "./link-account";
 import DropdownItem from "react-bootstrap/DropdownItem";
+import { StackedBarLoader } from "components";
 
 export const UnlinkAccountDialog = ({
   show,
@@ -52,7 +62,7 @@ export const UnlinkAccountDialog = ({
   );
 };
 
-const UpdateLinkedAccount = withRouter(() => {
+const UpdateLinkedAccountPanel = withRouter(() => {
   const { finbotClient } = useContext(ServicesContext);
   const { account } = useContext(AuthContext);
   const { linkedAccountId } = useParams();
@@ -70,42 +80,119 @@ const UpdateLinkedAccount = withRouter(() => {
   return <LinkAccount linkedAccount={linkedAccount} />;
 });
 
-const LinkedAccountStatus = withRouter(() => {
+const getLinkedAccountStatus = (linkedAccount) => {
+  return (linkedAccount.status ?? { status: null }).status;
+};
+
+const getLinkedAccountLastError = (linkedAccount) => {
+  const errors = (linkedAccount.status ?? { errors: [] }).errors;
+  if (errors === null || errors.length === 0) {
+    return null;
+  }
+  return errors[errors.length - 1].error;
+};
+
+const LinkedAccountStatusIcon = ({ status }) => {
+  return (
+    <>
+      {status === "stable" && (
+        <span className={"text-success"}>
+          <FaCheckCircle />
+        </span>
+      )}
+      {status === "unstable" && (
+        <span className={"text-danger"}>
+          <FaExclamationCircle />
+        </span>
+      )}
+      {status === null && <FaQuestionCircle />}
+    </>
+  );
+};
+
+const LinkedAccountStatusPanel = withRouter(() => {
   const { finbotClient } = useContext(ServicesContext);
   const { account } = useContext(AuthContext);
   const { linkedAccountId } = useParams();
   const [linkedAccount, setLinkedAccount] = useState(null);
   useEffect(() => {
     const fetch = async () => {
-      const linkedAccount = await finbotClient.getLinkedAccount({
-        account_id: account.id,
-        linked_account_id: linkedAccountId,
-      });
-      setLinkedAccount(linkedAccount);
+      try {
+        const linkedAccount = await finbotClient.getLinkedAccount({
+          account_id: account.id,
+          linked_account_id: linkedAccountId,
+        });
+        setLinkedAccount(linkedAccount);
+      } catch (e) {
+        toast.error(e);
+      }
     };
     fetch();
   }, [finbotClient, account, linkedAccountId]);
+
+  if (linkedAccount === null) {
+    return (
+      <StackedBarLoader
+        count={4}
+        color={"#FBFBFB"}
+        spacing={"0.8em"}
+        height={"1em"}
+        width={"100%"}
+      />
+    );
+  }
+
+  const status = getLinkedAccountStatus(linkedAccount);
+  const lastError = getLinkedAccountLastError(linkedAccount);
+
   return (
     <>
       <Row className={"mb-4"}>
         <Col>
-          <h4>{(linkedAccount ?? { account_name: "" }).account_name}</h4>
+          <h4>
+            {(linkedAccount ?? { account_name: "" }).account_name}{" "}
+            <LinkedAccountStatusIcon status={status} />
+          </h4>
         </Col>
       </Row>
+      {status === "unstable" && (
+        <Row className={"mb-4"}>
+          <Col>
+            <Alert variant={"danger"}>
+              <Alert.Heading>
+                There is an issue with this linked account
+              </Alert.Heading>
+              <p>
+                Details: {lastError.user_message} (code: {lastError.error_code})
+              </p>
+              <hr />
+              <span className={"font-italic"}>
+                Reference: {lastError.distributed_trace_key.guid}/
+                {lastError.distributed_trace_key.path}
+              </span>
+            </Alert>
+          </Col>
+        </Row>
+      )}
+      {status === null && (
+        <Row className={"mb-4"}>
+          <Col>
+            <Alert variant={"info"}>
+              <Alert.Heading>
+                We do not have any information about this linked account
+              </Alert.Heading>
+              <p>
+                This usually happens for accounts that have just been linked.
+                The account status will be available as soon as the account
+                valuation is calculated.
+              </p>
+            </Alert>
+          </Col>
+        </Row>
+      )}
       <Row className={"mb-4"}>
-        <Col sm={4}>
-          <Table size="sm">
-            <thead>
-              <tr>
-                <th>Status</th>
-                <th>
-                  <span className={"text-success"}>
-                    <FaCheckCircle />
-                  </span>
-                </th>
-              </tr>
-            </thead>
-          </Table>
+        <Col>
+          <h5>Previous snapshots</h5>
         </Col>
       </Row>
     </>
@@ -173,8 +260,7 @@ export const AccountsPanel = () => {
         </thead>
         <tbody>
           {accounts.map((linkedAccount) => {
-            console.log(linkedAccount.status);
-            const status = (linkedAccount.status ?? { status: null }).status;
+            const status = getLinkedAccountStatus(linkedAccount);
             return (
               <tr key={`account-${linkedAccount.id}`}>
                 <td>
@@ -185,17 +271,7 @@ export const AccountsPanel = () => {
                 <td>{linkedAccount.provider.description}</td>
                 <td style={{ textAlign: "center" }}>
                   <Link to={`/settings/linked/${linkedAccount.id}/status`}>
-                    {status === "stable" && (
-                      <span className={"text-success"}>
-                        <FaCheckCircle />
-                      </span>
-                    )}
-                    {status === "unstable" && (
-                      <span className={"text-danger"}>
-                        <FaExclamationCircle />
-                      </span>
-                    )}
-                    {status === null && <FaQuestionCircle />}
+                    <LinkedAccountStatusIcon status={status} />
                   </Link>
                 </td>
                 <td>
@@ -224,6 +300,14 @@ export const AccountsPanel = () => {
                       }}
                     >
                       Unlink
+                    </DropdownItem>
+                    <Dropdown.Divider />
+                    <DropdownItem
+                      onClick={() => {
+                        push(`/settings/linked/${linkedAccount.id}/status`);
+                      }}
+                    >
+                      Status
                     </DropdownItem>
                   </SplitButton>
                 </td>
@@ -255,7 +339,7 @@ export const LinkedAccountsSettings = withRouter((props) => {
                 exact: true,
                 strict: true,
               }) ? (
-              <small>{"| Update"}</small>
+              <small>{"| Edit"}</small>
             ) : matchPath(route, {
                 path: "/settings/linked/:id/status",
                 exact: true,
@@ -290,12 +374,12 @@ export const LinkedAccountsSettings = withRouter((props) => {
             <Route
               exact
               path="/settings/linked/:linkedAccountId/edit"
-              render={() => <UpdateLinkedAccount />}
+              render={() => <UpdateLinkedAccountPanel />}
             />
             <Route
               exact
               path="/settings/linked/:linkedAccountId/status"
-              render={() => <LinkedAccountStatus />}
+              render={() => <LinkedAccountStatusPanel />}
             />
             <Route
               exact
