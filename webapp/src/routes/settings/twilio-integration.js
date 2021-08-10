@@ -129,7 +129,7 @@ export const TwilioIntegrationSettings = () => {
                   />
                 </Form.Group>
                 <Form.Group>
-                  <Form.Label>Phone number (sender)</Form.Label>
+                  <Form.Label>Phone number (sender) or friendly name</Form.Label>
                   <Field
                     disabled={!enableTwilio}
                     type="text"

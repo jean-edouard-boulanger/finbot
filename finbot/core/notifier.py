@@ -9,7 +9,10 @@ class Notifier(Protocol):
     def notify_valuation(
         self, valuation: float, change_1day: float, currency: str
     ) -> None:
-        pass
+        ...
+
+    def notify_twilio_settings_updated(self) -> None:
+        ...
 
 
 @dataclass
@@ -45,6 +48,17 @@ class TwilioNotifier(Notifier):
                 f"""\
                 💰 Finbot valuation: {valuation:,.1f} {currency}
                 1 day change: {change_1day:,.1f} {currency} {'⬆️' if change_1day >= 0 else '⬇️'}
+            """
+            ).strip(),
+        )
+
+    def notify_twilio_settings_updated(self) -> None:
+        self._client.messages.create(
+            to=self._recipient_phone_number,
+            from_=self._settings.phone_number,
+            body=dedent(
+                f"""\
+                ☎️ Your Twilio integration settings have been successfully updated
             """
             ).strip(),
         )
