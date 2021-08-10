@@ -57,7 +57,7 @@ class TwilioNotifier(Notifier):
             to=self._recipient_phone_number,
             from_=self._settings.phone_number,
             body=dedent(
-                f"""\
+                """\
                 ☎️ Your Twilio integration settings have been successfully updated
             """
             ).strip(),
