@@ -54,8 +54,24 @@ def get_user_account_plaid_settings(
     )
 
 
-def find_provider(session, provider_id: str) -> Provider:
+def find_provider(session, provider_id: str) -> Optional[Provider]:
     return session.query(Provider).filter_by(id=provider_id).first()
+
+
+def get_provider(session, provider_id: str) -> Provider:
+    provider = find_provider(session, provider_id)
+    if not provider:
+        raise InvalidUserInput(f"provider '{provider_id}' not found")
+    return provider
+
+
+def linked_account_exists(session, user_account_id: int, account_name: str) -> bool:
+    return (
+        session.query(LinkedAccount)
+        .filter_by(user_account_id=user_account_id)
+        .filter_by(account_name=account_name)
+        .count()
+    ) > 0
 
 
 def find_linked_accounts(session, user_account_id: int) -> list[LinkedAccount]:

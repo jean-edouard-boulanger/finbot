@@ -32,7 +32,9 @@ RULES: list[Rule] = [
     ),
     Rule(
         match_files=["*.py"],
-        banned_pattern=re.compile(r"import(.+)(List|(?<!Typed)Dict)|Dict\[|List\["),
+        banned_pattern=re.compile(
+            r"import(.+)\s+Dict|(\s+|typing\.)Dict\[|(\s+|typing\.)List\["
+        ),
         message="As of python3.9, dict and list type hints may be used installed of Dict and List",
     ),
     Rule(
