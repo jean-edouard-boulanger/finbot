@@ -3,11 +3,11 @@ from finbot.apps.appwsrv import timeseries, repository, core
 from finbot.apps.appwsrv.reports import holdings as holdings_report
 from finbot.apps.appwsrv.reports import earnings as earnings_report
 from finbot.core.notifier import TwilioNotifier, TwilioSettings
-from finbot.core.web_service import service_endpoint, Route
+from finbot.core.web_service import service_endpoint, Route, RequestContext
 from finbot.core.errors import InvalidUserInput, InvalidOperation, MissingUserData
 from finbot.core.serialization import serialize
 from finbot.core.logging import configure_logging
-from finbot.core.utils import now_utc
+from finbot.core.utils import now_utc, unwrap_optional
 from finbot.core import secure, dbutils, environment, tracer
 from finbot.model import (
     Provider,
@@ -20,7 +20,7 @@ from finbot.model import (
     DistributedTrace,
 )
 
-from flask import Flask, request
+from flask import Flask
 from flask_cors import CORS
 from flask_jwt_extended import (
     JWTManager,
@@ -94,10 +94,10 @@ def healthy():
 ADMIN = API_V1.admin
 
 
-@app.route(ADMIN.traces.p("guid")(), methods=["GET"])
-@service_endpoint()
-def get_traces(guid):
-    trace_format = request.args.get("format", default="list")
+@app.route(ADMIN.traces.p("string:guid")(), methods=["GET"])
+@service_endpoint(parameters={"format": {"type": str, "default": "list"}})
+def get_traces(request_context: RequestContext, guid: str):
+    trace_format = request_context.parameters["format"]
     traces = db_session.query(DistributedTrace).filter_by(guid=guid).all()
     if trace_format == "tree":
         return {"tree": tracer.build_tree(traces)}
@@ -117,8 +117,8 @@ AUTH = API_V1.auth
         "properties": {"email": {"type": "string"}, "password": {"type": "string"}},
     },
 )
-def auth_login():
-    data = request.json
+def auth_login(request_context: RequestContext):
+    data = request_context.request
     account = db_session.query(UserAccount).filter_by(email=data["email"]).first()
     not_found_message = "Invalid email or password"
     if not account:
@@ -165,8 +165,8 @@ def auth_login():
         },
     }
 )
-def update_or_create_provider():
-    data = request.json
+def update_or_create_provider(request_context: RequestContext):
+    data = request_context.request
     existing_provider = repository.find_provider(db_session, data["id"])
     with db_session.persist(existing_provider or Provider()) as provider:
         provider.id = data["id"]
@@ -195,9 +195,7 @@ def get_provider(provider_id: str):
 @app.route(API_V1.providers.p("provider_id")(), methods=["DELETE"])
 @service_endpoint()
 def delete_provider(provider_id: str):
-    provider = repository.find_provider(db_session, provider_id)
-    if not Provider:
-        raise InvalidUserInput(f"Provider with id '${provider_id}' does not exist")
+    provider = repository.get_provider(db_session, provider_id)
     linked_accounts: list[LinkedAccount] = provider.linked_accounts
     if len(linked_accounts) > 0:
         raise InvalidOperation("This provider is still in use")
@@ -229,13 +227,13 @@ ACCOUNTS = API_V1.accounts
         },
     },
 )
-def create_user_account():
-    data = request.json
+def create_user_account(request_context: RequestContext):
+    data = request_context.request
     try:
         with db_session.persist(UserAccount()) as user_account:
             user_account.email = data["email"]
             user_account.encrypted_password = secure.fernet_encrypt(
-                data["password"].encode(), FINBOT_ENV.secret_key
+                data["password"].encode(), FINBOT_ENV.secret_key.encode()
             ).decode()
             user_account.full_name = data["full_name"]
             user_account.settings = UserAccountSettings(
@@ -263,9 +261,6 @@ def create_user_account():
     }
 
 
-ACCOUNT = ACCOUNTS.p("int:user_account_id")
-
-
 def serialize_user_account(account: UserAccount) -> dict[str, Any]:
     return {
         "id": account.id,
@@ -277,10 +272,13 @@ def serialize_user_account(account: UserAccount) -> dict[str, Any]:
     }
 
 
+ACCOUNT = ACCOUNTS.p("int:user_account_id")
+
+
 @app.route(ACCOUNT(), methods=["GET"])
 @jwt_required()
 @service_endpoint()
-def get_user_account(user_account_id):
+def get_user_account(user_account_id: int):
     account = repository.get_user_account(db_session, user_account_id)
     return {"user_account": serialize_user_account(account)}
 
@@ -315,7 +313,7 @@ def serialize_user_account_valuation(
 @app.route(ACCOUNT.valuation(), methods=["GET"])
 @jwt_required()
 @service_endpoint()
-def get_user_account_valuation(user_account_id):
+def get_user_account_valuation(user_account_id: int):
     to_time = now_utc()
     from_time = to_time - timedelta(days=30)
     valuation_history = repository.find_user_account_historical_valuation(
@@ -354,8 +352,8 @@ def get_user_account_valuation(user_account_id):
         },
     }
 )
-def update_user_account_profile(user_account_id):
-    data = request.json
+def update_user_account_profile(request_context: RequestContext, user_account_id: int):
+    data = request_context.request
     account = repository.get_user_account(db_session, user_account_id)
     with db_session.persist(account):
         account.email = data["email"]
@@ -376,7 +374,7 @@ def serialize_user_account_settings(settings: UserAccountSettings) -> dict[str, 
 @app.route(ACCOUNT.settings(), methods=["GET"])
 @jwt_required()
 @service_endpoint()
-def get_user_account_settings(user_account_id):
+def get_user_account_settings(user_account_id: int):
     settings = repository.get_user_account_settings(db_session, user_account_id)
     return {"settings": serialize_user_account_settings(settings)}
 
@@ -402,8 +400,8 @@ def get_user_account_settings(user_account_id):
         },
     }
 )
-def update_user_account_settings(user_account_id):
-    data = request.json
+def update_user_account_settings(request_context: RequestContext, user_account_id: int):
+    data = request_context.request
     user_account = repository.get_user_account(db_session, user_account_id)
     settings = repository.get_user_account_settings(db_session, user_account_id)
     if "valuation_ccy" in data:
@@ -416,7 +414,9 @@ def update_user_account_settings(user_account_id):
             settings.twilio_settings = serialized_twilio_settings
         if serialized_twilio_settings:
             twilio_settings = TwilioSettings.deserialize(serialized_twilio_settings)
-            notifier = TwilioNotifier(twilio_settings, user_account.mobile_phone_number)
+            notifier = TwilioNotifier(
+                twilio_settings, unwrap_optional(user_account.mobile_phone_number)
+            )
             notifier.notify_twilio_settings_updated()
     return {"settings": serialize_user_account_settings(settings)}
 
@@ -424,7 +424,7 @@ def update_user_account_settings(user_account_id):
 @app.route(ACCOUNT.settings.plaid(), methods=["GET"])
 @jwt_required()
 @service_endpoint()
-def get_user_account_plaid_settings(user_account_id):
+def get_user_account_plaid_settings(user_account_id: int):
     settings = repository.get_user_account_plaid_settings(db_session, user_account_id)
     return {"plaid_settings": settings.serialize() if settings is not None else None}
 
@@ -445,12 +445,14 @@ def get_user_account_plaid_settings(user_account_id):
         },
     },
 )
-def update_user_account_plaid_settings(user_account_id):
+def update_user_account_plaid_settings(
+    request_context: RequestContext, user_account_id: int
+):
     existing_settings = repository.get_user_account_plaid_settings(
         db_session, user_account_id
     )
     plaid_settings: UserAccountPlaidSettings
-    request_data = request.json
+    request_data = request_context.request
     with db_session.persist(
         existing_settings or UserAccountPlaidSettings()
     ) as plaid_settings:
@@ -465,7 +467,7 @@ def update_user_account_plaid_settings(user_account_id):
 @app.route(ACCOUNT.settings.plaid(), methods=["DELETE"])
 @jwt_required()
 @service_endpoint()
-def delete_user_account_plaid_settings(user_account_id):
+def delete_user_account_plaid_settings(user_account_id: int):
     settings = repository.get_user_account_plaid_settings(db_session, user_account_id)
     if settings:
         db_session.delete(settings)
@@ -485,14 +487,14 @@ def is_user_account_configured(user_account_id: int):
 @app.route(ACCOUNT.valuation.trigger(), methods=["POST"])
 @jwt_required()
 @service_endpoint()
-def trigger_user_account_valuation(user_account_id):
+def trigger_user_account_valuation(user_account_id: int):
     return trigger_valuation(user_account_id)
 
 
 @app.route(ACCOUNT.history(), methods=["GET"])
 @jwt_required()
 @service_endpoint()
-def get_user_account_valuation_history(user_account_id):
+def get_user_account_valuation_history(user_account_id: int):
     history_entries = (
         db_session.query(UserAccountHistoryEntry)
         .filter_by(user_account_id=user_account_id)
@@ -526,7 +528,7 @@ def get_user_account_valuation_history(user_account_id):
 @app.route(ACCOUNT.linked_accounts(), methods=["GET"])
 @jwt_required()
 @service_endpoint()
-def get_linked_accounts(user_account_id):
+def get_linked_accounts(user_account_id: int):
     results = repository.find_linked_accounts(db_session, user_account_id)
     statuses = repository.get_linked_accounts_statuses(db_session, user_account_id)
     return {
@@ -548,7 +550,7 @@ def get_linked_accounts(user_account_id):
 @app.route(ACCOUNT.linked_accounts.valuation(), methods=["GET"])
 @jwt_required()
 @service_endpoint()
-def get_linked_accounts_valuation(user_account_id):
+def get_linked_accounts_valuation(user_account_id: int):
     history_entry = repository.find_last_history_entry(db_session, user_account_id)
     if not history_entry:
         raise MissingUserData("No data to report")
@@ -592,31 +594,22 @@ def get_linked_accounts_valuation(user_account_id):
             "account_name": {"type": "string"},
         },
     },
+    parameters={
+        "validate": {"type": bool, "default": True},
+        "persist": {"type": bool, "default": True},
+    },
 )
-def link_new_account(user_account_id):
-    do_validate = bool(int(request.args.get("validate", 1)))
-    do_persist = bool(int(request.args.get("persist", 1)))
-    request_data = request.json
+def link_new_account(request_context: RequestContext, user_account_id: int):
+    do_validate = request_context.parameters["validate"]
+    do_persist = request_context.parameters["persist"]
+    request_data = request_context.request
 
     logging.info(f"validate={do_validate} persist={do_persist}")
 
-    user_account = (
-        db_session.query(UserAccount)
-        .filter_by(id=user_account_id)
-        .options(joinedload(UserAccount.plaid_settings))
-        .first()
-    )
-
-    if not user_account:
-        raise InvalidUserInput(
-            f"could not find user account with id '{user_account_id}'"
-        )
+    user_account = repository.get_user_account(db_session, user_account_id)
 
     provider_id = request_data["provider_id"]
-    provider = db_session.query(Provider).filter_by(id=provider_id).first()
-
-    if not provider:
-        raise InvalidUserInput(f"could not find provider with id '{provider_id}'")
+    provider = repository.get_provider(db_session, provider_id)
 
     is_plaid = provider.id == "plaid_us"
     if is_plaid and not user_account.plaid_settings:
@@ -641,10 +634,17 @@ def link_new_account(user_account_id):
         )
 
     if do_persist:
+        account_name: str = request_data["account_name"]
+        if repository.linked_account_exists(db_session, user_account_id, account_name):
+            raise InvalidUserInput(
+                f"A linked account with name '{account_name}' already exists"
+            )
+
         logging.info(
             f"Linking external account (provider_id={provider.id})"
             f" to user account_id={user_account.id}"
         )
+
         try:
             with db_session.persist(user_account):
                 encrypted_credentials = secure.fernet_encrypt(
@@ -653,7 +653,7 @@ def link_new_account(user_account_id):
                 user_account.linked_accounts.append(
                     LinkedAccount(
                         provider_id=request_data["provider_id"],
-                        account_name=request_data["account_name"],
+                        account_name=account_name,
                         encrypted_credentials=encrypted_credentials,
                     )
                 )
@@ -686,7 +686,7 @@ LINKED_ACCOUNT = ACCOUNT.linked_accounts.p("int:linked_account_id")
 @app.route(LINKED_ACCOUNT(), methods=["GET"])
 @jwt_required()
 @service_endpoint()
-def get_linked_account(user_account_id, linked_account_id):
+def get_linked_account(user_account_id: int, linked_account_id: int):
     linked_account = repository.get_linked_account(
         db_session, user_account_id, linked_account_id
     )
@@ -697,12 +697,12 @@ def get_linked_account(user_account_id, linked_account_id):
         )
         credentials = json.loads(
             secure.fernet_decrypt(
-                linked_account.encrypted_credentials.encode(),
+                unwrap_optional(linked_account.encrypted_credentials).encode(),
                 FINBOT_ENV.secret_key.encode(),
             ).decode()
         )
         credentials["link_token"] = core.create_plaid_link_token(
-            credentials, plaid_settings
+            credentials, unwrap_optional(plaid_settings)
         )
     linked_account_status = repository.get_linked_account_status(
         db_session, user_account_id, linked_account_id
@@ -731,14 +731,20 @@ def get_linked_account(user_account_id, linked_account_id):
         "properties": {"account_name": {"type": "string"}},
     }
 )
-def update_linked_account_metadata(user_account_id, linked_account_id):
-    request_data = request.json
-    linked_account_id = int(linked_account_id)
+def update_linked_account_metadata(
+    request_context: RequestContext, user_account_id: int, linked_account_id: int
+):
+    request_data = request_context.request
     linked_account = repository.get_linked_account(
         db_session, user_account_id, linked_account_id
     )
     with db_session.persist(linked_account):
-        linked_account.account_name = request_data["account_name"]
+        account_name: str = request_data["account_name"]
+        if repository.linked_account_exists(db_session, user_account_id, account_name):
+            raise InvalidUserInput(
+                f"A linked account with name '{account_name}' already exists"
+            )
+        linked_account.account_name = account_name
     return {}
 
 
@@ -751,13 +757,19 @@ def update_linked_account_metadata(user_account_id, linked_account_id):
         "additionalProperties": False,
         "properties": {"credentials": {"type": ["object", "null"]}},
     },
+    parameters={
+        "validate": {"type": bool, "default": True},
+        "persist": {"type": bool, "default": True},
+    },
 )
-def update_linked_account_credentials(user_account_id, linked_account_id):
-    do_validate = bool(int(request.args.get("validate", 1)))
-    do_persist = bool(int(request.args.get("persist", 1)))
+def update_linked_account_credentials(
+    request_context: RequestContext, user_account_id: int, linked_account_id: int
+):
+    do_validate = request_context.parameters["validate"]
+    do_persist = request_context.parameters["persist"]
+    request_data = request_context.request
 
-    request_data = request.json
-    linked_account_id = int(linked_account_id)
+    linked_account_id = linked_account_id
     linked_account = repository.get_linked_account(
         db_session, user_account_id, linked_account_id
     )
@@ -774,7 +786,7 @@ def update_linked_account_credentials(user_account_id, linked_account_id):
     if linked_account.provider.id == "plaid_us":
         credentials = json.loads(
             secure.fernet_decrypt(
-                linked_account.encrypted_credentials.encode(),
+                unwrap_optional(linked_account.encrypted_credentials).encode(),
                 FINBOT_ENV.secret_key.encode(),
             ).decode()
         )
@@ -799,8 +811,7 @@ def update_linked_account_credentials(user_account_id, linked_account_id):
 @app.route(LINKED_ACCOUNT(), methods=["DELETE"])
 @jwt_required()
 @service_endpoint()
-def delete_linked_account(user_account_id, linked_account_id):
-    linked_account_id = int(linked_account_id)
+def delete_linked_account(user_account_id: int, linked_account_id: int):
     linked_account = repository.get_linked_account(
         db_session, user_account_id, linked_account_id
     )
@@ -825,8 +836,9 @@ def delete_linked_account(user_account_id, linked_account_id):
 @app.route(LINKED_ACCOUNT.history(), methods=["GET"])
 @jwt_required()
 @service_endpoint()
-def get_linked_account_historical_valuation(user_account_id, linked_account_id):
-    linked_account_id = int(linked_account_id)
+def get_linked_account_historical_valuation(
+    user_account_id: int, linked_account_id: int
+):
     results = (
         db_session.query(UserAccountHistoryEntry)
         .filter_by(user_account_id=user_account_id)
@@ -863,13 +875,13 @@ def get_linked_account_historical_valuation(user_account_id, linked_account_id):
 @app.route(LINKED_ACCOUNT.sub_accounts(), methods=["GET"])
 @jwt_required()
 @service_endpoint()
-def get_linked_account_sub_accounts(user_account_id, linked_account_id):
+def get_linked_account_sub_accounts(user_account_id: int, linked_account_id: int):
     history_entry = repository.find_last_history_entry(db_session, user_account_id)
     if not history_entry:
         raise MissingUserData(
             f"No valuation available for user account '{user_account_id}'"
         )
-    linked_account_id = int(linked_account_id)
+    linked_account_id = linked_account_id
     results = repository.find_sub_accounts_valuation(
         db_session, history_entry.id, linked_account_id
     )

@@ -9,13 +9,18 @@ from finbot.core import tracer
 
 import jsonschema
 
-from typing import Optional, Callable, Iterator, Any
 from flask import jsonify, request
+from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
+
+from werkzeug.datastructures import ImmutableMultiDict
+
+from typing import Optional, Callable, Iterator, Any, TypedDict, Union, Type
 from contextlib import contextmanager
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from dataclasses import dataclass
 import functools
 import logging
+import inspect
 
 
 class Route(object):
@@ -138,14 +143,139 @@ class ApplicationErrorResponse:
         return ApplicationErrorResponse(ApplicationErrorData.from_exception(e))
 
 
+@dataclass
+class RequestContext:
+    _request_payload: Optional[dict[Any, Any]]
+    _parameters: dict[str, Any]
+    _user_id: Optional[int]
+
+    @property
+    def request(self) -> dict[Any, Any]:
+        if self._request_payload is None:
+            raise RuntimeError(
+                "trying to access unset request payload in request context"
+            )
+        return self._request_payload
+
+    @property
+    def parameters(self) -> dict[str, Any]:
+        return self._parameters
+
+    @property
+    def user_id(self) -> int:
+        if self._user_id is None:
+            raise RuntimeError("trying to access unset user_id in request context")
+        return self._user_id
+
+
+def _get_jwt_identity_safe() -> Optional[int]:
+    if verify_jwt_in_request(optional=True):
+        jwt_ident: Optional[int] = get_jwt_identity()
+        return jwt_ident
+    return None
+
+
+def _init_request_context(
+    request_payload: Optional[dict[Any, Any]], parameters: dict[str, Any]
+) -> RequestContext:
+    return RequestContext(
+        _request_payload=request_payload,
+        _parameters=parameters,
+        _user_id=_get_jwt_identity_safe(),
+    )
+
+
+ParameterType = Union[
+    Type[str],
+    Type[int],
+    Type[float],
+    Type[bool],
+    Type[datetime],
+    Type[date],
+    Callable[[str], Any],
+]
+
+
+class ParameterDef(TypedDict, total=False):
+    type: ParameterType
+    required: bool
+    default: Any
+
+
+def _parse_raw_parameter_value(raw_value: str, parameter_type: ParameterType) -> Any:
+    if parameter_type in {str, int, float}:
+        return parameter_type(raw_value)  # type: ignore
+    if parameter_type is bool:
+        true_values = ["1", "true", "t", "y", "yes"]
+        if raw_value.lower() in true_values:
+            return True
+        false_values = ["0", "false", "f", "n", "no"]
+        if raw_value.lower() in false_values:
+            return False
+        raise RequestValidationError(
+            f"bool parameter value expected to be any of:"
+            f" {', '.join(true_values + false_values)}"
+            f" (case insensitive)"
+        )
+    if parameter_type is datetime:
+        return datetime.fromisoformat(raw_value)
+    if parameter_type is date:
+        return date.fromisoformat(raw_value)
+    return parameter_type(raw_value)  # type: ignore
+
+
+def _parse_url_parameter(
+    parameter_name: str,
+    parameter_def: ParameterDef,
+    raw_arguments: ImmutableMultiDict[Any, Any],
+) -> Optional[Any]:
+    if parameter_def.get("required", False) and parameter_name not in raw_arguments:
+        raise RequestValidationError(
+            f"Mandatory parameter '{parameter_name}' missing in request"
+        )
+    raw_value = raw_arguments.get(parameter_name)
+    if raw_value is None:
+        if "default" in parameter_def:
+            return parameter_def["default"]
+        return None
+    try:
+        return _parse_raw_parameter_value(raw_value, parameter_def["type"])
+    except Exception as e:
+        raise RequestValidationError(
+            f"Could not validate request parameter '{parameter_name}': {e}"
+        )
+
+
+def _parse_url_parameters(
+    parameters_def: Optional[dict[str, ParameterDef]],
+    raw_parameters: ImmutableMultiDict[Any, Any],
+) -> dict[str, Optional[Any]]:
+    parameters_def = parameters_def or {}
+    for param_name in raw_parameters:
+        if param_name not in parameters_def:
+            raise RequestValidationError(
+                f"Received unexpected parameter '{param_name}'"
+            )
+    return {
+        param_name: _parse_url_parameter(param_name, param_def, raw_parameters)
+        for param_name, param_def in parameters_def.items()
+    }
+
+
 def service_endpoint(
-    trace_values: bool = True, schema: Optional[dict[Any, Any]] = None
+    trace_values: bool = True,
+    schema: Optional[dict[Any, Any]] = None,
+    parameters: Optional[dict[Any, ParameterDef]] = None,
 ) -> Callable[..., Any]:
     def impl(func: Callable[..., Any]) -> Callable[..., Any]:
         def prepare_response(response_data: Any) -> Any:
             serialized_response = serialize(response_data)
             logging.debug(f"response_dump={pretty_dump(serialized_response)}")
             return jsonify(serialized_response)
+
+        include_request_context = (
+            "request_context" in inspect.signature(func).parameters
+        )
 
         @functools.wraps(func)
         def handler(*args: Any, **kwargs: Any) -> Any:
@@ -162,6 +292,14 @@ def service_endpoint(
                                 raise RequestValidationError(
                                     f"failed to validate request: {e}"
                                 )
+                        parsed_parameters = _parse_url_parameters(
+                            parameters, request.args
+                        )
+                        if include_request_context:
+                            logging.debug("initializing request context")
+                            kwargs["request_context"] = _init_request_context(
+                                payload, parsed_parameters
+                            )
                         flat_context = _get_tracer_context(payload)
                         with tracer.adopt(flat_context, func.__name__):
                             response = func(*args, **kwargs)
