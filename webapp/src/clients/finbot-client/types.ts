@@ -99,13 +99,13 @@ export interface ProviderResource {
 export interface LinkAccountRequest
   extends UserAccountResource,
     ProviderResource {
-  credentials: object | null;
+  credentials: Record<string, unknown> | null;
   account_name: string;
 }
 
 export interface ValidateLinkedAccountCredentialsRequest
   extends LinkAccountRequest {
-  credentials: object | null;
+  credentials: Record<string, unknown> | null;
   account_name: string;
 }
 
@@ -117,7 +117,7 @@ export interface UpdateLinkedAccountMetadata extends LinkedAccountResource {
 }
 
 export interface UpdateLinkedAccountCredentials extends LinkedAccountResource {
-  credentials: object | null;
+  credentials: Record<string, unknown> | null;
   validate?: boolean;
   persist?: boolean;
 }
@@ -129,7 +129,7 @@ export interface GetProviderRequest extends ProviderResource {}
 export interface SaveProviderRequest extends ProviderResource {
   description: string;
   website_url: string;
-  credentials_schema: object;
+  credentials_schema: Record<string, unknown>;
 }
 
 export interface DeleteProviderRequest extends ProviderResource {}
