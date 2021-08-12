@@ -35,14 +35,14 @@ export interface UserAccountResource {
 export interface GetUserAccountRequest extends UserAccountResource {}
 
 export interface UserAccount {
-  id: number
-  email: string
-  full_name: string
-  mobile_phone_number: string
+  id: number;
+  email: string;
+  full_name: string;
+  mobile_phone_number: string;
 }
 
 export interface GetUserAccountResponse {
-  user_account: UserAccount
+  user_account: UserAccount;
 }
 
 export interface UpdateAccountProfileRequest extends UserAccountResource {
@@ -63,7 +63,8 @@ export interface TwilioSettings {
   phone_number: string;
 }
 
-export interface UpdateTwilioAccountSettingsRequest extends UserAccountResource {
+export interface UpdateTwilioAccountSettingsRequest
+  extends UserAccountResource {
   twilio_settings: TwilioSettings;
 }
 
@@ -76,13 +77,16 @@ export interface UpdateAccountPlaidSettingsRequest extends UserAccountResource {
   secret_key: string;
 }
 
-export interface GetAccountHistoricalValuationRequest extends UserAccountResource {}
+export interface GetAccountHistoricalValuationRequest
+  extends UserAccountResource {}
 
-export interface DeleteAccountPlaidSettingsRequest extends UserAccountResource {}
+export interface DeleteAccountPlaidSettingsRequest
+  extends UserAccountResource {}
 
 export interface GetLinkedAccountsRequest extends UserAccountResource {}
 
-export interface GetLinkedAccountsValuationRequest extends UserAccountResource {}
+export interface GetLinkedAccountsValuationRequest
+  extends UserAccountResource {}
 
 export interface LinkedAccountResource extends UserAccountResource {
   linked_account_id: number;
@@ -92,7 +96,9 @@ export interface ProviderResource {
   provider_id: string;
 }
 
-export interface LinkAccountRequest extends UserAccountResource, ProviderResource {
+export interface LinkAccountRequest
+  extends UserAccountResource,
+    ProviderResource {
   credentials: object | null;
   account_name: string;
 }

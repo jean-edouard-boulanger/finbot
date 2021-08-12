@@ -256,9 +256,7 @@ def create_user_account(request_context: RequestContext):
             f"User account with email '{user_account.email}' already exists"
         )
 
-    return {
-        "user_account": serialize_user_account(user_account)
-    }
+    return {"user_account": serialize_user_account(user_account)}
 
 
 ACCOUNT = ACCOUNTS.p("int:user_account_id")

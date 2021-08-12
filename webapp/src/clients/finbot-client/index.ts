@@ -1,4 +1,4 @@
-import axios, {AxiosResponse} from "axios";
+import axios, { AxiosResponse } from "axios";
 
 import {
   DeleteAccountPlaidSettingsRequest,
@@ -30,7 +30,7 @@ import {
   ValidateLinkedAccountCredentialsRequest,
 } from "./types";
 
-export function getEndpoint(): string {
+function getEndpoint(): string {
   const endpoint = process.env.REACT_APP_FINBOT_SERVER_ENDPOINT;
   if (endpoint) {
     return endpoint;
@@ -38,7 +38,7 @@ export function getEndpoint(): string {
   return "http://127.0.0.1:5003/api/v1";
 }
 
-export function handleResponse<T = any>(response: AxiosResponse): T {
+function handleResponse<T = any>(response: AxiosResponse): T {
   const payload = response.data;
   if (Object.prototype.hasOwnProperty.call(payload, "error")) {
     const error_metadata: FinbotErrorMetadata = payload.error;
@@ -93,7 +93,9 @@ export class FinbotClient {
     return handleResponse(response);
   }
 
-  async getUserAccount({ account_id }: GetUserAccountRequest): Promise<UserAccount> {
+  async getUserAccount({
+    account_id,
+  }: GetUserAccountRequest): Promise<UserAccount> {
     const response = await axios.get(`${this.endpoint}/accounts/${account_id}`);
     return handleResponse<GetUserAccountResponse>(response).user_account;
   }
