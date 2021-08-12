@@ -8,7 +8,14 @@ function getEndpoint() {
   return "http://127.0.0.1:5003/api/v1";
 }
 
-class FinbotClient {
+export class FinbotClientError extends Error {
+  constructor(user_message, metadata) {
+    super(user_message);
+    this.metadata = metadata;
+  }
+}
+
+export class FinbotClient {
   constructor() {
     this.endpoint = getEndpoint();
   }
@@ -16,7 +23,8 @@ class FinbotClient {
   handleResponse(response) {
     const app_data = response.data;
     if (Object.prototype.hasOwnProperty.call(app_data, "error")) {
-      throw app_data.error.user_message;
+      const error_metadata = app_data.error;
+      throw new FinbotClientError(error_metadata.user_message, error_metadata);
     }
     return app_data;
   }
@@ -251,5 +259,3 @@ class FinbotClient {
     return this.handleResponse(response).report;
   }
 }
-
-export { FinbotClient };

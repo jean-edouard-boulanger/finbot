@@ -10,10 +10,10 @@ const UserNavbar = (props) => {
   return (
     <Navbar.Collapse id="responsive-navbar-nav">
       <Nav activeKey={props.location.pathname} className="ml-auto">
-        <NavLink className="px-5 nav-link" to="/dashboard" exact>
+        <NavLink className="px-5 nav-link" to="/dashboard">
           Dashboard
         </NavLink>
-        <NavLink className="px-5 nav-link" to="/settings" exact>
+        <NavLink className="px-5 nav-link" to="/settings">
           Settings
         </NavLink>
         <NavLink className="px-5 nav-link" to="/logout">
