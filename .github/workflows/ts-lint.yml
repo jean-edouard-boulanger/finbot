@@ -1,4 +1,4 @@
-name: Lint (JS)
+name: Lint (TS)
 on:
   push:
     branches:
@@ -44,5 +44,5 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: 3.9
-      - name: Check banned keywords (JS)
-        run: make banned-keywords-check-js
+      - name: Check banned keywords
+        run: make banned-keywords-check-ts
