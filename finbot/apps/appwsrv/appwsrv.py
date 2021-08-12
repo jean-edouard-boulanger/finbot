@@ -141,13 +141,7 @@ def auth_login(request_context: RequestContext):
                 identity=account.id, expires_delta=False
             ).decode(),
         },
-        "account": {
-            "id": account.id,
-            "email": account.email,
-            "full_name": account.full_name,
-            "created_at": account.created_at,
-            "updated_at": account.updated_at,
-        },
+        "account": serialize_user_account(account),
     }
 
 

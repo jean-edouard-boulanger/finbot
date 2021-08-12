@@ -19,7 +19,7 @@ module.exports = exports = {
   rules: {
     "react/prop-types": "off",
     "react/display-name": "off",
-    "no-unused-vars": errorOnProd,
+    "@typescript-eslint/no-unused-vars": errorOnProd,
     "@typescript-eslint/no-empty-function": "off",
     "@typescript-eslint/no-var-requires": "off",
     "@typescript-eslint/explicit-module-boundary-types": "off",

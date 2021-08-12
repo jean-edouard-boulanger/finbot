@@ -23,9 +23,21 @@ export interface RegisterAccountRequest {
   valuation_ccy: string;
 }
 
-export interface LoginRequest {
+export interface Credentials {
   email: string;
   password: string;
+}
+
+export interface LoginRequest extends Credentials {}
+
+export interface Auth {
+  access_token: string;
+  refresh_token: string;
+}
+
+export interface LoginResponse {
+  auth: Auth;
+  account: UserAccount;
 }
 
 export interface UserAccountResource {

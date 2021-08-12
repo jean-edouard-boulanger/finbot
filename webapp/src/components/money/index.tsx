@@ -1,7 +1,15 @@
 import React from "react";
-import PropTypes from "prop-types";
 
-const Money = (props) => {
+
+export interface MoneyProps {
+  amount: number
+  locale: string
+  ccy: string
+  moneyFormatter(amount: number, locale: string, ccy: string): string
+}
+
+
+export const Money: React.FC<MoneyProps> = (props) => {
   const { amount, locale, ccy, moneyFormatter } = props;
 
   if (amount >= 0) {
@@ -15,11 +23,4 @@ const Money = (props) => {
   }
 };
 
-Money.propTypes = {
-  amount: PropTypes.number,
-  locale: PropTypes.string,
-  moneyFormatter: PropTypes.func,
-  ccy: PropTypes.string,
-};
-
-export { Money };
+export default Money;

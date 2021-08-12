@@ -3,7 +3,11 @@ import React, { useState } from "react";
 import { Form, InputGroup, Button } from "react-bootstrap";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
-export const ToggleSecret = (props) => {
+export interface ToggleSecretProps {
+  renderAs?: any
+}
+
+export const ToggleSecret: React.FC<ToggleSecretProps & {[x: string]: any}> = (props) => {
   const { renderAs, ...rest } = props;
   const [displayed, setDisplayed] = useState(false);
 

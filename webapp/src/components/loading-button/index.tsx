@@ -1,8 +1,12 @@
 import React from "react";
 
-import { Button, Spinner } from "react-bootstrap";
+import { Button, ButtonProps, Spinner } from "react-bootstrap";
 
-export const LoadingButton = (props) => {
+export interface LoadingButtonProps extends ButtonProps {
+  loading?: boolean
+}
+
+export const LoadingButton: React.FC<LoadingButtonProps> = (props) => {
   const { children, loading = true, ...buttonProps } = props;
   return (
     <Button disabled={loading} {...buttonProps}>

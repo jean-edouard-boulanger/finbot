@@ -1,6 +1,11 @@
 import React, { useContext, useEffect, useState } from "react";
 
-import { StackedBarLoader, Money, ValuationChange } from "components";
+import {
+  StackedBarLoader,
+  Money,
+  ValuationChange,
+  RelativeValuationChange,
+} from "components";
 import { Alert, Table } from "react-bootstrap";
 import { ServicesContext } from "contexts/services/services-context";
 
@@ -110,7 +115,7 @@ export const EarningsReport = (props) => {
               </td>
               <td>
                 <strong>
-                  <ValuationChange.Relative amount={entry.metrics.rel_change} />
+                  <RelativeValuationChange amount={entry.metrics.rel_change} />
                 </strong>
               </td>
             </tr>
@@ -170,7 +175,7 @@ export const EarningsReport = (props) => {
           </td>
           <td>
             <strong>
-              <ValuationChange.Relative amount={report.rollup.rel_change} />
+              <RelativeValuationChange amount={report.rollup.rel_change} />
             </strong>
           </td>
         </tr>

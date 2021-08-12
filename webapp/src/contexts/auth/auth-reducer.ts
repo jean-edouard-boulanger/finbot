@@ -1,8 +1,14 @@
+import { AuthState } from "./auth-state";
 import { setAuthHeader } from "./auth-globals";
 import { LOGIN_SUCCESS, LOGOUT } from "./auth-actions";
 import { persistLocal, clearLocal } from "./auth-storage";
 
-export default (state, action) => {
+export interface Action {
+  type: string;
+  payload?: any;
+}
+
+export default (state: AuthState, action: Action): AuthState => {
   switch (action.type) {
     case LOGIN_SUCCESS: {
       const accessToken = action.payload.auth.access_token;

@@ -1,4 +1,3 @@
-import { DurationBadge } from "./duration-badge";
 import { LoadingButton } from "./loading-button";
 import { MainContainer } from "./main-container";
 import { Money } from "./money";
@@ -7,10 +6,9 @@ import { SparkLine } from "./sparkline";
 import { StackedBarLoader } from "./stacked-bar-loader";
 import { ToggleSecret } from "./toggle-secret";
 import { TreeGrid } from "./tree-grid";
-import { ValuationChange } from "./valuation-change";
+import { ValuationChange, RelativeValuationChange } from "./valuation-change";
 
 export {
-  DurationBadge,
   LoadingButton,
   MainContainer,
   Money,
@@ -20,4 +18,5 @@ export {
   ToggleSecret,
   TreeGrid,
   ValuationChange,
+  RelativeValuationChange,
 };
