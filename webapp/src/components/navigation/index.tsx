@@ -1,12 +1,12 @@
 import React, { useContext } from "react";
-import { withRouter, NavLink } from "react-router-dom";
+import { withRouter, NavLink, RouteComponentProps } from "react-router-dom";
 
 import AuthContext from "contexts/auth/auth-context";
 
 import Navbar from "react-bootstrap/Navbar";
 import Nav from "react-bootstrap/Nav";
 
-const UserNavbar = (props) => {
+const UserNavbar: React.FC<RouteComponentProps<Record<string, never>>> = (props) => {
   return (
     <Navbar.Collapse id="responsive-navbar-nav">
       <Nav activeKey={props.location.pathname} className="ml-auto">
@@ -24,7 +24,7 @@ const UserNavbar = (props) => {
   );
 };
 
-const GuestNavbar = (props) => {
+const GuestNavbar: React.FC<RouteComponentProps<Record<string, never>>> = (props) => {
   return (
     <Navbar.Collapse id="responsive-navbar-nav">
       <Nav activeKey={props.location.pathname} className="ml-auto">

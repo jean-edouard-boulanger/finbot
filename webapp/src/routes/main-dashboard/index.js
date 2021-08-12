@@ -3,7 +3,7 @@ import { Redirect } from "react-router-dom";
 
 import { AuthContext, ServicesContext } from "contexts";
 
-import { Money, ValuationChange } from "components";
+import { Money, RelativeValuationChange } from "components";
 import { EarningsReport, HoldingsReport } from "./reports";
 
 import { Row, Col, Card, Tabs, Tab } from "react-bootstrap";
@@ -168,7 +168,7 @@ export const MainDashboard = () => {
             <Card.Body>
               <Card.Title>24h Change</Card.Title>
               {valuation?.change?.change_1day ? (
-                <ValuationChange.Relative
+                <RelativeValuationChange
                   amount={getRelativeChange(
                     valuation.value - valuation.change.change_1day,
                     valuation.value

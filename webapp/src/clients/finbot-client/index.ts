@@ -19,6 +19,7 @@ import {
   IsAccountConfiguredRequest,
   LinkAccountRequest,
   LoginRequest,
+  LoginResponse,
   RegisterAccountRequest,
   SaveProviderRequest,
   UpdateAccountPlaidSettingsRequest,
@@ -85,12 +86,15 @@ export class FinbotClient {
     return handleResponse(response);
   }
 
-  async logInAccount({ email, password }: LoginRequest) {
+  async logInAccount({
+    email,
+    password,
+  }: LoginRequest): Promise<LoginResponse> {
     const response = await axios.post(`${this.endpoint}/auth/login`, {
       email,
       password,
     });
-    return handleResponse(response);
+    return handleResponse<LoginResponse>(response);
   }
 
   async getUserAccount({

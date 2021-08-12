@@ -1,6 +1,14 @@
 import React from "react";
 
-export const ValuationChange = (props) => {
+export interface ValuationChangeProps {
+  amount?: number | null,
+  currentValue?: number | null
+  previousValue?: number | null
+  locale?: string
+  showZero?: boolean
+}
+
+export const ValuationChange: React.FC<ValuationChangeProps> = (props) => {
   const {
     amount,
     currentValue,
@@ -10,18 +18,15 @@ export const ValuationChange = (props) => {
     showZero = false,
   } = props;
 
-  const fmt = (val) => {
+  const fmt = (val: number): string => {
     return val.toLocaleString(locale);
   };
 
-  function hasValue(val) {
-    return val !== undefined && val !== null;
-  }
-
-  function impl(val) {
-    if (!hasValue(val) || (val === 0.0 && !showZero)) {
+  function impl(val?: number | null) {
+    if ((val === null || val === undefined) || (val === 0.0 && !showZero)) {
       return <span className="text-muted">-</span>;
-    } else if (val === 0.0) {
+    }
+    else if (val === 0.0) {
       return <span className="text-muted">{fmt(0)}</span>;
     } else if (val < 0) {
       return <span className="text-danger">{fmt(val)}</span>;
@@ -31,11 +36,12 @@ export const ValuationChange = (props) => {
   }
 
   // absolute change provided
-  if (hasValue(amount)) {
+  if (amount !== null && amount !== undefined) {
     return impl(amount);
   }
   // current and previous values were provided, will compute difference
-  else if (hasValue(currentValue) && hasValue(previousValue)) {
+  else if (currentValue !== null && currentValue !== undefined
+    && previousValue !== null && previousValue !== undefined) {
     return impl(currentValue - previousValue);
   }
   // invalid combination
@@ -44,7 +50,11 @@ export const ValuationChange = (props) => {
   }
 };
 
-ValuationChange.Relative = (props) => {
+export interface RelativeValuationChangeProps {
+  amount?: number
+}
+
+export const RelativeValuationChange: React.FC<RelativeValuationChangeProps> = (props) => {
   const { amount } = props;
   if (!amount || amount === 0.0) {
     return <span className="text-muted">-</span>;
@@ -55,5 +65,3 @@ ValuationChange.Relative = (props) => {
     return <span className="text-success">+{(amount * 100).toFixed(2)}%</span>;
   }
 };
-
-export default ValuationChange;

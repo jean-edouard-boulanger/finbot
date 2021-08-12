@@ -1,7 +1,8 @@
-import { Container } from "react-bootstrap";
 import React from "react";
 
-export function MainContainer(props) {
+import { Container } from "react-bootstrap";
+
+export const MainContainer: React.FC<React.HTMLAttributes<HTMLElement>> = (props) => {
   return (
     <div className="main-wrapper">
       <Container fluid>{props.children}</Container>

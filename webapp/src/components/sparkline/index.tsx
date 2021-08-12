@@ -1,7 +1,8 @@
-import Chart from "react-apexcharts";
 import React from "react";
 
-const getSparkLineColor = (series) => {
+import Chart from "react-apexcharts";
+
+const getSparkLineColor = (series: Array<number>): string => {
   const loss_color = "#e34f44";
   const gain_color = "#94e5a3";
   const last = series[series.length - 1];
@@ -12,7 +13,11 @@ const getSparkLineColor = (series) => {
   return change >= 0 ? gain_color : loss_color;
 };
 
-export const SparkLine = (props) => {
+export interface SparkLineProps {
+  series: Array<number>
+}
+
+export const SparkLine: React.FC<SparkLineProps> = (props) => {
   const series = props.series.filter((value) => value !== null);
   return (
     <Chart

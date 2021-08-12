@@ -1,6 +1,8 @@
+import { AuthState } from "./auth-state";
+
 const IDENTITY_LOCAL_KEY = "identity";
 
-export function persistLocal(state) {
+export function persistLocal(state: AuthState) {
   localStorage.setItem(
     IDENTITY_LOCAL_KEY,
     JSON.stringify({
@@ -10,20 +12,20 @@ export function persistLocal(state) {
   );
 }
 
-export function restoreLocal(state) {
+export function restoreLocal(currentState: AuthState): AuthState {
   const jsonData = localStorage.getItem(IDENTITY_LOCAL_KEY);
   if (jsonData === null) {
-    return { ...state };
+    return { ...currentState };
   }
   try {
     const data = JSON.parse(jsonData);
     return {
-      ...state,
+      ...currentState,
       token: data.token,
       account: data.account,
     };
   } catch {
-    return { ...state };
+    return { ...currentState };
   }
 }
 
