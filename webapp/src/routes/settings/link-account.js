@@ -201,10 +201,10 @@ export const LinkAccount = (props) => {
     };
     setOperation("Validating credentials");
     try {
-      await finbotClient.validateExternalAccountCredentials(
-        account.id,
-        link_settings
-      );
+      await finbotClient.validateLinkedAccountCredentials({
+        account_id: account.id,
+        ...link_settings,
+      });
     } catch (e) {
       toast.error(`Error validating credentials: ${e}`);
       setOperation(null);
@@ -212,7 +212,10 @@ export const LinkAccount = (props) => {
     }
     setOperation("Linking account");
     try {
-      await finbotClient.linkAccount(account.id, link_settings);
+      await finbotClient.linkAccount({
+        account_id: account.id,
+        ...link_settings,
+      });
     } catch (e) {
       toast.error(`Error updating credentials: ${e}`);
       setOperation(null);

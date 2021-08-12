@@ -3,14 +3,14 @@ import React from "react";
 import { ServicesContext } from "./services-context";
 import { FinbotClient } from "clients";
 
-export const ServicesProvider = (props) => {
+export const ServicesProvider = ({ children }: {children: React.ReactNode}) => {
   return (
     <ServicesContext.Provider
       value={{
         finbotClient: new FinbotClient(),
       }}
     >
-      {props.children}
+      {children}
     </ServicesContext.Provider>
   );
 };
