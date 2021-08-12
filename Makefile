@@ -170,16 +170,16 @@ docker-dev:
 py-unit-tests:
 	python3.9 -m pytest tests/unit_tests
 
-prettier-js:
+prettier-ts:
 	cd webapp && npm run prettier
 
-prettier-check-js:
+prettier-check-ts:
 	cd webapp && npm run prettier-check
 
 eslint:
 	cd webapp && npm run lint-check:prod
 
-banned-keywords-check-js:
+banned-keywords-check-ts:
 	tools/banned-keywords.py --source-dirs webapp/src
 
 flake8:
@@ -205,9 +205,9 @@ lint-sh:
  		xargs shellcheck -e SC1090 -e SC1091 -S style
 
 lint-py: mypy flake8 black-check banned-keywords-check-py
-lint-js: eslint prettier-check-js banned-keywords-check-js
-lint-all: lint-py lint-js lint-sh
+lint-ts: eslint prettier-check-ts banned-keywords-check-ts
+lint-all: lint-py lint-ts lint-sh
 
 format-py: black
-format-js: prettier-js
-format-all: format-py format-js
+format-ts: prettier-ts
+format-all: format-py format-ts

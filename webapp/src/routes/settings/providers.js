@@ -102,7 +102,7 @@ export const EditProviderPanel = () => {
 
   const handleDelete = async (providerId) => {
     try {
-      await finbotClient.deleteProvider(providerId);
+      await finbotClient.deleteProvider({ provider_id: providerId });
       setSelectedProviderId(null);
       toast.success(`Provider '${providerId}' has been deleted`);
     } catch (e) {
@@ -128,7 +128,9 @@ export const EditProviderPanel = () => {
       return;
     }
     const fetch = async () => {
-      const provider = await finbotClient.getProvider(selectedProviderId);
+      const provider = await finbotClient.getProvider({
+        provider_id: selectedProviderId,
+      });
       resetProviderDescription(provider);
       setRawSchema(JSON.stringify(provider.credentials_schema, null, 2));
     };

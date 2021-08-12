@@ -208,6 +208,17 @@ def delete_provider(provider_id: str):
 ACCOUNTS = API_V1.accounts
 
 
+def serialize_user_account(account: UserAccount) -> dict[str, Any]:
+    return {
+        "id": account.id,
+        "email": account.email,
+        "full_name": account.full_name,
+        "mobile_phone_number": account.mobile_phone_number,
+        "created_at": account.created_at,
+        "updated_at": account.updated_at,
+    }
+
+
 @app.route(ACCOUNTS(), methods=["POST"])
 @service_endpoint(
     trace_values=False,
@@ -246,29 +257,7 @@ def create_user_account(request_context: RequestContext):
         )
 
     return {
-        "user_account": {
-            "id": user_account.id,
-            "email": user_account.email,
-            "full_name": user_account.full_name,
-            "settings": {
-                "valuation_ccy": user_account.settings.valuation_ccy,
-                "created_at": user_account.settings.created_at,
-                "updated_at": user_account.settings.updated_at,
-            },
-            "created_at": user_account.created_at,
-            "updated_at": user_account.updated_at,
-        }
-    }
-
-
-def serialize_user_account(account: UserAccount) -> dict[str, Any]:
-    return {
-        "id": account.id,
-        "email": account.email,
-        "full_name": account.full_name,
-        "mobile_phone_number": account.mobile_phone_number,
-        "created_at": account.created_at,
-        "updated_at": account.updated_at,
+        "user_account": serialize_user_account(user_account)
     }
 
 

@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 
-import { ServicesContext, AuthContext } from "contexts";
+import { ServicesContext, AuthContext } from "../../contexts";
 
 import { Formik, Form as MetaForm, Field, ErrorMessage } from "formik";
 import { Row, Col, Form } from "react-bootstrap";
@@ -25,7 +25,7 @@ export const ProfileSettings = () => {
 
   useEffect(() => {
     const fetch = async () => {
-      const userAccount = await finbotClient.getAccount({
+      const userAccount = await finbotClient.getUserAccount({
         account_id: auth.account.id,
       });
       setAccount(userAccount);
