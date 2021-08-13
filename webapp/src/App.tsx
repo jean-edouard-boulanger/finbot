@@ -21,9 +21,7 @@ import "react-toastify/dist/ReactToastify.css";
 import "bootswatch/dist/lux/bootstrap.min.css";
 import "./assets/css/index.css";
 
-toast.configure({
-  delay: 500,
-});
+toast.configure();
 
 const GuestRouter = () => {
   return (

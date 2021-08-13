@@ -6,7 +6,9 @@ import AuthContext from "contexts/auth/auth-context";
 import Navbar from "react-bootstrap/Navbar";
 import Nav from "react-bootstrap/Nav";
 
-const UserNavbar: React.FC<RouteComponentProps<Record<string, never>>> = (props) => {
+const UserNavbar: React.FC<RouteComponentProps<Record<string, never>>> = (
+  props
+) => {
   return (
     <Navbar.Collapse id="responsive-navbar-nav">
       <Nav activeKey={props.location.pathname} className="ml-auto">
@@ -24,7 +26,9 @@ const UserNavbar: React.FC<RouteComponentProps<Record<string, never>>> = (props)
   );
 };
 
-const GuestNavbar: React.FC<RouteComponentProps<Record<string, never>>> = (props) => {
+const GuestNavbar: React.FC<RouteComponentProps<Record<string, never>>> = (
+  props
+) => {
   return (
     <Navbar.Collapse id="responsive-navbar-nav">
       <Nav activeKey={props.location.pathname} className="ml-auto">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 
 import { AuthContext, ServicesContext } from "contexts";
+import { PlaidSettings } from "clients/finbot-client/types";
 
 import { Formik, Form as MetaForm, Field, ErrorMessage } from "formik";
 import { LoadingButton, ToggleSecret } from "components";
@@ -21,13 +22,12 @@ const SETTINGS_SCHEMA = Yup.object().shape({
   secret_key: Yup.string().required().min(1).label("Secret key"),
 });
 
-const makePlaidSettings = (settings) => {
-  settings = settings ?? {};
+const makePlaidSettings = (settings?: PlaidSettings | null) => {
   return {
-    env: settings.env ?? PLAID_ENVIRONMENTS[PLAID_ENVIRONMENTS.length - 1],
-    client_id: settings.client_id ?? "",
-    public_key: settings.public_key ?? "",
-    secret_key: settings.secret_key ?? "",
+    env: settings?.env ?? PLAID_ENVIRONMENTS[PLAID_ENVIRONMENTS.length - 1],
+    client_id: settings?.client_id ?? "",
+    public_key: settings?.public_key ?? "",
+    secret_key: settings?.secret_key ?? "",
   };
 };
 
@@ -36,12 +36,16 @@ export const PlaidIntegrationSettings = () => {
   const { finbotClient } = useContext(ServicesContext);
 
   const [enablePlaid, setEnablePlaid] = useState(false);
-  const [plaidSettings, setPlaidSettings] = useState(null);
+  const [plaidSettings, setPlaidSettings] = useState<PlaidSettings | null>(
+    null
+  );
+
+  const userAccountId = account!.id;
 
   useEffect(() => {
     const fetch = async () => {
-      const plaidSettings = await finbotClient.getAccountPlaidSettings({
-        account_id: account.id,
+      const plaidSettings = await finbotClient!.getAccountPlaidSettings({
+        account_id: userAccountId,
       });
       setEnablePlaid(plaidSettings !== null);
       setPlaidSettings(makePlaidSettings(plaidSettings));
@@ -49,11 +53,14 @@ export const PlaidIntegrationSettings = () => {
     fetch();
   }, [account, finbotClient]);
 
-  const handleSubmit = async (values, { setSubmitting }) => {
+  const handleSubmit = async (
+    values: PlaidSettings,
+    { setSubmitting }: { setSubmitting: (submitting: boolean) => void }
+  ) => {
     try {
       if (enablePlaid) {
-        const newSettings = await finbotClient.updateAccountPlaidSettings({
-          account_id: account.id,
+        const newSettings = await finbotClient!.updateAccountPlaidSettings({
+          account_id: userAccountId,
           env: values.env,
           client_id: values.client_id,
           public_key: values.public_key,
@@ -61,8 +68,8 @@ export const PlaidIntegrationSettings = () => {
         });
         setPlaidSettings(makePlaidSettings(newSettings));
       } else {
-        await finbotClient.deleteAccountPlaidSettings({
-          account_id: account.id,
+        await finbotClient!.deleteAccountPlaidSettings({
+          account_id: userAccountId,
         });
         setPlaidSettings(makePlaidSettings());
       }
@@ -85,7 +92,7 @@ export const PlaidIntegrationSettings = () => {
           <Formik
             enableReinitialize
             validationSchema={enablePlaid ? SETTINGS_SCHEMA : null}
-            initialValues={plaidSettings}
+            initialValues={plaidSettings ?? makePlaidSettings()}
             onSubmit={handleSubmit}
           >
             {({ isSubmitting, submitForm }) => (

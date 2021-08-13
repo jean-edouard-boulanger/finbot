@@ -1,13 +1,17 @@
 import React from "react";
 
+export type MoneyFormatterType = (
+  amount: number,
+  locale: string,
+  ccy: string
+) => string;
 
 export interface MoneyProps {
-  amount: number
-  locale: string
-  ccy: string
-  moneyFormatter(amount: number, locale: string, ccy: string): string
+  amount: number;
+  locale: string;
+  ccy: string;
+  moneyFormatter: MoneyFormatterType;
 }
-
 
 export const Money: React.FC<MoneyProps> = (props) => {
   const { amount, locale, ccy, moneyFormatter } = props;

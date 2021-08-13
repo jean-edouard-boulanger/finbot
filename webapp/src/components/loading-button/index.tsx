@@ -3,7 +3,7 @@ import React from "react";
 import { Button, ButtonProps, Spinner } from "react-bootstrap";
 
 export interface LoadingButtonProps extends ButtonProps {
-  loading?: boolean
+  loading?: boolean;
 }
 
 export const LoadingButton: React.FC<LoadingButtonProps> = (props) => {

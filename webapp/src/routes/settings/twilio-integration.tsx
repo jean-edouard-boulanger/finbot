@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useContext } from "react";
 
 import { AuthContext, ServicesContext } from "contexts";
+import { LoadingButton, ToggleSecret } from "components";
+import { TwilioSettings } from "clients/finbot-client/types";
 
 import { Formik, Form as MetaForm, Field, ErrorMessage } from "formik";
-import { LoadingButton, ToggleSecret } from "components";
 import { Col, Row, Form, Alert } from "react-bootstrap";
 import { toast } from "react-toastify";
 
@@ -15,12 +16,11 @@ const SETTINGS_SCHEMA = Yup.object().shape({
   phone_number: Yup.string().required().label("Phone number"),
 });
 
-const makeTwilioSettings = (settings) => {
-  settings = settings ?? {};
+const makeTwilioSettings = (settings?: TwilioSettings | null) => {
   return {
-    account_sid: settings.account_sid ?? "",
-    auth_token: settings.auth_token ?? "",
-    phone_number: settings.phone_number ?? "",
+    account_sid: settings?.account_sid ?? "",
+    auth_token: settings?.auth_token ?? "",
+    phone_number: settings?.phone_number ?? "",
   };
 };
 
@@ -29,12 +29,14 @@ export const TwilioIntegrationSettings = () => {
   const { finbotClient } = useContext(ServicesContext);
 
   const [enableTwilio, setEnableTwilio] = useState(false);
-  const [twilioSettings, setTwilioSettings] = useState(null);
+  const [twilioSettings, setTwilioSettings] = useState<TwilioSettings>(
+    makeTwilioSettings()
+  );
 
   useEffect(() => {
     const fetch = async () => {
-      const settings = await finbotClient.getAccountSettings({
-        account_id: account.id,
+      const settings = await finbotClient!.getAccountSettings({
+        account_id: account!.id,
       });
       const twilioSettings = settings.twilio_settings;
       setEnableTwilio(twilioSettings !== null);
@@ -43,11 +45,14 @@ export const TwilioIntegrationSettings = () => {
     fetch();
   }, [account, finbotClient]);
 
-  const handleSubmit = async (values, { setSubmitting }) => {
+  const handleSubmit = async (
+    values: TwilioSettings,
+    { setSubmitting }: { setSubmitting: (submitting: boolean) => void }
+  ) => {
     try {
       const newSettings = enableTwilio ? values : null;
-      await finbotClient.updateTwilioAccountSettings({
-        account_id: account.id,
+      await finbotClient!.updateTwilioAccountSettings({
+        account_id: account!.id,
         twilio_settings: newSettings,
       });
       setSubmitting(false);

@@ -1,15 +1,21 @@
 import React, { useContext, useState } from "react";
 import { Link } from "react-router-dom";
 
+import { Credentials } from "clients/finbot-client/types";
 import { AuthContext } from "contexts";
 
 import { toast } from "react-toastify";
 import { LoadingButton } from "components";
 import { Row, Col, Button } from "react-bootstrap";
 
-import { default as DataDrivenForm } from "react-jsonschema-form";
+import {
+  default as DataDrivenForm,
+  UiSchema,
+  ISubmitEvent,
+} from "react-jsonschema-form";
+import { JSONSchema6 } from "json-schema";
 
-const LOGIN_DATA_SCHEMA = {
+const LOGIN_DATA_SCHEMA: JSONSchema6 = {
   type: "object",
   required: ["password", "email"],
   properties: {
@@ -25,7 +31,7 @@ const LOGIN_DATA_SCHEMA = {
   },
 };
 
-const LOGIN_UI_SCHEMA = {
+const LOGIN_UI_SCHEMA: UiSchema = {
   email: {
     "ui:emptyValue": "",
     "ui:autofocus": true,
@@ -35,13 +41,15 @@ const LOGIN_UI_SCHEMA = {
   },
 };
 
-export const LoginForm = () => {
+export interface LoginFormProps {}
+
+export const LoginForm: React.FC<LoginFormProps> = () => {
   const { login } = useContext(AuthContext);
   const [loading] = useState(false);
 
-  const handleLogin = async (data) => {
+  const handleLogin = async (event: ISubmitEvent<Credentials>) => {
     try {
-      await login(data.formData);
+      await login!(event.formData);
     } catch (e) {
       toast.error(e);
     }

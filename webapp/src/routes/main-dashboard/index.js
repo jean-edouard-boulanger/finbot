@@ -4,7 +4,7 @@ import { Redirect } from "react-router-dom";
 import { AuthContext, ServicesContext } from "contexts";
 
 import { Money, RelativeValuationChange } from "components";
-import { EarningsReport, HoldingsReport } from "./reports";
+import { EarningsReportPanel, HoldingsReportPanel } from "./reports";
 
 import { Row, Col, Card, Tabs, Tab } from "react-bootstrap";
 import Chart from "react-apexcharts";
@@ -338,14 +338,14 @@ export const MainDashboard = () => {
             </Card.Header>
             <Card.Body>
               {selectedReport === REPORTS.HOLDINGS && (
-                <HoldingsReport
+                <HoldingsReportPanel
                   accountId={accountId}
                   locale={locale}
                   moneyFormatter={moneyFormatter}
                 />
               )}
               {selectedReport === REPORTS.EARNINGS && (
-                <EarningsReport
+                <EarningsReportPanel
                   accountId={accountId}
                   locale={locale}
                   moneyFormatter={moneyFormatter}

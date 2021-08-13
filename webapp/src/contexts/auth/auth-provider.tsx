@@ -10,7 +10,6 @@ import { LOGIN_SUCCESS, LOGOUT } from "./auth-actions";
 import { restoreLocal } from "./auth-storage";
 import { makeFreshAuthState, isValidAuthState } from "./auth-state";
 
-
 export const AuthProvider = (props: React.HTMLAttributes<HTMLElement>) => {
   let initialState = restoreLocal(makeFreshAuthState());
   if (!isValidAuthState(initialState)) {
@@ -23,7 +22,7 @@ export const AuthProvider = (props: React.HTMLAttributes<HTMLElement>) => {
 
   async function handleLogin(credentials: Credentials) {
     const { email, password } = credentials;
-    const res = await finbotClient?.logInAccount({ email, password });
+    const res = await finbotClient!.logInAccount({ email, password });
     dispatch({
       type: LOGIN_SUCCESS,
       payload: res,

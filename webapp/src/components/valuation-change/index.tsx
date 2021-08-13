@@ -1,11 +1,11 @@
 import React from "react";
 
 export interface ValuationChangeProps {
-  amount?: number | null,
-  currentValue?: number | null
-  previousValue?: number | null
-  locale?: string
-  showZero?: boolean
+  amount?: number | null;
+  currentValue?: number | null;
+  previousValue?: number | null;
+  locale?: string;
+  showZero?: boolean;
 }
 
 export const ValuationChange: React.FC<ValuationChangeProps> = (props) => {
@@ -23,10 +23,9 @@ export const ValuationChange: React.FC<ValuationChangeProps> = (props) => {
   };
 
   function impl(val?: number | null) {
-    if ((val === null || val === undefined) || (val === 0.0 && !showZero)) {
+    if (val === null || val === undefined || (val === 0.0 && !showZero)) {
       return <span className="text-muted">-</span>;
-    }
-    else if (val === 0.0) {
+    } else if (val === 0.0) {
       return <span className="text-muted">{fmt(0)}</span>;
     } else if (val < 0) {
       return <span className="text-danger">{fmt(val)}</span>;
@@ -40,8 +39,12 @@ export const ValuationChange: React.FC<ValuationChangeProps> = (props) => {
     return impl(amount);
   }
   // current and previous values were provided, will compute difference
-  else if (currentValue !== null && currentValue !== undefined
-    && previousValue !== null && previousValue !== undefined) {
+  else if (
+    currentValue !== null &&
+    currentValue !== undefined &&
+    previousValue !== null &&
+    previousValue !== undefined
+  ) {
     return impl(currentValue - previousValue);
   }
   // invalid combination
@@ -51,10 +54,12 @@ export const ValuationChange: React.FC<ValuationChangeProps> = (props) => {
 };
 
 export interface RelativeValuationChangeProps {
-  amount?: number
+  amount?: number;
 }
 
-export const RelativeValuationChange: React.FC<RelativeValuationChangeProps> = (props) => {
+export const RelativeValuationChange: React.FC<RelativeValuationChangeProps> = (
+  props
+) => {
   const { amount } = props;
   if (!amount || amount === 0.0) {
     return <span className="text-muted">-</span>;

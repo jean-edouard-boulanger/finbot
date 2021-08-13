@@ -115,7 +115,7 @@ const Header = () => {
   );
 };
 
-export const HoldingsReport = (props) => {
+export const HoldingsReportPanel = (props) => {
   const { accountId, locale, moneyFormatter } = props;
 
   const { finbotClient } = useContext(ServicesContext);

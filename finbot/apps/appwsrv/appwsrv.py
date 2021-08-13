@@ -340,7 +340,11 @@ def update_user_account_profile(request_context: RequestContext, user_account_id
         account.email = data["email"]
         account.full_name = data["full_name"]
         account.mobile_phone_number = data["mobile_phone_number"]
-    return {"user_account": serialize_user_account(account)}
+    return {"profile": {
+        "email": account.email,
+        "full_name": account.full_name,
+        "mobile_phone_number": account.mobile_phone_number
+    }}
 
 
 def serialize_user_account_settings(settings: UserAccountSettings) -> dict[str, Any]:
@@ -519,6 +523,7 @@ def get_linked_accounts(user_account_id: int):
                 "account_name": entry.account_name,
                 "deleted": entry.deleted,
                 "provider": entry.provider,
+                "provider_id": entry.provider_id,
                 "created_at": entry.created_at,
                 "updated_at": entry.updated_at,
                 "status": statuses.get(entry.id),
@@ -693,6 +698,7 @@ def get_linked_account(user_account_id: int, linked_account_id: int):
             "id": linked_account.id,
             "user_account_id": linked_account.user_account_id,
             "provider_id": linked_account.provider_id,
+            "provider": linked_account.provider,
             "account_name": linked_account.account_name,
             "credentials": credentials,
             "deleted": linked_account.deleted,

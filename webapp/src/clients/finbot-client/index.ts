@@ -4,9 +4,11 @@ import {
   DeleteAccountPlaidSettingsRequest,
   DeleteLinkedAccountRequest,
   DeleteProviderRequest,
+  EarningsReport,
   FinbotErrorMetadata,
   GetAccountHistoricalValuationRequest,
   GetAccountPlaidSettingsRequest,
+  GetAccountPlaidSettingsResponse,
   GetAccountSettingsRequest,
   GetAccountValuationRequest,
   GetGuidRequest,
@@ -14,20 +16,26 @@ import {
   GetLinkedAccountsRequest,
   GetLinkedAccountsValuationRequest,
   GetProviderRequest,
+  GetProvidersResponse,
   GetUserAccountRequest,
   GetUserAccountResponse,
   IsAccountConfiguredRequest,
   LinkAccountRequest,
   LoginRequest,
   LoginResponse,
+  PlaidSettings,
+  Provider,
   RegisterAccountRequest,
+  ReportResponse,
   SaveProviderRequest,
   UpdateAccountPlaidSettingsRequest,
   UpdateAccountProfileRequest,
+  UpdateAccountProfileResponse,
   UpdateLinkedAccountCredentials,
   UpdateLinkedAccountMetadata,
   UpdateTwilioAccountSettingsRequest,
   UserAccount,
+  UserAccountProfile,
   ValidateLinkedAccountCredentialsRequest,
 } from "./types";
 
@@ -109,7 +117,7 @@ export class FinbotClient {
     full_name,
     email,
     mobile_phone_number,
-  }: UpdateAccountProfileRequest) {
+  }: UpdateAccountProfileRequest): Promise<UserAccountProfile> {
     const response = await axios.put(
       `${this.endpoint}/accounts/${account_id}/profile`,
       {
@@ -118,7 +126,7 @@ export class FinbotClient {
         mobile_phone_number,
       }
     );
-    return handleResponse(response).user_account;
+    return handleResponse<UpdateAccountProfileResponse>(response).profile;
   }
 
   async getAccountValuation({ account_id }: GetAccountValuationRequest) {
@@ -155,11 +163,12 @@ export class FinbotClient {
 
   async getAccountPlaidSettings({
     account_id,
-  }: GetAccountPlaidSettingsRequest) {
+  }: GetAccountPlaidSettingsRequest): Promise<PlaidSettings> {
     const response = await axios.get(
       `${this.endpoint}/accounts/${account_id}/settings/plaid`
     );
-    return handleResponse(response).plaid_settings;
+    return handleResponse<GetAccountPlaidSettingsResponse>(response)
+      .plaid_settings;
   }
 
   async updateAccountPlaidSettings({
@@ -269,9 +278,9 @@ export class FinbotClient {
     return handleResponse(response);
   }
 
-  async getProviders() {
+  async getProviders(): Promise<Array<Provider>> {
     const response = await axios.get(`${this.endpoint}/providers`);
-    return handleResponse(response).providers;
+    return handleResponse<GetProvidersResponse>(response).providers;
   }
 
   async saveProvider(provider: SaveProviderRequest) {
@@ -324,8 +333,8 @@ export class FinbotClient {
     return handleResponse(response).report;
   }
 
-  async getEarningsReport() {
+  async getEarningsReport(): Promise<EarningsReport> {
     const response = await axios.get(`${this.endpoint}/reports/earnings`);
-    return handleResponse(response).report;
+    return handleResponse<ReportResponse<EarningsReport>>(response).report;
   }
 }
