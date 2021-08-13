@@ -21,7 +21,7 @@ const PLAID_PROVIDER_ID = "plaid_us";
 
 interface DataDrivenAccountFormProps {
   operation: string | null;
-  schema: any; // TODO
+  schema: any;
   onSubmit(credentials: LinkedAccountCredentials): void;
   updateMode: boolean;
 }

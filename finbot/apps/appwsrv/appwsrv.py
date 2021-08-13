@@ -340,11 +340,13 @@ def update_user_account_profile(request_context: RequestContext, user_account_id
         account.email = data["email"]
         account.full_name = data["full_name"]
         account.mobile_phone_number = data["mobile_phone_number"]
-    return {"profile": {
-        "email": account.email,
-        "full_name": account.full_name,
-        "mobile_phone_number": account.mobile_phone_number
-    }}
+    return {
+        "profile": {
+            "email": account.email,
+            "full_name": account.full_name,
+            "mobile_phone_number": account.mobile_phone_number,
+        }
+    }
 
 
 def serialize_user_account_settings(settings: UserAccountSettings) -> dict[str, Any]:
