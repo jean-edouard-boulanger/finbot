@@ -1,14 +1,21 @@
 import React, { useContext, useState } from "react";
 import { Redirect } from "react-router-dom";
 
+import { RegisterAccountRequest } from "clients/finbot-client/types";
 import { ServicesContext } from "contexts";
 
 import { toast } from "react-toastify";
 import { LoadingButton } from "components";
-import { default as DataDrivenForm } from "react-jsonschema-form";
 import { Row, Col } from "react-bootstrap";
 
-const SIGNUP_DATA_SCHEMA = {
+import {
+  default as DataDrivenForm,
+  UiSchema,
+  ISubmitEvent,
+} from "react-jsonschema-form";
+import { JSONSchema6 } from "json-schema";
+
+const SIGNUP_DATA_SCHEMA: JSONSchema6 = {
   type: "object",
   required: ["full_name", "password", "valuation_ccy", "email"],
   properties: {
@@ -35,7 +42,7 @@ const SIGNUP_DATA_SCHEMA = {
   },
 };
 
-const SIGNUP_UI_SCHEMA = {
+const SIGNUP_UI_SCHEMA: UiSchema = {
   full_name: {
     "ui:autofocus": true,
     "ui:emptyValue": "",
@@ -54,10 +61,10 @@ export const SignupForm = () => {
   const [loading, setLoading] = useState(false);
   const [registered, setRegistered] = useState(false);
 
-  const handleSignup = async (data) => {
+  const handleSignup = async (event: ISubmitEvent<RegisterAccountRequest>) => {
     try {
       setLoading(true);
-      await finbotClient.registerAccount(data.formData);
+      await finbotClient!.registerAccount(event.formData);
       setLoading(false);
       setRegistered(true);
     } catch (e) {

@@ -14,7 +14,7 @@ const getSparkLineColor = (series: Array<number>): string => {
 };
 
 export interface SparkLineProps {
-  series: Array<number>
+  series: Array<number>;
 }
 
 export const SparkLine: React.FC<SparkLineProps> = (props) => {

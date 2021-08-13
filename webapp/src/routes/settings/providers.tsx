@@ -53,7 +53,7 @@ const PROVIDER_SCHEMA = Yup.object().shape({
   website_url: Yup.string().required("Website is required").max(256),
 });
 
-const useSchema = (rawSchema) => {
+const useSchema = (rawSchema: string): [any | null, string | null] => {
   try {
     const schema = JSON.parse(rawSchema);
     return [schema, null];
@@ -62,19 +62,42 @@ const useSchema = (rawSchema) => {
   }
 };
 
+interface ProviderDescription {
+  id: string;
+  description: string;
+  website_url: string;
+}
+
+const makeProviderDescription = (
+  entry?: Partial<ProviderDescription>
+): ProviderDescription => {
+  return {
+    id: entry?.id ?? "",
+    description: entry?.description ?? "",
+    website_url: entry?.website_url ?? "",
+  };
+};
+
 export const EditProviderPanel = () => {
   const { finbotClient } = useContext(ServicesContext);
   const { account } = useContext(AuthContext);
-  const [selectedProviderId, setSelectedProviderId] = useState(null);
-  const [providerDescription, setProviderDescription] = useState(null);
+  const [selectedProviderId, setSelectedProviderId] = useState<string | null>(
+    null
+  );
+  const [providerDescription, setProviderDescription] = useState(
+    makeProviderDescription()
+  );
   const [rawSchema, setRawSchema] = useState(() => {
     return JSON.stringify(DEFAULT_CREDENTIALS_SCHEMA, null, 2);
   });
   const [schema, schemaError] = useSchema(rawSchema);
-  const editorRef = useRef();
+  const editorRef = useRef<AceEditor | null>();
 
-  const handleSubmit = async (values, { setSubmitting }) => {
-    let editor = editorRef.current.editor;
+  const handleSubmit = async (
+    description: ProviderDescription,
+    { setSubmitting }: { setSubmitting: (submitting: boolean) => void }
+  ) => {
+    const editor = editorRef.current!.editor;
     let schema = null;
     try {
       schema = JSON.parse(editor.getValue());
@@ -87,9 +110,9 @@ export const EditProviderPanel = () => {
     }
 
     try {
-      const provider = await finbotClient.saveProvider({
+      const provider = await finbotClient!.saveProvider({
+        ...description,
         credentials_schema: schema,
-        ...values,
       });
       setSubmitting(false);
       setSelectedProviderId(provider.id);
@@ -100,35 +123,31 @@ export const EditProviderPanel = () => {
     }
   };
 
-  const handleDelete = async (providerId) => {
+  const handleDelete = async (providerId: string | null) => {
     try {
-      await finbotClient.deleteProvider({ provider_id: providerId });
-      setSelectedProviderId(null);
-      toast.success(`Provider '${providerId}' has been deleted`);
+      if (providerId !== null) {
+        await finbotClient!.deleteProvider({
+          provider_id: providerId,
+        });
+        setSelectedProviderId(null);
+        toast.success(`Provider '${providerId}' has been deleted`);
+      }
     } catch (e) {
       toast.error(`Could not delete provider: ${e}`);
     }
   };
 
-  const resetProviderDescription = ({ id, description, website_url }) => {
-    setProviderDescription({
-      id: id || "",
-      description: description || "",
-      website_url: website_url || "",
-    });
+  const resetProviderDescription = (entry?: Partial<ProviderDescription>) => {
+    setProviderDescription(makeProviderDescription(entry));
   };
 
   useEffect(() => {
     if (selectedProviderId === null) {
-      resetProviderDescription({
-        id: null,
-        description: null,
-        website_url: null,
-      });
+      resetProviderDescription();
       return;
     }
     const fetch = async () => {
-      const provider = await finbotClient.getProvider({
+      const provider = await finbotClient!.getProvider({
         provider_id: selectedProviderId,
       });
       resetProviderDescription(provider);
@@ -153,8 +172,8 @@ export const EditProviderPanel = () => {
         <Col>
           <ProviderSelector
             defaultValue={ProviderSelector.New}
-            onChange={(value) => {
-              setSelectedProviderId(value.value);
+            onChange={(item) => {
+              setSelectedProviderId(item?.value ?? null);
             }}
             onNew={() => {
               setSelectedProviderId(null);
@@ -232,7 +251,7 @@ export const EditProviderPanel = () => {
                       height="30em"
                       value={rawSchema}
                       onBlur={(e, editor) => {
-                        const rawSchema = editor.getValue();
+                        const rawSchema = editor!.getValue();
                         setRawSchema(rawSchema);
                       }}
                       ref={(editor) => {
@@ -256,7 +275,7 @@ export const EditProviderPanel = () => {
                             uiSchema={schema.ui_schema ?? {}}
                             showErrorList={false}
                           >
-                            <Button hidden disabled size={"xs"}>
+                            <Button hidden disabled size={"sm"}>
                               Hidden
                             </Button>
                           </DataDrivenForm>

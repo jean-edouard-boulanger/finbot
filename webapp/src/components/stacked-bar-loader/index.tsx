@@ -7,11 +7,13 @@ const DEFAULT_COUNT = 3;
 const DEFAULT_SPACING = "0.5em";
 
 export interface StackedBarLoaderProps {
-  count: number,
-  spacing: number
+  count: number;
+  spacing: string | number;
 }
 
-export const StackedBarLoader: React.FC<StackedBarLoaderProps & LoaderHeightWidthProps> = (props) => {
+export const StackedBarLoader: React.FC<
+  StackedBarLoaderProps & LoaderHeightWidthProps
+> = (props) => {
   const { count = DEFAULT_COUNT, spacing = DEFAULT_SPACING, ...rest } = props;
   const range = Array.from(Array(count).keys());
   return (

@@ -1,10 +1,15 @@
 import React, { useContext, useEffect, useState } from "react";
 
-import { ServicesContext, AuthContext } from "../../contexts";
+import { ServicesContext, AuthContext } from "contexts";
+import { LoadingButton } from "components/loading-button";
+import {
+  UpdateAccountProfileRequest,
+  UserAccount,
+  UserAccountProfile,
+} from "clients/finbot-client/types";
 
 import { Formik, Form as MetaForm, Field, ErrorMessage } from "formik";
 import { Row, Col, Form } from "react-bootstrap";
-import { LoadingButton } from "../../components/loading-button";
 import { toast } from "react-toastify";
 
 import * as Yup from "yup";
@@ -18,32 +23,51 @@ const PROFILE_SCHEMA = Yup.object().shape({
     .label("Mobile phone number"),
 });
 
+const makeProfile = (
+  profile?: Partial<UserAccountProfile> | Partial<UserAccount>
+): UserAccountProfile => {
+  return {
+    email: profile?.email ?? "",
+    full_name: profile?.full_name ?? "",
+    mobile_phone_number: profile?.mobile_phone_number ?? null,
+  };
+};
+
+const makeUpdateRequest = (
+  accountId: number,
+  profile?: Partial<UserAccountProfile>
+): UpdateAccountProfileRequest => {
+  return {
+    account_id: accountId,
+    ...makeProfile(profile),
+  };
+};
+
 export const ProfileSettings = () => {
   const { finbotClient } = useContext(ServicesContext);
   const auth = useContext(AuthContext);
-  const [account, setAccount] = useState(null);
+  const [profile, setProfile] = useState<UserAccountProfile | null>(null);
+  const userAccountId = auth.account!.id;
 
   useEffect(() => {
     const fetch = async () => {
-      const userAccount = await finbotClient.getUserAccount({
-        account_id: auth.account.id,
+      const userAccount = await finbotClient!.getUserAccount({
+        account_id: userAccountId,
       });
-      setAccount(userAccount);
+      setProfile(makeProfile(userAccount));
     };
     fetch();
   }, [finbotClient, auth.account]);
 
-  const handleSubmit = async (values, { setSubmitting }) => {
+  const handleSubmit = async (
+    values: UserAccountProfile,
+    { setSubmitting }: { setSubmitting: (submitting: boolean) => void }
+  ) => {
     try {
-      const mobilePhoneNumber = values.mobile_phone_number;
-      const userAccount = await finbotClient.updateAccountProfile({
-        account_id: auth.account.id,
-        email: values.email,
-        full_name: values.full_name,
-        mobile_phone_number:
-          mobilePhoneNumber.length === 0 ? null : mobilePhoneNumber,
-      });
-      setAccount(userAccount);
+      const newProfile = await finbotClient!.updateAccountProfile(
+        makeUpdateRequest(userAccountId, values)
+      );
+      setProfile(newProfile);
       toast.success("Profile updated");
     } catch (e) {
       toast.error(`Failed to update profile: ${e}`);
@@ -63,7 +87,7 @@ export const ProfileSettings = () => {
           <Formik
             enableReinitialize
             validationSchema={PROFILE_SCHEMA}
-            initialValues={account}
+            initialValues={profile ?? makeProfile()}
             onSubmit={handleSubmit}
           >
             {({ isSubmitting, submitForm }) => (

@@ -6,7 +6,9 @@ import { Link } from "react-router-dom";
 
 import { Card, Row, Col } from "react-bootstrap";
 
-export const Welcome = () => {
+export interface WelcomeProps {}
+
+export const Welcome: React.FC<WelcomeProps> = () => {
   const { account } = useContext(AuthContext);
   return (
     <>
@@ -17,7 +19,7 @@ export const Welcome = () => {
               <div className={"page-header"}>
                 <h1>
                   Welcome to finbot
-                  <small>{` ${account.full_name.split(" ")[0]}`}</small>
+                  <small>{` ${account?.full_name.split(" ")[0]}`}</small>
                 </h1>
               </div>
             </Col>

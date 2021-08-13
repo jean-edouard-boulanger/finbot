@@ -1,27 +1,38 @@
 import React, { useContext, useEffect, useState } from "react";
 
+import { ServicesContext } from "contexts/services/services-context";
+import { EarningsReport } from "clients/finbot-client/types";
 import {
   StackedBarLoader,
   Money,
   ValuationChange,
   RelativeValuationChange,
 } from "components";
-import { Alert, Table } from "react-bootstrap";
-import { ServicesContext } from "contexts/services/services-context";
+import { MoneyFormatterType } from "components/money";
 
-export const EarningsReport = (props) => {
+import { Alert, Table } from "react-bootstrap";
+
+export interface EarningsReportPanelProps {
+  accountId: number;
+  locale: string;
+  moneyFormatter: MoneyFormatterType;
+}
+
+export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
+  props
+) => {
   const { accountId, locale, moneyFormatter } = props;
 
   const { finbotClient } = useContext(ServicesContext);
   const [loading, setLoading] = useState(false);
-  const [report, setReport] = useState(null);
-  const [error, setError] = useState(null);
+  const [report, setReport] = useState<EarningsReport | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetch = async () => {
       try {
         setLoading(true);
-        const report = await finbotClient.getEarningsReport();
+        const report = await finbotClient!.getEarningsReport();
         setReport(report);
       } catch (e) {
         setError(`${e}`);
@@ -126,7 +137,7 @@ export const EarningsReport = (props) => {
         <tr
           style={{ fontWeight: "bold" }}
           className={
-            report.rollup.abs_change >= 0 ? "table-success" : "table-danger"
+            report!.rollup.abs_change >= 0 ? "table-success" : "table-danger"
           }
         >
           <td>
@@ -135,7 +146,7 @@ export const EarningsReport = (props) => {
           <td>
             <strong>
               <Money
-                amount={report.rollup.first_value}
+                amount={report!.rollup.first_value}
                 locale={locale}
                 ccy={currency}
                 moneyFormatter={moneyFormatter}
@@ -145,7 +156,7 @@ export const EarningsReport = (props) => {
           <td>
             <strong>
               <Money
-                amount={report.rollup.last_value}
+                amount={report!.rollup.last_value}
                 locale={locale}
                 ccy={currency}
                 moneyFormatter={moneyFormatter}
@@ -154,7 +165,7 @@ export const EarningsReport = (props) => {
           </td>
           <td>
             <Money
-              amount={report.rollup.min_value}
+              amount={report!.rollup.min_value}
               locale={locale}
               ccy={currency}
               moneyFormatter={moneyFormatter}
@@ -162,7 +173,7 @@ export const EarningsReport = (props) => {
           </td>
           <td>
             <Money
-              amount={report.rollup.max_value}
+              amount={report!.rollup.max_value}
               locale={locale}
               ccy={currency}
               moneyFormatter={moneyFormatter}
@@ -170,12 +181,12 @@ export const EarningsReport = (props) => {
           </td>
           <td>
             <strong>
-              <ValuationChange amount={report.rollup.abs_change} />
+              <ValuationChange amount={report!.rollup.abs_change} />
             </strong>
           </td>
           <td>
             <strong>
-              <RelativeValuationChange amount={report.rollup.rel_change} />
+              <RelativeValuationChange amount={report!.rollup.rel_change} />
             </strong>
           </td>
         </tr>

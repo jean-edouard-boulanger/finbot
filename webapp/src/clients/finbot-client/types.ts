@@ -57,10 +57,18 @@ export interface GetUserAccountResponse {
   user_account: UserAccount;
 }
 
-export interface UpdateAccountProfileRequest extends UserAccountResource {
+export interface UserAccountProfile {
   full_name: string;
   email: string;
-  mobile_phone_number: string;
+  mobile_phone_number: string | null;
+}
+
+export interface UpdateAccountProfileRequest
+  extends UserAccountResource,
+    UserAccountProfile {}
+
+export interface UpdateAccountProfileResponse {
+  profile: UserAccountProfile;
 }
 
 export interface GetAccountValuationRequest extends UserAccountResource {}
@@ -77,17 +85,25 @@ export interface TwilioSettings {
 
 export interface UpdateTwilioAccountSettingsRequest
   extends UserAccountResource {
-  twilio_settings: TwilioSettings;
+  twilio_settings: TwilioSettings | null;
 }
 
 export interface GetAccountPlaidSettingsRequest extends UserAccountResource {}
 
-export interface UpdateAccountPlaidSettingsRequest extends UserAccountResource {
+export interface PlaidSettings {
   env: string;
   client_id: string;
   public_key: string;
   secret_key: string;
 }
+
+export interface GetAccountPlaidSettingsResponse {
+  plaid_settings: PlaidSettings;
+}
+
+export interface UpdateAccountPlaidSettingsRequest
+  extends UserAccountResource,
+    PlaidSettings {}
 
 export interface GetAccountHistoricalValuationRequest
   extends UserAccountResource {}
@@ -104,6 +120,29 @@ export interface LinkedAccountResource extends UserAccountResource {
   linked_account_id: number;
 }
 
+export type LinkedAccountCredentials = Record<string, unknown>;
+
+export interface LinkedAccountStatusErrorEntry {
+  scope: string;
+  error: FinbotErrorMetadata;
+}
+
+export interface LinkedAccountStatus {
+  status: "stable" | "unstable";
+  errors: Array<LinkedAccountStatusErrorEntry>;
+}
+
+export interface LinkedAccount {
+  id: number;
+  user_account_id: number;
+  provider_id: string;
+  account_name: string;
+  credentials: LinkedAccountCredentials | null;
+  deleted: boolean;
+  status: LinkedAccountStatus | null;
+  provider: Provider;
+}
+
 export interface ProviderResource {
   provider_id: string;
 }
@@ -111,15 +150,12 @@ export interface ProviderResource {
 export interface LinkAccountRequest
   extends UserAccountResource,
     ProviderResource {
-  credentials: Record<string, unknown> | null;
+  credentials: LinkedAccountCredentials | null;
   account_name: string;
 }
 
 export interface ValidateLinkedAccountCredentialsRequest
-  extends LinkAccountRequest {
-  credentials: Record<string, unknown> | null;
-  account_name: string;
-}
+  extends LinkAccountRequest {}
 
 export interface GetLinkedAccountRequest extends LinkedAccountResource {}
 
@@ -129,19 +165,56 @@ export interface UpdateLinkedAccountMetadata extends LinkedAccountResource {
 }
 
 export interface UpdateLinkedAccountCredentials extends LinkedAccountResource {
-  credentials: Record<string, unknown> | null;
+  credentials: LinkedAccountCredentials | null;
   validate?: boolean;
   persist?: boolean;
 }
 
 export interface DeleteLinkedAccountRequest extends LinkedAccountResource {}
 
-export interface GetProviderRequest extends ProviderResource {}
-
-export interface SaveProviderRequest extends ProviderResource {
+export interface Provider {
+  id: string;
   description: string;
   website_url: string;
   credentials_schema: Record<string, unknown>;
 }
 
+export interface GetProvidersResponse {
+  providers: Array<Provider>;
+}
+
+export interface GetProviderRequest extends ProviderResource {}
+
+export interface SaveProviderRequest extends Provider {}
+
 export interface DeleteProviderRequest extends ProviderResource {}
+
+export interface EarningsReportAggregation {
+  as_str: string;
+}
+
+export interface EarningsReportMetrics {
+  first_date: string;
+  first_value: number;
+  last_date: string;
+  last_value: number;
+  min_value: number;
+  max_value: number;
+  abs_change: number;
+  rel_change: number;
+}
+
+export interface EarningsReportEntry {
+  aggregation: EarningsReportAggregation;
+  metrics: EarningsReportMetrics;
+}
+
+export interface EarningsReport {
+  currency: string;
+  entries: Array<EarningsReportEntry>;
+  rollup: EarningsReportMetrics;
+}
+
+export interface ReportResponse<ReportType> {
+  report: ReportType;
+}
