@@ -293,7 +293,8 @@ export const AccountsPanel: React.FC<AccountsPanelProps> = () => {
               <tr key={`account-${linkedAccount.id}`}>
                 <td>
                   <Link to={`/settings/linked/${linkedAccount.id}/status`}>
-                    {linkedAccount.account_name}{` `}
+                    {linkedAccount.account_name}
+                    {` `}
                     <LinkedAccountStatusIcon status={status} />
                   </Link>
                 </td>

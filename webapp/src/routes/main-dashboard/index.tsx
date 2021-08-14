@@ -5,7 +5,7 @@ import { AuthContext, ServicesContext } from "contexts";
 
 import { UserAccountValuation } from "clients/finbot-client/types";
 
-import {Money, RelativeValuationChange, BarLoader} from "components";
+import { Money, RelativeValuationChange, BarLoader } from "components";
 import { defaultMoneyFormatter } from "components/money";
 import {
   EarningsReportPanel,
@@ -79,8 +79,7 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
                     DateTime.DATETIME_FULL
                   )})`}
               </Card.Title>
-              {
-                (valuation !== null) &&
+              {valuation !== null && (
                 <strong>
                   <Money
                     amount={valuation.value}
@@ -89,45 +88,43 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
                     moneyFormatter={defaultMoneyFormatter}
                   />
                 </strong>
-              }
+              )}
             </Card.Body>
-            {(valuation === null) && <BarLoader width={"100%"} />}
+            {valuation === null && <BarLoader width={"100%"} />}
           </Card>
         </Col>
         <Col md={4} className="mt-3">
           <Card>
             <Card.Body>
               <Card.Title>Liabilities</Card.Title>
-              {
-                (valuation !== null) &&
-                  <strong>
-                    <Money
-                      amount={valuation.total_liabilities}
-                      locale={locale}
-                      ccy={valuation.currency}
-                      moneyFormatter={defaultMoneyFormatter}
-                    />
-                  </strong>
-              }
+              {valuation !== null && (
+                <strong>
+                  <Money
+                    amount={valuation.total_liabilities}
+                    locale={locale}
+                    ccy={valuation.currency}
+                    moneyFormatter={defaultMoneyFormatter}
+                  />
+                </strong>
+              )}
             </Card.Body>
-            {(valuation === null) && <BarLoader width={"100%"} />}
+            {valuation === null && <BarLoader width={"100%"} />}
           </Card>
         </Col>
         <Col md={4} className="mt-3">
           <Card>
             <Card.Body>
               <Card.Title>24h Change</Card.Title>
-              {
-                (valuation?.change?.change_1day) &&
-                  <RelativeValuationChange
-                    amount={getRelativeChange(
-                      valuation.value - valuation.change.change_1day,
-                      valuation.value
-                    )}
-                  />
-              }
+              {valuation?.change?.change_1day && (
+                <RelativeValuationChange
+                  amount={getRelativeChange(
+                    valuation.value - valuation.change.change_1day,
+                    valuation.value
+                  )}
+                />
+              )}
             </Card.Body>
-            {(valuation === null) && <BarLoader width={"100%"} />}
+            {valuation === null && <BarLoader width={"100%"} />}
           </Card>
         </Col>
       </Row>

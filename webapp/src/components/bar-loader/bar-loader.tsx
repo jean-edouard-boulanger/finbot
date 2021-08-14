@@ -11,7 +11,7 @@ export const BarLoader: React.FC<
   StackedBarLoaderProps & LoaderHeightWidthProps
 > = (props) => {
   return (
-    <div style={{display: "flex"}}>
+    <div style={{ display: "flex" }}>
       <BarLoaderImpl color={DEFAULT_BACKGROUND_COLOR} {...props} />
     </div>
   );
