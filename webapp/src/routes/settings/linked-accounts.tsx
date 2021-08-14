@@ -295,7 +295,7 @@ export const AccountsPanel: React.FC<AccountsPanelProps> = () => {
                     {linkedAccount.account_name}
                   </Link>
                 </td>
-                <td>{linkedAccount.provider.description}</td>
+                <td>{linkedAccount!.provider!.description}</td>
                 <td style={{ textAlign: "center" }}>
                   <Link to={`/settings/linked/${linkedAccount.id}/status`}>
                     <LinkedAccountStatusIcon status={status} />

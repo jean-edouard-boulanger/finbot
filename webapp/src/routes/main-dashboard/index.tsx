@@ -4,30 +4,37 @@ import { Redirect } from "react-router-dom";
 import { AuthContext, ServicesContext } from "contexts";
 
 import { Money, RelativeValuationChange } from "components";
+import { MoneyFormatterType } from "components/money";
 import { EarningsReportPanel, HoldingsReportPanel } from "./reports";
 
 import { Row, Col, Card, Tabs, Tab } from "react-bootstrap";
 import Chart from "react-apexcharts";
 import BarLoader from "react-spinners/BarLoader";
 
-import queryString from "query-string";
 import { DateTime } from "luxon";
+import {
+  LinkedAccountsValuationEntry,
+  UserAccountValuation,
+} from "clients/finbot-client/types";
 
-function getRelativeChange(startVal, finalVal) {
+const getRelativeChange = (startVal: number, finalVal: number) => {
   return (finalVal - startVal) / startVal;
-}
+};
 
-function moneyFormatter(amount, locale, currency) {
+const moneyFormatter: MoneyFormatterType = (amount, locale, currency) => {
   const localized = new Intl.NumberFormat(locale, {
     style: "currency",
     currency: currency,
   }).format(Math.abs(amount));
   return amount >= 0 ? localized : `(${localized})`;
-}
+};
 
-function maxValue(list, accessor) {
+function maxValue<T>(
+  list: Array<T>,
+  accessor: (item: T) => number
+): number | null {
   accessor = accessor || ((val) => val);
-  let currentMax = null;
+  let currentMax: number | null = null;
   for (let i = 0; i !== list.length; ++i) {
     const val = accessor(list[i]);
     if (currentMax === null || val > currentMax) {
@@ -42,73 +49,83 @@ const REPORTS = {
   EARNINGS: "Earnings",
 };
 
-function getAccountIdOverride() {
-  const urlParams = queryString.parse(window.location.search);
-  const userId = urlParams.userId;
-  return userId === undefined ? null : userId;
+const DEFAULT_REPORT = REPORTS.HOLDINGS;
+
+interface HistoricalValuationEntry {
+  timestamp: number;
+  value: number;
+}
+
+interface HistoricalValuation {
+  data: Array<HistoricalValuationEntry>;
+  high: number | null;
 }
 
 export const MainDashboard = () => {
   const { account } = useContext(AuthContext);
   const { finbotClient } = useContext(ServicesContext);
-
   const locale = "en-GB";
-  const [accountId] = useState(() => {
-    const accountIdOverride = getAccountIdOverride();
-    if (accountIdOverride !== null) {
-      return accountIdOverride;
-    }
-    return account.id;
-  });
-  const [configured, setConfigured] = useState(null);
-  const [valuation, setValuation] = useState(null);
-  const [linkedAccounts, setLinkedAccounts] = useState([]);
-  const [historicalValuation, setHistoricalValuation] = useState({
+  const [configured, setConfigured] = useState<boolean | null>(null);
+  const [valuation, setValuation] = useState<UserAccountValuation | null>(null);
+  const [linkedAccountsValuation, setLinkedAccountsValuation] = useState<
+    Array<LinkedAccountsValuationEntry>
+  >([]);
+  const [
+    historicalValuation,
+    setHistoricalValuation,
+  ] = useState<HistoricalValuation>({
     data: [],
     high: 0,
   });
-  const [selectedReport, setSelectedReport] = useState(REPORTS.HOLDINGS);
+  const [selectedReport, setSelectedReport] = useState<string>(DEFAULT_REPORT);
+  const userAccountId = account!.id;
 
   useEffect(() => {
-    let fetch = async () => {
-      const configured = await finbotClient.isAccountConfigured({
-        account_id: accountId,
+    const fetch = async () => {
+      const configured = await finbotClient!.isAccountConfigured({
+        account_id: userAccountId,
       });
       setConfigured(configured);
     };
     fetch();
-  }, [finbotClient, accountId]);
+  }, [finbotClient]);
 
   useEffect(() => {
     if (!configured) {
       return;
     }
-    let fetch = async () => {
-      const valuation = await finbotClient.getAccountValuation({
-        account_id: accountId,
-      });
-      setValuation(valuation);
+    const fetch = async () => {
+      {
+        const result = await finbotClient!.getAccountValuation({
+          account_id: userAccountId,
+        });
+        setValuation(result);
+      }
 
-      const linked_accounts = await finbotClient.getLinkedAccountsValuation({
-        account_id: accountId,
-      });
-      setLinkedAccounts(linked_accounts);
+      {
+        const result = await finbotClient!.getLinkedAccountsValuation({
+          account_id: userAccountId,
+        });
+        setLinkedAccountsValuation(result);
+      }
 
-      const historical_valuation = await finbotClient.getAccountHistoricalValuation(
-        { account_id: accountId }
-      );
-      setHistoricalValuation({
-        data: historical_valuation.map((entry) => {
-          return {
-            date: Date.parse(entry.date).getTime(),
-            value: entry.value,
-          };
-        }),
-        high: maxValue(historical_valuation, (entry) => entry.value),
-      });
+      {
+        const result = await finbotClient!.getAccountHistoricalValuation({
+          account_id: userAccountId,
+        });
+        setHistoricalValuation({
+          data: result.map((entry) => {
+            return {
+              timestamp: DateTime.fromISO(entry.date).toMillis(),
+              value: entry.value,
+            };
+          }),
+          high: maxValue(result, (entry) => entry.value),
+        });
+      }
     };
     fetch();
-  }, [finbotClient, configured, accountId]);
+  }, [finbotClient, configured, userAccountId]);
 
   if (configured === false) {
     return <Redirect to={"/welcome"} />;
@@ -132,7 +149,6 @@ export const MainDashboard = () => {
               ) : (
                 <strong>
                   <Money
-                    className="text-info"
                     amount={valuation.value}
                     locale={locale}
                     ccy={valuation.currency}
@@ -152,7 +168,6 @@ export const MainDashboard = () => {
               ) : (
                 <strong>
                   <Money
-                    className="text-info"
                     amount={valuation.total_liabilities}
                     locale={locale}
                     ccy={valuation.currency}
@@ -215,7 +230,7 @@ export const MainDashboard = () => {
                   xaxis: {
                     type: "datetime",
                     categories: historicalValuation.data.map(
-                      (entry) => entry.date
+                      (entry) => entry.timestamp
                     ),
                     tooltip: {
                       enabled: false,
@@ -231,11 +246,11 @@ export const MainDashboard = () => {
                       format: "dd-MMM-yyyy hh:mm",
                     },
                     y: {
-                      formatter: (value) => {
+                      formatter: (value: number) => {
                         return moneyFormatter(
                           value,
                           locale,
-                          valuation.currency
+                          valuation!.currency
                         );
                       },
                     },
@@ -280,16 +295,16 @@ export const MainDashboard = () => {
                   },
                   tooltip: {
                     y: {
-                      formatter: (value) => {
+                      formatter: (value: number) => {
                         const amount_str = moneyFormatter(
                           value,
                           locale,
-                          valuation.currency
+                          valuation!.currency
                         );
                         return `<span class="text-white">${amount_str}</span>`;
                       },
                       title: {
-                        formatter: (seriesName) => {
+                        formatter: (seriesName: string) => {
                           return `<strong><span class="text-white">${seriesName}</span></strong>`;
                         },
                       },
@@ -308,12 +323,12 @@ export const MainDashboard = () => {
                       },
                     },
                   ],
-                  labels: linkedAccounts
+                  labels: linkedAccountsValuation
                     .filter((entry) => entry.valuation.value >= 0.0)
                     .map((entry) => entry.linked_account.description),
                 }}
                 type="donut"
-                series={linkedAccounts
+                series={linkedAccountsValuation
                   .filter((entry) => entry.valuation.value >= 0.0)
                   .map((entry) => entry.valuation.value)}
                 width="100%"
@@ -330,7 +345,9 @@ export const MainDashboard = () => {
               <Tabs
                 id={"reports-nav"}
                 activeKey={selectedReport}
-                onSelect={(key) => setSelectedReport(key)}
+                onSelect={(reportSelection) =>
+                  setSelectedReport(reportSelection ?? DEFAULT_REPORT)
+                }
               >
                 <Tab eventKey={REPORTS.HOLDINGS} title={"Holdings"} />
                 <Tab eventKey={REPORTS.EARNINGS} title={"Earnings"} />
@@ -339,14 +356,14 @@ export const MainDashboard = () => {
             <Card.Body>
               {selectedReport === REPORTS.HOLDINGS && (
                 <HoldingsReportPanel
-                  accountId={accountId}
+                  accountId={userAccountId}
                   locale={locale}
                   moneyFormatter={moneyFormatter}
                 />
               )}
               {selectedReport === REPORTS.EARNINGS && (
                 <EarningsReportPanel
-                  accountId={accountId}
+                  accountId={userAccountId}
                   locale={locale}
                   moneyFormatter={moneyFormatter}
                 />

@@ -1,26 +1,34 @@
 import axios, { AxiosResponse } from "axios";
 
 import {
+  AccountHistoricalValuationEntry,
   DeleteAccountPlaidSettingsRequest,
   DeleteLinkedAccountRequest,
   DeleteProviderRequest,
   EarningsReport,
   FinbotErrorMetadata,
   GetAccountHistoricalValuationRequest,
+  GetAccountHistoricalValuationResponse,
   GetAccountPlaidSettingsRequest,
   GetAccountPlaidSettingsResponse,
   GetAccountSettingsRequest,
   GetAccountValuationRequest,
-  GetGuidRequest,
+  GetAccountValuationResponse,
+  GetTracesRequest,
+  GetTracesResponse,
   GetLinkedAccountRequest,
   GetLinkedAccountsRequest,
   GetLinkedAccountsValuationRequest,
+  GetLinkedAccountsValuationResponse,
   GetProviderRequest,
   GetProvidersResponse,
   GetUserAccountRequest,
   GetUserAccountResponse,
+  HoldingsReport,
   IsAccountConfiguredRequest,
+  IsAccountConfiguredResponse,
   LinkAccountRequest,
+  LinkedAccountsValuationEntry,
   LoginRequest,
   LoginResponse,
   PlaidSettings,
@@ -36,7 +44,9 @@ import {
   UpdateTwilioAccountSettingsRequest,
   UserAccount,
   UserAccountProfile,
+  UserAccountValuation,
   ValidateLinkedAccountCredentialsRequest,
+  TracesTree,
 } from "./types";
 
 function getEndpoint(): string {
@@ -72,10 +82,10 @@ export class FinbotClient {
     this.endpoint = getEndpoint();
   }
 
-  async getTraces({ guid }: GetGuidRequest) {
+  async getTraces({ guid }: GetTracesRequest): Promise<TracesTree> {
     const endpoint = `${this.endpoint}/admin/traces/${guid}?format=tree`;
     const response = await axios.get(endpoint);
-    return handleResponse(response);
+    return handleResponse<GetTracesResponse>(response).tree;
   }
 
   async registerAccount({
@@ -129,18 +139,22 @@ export class FinbotClient {
     return handleResponse<UpdateAccountProfileResponse>(response).profile;
   }
 
-  async getAccountValuation({ account_id }: GetAccountValuationRequest) {
+  async getAccountValuation({
+    account_id,
+  }: GetAccountValuationRequest): Promise<UserAccountValuation | null> {
     const response = await axios.get(
       `${this.endpoint}/accounts/${account_id}/valuation`
     );
-    return handleResponse(response).valuation;
+    return handleResponse<GetAccountValuationResponse>(response).valuation;
   }
 
-  async isAccountConfigured({ account_id }: IsAccountConfiguredRequest) {
+  async isAccountConfigured({
+    account_id,
+  }: IsAccountConfiguredRequest): Promise<boolean> {
     const response = await axios.get(
       `${this.endpoint}/accounts/${account_id}/is_configured`
     );
-    return handleResponse(response).configured;
+    return handleResponse<IsAccountConfiguredResponse>(response).configured;
   }
 
   async getAccountSettings({ account_id }: GetAccountSettingsRequest) {
@@ -201,11 +215,14 @@ export class FinbotClient {
 
   async getAccountHistoricalValuation({
     account_id,
-  }: GetAccountHistoricalValuationRequest) {
+  }: GetAccountHistoricalValuationRequest): Promise<
+    Array<AccountHistoricalValuationEntry>
+  > {
     const response = await axios.get(
       `${this.endpoint}/accounts/${account_id}/history`
     );
-    return handleResponse(response).historical_valuation;
+    return handleResponse<GetAccountHistoricalValuationResponse>(response)
+      .historical_valuation;
   }
 
   async getLinkedAccounts({ account_id }: GetLinkedAccountsRequest) {
@@ -227,11 +244,14 @@ export class FinbotClient {
 
   async getLinkedAccountsValuation({
     account_id,
-  }: GetLinkedAccountsValuationRequest) {
+  }: GetLinkedAccountsValuationRequest): Promise<
+    Array<LinkedAccountsValuationEntry>
+  > {
     const response = await axios.get(
       `${this.endpoint}/accounts/${account_id}/linked_accounts/valuation`
     );
-    return handleResponse(response).linked_accounts;
+    return handleResponse<GetLinkedAccountsValuationResponse>(response)
+      .linked_accounts;
   }
 
   async updateLinkedAccountMetadata({
@@ -328,9 +348,9 @@ export class FinbotClient {
     return handleResponse(response).result;
   }
 
-  async getHoldingsReport() {
+  async getHoldingsReport(): Promise<HoldingsReport> {
     const response = await axios.get(`${this.endpoint}/reports/holdings`);
-    return handleResponse(response).report;
+    return handleResponse<ReportResponse<HoldingsReport>>(response).report;
   }
 
   async getEarningsReport(): Promise<EarningsReport> {

@@ -846,8 +846,10 @@ def get_linked_account_historical_valuation(
     )
 
     output_entries = []
+    account_entry: UserAccountHistoryEntry
     for account_entry in results:
         assert len(account_entry.linked_accounts_valuation_history_entries) == 1
+        entry: LinkedAccountValuationHistoryEntry
         for entry in account_entry.linked_accounts_valuation_history_entries:
             assert entry.linked_account_id == linked_account_id
             output_entries.append(
@@ -855,6 +857,7 @@ def get_linked_account_historical_valuation(
                     "linked_account_id": entry.linked_account_id,
                     "date": account_entry.effective_at,
                     "currency": account_entry.valuation_ccy,
+                    # TODO: currency as a single field in the response?
                     "value": entry.valuation,
                 }
             )

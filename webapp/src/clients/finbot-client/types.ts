@@ -12,8 +12,24 @@ export interface FinbotErrorMetadata {
   distributed_trace_key: DistributedTraceKey | null;
 }
 
-export interface GetGuidRequest {
+export interface GetTracesRequest {
   guid: string;
+}
+
+export interface TracesTreeNode {
+  path: string;
+  name: string;
+  metadata: Record<string, any>;
+  start_time: string;
+  end_time: string;
+  children: Array<TracesTreeNode>;
+  extra_properties: Record<string, any>;
+}
+
+export type TracesTree = TracesTreeNode;
+
+export interface GetTracesResponse {
+  tree: TracesTree;
 }
 
 export interface RegisterAccountRequest {
@@ -73,7 +89,25 @@ export interface UpdateAccountProfileResponse {
 
 export interface GetAccountValuationRequest extends UserAccountResource {}
 
+export interface UserAccountValuation {
+  history_entry_id: number;
+  date: string;
+  currency: string;
+  value: number;
+  total_liabilities: number;
+  change: ValuationChange;
+  sparkline: Array<number>;
+}
+
+export interface GetAccountValuationResponse {
+  valuation: UserAccountValuation | null;
+}
+
 export interface IsAccountConfiguredRequest extends UserAccountResource {}
+
+export interface IsAccountConfiguredResponse {
+  configured: boolean;
+}
 
 export interface GetAccountSettingsRequest extends UserAccountResource {}
 
@@ -108,6 +142,16 @@ export interface UpdateAccountPlaidSettingsRequest
 export interface GetAccountHistoricalValuationRequest
   extends UserAccountResource {}
 
+export interface AccountHistoricalValuationEntry {
+  date: string;
+  currency: string;
+  value: number;
+}
+
+export interface GetAccountHistoricalValuationResponse {
+  historical_valuation: Array<AccountHistoricalValuationEntry>;
+}
+
 export interface DeleteAccountPlaidSettingsRequest
   extends UserAccountResource {}
 
@@ -115,6 +159,22 @@ export interface GetLinkedAccountsRequest extends UserAccountResource {}
 
 export interface GetLinkedAccountsValuationRequest
   extends UserAccountResource {}
+
+export interface LinkedAccountValuation {
+  date: string;
+  currency: string;
+  value: number;
+  change: ValuationChange;
+}
+
+export interface LinkedAccountsValuationEntry {
+  linked_account: LinkedAccount;
+  valuation: LinkedAccountValuation;
+}
+
+export interface GetLinkedAccountsValuationResponse {
+  linked_accounts: Array<LinkedAccountsValuationEntry>;
+}
 
 export interface LinkedAccountResource extends UserAccountResource {
   linked_account_id: number;
@@ -137,10 +197,11 @@ export interface LinkedAccount {
   user_account_id: number;
   provider_id: string;
   account_name: string;
-  credentials: LinkedAccountCredentials | null;
+  description: string;
   deleted: boolean;
   status: LinkedAccountStatus | null;
-  provider: Provider;
+  credentials?: LinkedAccountCredentials | null;
+  provider?: Provider;
 }
 
 export interface ProviderResource {
@@ -213,6 +274,95 @@ export interface EarningsReport {
   currency: string;
   entries: Array<EarningsReportEntry>;
   rollup: EarningsReportMetrics;
+}
+
+export interface ValuationChange {
+  change_1hour: number;
+  change_1day: number;
+  change_1week: number;
+  change_1month: number;
+  change_6months: number;
+  change_1year: number;
+  change_2years: number;
+}
+
+export interface HoldingsReportValuation {
+  currency: string;
+  value: number;
+  change: ValuationChange;
+  units?: number;
+  sparkline?: Array<number>;
+}
+
+export interface HoldingsReportNodeBase<
+  Role extends string,
+  ChildType = never
+> {
+  role: Role;
+  children?: Array<ChildType>;
+}
+
+export interface HoldingsReportValuationNode {
+  valuation: HoldingsReportValuation;
+}
+
+export type HoldingsReportMetadataNode = HoldingsReportNodeBase<"metadata"> & {
+  label: string;
+  value: any;
+};
+
+export interface HoldingsReportItem {
+  name: string;
+  type: string;
+  sub_type: string;
+}
+
+export type HoldingsReportItemNode = HoldingsReportNodeBase<
+  "item",
+  HoldingsReportMetadataNode
+> &
+  HoldingsReportValuationNode & { item: HoldingsReportItem };
+
+export interface HoldingsReportSubAccount {
+  id: string;
+  currency: string;
+  description: string;
+  type: string;
+}
+
+export type HoldingsReportSubAccountNode = HoldingsReportNodeBase<
+  "sub_account",
+  HoldingsReportItemNode
+> &
+  HoldingsReportValuationNode & { sub_account: HoldingsReportSubAccount };
+
+export interface HoldingsReportLinkedAccount {
+  id: string;
+  provider_id: string;
+  description: string;
+}
+
+export type HoldingsReportLinkedAccountNode = HoldingsReportNodeBase<
+  "linked_account",
+  HoldingsReportSubAccountNode
+> &
+  HoldingsReportValuationNode & { linked_account: HoldingsReportLinkedAccount };
+
+export type HoldingsReportUserAccountNode = HoldingsReportNodeBase<
+  "user_account",
+  HoldingsReportLinkedAccountNode
+> &
+  HoldingsReportValuationNode;
+
+export type HoldingsReportNode =
+  | HoldingsReportMetadataNode
+  | HoldingsReportItemNode
+  | HoldingsReportSubAccountNode
+  | HoldingsReportLinkedAccountNode
+  | HoldingsReportUserAccountNode;
+
+export interface HoldingsReport {
+  valuation_tree: HoldingsReportUserAccountNode;
 }
 
 export interface ReportResponse<ReportType> {
