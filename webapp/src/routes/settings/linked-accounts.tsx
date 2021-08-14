@@ -283,7 +283,6 @@ export const AccountsPanel: React.FC<AccountsPanelProps> = () => {
           <tr>
             <th>Account name</th>
             <th>Provider</th>
-            <th style={{ width: "6em" }}>Status</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -293,16 +292,13 @@ export const AccountsPanel: React.FC<AccountsPanelProps> = () => {
             return (
               <tr key={`account-${linkedAccount.id}`}>
                 <td>
-                  <Link to={`/settings/linked/${linkedAccount.id}/edit`}>
-                    {linkedAccount.account_name}
-                  </Link>
-                </td>
-                <td>{linkedAccount!.provider!.description}</td>
-                <td style={{ textAlign: "center" }}>
                   <Link to={`/settings/linked/${linkedAccount.id}/status`}>
+                    {linkedAccount.account_name}
+                    {` `}
                     <LinkedAccountStatusIcon status={status} />
                   </Link>
                 </td>
+                <td>{linkedAccount!.provider!.description}</td>
                 <td>
                   <SplitButton
                     id={`action-${linkedAccount.id}`}

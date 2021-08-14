@@ -1,14 +1,14 @@
 import React from "react";
 
-import { BarLoader } from "react-spinners";
+import { BarLoader } from "./bar-loader";
 import { LoaderHeightWidthProps } from "react-spinners/interfaces";
 
 const DEFAULT_COUNT = 3;
 const DEFAULT_SPACING = "0.5em";
 
 export interface StackedBarLoaderProps {
-  count: number;
-  spacing: string | number;
+  count?: number;
+  spacing?: string | number;
 }
 
 export const StackedBarLoader: React.FC<

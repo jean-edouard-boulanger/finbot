@@ -173,6 +173,9 @@ py-unit-tests:
 prettier-ts:
 	cd webapp && npm run prettier
 
+tsc-build-check:
+	cd webwapp && npm run tsc-build-check
+
 prettier-check-ts:
 	cd webapp && npm run prettier-check
 
@@ -205,7 +208,7 @@ lint-sh:
  		xargs shellcheck -e SC1090 -e SC1091 -S style
 
 lint-py: mypy flake8 black-check banned-keywords-check-py
-lint-ts: eslint prettier-check-ts banned-keywords-check-ts
+lint-ts: eslint tsc-build-check prettier-check-ts banned-keywords-check-ts
 lint-all: lint-py lint-ts lint-sh
 
 format-py: black
