@@ -174,7 +174,7 @@ prettier-ts:
 	cd webapp && npm run prettier
 
 tsc-build-check:
-	cd webwapp && npm run tsc-build-check
+	cd webapp && npm run tsc-build-check
 
 prettier-check-ts:
 	cd webapp && npm run prettier-check

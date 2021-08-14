@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-export FINBOT_TOPLEVEL_DIR=$(git rev-parse --show-toplevel)
 log() {
   log_level=$1
   shift
