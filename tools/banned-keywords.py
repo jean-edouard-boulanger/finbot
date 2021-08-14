@@ -58,8 +58,8 @@ RULES: list[Rule] = [
     Rule(
         match_files=["*.js", "*.ts"],
         banned_pattern=re.compile(r"FIXME"),
-        message="All FIXMEs need to be addressed in the same PR"
-    )
+        message="All FIXMEs need to be addressed in the same PR",
+    ),
 ]
 
 

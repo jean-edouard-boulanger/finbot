@@ -8,16 +8,18 @@ import { MoneyFormatterType } from "components/money";
 
 import { LinkedAccountsValuationEntry } from "clients/finbot-client/types";
 
-const getCommonCurrency = (entries: Array<LinkedAccountsValuationEntry>): string | undefined => {
+const getCommonCurrency = (
+  entries: Array<LinkedAccountsValuationEntry>
+): string | undefined => {
   const currencies = new Set<string>();
   entries.forEach((entry) => {
     currencies.add(entry.valuation.currency);
   });
-  if(currencies.size !== 1) {
+  if (currencies.size !== 1) {
     return undefined;
   }
   return currencies.values().next().value;
-}
+};
 
 export interface WealthDistributionProps {
   userAccountId: number;
@@ -72,7 +74,7 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
                 y: {
                   formatter: (value: number) => {
                     const commonCurrency = getCommonCurrency(valuation);
-                    if(commonCurrency === undefined) {
+                    if (commonCurrency === undefined) {
                       return `${value} (unknown currency)`;
                     }
                     const amount_str = moneyFormatter(
