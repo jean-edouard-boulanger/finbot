@@ -7,69 +7,82 @@ import {
   ValuationChange,
   StackedBarLoader,
 } from "components";
+import { TreeGridRowProps } from "components/tree-grid";
+import { MoneyFormatterType } from "components/money";
 import { Alert } from "react-bootstrap";
-import { FaExclamationCircle } from "react-icons/fa";
 import { ServicesContext } from "contexts/services/services-context";
+import {
+  HoldingsReport,
+  HoldingsReportMetadataNode,
+  HoldingsReportNode,
+} from "clients/finbot-client/types";
 
-function getRowMetadata(data) {
-  if (data.role === "user_account") {
+function getRowMetadata(node: HoldingsReportNode) {
+  if (node.role === "user_account") {
     return {
       label: "Holdings",
       height: "4em",
     };
-  } else if (data.role === "linked_account") {
+  } else if (node.role === "linked_account") {
     return {
-      label: data.linked_account.description,
+      label: node.linked_account.description,
       height: "4em",
     };
-  } else if (data.role === "sub_account") {
+  } else if (node.role === "sub_account") {
     return {
-      label: data.sub_account.description,
+      label: node.sub_account.description,
       height: "4em",
     };
-  } else if (data.role === "item") {
+  } else if (node.role === "item") {
     return {
-      label: data.item.name,
+      label: node.item.name,
       height: "4em",
     };
   }
 }
 
-const GridMetadataRow = (props) => {
-  const rest = Object.assign({}, props);
-  delete rest.label;
-  delete rest.value;
+function getNodeValuation(node: HoldingsReportNode): number | undefined {
+  if (node.role !== "metadata") {
+    return node.valuation.value;
+  }
+}
+
+const GridMetadataRow = (
+  props: TreeGridRowProps<HoldingsReportMetadataNode>
+) => {
+  const { data, ...rest } = props;
   return (
     <tr>
-      <td colSpan="8">
+      <td colSpan={8}>
         <TreeGrid.Expander {...rest} />
-        <strong>{`${props.label}: `}</strong>
-        {props.value}
+        <strong>{`${data.label}: `}</strong>
+        {data.value}
       </td>
     </tr>
   );
 };
 
-const GridRow = (locale, moneyFormatter) => {
-  return (props) => {
-    const data = props.data;
-    const metadata = getRowMetadata(data);
+const GridRow = (locale: string, moneyFormatter: MoneyFormatterType) => {
+  return (props: TreeGridRowProps<HoldingsReportNode>) => {
+    const node = props.data;
+    const metadata = getRowMetadata(node);
 
-    if (data.role === "metadata") {
-      return <GridMetadataRow {...data} {...props} />;
+    if (node.role === "metadata") {
+      const metadataNode: HoldingsReportMetadataNode = node;
+      const newProps = { ...props, data: metadataNode };
+      return <GridMetadataRow {...newProps} />;
     }
 
-    const valuation = data.valuation;
+    const valuation = node.valuation;
     const change = valuation.change;
     const sparkline = valuation.sparkline;
-    const fontWeight = data.role === "user_account" ? "bold" : null;
+    const fontWeight = node.role === "user_account" ? "bold" : undefined;
 
     return (
-      <tr style={{ height: metadata.height, fontWeight }}>
+      <tr style={{ height: metadata!.height, fontWeight }}>
         <td>
           <TreeGrid.Expander {...props} />
-          {metadata.label}{" "}
-          {metadata.warning !== undefined && <FaExclamationCircle />}
+          {metadata!.label}
         </td>
         <td>
           <Money
@@ -115,19 +128,27 @@ const Header = () => {
   );
 };
 
-export const HoldingsReportPanel = (props) => {
+export interface HoldingsReportPanelProps {
+  accountId: number;
+  locale: string;
+  moneyFormatter: MoneyFormatterType;
+}
+
+export const HoldingsReportPanel: React.FC<HoldingsReportPanelProps> = (
+  props
+) => {
   const { accountId, locale, moneyFormatter } = props;
 
   const { finbotClient } = useContext(ServicesContext);
   const [loading, setLoading] = useState(false);
-  const [report, setReport] = useState(null);
-  const [error, setError] = useState(null);
+  const [report, setReport] = useState<HoldingsReport | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetch = async () => {
       try {
         setLoading(true);
-        const report = await finbotClient.getHoldingsReport();
+        const report = await finbotClient!.getHoldingsReport();
         setReport(report);
       } catch (e) {
         setError(`${e}`);
@@ -164,8 +185,8 @@ export const HoldingsReportPanel = (props) => {
     <TreeGrid
       rowAs={GridRow(locale, moneyFormatter)}
       headerAs={Header}
-      tree={report.valuation_tree}
-      sortBy={(data) => data?.valuation?.value}
+      tree={report!.valuation_tree as HoldingsReportNode}
+      sortBy={(node) => getNodeValuation(node) ?? Number.MIN_VALUE}
     />
   );
 };

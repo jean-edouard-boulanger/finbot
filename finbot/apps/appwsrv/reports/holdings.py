@@ -112,11 +112,9 @@ def generate(session, history_entry: UserAccountHistoryEntry):
                             "type": sa_v.sub_account_type,
                         },
                         "valuation": {
-                            "value": sa_v.valuation,
-                            "value_account_currency": sa_v.valuation_sub_account_ccy,
-                            "change": sa_v.valuation_change,
-                            "total_liabilities": sa_v.total_liabilities,
                             "currency": valuation_currency,
+                            "value": sa_v.valuation,
+                            "change": sa_v.valuation_change,
                         },
                         "children": [
                             {
@@ -127,11 +125,10 @@ def generate(session, history_entry: UserAccountHistoryEntry):
                                     "sub_type": item_v.item_subtype,
                                 },
                                 "valuation": {
-                                    "units": item_v.units,
-                                    "value": item_v.valuation,
-                                    "value_account_currency": item_v.valuation_sub_account_ccy,
-                                    "change": item_v.valuation_change,
                                     "currency": valuation_currency,
+                                    "value": item_v.valuation,
+                                    "change": item_v.valuation_change,
+                                    "units": item_v.units,
                                 },
                                 "children": [
                                     {"role": "metadata", "label": key, "value": value}

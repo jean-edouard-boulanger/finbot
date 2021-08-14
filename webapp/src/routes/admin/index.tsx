@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { useParams } from "react-router-dom";
 
 import { ServicesContext } from "contexts";
+import { TracesTree, TracesTreeNode } from "clients/finbot-client/types";
 
 import AceEditor from "react-ace";
 import { Col, Row, Card, Table, Button, Alert, Badge } from "react-bootstrap";
@@ -10,17 +11,18 @@ import { TreeGrid } from "components";
 
 import "ace-builds/src-noconflict/theme-github";
 import "ace-builds/src-noconflict/mode-json";
+import { TreeGridRowProps } from "../../components/tree-grid";
 
 const { DateTime } = require("luxon");
 
-function ellipsis(text, max) {
-  if (text.length < max) {
+function ellipsis(text: string, maxLength: number) {
+  if (text.length < maxLength) {
     return text;
   }
-  return text.slice(0, max) + "...";
+  return text.slice(0, maxLength) + "...";
 }
 
-function formatInlineData(data) {
+function formatInlineData(data: any) {
   if (data === null || data === undefined) {
     return "null";
   }
@@ -38,48 +40,47 @@ function formatInlineData(data) {
   return data;
 }
 
-function getEditorLanguage(data) {
-  if (data === null || data === undefined) {
-    return null;
-  }
+function getEditorLanguage({ data }: SelectedData) {
   if (typeof data === "object") {
     return "json";
   }
-  return null;
+  return undefined;
 }
 
-function getEditorData(data) {
-  const payload = data[1];
-  if (typeof payload === "object") {
-    return JSON.stringify(payload, null, 2);
+function getEditorData({ data }: SelectedData) {
+  if (typeof data === "object") {
+    return JSON.stringify(data, null, 2);
   }
-  return `${payload}`;
+  return `${data}`;
 }
 
-function GridRow(callback) {
-  return (props) => {
-    const data = props.data;
-    const duration = data.end_time.diff(data.start_time, "seconds");
+function GridRow(clickedCallback: (node: TracesTreeNode) => void) {
+  return (props: TreeGridRowProps<TracesTreeNode>) => {
+    const node = props.data;
+    const duration = DateTime.fromISO(node.end_time).diff(
+      DateTime.fromISO(node.start_time),
+      "seconds"
+    );
     const durationSeconds = duration.toObject().seconds;
-    const errorState = data.extra_properties.error_state;
+    const errorState = node.extra_properties.error_state;
     const className =
       errorState === null
         ? ""
         : errorState === "self"
         ? "bg-danger"
         : "text-danger";
-    const metadata = data.metadata;
+    const metadata = node.metadata;
     return (
-      <tr key={data.pretty_path} className={className}>
+      <tr key={node.path} className={className}>
         <td>
           <TreeGrid.Expander {...props} />{" "}
           <Button
             variant="link"
             size="sm"
             className="text-reset"
-            onClick={() => callback(data)}
+            onClick={() => clickedCallback(node)}
           >
-            {data.name}
+            {node.name}
           </Button>
         </td>
         <td>
@@ -87,8 +88,12 @@ function GridRow(callback) {
             <Badge variant="primary">{metadata.description}</Badge>
           )}
         </td>
-        <td>{data.start_time.toLocaleString(DateTime.TIME_WITH_SECONDS)}</td>
-        <td>{data.metadata.origin}</td>
+        <td>
+          {DateTime.fromISO(node.start_time).toLocaleString(
+            DateTime.TIME_WITH_SECONDS
+          )}
+        </td>
+        <td>{node.metadata.origin}</td>
         <td>
           {(durationSeconds ?? null) !== null &&
             `${durationSeconds.toFixed(1)}s`}
@@ -99,7 +104,15 @@ function GridRow(callback) {
   };
 }
 
-function getLogRowStyle(entry) {
+interface LogEntry {
+  time: string;
+  level: string;
+  message: string;
+  filename: string;
+  line: number;
+}
+
+function getLogRowStyle(entry: LogEntry) {
   if (entry.level === "FATAL") {
     return "bg-dark";
   }
@@ -112,7 +125,11 @@ function getLogRowStyle(entry) {
   return "bg-white";
 }
 
-function LogsViewer({ logs }) {
+interface LogsViewerProps {
+  logs: Array<LogEntry>;
+}
+
+const LogsViewer: React.FC<LogsViewerProps> = ({ logs }) => {
   return (
     <Table style={{ tableLayout: "fixed", wordWrap: "break-word" }}>
       <tbody>
@@ -129,28 +146,36 @@ function LogsViewer({ logs }) {
       </tbody>
     </Table>
   );
+};
+
+interface SelectedData {
+  key: string;
+  data: any | null | undefined;
 }
 
-function getInspectorMode(data) {
+function getInspectorMode(data?: SelectedData | null) {
   if (data === null || data === undefined) {
     return "hint";
   }
-  const key = data[0];
-  if (key === "logs") {
+  if (data.key === "logs") {
     return "logs";
   }
   return "editor";
 }
 
-function Inspector({ data }) {
+interface InspectorProps {
+  data: SelectedData | null;
+}
+
+const Inspector: React.FC<InspectorProps> = ({ data }) => {
   const mode = getInspectorMode(data);
   if (mode === "hint") {
     return <Alert variant="primary">Select a span attribute ...</Alert>;
   } else if (mode === "editor") {
     return (
       <AceEditor
-        value={getEditorData(data)}
-        mode={getEditorLanguage(data)}
+        value={getEditorData(data!)}
+        mode={getEditorLanguage(data!)}
         theme="github"
         width="100%"
         showGutter={true}
@@ -159,33 +184,23 @@ function Inspector({ data }) {
       />
     );
   } else if (mode === "logs") {
-    return <LogsViewer logs={data[1]} />;
+    return <LogsViewer logs={data!.data} />;
+  } else {
+    return <></>;
   }
-}
-
-function walkTree(node, handler) {
-  handler(node);
-  node.children.forEach((child) => {
-    walkTree(child, handler);
-  });
-}
+};
 
 export function Admin() {
-  const { guid } = useParams();
+  const { guid } = useParams<Record<string, string | undefined>>();
   const { finbotClient } = useContext(ServicesContext);
-  const [tree, setTree] = useState(null);
-  const [selectedSpan, setSelectedSpan] = useState(null);
-  const [selectedData, setSelectedData] = useState(null);
+  const [tree, setTree] = useState<TracesTree | null>(null);
+  const [selectedSpan, setSelectedSpan] = useState<TracesTreeNode | null>(null);
+  const [selectedData, setSelectedData] = useState<SelectedData | null>(null);
 
   useEffect(() => {
     const impl = async function () {
-      const response = await finbotClient.getTraces({ guid });
-      const data = response.tree;
-      walkTree(data, (node) => {
-        node.start_time = DateTime.fromISO(node.start_time);
-        node.end_time = DateTime.fromISO(node.end_time);
-      });
-      setTree(data);
+      const result = await finbotClient!.getTraces({ guid: guid! });
+      setTree(result);
     };
     impl();
   }, [finbotClient, guid]);
@@ -223,18 +238,20 @@ export function Admin() {
                     {selectedSpan !== null && (
                       <Table hover size="sm">
                         <tbody>
-                          {Object.keys(selectedSpan.metadata).map((k) => {
-                            const data = selectedSpan.metadata[k];
+                          {Object.keys(selectedSpan.metadata).map((key) => {
+                            const data = selectedSpan.metadata[key];
                             return (
-                              <tr key={k}>
+                              <tr key={key}>
                                 <td style={{ width: "25%" }}>
                                   <Button
                                     variant="link"
                                     size="sm"
                                     className="text-reset"
-                                    onClick={() => setSelectedData([k, data])}
+                                    onClick={() =>
+                                      setSelectedData({ key, data })
+                                    }
                                   >
-                                    {k}
+                                    {key}
                                   </Button>
                                 </td>
                                 <td>
@@ -242,7 +259,9 @@ export function Admin() {
                                     variant="link"
                                     size="sm"
                                     className="text-reset"
-                                    onClick={() => setSelectedData([k, data])}
+                                    onClick={() =>
+                                      setSelectedData({ key, data })
+                                    }
                                   >
                                     {formatInlineData(data)}
                                   </Button>
@@ -261,7 +280,8 @@ export function Admin() {
               <Col>
                 <Card>
                   <Card.Header>
-                    Inspector{selectedData !== null && ` (${selectedData[0]})`}
+                    Inspector&nbsp;
+                    {selectedData !== null && `(${selectedData.key})`}
                   </Card.Header>
                   <Card.Body>
                     <Inspector data={selectedData} />
