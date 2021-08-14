@@ -3,7 +3,7 @@ import { MainContainer } from "./main-container";
 import { Money } from "./money";
 import { Navigation } from "./navigation";
 import { SparkLine } from "./sparkline";
-import { StackedBarLoader } from "./stacked-bar-loader";
+import { BarLoader, StackedBarLoader } from "./bar-loader";
 import { ToggleSecret } from "./toggle-secret";
 import { TreeGrid } from "./tree-grid";
 import { ValuationChange, RelativeValuationChange } from "./valuation-change";
@@ -14,6 +14,7 @@ export {
   Money,
   Navigation,
   SparkLine,
+  BarLoader,
   StackedBarLoader,
   ToggleSecret,
   TreeGrid,
