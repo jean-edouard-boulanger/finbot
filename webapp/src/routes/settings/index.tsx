@@ -68,7 +68,7 @@ export const NavigationPanel = withRouter((props) => {
   );
 });
 
-export const Settings = () => {
+export const Settings: React.FC<Record<string, never>> = () => {
   return (
     <Row>
       <Col md={3}>

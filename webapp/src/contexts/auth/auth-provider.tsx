@@ -10,7 +10,9 @@ import { LOGIN_SUCCESS, LOGOUT } from "./auth-actions";
 import { restoreLocal } from "./auth-storage";
 import { makeFreshAuthState, isValidAuthState } from "./auth-state";
 
-export const AuthProvider = (props: React.HTMLAttributes<HTMLElement>) => {
+export const AuthProvider = (
+  props: React.HTMLAttributes<HTMLElement>
+): JSX.Element => {
   let initialState = restoreLocal(makeFreshAuthState());
   if (!isValidAuthState(initialState)) {
     initialState = makeFreshAuthState();

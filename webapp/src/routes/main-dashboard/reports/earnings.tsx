@@ -13,7 +13,7 @@ import { MoneyFormatterType } from "components/money";
 import { Alert, Table } from "react-bootstrap";
 
 export interface EarningsReportPanelProps {
-  accountId: number;
+  userAccountId: number;
   locale: string;
   moneyFormatter: MoneyFormatterType;
 }
@@ -21,7 +21,7 @@ export interface EarningsReportPanelProps {
 export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
   props
 ) => {
-  const { accountId, locale, moneyFormatter } = props;
+  const { userAccountId, locale, moneyFormatter } = props;
 
   const { finbotClient } = useContext(ServicesContext);
   const [loading, setLoading] = useState(false);
@@ -40,7 +40,7 @@ export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
       setLoading(false);
     };
     fetch();
-  }, [finbotClient, accountId]);
+  }, [finbotClient, userAccountId]);
 
   if (error !== null) {
     return (

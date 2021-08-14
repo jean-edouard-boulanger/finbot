@@ -78,7 +78,7 @@ const makeProviderDescription = (
   };
 };
 
-export const EditProviderPanel = () => {
+export const EditProviderPanel: React.FC<Record<string, never>> = () => {
   const { finbotClient } = useContext(ServicesContext);
   const { account } = useContext(AuthContext);
   const [selectedProviderId, setSelectedProviderId] = useState<string | null>(
@@ -322,7 +322,7 @@ export const EditProviderPanel = () => {
   );
 };
 
-export const ProvidersSettings = () => {
+export const ProvidersSettings: React.FC<Record<string, never>> = () => {
   return (
     <Row>
       <Col>

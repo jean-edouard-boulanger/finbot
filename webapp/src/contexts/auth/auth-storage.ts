@@ -2,7 +2,7 @@ import { AuthState } from "./auth-state";
 
 const IDENTITY_LOCAL_KEY = "identity";
 
-export function persistLocal(state: AuthState) {
+export function persistLocal(state: AuthState): void {
   localStorage.setItem(
     IDENTITY_LOCAL_KEY,
     JSON.stringify({
@@ -29,6 +29,6 @@ export function restoreLocal(currentState: AuthState): AuthState {
   }
 }
 
-export function clearLocal() {
+export function clearLocal(): void {
   localStorage.removeItem(IDENTITY_LOCAL_KEY);
 }

@@ -53,8 +53,8 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "lint-check": "eslint .",
-    "lint-check:prod": "NODE_ENV=prod eslint .",
+    "lint-check": "eslint --format unix .",
+    "lint-check:prod": "NODE_ENV=prod eslint --format unix .",
     "prettier": "prettier --write **.js **.ts **.tsx",
     "prettier-check": "prettier -c **.js **.ts **.tsx"
   },

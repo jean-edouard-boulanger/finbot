@@ -190,7 +190,7 @@ const Inspector: React.FC<InspectorProps> = ({ data }) => {
   }
 };
 
-export function Admin() {
+export const Admin: React.FC<Record<string, never>> = () => {
   const { guid } = useParams<Record<string, string | undefined>>();
   const { finbotClient } = useContext(ServicesContext);
   const [tree, setTree] = useState<TracesTree | null>(null);
@@ -294,6 +294,6 @@ export function Admin() {
       )}
     </>
   );
-}
+};
 
 export default Admin;

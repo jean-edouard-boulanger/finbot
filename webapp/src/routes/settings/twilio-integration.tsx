@@ -24,7 +24,9 @@ const makeTwilioSettings = (settings?: TwilioSettings | null) => {
   };
 };
 
-export const TwilioIntegrationSettings = () => {
+export const TwilioIntegrationSettings: React.FC<
+  Record<string, never>
+> = () => {
   const { account } = useContext(AuthContext);
   const { finbotClient } = useContext(ServicesContext);
 

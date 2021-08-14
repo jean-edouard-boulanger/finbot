@@ -31,7 +31,7 @@ const makePlaidSettings = (settings?: PlaidSettings | null) => {
   };
 };
 
-export const PlaidIntegrationSettings = () => {
+export const PlaidIntegrationSettings: React.FC<Record<string, never>> = () => {
   const { account } = useContext(AuthContext);
   const { finbotClient } = useContext(ServicesContext);
 

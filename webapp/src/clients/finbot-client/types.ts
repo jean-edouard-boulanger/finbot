@@ -39,6 +39,10 @@ export interface RegisterAccountRequest {
   valuation_ccy: string;
 }
 
+export interface RegisterAccountResponse {
+  user_account: UserAccount;
+}
+
 export interface Credentials {
   email: string;
   password: string;
@@ -111,6 +115,15 @@ export interface IsAccountConfiguredResponse {
 
 export interface GetAccountSettingsRequest extends UserAccountResource {}
 
+export interface UserAccountSettings {
+  valuation_ccy: string;
+  twilio_settings: TwilioSettings;
+}
+
+export interface GetAccountSettingsResponse {
+  settings: UserAccountSettings;
+}
+
 export interface TwilioSettings {
   account_sid: string;
   auth_token: string;
@@ -120,6 +133,10 @@ export interface TwilioSettings {
 export interface UpdateTwilioAccountSettingsRequest
   extends UserAccountResource {
   twilio_settings: TwilioSettings | null;
+}
+
+export interface UpdateTwilioAccountSettingsResponse {
+  settings: UserAccountSettings;
 }
 
 export interface GetAccountPlaidSettingsRequest extends UserAccountResource {}
@@ -139,23 +156,35 @@ export interface UpdateAccountPlaidSettingsRequest
   extends UserAccountResource,
     PlaidSettings {}
 
+export interface UpdateAccountPlaidSettingsResponse {
+  plaid_settings: PlaidSettings;
+}
+
 export interface GetAccountHistoricalValuationRequest
   extends UserAccountResource {}
 
 export interface AccountHistoricalValuationEntry {
   date: string;
-  currency: string;
   value: number;
 }
 
+export interface AccountHistoricalValuation {
+  valuation_ccy: string;
+  entries: Array<AccountHistoricalValuationEntry>;
+}
+
 export interface GetAccountHistoricalValuationResponse {
-  historical_valuation: Array<AccountHistoricalValuationEntry>;
+  historical_valuation: AccountHistoricalValuation;
 }
 
 export interface DeleteAccountPlaidSettingsRequest
   extends UserAccountResource {}
 
 export interface GetLinkedAccountsRequest extends UserAccountResource {}
+
+export interface GetLinkedAccountsResponse {
+  linked_accounts: Array<LinkedAccount>;
+}
 
 export interface GetLinkedAccountsValuationRequest
   extends UserAccountResource {}
@@ -220,6 +249,10 @@ export interface ValidateLinkedAccountCredentialsRequest
 
 export interface GetLinkedAccountRequest extends LinkedAccountResource {}
 
+export interface GetLinkedAccountResponse {
+  linked_account: LinkedAccount;
+}
+
 export interface UpdateLinkedAccountMetadata extends LinkedAccountResource {
   linked_account_id: number;
   account_name: string;
@@ -246,7 +279,15 @@ export interface GetProvidersResponse {
 
 export interface GetProviderRequest extends ProviderResource {}
 
+export interface GetProviderResponse {
+  provider: Provider;
+}
+
 export interface SaveProviderRequest extends Provider {}
+
+export interface SaveProviderResponse {
+  provider: Provider;
+}
 
 export interface DeleteProviderRequest extends ProviderResource {}
 

@@ -13,6 +13,18 @@ export interface MoneyProps {
   moneyFormatter: MoneyFormatterType;
 }
 
+export const defaultMoneyFormatter: MoneyFormatterType = (
+  amount,
+  locale,
+  currency
+) => {
+  const localized = new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: currency,
+  }).format(Math.abs(amount));
+  return amount >= 0 ? localized : `(${localized})`;
+};
+
 export const Money: React.FC<MoneyProps> = (props) => {
   const { amount, locale, ccy, moneyFormatter } = props;
 

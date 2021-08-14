@@ -43,7 +43,7 @@ const makeUpdateRequest = (
   };
 };
 
-export const ProfileSettings = () => {
+export const ProfileSettings: React.FC<Record<string, never>> = () => {
   const { finbotClient } = useContext(ServicesContext);
   const auth = useContext(AuthContext);
   const [profile, setProfile] = useState<UserAccountProfile | null>(null);

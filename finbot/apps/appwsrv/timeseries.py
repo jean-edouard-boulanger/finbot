@@ -35,7 +35,7 @@ def sample_time_series(
     timed_items: list[ItemType],
     time_getter: Callable[[ItemType], datetime],
     interval: timedelta,
-):
+) -> Iterator[ItemType]:
     if not timed_items:
         return
     next_date = time_getter(timed_items[0])
