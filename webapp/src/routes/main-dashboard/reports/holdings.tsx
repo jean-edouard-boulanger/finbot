@@ -1,5 +1,12 @@
 import React, { useContext, useEffect, useState } from "react";
 
+import { ServicesContext } from "contexts";
+import {
+  HoldingsReport,
+  HoldingsReportMetadataNode,
+  HoldingsReportNode,
+} from "clients/finbot-client/types";
+
 import {
   TreeGrid,
   Money,
@@ -10,12 +17,6 @@ import {
 import { TreeGridRowProps } from "components/tree-grid";
 import { MoneyFormatterType } from "components/money";
 import { Alert } from "react-bootstrap";
-import { ServicesContext } from "contexts/services/services-context";
-import {
-  HoldingsReport,
-  HoldingsReportMetadataNode,
-  HoldingsReportNode,
-} from "clients/finbot-client/types";
 
 function getRowMetadata(node: HoldingsReportNode) {
   if (node.role === "user_account") {
@@ -129,7 +130,7 @@ const Header = () => {
 };
 
 export interface HoldingsReportPanelProps {
-  accountId: number;
+  userAccountId: number;
   locale: string;
   moneyFormatter: MoneyFormatterType;
 }
@@ -137,7 +138,7 @@ export interface HoldingsReportPanelProps {
 export const HoldingsReportPanel: React.FC<HoldingsReportPanelProps> = (
   props
 ) => {
-  const { accountId, locale, moneyFormatter } = props;
+  const { userAccountId, locale, moneyFormatter } = props;
 
   const { finbotClient } = useContext(ServicesContext);
   const [loading, setLoading] = useState(false);
@@ -156,7 +157,7 @@ export const HoldingsReportPanel: React.FC<HoldingsReportPanelProps> = (
       setLoading(false);
     };
     fetch();
-  }, [finbotClient, accountId]);
+  }, [finbotClient, userAccountId]);
 
   if (error !== null) {
     return (

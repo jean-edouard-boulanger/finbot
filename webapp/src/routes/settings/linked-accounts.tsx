@@ -77,7 +77,9 @@ const UpdateLinkedAccountPanel = withRouter(() => {
   const { finbotClient } = useContext(ServicesContext);
   const { account } = useContext(AuthContext);
   const { linkedAccountId } = useParams<Record<string, string | undefined>>();
-  const [linkedAccount, setLinkedAccount] = useState(null);
+  const [linkedAccount, setLinkedAccount] = useState<LinkedAccount | null>(
+    null
+  );
   useEffect(() => {
     const fetch = async () => {
       const linkedAccount = await finbotClient!.getLinkedAccount({

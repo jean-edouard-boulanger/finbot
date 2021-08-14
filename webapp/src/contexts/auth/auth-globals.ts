@@ -1,6 +1,6 @@
 import axios from "axios";
 
-export const setAuthHeader = (token?: string | null) => {
+export const setAuthHeader = (token?: string | null): void => {
   if (!token) {
     delete axios.defaults.headers.common["Authorization"];
     return;

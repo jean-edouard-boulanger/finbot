@@ -10,7 +10,7 @@ export const makeFreshAuthState = (): AuthState => {
   };
 };
 
-export const isValidAuthState = (state: any): boolean => {
+export const isValidAuthState = (state: Record<string, any>): boolean => {
   if (state.token === null && state.account === null) {
     return true;
   }

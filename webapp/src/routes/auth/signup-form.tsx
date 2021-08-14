@@ -56,7 +56,7 @@ const SIGNUP_UI_SCHEMA: UiSchema = {
   },
 };
 
-export const SignupForm = () => {
+export const SignupForm: React.FC<Record<string, never>> = () => {
   const { finbotClient } = useContext(ServicesContext);
   const [loading, setLoading] = useState(false);
   const [registered, setRegistered] = useState(false);

@@ -3,46 +3,24 @@ import { Redirect } from "react-router-dom";
 
 import { AuthContext, ServicesContext } from "contexts";
 
-import { Money, RelativeValuationChange } from "components";
-import { MoneyFormatterType } from "components/money";
-import { EarningsReportPanel, HoldingsReportPanel } from "./reports";
+import { UserAccountValuation } from "clients/finbot-client/types";
 
+import { Money, RelativeValuationChange } from "components";
+import { defaultMoneyFormatter } from "components/money";
+import {
+  EarningsReportPanel,
+  HoldingsReportPanel,
+  HistoricalValuationPanel,
+  WealthDistributionPanel,
+} from "./reports";
 import { Row, Col, Card, Tabs, Tab } from "react-bootstrap";
-import Chart from "react-apexcharts";
 import BarLoader from "react-spinners/BarLoader";
 
 import { DateTime } from "luxon";
-import {
-  LinkedAccountsValuationEntry,
-  UserAccountValuation,
-} from "clients/finbot-client/types";
 
 const getRelativeChange = (startVal: number, finalVal: number) => {
   return (finalVal - startVal) / startVal;
 };
-
-const moneyFormatter: MoneyFormatterType = (amount, locale, currency) => {
-  const localized = new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency: currency,
-  }).format(Math.abs(amount));
-  return amount >= 0 ? localized : `(${localized})`;
-};
-
-function maxValue<T>(
-  list: Array<T>,
-  accessor: (item: T) => number
-): number | null {
-  accessor = accessor || ((val) => val);
-  let currentMax: number | null = null;
-  for (let i = 0; i !== list.length; ++i) {
-    const val = accessor(list[i]);
-    if (currentMax === null || val > currentMax) {
-      currentMax = val;
-    }
-  }
-  return currentMax;
-}
 
 const REPORTS = {
   HOLDINGS: "holdings",
@@ -51,32 +29,12 @@ const REPORTS = {
 
 const DEFAULT_REPORT = REPORTS.HOLDINGS;
 
-interface HistoricalValuationEntry {
-  timestamp: number;
-  value: number;
-}
-
-interface HistoricalValuation {
-  data: Array<HistoricalValuationEntry>;
-  high: number | null;
-}
-
-export const MainDashboard = () => {
+export const MainDashboard: React.FC<Record<string, never>> = () => {
   const { account } = useContext(AuthContext);
   const { finbotClient } = useContext(ServicesContext);
   const locale = "en-GB";
   const [configured, setConfigured] = useState<boolean | null>(null);
   const [valuation, setValuation] = useState<UserAccountValuation | null>(null);
-  const [linkedAccountsValuation, setLinkedAccountsValuation] = useState<
-    Array<LinkedAccountsValuationEntry>
-  >([]);
-  const [
-    historicalValuation,
-    setHistoricalValuation,
-  ] = useState<HistoricalValuation>({
-    data: [],
-    high: 0,
-  });
   const [selectedReport, setSelectedReport] = useState<string>(DEFAULT_REPORT);
   const userAccountId = account!.id;
 
@@ -101,28 +59,6 @@ export const MainDashboard = () => {
         });
         setValuation(result);
       }
-
-      {
-        const result = await finbotClient!.getLinkedAccountsValuation({
-          account_id: userAccountId,
-        });
-        setLinkedAccountsValuation(result);
-      }
-
-      {
-        const result = await finbotClient!.getAccountHistoricalValuation({
-          account_id: userAccountId,
-        });
-        setHistoricalValuation({
-          data: result.map((entry) => {
-            return {
-              timestamp: DateTime.fromISO(entry.date).toMillis(),
-              value: entry.value,
-            };
-          }),
-          high: maxValue(result, (entry) => entry.value),
-        });
-      }
     };
     fetch();
   }, [finbotClient, configured, userAccountId]);
@@ -145,14 +81,14 @@ export const MainDashboard = () => {
                   )})`}
               </Card.Title>
               {valuation === null ? (
-                <BarLoader color={"#F0F0F0"} />
+                <BarLoader color={"#f0f0f0"} />
               ) : (
                 <strong>
                   <Money
                     amount={valuation.value}
                     locale={locale}
                     ccy={valuation.currency}
-                    moneyFormatter={moneyFormatter}
+                    moneyFormatter={defaultMoneyFormatter}
                   />
                 </strong>
               )}
@@ -171,7 +107,7 @@ export const MainDashboard = () => {
                     amount={valuation.total_liabilities}
                     locale={locale}
                     ccy={valuation.currency}
-                    moneyFormatter={moneyFormatter}
+                    moneyFormatter={defaultMoneyFormatter}
                   />
                 </strong>
               )}
@@ -198,144 +134,18 @@ export const MainDashboard = () => {
       </Row>
       <Row>
         <Col lg={6} md={12} sm={12} xs={12} className="mt-3">
-          <Card>
-            <Card.Header>Historical Valuation</Card.Header>
-            <Card.Body>
-              <Chart
-                options={{
-                  chart: {
-                    animations: {
-                      enabled: false,
-                    },
-                    stacked: false,
-                    zoom: {
-                      enabled: false,
-                    },
-                    toolbar: {
-                      show: true,
-                      tools: {
-                        download: false,
-                      },
-                    },
-                  },
-                  grid: {
-                    show: false,
-                  },
-                  theme: {
-                    palette: "palette8",
-                  },
-                  dataLabels: {
-                    enabled: false,
-                  },
-                  xaxis: {
-                    type: "datetime",
-                    categories: historicalValuation.data.map(
-                      (entry) => entry.timestamp
-                    ),
-                    tooltip: {
-                      enabled: false,
-                    },
-                  },
-                  yaxis: {
-                    show: false,
-                    min: 0,
-                    max: historicalValuation.high,
-                  },
-                  tooltip: {
-                    x: {
-                      format: "dd-MMM-yyyy hh:mm",
-                    },
-                    y: {
-                      formatter: (value: number) => {
-                        return moneyFormatter(
-                          value,
-                          locale,
-                          valuation!.currency
-                        );
-                      },
-                    },
-                  },
-                  fill: {
-                    opacity: 0.5,
-                    type: "solid",
-                  },
-                  stroke: {
-                    width: 1,
-                  },
-                }}
-                series={[
-                  {
-                    name: "value",
-                    data: historicalValuation.data.map((entry) => entry.value),
-                  },
-                ]}
-                type="area"
-                width="100%"
-                height="250px"
-              />
-            </Card.Body>
-          </Card>
+          <HistoricalValuationPanel
+            userAccountId={userAccountId}
+            locale={locale}
+            moneyFormatter={defaultMoneyFormatter}
+          />
         </Col>
         <Col lg={6} md={12} sm={12} xs={12} className="mt-3">
-          <Card>
-            <Card.Header>Wealth Distribution</Card.Header>
-            <Card.Body>
-              <Chart
-                options={{
-                  legend: {
-                    show: true,
-                  },
-                  theme: {
-                    palette: "palette8",
-                  },
-                  plotOptions: {
-                    pie: {
-                      customScale: 1,
-                    },
-                  },
-                  tooltip: {
-                    y: {
-                      formatter: (value: number) => {
-                        const amount_str = moneyFormatter(
-                          value,
-                          locale,
-                          valuation!.currency
-                        );
-                        return `<span class="text-white">${amount_str}</span>`;
-                      },
-                      title: {
-                        formatter: (seriesName: string) => {
-                          return `<strong><span class="text-white">${seriesName}</span></strong>`;
-                        },
-                      },
-                    },
-                  },
-                  stroke: {
-                    width: 0,
-                  },
-                  responsive: [
-                    {
-                      breakpoint: 765,
-                      options: {
-                        legend: {
-                          show: false,
-                        },
-                      },
-                    },
-                  ],
-                  labels: linkedAccountsValuation
-                    .filter((entry) => entry.valuation.value >= 0.0)
-                    .map((entry) => entry.linked_account.description),
-                }}
-                type="donut"
-                series={linkedAccountsValuation
-                  .filter((entry) => entry.valuation.value >= 0.0)
-                  .map((entry) => entry.valuation.value)}
-                width="100%"
-                height="250px"
-              />
-            </Card.Body>
-          </Card>
+          <WealthDistributionPanel
+            userAccountId={userAccountId}
+            locale={locale}
+            moneyFormatter={defaultMoneyFormatter}
+          />
         </Col>
       </Row>
       <Row className="mt-3">
@@ -356,16 +166,16 @@ export const MainDashboard = () => {
             <Card.Body>
               {selectedReport === REPORTS.HOLDINGS && (
                 <HoldingsReportPanel
-                  accountId={userAccountId}
+                  userAccountId={userAccountId}
                   locale={locale}
-                  moneyFormatter={moneyFormatter}
+                  moneyFormatter={defaultMoneyFormatter}
                 />
               )}
               {selectedReport === REPORTS.EARNINGS && (
                 <EarningsReportPanel
-                  accountId={userAccountId}
+                  userAccountId={userAccountId}
                   locale={locale}
-                  moneyFormatter={moneyFormatter}
+                  moneyFormatter={defaultMoneyFormatter}
                 />
               )}
             </Card.Body>

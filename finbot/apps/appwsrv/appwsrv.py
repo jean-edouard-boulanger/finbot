@@ -5,7 +5,6 @@ from finbot.apps.appwsrv.reports import earnings as earnings_report
 from finbot.core.notifier import TwilioNotifier, TwilioSettings
 from finbot.core.web_service import service_endpoint, Route, RequestContext
 from finbot.core.errors import InvalidUserInput, InvalidOperation, MissingUserData
-from finbot.core.serialization import serialize
 from finbot.core.logging import configure_logging
 from finbot.core.utils import now_utc, unwrap_optional
 from finbot.core import secure, dbutils, environment, tracer
@@ -167,7 +166,7 @@ def update_or_create_provider(request_context: RequestContext):
         provider.description = data["description"]
         provider.website_url = data["website_url"]
         provider.credentials_schema = data["credentials_schema"]
-    return provider
+    return {"provider": provider}
 
 
 @app.route(API_V1.providers(), methods=["GET"])
@@ -183,7 +182,7 @@ def get_provider(provider_id: str):
     provider = repository.find_provider(db_session, provider_id)
     if not provider:
         raise InvalidUserInput(f"Provider with id '${provider_id}' does not exist")
-    return serialize(provider)
+    return {"provider": provider}
 
 
 @app.route(API_V1.providers.p("provider_id")(), methods=["DELETE"])
@@ -482,7 +481,8 @@ def trigger_user_account_valuation(user_account_id: int):
 @jwt_required()
 @service_endpoint()
 def get_user_account_valuation_history(user_account_id: int):
-    history_entries = (
+    settings = repository.get_user_account_settings(db_session, user_account_id)
+    history_entries: list[UserAccountHistoryEntry] = (
         db_session.query(UserAccountHistoryEntry)
         .filter_by(user_account_id=user_account_id)
         .filter_by(available=True)
@@ -497,18 +497,22 @@ def get_user_account_valuation_history(user_account_id: int):
     )
 
     return {
-        "historical_valuation": [
-            {
-                "date": entry.effective_at,
-                "currency": entry.valuation_ccy,
-                "value": entry.user_account_valuation_history_entry.valuation,
-            }
-            for entry in timeseries.sample_time_series(
-                history_entries,
-                time_getter=(lambda item: item.effective_at),
-                interval=timedelta(days=1),
-            )
-        ]
+        "historical_valuation": {
+            "valuation_ccy": settings.valuation_ccy,
+            "entries": [
+                {
+                    "date": entry.effective_at,
+                    "currency": entry.valuation_ccy,
+                    "value": entry.user_account_valuation_history_entry.valuation,
+                }
+                for entry in timeseries.sample_time_series(
+                    history_entries,
+                    time_getter=(lambda item: item.effective_at),
+                    interval=timedelta(days=1),
+                )
+                if entry.valuation_ccy == settings.valuation_ccy
+            ],
+        }
     }
 
 
@@ -665,7 +669,7 @@ def link_new_account(request_context: RequestContext, user_account_id: int):
                 f"failed to trigger valuation for account_id={user_account.id}: {e}"
             )
 
-    return {"result": {"validated": do_validate, "persisted": do_persist}}
+    return {}
 
 
 LINKED_ACCOUNT = ACCOUNT.linked_accounts.p("int:linked_account_id")
@@ -794,7 +798,7 @@ def update_linked_account_credentials(
                 json.dumps(credentials).encode(), FINBOT_ENV.secret_key.encode()
             ).decode()
 
-    return {"result": {"validated": do_validate, "persisted": do_persist}}
+    return {}
 
 
 @app.route(LINKED_ACCOUNT(), methods=["DELETE"])

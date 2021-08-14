@@ -52,7 +52,9 @@ const AppRouter = () => {
   return isAuthenticated ? <UserRouter /> : <GuestRouter />;
 };
 
-const App = () => {
+interface AppProps {}
+
+const App: React.FC<AppProps> = () => {
   return (
     <ServicesProvider>
       <AuthProvider>

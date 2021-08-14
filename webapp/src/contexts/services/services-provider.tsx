@@ -7,7 +7,7 @@ export const ServicesProvider = ({
   children,
 }: {
   children: React.ReactNode;
-}) => {
+}): JSX.Element => {
   return (
     <ServicesContext.Provider
       value={{

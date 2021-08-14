@@ -128,7 +128,7 @@ export type TreeGridRowProps<
 
 export function TreeGrid<UserNodeType extends TreeNode<UserNodeType>>(
   props: TreeGridProps<UserNodeType>
-) {
+): JSX.Element {
   const { tree, sortBy = () => 0, expanded = false } = props;
   const Row = props.rowAs;
   const Header = props.headerAs;
