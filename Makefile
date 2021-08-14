@@ -21,26 +21,26 @@ run-schedsrv-dev:
 		python3.9 finbot/apps/schedsrv/schedsrv.py
 
 run-histwsrv-dev:
-	tools/run-web-app.sh \
+	tools/run-web-service.sh \
 		--app histwsrv \
 		--timeout 30 \
 		--port 5002
 
 run-finbotwsrv-dev:
-	tools/run-web-app.sh \
+	tools/run-web-service.sh \
 		--app finbotwsrv \
 		--workers 4 \
 		--timeout 300 \
 		--port 5001
 
 run-snapwsrv-dev:
-	tools/run-web-app.sh \
+	tools/run-web-service.sh \
 		--app snapwsrv \
 		--timeout 1200 \
 		--port 5000
 
 run-appwsrv-dev:
-	tools/run-web-app.sh \
+	tools/run-web-service.sh \
 		--app appwsrv \
   		--timeout 600 \
 		--port 5003

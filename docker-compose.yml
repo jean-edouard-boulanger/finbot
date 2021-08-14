@@ -97,14 +97,14 @@ services:
       FINBOT_WAIT_DEPS: "finbot,db"
 
   webapp:
-    image: "node:15-alpine3.10"
+    image: "node:16-buster"
     container_name: webapp
     depends_on:
       - appwsrv
     volumes:
-      - ./webapp:/webapp
-    working_dir: /webapp
-    command: sh -c "npm install && npm start"
+      - .:/finbot
+    working_dir: /finbot
+    command: bash -c "source docker.env.sh && tools/run-webapp.sh"
     tty: true
     ports:
       - "5005:5005"
