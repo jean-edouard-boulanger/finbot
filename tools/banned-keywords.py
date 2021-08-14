@@ -55,6 +55,11 @@ RULES: list[Rule] = [
         banned_pattern=re.compile(r"console.log\("),
         message="Please remove calls to console.log",
     ),
+    Rule(
+        match_files=["*.js", "*.ts"],
+        banned_pattern=re.compile(r"FIXME"),
+        message="All FIXMEs need to be addressed in the same PR"
+    )
 ]
 
 

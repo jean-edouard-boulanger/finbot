@@ -8,6 +8,17 @@ import { MoneyFormatterType } from "components/money";
 
 import { LinkedAccountsValuationEntry } from "clients/finbot-client/types";
 
+const getCommonCurrency = (entries: Array<LinkedAccountsValuationEntry>): string | undefined => {
+  const currencies = new Set<string>();
+  entries.forEach((entry) => {
+    currencies.add(entry.valuation.currency);
+  });
+  if(currencies.size !== 1) {
+    return undefined;
+  }
+  return currencies.values().next().value;
+}
+
 export interface WealthDistributionProps {
   userAccountId: number;
   locale: string;
@@ -60,10 +71,14 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
               tooltip: {
                 y: {
                   formatter: (value: number) => {
+                    const commonCurrency = getCommonCurrency(valuation);
+                    if(commonCurrency === undefined) {
+                      return `${value} (unknown currency)`;
+                    }
                     const amount_str = moneyFormatter(
                       value,
                       locale,
-                      "EUR" // FIXME
+                      commonCurrency
                     );
                     return `<span class="text-white">${amount_str}</span>`;
                   },
