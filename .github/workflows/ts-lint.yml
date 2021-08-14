@@ -5,12 +5,18 @@ on:
       - master
     paths:
       - "**.js"
+      - "**.jsx"
+      - "**.ts"
+      - "**.tsx"
       - "package.json"
   pull_request:
     branches:
       - master
     paths:
       - "**.js"
+      - "**.jsx"
+      - "**.ts"
+      - "**.tsx"
       - "package.json"
 
 jobs:
