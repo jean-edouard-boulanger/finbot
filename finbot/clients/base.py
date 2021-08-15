@@ -17,7 +17,7 @@ class Base(object):
 
     def send_request(
         self, verb: str, route: str, payload: Optional[Any] = None
-    ) -> dict:
+    ) -> Any:
         resource = f"{self._endpoint}/{route}"
         if not hasattr(requests, verb.lower()):
             raise ClientError(f"unexpected verb: {verb} (while calling {resource})")
@@ -29,12 +29,13 @@ class Base(object):
             raise ClientError(f"error while sending request to {resource}: {e}")
         return json.loads(response.content)
 
-    def get(self, route: str) -> dict[Any, Any]:
+    def get(self, route: str) -> Any:
         return self.send_request("get", route)
 
-    def post(self, route: str, payload: Optional[Any] = None) -> dict[Any, Any]:
+    def post(self, route: str, payload: Optional[Any] = None) -> Any:
         return self.send_request("post", route, payload)
 
     @property
     def healthy(self) -> bool:
-        return self.get("healthy")["healthy"]
+        result: bool = self.get("healthy")["healthy"]
+        return result
