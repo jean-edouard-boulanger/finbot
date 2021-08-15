@@ -52,7 +52,7 @@ def sample_time_series(
 
 def create_schedule(
     from_time: datetime, to_time: datetime, frequency: ScheduleFrequency
-):
+) -> list[datetime]:
     schedule = []
     current_time = from_time
     interval = _frequency_to_time_interval(frequency)
