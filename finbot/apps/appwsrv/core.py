@@ -1,13 +1,36 @@
-from typing import Optional
-
-from finbot.clients.finbot import FinbotClient
+from finbot.apps.appwsrv.db import db_session
+from finbot.apps.appwsrv import repository
+from finbot.clients import FinbotClient, SchedClient, TriggerValuationRequest
+from finbot.core import environment
 from finbot.model import UserAccountPlaidSettings
 from finbot.apps.finbotwsrv.errors import AuthenticationFailure
 from finbot.providers.plaid_us import pack_credentials as pack_plaid_credentials
 
 from plaid import Client as PlaidClient
 
+from contextlib import closing
+from typing import Optional
 import logging
+
+
+def get_finbot_client() -> FinbotClient:
+    return FinbotClient(environment.get_finbotwsrv_endpoint())
+
+
+def get_sched_client() -> SchedClient:
+    return SchedClient(environment.get_schedsrv_endpoint())
+
+
+def trigger_valuation(
+    user_account_id: int, linked_accounts: Optional[list[int]] = None
+):
+    account = repository.get_user_account(db_session, user_account_id)
+    with closing(get_sched_client()) as client:
+        client.trigger_valuation(
+            TriggerValuationRequest(
+                user_account_id=account.id, linked_accounts=linked_accounts
+            )
+        )
 
 
 def validate_credentials(
