@@ -1,10 +1,13 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { withRouter, NavLink, RouteComponentProps } from "react-router-dom";
 
 import AuthContext from "contexts/auth/auth-context";
 
 import Navbar from "react-bootstrap/Navbar";
 import Nav from "react-bootstrap/Nav";
+import { Badge } from "react-bootstrap";
+import { ServicesContext } from "../../contexts";
+import { SystemReport } from "../../clients/finbot-client/types";
 
 const UserNavbar: React.FC<RouteComponentProps<Record<string, never>>> = (
   props
@@ -44,7 +47,20 @@ const GuestNavbar: React.FC<RouteComponentProps<Record<string, never>>> = (
 };
 
 export const Navigation = withRouter((props) => {
+  const { finbotClient } = useContext(ServicesContext);
   const { isAuthenticated } = useContext(AuthContext);
+  const [report, setReport] = useState<SystemReport | null>(null);
+
+  useEffect(() => {
+    const fetch = async () => {
+      const report = await finbotClient!.getSystemReport();
+      setReport(report);
+    };
+    fetch();
+  }, [finbotClient]);
+
+  const isDev = report?.runtime === "development";
+
   return (
     <Navbar
       className="box-shadow"
@@ -57,7 +73,10 @@ export const Navigation = withRouter((props) => {
         className="px-5 navbar-brand"
         to={isAuthenticated ? `/dashboard` : "/loading"}
       >
-        Finbot
+        Finbot{` `}
+        {isDev && (
+          <Badge variant={"danger"}>DEV build v{report!.finbot_version}</Badge>
+        )}
       </NavLink>
       <Navbar.Toggle aria-controls="responsive-navbar-nav" />
       {isAuthenticated ? <UserNavbar {...props} /> : <GuestNavbar {...props} />}

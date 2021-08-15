@@ -409,3 +409,12 @@ export interface HoldingsReport {
 export interface ReportResponse<ReportType> {
   report: ReportType;
 }
+
+export interface SystemReport {
+  finbot_version: string;
+  runtime: "development" | "production";
+}
+
+export interface GetSystemReportResponse {
+  system_report: SystemReport;
+}
