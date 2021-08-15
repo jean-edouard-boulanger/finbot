@@ -197,6 +197,7 @@ black:
 mypy:
 	mypy -p finbot;
 	mypy --strict -p finbot.core;
+	mypy --strict -p finbot.clients;
 	mypy --strict -p finbot.model;
 	mypy --strict -p finbot.providers;
 

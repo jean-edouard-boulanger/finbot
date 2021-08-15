@@ -22,7 +22,7 @@ class FinbotClient(ClientBase):
         line_items: list[LineItem],
         account_metadata: Optional[str] = None,
         tracer_context: Optional[tracer.FlatContext] = None,
-    ) -> dict:
+    ) -> Any:
         return self.post(
             "financial_data",
             payload=tracer.pack_context(
