@@ -6,8 +6,8 @@ import AuthContext from "contexts/auth/auth-context";
 import Navbar from "react-bootstrap/Navbar";
 import Nav from "react-bootstrap/Nav";
 import { Badge } from "react-bootstrap";
-import { ServicesContext } from "../../contexts";
-import { SystemReport } from "../../clients/finbot-client/types";
+import { ServicesContext } from "contexts";
+import { SystemReport } from "clients/finbot-client/types";
 
 const UserNavbar: React.FC<RouteComponentProps<Record<string, never>>> = (
   props
