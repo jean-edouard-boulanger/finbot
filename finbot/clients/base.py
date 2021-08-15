@@ -15,9 +15,7 @@ class Base(object):
     def __init__(self, server_endpoint: str):
         self._endpoint = server_endpoint
 
-    def send_request(
-        self, verb: str, route: str, payload: Optional[Any] = None
-    ) -> Any:
+    def send_request(self, verb: str, route: str, payload: Optional[Any] = None) -> Any:
         resource = f"{self._endpoint}/{route}"
         if not hasattr(requests, verb.lower()):
             raise ClientError(f"unexpected verb: {verb} (while calling {resource})")
