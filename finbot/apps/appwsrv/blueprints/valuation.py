@@ -3,10 +3,9 @@ from finbot.apps.appwsrv.db import db_session
 from finbot.apps.appwsrv.serialization import serialize_user_account_valuation
 from finbot.apps.appwsrv import repository, core as appwsrv_core
 from finbot.core.web_service import service_endpoint
-from finbot.core.errors import MissingUserData
 from finbot.core.utils import now_utc
 from finbot.core import timeseries
-from finbot.model import UserAccountHistoryEntry
+from finbot.model import UserAccountHistoryEntry, SubAccountItemValuationHistoryEntry
 
 from sqlalchemy import asc
 from sqlalchemy.orm import joinedload
@@ -15,6 +14,7 @@ from flask import Blueprint
 from flask_jwt_extended import jwt_required
 
 from datetime import timedelta
+from collections import defaultdict
 import logging
 
 
@@ -57,6 +57,27 @@ def get_user_account_valuation(user_account_id: int):
         )
         if valuation
         else None,
+    }
+
+
+@valuation_api.route(ACCOUNT.valuation.by.asset_type(), methods=["GET"])
+@jwt_required()
+@service_endpoint()
+def get_user_account_valuation_by_asset_type(user_account_id: int):
+    last_history_entry = repository.get_last_history_entry(db_session, user_account_id)
+    items = repository.find_items_valuation(db_session, last_history_entry.id)
+    valuation_ccy = repository.get_user_account_settings(
+        db_session, user_account_id
+    ).valuation_ccy
+    valuation_by_asset_type: dict[str, float] = defaultdict(float)
+    item: SubAccountItemValuationHistoryEntry
+    for item in items:
+        valuation_by_asset_type[item.item_subtype] += float(item.valuation)
+    return {
+        "valuation": {
+            "valuation_ccy": valuation_ccy,
+            "by_asset_type": valuation_by_asset_type,
+        }
     }
 
 
@@ -103,30 +124,34 @@ def get_user_account_valuation_history(user_account_id: int):
 @jwt_required()
 @service_endpoint()
 def get_linked_accounts_valuation(user_account_id: int):
-    history_entry = repository.find_last_history_entry(db_session, user_account_id)
-    if not history_entry:
-        raise MissingUserData("No data to report")
+    history_entry = repository.get_last_history_entry(db_session, user_account_id)
+    valuation_ccy = repository.get_user_account_settings(
+        db_session, user_account_id
+    ).valuation_ccy
     results = repository.find_linked_accounts_valuation(db_session, history_entry.id)
     return {
-        "linked_accounts": [
-            {
-                "linked_account": {
-                    "id": entry.linked_account.id,
-                    "provider_id": entry.linked_account.provider_id,
-                    "description": entry.linked_account.account_name,
-                },
-                "valuation": {
-                    "date": (
-                        entry.effective_snapshot.effective_at
-                        if entry.effective_snapshot
-                        else history_entry.effective_at
-                    ),
-                    "currency": history_entry.valuation_ccy,
-                    "value": entry.valuation,
-                    "change": entry.valuation_change,
-                },
-            }
-            for entry in results
-            if not entry.linked_account.deleted
-        ]
+        "valuation": {
+            "valuation_ccy": valuation_ccy,
+            "entries": [
+                {
+                    "linked_account": {
+                        "id": entry.linked_account.id,
+                        "provider_id": entry.linked_account.provider_id,
+                        "description": entry.linked_account.account_name,
+                    },
+                    "valuation": {
+                        "date": (
+                            entry.effective_snapshot.effective_at
+                            if entry.effective_snapshot
+                            else history_entry.effective_at
+                        ),
+                        "currency": history_entry.valuation_ccy,
+                        "value": entry.valuation,
+                        "change": entry.valuation_change,
+                    },
+                }
+                for entry in results
+                if not entry.linked_account.deleted
+            ],
+        }
     }
