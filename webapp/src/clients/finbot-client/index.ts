@@ -58,6 +58,8 @@ import {
   SaveProviderResponse,
   GetProviderResponse,
   AccountHistoricalValuation,
+  SystemReport,
+  GetSystemReportResponse,
 } from "./types";
 
 function getEndpoint(): string {
@@ -371,5 +373,10 @@ export class FinbotClient {
   async getEarningsReport(): Promise<EarningsReport> {
     const response = await axios.get(`${this.endpoint}/reports/earnings`);
     return handleResponse<ReportResponse<EarningsReport>>(response).report;
+  }
+
+  async getSystemReport(): Promise<SystemReport> {
+    const response = await axios.get(`${this.endpoint}/system_report`);
+    return handleResponse<GetSystemReportResponse>(response).system_report;
   }
 }
