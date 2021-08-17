@@ -201,8 +201,13 @@ export interface LinkedAccountsValuationEntry {
   valuation: LinkedAccountValuation;
 }
 
+export interface LinkedAccountsValuation {
+  valuation_ccy: string;
+  entries: Array<LinkedAccountsValuationEntry>
+}
+
 export interface GetLinkedAccountsValuationResponse {
-  linked_accounts: Array<LinkedAccountsValuationEntry>;
+  valuation: LinkedAccountsValuation;
 }
 
 export interface LinkedAccountResource extends UserAccountResource {
@@ -325,6 +330,17 @@ export interface ValuationChange {
   change_6months: number;
   change_1year: number;
   change_2years: number;
+}
+
+export interface GetUserAccountValuationByAssetTypeRequest extends UserAccountResource {}
+
+export interface UserAccountValuationByAssetType {
+  valuation_ccy: string;
+  by_asset_type: Record<string, number>
+}
+
+export interface GetUserAccountValuationByAssetTypeResponse {
+  valuation: UserAccountValuationByAssetType
 }
 
 export interface HoldingsReportValuation {

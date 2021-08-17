@@ -88,7 +88,7 @@ def _format_error(errors: list[str]) -> str:
 def _classify_asset(symbol: str) -> str:
     if symbol.startswith("Z"):
         return "currency"
-    return "crypto"
+    return "cryptocurrency"
 
 
 def _format_symbol(symbol: str) -> str:

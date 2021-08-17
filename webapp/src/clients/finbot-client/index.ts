@@ -60,6 +60,9 @@ import {
   AccountHistoricalValuation,
   SystemReport,
   GetSystemReportResponse,
+  GetUserAccountValuationByAssetTypeRequest,
+  UserAccountValuationByAssetType,
+  GetUserAccountValuationByAssetTypeResponse, LinkedAccountsValuation,
 } from "./types";
 
 function getEndpoint(): string {
@@ -261,14 +264,18 @@ export class FinbotClient {
 
   async getLinkedAccountsValuation({
     account_id,
-  }: GetLinkedAccountsValuationRequest): Promise<
-    Array<LinkedAccountsValuationEntry>
-  > {
+  }: GetLinkedAccountsValuationRequest): Promise<LinkedAccountsValuation> {
     const response = await axios.get(
       `${this.endpoint}/accounts/${account_id}/linked_accounts/valuation`
     );
-    return handleResponse<GetLinkedAccountsValuationResponse>(response)
-      .linked_accounts;
+    return handleResponse<GetLinkedAccountsValuationResponse>(response).valuation;
+  }
+
+  async getUserAccountValuationByAssetType({ account_id }: GetUserAccountValuationByAssetTypeRequest): Promise<UserAccountValuationByAssetType> {
+    const response = await axios.get(
+      `${this.endpoint}/accounts/${account_id}/valuation/by/asset_type`
+    )
+    return handleResponse<GetUserAccountValuationByAssetTypeResponse>(response).valuation;
   }
 
   async updateLinkedAccountMetadata({

@@ -24,21 +24,8 @@ body {
   padding: 25px 30px 200px;
 }
 
-.opaque-background {
-  /* background: rgba(255, 255, 255, 0.4); */
-  background: rgba(234,226,229,0.9);
-   min-height: 52vh;
-}
-
-.sign-form {
-  width: 800px;
-}
-
-.box-shadow {
-  box-shadow: 0 3px 10px rgba(51, 50, 47, 0.5);
-}
-
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+.btn-xs {
+  padding: 0 0.5rem;
+  font-size: 0.6rem;
+  line-height: 1.0rem;
 }

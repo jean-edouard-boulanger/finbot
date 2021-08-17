@@ -1,4 +1,4 @@
-from finbot.core.errors import InvalidUserInput
+from finbot.core.errors import InvalidUserInput, MissingUserData
 from finbot.model import (
     LinkedAccount,
     Provider,
@@ -84,14 +84,17 @@ def find_linked_accounts(session, user_account_id: int) -> list[LinkedAccount]:
     )
 
 
-def find_last_history_entry(session, user_account_id: int) -> UserAccountHistoryEntry:
-    return (
+def get_last_history_entry(session, user_account_id: int) -> UserAccountHistoryEntry:
+    entry = (
         session.query(UserAccountHistoryEntry)
         .filter_by(user_account_id=user_account_id)
         .filter_by(available=True)
         .order_by(desc(UserAccountHistoryEntry.effective_at))
         .first()
     )
+    if entry is None:
+        raise MissingUserData("No history entry available")
+    return entry
 
 
 def find_user_account_historical_valuation(
