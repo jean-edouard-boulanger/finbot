@@ -66,7 +66,9 @@ def get_user_account_valuation(user_account_id: int):
 def get_user_account_valuation_by_asset_type(user_account_id: int):
     last_history_entry = repository.get_last_history_entry(db_session, user_account_id)
     items = repository.find_items_valuation(db_session, last_history_entry.id)
-    valuation_ccy = repository.get_user_account_settings(db_session, user_account_id).valuation_ccy
+    valuation_ccy = repository.get_user_account_settings(
+        db_session, user_account_id
+    ).valuation_ccy
     valuation_by_asset_type: dict[str, float] = defaultdict(float)
     item: SubAccountItemValuationHistoryEntry
     for item in items:
@@ -74,7 +76,7 @@ def get_user_account_valuation_by_asset_type(user_account_id: int):
     return {
         "valuation": {
             "valuation_ccy": valuation_ccy,
-            "by_asset_type": valuation_by_asset_type
+            "by_asset_type": valuation_by_asset_type,
         }
     }
 
@@ -123,7 +125,9 @@ def get_user_account_valuation_history(user_account_id: int):
 @service_endpoint()
 def get_linked_accounts_valuation(user_account_id: int):
     history_entry = repository.get_last_history_entry(db_session, user_account_id)
-    valuation_ccy = repository.get_user_account_settings(db_session, user_account_id).valuation_ccy
+    valuation_ccy = repository.get_user_account_settings(
+        db_session, user_account_id
+    ).valuation_ccy
     results = repository.find_linked_accounts_valuation(db_session, history_entry.id)
     return {
         "valuation": {
@@ -148,6 +152,6 @@ def get_linked_accounts_valuation(user_account_id: int):
                 }
                 for entry in results
                 if not entry.linked_account.deleted
-            ]
+            ],
         }
     }

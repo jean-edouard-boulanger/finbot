@@ -27,7 +27,6 @@ import {
   IsAccountConfiguredRequest,
   IsAccountConfiguredResponse,
   LinkAccountRequest,
-  LinkedAccountsValuationEntry,
   LoginRequest,
   LoginResponse,
   PlaidSettings,
@@ -62,7 +61,8 @@ import {
   GetSystemReportResponse,
   GetUserAccountValuationByAssetTypeRequest,
   UserAccountValuationByAssetType,
-  GetUserAccountValuationByAssetTypeResponse, LinkedAccountsValuation,
+  GetUserAccountValuationByAssetTypeResponse,
+  LinkedAccountsValuation,
 } from "./types";
 
 function getEndpoint(): string {
@@ -268,14 +268,18 @@ export class FinbotClient {
     const response = await axios.get(
       `${this.endpoint}/accounts/${account_id}/linked_accounts/valuation`
     );
-    return handleResponse<GetLinkedAccountsValuationResponse>(response).valuation;
+    return handleResponse<GetLinkedAccountsValuationResponse>(response)
+      .valuation;
   }
 
-  async getUserAccountValuationByAssetType({ account_id }: GetUserAccountValuationByAssetTypeRequest): Promise<UserAccountValuationByAssetType> {
+  async getUserAccountValuationByAssetType({
+    account_id,
+  }: GetUserAccountValuationByAssetTypeRequest): Promise<UserAccountValuationByAssetType> {
     const response = await axios.get(
       `${this.endpoint}/accounts/${account_id}/valuation/by/asset_type`
-    )
-    return handleResponse<GetUserAccountValuationByAssetTypeResponse>(response).valuation;
+    );
+    return handleResponse<GetUserAccountValuationByAssetTypeResponse>(response)
+      .valuation;
   }
 
   async updateLinkedAccountMetadata({

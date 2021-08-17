@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 
 import { ServicesContext } from "contexts";
 
-import {Card, Dropdown, DropdownButton} from "react-bootstrap";
+import { Card, Dropdown, DropdownButton } from "react-bootstrap";
 import Chart from "react-apexcharts";
 import { MoneyFormatterType } from "components/money";
 
@@ -10,10 +10,7 @@ import { capitalize } from "utils/string";
 
 type AggregationMode = "account" | "asset type";
 
-const AGGREGATION_MODES: Array<AggregationMode> = [
-  "account",
-  "asset type"
-]
+const AGGREGATION_MODES: Array<AggregationMode> = ["account", "asset type"];
 
 const DEFAULT_AGGREGATION_MODE = AGGREGATION_MODES[0];
 
@@ -34,32 +31,32 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
 ) => {
   const { userAccountId, locale, moneyFormatter } = props;
   const { finbotClient } = useContext(ServicesContext);
-  const [ aggregationMode, setAggregationMode ] = useState<AggregationMode>(DEFAULT_AGGREGATION_MODE);
-  const [
-    valuation,
-    setValuation,
-  ] = useState<ValuationData | null>(null);
+  const [aggregationMode, setAggregationMode] = useState<AggregationMode>(
+    DEFAULT_AGGREGATION_MODE
+  );
+  const [valuation, setValuation] = useState<ValuationData | null>(null);
 
   useEffect(() => {
     const fetch = async () => {
-      if(aggregationMode === "account") {
+      if (aggregationMode === "account") {
         const result = await finbotClient!.getLinkedAccountsValuation({
           account_id: userAccountId,
         });
         setValuation({
           valuation_ccy: result.valuation_ccy,
-          labels: result.entries.map((entry) => entry.linked_account.description),
-          values: result.entries.map((entry) => entry.valuation.value)
+          labels: result.entries.map(
+            (entry) => entry.linked_account.description
+          ),
+          values: result.entries.map((entry) => entry.valuation.value),
         });
-      }
-      else if(aggregationMode === "asset type") {
+      } else if (aggregationMode === "asset type") {
         const result = await finbotClient!.getUserAccountValuationByAssetType({
-          account_id: userAccountId
+          account_id: userAccountId,
         });
         setValuation({
           valuation_ccy: result.valuation_ccy,
           labels: Object.keys(result.by_asset_type).map(capitalize),
-          values: Object.values(result.by_asset_type)
+          values: Object.values(result.by_asset_type),
         });
       }
     };
@@ -73,21 +70,22 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
         <DropdownButton
           variant={""}
           size={"xs" as any}
-          title={`By ${aggregationMode}`}>
-          {
-            (AGGREGATION_MODES.filter((mode) => mode != aggregationMode).map((mode) => {
+          title={`By ${aggregationMode}`}
+        >
+          {AGGREGATION_MODES.filter((mode) => mode != aggregationMode).map(
+            (mode) => {
               return (
                 <Dropdown.Item
                   key={mode}
                   onClick={() => {
-                    setAggregationMode(mode)
+                    setAggregationMode(mode);
                   }}
                 >
                   {mode.toUpperCase()}
                 </Dropdown.Item>
-              )
-            }))
-          }
+              );
+            }
+          )}
         </DropdownButton>
       </Card.Header>
       <Card.Body>
@@ -140,7 +138,7 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
                   },
                 },
               ],
-              labels: valuation.labels
+              labels: valuation.labels,
             }}
             type="donut"
             series={valuation.values}
