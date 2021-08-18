@@ -235,31 +235,19 @@ export class FinbotClient {
 
   async getAccountHistoricalValuation({
     account_id,
+    from_time,
+    to_time,
   }: GetAccountHistoricalValuationRequest): Promise<AccountHistoricalValuation> {
+    const params = {
+      from_time: from_time?.toISO(),
+      to_time: to_time?.toISO(),
+    };
     const response = await axios.get(
-      `${this.endpoint}/accounts/${account_id}/history`
+      `${this.endpoint}/accounts/${account_id}/history`,
+      { params }
     );
     return handleResponse<GetAccountHistoricalValuationResponse>(response)
       .historical_valuation;
-  }
-
-  async getLinkedAccounts({
-    account_id,
-  }: GetLinkedAccountsRequest): Promise<Array<LinkedAccount>> {
-    const response = await axios.get(
-      `${this.endpoint}/accounts/${account_id}/linked_accounts`
-    );
-    return handleResponse<GetLinkedAccountsResponse>(response).linked_accounts;
-  }
-
-  async getLinkedAccount({
-    account_id,
-    linked_account_id,
-  }: GetLinkedAccountRequest): Promise<LinkedAccount> {
-    const response = await axios.get(
-      `${this.endpoint}/accounts/${account_id}/linked_accounts/${linked_account_id}`
-    );
-    return handleResponse<GetLinkedAccountResponse>(response).linked_account;
   }
 
   async getLinkedAccountsValuation({
@@ -280,6 +268,25 @@ export class FinbotClient {
     );
     return handleResponse<GetUserAccountValuationByAssetTypeResponse>(response)
       .valuation;
+  }
+
+  async getLinkedAccounts({
+    account_id,
+  }: GetLinkedAccountsRequest): Promise<Array<LinkedAccount>> {
+    const response = await axios.get(
+      `${this.endpoint}/accounts/${account_id}/linked_accounts`
+    );
+    return handleResponse<GetLinkedAccountsResponse>(response).linked_accounts;
+  }
+
+  async getLinkedAccount({
+    account_id,
+    linked_account_id,
+  }: GetLinkedAccountRequest): Promise<LinkedAccount> {
+    const response = await axios.get(
+      `${this.endpoint}/accounts/${account_id}/linked_accounts/${linked_account_id}`
+    );
+    return handleResponse<GetLinkedAccountResponse>(response).linked_account;
   }
 
   async updateLinkedAccountMetadata({

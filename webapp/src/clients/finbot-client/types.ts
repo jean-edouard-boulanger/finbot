@@ -1,6 +1,13 @@
+import { DateTime } from "luxon";
+
 export interface DistributedTraceKey {
   guid: string;
   path: string;
+}
+
+export interface TimeRange {
+  from_time?: DateTime | null;
+  to_time?: DateTime | null;
 }
 
 export interface FinbotErrorMetadata {
@@ -161,7 +168,8 @@ export interface UpdateAccountPlaidSettingsResponse {
 }
 
 export interface GetAccountHistoricalValuationRequest
-  extends UserAccountResource {}
+  extends UserAccountResource,
+    TimeRange {}
 
 export interface AccountHistoricalValuationEntry {
   date: string;

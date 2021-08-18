@@ -22,7 +22,6 @@ module.exports = exports = {
     "@typescript-eslint/no-unused-vars": errorOnProd,
     "@typescript-eslint/explicit-module-boundary-types": errorOnProd,
     "@typescript-eslint/no-empty-function": "off",
-    "@typescript-eslint/no-var-requires": "off",
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/no-empty-interface": "off",
     "@typescript-eslint/no-non-null-assertion": "off",

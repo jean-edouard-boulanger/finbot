@@ -2,11 +2,93 @@ import React, { useState, useEffect, useContext } from "react";
 
 import { ServicesContext } from "contexts";
 
-import { Card } from "react-bootstrap";
+import { Card, Dropdown, DropdownButton } from "react-bootstrap";
 import Chart from "react-apexcharts";
 import { MoneyFormatterType } from "components/money";
 
 import { DateTime } from "luxon";
+import { TimeRange } from "clients/finbot-client/types";
+import { lastItem } from "utils/array";
+
+interface TimeRangeChoiceProp {
+  label: string;
+  makeRange(now: DateTime): TimeRange;
+}
+
+const TIME_RANGES: Array<TimeRangeChoiceProp> = [
+  {
+    label: "1W",
+    makeRange: (now) => {
+      return {
+        from_time: now.minus({ weeks: 1 }),
+      };
+    },
+  },
+  {
+    label: "2W",
+    makeRange: (now) => {
+      return {
+        from_time: now.minus({ weeks: 2 }),
+      };
+    },
+  },
+  {
+    label: "1M",
+    makeRange: (now) => {
+      return {
+        from_time: now.minus({ month: 1 }),
+      };
+    },
+  },
+  {
+    label: "2M",
+    makeRange: (now) => {
+      return {
+        from_time: now.minus({ months: 2 }),
+      };
+    },
+  },
+  {
+    label: "6M",
+    makeRange: (now) => {
+      return {
+        from_time: now.minus({ months: 6 }),
+      };
+    },
+  },
+  {
+    label: "1Y",
+    makeRange: (now) => {
+      return {
+        from_time: now.minus({ year: 1 }),
+      };
+    },
+  },
+  {
+    label: "2Y",
+    makeRange: (now) => {
+      return {
+        from_time: now.minus({ year: 2 }),
+      };
+    },
+  },
+  {
+    label: "5Y",
+    makeRange: (now) => {
+      return {
+        from_time: now.minus({ year: 5 }),
+      };
+    },
+  },
+  {
+    label: "ALL",
+    makeRange: () => {
+      return {};
+    },
+  },
+];
+
+const DEFAULT_RANGE = lastItem(TIME_RANGES)!;
 
 function maxValue<T>(
   list: Array<T>,
@@ -45,6 +127,11 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
 ) => {
   const { userAccountId, locale, moneyFormatter } = props;
   const { finbotClient } = useContext(ServicesContext);
+  const [now] = useState<DateTime>(DateTime.now());
+  const [
+    selectedTimeRange,
+    setSelectedTimeRange,
+  ] = useState<TimeRangeChoiceProp>(DEFAULT_RANGE);
   const [
     historicalValuation,
     setHistoricalValuation,
@@ -56,8 +143,10 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
 
   useEffect(() => {
     const fetch = async () => {
+      const range = selectedTimeRange.makeRange(now);
       const result = await finbotClient!.getAccountHistoricalValuation({
         account_id: userAccountId,
+        ...range,
       });
       setHistoricalValuation({
         valuation_ccy: result.valuation_ccy,
@@ -71,11 +160,32 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
       });
     };
     fetch();
-  }, [finbotClient, userAccountId]);
+  }, [finbotClient, userAccountId, now, selectedTimeRange]);
 
   return (
     <Card>
-      <Card.Header>Historical Valuation</Card.Header>
+      <Card.Header className={"d-flex justify-content-between"}>
+        Historical Valuation
+        <DropdownButton
+          variant={""}
+          size={"xs" as any}
+          title={selectedTimeRange.label}
+        >
+          {TIME_RANGES.map((range) => {
+            return (
+              <Dropdown.Item
+                active={range.label === selectedTimeRange.label}
+                key={range.label}
+                onClick={() => {
+                  setSelectedTimeRange(range);
+                }}
+              >
+                {range.label.toUpperCase()}
+              </Dropdown.Item>
+            );
+          })}
+        </DropdownButton>
+      </Card.Header>
       <Card.Body>
         <Chart
           options={{

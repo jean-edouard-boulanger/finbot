@@ -38,26 +38,33 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
 
   useEffect(() => {
     const fetch = async () => {
-      if (aggregationMode === "account") {
-        const result = await finbotClient!.getLinkedAccountsValuation({
-          account_id: userAccountId,
-        });
-        setValuation({
-          valuation_ccy: result.valuation_ccy,
-          labels: result.entries.map(
-            (entry) => entry.linked_account.description
-          ),
-          values: result.entries.map((entry) => entry.valuation.value),
-        });
-      } else if (aggregationMode === "asset type") {
-        const result = await finbotClient!.getUserAccountValuationByAssetType({
-          account_id: userAccountId,
-        });
-        setValuation({
-          valuation_ccy: result.valuation_ccy,
-          labels: Object.keys(result.by_asset_type).map(capitalize),
-          values: Object.values(result.by_asset_type),
-        });
+      switch (aggregationMode) {
+        case "account": {
+          const result = await finbotClient!.getLinkedAccountsValuation({
+            account_id: userAccountId,
+          });
+          setValuation({
+            valuation_ccy: result.valuation_ccy,
+            labels: result.entries.map(
+              (entry) => entry.linked_account.description
+            ),
+            values: result.entries.map((entry) => entry.valuation.value),
+          });
+          break;
+        }
+        case "asset type": {
+          const result = await finbotClient!.getUserAccountValuationByAssetType(
+            {
+              account_id: userAccountId,
+            }
+          );
+          setValuation({
+            valuation_ccy: result.valuation_ccy,
+            labels: Object.keys(result.by_asset_type).map(capitalize),
+            values: Object.values(result.by_asset_type),
+          });
+          break;
+        }
       }
     };
     fetch();
@@ -72,20 +79,19 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
           size={"xs" as any}
           title={`By ${aggregationMode}`}
         >
-          {AGGREGATION_MODES.filter((mode) => mode != aggregationMode).map(
-            (mode) => {
-              return (
-                <Dropdown.Item
-                  key={mode}
-                  onClick={() => {
-                    setAggregationMode(mode);
-                  }}
-                >
-                  {mode.toUpperCase()}
-                </Dropdown.Item>
-              );
-            }
-          )}
+          {AGGREGATION_MODES.map((mode) => {
+            return (
+              <Dropdown.Item
+                active={mode === aggregationMode}
+                key={mode}
+                onClick={() => {
+                  setAggregationMode(mode);
+                }}
+              >
+                BY {mode.toUpperCase()}
+              </Dropdown.Item>
+            );
+          })}
         </DropdownButton>
       </Card.Header>
       <Card.Body>
