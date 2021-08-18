@@ -11,9 +11,9 @@ import { TreeGrid } from "components";
 
 import "ace-builds/src-noconflict/theme-github";
 import "ace-builds/src-noconflict/mode-json";
-import { TreeGridRowProps } from "../../components/tree-grid";
+import { TreeGridRowProps } from "components/tree-grid";
 
-const { DateTime } = require("luxon");
+import { DateTime } from "luxon";
 
 function ellipsis(text: string, maxLength: number) {
   if (text.length < maxLength) {
@@ -96,7 +96,7 @@ function GridRow(clickedCallback: (node: TracesTreeNode) => void) {
         <td>{node.metadata.origin}</td>
         <td>
           {(durationSeconds ?? null) !== null &&
-            `${durationSeconds.toFixed(1)}s`}
+            `${durationSeconds!.toFixed(1)}s`}
           {(durationSeconds ?? null) === null && <FaSpinner />}
         </td>
       </tr>

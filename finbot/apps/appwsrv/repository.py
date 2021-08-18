@@ -93,20 +93,27 @@ def get_last_history_entry(session, user_account_id: int) -> UserAccountHistoryE
         .first()
     )
     if entry is None:
-        raise MissingUserData("No history entry available")
+        raise MissingUserData("This user account has not been valued yet")
     return entry
 
 
 def find_user_account_historical_valuation(
-    session, user_account_id: int, from_time: datetime, to_time: datetime
+    session,
+    user_account_id: int,
+    from_time: Optional[datetime] = None,
+    to_time: Optional[datetime] = None,
 ) -> list[UserAccountHistoryEntry]:
-    return (
+    query = (
         session.query(UserAccountHistoryEntry)
         .filter_by(user_account_id=user_account_id)
         .filter_by(available=True)
-        .filter(UserAccountHistoryEntry.effective_at >= from_time)
-        .filter(UserAccountHistoryEntry.effective_at <= to_time)
-        .order_by(asc(UserAccountHistoryEntry.effective_at))
+    )
+    if from_time:
+        query = query.filter(UserAccountHistoryEntry.effective_at >= from_time)
+    if to_time:
+        query = query.filter(UserAccountHistoryEntry.effective_at <= to_time)
+    return (
+        query.order_by(asc(UserAccountHistoryEntry.effective_at))
         .options(
             joinedload(UserAccountHistoryEntry.user_account_valuation_history_entry)
         )

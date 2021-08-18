@@ -1,19 +1,17 @@
+from finbot.core.errors import InvalidUserInput, MissingUserData
 from finbot.apps.appwsrv.blueprints import ACCOUNT, LINKED_ACCOUNTS
 from finbot.apps.appwsrv.db import db_session
 from finbot.apps.appwsrv.serialization import serialize_user_account_valuation
 from finbot.apps.appwsrv import repository, core as appwsrv_core
-from finbot.core.web_service import service_endpoint
+from finbot.core.web_service import service_endpoint, RequestContext
 from finbot.core.utils import now_utc
 from finbot.core import timeseries
 from finbot.model import UserAccountHistoryEntry, SubAccountItemValuationHistoryEntry
 
-from sqlalchemy import asc
-from sqlalchemy.orm import joinedload
-
 from flask import Blueprint
 from flask_jwt_extended import jwt_required
 
-from datetime import timedelta
+from datetime import timedelta, datetime
 from collections import defaultdict
 import logging
 
@@ -83,22 +81,31 @@ def get_user_account_valuation_by_asset_type(user_account_id: int):
 
 @valuation_api.route(ACCOUNT.history(), methods=["GET"])
 @jwt_required()
-@service_endpoint()
-def get_user_account_valuation_history(user_account_id: int):
+@service_endpoint(
+    parameters={
+        "from_time": {
+            "type": datetime,
+        },
+        "to_time": {"type": datetime},
+    }
+)
+def get_user_account_valuation_history(
+    request_context: RequestContext, user_account_id: int
+):
     settings = repository.get_user_account_settings(db_session, user_account_id)
-    history_entries: list[UserAccountHistoryEntry] = (
-        db_session.query(UserAccountHistoryEntry)
-        .filter_by(user_account_id=user_account_id)
-        .filter_by(available=True)
-        .order_by(asc(UserAccountHistoryEntry.effective_at))
-        .options(
-            joinedload(
-                UserAccountHistoryEntry.user_account_valuation_history_entry,
-                innerjoin=True,
-            )
-        )
-        .all()
+    from_time = request_context.parameters["from_time"]
+    to_time = request_context.parameters["to_time"]
+    if from_time and to_time and from_time >= to_time:
+        raise InvalidUserInput("Start time parameter must be before end time parameter")
+
+    history_entries: list[
+        UserAccountHistoryEntry
+    ] = repository.find_user_account_historical_valuation(
+        db_session, user_account_id, from_time, to_time
     )
+
+    if len(history_entries) == 0:
+        raise MissingUserData("No valuation available for selected time range")
 
     return {
         "historical_valuation": {

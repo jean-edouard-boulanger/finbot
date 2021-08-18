@@ -30,7 +30,7 @@ def get_holdings_report(request_context: RequestContext):
     user_account_id = request_context.user_id
     history_entry = repository.get_last_history_entry(db_session, user_account_id)
     if not history_entry:
-        raise MissingUserData("No data to report")
+        raise MissingUserData("No valuation available for selected time range")
     return {
         "report": holdings_report.generate(
             session=db_session, history_entry=history_entry
