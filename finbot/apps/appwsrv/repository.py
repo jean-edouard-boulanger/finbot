@@ -93,7 +93,7 @@ def get_last_history_entry(session, user_account_id: int) -> UserAccountHistoryE
         .first()
     )
     if entry is None:
-        raise MissingUserData("This user account has not been valued yet")
+        raise MissingUserData("No valuation available for this account")
     return entry
 
 
