@@ -231,7 +231,7 @@ def get_user_account_historical_valuation(
                 else (q.last_value - q.first_value) / (q.first_value)
                end as rel_change
           from ({main_query}) q
-      order by q.period_start, q.linked_account_id
+      order by q.period_start
     """
     return [
         HistoricalValuationEntry(**row) for row in session.execute(query, query_params)
