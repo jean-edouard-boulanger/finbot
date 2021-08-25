@@ -365,8 +365,10 @@ def get_historical_valuation_by_asset_type(
                      item_subtype as asset_type,
                      sum(valuation) as valuation
                 from finbot_sub_accounts_items_valuation_history_entries fsaivhe
-                join finbot_user_accounts_history_entries fuahe on fsaivhe.history_entry_id = fuahe.id
-                join finbot_linked_accounts fla on fsaivhe.linked_account_id = fla.id
+                join finbot_user_accounts_history_entries fuahe
+                  on fsaivhe.history_entry_id = fuahe.id
+                join finbot_linked_accounts fla
+                  on fsaivhe.linked_account_id = fla.id
                where fuahe.available
              and not fla.deleted
                  and fuahe.user_account_id = :user_account_id {time_clause}

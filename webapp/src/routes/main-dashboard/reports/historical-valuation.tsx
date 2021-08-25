@@ -33,8 +33,8 @@ const LEVELS: Array<LevelChoiceProp> = [
   },
   {
     type: "asset_type",
-    label: "BY ASSET TYPE"
-  }
+    label: "BY ASSET TYPE",
+  },
 ];
 
 const DEFAULT_LEVEL = LEVELS[1];
@@ -128,8 +128,8 @@ const TIME_RANGES: Array<TimeRangeChoiceType> = [
           month: 12,
           day: 31,
           hour: 23,
-          minute: 59
-        })
+          minute: 59,
+        }),
       };
     },
   },

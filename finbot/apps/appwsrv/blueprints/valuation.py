@@ -163,7 +163,9 @@ def get_user_account_valuation_history_by_asset_type(
     frequency = request_context.parameters["frequency"]
     is_daily = frequency == repository.ValuationFrequency.Daily
 
-    valuation_history: list[repository.AssetTypeHistoricalValuationEntry] = repository.get_historical_valuation_by_asset_type(
+    valuation_history: list[
+        repository.AssetTypeHistoricalValuationEntry
+    ] = repository.get_historical_valuation_by_asset_type(
         db_session,
         user_account_id,
         from_time=from_time,
