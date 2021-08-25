@@ -42,7 +42,7 @@ def generate(session, history_entry: UserAccountHistoryEntry):
         to_time=to_time,
     )
     linked_accounts_historical_valuation = (
-        repository.get_linked_accounts_historical_valuation(
+        repository.get_historical_valuation_by_linked_account(
             session=session,
             user_account_id=history_entry.user_account_id,
             from_time=from_time,

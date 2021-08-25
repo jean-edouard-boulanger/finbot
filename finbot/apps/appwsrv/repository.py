@@ -244,7 +244,7 @@ class LinkedAccountHistoricalValuationEntry(HistoricalValuationEntry):
     linked_account_name: str
 
 
-def get_linked_accounts_historical_valuation(
+def get_historical_valuation_by_linked_account(
     session,
     user_account_id: int,
     from_time: Optional[datetime] = None,
@@ -286,7 +286,7 @@ def get_linked_accounts_historical_valuation(
             on flavhe.history_entry_id = fuahe.id
           join finbot_linked_accounts fla
             on flavhe.linked_account_id = fla.id
-         where fuahe.user_account_id = 2
+         where fuahe.user_account_id = :user_account_id
            and fuahe.available
            and not fla.deleted
     """
@@ -308,6 +308,86 @@ def get_linked_accounts_historical_valuation(
     """
     return [
         LinkedAccountHistoricalValuationEntry(**row)
+        for row in session.execute(query, query_params)
+    ]
+
+
+@dataclass
+class AssetTypeHistoricalValuationEntry(HistoricalValuationEntry):
+    asset_type: str
+
+
+def get_historical_valuation_by_asset_type(
+    session,
+    user_account_id: int,
+    from_time: Optional[datetime] = None,
+    to_time: Optional[datetime] = None,
+    frequency: Optional[ValuationFrequency] = None,
+) -> list[AssetTypeHistoricalValuationEntry]:
+    frequency = frequency or ValuationFrequency.Daily
+    sub_grouping = _get_valuation_grouping_from_frequency(frequency).sql_grouping
+    query_params: dict[str, Any] = {"user_account_id": user_account_id}
+    time_clause = ""
+    if from_time:
+        query_params["from_time"] = from_time
+        time_clause += " and fuahe.effective_at >= :from_time "
+    if to_time:
+        query_params["to_time"] = to_time
+        time_clause += " and fuahe.effective_at <= :to_time "
+    main_query = f"""
+        select distinct on (agg_items.asset_type, {sub_grouping})
+               {sub_grouping} as valuation_period,
+               agg_items.asset_type,
+               first_value(fuahe.effective_at) over (
+                   partition by agg_items.asset_type, {sub_grouping}
+                   order by fuahe.effective_at
+                ) as period_start,
+               first_value(fuahe.effective_at) over (
+                   partition by agg_items.asset_type, {sub_grouping}
+                   order by fuahe.effective_at desc
+                ) as period_end,
+               first_value(agg_items.valuation) over (
+                   partition by agg_items.asset_type, {sub_grouping}
+                   order by fuahe.effective_at
+                ) as first_value,
+               first_value(agg_items.valuation) over (
+                   partition by agg_items.asset_type, {sub_grouping}
+                   order by fuahe.effective_at desc
+               ) as last_value,
+               min(agg_items.valuation) over (
+                   partition by agg_items.asset_type, {sub_grouping}
+               ) as max_value,
+               min(agg_items.valuation) over (
+                   partition by agg_items.asset_type, {sub_grouping}
+               ) as min_value
+          from (
+              select history_entry_id,
+                     item_subtype as asset_type,
+                     sum(valuation) as valuation
+                from finbot_sub_accounts_items_valuation_history_entries fsaivhe
+                join finbot_user_accounts_history_entries fuahe
+                  on fsaivhe.history_entry_id = fuahe.id
+                join finbot_linked_accounts fla
+                  on fsaivhe.linked_account_id = fla.id
+               where fuahe.available
+             and not fla.deleted
+                 and fuahe.user_account_id = :user_account_id {time_clause}
+            group by history_entry_id, item_subtype
+          ) agg_items
+          join finbot_user_accounts_history_entries fuahe on agg_items.history_entry_id = fuahe.id
+    """
+    query = f"""
+        select q.*,
+               (q.last_value - q.first_value) as abs_change,
+               case q.first_value
+                when 0 then null
+                else (q.last_value - q.first_value) / (q.first_value)
+               end as rel_change
+          from ({main_query}) q
+      order by q.period_start, q.asset_type
+    """
+    return [
+        AssetTypeHistoricalValuationEntry(**row)
         for row in session.execute(query, query_params)
     ]
 

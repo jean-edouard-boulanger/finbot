@@ -137,6 +137,83 @@ def get_user_account_valuation_history(
     }
 
 
+@valuation_api.route(ACCOUNT.valuation.history.by.asset_type(), methods=["GET"])
+# @jwt_required()
+@service_endpoint(
+    parameters={
+        "from_time": {
+            "type": datetime,
+        },
+        "to_time": {"type": datetime},
+        "frequency": {
+            "type": repository.ValuationFrequency.deserialize,
+            "default": repository.ValuationFrequency.Daily,
+        },
+    }
+)
+def get_user_account_valuation_history_by_asset_type(
+    request_context: RequestContext, user_account_id: int
+):
+    settings = repository.get_user_account_settings(db_session, user_account_id)
+    from_time = request_context.parameters["from_time"]
+    to_time = request_context.parameters["to_time"]
+    if from_time and to_time and from_time >= to_time:
+        raise InvalidUserInput("Start time parameter must be before end time parameter")
+
+    frequency = request_context.parameters["frequency"]
+    is_daily = frequency == repository.ValuationFrequency.Daily
+
+    valuation_history: list[
+        repository.AssetTypeHistoricalValuationEntry
+    ] = repository.get_historical_valuation_by_asset_type(
+        db_session,
+        user_account_id,
+        from_time=from_time,
+        to_time=to_time,
+        frequency=frequency,
+    )
+    if len(valuation_history) == 0:
+        raise MissingUserData("No valuation available for selected time range")
+    current_index = 0
+    x_axis_layout: dict[Union[date, str], int] = OrderedDict()
+    for entry in valuation_history:
+        if entry.valuation_period not in x_axis_layout:
+            x_axis_layout[entry.valuation_period] = current_index
+            current_index += 1
+    valuation_history_by_asset_type: dict[
+        str, list[Optional[repository.HistoricalValuationEntry]]
+    ] = defaultdict(lambda: [None] * len(x_axis_layout))
+    for entry in valuation_history:
+        entry_index = x_axis_layout[entry.valuation_period]
+        valuation_history_by_asset_type[entry.asset_type][entry_index] = entry
+    return {
+        "historical_valuation": {
+            "valuation_ccy": settings.valuation_ccy,
+            "series_data": {
+                "x_axis": {
+                    "type": "datetime" if is_daily else "category",
+                    "categories": [
+                        datetime(year=period.year, month=period.month, day=period.day)
+                        if isinstance(period, date)
+                        else period
+                        for period in x_axis_layout.keys()
+                    ],
+                },
+                "series": [
+                    {
+                        "name": f"{asset_type.capitalize()} (Last)",
+                        "data": [
+                            (entry.last_value if entry is not None else None)
+                            for entry in entries
+                        ],
+                    }
+                    for asset_type, entries in valuation_history_by_asset_type.items()
+                ],
+            },
+        }
+    }
+
+
 @valuation_api.route(LINKED_ACCOUNTS.valuation(), methods=["GET"])
 @jwt_required()
 @service_endpoint()
@@ -198,7 +275,7 @@ def get_linked_accounts_historical_valuation(
         raise InvalidUserInput("Start time parameter must be before end time parameter")
     frequency = request_context.parameters["frequency"]
     is_daily = frequency == repository.ValuationFrequency.Daily
-    valuation_history = repository.get_linked_accounts_historical_valuation(
+    valuation_history = repository.get_historical_valuation_by_linked_account(
         session=db_session,
         user_account_id=user_account_id,
         from_time=from_time,
