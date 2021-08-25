@@ -7,15 +7,45 @@ import Chart from "react-apexcharts";
 import { MoneyFormatterType } from "components/money";
 
 import { DateTime } from "luxon";
-import { TimeRange } from "clients/finbot-client/types";
+import { HistoricalValuation, TimeRange } from "clients/finbot-client/types";
 import { lastItem } from "utils/array";
 
-interface TimeRangeChoiceProp {
+interface TimeRangeChoiceType {
   label: string;
   makeRange(now: DateTime): TimeRange;
 }
 
-const TIME_RANGES: Array<TimeRangeChoiceProp> = [
+type LevelType = "account" | "linked_account";
+
+interface LevelChoiceProp {
+  type: LevelType;
+  label: string;
+}
+
+const LEVELS: Array<LevelChoiceProp> = [
+  {
+    type: "account",
+    label: "ACCOUNT",
+  },
+  {
+    type: "linked_account",
+    label: "LINKED ACCOUNTS",
+  },
+];
+
+const DEFAULT_LEVEL = LEVELS[1];
+
+const FREQUENCIES: Array<string> = [
+  "Daily",
+  "Weekly",
+  "Monthly",
+  "Quarterly",
+  "Yearly",
+];
+
+const DEFAULT_FREQUENCY = FREQUENCIES[2];
+
+const TIME_RANGES: Array<TimeRangeChoiceType> = [
   {
     label: "1W",
     makeRange: (now) => {
@@ -81,7 +111,19 @@ const TIME_RANGES: Array<TimeRangeChoiceProp> = [
     },
   },
   {
-    label: "ALL",
+    label: "THIS YEAR",
+    makeRange: (now) => {
+      return {
+        from_time: DateTime.fromObject({
+          year: now.year,
+          month: 1,
+          day: 1,
+        }),
+      };
+    },
+  },
+  {
+    label: "ALL DATA",
     makeRange: () => {
       return {};
     },
@@ -89,32 +131,6 @@ const TIME_RANGES: Array<TimeRangeChoiceProp> = [
 ];
 
 const DEFAULT_RANGE = lastItem(TIME_RANGES)!;
-
-function maxValue<T>(
-  list: Array<T>,
-  accessor: (item: T) => number
-): number | null {
-  accessor = accessor || ((val) => val);
-  let currentMax: number | null = null;
-  for (let i = 0; i !== list.length; ++i) {
-    const val = accessor(list[i]);
-    if (currentMax === null || val > currentMax) {
-      currentMax = val;
-    }
-  }
-  return currentMax;
-}
-
-interface HistoricalValuationEntry {
-  timestamp: number;
-  value: number;
-}
-
-interface HistoricalValuation {
-  valuation_ccy: string | null;
-  data: Array<HistoricalValuationEntry>;
-  high: number | null;
-}
 
 export interface HistoricalValuationProps {
   userAccountId: number;
@@ -128,137 +144,198 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
   const { userAccountId, locale, moneyFormatter } = props;
   const { finbotClient } = useContext(ServicesContext);
   const [now] = useState<DateTime>(DateTime.now());
+  const [selectedLevel, setSelectedLevel] = useState(DEFAULT_LEVEL);
+  const [selectedFrequency, setSelectedFrequency] = useState(DEFAULT_FREQUENCY);
   const [
     selectedTimeRange,
     setSelectedTimeRange,
-  ] = useState<TimeRangeChoiceProp>(DEFAULT_RANGE);
+  ] = useState<TimeRangeChoiceType>(DEFAULT_RANGE);
   const [
     historicalValuation,
     setHistoricalValuation,
-  ] = useState<HistoricalValuation>({
-    valuation_ccy: null,
-    data: [],
-    high: null,
-  });
+  ] = useState<HistoricalValuation | null>(null);
 
   useEffect(() => {
-    const fetch = async () => {
+    const fetchValuation = async () => {
       const range = selectedTimeRange.makeRange(now);
-      const result = await finbotClient!.getAccountHistoricalValuation({
+      const request = {
         account_id: userAccountId,
         ...range,
-      });
-      setHistoricalValuation({
-        valuation_ccy: result.valuation_ccy,
-        data: result.entries.map((entry) => {
-          return {
-            timestamp: DateTime.fromISO(entry.date).toMillis(),
-            value: entry.value,
-          };
-        }),
-        high: maxValue(result.entries, (entry) => entry.value),
-      });
+        frequency: selectedFrequency,
+      };
+      switch (selectedLevel.type) {
+        case "account": {
+          const data = await finbotClient!.getAccountHistoricalValuation(
+            request
+          );
+          setHistoricalValuation(data);
+          break;
+        }
+        case "linked_account": {
+          const data = await finbotClient!.getLinkedAccountsHistoricalValuation(
+            request
+          );
+          setHistoricalValuation(data);
+          break;
+        }
+      }
     };
-    fetch();
-  }, [finbotClient, userAccountId, now, selectedTimeRange]);
+    fetchValuation();
+  }, [
+    finbotClient,
+    userAccountId,
+    now,
+    selectedLevel,
+    selectedTimeRange,
+    selectedFrequency,
+  ]);
 
   return (
-    <Card>
-      <Card.Header className={"d-flex justify-content-between"}>
-        Historical Valuation
-        <DropdownButton
-          variant={""}
-          size={"xs" as any}
-          title={selectedTimeRange.label}
-        >
-          {TIME_RANGES.map((range) => {
-            return (
-              <Dropdown.Item
-                active={range.label === selectedTimeRange.label}
-                key={range.label}
-                onClick={() => {
-                  setSelectedTimeRange(range);
-                }}
-              >
-                {range.label.toUpperCase()}
-              </Dropdown.Item>
-            );
-          })}
-        </DropdownButton>
+    <Card style={{ height: "22rem" }}>
+      <Card.Header className={"d-flex"}>
+        <div className={"mr-auto"}>Historical Valuation</div>
+        <div>
+          <DropdownButton
+            variant={""}
+            size={"xs" as any}
+            title={selectedLevel.label}
+          >
+            {LEVELS.map((level) => {
+              return (
+                <Dropdown.Item
+                  active={selectedLevel.type === level.type}
+                  key={level.type}
+                  onClick={() => {
+                    setSelectedLevel(level);
+                  }}
+                >
+                  {level.label.toUpperCase()}
+                </Dropdown.Item>
+              );
+            })}
+          </DropdownButton>
+        </div>
+        <div>
+          <DropdownButton
+            variant={""}
+            size={"xs" as any}
+            title={selectedFrequency}
+          >
+            {FREQUENCIES.map((freq) => {
+              return (
+                <Dropdown.Item
+                  active={selectedFrequency === freq}
+                  key={freq}
+                  onClick={() => {
+                    setSelectedFrequency(freq);
+                  }}
+                >
+                  {freq.toUpperCase()}
+                </Dropdown.Item>
+              );
+            })}
+          </DropdownButton>
+        </div>
+        <div>
+          <DropdownButton
+            variant={""}
+            size={"xs" as any}
+            title={selectedTimeRange.label}
+          >
+            {TIME_RANGES.map((range) => {
+              return (
+                <Dropdown.Item
+                  active={range.label === selectedTimeRange.label}
+                  key={range.label}
+                  onClick={() => {
+                    setSelectedTimeRange(range);
+                  }}
+                >
+                  {range.label.toUpperCase()}
+                </Dropdown.Item>
+              );
+            })}
+          </DropdownButton>
+        </div>
       </Card.Header>
       <Card.Body>
-        <Chart
-          options={{
-            chart: {
-              animations: {
-                enabled: false,
-              },
-              stacked: false,
-              zoom: {
-                enabled: false,
-              },
-              toolbar: {
-                show: true,
-                tools: {
-                  download: false,
+        {historicalValuation && (
+          <Chart
+            options={{
+              chart: {
+                animations: {
+                  enabled: false,
+                },
+                stacked: true,
+                zoom: {
+                  enabled: false,
+                },
+                toolbar: {
+                  show: true,
+                  tools: {
+                    download: false,
+                  },
                 },
               },
-            },
-            grid: {
-              show: false,
-            },
-            theme: {
-              palette: "palette8",
-            },
-            dataLabels: {
-              enabled: false,
-            },
-            xaxis: {
-              type: "datetime",
-              categories: historicalValuation.data.map(
-                (entry) => entry.timestamp
-              ),
+              grid: {
+                show: false,
+              },
+              theme: {
+                palette: "palette8",
+              },
+              dataLabels: {
+                enabled: false,
+              },
+              xaxis: {
+                type: historicalValuation.series_data.x_axis.type,
+                tickAmount: 6,
+                categories: historicalValuation.series_data.x_axis.categories,
+                tooltip: {
+                  enabled: false,
+                },
+                labels: {
+                  rotate: 0,
+                },
+              },
+              legend: {
+                show: false,
+              },
+              yaxis: {
+                show: false,
+                min: 0,
+              },
               tooltip: {
-                enabled: false,
-              },
-            },
-            yaxis: {
-              show: false,
-              min: 0,
-              max: historicalValuation.high ?? 0,
-            },
-            tooltip: {
-              x: {
-                format: "dd-MMM-yyyy hh:mm",
-              },
-              y: {
-                formatter: (value: number) => {
-                  return moneyFormatter(
-                    value,
-                    locale,
-                    historicalValuation.valuation_ccy ?? ""
-                  );
+                x: {
+                  format: "dd-MMM-yyyy hh:mm",
+                },
+                y: {
+                  formatter: (value: number) => {
+                    return moneyFormatter(
+                      value,
+                      locale,
+                      historicalValuation.valuation_ccy ?? ""
+                    );
+                  },
                 },
               },
-            },
-            fill: {
-              opacity: 0.5,
-              type: "solid",
-            },
-            stroke: {
-              width: 1,
-            },
-          }}
-          series={[
-            {
-              name: "value",
-              data: historicalValuation.data.map((entry) => entry.value),
-            },
-          ]}
-          type="area"
-          width="100%"
-          height="250px"
-        />
+              fill: {
+                opacity: 0.8,
+                type: "solid",
+              },
+              stroke: {
+                width: 1,
+              },
+            }}
+            series={historicalValuation.series_data.series}
+            type={
+              historicalValuation.series_data.x_axis.type === "datetime"
+                ? "area"
+                : "bar"
+            }
+            width="100%"
+            height="250px"
+          />
+        )}
       </Card.Body>
     </Card>
   );

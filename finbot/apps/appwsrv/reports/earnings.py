@@ -1,23 +1,13 @@
 from dataclasses import dataclass
-from collections import defaultdict
-from datetime import datetime
-import calendar
+from datetime import datetime, date
 
 from finbot.apps.appwsrv import repository
 from finbot.model import UserAccountHistoryEntry
 
 
 @dataclass(frozen=True)
-class ByMonth:
-    year: int
-    month: int
-
-    def serialize(self):
-        return {
-            "year": self.year,
-            "month": self.month,
-            "as_str": f"{calendar.month_name[self.month]} {self.year}",
-        }
+class AggregationDescription:
+    as_str: str
 
 
 @dataclass
@@ -34,7 +24,7 @@ class Metrics:
 
 @dataclass
 class ReportEntry:
-    aggregation: ByMonth
+    aggregation: AggregationDescription
     metrics: Metrics
 
     def serialize(self):
@@ -103,19 +93,32 @@ def generate(
     session, user_account_id: int, from_time: datetime, to_time: datetime
 ) -> Report:
     user_settings = repository.get_user_account(session, user_account_id)
-    historical_valuation = repository.find_user_account_historical_valuation(
+    historical_valuation = repository.get_user_account_historical_valuation(
         session=session,
         user_account_id=user_account_id,
         from_time=from_time,
         to_time=to_time,
+        frequency=repository.ValuationFrequency.Monthly,
     )
-    aggregated_entries = defaultdict(list)
-    for entry in historical_valuation:
-        agg = ByMonth(entry.effective_at.year, entry.effective_at.month)
-        aggregated_entries[agg].append(entry)
     entries = [
-        ReportEntry(aggregation=agg, metrics=_get_aggregated_metrics(entries))
-        for agg, entries in aggregated_entries.items()
+        ReportEntry(
+            aggregation=AggregationDescription(
+                entry.valuation_period.isoformat()
+                if isinstance(entry.valuation_period, date)
+                else entry.valuation_period
+            ),
+            metrics=Metrics(
+                first_date=entry.period_start,
+                first_value=entry.first_value,
+                last_date=entry.period_end,
+                last_value=entry.last_value,
+                min_value=entry.min_value,
+                max_value=entry.max_value,
+                abs_change=entry.abs_change,
+                rel_change=entry.rel_change,
+            ),
+        )
+        for entry in historical_valuation
     ]
     return Report(
         currency=user_settings.settings.valuation_ccy,

@@ -71,7 +71,7 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
   }, [finbotClient, userAccountId, aggregationMode]);
 
   return (
-    <Card>
+    <Card style={{ height: "22rem" }}>
       <Card.Header className={"d-flex justify-content-between"}>
         Wealth Distribution
         <DropdownButton

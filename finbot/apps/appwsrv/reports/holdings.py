@@ -12,7 +12,7 @@ from finbot.model import (
 
 
 def generate(session, history_entry: UserAccountHistoryEntry):
-    user_account_valuation = repository.find_user_account_valuation(
+    user_account_valuation = repository.get_user_account_valuation(
         session, history_entry.id
     )
     linked_accounts_valuation = repository.find_linked_accounts_valuation(
@@ -35,22 +35,26 @@ def generate(session, history_entry: UserAccountHistoryEntry):
 
     to_time = utils.now_utc()
     from_time = to_time - timedelta(days=30)
-    user_account_historical_valuation = (
-        repository.find_user_account_historical_valuation(
+    historical_valuation = repository.get_user_account_historical_valuation(
+        session=session,
+        user_account_id=history_entry.user_account_id,
+        from_time=from_time,
+        to_time=to_time,
+    )
+    linked_accounts_historical_valuation = (
+        repository.get_linked_accounts_historical_valuation(
             session=session,
             user_account_id=history_entry.user_account_id,
             from_time=from_time,
             to_time=to_time,
         )
     )
-    historical_valuation_by_account = (
-        repository.find_linked_accounts_historical_valuation(
-            session=session,
-            user_account_id=history_entry.user_account_id,
-            from_time=from_time,
-            to_time=to_time,
-        )
-    )
+    historical_valuation_by_linked_account: dict[
+        int, list[repository.HistoricalValuationEntry]
+    ] = defaultdict(list)
+    for entry in linked_accounts_historical_valuation:
+        historical_valuation_by_linked_account[entry.linked_account_id].append(entry)
+
     sparkline_schedule = timeseries.create_schedule(
         from_time=from_time,
         to_time=to_time,
@@ -69,13 +73,11 @@ def generate(session, history_entry: UserAccountHistoryEntry):
             "value": user_account_valuation.valuation,
             "change": user_account_valuation.valuation_change,
             "sparkline": [
-                uas_v.user_account_valuation_history_entry.valuation
-                if uas_v is not None
-                else None
+                uas_v.last_value if uas_v is not None else None
                 for valuation_time, uas_v in timeseries.schedulify(
                     sparkline_schedule,
-                    user_account_historical_valuation,
-                    lambda uas_v: uas_v.effective_at,
+                    historical_valuation,
+                    lambda uas_v: uas_v.period_end,
                 )
             ],
         },
@@ -92,13 +94,13 @@ def generate(session, history_entry: UserAccountHistoryEntry):
                     "value": la_v.valuation,
                     "change": la_v.valuation_change,
                     "sparkline": [
-                        las_v.valuation if las_v is not None else None
+                        las_v.last_value if las_v is not None else None
                         for valuation_time, las_v in timeseries.schedulify(
                             sparkline_schedule,
-                            historical_valuation_by_account.get(
+                            historical_valuation_by_linked_account.get(
                                 la_v.linked_account_id, []
                             ),
-                            lambda las_v: las_v.account_valuation_history_entry.effective_at,
+                            lambda las_v: las_v.period_end,
                         )
                     ],
                 },

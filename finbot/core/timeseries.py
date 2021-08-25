@@ -8,6 +8,14 @@ class ScheduleFrequency(enum.Enum):
     Daily = enum.auto()
     Weekly = enum.auto()
 
+    @staticmethod
+    def deserialize(data: str) -> "ScheduleFrequency":
+        return {
+            "hourly": ScheduleFrequency.Hourly,
+            "daily": ScheduleFrequency.Daily,
+            "weekly": ScheduleFrequency.Weekly,
+        }[data.lower()]
+
 
 ItemType = TypeVar("ItemType")
 
@@ -29,25 +37,6 @@ def _find_next_close_item(
         if time_getter(item) >= cutoff:
             return item
     return None
-
-
-def sample_time_series(
-    timed_items: list[ItemType],
-    time_getter: Callable[[ItemType], datetime],
-    interval: timedelta,
-) -> Iterator[ItemType]:
-    if not timed_items:
-        return
-    next_date = time_getter(timed_items[0])
-    yield timed_items[0]
-    if len(timed_items) < 2:
-        return
-    for item in timed_items[1:-1]:
-        current_time = time_getter(item)
-        if current_time >= next_date:
-            next_date = current_time + interval
-            yield item
-    yield timed_items[-1]
 
 
 def create_schedule(
