@@ -77,7 +77,7 @@ def get_user_account_valuation_by_asset_type(user_account_id: int):
 
 
 @valuation_api.route(ACCOUNT.valuation.history(), methods=["GET"])
-# @jwt_required()
+@jwt_required()
 @service_endpoint(
     parameters={
         "from_time": {
@@ -175,7 +175,7 @@ def get_linked_accounts_valuation(user_account_id: int):
 
 
 @valuation_api.route(LINKED_ACCOUNTS.valuation.history(), methods=["GET"])
-# @jwt_required()
+@jwt_required()
 @service_endpoint(
     parameters={
         "from_time": {
