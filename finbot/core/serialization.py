@@ -1,5 +1,6 @@
 from typing import Optional, Any, Union
-from datetime import datetime
+from datetime import datetime, date
+import dataclasses
 import decimal
 import json
 
@@ -16,12 +17,14 @@ def serialize(data: Any) -> Any:
         return serialize(data.serialize())
     if isinstance(data, decimal.Decimal):
         return float(data)
-    if isinstance(data, datetime):
+    if isinstance(data, (datetime, date)):
         return data.isoformat()
     if isinstance(data, dict):
         return {serialize_key(k): serialize(v) for k, v in data.items()}
     if isinstance(data, (list, set, tuple)):
         return [serialize(v) for v in data]
+    if dataclasses.is_dataclass(data):
+        return serialize(dataclasses.asdict(data))
     return data
 
 

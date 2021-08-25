@@ -1,5 +1,20 @@
 import { DateTime } from "luxon";
 
+export interface SeriesXAxisData {
+  type: "datetime" | "category";
+  categories: Array<string | number>;
+}
+
+export interface SeriesYAxisData {
+  name: string;
+  data: Array<number>;
+}
+
+export interface SeriesData {
+  x_axis: SeriesXAxisData;
+  series: Array<SeriesYAxisData>;
+}
+
 export interface DistributedTraceKey {
   guid: string;
   path: string;
@@ -169,20 +184,17 @@ export interface UpdateAccountPlaidSettingsResponse {
 
 export interface GetAccountHistoricalValuationRequest
   extends UserAccountResource,
-    TimeRange {}
-
-export interface AccountHistoricalValuationEntry {
-  date: string;
-  value: number;
+    TimeRange {
+  frequency?: string;
 }
 
-export interface AccountHistoricalValuation {
+export interface HistoricalValuation {
   valuation_ccy: string;
-  entries: Array<AccountHistoricalValuationEntry>;
+  series_data: SeriesData;
 }
 
 export interface GetAccountHistoricalValuationResponse {
-  historical_valuation: AccountHistoricalValuation;
+  historical_valuation: HistoricalValuation;
 }
 
 export interface DeleteAccountPlaidSettingsRequest
@@ -216,6 +228,16 @@ export interface LinkedAccountsValuation {
 
 export interface GetLinkedAccountsValuationResponse {
   valuation: LinkedAccountsValuation;
+}
+
+export interface GetLinkedAccountsHistoricalValuationRequest
+  extends UserAccountResource,
+    TimeRange {
+  frequency?: string;
+}
+
+export interface GetLinkedAccountsHistoricalValuationResponse {
+  historical_valuation: HistoricalValuation;
 }
 
 export interface LinkedAccountResource extends UserAccountResource {

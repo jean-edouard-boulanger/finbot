@@ -56,13 +56,15 @@ import {
   GetLinkedAccountResponse,
   SaveProviderResponse,
   GetProviderResponse,
-  AccountHistoricalValuation,
+  HistoricalValuation,
   SystemReport,
   GetSystemReportResponse,
   GetUserAccountValuationByAssetTypeRequest,
   UserAccountValuationByAssetType,
   GetUserAccountValuationByAssetTypeResponse,
   LinkedAccountsValuation,
+  GetLinkedAccountsHistoricalValuationRequest,
+  GetLinkedAccountsHistoricalValuationResponse,
 } from "./types";
 
 function getEndpoint(): string {
@@ -155,15 +157,6 @@ export class FinbotClient {
     return handleResponse<UpdateAccountProfileResponse>(response).profile;
   }
 
-  async getAccountValuation({
-    account_id,
-  }: GetAccountValuationRequest): Promise<UserAccountValuation | null> {
-    const response = await axios.get(
-      `${this.endpoint}/accounts/${account_id}/valuation`
-    );
-    return handleResponse<GetAccountValuationResponse>(response).valuation;
-  }
-
   async isAccountConfigured({
     account_id,
   }: IsAccountConfiguredRequest): Promise<boolean> {
@@ -233,17 +226,28 @@ export class FinbotClient {
     handleResponse(response);
   }
 
+  async getAccountValuation({
+    account_id,
+  }: GetAccountValuationRequest): Promise<UserAccountValuation | null> {
+    const response = await axios.get(
+      `${this.endpoint}/accounts/${account_id}/valuation`
+    );
+    return handleResponse<GetAccountValuationResponse>(response).valuation;
+  }
+
   async getAccountHistoricalValuation({
     account_id,
     from_time,
     to_time,
-  }: GetAccountHistoricalValuationRequest): Promise<AccountHistoricalValuation> {
+    frequency,
+  }: GetAccountHistoricalValuationRequest): Promise<HistoricalValuation> {
     const params = {
       from_time: from_time?.toISO(),
       to_time: to_time?.toISO(),
+      frequency: frequency,
     };
     const response = await axios.get(
-      `${this.endpoint}/accounts/${account_id}/history`,
+      `${this.endpoint}/accounts/${account_id}/valuation/history`,
       { params }
     );
     return handleResponse<GetAccountHistoricalValuationResponse>(response)
@@ -258,6 +262,26 @@ export class FinbotClient {
     );
     return handleResponse<GetLinkedAccountsValuationResponse>(response)
       .valuation;
+  }
+
+  async getLinkedAccountsHistoricalValuation({
+    account_id,
+    from_time,
+    to_time,
+    frequency,
+  }: GetLinkedAccountsHistoricalValuationRequest): Promise<HistoricalValuation> {
+    const params = {
+      from_time: from_time?.toISO(),
+      to_time: to_time?.toISO(),
+      frequency: frequency,
+    };
+    const response = await axios.get(
+      `${this.endpoint}/accounts/${account_id}/linked_accounts/valuation/history`,
+      { params }
+    );
+    return handleResponse<GetLinkedAccountsHistoricalValuationResponse>(
+      response
+    ).historical_valuation;
   }
 
   async getUserAccountValuationByAssetType({

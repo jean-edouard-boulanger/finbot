@@ -1,3 +1,4 @@
+from finbot.apps.appwsrv import repository
 from finbot.core import timeseries
 from finbot.model import UserAccountHistoryEntry, UserAccountSettings, UserAccount
 
@@ -18,12 +19,11 @@ def serialize_user_account(account: UserAccount) -> dict[str, Any]:
 
 def serialize_user_account_valuation(
     entry: UserAccountHistoryEntry,
-    history: list[UserAccountHistoryEntry],
+    history: list[repository.HistoricalValuationEntry],
     sparkline_schedule: list[datetime],
 ):
     valuation_entry = entry.user_account_valuation_history_entry
     return {
-        "history_entry_id": entry.id,
         "date": entry.effective_at,
         "currency": entry.valuation_ccy,
         "value": valuation_entry.valuation,
@@ -32,12 +32,10 @@ def serialize_user_account_valuation(
         "sparkline": [
             {
                 "effective_at": valuation_time,
-                "value": uas_v.user_account_valuation_history_entry.valuation
-                if uas_v is not None
-                else None,
+                "value": uas_v.last_value if uas_v is not None else None,
             }
             for valuation_time, uas_v in timeseries.schedulify(
-                sparkline_schedule, history, lambda uas_v: uas_v.effective_at
+                sparkline_schedule, history, lambda uas_v: uas_v.period_end
             )
         ],
     }

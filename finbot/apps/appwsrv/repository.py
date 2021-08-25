@@ -15,11 +15,13 @@ from finbot.model import (
     SubAccountItemValuationHistoryEntry,
 )
 
-from collections import defaultdict
-from datetime import datetime
-from typing import Optional, Any
-from sqlalchemy import asc, desc
+from sqlalchemy import desc
 from sqlalchemy.orm import joinedload
+
+from typing import Optional, Any, Union
+from dataclasses import dataclass
+from datetime import datetime, date
+import enum
 import logging
 
 
@@ -97,54 +99,211 @@ def get_last_history_entry(session, user_account_id: int) -> UserAccountHistoryE
     return entry
 
 
-def find_user_account_historical_valuation(
+class ValuationFrequency(enum.Enum):
+    Daily = enum.auto()
+    Weekly = enum.auto()
+    Monthly = enum.auto()
+    Quarterly = enum.auto()
+    Yearly = enum.auto()
+
+    def serialize(self) -> str:
+        return self.name.lower()
+
+    @staticmethod
+    def deserialize(data: str):
+        return {
+            "daily": ValuationFrequency.Daily,
+            "weekly": ValuationFrequency.Weekly,
+            "monthly": ValuationFrequency.Monthly,
+            "quarterly": ValuationFrequency.Quarterly,
+            "yearly": ValuationFrequency.Yearly,
+        }[data.lower()]
+
+
+@dataclass
+class HistoricalValuationEntry:
+    valuation_period: Union[date, str]
+    period_start: datetime
+    period_end: datetime
+    first_value: float
+    last_value: float
+    abs_change: float
+    rel_change: float
+    min_value: float
+    max_value: float
+
+
+class DailyValuationGrouping(object):
+    datatype = "datetime"
+    sql_grouping = "fuahe.effective_at::timestamp::date"
+
+
+class WeeklyValuationGrouping(object):
+    datatype = "category"
+    sql_grouping = (
+        "'W' || extract(week from fuahe.effective_at)::text "
+        "|| ' ' || extract(year from fuahe.effective_at)::text"
+    )
+
+
+class MonthlyValuationGrouping(object):
+    datatype = "category"
+    sql_grouping = (
+        "to_char(fuahe.effective_at, 'Mon') "
+        "|| ' ' || extract(year from fuahe.effective_at)::text"
+    )
+
+
+class QuarterlyValuationGrouping(object):
+    datatype = "category"
+    sql_grouping = (
+        "'Q' || extract(quarter from fuahe.effective_at) "
+        "|| ' ' || extract(year from fuahe.effective_at)::text"
+    )
+
+
+class YearlyValuationGrouping(object):
+    datatype = "category"
+    sql_grouping = "extract(year from fuahe.effective_at)::text"
+
+
+def _get_valuation_grouping_from_frequency(frequency: ValuationFrequency):
+    return {
+        ValuationFrequency.Daily: DailyValuationGrouping,
+        ValuationFrequency.Weekly: WeeklyValuationGrouping,
+        ValuationFrequency.Monthly: MonthlyValuationGrouping,
+        ValuationFrequency.Quarterly: QuarterlyValuationGrouping,
+        ValuationFrequency.Yearly: YearlyValuationGrouping,
+    }[frequency]()
+
+
+def get_user_account_historical_valuation(
     session,
     user_account_id: int,
     from_time: Optional[datetime] = None,
     to_time: Optional[datetime] = None,
-) -> list[UserAccountHistoryEntry]:
-    query = (
-        session.query(UserAccountHistoryEntry)
-        .filter_by(user_account_id=user_account_id)
-        .filter_by(available=True)
-    )
+    frequency: Optional[ValuationFrequency] = None,
+) -> list[HistoricalValuationEntry]:
+    frequency = frequency or ValuationFrequency.Daily
+    grouping = _get_valuation_grouping_from_frequency(frequency).sql_grouping
+    query_params: dict[str, Any] = {"user_account_id": user_account_id}
+    main_query = f"""
+        select distinct on ({grouping}) {grouping} as valuation_period,
+               first_value(fuahe.effective_at) over (
+                   partition by {grouping}
+                   order by fuahe.effective_at
+               ) as period_start,
+               first_value(fuahe.effective_at) over (
+                   partition by {grouping}
+                   order by fuahe.effective_at desc
+               ) as period_end,
+               first_value(fuavhe.valuation) over (
+                   partition by {grouping}
+                   order by fuahe.effective_at
+               ) as first_value,
+               first_value(fuavhe.valuation) over (
+                   partition by {grouping}
+                   order by fuahe.effective_at desc
+               ) as last_value,
+               min(fuavhe.valuation) over (
+                   partition by {grouping}
+               ) as min_value,
+               max(fuavhe.valuation) over (
+                   partition by {grouping}
+               ) as max_value
+        from finbot_user_accounts_valuation_history_entries fuavhe
+                 join finbot_user_accounts_history_entries fuahe
+                   on fuavhe.history_entry_id = fuahe.id
+        where fuahe.user_account_id = :user_account_id
+          and fuahe.available
+    """
     if from_time:
-        query = query.filter(UserAccountHistoryEntry.effective_at >= from_time)
+        query_params["from_time"] = from_time
+        main_query += " and fuahe.effective_at >= :from_time "
     if to_time:
-        query = query.filter(UserAccountHistoryEntry.effective_at <= to_time)
-    return (
-        query.order_by(asc(UserAccountHistoryEntry.effective_at))
-        .options(
-            joinedload(UserAccountHistoryEntry.user_account_valuation_history_entry)
-        )
-        .all()
-    )
+        query_params["to_time"] = to_time
+        main_query += " and fuahe.effective_at <= :to_time "
+    query = f"""
+        SELECT q.*,
+               (q.last_value - q.first_value) as abs_change,
+               (q.last_value - q.first_value) / (q.first_value) as rel_change
+          FROM ({main_query}) q
+      ORDER BY q.period_start
+    """
+    return [
+        HistoricalValuationEntry(**row) for row in session.execute(query, query_params)
+    ]
 
 
-def find_linked_accounts_historical_valuation(
-    session, user_account_id: int, from_time: datetime, to_time: datetime
-) -> dict[int, list[LinkedAccountValuationHistoryEntry]]:
-    history_entries = (
-        session.query(UserAccountHistoryEntry)
-        .filter_by(user_account_id=user_account_id)
-        .filter_by(available=True)
-        .filter(UserAccountHistoryEntry.effective_at >= from_time)
-        .filter(UserAccountHistoryEntry.effective_at <= to_time)
-        .order_by(asc(UserAccountHistoryEntry.effective_at))
-        .options(
-            joinedload(
-                UserAccountHistoryEntry.linked_accounts_valuation_history_entries
-            )
-        )
-        .all()
-    )
-    results = defaultdict(list)
-    history_entry: UserAccountHistoryEntry
-    for history_entry in history_entries:
-        valuation: LinkedAccountValuationHistoryEntry
-        for valuation in history_entry.linked_accounts_valuation_history_entries:
-            results[valuation.linked_account_id].append(valuation)
-    return results
+@dataclass
+class LinkedAccountHistoricalValuationEntry(HistoricalValuationEntry):
+    linked_account_id: int
+    linked_account_name: str
+
+
+def get_linked_accounts_historical_valuation(
+    session,
+    user_account_id: int,
+    from_time: Optional[datetime] = None,
+    to_time: Optional[datetime] = None,
+    frequency: Optional[ValuationFrequency] = None,
+) -> list[LinkedAccountHistoricalValuationEntry]:
+    frequency = frequency or ValuationFrequency.Daily
+    sub_grouping = _get_valuation_grouping_from_frequency(frequency).sql_grouping
+    query_params: dict[str, Any] = {"user_account_id": user_account_id}
+    main_query = f"""
+        select distinct on (flavhe.linked_account_id, {sub_grouping})
+               flavhe.linked_account_id as linked_account_id,
+               fla.account_name as linked_account_name,
+               {sub_grouping} as valuation_period,
+               first_value(fuahe.effective_at) over (
+                   partition by flavhe.linked_account_id, {sub_grouping}
+                   order by fuahe.effective_at
+               ) as period_start,
+               first_value(fuahe.effective_at) over (
+                   partition by flavhe.linked_account_id, {sub_grouping}
+                   order by fuahe.effective_at desc
+               ) as period_end,
+               first_value(flavhe.valuation) over (
+                   partition by flavhe.linked_account_id, {sub_grouping}
+                   order by fuahe.effective_at
+               ) as first_value,
+               first_value(flavhe.valuation) over (
+                   partition by flavhe.linked_account_id, {sub_grouping}
+                   order by fuahe.effective_at desc
+               ) as last_value,
+               min(flavhe.valuation) over (
+                   partition by flavhe.linked_account_id, {sub_grouping}
+               ) as min_value,
+               max(flavhe.valuation) over (
+                   partition by flavhe.linked_account_id, {sub_grouping}
+               ) as max_value
+          from finbot_linked_accounts_valuation_history_entries flavhe
+          join finbot_user_accounts_history_entries fuahe
+            on flavhe.history_entry_id = fuahe.id
+          join finbot_linked_accounts fla
+            on flavhe.linked_account_id = fla.id
+         where fuahe.user_account_id = 2
+           and fuahe.available
+           and not fla.deleted
+    """
+    if from_time:
+        query_params["from_time"] = from_time
+        main_query += " and fuahe.effective_at >= :from_time "
+    if to_time:
+        query_params["to_time"] = to_time
+        main_query += " and fuahe.effective_at <= :to_time "
+    query = f"""
+        SELECT q.*,
+               (q.last_value - q.first_value) as abs_change,
+               (q.last_value - q.first_value) / (q.first_value) as rel_change
+          FROM ({main_query}) q
+      ORDER BY q.period_start, q.linked_account_id
+    """
+    return [
+        LinkedAccountHistoricalValuationEntry(**row)
+        for row in session.execute(query, query_params)
+    ]
 
 
 def get_linked_accounts_statuses(
@@ -182,7 +341,7 @@ def get_linked_account_status(
     return get_linked_accounts_statuses(session, user_account_id).get(linked_account_id)
 
 
-def find_user_account_valuation(
+def get_user_account_valuation(
     session, history_entry_id: int
 ) -> UserAccountValuationHistoryEntry:
     return (

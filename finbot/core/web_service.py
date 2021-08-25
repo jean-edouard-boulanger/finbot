@@ -283,7 +283,9 @@ def service_endpoint(
             with time_elapsed():
                 with scoped_stack_printer_configuration(show_vals=fs_show_vals):
                     try:
-                        logging.info(f"process {func.__name__} request")
+                        logging.info(
+                            f"process {func.__name__} request route={request.full_path}"
+                        )
                         payload = request.get_json(silent=True)
                         if schema:
                             try:
