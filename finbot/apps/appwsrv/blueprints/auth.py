@@ -43,10 +43,10 @@ def auth_login(request_context: RequestContext):
         "auth": {
             "access_token": create_access_token(
                 identity=account.id, expires_delta=False
-            ).decode(),
+            ),
             "refresh_token": create_refresh_token(
                 identity=account.id, expires_delta=False
-            ).decode(),
+            ),
         },
         "account": serialize_user_account(account),
     }

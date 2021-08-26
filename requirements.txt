@@ -6,7 +6,7 @@ filelock
 flake8
 flask
 flask-cors
-flask-jwt-extended
+flask-jwt-extended>=4.3,<5.0
 forex-python
 gspread
 gunicorn
@@ -17,7 +17,7 @@ marshmallow-dataclass
 mypy
 oauth2client
 pandas
-plaid-python
+plaid-python==7.5.0
 price-parser
 psycopg2
 pycoingecko
