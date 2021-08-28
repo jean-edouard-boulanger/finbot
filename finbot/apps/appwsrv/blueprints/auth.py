@@ -4,7 +4,6 @@ from finbot.apps.appwsrv.blueprints import API_V1
 from finbot.apps.appwsrv.serialization import serialize_user_account
 from finbot.core.web_service import Route, service_endpoint, RequestContext
 from finbot.core.errors import InvalidUserInput
-from finbot.core import secure, environment
 
 from flask import Blueprint
 from flask_jwt_extended import create_access_token, create_refresh_token

@@ -9,7 +9,6 @@ from finbot.core.errors import InvalidUserInput
 from finbot.core.web_service import Route, service_endpoint, RequestContext
 from finbot.core.notifier import TwilioNotifier, TwilioSettings
 from finbot.core.utils import unwrap_optional
-from finbot.core import environment, secure
 from finbot.model import (
     UserAccount,
     UserAccountSettings,
