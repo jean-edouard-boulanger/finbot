@@ -69,6 +69,7 @@ export const TwilioIntegrationSettings: React.FC<
       <Row className={"mb-4"}>
         <Col>
           <h3>Twilio integration</h3>
+          <hr />
         </Col>
       </Row>
       <Row>

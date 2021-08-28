@@ -6,6 +6,7 @@ import { LinkedAccountsSettings } from "./linked-accounts";
 import { ProvidersSettings } from "./providers";
 import { PlaidIntegrationSettings } from "./plaid-integration";
 import { TwilioIntegrationSettings } from "./twilio-integration";
+import { AccountSecuritySettings } from "./account-security";
 
 import { ListGroup, Row, Col } from "react-bootstrap";
 
@@ -24,6 +25,15 @@ export const NavigationPanel = withRouter((props) => {
         action
       >
         Profile
+      </ListGroup.Item>
+      <ListGroup.Item
+        active={route.startsWith("/settings/security")}
+        onClick={() => {
+          props.history.push("/settings/security");
+        }}
+        action
+      >
+        Account security
       </ListGroup.Item>
       <ListGroup.Item
         active={route.startsWith("/settings/linked")}
@@ -80,6 +90,11 @@ export const Settings: React.FC<Record<string, never>> = () => {
             exact
             path="/settings/profile"
             render={() => <ProfileSettings />}
+          />
+          <Route
+            exact
+            path="/settings/security"
+            render={() => <AccountSecuritySettings />}
           />
           <Route
             path="/settings/linked"

@@ -80,6 +80,7 @@ export const ProfileSettings: React.FC<Record<string, never>> = () => {
       <Row className={"mb-4"}>
         <Col>
           <h3>Profile</h3>
+          <hr />
         </Col>
       </Row>
       <Row>

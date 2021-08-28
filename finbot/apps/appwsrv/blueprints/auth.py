@@ -1,10 +1,10 @@
+from finbot.apps.appwsrv import repository
+from finbot.apps.appwsrv.db import db_session
 from finbot.apps.appwsrv.blueprints import API_V1
 from finbot.apps.appwsrv.serialization import serialize_user_account
-from finbot.apps.appwsrv.db import db_session
 from finbot.core.web_service import Route, service_endpoint, RequestContext
 from finbot.core.errors import InvalidUserInput
 from finbot.core import secure, environment
-from finbot.model import UserAccount
 
 from flask import Blueprint
 from flask_jwt_extended import create_access_token, create_refresh_token
@@ -26,16 +26,12 @@ auth_api = Blueprint("auth_api", __name__)
 )
 def auth_login(request_context: RequestContext):
     data = request_context.request
-    account = db_session.query(UserAccount).filter_by(email=data["email"]).first()
+    account = repository.find_user_account_by_email(db_session, data["email"])
     not_found_message = "Invalid email or password"
     if not account:
         raise InvalidUserInput(not_found_message)
 
-    # TODO: password should be hashed, not encrypted/decrypted with secret
-    account_password = secure.fernet_decrypt(
-        account.encrypted_password.encode(), environment.get_secret_key().encode()
-    ).decode()
-    if account_password != data["password"]:
+    if account.clear_password != data["password"]:
         raise InvalidUserInput(not_found_message)
 
     # TODO: expires_delta should be set to a reasonable time interval

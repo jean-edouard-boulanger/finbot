@@ -1,5 +1,5 @@
 export FINBOT_EDIT_CMD ?= code --wait
-export BLACK_SETTINGS = --exclude migrations/ webapp/ .
+export BLACK_SETTINGS = --exclude 'migrations/|webapp/|venv/' .
 
 
 alembic-gen:

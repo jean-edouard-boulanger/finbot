@@ -375,6 +375,7 @@ export const LinkedAccountsSettings = withRouter((props) => {
               <></>
             )}
           </h3>
+          <hr />
         </Col>
       </Row>
       {route === "/settings/linked" && (

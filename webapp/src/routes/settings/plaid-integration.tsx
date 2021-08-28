@@ -85,6 +85,7 @@ export const PlaidIntegrationSettings: React.FC<Record<string, never>> = () => {
       <Row className={"mb-4"}>
         <Col>
           <h3>Plaid integration</h3>
+          <hr />
         </Col>
       </Row>
       <Row>
