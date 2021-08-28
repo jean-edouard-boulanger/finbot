@@ -23,6 +23,8 @@ def serialize(data: Any) -> Any:
         return {serialize_key(k): serialize(v) for k, v in data.items()}
     if isinstance(data, (list, set, tuple)):
         return [serialize(v) for v in data]
+    if isinstance(data, bytes):
+        return data.decode()
     if dataclasses.is_dataclass(data):
         return serialize(dataclasses.asdict(data))
     return data

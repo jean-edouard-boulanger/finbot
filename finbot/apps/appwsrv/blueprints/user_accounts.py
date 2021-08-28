@@ -9,7 +9,6 @@ from finbot.core.errors import InvalidUserInput
 from finbot.core.web_service import Route, service_endpoint, RequestContext
 from finbot.core.notifier import TwilioNotifier, TwilioSettings
 from finbot.core.utils import unwrap_optional
-from finbot.core import environment, secure
 from finbot.model import (
     UserAccount,
     UserAccountSettings,
@@ -53,11 +52,10 @@ user_accounts_api = Blueprint("user_accounts_api", __name__)
 def create_user_account(request_context: RequestContext):
     data = request_context.request
     try:
+        user_account: UserAccount
         with db_session.persist(UserAccount()) as user_account:
             user_account.email = data["email"]
-            user_account.encrypted_password = secure.fernet_encrypt(
-                data["password"].encode(), environment.get_secret_key().encode()
-            ).decode()
+            user_account.clear_password = data["password"]
             user_account.full_name = data["full_name"]
             user_account.settings = UserAccountSettings(
                 valuation_ccy=data["settings"]["valuation_ccy"]
@@ -77,6 +75,33 @@ def create_user_account(request_context: RequestContext):
 def get_user_account(user_account_id: int):
     account = repository.get_user_account(db_session, user_account_id)
     return {"user_account": serialize_user_account(account)}
+
+
+@user_accounts_api.route(ACCOUNT.password(), methods=["PUT"])
+@jwt_required()
+@service_endpoint(
+    schema={
+        "type": "object",
+        "additionalProperties": False,
+        "properties": {
+            "old_password": {"type": "string"},
+            "new_password": {"type": "string"},
+        },
+    }
+)
+def update_user_account_password(request_context: RequestContext, user_account_id: int):
+    data = request_context.request
+    account = repository.get_user_account(db_session, user_account_id)
+    if data["old_password"] != account.clear_password:
+        raise InvalidUserInput("The old password is incorrect")
+    new_password = data["new_password"]
+    if account.clear_password == new_password:
+        raise InvalidUserInput(
+            "The new password must be different from the old password"
+        )
+    with db_session.persist(account):
+        account.clear_password = new_password
+    return {}
 
 
 @user_accounts_api.route(ACCOUNT.profile(), methods=["PUT"])

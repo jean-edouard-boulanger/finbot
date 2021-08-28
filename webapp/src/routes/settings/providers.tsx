@@ -166,6 +166,7 @@ export const EditProviderPanel: React.FC<Record<string, never>> = () => {
             Providers
             <small>| {isNew ? "New" : selectedProviderId}</small>
           </h3>
+          <hr />
         </Col>
       </Row>
       <Row className={"mb-4"}>

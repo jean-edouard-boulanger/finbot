@@ -1,5 +1,5 @@
 export FINBOT_EDIT_CMD ?= code --wait
-export BLACK_SETTINGS = --exclude migrations/ webapp/ .
+export BLACK_SETTINGS = --exclude 'migrations/|webapp/|venv/' .
 
 
 alembic-gen:
@@ -186,7 +186,7 @@ banned-keywords-check-ts:
 	tools/banned-keywords.py --source-dirs webapp/src
 
 flake8:
-	flake8 --exclude migrations/ --max-line-length 100
+	flake8 --exclude migrations/,venv/ --max-line-length 100
 
 black-check:
 	black --check $(BLACK_SETTINGS)

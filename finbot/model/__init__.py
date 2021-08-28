@@ -1,4 +1,5 @@
 from finbot.core.dbutils import JSONEncoded, DateTimeTz
+from finbot.core import secure, environment
 
 from typing import Optional, TypeVar, Type, TYPE_CHECKING, Any
 from datetime import datetime
@@ -56,6 +57,18 @@ class UserAccount(Base):
     plaid_settings = relationship(
         "UserAccountPlaidSettings", uselist=False, back_populates="user_account"
     )
+
+    @property
+    def clear_password(self) -> str:
+        return secure.fernet_decrypt(
+            self.encrypted_password.encode(), environment.get_secret_key().encode()
+        ).decode()
+
+    @clear_password.setter
+    def clear_password(self, new_password: str) -> None:
+        self.encrypted_password = secure.fernet_encrypt(
+            new_password.encode(), environment.get_secret_key().encode()
+        ).decode()
 
 
 class UserAccountSettings(Base):

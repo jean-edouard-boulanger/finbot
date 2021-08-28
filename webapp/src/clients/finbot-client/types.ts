@@ -99,6 +99,11 @@ export interface GetUserAccountResponse {
   user_account: UserAccount;
 }
 
+export interface UpdateUserAccountPasswordRequest extends UserAccountResource {
+  old_password: string;
+  new_password: string;
+}
+
 export interface UserAccountProfile {
   full_name: string;
   email: string;

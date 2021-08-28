@@ -35,6 +35,10 @@ def get_user_account(session, user_account_id: int) -> UserAccount:
     return account
 
 
+def find_user_account_by_email(session, email: str) -> Optional[UserAccount]:
+    return session.query(UserAccount).filter_by(email=email).first()
+
+
 def get_user_account_settings(session, user_account_id: int) -> UserAccountSettings:
     settings = (
         session.query(UserAccountSettings)

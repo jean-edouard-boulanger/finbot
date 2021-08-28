@@ -65,6 +65,7 @@ import {
   LinkedAccountsValuation,
   GetLinkedAccountsHistoricalValuationRequest,
   GetLinkedAccountsHistoricalValuationResponse,
+  UpdateUserAccountPasswordRequest,
 } from "./types";
 
 function getEndpoint(): string {
@@ -138,6 +139,21 @@ export class FinbotClient {
   }: GetUserAccountRequest): Promise<UserAccount> {
     const response = await axios.get(`${this.endpoint}/accounts/${account_id}`);
     return handleResponse<GetUserAccountResponse>(response).user_account;
+  }
+
+  async updateUserAccountPassword({
+    account_id,
+    old_password,
+    new_password,
+  }: UpdateUserAccountPasswordRequest): Promise<void> {
+    const response = await axios.put(
+      `${this.endpoint}/accounts/${account_id}/password`,
+      {
+        old_password,
+        new_password,
+      }
+    );
+    return handleResponse<void>(response);
   }
 
   async updateAccountProfile({
