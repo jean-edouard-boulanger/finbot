@@ -7,6 +7,7 @@ import { BarLoader, StackedBarLoader } from "./bar-loader";
 import { ToggleSecret } from "./toggle-secret";
 import { TreeGrid } from "./tree-grid";
 import { ValuationChange, RelativeValuationChange } from "./valuation-change";
+import { PasswordValidationCard } from "./password";
 
 export {
   LoadingButton,
@@ -20,4 +21,5 @@ export {
   TreeGrid,
   ValuationChange,
   RelativeValuationChange,
+  PasswordValidationCard,
 };

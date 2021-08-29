@@ -20,6 +20,7 @@
     "bootswatch": "^4.4.1",
     "chokidar": "^3.5.2",
     "datejs": "^1.0.0-rc3",
+    "email-addresses": "^5.0.0",
     "eslint": "^7.32.0",
     "formik": "^2.2.6",
     "jwt-decode": "^2.2.0",

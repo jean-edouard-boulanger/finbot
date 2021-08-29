@@ -61,6 +61,10 @@ export interface RegisterAccountRequest {
   valuation_ccy: string;
 }
 
+export interface IsEmailAvailableResponse {
+  available: boolean;
+}
+
 export interface RegisterAccountResponse {
   user_account: UserAccount;
 }

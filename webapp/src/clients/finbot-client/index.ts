@@ -66,6 +66,7 @@ import {
   GetLinkedAccountsHistoricalValuationRequest,
   GetLinkedAccountsHistoricalValuationResponse,
   UpdateUserAccountPasswordRequest,
+  IsEmailAvailableResponse,
 } from "./types";
 
 function getEndpoint(): string {
@@ -113,7 +114,7 @@ export class FinbotClient {
     password,
     valuation_ccy,
   }: RegisterAccountRequest): Promise<UserAccount> {
-    const settings = { valuation_ccy: valuation_ccy };
+    const settings = { valuation_ccy };
     const response = await axios.post(`${this.endpoint}/accounts`, {
       email,
       full_name,
@@ -121,6 +122,15 @@ export class FinbotClient {
       settings,
     });
     return handleResponse<RegisterAccountResponse>(response).user_account;
+  }
+
+  async isEmailAvailable(email: string): Promise<boolean> {
+    const params = { email };
+    const response = await axios.get(
+      `${this.endpoint}/accounts/email_available`,
+      { params }
+    );
+    return handleResponse<IsEmailAvailableResponse>(response).available;
   }
 
   async logInAccount({
