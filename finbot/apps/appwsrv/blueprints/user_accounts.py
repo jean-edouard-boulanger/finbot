@@ -30,6 +30,14 @@ ACCOUNT: Route = ACCOUNTS.p("int:user_account_id")
 user_accounts_api = Blueprint("user_accounts_api", __name__)
 
 
+@user_accounts_api.route(ACCOUNTS.email_available(), methods=["GET"])
+@service_endpoint(parameters={"email": {"type": str, "required": True}})
+def is_email_available(request_context: RequestContext):
+    email = request_context.parameters["email"]
+    user_account = repository.find_user_account_by_email(db_session, email)
+    return {"available": user_account is None}
+
+
 @user_accounts_api.route(ACCOUNTS(), methods=["POST"])
 @service_endpoint(
     trace_values=False,

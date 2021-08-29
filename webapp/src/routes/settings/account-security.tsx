@@ -1,86 +1,24 @@
 import React, { useContext, useEffect, useState } from "react";
 
-import { Card, Col, Form, ListGroup, Row } from "react-bootstrap";
-
-import { LoadingButton } from "components/loading-button";
-import { FaCheckCircle } from "react-icons/fa";
-import { toast } from "react-toastify";
 import { ServicesContext, AuthContext } from "contexts";
 
-interface PasswordForm {
+import { LoadingButton, PasswordValidationCard } from "components";
+import {
+  validatePassword,
+  PasswordValidationInput,
+  PasswordValidationResult,
+} from "components/password";
+import { Col, Form, Row } from "react-bootstrap";
+import { toast } from "react-toastify";
+
+interface PasswordForm extends PasswordValidationInput {
   oldPassword: string;
-  newPassword: string;
-  newPasswordConfirm: string;
 }
-
-interface PasswordValidationRule {
-  description: string;
-  validator(form: PasswordForm): boolean;
-}
-
-const PASSWORD_VALIDATION_RULES: Array<PasswordValidationRule> = [
-  {
-    description: "Must be at least 8 characters",
-    validator: ({ newPassword }) => {
-      return newPassword.length >= 8;
-    },
-  },
-  {
-    description: "Must contain at least a number",
-    validator: ({ newPassword }) => {
-      return /\d/.test(newPassword);
-    },
-  },
-  {
-    description: "Must contain at least one lowercase character",
-    validator: ({ newPassword }) => {
-      return /[a-z]/.test(newPassword);
-    },
-  },
-  {
-    description: "Must contain at least one uppercase character",
-    validator: ({ newPassword }) => {
-      return /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/.test(newPassword); //eslint-disable-line
-    },
-  },
-  {
-    description: "New passwords must match",
-    validator: ({ newPassword, newPasswordConfirm }) => {
-      console.log([newPassword, newPasswordConfirm]);
-      return newPassword.length > 0 && newPassword === newPasswordConfirm;
-    },
-  },
-];
 
 const DEFAULT_PASSWORD_FORM: PasswordForm = {
   oldPassword: "",
-  newPassword: "",
-  newPasswordConfirm: "",
-};
-
-interface PasswordValidationRuleResult {
-  description: string;
-  valid: boolean;
-}
-
-interface PasswordValidation {
-  valid: boolean;
-  rules: Array<PasswordValidationRuleResult>;
-}
-
-const validatePasswordForm = (form: PasswordForm): PasswordValidation => {
-  let allValid = true;
-  const rules: Array<PasswordValidationRuleResult> = PASSWORD_VALIDATION_RULES.map(
-    (rule) => {
-      const valid = rule.validator(form);
-      allValid = allValid && valid;
-      return {
-        description: rule.description,
-        valid: rule.validator(form),
-      };
-    }
-  );
-  return { valid: allValid, rules };
+  password: "",
+  passwordConfirm: "",
 };
 
 export interface AccountSecuritySettingsProps {}
@@ -95,13 +33,13 @@ export const AccountSecuritySettings: React.FC<AccountSecuritySettingsProps> = (
   const [
     passwordValidation,
     setPasswordValidation,
-  ] = useState<PasswordValidation>(() => {
-    return validatePasswordForm(passwordForm);
+  ] = useState<PasswordValidationResult>(() => {
+    return validatePassword(passwordForm);
   });
   const userAccountId = auth.account!.id;
 
   useEffect(() => {
-    setPasswordValidation(validatePasswordForm(passwordForm));
+    setPasswordValidation(validatePassword(passwordForm));
   }, [passwordForm]);
 
   const handleFormChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -118,12 +56,12 @@ export const AccountSecuritySettings: React.FC<AccountSecuritySettingsProps> = (
       await finbotClient!.updateUserAccountPassword({
         account_id: userAccountId,
         old_password: form.oldPassword,
-        new_password: form.newPassword,
+        new_password: form.password,
       });
       toast.success("Password updated successfully");
       setPasswordForm(DEFAULT_PASSWORD_FORM);
     } catch (e) {
-      toast.error(`Failed to update password: ${e}`);
+      toast.error(`${e}`);
     }
     setLoading(false);
   };
@@ -157,8 +95,8 @@ export const AccountSecuritySettings: React.FC<AccountSecuritySettingsProps> = (
               <Form.Label>New password</Form.Label>
               <Form.Control
                 type="password"
-                name="newPassword"
-                value={passwordForm.newPassword}
+                name="password"
+                value={passwordForm.password}
                 onChange={handleFormChange}
               />
             </Form.Group>
@@ -166,8 +104,8 @@ export const AccountSecuritySettings: React.FC<AccountSecuritySettingsProps> = (
               <Form.Label>Confirm new password</Form.Label>
               <Form.Control
                 type="password"
-                name="newPasswordConfirm"
-                value={passwordForm.newPasswordConfirm}
+                name="passwordConfirm"
+                value={passwordForm.passwordConfirm}
                 onChange={handleFormChange}
               />
             </Form.Group>
@@ -185,26 +123,7 @@ export const AccountSecuritySettings: React.FC<AccountSecuritySettingsProps> = (
           </Form>
         </Col>
         <Col>
-          <Card>
-            <ListGroup className={"list-group-flush"}>
-              <ListGroup.Item>
-                <strong>Password validation rules</strong>
-              </ListGroup.Item>
-              {passwordValidation.rules.map((rule, index) => {
-                return (
-                  <ListGroup.Item key={`${index}`}>
-                    {rule.description}
-                    {rule.valid && (
-                      <span className={"text-success"}>
-                        &nbsp;
-                        <FaCheckCircle />
-                      </span>
-                    )}
-                  </ListGroup.Item>
-                );
-              })}
-            </ListGroup>
-          </Card>
+          <PasswordValidationCard validation={passwordValidation} />
         </Col>
       </Row>
     </>
