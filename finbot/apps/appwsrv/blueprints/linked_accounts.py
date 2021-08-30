@@ -1,11 +1,11 @@
 from finbot.apps.appwsrv.blueprints import ACCOUNT
 from finbot.apps.appwsrv.db import db_session
-from finbot.apps.appwsrv import repository, core as appwsrv_core
+from finbot.apps.appwsrv import core as appwsrv_core
 from finbot.core.errors import InvalidUserInput, InvalidOperation
 from finbot.core.web_service import Route, service_endpoint, RequestContext
 from finbot.core.utils import unwrap_optional
 from finbot.core import environment, secure
-from finbot.model import LinkedAccount
+from finbot.model import repository, LinkedAccount
 
 from sqlalchemy.exc import IntegrityError
 

@@ -1,6 +1,10 @@
-from finbot.apps.appwsrv import repository
 from finbot.core import timeseries
-from finbot.model import UserAccountHistoryEntry, UserAccountSettings, UserAccount
+from finbot.model import (
+    repository,
+    UserAccountSettings,
+    UserAccountHistoryEntry,
+    UserAccount,
+)
 
 from typing import Any
 from datetime import datetime

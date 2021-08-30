@@ -5,7 +5,7 @@ Revises: 2a508081682f
 Create Date: 2020-05-03 19:02:47.919296
 
 """
-from finbot.core.dbutils import JSONEncoded
+from finbot.core.db.types import JSONEncoded
 from alembic import op
 import sqlalchemy as sa
 

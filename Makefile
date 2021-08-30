@@ -201,6 +201,11 @@ mypy:
 	mypy --strict -p finbot.model;
 	mypy --strict -p finbot.providers;
 
+unit-tests-py:
+	python3.9 -m pytest -vv tests/unit
+
+unit-tests: unit-tests-py
+
 banned-keywords-check-py:
 	tools/banned-keywords.py --source-dirs finbot
 
@@ -208,7 +213,7 @@ lint-sh:
 	grep -rl '^#!/.*bash' --exclude-dir=webapp --exclude-dir='./.*' . |\
  		xargs shellcheck -e SC1090 -e SC1091 -S style
 
-lint-py: mypy flake8 black-check banned-keywords-check-py
+lint-py: mypy flake8 black-check banned-keywords-check-py unit-tests-py
 lint-ts: eslint tsc-build-check prettier-check-ts banned-keywords-check-ts
 lint-all: lint-py lint-ts lint-sh
 

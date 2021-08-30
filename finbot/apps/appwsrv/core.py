@@ -1,8 +1,7 @@
 from finbot.apps.appwsrv.db import db_session
-from finbot.apps.appwsrv import repository
 from finbot.clients import FinbotClient, SchedClient, TriggerValuationRequest
 from finbot.core import environment
-from finbot.model import UserAccountPlaidSettings
+from finbot.model import repository, UserAccountPlaidSettings
 from finbot.apps.finbotwsrv.errors import AuthenticationFailure
 from finbot.providers.plaid_us import pack_credentials as pack_plaid_credentials
 

@@ -4,10 +4,10 @@ from finbot.apps.appwsrv.reports import (
     earnings as earnings_report,
 )
 from finbot.apps.appwsrv.db import db_session
-from finbot.apps.appwsrv import repository
 from finbot.core.errors import MissingUserData
 from finbot.core.web_service import Route, service_endpoint, RequestContext
 from finbot.core.utils import now_utc
+from finbot.model import repository
 
 from flask import Blueprint
 from flask_jwt_extended import jwt_required

@@ -4,12 +4,12 @@ from finbot.apps.appwsrv.serialization import (
     serialize_user_account,
     serialize_user_account_settings,
 )
-from finbot.apps.appwsrv import repository
 from finbot.core.errors import InvalidUserInput
 from finbot.core.web_service import Route, service_endpoint, RequestContext
 from finbot.core.notifier import TwilioNotifier, TwilioSettings
 from finbot.core.utils import unwrap_optional
 from finbot.model import (
+    repository,
     UserAccount,
     UserAccountSettings,
     UserAccountPlaidSettings,
