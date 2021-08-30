@@ -2,11 +2,11 @@ from finbot.core.errors import InvalidUserInput, MissingUserData
 from finbot.apps.appwsrv.blueprints import ACCOUNT, LINKED_ACCOUNTS
 from finbot.apps.appwsrv.db import db_session
 from finbot.apps.appwsrv.serialization import serialize_user_account_valuation
-from finbot.apps.appwsrv import repository, core as appwsrv_core
+from finbot.apps.appwsrv import core as appwsrv_core
 from finbot.core.web_service import service_endpoint, RequestContext
 from finbot.core.utils import now_utc
 from finbot.core import timeseries
-from finbot.model import SubAccountItemValuationHistoryEntry
+from finbot.model import repository, SubAccountItemValuationHistoryEntry
 
 from flask import Blueprint
 from flask_jwt_extended import jwt_required

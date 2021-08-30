@@ -1,4 +1,4 @@
-from finbot.core.dbutils import JSONEncoded, DateTimeTz
+from finbot.core.db.types import JSONEncoded, DateTimeTz
 from finbot.core import secure, environment
 
 from typing import Optional, TypeVar, Type, TYPE_CHECKING, Any
@@ -221,10 +221,10 @@ class UserAccountSnapshot(Base):
 
     user_account = relationship(UserAccount, uselist=False)
     xccy_rates_entries = relationship(
-        "XccyRateSnapshotEntry", back_populates="snapshot"
+        "XccyRateSnapshotEntry", back_populates="snapshot", uselist=True
     )
     linked_accounts_entries = relationship(
-        "LinkedAccountSnapshotEntry", back_populates="snapshot"
+        "LinkedAccountSnapshotEntry", back_populates="snapshot", uselist=True
     )
 
     @property
@@ -532,3 +532,9 @@ class SubAccountItemValuationHistoryEntry(Base):
             ],
         ),
     )
+
+
+class GenericKeyValueStore(Base):
+    __tablename__ = "finbot_generic_key_value_store"
+    key = Column(String(64), primary_key=True)
+    value = Column(JSONEncoded, nullable=False)

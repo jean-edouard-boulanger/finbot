@@ -1,8 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime, date
 
-from finbot.apps.appwsrv import repository
-from finbot.model import UserAccountHistoryEntry
+from finbot.model import repository, UserAccountHistoryEntry
 
 
 @dataclass(frozen=True)

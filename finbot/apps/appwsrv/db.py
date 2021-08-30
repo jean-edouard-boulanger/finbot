@@ -1,4 +1,5 @@
-from finbot.core import environment, dbutils
+from finbot.core.db.session import Session
+from finbot.core import environment
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -13,4 +14,4 @@ logger.info("initializing database engine")
 db_engine = create_engine(environment.get_database_url())
 
 logger.info("initializing database session")
-db_session = dbutils.add_persist_utilities(scoped_session(sessionmaker(bind=db_engine)))
+db_session = Session(scoped_session(sessionmaker(bind=db_engine)))

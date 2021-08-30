@@ -1,9 +1,8 @@
 from finbot.apps.appwsrv.blueprints import API_V1
 from finbot.apps.appwsrv.db import db_session
-from finbot.apps.appwsrv import repository
 from finbot.core.errors import InvalidUserInput, InvalidOperation
 from finbot.core.web_service import Route, service_endpoint, RequestContext
-from finbot.model import Provider, LinkedAccount
+from finbot.model import repository, Provider, LinkedAccount
 
 from flask import Blueprint
 import logging

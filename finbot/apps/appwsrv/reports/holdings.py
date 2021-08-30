@@ -2,9 +2,9 @@ from typing import Tuple
 from collections import defaultdict
 from datetime import timedelta
 
-from finbot.apps.appwsrv import repository
 from finbot.core import utils, timeseries
 from finbot.model import (
+    repository,
     UserAccountHistoryEntry,
     SubAccountValuationHistoryEntry,
     SubAccountItemValuationHistoryEntry,

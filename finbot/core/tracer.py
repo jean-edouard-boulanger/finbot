@@ -1,9 +1,9 @@
 from finbot.model import DistributedTrace
+from finbot.core.db.session import Session
 from finbot.core.utils import format_stack
 from finbot.core.serialization import serialize
 
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm.session import Session
 
 from typing import Iterator, Optional, Protocol, TypedDict, Callable, Any
 from dataclasses import dataclass, field

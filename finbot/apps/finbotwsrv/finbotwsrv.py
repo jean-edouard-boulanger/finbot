@@ -1,5 +1,6 @@
 from finbot import providers
-from finbot.core import tracer, dbutils, environment
+from finbot.core.db.session import Session
+from finbot.core import tracer, environment
 from finbot.core.logging import configure_logging
 from finbot.core.utils import format_stack, configure_stack_printer
 from finbot.core.web_service import service_endpoint, ApplicationErrorData
@@ -19,7 +20,7 @@ configure_logging(FINBOT_ENV.desired_log_level)
 configure_stack_printer(show_vals=None)
 
 db_engine = create_engine(FINBOT_ENV.database_url)
-db_session = dbutils.add_persist_utilities(scoped_session(sessionmaker(bind=db_engine)))
+db_session = Session(scoped_session(sessionmaker(bind=db_engine)))
 tracer.configure(
     identity="finbotwsrv", persistence_layer=tracer.DBPersistenceLayer(db_session)
 )

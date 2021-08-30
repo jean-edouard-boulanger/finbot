@@ -1,7 +1,8 @@
 from finbot.clients.finbot import FinbotClient, LineItem
 from finbot.providers.plaid_us import pack_credentials as pack_plaid_credentials
-from finbot.core import secure, utils, dbutils, fx_market, tracer, environment
+from finbot.core import secure, utils, fx_market, tracer, environment
 from finbot.core.utils import unwrap_optional, format_stack
+from finbot.core.db.session import Session
 from finbot.core.logging import configure_logging
 from finbot.core.web_service import service_endpoint, ApplicationErrorData
 from finbot.core.serialization import pretty_dump
@@ -35,7 +36,7 @@ FINBOT_ENV = environment.get()
 configure_logging(FINBOT_ENV.desired_log_level)
 
 db_engine = create_engine(FINBOT_ENV.database_url)
-db_session = dbutils.add_persist_utilities(scoped_session(sessionmaker(bind=db_engine)))
+db_session = Session(scoped_session(sessionmaker(bind=db_engine)))
 tracer.configure(
     identity="snapwsrv", persistence_layer=tracer.DBPersistenceLayer(db_session)
 )

@@ -8,7 +8,7 @@ Create Date: 2021-04-09 20:34:28.275449
 from alembic import op
 import sqlalchemy as sa
 
-from finbot.core.dbutils import JSONEncoded
+from finbot.core.db.types import JSONEncoded
 
 
 # revision identifiers, used by Alembic.

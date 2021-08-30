@@ -2,7 +2,8 @@ from finbot.apps.histwsrv import repository
 from finbot.core.web_service import service_endpoint
 from finbot.core.serialization import pretty_dump
 from finbot.core.logging import configure_logging
-from finbot.core import dbutils, tracer, environment
+from finbot.core.db.session import Session
+from finbot.core import tracer, environment
 from finbot.model import (
     UserAccountSnapshot,
     UserAccountHistoryEntry,
@@ -25,7 +26,7 @@ FINBOT_ENV = environment.get()
 configure_logging(FINBOT_ENV.desired_log_level)
 
 db_engine = create_engine(FINBOT_ENV.database_url)
-db_session = dbutils.add_persist_utilities(scoped_session(sessionmaker(bind=db_engine)))
+db_session = Session(scoped_session(sessionmaker(bind=db_engine)))
 tracer.configure(
     identity="hitwsrv", persistence_layer=tracer.DBPersistenceLayer(db_session)
 )
