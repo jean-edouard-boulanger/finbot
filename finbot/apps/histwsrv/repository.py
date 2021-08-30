@@ -1,11 +1,14 @@
+from finbot.model import ValuationChangeEntry
+from finbot.core.db.session import Session
+
+import pandas as pd
+
 from typing import Tuple
 from datetime import date
-from finbot.model import ValuationChangeEntry
-import pandas as pd
 
 
 class ReportRepository(object):
-    def __init__(self, db_session):
+    def __init__(self, db_session: Session):
         self.db_session = db_session
 
     def get_consistent_snapshot_data(self, snapshot_id: int) -> pd.DataFrame:
