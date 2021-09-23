@@ -117,6 +117,7 @@ def fetch_data(settings, browser_factory, linked_account: LinkedAccount):
             balances = api.get_balances()
             if settings.dump_balances:
                 logging.info(f"[{provider.description}] balances {pretty_dump(balances)}")
+            print(balances["accounts"])
             for entry in balances["accounts"]:
                 account = entry["account"]
                 account_data = AccountData(

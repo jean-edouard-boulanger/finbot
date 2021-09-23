@@ -31,7 +31,7 @@ def _format_pair(pair: Xccy) -> str:
     return f"{pair.domestic}/{pair.foreign}"
 
 
-def _format_pairs(pairs: set[Xccy]) -> str:
+def _format_pairs(pairs: list[Xccy]) -> str:
     return ",".join(_format_pair(pair) for pair in pairs)
 
 
@@ -59,16 +59,24 @@ def _handle_fcsapi_response(response: Response, resource: str) -> Any:
 
 
 def get_rates(pairs: set[Xccy]) -> dict[Xccy, Optional[float]]:
-    pairs_str = _format_pairs(pairs)
-    resource = f"{API_URL}/latest?symbol={pairs_str}"
-    resource += f"&access_key={get_fcsapi_key()}"
-    with tracer.sub_step(f"Query {pairs_str} rate(s) from fcsapi") as step:
-        step.set_input({"resource": resource})
-        response = requests.get(resource)
-        rates_data = _handle_fcsapi_response(response, resource)
     rates: dict[Xccy, Optional[float]] = {
-        Xccy(*entry["s"].split("/")): float(entry["c"]) for entry in rates_data
+        pair: 1.0 for pair in pairs if pair.foreign == pair.domestic
     }
+    pairs_needing_lookup = [pair for pair in pairs if pair.foreign != pair.domestic]
+    if pairs_needing_lookup:
+        pairs_str = _format_pairs(pairs_needing_lookup)
+        resource = f"{API_URL}/latest?symbol={pairs_str}"
+        resource += f"&access_key={get_fcsapi_key()}"
+        with tracer.sub_step(f"Query {pairs_str} rate(s) from fcsapi") as step:
+            step.set_input({"resource": resource})
+            response = requests.get(resource)
+            rates_data = _handle_fcsapi_response(response, resource)
+            rates.update(
+                {
+                    Xccy(*entry["s"].split("/")): float(entry["c"])
+                    for entry in rates_data
+                }
+            )
     for pair in pairs:
         if pair not in rates:
             rates[pair] = None

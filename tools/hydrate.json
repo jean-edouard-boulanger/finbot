@@ -371,6 +371,37 @@
             }
         },
         {
+          "id": "qonto_us",
+          "description": "Qonto",
+          "website_url": "https://qonto.com",
+          "credentials_schema": {
+            "json_schema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "properties": {
+                "identifier": {
+                  "title": "Identifier",
+                  "type": "string"
+                },
+                "secret_key": {
+                  "title": "Secret key",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "identifier",
+                "secret_key"
+              ],
+              "type": "object"
+            },
+            "ui_schema": {
+              "ui:order": [
+                "identifier",
+                "secret_key"
+              ]
+            }
+          }
+        },
+        {
             "id": "dummy_uk",
             "description": "Dummy financial provider (UK)",
             "website_url": "http://www.dummy.com",
