@@ -51,6 +51,9 @@ class Liabilities(TypedDict):
 
 
 class Base(object):
+    def __init__(self, **kwargs: Any):
+        pass
+
     def authenticate(self, credentials: Any) -> None:
         """Authenticate user with provided credentials. Should persist any
         information needed to perform further operations (get balances,
