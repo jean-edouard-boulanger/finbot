@@ -4,13 +4,16 @@ from finbot.core import tracer, environment
 from finbot.core.logging import configure_logging
 from finbot.core.utils import format_stack, configure_stack_printer
 from finbot.core.web_service import service_endpoint, ApplicationErrorData
-from finbot.providers.factory import get_provider
+from finbot.providers.factory import get_provider, ProviderDescriptor
+from finbot.apps.finbotwsrv.schema import FinancialDataRequest, LineItemLiteral
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-from flask import Flask, request
+from flask import Flask
+from flask_pydantic import validate
 
+from typing import Any
 from contextlib import closing
 import logging
 
@@ -28,28 +31,28 @@ tracer.configure(
 app = Flask(__name__)
 
 
-def balances_handler(provider_api: providers.Base):
+def balances_handler(provider_api: providers.Base) -> list[providers.BalanceEntry]:
     return [
         {"account": entry["account"], "balance": entry["balance"]}
         for entry in provider_api.get_balances()["accounts"]
     ]
 
 
-def assets_handler(provider_api: providers.Base):
+def assets_handler(provider_api: providers.Base) -> list[providers.AssetEntry]:
     return [
         {"account": entry["account"], "assets": entry["assets"]}
         for entry in provider_api.get_assets()["accounts"]
     ]
 
 
-def liabilities_handler(provider_api: providers.Base):
+def liabilities_handler(provider_api: providers.Base) -> list[providers.LiabilityEntry]:
     return [
         {"account": entry["account"], "liabilities": entry["liabilities"]}
         for entry in provider_api.get_liabilities()["accounts"]
     ]
 
 
-def item_handler(item_type: str, provider_api: providers.Base):
+def item_handler(item_type: LineItemLiteral, provider_api: providers.Base):
     handler = {
         "balances": balances_handler,
         "assets": assets_handler,
@@ -68,8 +71,12 @@ def item_handler(item_type: str, provider_api: providers.Base):
         return {"line_item": item_type, "error": ApplicationErrorData.from_exception(e)}
 
 
-def get_financial_data_impl(provider, credentials, line_items):
-    with closing(provider.api_module.Api()) as provider_api:
+def get_financial_data_impl(
+    provider_descriptor: ProviderDescriptor,
+    credentials: Any,
+    line_items: list[LineItemLiteral],
+):
+    with closing(provider_descriptor.api_module.Api()) as provider_api:
         with tracer.sub_step("authenticate") as step:
             step.metadata["user_id"] = credentials.user_id
             logging.info(f"authenticating {credentials.user_id}")
@@ -88,26 +95,13 @@ def healthy():
 
 
 @app.route("/financial_data", methods=["POST"])
-@service_endpoint(
-    schema={
-        "type": "object",
-        "required": ["provider", "credentials", "items"],
-        "properties": {
-            "provider": {"type": "string"},
-            "credentials": {"type": ["null", "object"]},
-            "items": {"type": "array", "items": {"type": "string"}},
-            "account_metadata": {"type": ["null", "string"]},
-        },
-    }
-)
-def get_financial_data():
-    request_data = request.json
-    provider_id = request_data["provider"]
-    provider = get_provider(provider_id)
-    credentials = provider.api_module.Credentials.init(request_data["credentials"])
-    line_items = request_data["items"]
-    tracer.current().set_description(provider_id)
-    tracer.current().metadata["provider_id"] = provider_id
-    tracer.current().metadata["line_items"] = ", ".join(line_items)
-    tracer.current().metadata["account"] = request_data.get("account_metadata")
-    return get_financial_data_impl(provider, credentials, line_items)
+@service_endpoint()
+@validate()
+def get_financial_data(body: FinancialDataRequest):
+    provider = get_provider(body.provider)
+    credentials = provider.api_module.Credentials.init(body.credentials)
+    tracer.current().set_description(body.provider)
+    tracer.current().metadata["provider_id"] = body.provider
+    tracer.current().metadata["line_items"] = ", ".join(body.items)
+    tracer.current().metadata["account"] = body.account_metadata
+    return get_financial_data_impl(provider, credentials, body.items)

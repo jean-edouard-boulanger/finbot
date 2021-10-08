@@ -1,3 +1,9 @@
+from finbot.apps.snapwsrv.schema import (
+    TakeSnapshotRequest,
+    TakeSnapshotResponse,
+    SnapshotResultsCount,
+    SnapshotSummary,
+)
 from finbot.clients.finbot import FinbotClient, LineItem
 from finbot.providers.plaid_us import pack_credentials as pack_plaid_credentials
 from finbot.core import secure, utils, fx_market, tracer, environment
@@ -18,7 +24,8 @@ from finbot.model import (
     XccyRateSnapshotEntry,
 )
 
-from flask import Flask, request
+from flask import Flask
+from flask_pydantic import validate
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker, joinedload
@@ -135,16 +142,6 @@ class CachedXccyRatesGetter(object):
         return self.xccy_rates[xccy]
 
 
-class SnapshotResultsCount(object):
-    def __init__(self, total=0, failures=0):
-        self.total = total
-        self.failures = failures
-
-    @property
-    def success(self):
-        return self.total - self.failures
-
-
 class SnapshotBuilderVisitor(SnapshotTreeVisitor):
     def __init__(self, snapshot: UserAccountSnapshot, xccy_rates_getter, target_ccy):
         self.snapshot = snapshot
@@ -156,7 +153,7 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
         self.sub_accounts: dict[
             Tuple[str, str], SubAccountSnapshotEntry
         ] = {}  # link_account_id, sub_account_id -> sub_account
-        self.results_count = SnapshotResultsCount()
+        self.results_count = SnapshotResultsCount(total=0, failures=0)
 
     def visit_account(self, account, errors):
         snapshot = self.snapshot
@@ -303,7 +300,9 @@ def validate_fx_rates(rates: dict[fx_market.Xccy, Optional[float]]):
         )
 
 
-def take_snapshot_impl(user_account_id: int, linked_accounts: Optional[list[int]]):
+def take_snapshot_impl(
+    user_account_id: int, linked_accounts: Optional[list[int]]
+) -> SnapshotSummary:
     logging.info(
         f"fetching user information for"
         f" user_account_id={user_account_id}"
@@ -377,18 +376,12 @@ def take_snapshot_impl(user_account_id: int, linked_accounts: Optional[list[int]
         new_snapshot.status = SnapshotStatus.Success
         new_snapshot.end_time = utils.now_utc()
 
-    return {
-        "snapshot": {
-            "identifier": new_snapshot.id,
-            "start_time": new_snapshot.start_time.isoformat(),
-            "end_time": new_snapshot.end_time.isoformat(),
-            "results_count": {
-                "total": snapshot_builder.results_count.total,
-                "success": snapshot_builder.results_count.success,
-                "failures": snapshot_builder.results_count.failures,
-            },
-        }
-    }
+    return SnapshotSummary(
+        identifier=new_snapshot.id,
+        start_time=new_snapshot.start_time,
+        end_time=new_snapshot.end_time,
+        results_count=snapshot_builder.results_count,
+    )
 
 
 @app.route("/healthy", methods=["GET"])
@@ -398,18 +391,11 @@ def healthy():
 
 
 @app.route("/snapshot/<user_account_id>/take", methods=["POST"])
-@service_endpoint(
-    schema={
-        "type": ["object", "null"],
-        "additionalProperties": True,
-        "required": [],
-        "properties": {
-            "linked_accounts": {"type": ["array", "null"], "items": {"type": "number"}}
-        },
-    }
-)
-def take_snapshot(user_account_id: int):
-    data = request.json or {}
-    return take_snapshot_impl(
-        user_account_id=user_account_id, linked_accounts=data.get("linked_accounts")
+@service_endpoint()
+@validate()
+def take_snapshot(user_account_id: int, body: TakeSnapshotRequest):
+    return TakeSnapshotResponse(
+        snapshot=take_snapshot_impl(
+            user_account_id=user_account_id, linked_accounts=body.linked_accounts
+        )
     )

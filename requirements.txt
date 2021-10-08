@@ -7,6 +7,7 @@ flake8
 flask
 flask-cors
 flask-jwt-extended>=4.3,<5.0
+flask-pydantic
 forex-python
 gspread
 gunicorn
@@ -21,6 +22,7 @@ plaid-python==7.5.0
 price-parser
 psycopg2
 pycoingecko
+pydantic
 pytest
 python-binance
 python-bittrex

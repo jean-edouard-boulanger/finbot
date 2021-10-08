@@ -42,7 +42,7 @@ class Session(object):
     def merge(self, instance: Entity, load: bool = True) -> Entity:
         return self._impl.merge(instance, load)
 
-    def query(self, entity: Type[Entity]) -> Query:  # type: ignore
+    def query(self, entity: Type[Entity]) -> Query[Entity]:
         return self._impl.query(entity)
 
     def commit(self) -> None:

@@ -3,6 +3,7 @@ from finbot.core.web_service import service_endpoint
 from finbot.core.serialization import pretty_dump
 from finbot.core.logging import configure_logging
 from finbot.core.db.session import Session
+from finbot.core.utils import unwrap_optional
 from finbot.core import tracer, environment
 from finbot.model import (
     UserAccountSnapshot,
@@ -19,6 +20,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 import pandas as pd
 
 from typing import Any
+from decimal import Decimal
 import logging
 
 
@@ -34,12 +36,12 @@ tracer.configure(
 app = Flask(__name__)
 
 
-def get_user_account_valuation(data: pd.DataFrame) -> float:
-    return data["value_snapshot_ccy"].sum()
+def get_user_account_valuation(data: pd.DataFrame) -> Decimal:
+    return Decimal(data["value_snapshot_ccy"].sum())
 
 
-def get_user_account_liabilities(data: pd.DataFrame) -> float:
-    return data.loc[data["value_snapshot_ccy"] < 0, "value_snapshot_ccy"].sum()
+def get_user_account_liabilities(data: pd.DataFrame) -> Decimal:
+    return Decimal(data.loc[data["value_snapshot_ccy"] < 0, "value_snapshot_ccy"].sum())
 
 
 def get_linked_accounts_valuation(data: pd.DataFrame) -> dict[Any, Any]:
@@ -94,14 +96,17 @@ def healthy():
 
 @app.route("/history/<snapshot_id>/write", methods=["POST"])
 @service_endpoint()
-def write_history(snapshot_id):
+def write_history(snapshot_id: int):
     tracer.current().set_input({"snapshot_id": snapshot_id})
     repo = repository.ReportRepository(db_session)
 
     logging.info("fetching snapshot_id={} metadata".format(snapshot_id))
-    snapshot = db_session.query(UserAccountSnapshot).filter_by(id=snapshot_id).first()
+    snapshot: UserAccountSnapshot = (
+        db_session.query(UserAccountSnapshot).filter_by(id=snapshot_id).one()
+    )
 
-    valuation_date = snapshot.end_time
+    valuation_date = unwrap_optional(snapshot.end_time)
+
     logging.info(f"snapshot is effective_at={valuation_date}")
     logging.info("fetching consistent snapshot")
 
@@ -222,8 +227,9 @@ def write_history(snapshot_id):
     logging.debug(pretty_dump(user_account_valuation_change))
 
     with db_session.persist(history_entry):
-        entry = history_entry.user_account_valuation_history_entry
-        entry.valuation_change = user_account_valuation_change
+        history_entry.user_account_valuation_history_entry.valuation_change = (
+            user_account_valuation_change
+        )
 
     linked_accounts_valuation_change = repo.get_linked_accounts_valuation_change(
         reference_history_entry_ids
@@ -233,10 +239,14 @@ def write_history(snapshot_id):
     logging.debug(pretty_dump(linked_accounts_valuation_change))
 
     with db_session.persist(history_entry):
-        for entry in history_entry.linked_accounts_valuation_history_entries:
-            entry.valuation_change = linked_accounts_valuation_change[
-                entry.linked_account_id
-            ]
+        for (
+            linked_accounts_valuation_history_entry
+        ) in history_entry.linked_accounts_valuation_history_entries:
+            linked_accounts_valuation_history_entry.valuation_change = (
+                linked_accounts_valuation_change[
+                    linked_accounts_valuation_history_entry.linked_account_id
+                ]
+            )
 
     sub_accounts_valuation_change = repo.get_sub_accounts_valuation_change(
         reference_history_entry_ids
@@ -247,8 +257,9 @@ def write_history(snapshot_id):
 
     with db_session.persist(history_entry):
         for entry in history_entry.sub_accounts_valuation_history_entries:
-            path = (entry.linked_account_id, entry.sub_account_id)
-            entry.valuation_change = sub_accounts_valuation_change[path]
+            entry.valuation_change = sub_accounts_valuation_change[
+                (entry.linked_account_id, entry.sub_account_id)
+            ]
 
     sub_accounts_items_valuation_change = repo.get_sub_accounts_items_valuation_change(
         reference_history_entry_ids
@@ -258,14 +269,19 @@ def write_history(snapshot_id):
     logging.debug(pretty_dump(sub_accounts_items_valuation_change))
 
     with db_session.persist(history_entry):
-        for entry in history_entry.sub_accounts_items_valuation_history_entries:
-            path = (
-                entry.linked_account_id,
-                entry.sub_account_id,
-                entry.item_type.name,
-                entry.name,
+        for (
+            sub_accounts_items_valuation_history_entry
+        ) in history_entry.sub_accounts_items_valuation_history_entries:
+            sub_accounts_items_valuation_history_entry.valuation_change = (
+                sub_accounts_items_valuation_change[
+                    (
+                        sub_accounts_items_valuation_history_entry.linked_account_id,
+                        sub_accounts_items_valuation_history_entry.sub_account_id,
+                        sub_accounts_items_valuation_history_entry.item_type.name,
+                        sub_accounts_items_valuation_history_entry.name,
+                    )
+                ]
             )
-            entry.valuation_change = sub_accounts_items_valuation_change[path]
 
     with db_session.persist(history_entry):
         history_entry.available = True
