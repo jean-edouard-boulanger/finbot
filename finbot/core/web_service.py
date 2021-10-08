@@ -10,6 +10,7 @@ from finbot.core import tracer
 import jsonschema
 
 from flask import jsonify, request
+from flask import Response as FlaskResponse
 from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
 
 from werkzeug.datastructures import ImmutableMultiDict
@@ -269,8 +270,15 @@ def service_endpoint(
 ) -> Callable[..., Any]:
     def impl(func: Callable[..., Any]) -> Callable[..., Any]:
         def prepare_response(response_data: Any) -> Any:
+            if isinstance(response_data, FlaskResponse):
+                if logging.getLogger().isEnabledFor(logging.DEBUG):
+                    logging.debug(
+                        f"response_dump={pretty_dump(response_data.get_json(silent=True))}"
+                    )
+                return response_data
             serialized_response = serialize(response_data)
-            logging.debug(f"response_dump={pretty_dump(serialized_response)}")
+            if logging.getLogger().isEnabledFor(logging.DEBUG):
+                logging.debug(f"response_dump={pretty_dump(serialized_response)}")
             return jsonify(serialized_response)
 
         include_request_context = (
