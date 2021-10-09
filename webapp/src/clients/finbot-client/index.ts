@@ -472,23 +472,37 @@ export class FinbotClient {
   }
 
   async getEmailDeliveryProviders(): Promise<Array<EmailDeliveryProvider>> {
-    const response = await axios.get(`${this.endpoint}/admin/settings/email_delivery/providers`);
-    return handleResponse<GetEmailDeliveryProvidersResponse>(response).providers;
+    const response = await axios.get(
+      `${this.endpoint}/admin/settings/email_delivery/providers`
+    );
+    return handleResponse<GetEmailDeliveryProvidersResponse>(response)
+      .providers;
   }
 
   async getEmailDeliverySettings(): Promise<EmailDeliverySettings | null> {
-    const response = await axios.get(`${this.endpoint}/admin/settings/email_delivery`);
+    const response = await axios.get(
+      `${this.endpoint}/admin/settings/email_delivery`
+    );
     return handleResponse<GetEmailDeliverySettingsResponse>(response).settings;
   }
 
-  async setEmailDeliverySettings(settings: EmailDeliverySettings, validate?: boolean): Promise<void> {
+  async setEmailDeliverySettings(
+    settings: EmailDeliverySettings,
+    validate?: boolean
+  ): Promise<void> {
     const params = { validate: validate ?? false };
-    const response = await axios.put(`${this.endpoint}/admin/settings/email_delivery`, settings, {params});
+    const response = await axios.put(
+      `${this.endpoint}/admin/settings/email_delivery`,
+      settings,
+      { params }
+    );
     return handleResponse<void>(response);
   }
 
   async disableEmailDelivery(): Promise<void> {
-    const response = await axios.delete(`${this.endpoint}/admin/settings/email_delivery`);
+    const response = await axios.delete(
+      `${this.endpoint}/admin/settings/email_delivery`
+    );
     return handleResponse<void>(response);
   }
 }

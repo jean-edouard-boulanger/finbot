@@ -1,24 +1,24 @@
 import React, { useContext, useEffect, useState } from "react";
 
 import { ServicesContext } from "contexts";
-import {
-  EmailDeliveryProvider,
-} from "clients/finbot-client/types";
+import { EmailDeliveryProvider } from "clients/finbot-client/types";
 
-import Select from 'react-select';
+import Select from "react-select";
 import { default as DataDrivenForm } from "react-jsonschema-form";
 import { Row, Col, Form } from "react-bootstrap";
 import { LoadingButton } from "components";
-import {toast} from "react-toastify";
+import { toast } from "react-toastify";
 
 const makeProvidersSelectValue = (provider: EmailDeliveryProvider) => {
   return {
     label: provider.description,
-    value: provider.provider_id
-  }
-}
+    value: provider.provider_id,
+  };
+};
 
-export const EmailDeliverySettingsPanel: React.FC<Record<string, never>> = () => {
+export const EmailDeliverySettingsPanel: React.FC<
+  Record<string, never>
+> = () => {
   const { finbotClient } = useContext(ServicesContext);
   const [loading, setLoading] = useState<boolean>(false);
   const [enableDelivery, setEnableDelivery] = useState<boolean>(false);
@@ -34,63 +34,63 @@ export const EmailDeliverySettingsPanel: React.FC<Record<string, never>> = () =>
       setProviders(providersData);
       console.log(providersData);
       const currentSettings = await finbotClient!.getEmailDeliverySettings();
-      if(currentSettings !== null) {
+      if (currentSettings !== null) {
         const provider = providersData.filter((provider) => {
           return provider.provider_id === currentSettings.provider_id;
         })[0];
         setEnableDelivery(true);
         setProvider(provider);
         setProviderSettings(currentSettings.provider_settings);
-      }
-      else {
+      } else {
         setEnableDelivery(false);
         setProvider(null);
         setProviderSettings(null);
       }
-    }
+    };
     fetch();
   }, [finbotClient]);
 
   const setProviderById = (providerId?: string | null): void => {
-    for(const entry of providers) {
-      if(entry.provider_id === providerId) {
+    for (const entry of providers) {
+      if (entry.provider_id === providerId) {
         setProvider(entry);
         return;
       }
     }
     setProvider(null);
-  }
+  };
 
   const handleSaveWithProviderSettings = async (formData: any) => {
     try {
       setLoading(true);
       setProviderSettings(formData);
       const validate = true;
-      await finbotClient!.setEmailDeliverySettings({
-        sender_name: senderName,
-        subject_prefix: subjectPrefix,
-        provider_id: provider!.provider_id,
-        provider_settings: formData
-      }, validate);
+      await finbotClient!.setEmailDeliverySettings(
+        {
+          sender_name: senderName,
+          subject_prefix: subjectPrefix,
+          provider_id: provider!.provider_id,
+          provider_settings: formData,
+        },
+        validate
+      );
       toast.success("Email delivery settings have been updated successfully");
-    }
-    catch(e) {
+    } catch (e) {
       toast.error(`${e}`);
     }
     setLoading(false);
-  }
+  };
 
   const handleSaveDisableEmailDelivery = async () => {
     try {
       setLoading(true);
       await finbotClient!.disableEmailDelivery();
       toast.success("Email delivery has been disabled");
-    }
-    catch(e) {
+    } catch (e) {
       toast.error(`${e}`);
     }
     setLoading(false);
-  }
+  };
 
   return (
     <>
@@ -108,7 +108,7 @@ export const EmailDeliverySettingsPanel: React.FC<Record<string, never>> = () =>
               onChange={(event) => {
                 const checked = event.currentTarget.checked;
                 setEnableDelivery(checked);
-                if(provider === null && checked) {
+                if (provider === null && checked) {
                   setProvider(providers[0]);
                 }
               }}
@@ -154,7 +154,11 @@ export const EmailDeliverySettingsPanel: React.FC<Record<string, never>> = () =>
               isDisabled={!enableDelivery}
               placeholder="Delivery method"
               isLoading={providers.length === 0}
-              value={provider === null ? undefined : makeProvidersSelectValue(provider)}
+              value={
+                provider === null
+                  ? undefined
+                  : makeProvidersSelectValue(provider)
+              }
               options={providers.map(makeProvidersSelectValue)}
               onChange={(entry) => {
                 setProviderById(entry?.value);
@@ -165,10 +169,10 @@ export const EmailDeliverySettingsPanel: React.FC<Record<string, never>> = () =>
       </Row>
       <Row>
         <Col>
-          {(provider) &&
+          {provider && (
             <DataDrivenForm
               formData={providerSettings ?? ({} as any)}
-              onSubmit={({formData}) => {
+              onSubmit={({ formData }) => {
                 handleSaveWithProviderSettings(formData);
               }}
               disabled={!enableDelivery}
@@ -187,8 +191,8 @@ export const EmailDeliverySettingsPanel: React.FC<Record<string, never>> = () =>
                 Save
               </LoadingButton>
             </DataDrivenForm>
-          }
-          {(!enableDelivery) &&
+          )}
+          {!enableDelivery && (
             <LoadingButton
               onClick={handleSaveDisableEmailDelivery}
               disabled={enableDelivery}
@@ -198,7 +202,7 @@ export const EmailDeliverySettingsPanel: React.FC<Record<string, never>> = () =>
             >
               Save
             </LoadingButton>
-          }
+          )}
         </Col>
       </Row>
     </>
