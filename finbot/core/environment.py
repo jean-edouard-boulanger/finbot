@@ -24,6 +24,7 @@ class Environment:
     schedsrv_endpoint: str
     fcsapi_key: str
     runtime: str
+    rmq_url: str
 
     @property
     def desired_log_level(self) -> str:
@@ -86,6 +87,10 @@ def get_finbot_runtime() -> str:
     return get_environment_value("FINBOT_ENV", "production")
 
 
+def get_rmq_url() -> str:
+    return get_environment_value("FINBOT_RMQ_URL")
+
+
 def get() -> Environment:
     return Environment(
         secret_key=get_secret_key(),
@@ -99,4 +104,5 @@ def get() -> Environment:
         fcsapi_key=get_fcsapi_key(),
         schedsrv_endpoint=get_schedsrv_endpoint(),
         runtime=get_finbot_runtime(),
+        rmq_url=get_rmq_url(),
     )

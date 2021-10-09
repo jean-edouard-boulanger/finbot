@@ -22,7 +22,12 @@ do
   log_info "running: ${*}"
   "$@" &
   app_pid=${!}
-  inotifywait -e modify -e move -e create -e delete -e attrib -r "${watched}"
+  if [[ "$(uname)" == "Darwin" ]]
+  then
+    fswatch -1 -r "${watched}"
+  else
+    inotifywait -e modify -e move -e create -e delete -e attrib -r "${watched}"
+  fi
   log_info "changes detected, restarting ..."
   kill -9 "${app_pid}"
 done

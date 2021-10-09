@@ -113,18 +113,15 @@ def link_new_account(request_context: RequestContext, user_account_id: int):
         )
 
         try:
-            with db_session.persist(user_account):
-                encrypted_credentials = secure.fernet_encrypt(
+            new_linked_account: LinkedAccount
+            with db_session.persist(LinkedAccount()) as new_linked_account:
+                new_linked_account.user_account_id = user_account.id
+                new_linked_account.provider_id = request_data["provider_id"]
+                new_linked_account.account_name = account_name
+                new_linked_account.encrypted_credentials = secure.fernet_encrypt(
                     json.dumps(credentials).encode(),
                     environment.get_secret_key().encode(),
                 ).decode()
-                user_account.linked_accounts.append(
-                    LinkedAccount(
-                        provider_id=request_data["provider_id"],
-                        account_name=account_name,
-                        encrypted_credentials=encrypted_credentials,
-                    )
-                )
         except IntegrityError:
             raise InvalidOperation(
                 f"Provider '{provider.description}' was already linked "
@@ -133,7 +130,7 @@ def link_new_account(request_context: RequestContext, user_account_id: int):
 
     if do_persist:
         try:
-            linked_account_id = user_account.linked_accounts[-1].id
+            linked_account_id = new_linked_account.id
             logging.info(
                 f"triggering partial valuation for"
                 f" account_id={user_account.id}"

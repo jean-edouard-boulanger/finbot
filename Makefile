@@ -17,8 +17,15 @@ alembic-history:
 
 run-schedsrv-dev:
 	tools/autorestart.sh \
-		finbot/apps/schedsrv \
+		finbot/ \
 		python3.9 finbot/apps/schedsrv/schedsrv.py
+
+run-workersrv-dev:
+	tools/autorestart.sh \
+		finbot/ \
+		python3.9 -m celery \
+			-A finbot.apps.workersrv.workersrv worker \
+			--loglevel INFO
 
 run-histwsrv-dev:
 	tools/run-web-service.sh \

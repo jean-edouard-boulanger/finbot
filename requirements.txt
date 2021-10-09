@@ -1,5 +1,6 @@
 alembic
 black
+celery
 cffi
 cryptography
 filelock
@@ -18,6 +19,8 @@ marshmallow-dataclass
 mypy
 oauth2client
 pandas
+pika
+pika-stubs
 plaid-python==7.5.0
 price-parser
 psycopg2
@@ -27,7 +30,6 @@ pytest
 python-binance
 python-bittrex
 pytz
-pyzmq
 requests
 schedule
 selenium
