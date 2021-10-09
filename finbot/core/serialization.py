@@ -1,3 +1,5 @@
+import pydantic
+
 from typing import Optional, Any, Union
 from datetime import datetime, date
 import dataclasses
@@ -13,6 +15,10 @@ def serialize(data: Any) -> Any:
             return str(key)
         return key
 
+    if isinstance(data, pydantic.BaseModel):
+        return serialize(data.dict())
+    if dataclasses.is_dataclass(data):
+        return serialize(dataclasses.asdict(data))
     if hasattr(data, "serialize"):
         return serialize(data.serialize())
     if isinstance(data, decimal.Decimal):
@@ -25,8 +31,6 @@ def serialize(data: Any) -> Any:
         return [serialize(v) for v in data]
     if isinstance(data, bytes):
         return data.decode()
-    if dataclasses.is_dataclass(data):
-        return serialize(dataclasses.asdict(data))
     return data
 
 

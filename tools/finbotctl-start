@@ -47,13 +47,22 @@ finbot_is_valid_env "${FINBOT_ENV}" || die "'${FINBOT_ENV}' is not a valid envir
 
 log_info "starting finbot (environment: ${FINBOT_ENV})"
 
+log_info "starting finbot database and message queue containers"
+docker-compose up -d finbotdb finbotrmq || die failed to start containers
+wait_dep db,rmq
+
 log_info "starting finbot backend containers"
 docker-compose up -d \
-  appwsrv histwsrv snapwsrv finbotwsrv finbotdb schedsrv \
+  workersrv \
+  appwsrv \
+  histwsrv \
+  snapwsrv \
+  finbotwsrv \
+  schedsrv \
   || die failed to start containers
 
 log_info "waiting for finbot endpoints"
-wait_dep api,hist,snap,finbot
+wait_dep worker,api,hist,snap,finbot
 
 if [[ "${start_frontend}" == "1" ]]
 then

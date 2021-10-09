@@ -17,8 +17,15 @@ alembic-history:
 
 run-schedsrv-dev:
 	tools/autorestart.sh \
-		finbot/apps/schedsrv \
+		finbot/ \
 		python3.9 finbot/apps/schedsrv/schedsrv.py
+
+run-workersrv-dev:
+	tools/autorestart.sh \
+		finbot/ \
+		python3.9 -m celery \
+			-A finbot.apps.workersrv.workersrv worker \
+			--loglevel INFO
 
 run-histwsrv-dev:
 	tools/run-web-service.sh \
@@ -61,7 +68,7 @@ trigger-valuation-docker:
 
 trigger-valuation:
 	tools/check-env.sh accounts;
-	env FINBOT_WAIT_DEPS=db,snap,hist make finbot-wait;
+	env FINBOT_WAIT_DEPS=db,worker make finbot-wait;
 	python3.9 finbot/apps/schedsrv/schedsrv.py \
 		--mode one_shot \
 		--accounts ${accounts}

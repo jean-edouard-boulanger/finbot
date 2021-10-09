@@ -1,5 +1,7 @@
-from finbot.apps.schedsrv.errors import WorkflowError
+from finbot.apps.workersrv.schema import ValuationRequest, ValuationResponse
+from finbot.model import repository
 from finbot.core.serialization import pretty_dump
+from finbot.core.db.session import Session
 from finbot.core import tracer
 from finbot.core.notifier import (
     Notifier,
@@ -8,20 +10,14 @@ from finbot.core.notifier import (
     TwilioSettings,
 )
 from finbot.model import UserAccount
-from finbot.clients import sched as sched_client
 from finbot.clients import SnapClient, HistoryClient
 
 import logging
 
-
-def get_user_account(db_session, user_account_id: int) -> UserAccount:
-    account = db_session.query(UserAccount).filter_by(id=user_account_id).one()
-    if not account:
-        raise RuntimeError(f"user account not found: {user_account_id}")
-    return account
+logger = logging.getLogger()
 
 
-def configure_notifier(user_account: UserAccount) -> Notifier:
+def _configure_notifier(user_account: UserAccount) -> Notifier:
     notifiers: list[Notifier] = []
     if user_account.mobile_phone_number and user_account.settings.twilio_settings:
         twilio_settings = TwilioSettings.deserialize(
@@ -33,41 +29,46 @@ def configure_notifier(user_account: UserAccount) -> Notifier:
     return CompositeNotifier(notifiers)
 
 
-class RequestHandler(object):
-    def __init__(self, snap_client: SnapClient, hist_client: HistoryClient, db_session):
+class ValuationHandler(object):
+    def __init__(
+        self, db_session: Session, snap_client: SnapClient, hist_client: HistoryClient
+    ):
+        self.db_session = db_session
         self.snap_client = snap_client
         self.hist_client = hist_client
-        self.db_session = db_session
 
-    def _run_workflow(self, valuation_request: sched_client.TriggerValuationRequest):
-        user_account_id = valuation_request.user_account_id
-        logging.info(f"starting workflow for user_id={user_account_id}")
+    def handle_valuation(self, request: ValuationRequest) -> ValuationResponse:
+        user_account_id = request.user_account_id
+        logger.info(
+            f"starting workflow for user_id={user_account_id} "
+            f"linked_accounts={request.linked_accounts}"
+        )
 
-        user_account = get_user_account(self.db_session, user_account_id)
-        notifier = configure_notifier(user_account)
+        user_account = repository.get_user_account(self.db_session, user_account_id)
+        notifier = _configure_notifier(user_account)
 
         with tracer.sub_step("snapshot") as step:
-            logging.info("taking snapshot")
+            logger.info("taking snapshot")
             snapshot_metadata = self.snap_client.take_snapshot(
                 account_id=user_account_id,
-                linked_accounts=valuation_request.linked_accounts,
+                linked_accounts=request.linked_accounts,
                 tracer_context=tracer.propagate(),
             )
             step.set_output(snapshot_metadata)
 
-        logging.debug(snapshot_metadata)
+        logger.debug(snapshot_metadata)
         snapshot_id = snapshot_metadata.get("snapshot", {}).get("identifier")
         if snapshot_id is None:
-            raise WorkflowError(
+            raise RuntimeError(
                 f"missing snapshot_id in snapshot metadata: "
                 f"{pretty_dump(snapshot_metadata)}"
             )
 
-        logging.info(f"raw snapshot created with id={snapshot_id}")
-        logging.debug(snapshot_metadata)
+        logger.info(f"raw snapshot created with id={snapshot_id}")
+        logger.debug(snapshot_metadata)
 
         with tracer.sub_step("history report") as step:
-            logging.info("taking history report")
+            logger.info("taking history report")
             step.metadata["snapshot_id"] = snapshot_id
             history_metadata = self.hist_client.write_history(
                 snapshot_id, tracer_context=tracer.propagate()
@@ -76,26 +77,23 @@ class RequestHandler(object):
 
         history_entry_id = history_metadata.get("report", {}).get("history_entry_id")
         if history_entry_id is None:
-            raise WorkflowError(
+            raise RuntimeError(
                 f"missing history_entry_id in history metadata: "
                 f"{pretty_dump(history_metadata)}"
             )
 
-        logging.info(
+        logger.info(
             f"history report written with id={history_entry_id}"
             f" {pretty_dump(history_metadata)}"
         )
-        logging.info(f"valuation workflow done for user_id={user_account_id}")
+        logger.info(f"valuation workflow done for user_id={user_account_id}")
 
+        report = history_metadata["report"]
         with tracer.sub_step("notifications"):
-            report = history_metadata["report"]
             notifier.notify_valuation(
                 valuation=report["user_account_valuation"],
                 change_1day=report["valuation_change"]["change_1day"],
                 currency=report["valuation_currency"],
             )
 
-    def handle_valuation(self, valuation_request: sched_client.TriggerValuationRequest):
-        with tracer.root("valuation") as step:
-            step.metadata["request"] = sched_client.serialize(valuation_request)
-            self._run_workflow(valuation_request)
+        return ValuationResponse.parse_obj(report)

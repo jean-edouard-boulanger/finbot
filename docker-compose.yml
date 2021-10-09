@@ -7,14 +7,24 @@ services:
     restart: always
     shm_size: 256MB
     environment:
-        POSTGRES_PORT: 5432
-        POSTGRES_DB: finbot
-        POSTGRES_USER: finbot
-        POSTGRES_PASSWORD: finbot
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: finbot
+      POSTGRES_USER: finbot
+      POSTGRES_PASSWORD: finbot
     ports:
       - "5432:5432"
     volumes:
       - .finbotdb:/var/lib/postgresql/data
+
+  finbotrmq:
+    image: "rabbitmq:3-management-alpine"
+    container_name: finbotrmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: finbot
+      RABBITMQ_DEFAULT_PASS: finbot
 
   finbotwsrv:
     image: "finbot/runtime-selenium:latest"
@@ -67,8 +77,8 @@ services:
     image: "finbot/runtime:latest"
     container_name: schedsrv
     depends_on:
-      - snapwsrv
-      - histwsrv
+      - finbotdb
+      - workersrv
     working_dir: /finbot
     command: bash -c "source docker.env.sh && make finbot-wait && make run-schedsrv-dev"
     tty: true
@@ -76,7 +86,24 @@ services:
       - .:/finbot
     environment:
       FINBOT_ENV: ${FINBOT_ENV}
-      FINBOT_WAIT_DEPS: "db,snap,hist"
+      FINBOT_WAIT_DEPS: "db,worker"
+
+  workersrv:
+    image: "finbot/runtime:latest"
+    container_name: workersrv
+    depends_on:
+      - finbotdb
+      - finbotrmq
+      - snapwsrv
+      - histwsrv
+    working_dir: /finbot
+    command: bash -c "source docker.env.sh && make finbot-wait && make run-workersrv-dev"
+    tty: true
+    volumes:
+      - .:/finbot
+    environment:
+      FINBOT_ENV: ${FINBOT_ENV}
+      FINBOT_WAIT_DEPS: "db,rmq,snap,hist"
 
   appwsrv:
     image: "finbot/runtime:latest"
@@ -84,7 +111,7 @@ services:
     depends_on:
       - finbotdb
       - finbotwsrv
-      - schedsrv
+      - workersrv
     working_dir: /finbot
     command: bash -c "source docker.env.sh && make finbot-wait && make run-appwsrv-dev"
     tty: true
@@ -94,7 +121,7 @@ services:
       - .:/finbot
     environment:
       FINBOT_ENV: ${FINBOT_ENV}
-      FINBOT_WAIT_DEPS: "finbot,db"
+      FINBOT_WAIT_DEPS: "db,finbot,worker"
 
   webapp:
     image: "node:16-buster"
@@ -108,6 +135,8 @@ services:
     tty: true
     ports:
       - "5005:5005"
+    environment:
+      FINBOT_ENV: ${FINBOT_ENV}
 
   operator:
     image: "finbot/runtime-selenium:latest"
