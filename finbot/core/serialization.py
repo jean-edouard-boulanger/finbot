@@ -1,10 +1,13 @@
 import pydantic
 
-from typing import Optional, Any, Union
+from typing import Optional, Any, Union, TypeVar
 from datetime import datetime, date
 import dataclasses
 import decimal
 import json
+
+
+T = TypeVar("T")
 
 
 def serialize(data: Any) -> Any:

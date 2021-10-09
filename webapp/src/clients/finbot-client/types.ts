@@ -474,3 +474,29 @@ export interface SystemReport {
 export interface GetSystemReportResponse {
   system_report: SystemReport;
 }
+
+export interface EmailDeliveryProviderSchema {
+  settings_schema: any;
+  ui_schema?: any;
+}
+
+export interface EmailDeliveryProvider {
+  provider_id: string;
+  description: string;
+  schema: EmailDeliveryProviderSchema;
+}
+
+export interface GetEmailDeliveryProvidersResponse {
+  providers: Array<EmailDeliveryProvider>;
+}
+
+export interface EmailDeliverySettings {
+  subject_prefix: string;
+  sender_name: string;
+  provider_id: string;
+  provider_settings: any;
+}
+
+export interface GetEmailDeliverySettingsResponse {
+  settings: EmailDeliverySettings | null;
+}
