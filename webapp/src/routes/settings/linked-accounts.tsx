@@ -140,7 +140,7 @@ const LinkedAccountStatusPanel = withRouter(() => {
   const [linkedAccount, setLinkedAccount] = useState<LinkedAccount | null>(
     null
   );
-  const [showInternalDetails, setShowInternalDetails] = useState<boolean>(true);
+  const [showInternalDetails,] = useState<boolean>(true);
   useEffect(() => {
     const fetch = async () => {
       try {
