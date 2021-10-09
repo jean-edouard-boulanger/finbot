@@ -140,6 +140,7 @@ const LinkedAccountStatusPanel = withRouter(() => {
   const [linkedAccount, setLinkedAccount] = useState<LinkedAccount | null>(
     null
   );
+  const [showInternalDetails] = useState<boolean>(true);
   useEffect(() => {
     const fetch = async () => {
       try {
@@ -169,6 +170,7 @@ const LinkedAccountStatusPanel = withRouter(() => {
 
   const status = getLinkedAccountStatus(linkedAccount!);
   const lastError = getLinkedAccountLastError(linkedAccount!);
+  const distributedTraceKey = lastError?.distributed_trace_key;
 
   return (
     <>
@@ -180,22 +182,36 @@ const LinkedAccountStatusPanel = withRouter(() => {
           </h4>
         </Col>
       </Row>
-      {status === "unstable" && (
+      {status === "unstable" && lastError && (
         <Row className={"mb-4"}>
           <Col>
             <Alert variant={"danger"}>
               <Alert.Heading>
                 There is an issue with this linked account
               </Alert.Heading>
+              <hr />
               <p>
-                Details: {lastError!.user_message} (code:{" "}
+                <strong>Details</strong>: {lastError!.user_message} (code:{" "}
                 {lastError!.error_code})
               </p>
-              <hr />
-              <span className={"font-italic"}>
-                Reference: {lastError!.distributed_trace_key!.guid}/
-                {lastError!.distributed_trace_key!.path}
-              </span>
+              {showInternalDetails && (
+                <>
+                  <hr />
+                  <p>
+                    <strong>Internal details</strong>:{" "}
+                    {lastError!.debug_message}
+                  </p>
+                </>
+              )}
+              {distributedTraceKey && (
+                <>
+                  <hr />
+                  <span className={"font-italic"}>
+                    Reference: {distributedTraceKey.guid}/
+                    {distributedTraceKey.path}
+                  </span>
+                </>
+              )}
             </Alert>
           </Col>
         </Row>
@@ -207,6 +223,7 @@ const LinkedAccountStatusPanel = withRouter(() => {
               <Alert.Heading>
                 We do not have any information about this linked account
               </Alert.Heading>
+              <hr />
               <p>
                 This usually happens for accounts that have just been linked.
                 The account status will be available as soon as the account
