@@ -47,6 +47,12 @@ finbot_is_valid_env "${FINBOT_ENV}" || die "'${FINBOT_ENV}' is not a valid envir
 
 log_info "starting finbot (environment: ${FINBOT_ENV})"
 
+if [[ "${start_frontend}" == "1" ]]
+then
+  log_info "starting finbot frontend container (webapp)"
+  docker-compose up --no-deps -d webapp || die failed to start containers
+fi
+
 log_info "starting finbot database and message queue containers"
 docker-compose up -d finbotdb finbotrmq || die failed to start containers
 wait_dep db,rmq
@@ -66,13 +72,9 @@ wait_dep worker,api,hist,snap,finbot
 
 if [[ "${start_frontend}" == "1" ]]
 then
-  log_info "starting finbot frontend container (webapp)"
-  docker-compose up -d webapp || die failed to start containers
   log_info "waiting for frontend availability"
   wait_dep webapp
 
   webapp_url=$(tools/with-env.sh local tools/get-env.sh FINBOT_WEBAPP_ENDPOINT)
   log_info "you can now access finbot on: ${webapp_url}"
-else
-  log_info "skipping frontend container (--no-frontend provided)"
 fi
