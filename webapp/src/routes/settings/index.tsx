@@ -7,6 +7,7 @@ import { ProvidersSettings } from "./providers";
 import { PlaidIntegrationSettings } from "./plaid-integration";
 import { TwilioIntegrationSettings } from "./twilio-integration";
 import { AccountSecuritySettings } from "./account-security";
+import { EmailDeliverySettingsPanel } from "./email-delivery";
 
 import { ListGroup, Row, Col } from "react-bootstrap";
 
@@ -66,13 +67,22 @@ export const NavigationPanel = withRouter((props) => {
         <strong>Administration</strong>
       </ListGroup.Item>
       <ListGroup.Item
-        active={route.startsWith("/settings/providers")}
+        active={route.startsWith("/settings/admin/providers")}
         onClick={() => {
-          props.history.push("/settings/providers");
+          props.history.push("/settings/admin/providers");
         }}
         action
       >
         Providers
+      </ListGroup.Item>
+      <ListGroup.Item
+        active={route.startsWith("/settings/admin/email_delivery")}
+        onClick={() => {
+          props.history.push("/settings/admin/email_delivery");
+        }}
+        action
+      >
+        Email delivery
       </ListGroup.Item>
     </ListGroup>
   );
@@ -109,8 +119,12 @@ export const Settings: React.FC<Record<string, never>> = () => {
             render={() => <PlaidIntegrationSettings />}
           />
           <Route
-            path="/settings/providers"
+            path="/settings/admin/providers"
             render={() => <ProvidersSettings />}
+          />
+          <Route
+            path="/settings/admin/email_delivery"
+            render={() => <EmailDeliverySettingsPanel />}
           />
 
           <Redirect to={"/settings/profile"} />

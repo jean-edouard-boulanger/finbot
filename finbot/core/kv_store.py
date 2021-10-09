@@ -55,10 +55,10 @@ class DBKVStore(KVStore):
         pass
 
     def __init__(self, session: Session):
-        self.session = session
+        self._session = session
 
     def __query(self, key: str) -> Query[GenericKeyValueStore]:
-        query: Query[GenericKeyValueStore] = self.session.query(
+        query: Query[GenericKeyValueStore] = self._session.query(
             GenericKeyValueStore
         ).filter_by(key=key)
         return query
@@ -82,15 +82,15 @@ class DBKVStore(KVStore):
         return entity_type.deserialize(data)  # type: ignore
 
     def __setitem__(self, key: str, value: Any) -> None:
-        self.session.merge(GenericKeyValueStore(key=key, value=value))
-        self.session.commit()
+        self._session.merge(GenericKeyValueStore(key=key, value=value))
+        self._session.commit()
 
     def set_entity(self, entity: T) -> None:
         self[entity.key] = serialize(entity)
 
     def __delitem__(self, key: str) -> None:
         self.__query(key).delete()
-        self.session.commit()
+        self._session.commit()
 
     def delete_entity(self, entity: Union[T, Type[T]]) -> None:
         del self[entity.key]

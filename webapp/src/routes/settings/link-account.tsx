@@ -36,8 +36,8 @@ const DataDrivenAccountForm: React.FC<DataDrivenAccountFormProps> = ({
     <DataDrivenForm
       schema={schema.json_schema ?? {}}
       uiSchema={schema.ui_schema ?? {}}
-      onSubmit={(data: ISubmitEvent<LinkedAccountCredentials | null>) => {
-        onSubmit(data.formData ?? {});
+      onSubmit={(event: ISubmitEvent<LinkedAccountCredentials | null>) => {
+        onSubmit(event.formData ?? {});
       }}
       showErrorList={false}
     >
