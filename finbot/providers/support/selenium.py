@@ -26,12 +26,13 @@ class DefaultBrowserFactory(object):
         options.add_argument("--no-sandbox")
         if self.developer_tools:
             options.add_argument("--auto-open-devtools-for-tabs")
-        options.headless = self.headless
 
         # Prevents multiple processes from patching the chromedriver executable at once
         # Review: possibly over-engineered
         with filelock.FileLock(expanduser("~/.finbot.undetected_chromedriver.lock")):
-            return Chrome(options=options)
+            return Chrome(
+                options=options, executable_path="/usr/bin/chromedriver", headless=True
+            )
 
 
 def _safe_cond(cond: Callable[..., Any]) -> Callable[..., Any]:
