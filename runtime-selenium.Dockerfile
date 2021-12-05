@@ -6,7 +6,7 @@ RUN apt-get -y install curl unzip && \
     apt-get -y update && \
     apt-get -y install google-chrome-stable && \
     cd /tmp && \
-    wget -O chromedriver_linux64.zip https://chromedriver.storage.googleapis.com/96.0.4664.45/chromedriver_linux64.zip && \
+    wget -O chromedriver_linux64.zip https://chromedriver.storage.googleapis.com/2.41/chromedriver_linux64.zip && \
     unzip chromedriver_linux64.zip && \
     mv chromedriver /usr/bin/chromedriver && \
     chown root:root /usr/bin/chromedriver && \

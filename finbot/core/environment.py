@@ -27,12 +27,8 @@ class Environment:
     rmq_url: str
 
     @property
-    def is_development(self) -> bool:
-        return self.runtime == "development"
-
-    @property
     def desired_log_level(self) -> str:
-        return "DEBUG" if self.is_development else "DEBUG"
+        return "DEBUG" if self.runtime == "development" else "DEBUG"
 
 
 T = TypeVar("T")

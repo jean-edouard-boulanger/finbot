@@ -15,7 +15,6 @@ from flask_pydantic import validate
 
 from typing import Any
 from contextlib import closing
-import asyncio
 import logging
 
 
@@ -30,20 +29,6 @@ tracer.configure(
 )
 
 app = Flask(__name__)
-
-
-@app.before_request
-def setup_asyncio_loop():
-    """Sets up an asyncio event loop in the current thread if not already setup.
-    This is needed for the newer version of undetected-chromedriver.
-    This function is run before each request.
-    """
-    try:
-        asyncio.get_event_loop()
-        logging.debug("asyncio event loop already setup, skipping")
-    except RuntimeError:
-        logging.info("setting up asyncio event loop")
-        asyncio.set_event_loop(asyncio.new_event_loop())
 
 
 def balances_handler(provider_api: providers.Base) -> list[providers.BalanceEntry]:

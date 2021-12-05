@@ -17,7 +17,6 @@ from typing import Optional
 from functools import partial
 from contextlib import closing
 from multiprocessing.pool import ThreadPool
-import asyncio
 import functools
 import argparse
 import logging
@@ -94,7 +93,6 @@ class AssetTree(object):
 
 
 def fetch_data(settings, browser_factory, linked_account: LinkedAccount):
-    asyncio.set_event_loop(asyncio.new_event_loop())
     class DummyException(Exception):
         pass
     catch_exc = Exception if settings.pause_on_error else DummyException
