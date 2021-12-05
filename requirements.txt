@@ -42,4 +42,4 @@ types-Flask
 types-filelock
 types-pytz
 types-requests
-undetected-chromedriver
+undetected-chromedriver==3.0.3
