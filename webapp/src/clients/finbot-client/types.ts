@@ -38,13 +38,17 @@ export interface GetTracesRequest {
   guid: string;
 }
 
-export interface TracesTreeNode {
+export interface TracesTreeNodeData {
   path: string;
   name: string;
   metadata: Record<string, any>;
   start_time: string;
   end_time: string;
+}
+
+export interface TracesTreeNode {
   children: Array<TracesTreeNode>;
+  data: TracesTreeNodeData;
   extra_properties: Record<string, any>;
 }
 

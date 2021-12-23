@@ -57,8 +57,9 @@ function getEditorData({ data }: SelectedData) {
 function GridRow(clickedCallback: (node: TracesTreeNode) => void) {
   return (props: TreeGridRowProps<TracesTreeNode>) => {
     const node = props.data;
-    const duration = DateTime.fromISO(node.end_time).diff(
-      DateTime.fromISO(node.start_time),
+    const nodeData = node.data;
+    const duration = DateTime.fromISO(nodeData.end_time).diff(
+      DateTime.fromISO(nodeData.start_time),
       "seconds"
     );
     const durationSeconds = duration.toObject().seconds;
@@ -69,9 +70,9 @@ function GridRow(clickedCallback: (node: TracesTreeNode) => void) {
         : errorState === "self"
         ? "bg-danger"
         : "text-danger";
-    const metadata = node.metadata;
+    const metadata = nodeData.metadata;
     return (
-      <tr key={node.path} className={className}>
+      <tr key={nodeData.path} className={className}>
         <td>
           <TreeGrid.Expander {...props} />{" "}
           <Button
@@ -80,7 +81,7 @@ function GridRow(clickedCallback: (node: TracesTreeNode) => void) {
             className="text-reset"
             onClick={() => clickedCallback(node)}
           >
-            {node.name}
+            {nodeData.name}
           </Button>
         </td>
         <td>
@@ -89,11 +90,11 @@ function GridRow(clickedCallback: (node: TracesTreeNode) => void) {
           )}
         </td>
         <td>
-          {DateTime.fromISO(node.start_time).toLocaleString(
+          {DateTime.fromISO(nodeData.start_time).toLocaleString(
             DateTime.TIME_WITH_SECONDS
           )}
         </td>
-        <td>{node.metadata.origin}</td>
+        <td>{nodeData.metadata.origin ?? "N/A"}</td>
         <td>
           {(durationSeconds ?? null) !== null &&
             `${durationSeconds!.toFixed(1)}s`}
@@ -232,43 +233,45 @@ export const Admin: React.FC<Record<string, never>> = () => {
                 <Card>
                   <Card.Header>
                     Span metadata
-                    {selectedSpan !== null && ` (${selectedSpan.name})`}
+                    {selectedSpan !== null && ` (${selectedSpan.data.name})`}
                   </Card.Header>
                   <Card.Body>
                     {selectedSpan !== null && (
                       <Table hover size="sm">
                         <tbody>
-                          {Object.keys(selectedSpan.metadata).map((key) => {
-                            const data = selectedSpan.metadata[key];
-                            return (
-                              <tr key={key}>
-                                <td style={{ width: "25%" }}>
-                                  <Button
-                                    variant="link"
-                                    size="sm"
-                                    className="text-reset"
-                                    onClick={() =>
-                                      setSelectedData({ key, data })
-                                    }
-                                  >
-                                    {key}
-                                  </Button>
-                                </td>
-                                <td>
-                                  <Button
-                                    variant="link"
-                                    size="sm"
-                                    className="text-reset"
-                                    onClick={() =>
-                                      setSelectedData({ key, data })
-                                    }
-                                  >
-                                    {formatInlineData(data)}
-                                  </Button>
-                                </td>
-                              </tr>
-                            );
-                          })}
+                          {Object.keys(selectedSpan.data.metadata).map(
+                            (key) => {
+                              const data = selectedSpan.data.metadata[key];
+                              return (
+                                <tr key={key}>
+                                  <td style={{ width: "25%" }}>
+                                    <Button
+                                      variant="link"
+                                      size="sm"
+                                      className="text-reset"
+                                      onClick={() =>
+                                        setSelectedData({ key, data })
+                                      }
+                                    >
+                                      {key}
+                                    </Button>
+                                  </td>
+                                  <td>
+                                    <Button
+                                      variant="link"
+                                      size="sm"
+                                      className="text-reset"
+                                      onClick={() =>
+                                        setSelectedData({ key, data })
+                                      }
+                                    >
+                                      {formatInlineData(data)}
+                                    </Button>
+                                  </td>
+                                </tr>
+                              );
+                            }
+                          )}
                         </tbody>
                       </Table>
                     )}
