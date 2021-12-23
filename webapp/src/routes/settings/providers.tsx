@@ -58,7 +58,7 @@ const useSchema = (rawSchema: string): [any | null, string | null] => {
     const schema = JSON.parse(rawSchema);
     return [schema, null];
   } catch (e) {
-    return [null, e.toString()];
+    return [null, `${e}`];
   }
 };
 

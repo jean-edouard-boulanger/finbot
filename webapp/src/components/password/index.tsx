@@ -59,16 +59,15 @@ export const validatePassword = (
   input: PasswordValidationInput
 ): PasswordValidationResult => {
   let allValid = true;
-  const rules: Array<PasswordValidationRuleResult> = PASSWORD_VALIDATION_RULES.map(
-    (rule) => {
+  const rules: Array<PasswordValidationRuleResult> =
+    PASSWORD_VALIDATION_RULES.map((rule) => {
       const valid = rule.validator(input);
       allValid = allValid && valid;
       return {
         description: rule.description,
         valid: rule.validator(input),
       };
-    }
-  );
+    });
   return { valid: allValid, rules };
 };
 

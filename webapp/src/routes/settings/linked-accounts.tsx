@@ -150,7 +150,7 @@ const LinkedAccountStatusPanel = withRouter(() => {
         });
         setLinkedAccount(linkedAccount);
       } catch (e) {
-        toast.error(e);
+        toast.error(`${e}`);
       }
     };
     fetch();

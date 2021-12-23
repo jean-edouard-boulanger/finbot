@@ -120,11 +120,10 @@ export interface TreeGridProps<UserNodeType extends TreeNode<UserNodeType>> {
   headerAs?: any | null;
 }
 
-export type TreeGridRowProps<
-  UserNodeType extends TreeNode<UserNodeType>
-> = ExpanderProps & {
-  data: UserNodeType;
-};
+export type TreeGridRowProps<UserNodeType extends TreeNode<UserNodeType>> =
+  ExpanderProps & {
+    data: UserNodeType;
+  };
 
 export function TreeGrid<UserNodeType extends TreeNode<UserNodeType>>(
   props: TreeGridProps<UserNodeType>

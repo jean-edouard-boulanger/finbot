@@ -1,13 +1,41 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useState } from "react";
 import { withRouter, NavLink, RouteComponentProps } from "react-router-dom";
 
 import AuthContext from "contexts/auth/auth-context";
+import { useInterval } from "utils/use-interval";
 
 import Navbar from "react-bootstrap/Navbar";
 import Nav from "react-bootstrap/Nav";
 import { Badge } from "react-bootstrap";
 import { ServicesContext } from "contexts";
 import { SystemReport } from "clients/finbot-client/types";
+
+const SystemStatusBadge: React.FC<Record<string, never>> = () => {
+  const { finbotClient } = useContext(ServicesContext);
+  const [backendReachable, setBackendReachable] = useState(true);
+  const [report, setReport] = useState<SystemReport | null>(null);
+
+  useInterval(async () => {
+    try {
+      setReport(await finbotClient!.getSystemReport());
+      setBackendReachable(true);
+    } catch (e) {
+      setBackendReachable(false);
+      setReport(null);
+    }
+  }, 1000);
+
+  return (
+    <>
+      {backendReachable && report?.runtime === "development" && (
+        <Badge variant={"danger"}>DEV build v{report!.finbot_version}</Badge>
+      )}
+      {!backendReachable && (
+        <Badge variant={"danger"}>BACKEND UNREACHABLE</Badge>
+      )}
+    </>
+  );
+};
 
 const UserNavbar: React.FC<RouteComponentProps<Record<string, never>>> = (
   props
@@ -47,19 +75,7 @@ const GuestNavbar: React.FC<RouteComponentProps<Record<string, never>>> = (
 };
 
 export const Navigation = withRouter((props) => {
-  const { finbotClient } = useContext(ServicesContext);
   const { isAuthenticated } = useContext(AuthContext);
-  const [report, setReport] = useState<SystemReport | null>(null);
-
-  useEffect(() => {
-    const fetch = async () => {
-      const report = await finbotClient!.getSystemReport();
-      setReport(report);
-    };
-    fetch();
-  }, [finbotClient]);
-
-  const isDev = report?.runtime === "development";
 
   return (
     <Navbar
@@ -71,12 +87,10 @@ export const Navigation = withRouter((props) => {
     >
       <NavLink
         className="px-5 navbar-brand"
-        to={isAuthenticated ? `/dashboard` : "/loading"}
+        to={isAuthenticated ? `/dashboard` : "/login"}
       >
         Finbot{` `}
-        {isDev && (
-          <Badge variant={"danger"}>DEV build v{report!.finbot_version}</Badge>
-        )}
+        <SystemStatusBadge />
       </NavLink>
       <Navbar.Toggle aria-controls="responsive-navbar-nav" />
       {isAuthenticated ? <UserNavbar {...props} /> : <GuestNavbar {...props} />}

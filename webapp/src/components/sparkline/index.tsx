@@ -32,7 +32,15 @@ export const SparkLine: React.FC<SparkLineProps> = (props) => {
         },
         colors: [getSparkLineColor(series)],
         xaxis: {
-          show: false,
+          labels: {
+            show: false,
+          },
+          axisBorder: {
+            show: false,
+          },
+          axisTicks: {
+            show: false,
+          },
         },
         yaxis: {
           show: false,

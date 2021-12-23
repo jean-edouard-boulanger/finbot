@@ -77,18 +77,14 @@ export const SignupForm: React.FC<Record<string, never>> = () => {
   const [registrationForm, setRegistrationForm] = useState<RegistrationForm>(
     DEFAULT_REGISTRATION_FORM
   );
-  const [
-    passwordValidation,
-    setPasswordValidation,
-  ] = useState<PasswordValidationResult>(() => {
-    return validatePassword(registrationForm);
-  });
-  const [
-    personalFormValidation,
-    setPersonalFormValidation,
-  ] = useState<PersonalFormValidationResult>(() => {
-    return validatePersonalForm(registrationForm);
-  });
+  const [passwordValidation, setPasswordValidation] =
+    useState<PasswordValidationResult>(() => {
+      return validatePassword(registrationForm);
+    });
+  const [personalFormValidation, setPersonalFormValidation] =
+    useState<PersonalFormValidationResult>(() => {
+      return validatePersonalForm(registrationForm);
+    });
   const [step, setStep] = useState<FormStep>("personal");
   const [loading, setLoading] = useState(false);
   const [registered, setRegistered] = useState(false);

@@ -169,14 +169,10 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
   const [now] = useState<DateTime>(DateTime.now());
   const [selectedLevel, setSelectedLevel] = useState(DEFAULT_LEVEL);
   const [selectedFrequency, setSelectedFrequency] = useState(DEFAULT_FREQUENCY);
-  const [
-    selectedTimeRange,
-    setSelectedTimeRange,
-  ] = useState<TimeRangeChoiceType>(DEFAULT_RANGE);
-  const [
-    historicalValuation,
-    setHistoricalValuation,
-  ] = useState<HistoricalValuation | null>(null);
+  const [selectedTimeRange, setSelectedTimeRange] =
+    useState<TimeRangeChoiceType>(DEFAULT_RANGE);
+  const [historicalValuation, setHistoricalValuation] =
+    useState<HistoricalValuation | null>(null);
 
   useEffect(() => {
     const fetchValuation = async () => {
@@ -202,9 +198,10 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
           break;
         }
         case "asset_type": {
-          const data = await finbotClient!.getAccountHistoricalValuationByAssetType(
-            request
-          );
+          const data =
+            await finbotClient!.getAccountHistoricalValuationByAssetType(
+              request
+            );
           setHistoricalValuation(data);
           break;
         }

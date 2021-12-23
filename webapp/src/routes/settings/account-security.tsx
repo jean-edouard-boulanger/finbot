@@ -23,19 +23,19 @@ const DEFAULT_PASSWORD_FORM: PasswordForm = {
 
 export interface AccountSecuritySettingsProps {}
 
-export const AccountSecuritySettings: React.FC<AccountSecuritySettingsProps> = () => {
+export const AccountSecuritySettings: React.FC<
+  AccountSecuritySettingsProps
+> = () => {
   const { finbotClient } = useContext(ServicesContext);
   const auth = useContext(AuthContext);
   const [loading, setLoading] = useState<boolean>(false);
   const [passwordForm, setPasswordForm] = useState<PasswordForm>(
     DEFAULT_PASSWORD_FORM
   );
-  const [
-    passwordValidation,
-    setPasswordValidation,
-  ] = useState<PasswordValidationResult>(() => {
-    return validatePassword(passwordForm);
-  });
+  const [passwordValidation, setPasswordValidation] =
+    useState<PasswordValidationResult>(() => {
+      return validatePassword(passwordForm);
+    });
   const userAccountId = auth.account!.id;
 
   useEffect(() => {
