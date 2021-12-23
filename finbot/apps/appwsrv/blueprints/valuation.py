@@ -138,7 +138,7 @@ def get_user_account_valuation_history(
 
 
 @valuation_api.route(ACCOUNT.valuation.history.by.asset_type(), methods=["GET"])
-# @jwt_required()
+@jwt_required()
 @service_endpoint(
     parameters={
         "from_time": {

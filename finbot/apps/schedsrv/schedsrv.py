@@ -1,5 +1,6 @@
 from finbot.clients import WorkerClient, ValuationRequest
 from finbot.core import tracer, environment
+from finbot.core.errors import FinbotError
 from finbot.core.logging import configure_logging
 from finbot.core.db.session import Session
 from finbot.core.utils import format_stack
@@ -10,6 +11,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 
 import schedule
 
+from typing import Iterable
 from datetime import timedelta
 import sys
 import queue
@@ -29,14 +31,31 @@ tracer.configure(
 )
 
 
+def parse_valuation_requests(raw_accounts_str: str):
+    requests = []
+    raw_accounts = raw_accounts_str.split(";")
+    for raw_account in raw_accounts:
+        if ":" in raw_account:
+            account_id_str, linked_accounts_str = raw_account.split(":")
+            request = ValuationRequest(
+                user_account_id=int(account_id_str),
+                linked_accounts=[
+                    int(linked_account_id_str)
+                    for linked_account_id_str in linked_accounts_str.split(",")
+                ],
+            )
+        else:
+            request = ValuationRequest(user_account_id=int(raw_account))
+        requests.append(request)
+    return requests
+
+
 def create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="valuation and reporting scheduler")
     parser.add_argument(
         "--mode", choices={"server", "one_shot"}, type=str, default="server"
     )
-    parser.add_argument(
-        "--accounts", type=lambda v: set(int(i) for i in v.split(",")), default=None
-    )
+    parser.add_argument("--accounts", type=parse_valuation_requests, default=None)
     return parser
 
 
@@ -45,24 +64,23 @@ def iter_user_accounts():
         yield user_account
 
 
-def run_one_shot(accounts_ids: list[int]):
+def run_one_shot(requests: Iterable[ValuationRequest]):
     user_account: UserAccount
-    for user_account in iter_user_accounts():
-        if not accounts_ids or user_account.id in accounts_ids:
-            try:
-                worker_client = WorkerClient()
-                valuation = worker_client.get_valuation(
-                    ValuationRequest(user_account_id=user_account.id)
-                )
-                logging.info(
-                    f"user account {user_account.id} valuation {valuation.dict()}"
-                )
-            except Exception as e:
-                logging.warning(
-                    f"failure while running workflow for "
-                    f"user_id={user_account.id}: {e}, "
-                    f"trace: \n{format_stack()}"
-                )
+    for request in requests:
+        try:
+            worker_client = WorkerClient()
+            logging.info(f"handling valuation request {request}")
+            valuation = worker_client.get_valuation(request)
+            logging.info(
+                f"user account {request.user_account_id} valuation"
+                f" (linked_accounts={request.linked_accounts}): {valuation.dict()}"
+            )
+        except Exception as e:
+            logging.warning(
+                f"failure while running workflow for "
+                f"user_id={request.user_account_id}: {e}, "
+                f"trace: \n{format_stack()}"
+            )
 
 
 def pop_queue(work_queue: queue.Queue, timeout: timedelta):
@@ -126,6 +144,8 @@ def main_impl():
 
     logging.info(f"running in mode: {settings.mode}")
     if settings.mode == "one_shot":
+        if settings.accounts is None:
+            raise FinbotError("--accounts must be provided in on shot mode")
         run_one_shot(settings.accounts)
         return
 

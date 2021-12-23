@@ -193,7 +193,7 @@ banned-keywords-check-ts:
 	tools/banned-keywords.py --source-dirs webapp/src
 
 flake8:
-	flake8 --exclude migrations/,venv/ --max-line-length 100
+	flake8 --exclude migrations/,venv/,webapp/ --max-line-length 100
 
 black-check:
 	black --check $(BLACK_SETTINGS)

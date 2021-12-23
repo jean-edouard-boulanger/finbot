@@ -234,7 +234,7 @@ export class FinbotClient {
     public_key,
     secret_key,
   }: UpdateAccountPlaidSettingsRequest): Promise<PlaidSettings> {
-    const response = await axios.post(
+    const response = await axios.put(
       `${this.endpoint}/accounts/${account_id}/settings/plaid`,
       {
         env,
