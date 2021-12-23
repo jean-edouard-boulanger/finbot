@@ -1,14 +1,10 @@
-from finbot.core.errors import FinbotError
-from finbot.core.environment import get_fcsapi_key
 from finbot.core import tracer
+from finbot.core.errors import FinbotError
+
+import quickforex
 
 from dataclasses import dataclass
-from typing import Optional, Any
-from requests import Response
-import requests
-
-
-API_URL = "https://fcsapi.com/api-v3/forex"
+from typing import Optional
 
 
 @dataclass(frozen=True, eq=True)
@@ -22,61 +18,47 @@ class Xccy(object):
     def serialize(self) -> dict[str, str]:
         return {"domestic": self.domestic, "foreign": self.foreign}
 
+    def to_quickforex(self) -> quickforex.CurrencyPair:
+        return quickforex.CurrencyPair(self.domestic, self.foreign)
+
+
+def _xccy_to_quickforex(xccy: Xccy) -> quickforex.CurrencyPair:
+    return quickforex.CurrencyPair(xccy.domestic, xccy.foreign)
+
+
+def _xccy_from_quickforex(xccy: quickforex.CurrencyPair) -> Xccy:
+    return Xccy(xccy.domestic, xccy.foreign)
+
+
+def _format_quickforex_xccy(xccy: quickforex.CurrencyPair) -> str:
+    return f"{xccy.domestic}/{xccy.foreign}"
+
 
 class Error(FinbotError):
     pass
-
-
-def _format_pair(pair: Xccy) -> str:
-    return f"{pair.domestic}/{pair.foreign}"
-
-
-def _format_pairs(pairs: list[Xccy]) -> str:
-    return ",".join(_format_pair(pair) for pair in pairs)
-
-
-def _handle_fcsapi_response(response: Response, resource: str) -> Any:
-    response.raise_for_status()
-    payload = response.json()
-    print(tracer.current().name)
-    tracer.current().set_output(payload)
-    if "status" not in payload:
-        raise Error(
-            f"failure while querying fcsapi ({resource}): "
-            f"missing 'status' in payload"
-        )
-    if not payload["status"]:
-        raise Error(
-            f"failure while querying fcsapi ({resource}): "
-            f"{payload['msg']} (code: {payload['code']})"
-        )
-    if "response" not in payload:
-        raise Error(
-            f"failure while querying fcsapi ({resource}): "
-            f"missing 'response' in payload"
-        )
-    return payload["response"]
 
 
 def get_rates(pairs: set[Xccy]) -> dict[Xccy, Optional[float]]:
     rates: dict[Xccy, Optional[float]] = {
         pair: 1.0 for pair in pairs if pair.foreign == pair.domestic
     }
-    pairs_needing_lookup = [pair for pair in pairs if pair.foreign != pair.domestic]
+    pairs_needing_lookup: set[quickforex.CurrencyPair] = {
+        _xccy_to_quickforex(pair) for pair in pairs if pair not in rates
+    }
     if pairs_needing_lookup:
-        pairs_str = _format_pairs(pairs_needing_lookup)
-        resource = f"{API_URL}/latest?symbol={pairs_str}"
-        resource += f"&access_key={get_fcsapi_key()}"
-        with tracer.sub_step(f"Query {pairs_str} rate(s) from fcsapi") as step:
-            step.set_input({"resource": resource})
-            response = requests.get(resource)
-            rates_data = _handle_fcsapi_response(response, resource)
-            rates.update(
-                {
-                    Xccy(*entry["s"].split("/")): float(entry["c"])
-                    for entry in rates_data
-                }
-            )
+        pairs_str = ",".join(
+            _format_quickforex_xccy(pair) for pair in pairs_needing_lookup
+        )
+        try:
+            with tracer.sub_step(f"Getting {pairs_str} rates from quickforex") as step:
+                step.set_input(pairs_str)
+                quickforex_rates = quickforex.get_latest_rates(pairs_needing_lookup)
+        except Exception as e:
+            raise Error(
+                f"Error while getting rates for currency pairs {pairs_str}: {e}"
+            ) from e
+        for currency_pair, rate in quickforex_rates.items():
+            rates[_xccy_from_quickforex(currency_pair)] = float(rate)
     for pair in pairs:
         if pair not in rates:
             rates[pair] = None

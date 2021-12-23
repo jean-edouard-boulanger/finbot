@@ -1,6 +1,7 @@
 from finbot import providers
 from finbot.core.errors import FinbotError
 from finbot.providers.errors import AuthenticationFailure
+from finbot.core import fx_market
 from finbot.core import tracer
 
 import krakenex
@@ -25,9 +26,29 @@ class Credentials(object):
         return Credentials(data["api_key"], data["private_key"])
 
 
+def _format_error(errors: list[str]) -> str:
+    return ", ".join(errors)
+
+
+def _is_currency(symbol: str) -> bool:
+    return symbol.startswith("Z")
+
+
+def _classify_asset(symbol: str) -> str:
+    if _is_currency(symbol):
+        return "currency"
+    return "cryptocurrency"
+
+
+def _demangle_symbol(symbol: str) -> str:
+    if symbol[0] in {"Z", "X"} and len(symbol) == 4:
+        return symbol[1:]
+    return symbol
+
+
 class Api(providers.Base):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
         self._api: Optional[krakenex.API] = None
         self._account_ccy = "EUR"
 
@@ -46,8 +67,15 @@ class Api(providers.Base):
         for symbol, units in results.items():
             units = float(units)
             if units > OWNERSHIP_UNITS_THRESHOLD:
-                demangled_symbol = _format_symbol(symbol)
-                rate = price_fetcher.get_last_price(demangled_symbol, self._account_ccy)
+                demangled_symbol = _demangle_symbol(symbol)
+                if _is_currency(symbol):
+                    rate = fx_market.get_rate(
+                        fx_market.Xccy(demangled_symbol, self._account_ccy)
+                    )
+                else:
+                    rate = price_fetcher.get_last_price(
+                        demangled_symbol, self._account_ccy
+                    )
                 yield symbol, units, units * rate
 
     def authenticate(self, credentials: Credentials) -> None:
@@ -69,7 +97,7 @@ class Api(providers.Base):
                     "account": self._account_description(),
                     "assets": [
                         {
-                            "name": _format_symbol(symbol),
+                            "name": _demangle_symbol(symbol),
                             "type": _classify_asset(symbol),
                             "units": units,
                             "value": value,
@@ -79,22 +107,6 @@ class Api(providers.Base):
                 for symbol, units, value in self._iter_balances()
             ]
         }
-
-
-def _format_error(errors: list[str]) -> str:
-    return ", ".join(errors)
-
-
-def _classify_asset(symbol: str) -> str:
-    if symbol.startswith("Z"):
-        return "currency"
-    return "cryptocurrency"
-
-
-def _format_symbol(symbol: str) -> str:
-    if symbol[0] in {"Z", "X"} and len(symbol) == 4:
-        return symbol[1:]
-    return symbol
 
 
 class KrakenPriceFetcher(object):

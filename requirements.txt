@@ -16,7 +16,7 @@ jsonschema
 krakenex
 marshmallow
 marshmallow-dataclass
-mypy
+mypy==0.910
 oauth2client
 pandas
 pika
@@ -30,6 +30,7 @@ pytest
 python-binance
 python-bittrex
 pytz
+quickforex
 requests
 schedule
 selenium

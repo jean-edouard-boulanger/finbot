@@ -30,7 +30,6 @@ if TYPE_CHECKING:
         def __init__(self, arg: Type[T], **kwargs: Any) -> None:
             pass
 
-
 else:
     from sqlalchemy import Enum
 
