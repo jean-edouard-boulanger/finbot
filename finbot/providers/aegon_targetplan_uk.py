@@ -36,8 +36,8 @@ class Credentials(object):
 
 
 class Api(SeleniumBased):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
         self.accounts: Optional[dict[str, providers.Account]] = None
 
     def _go_home(self) -> None:
@@ -68,7 +68,7 @@ class Api(SeleniumBased):
 
                         if _is_maintenance(self._do.current_url):
                             logging.warning("Maintenance mode, acknowledging")
-                        self._do.find(By.XPATH, "//a[@role='button']").click()
+                            self._do.find(By.XPATH, "//a[@role='button']").click()
                         return self._do.wait_cond(
                             lambda _: _get_allocations_table(self._do)
                         )
