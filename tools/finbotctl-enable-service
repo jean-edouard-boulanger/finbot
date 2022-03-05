@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+OWN_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+source "${OWN_DIR}/bash-utils.sh"
+
+usage () {
+  echo
+  echo "finbotctl enable-service: start finbot"
+  echo "  Arguments"
+  echo "    --start    additionally immediately start the finbot application using systemd"
+}
+
+start_immediately=0
+while [[ $# -gt 0 ]]
+do
+  key="$1"
+  case $key in
+    --help)
+      usage
+      exit 0
+    ;;
+    --start)
+      start_immediately=1
+      shift
+    ;;
+    *)
+      echo "unknown argument: ${key}"
+      usage
+      exit 1
+    ;;
+  esac
+done
+
+if [[ "${EUID}" -ne 0 ]]
+  then echo "Please run as root: sudo ./finbotctl enable-service"
+  exit
+fi
+
+which systemctl >/dev/null 2>&1 || die "systemd is not supported on your machine"
+which docker-compose >/dev/null 2>&1 || die "'docker-compose' is not available in this machine, install and try again"
+
+systemd_service_name=finbot-docker
+docker_compose_path=$(which docker-compose)
+service_tpl_file_path=${OWN_DIR}/../finbot-docker.service.tpl
+cat "${service_tpl_file_path}" \
+  | sed "s/FINBOT_CHECKOUT_DIR/${FINBOT_CHECKOUT_DIR//\//\\/}/g" \
+  | sed "s/DOCKER_COMPOSE_PATH/${docker_compose_path//\//\\/}/g" > /etc/systemd/system/${systemd_service_name}.service
+
+systemctl daemon-reload
+systemctl enable ${systemd_service_name}
+
+if [[ "${start_immediately}" -eq "1" ]]
+then
+  log_info "starting finbot using systemctl"
+  systemctl start ${systemd_service_name}
+  systemctl status ${systemd_service_name}
+fi

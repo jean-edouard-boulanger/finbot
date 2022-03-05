@@ -10,6 +10,7 @@ function usage {
   echo "  start: "
   echo "  stop: "
   echo "  restart: "
+  echo "  enable-service: "
 }
 
 command="${1}"
