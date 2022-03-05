@@ -2,6 +2,7 @@ alembic
 black
 celery
 cffi
+colorama
 cryptography
 filelock
 flake8

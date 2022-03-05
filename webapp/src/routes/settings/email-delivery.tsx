@@ -32,7 +32,6 @@ export const EmailDeliverySettingsPanel: React.FC<
     const fetch = async () => {
       const providersData = await finbotClient!.getEmailDeliveryProviders();
       setProviders(providersData);
-      console.log(providersData);
       const currentSettings = await finbotClient!.getEmailDeliverySettings();
       if (currentSettings !== null) {
         const provider = providersData.filter((provider) => {
