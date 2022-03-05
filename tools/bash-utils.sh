@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+FINBOT_CHECKOUT_DIR=$( git rev-parse --show-toplevel )
+export FINBOT_CHECKOUT_DIR
 
 log() {
   log_level=$1
@@ -43,4 +45,8 @@ finbot_is_valid_env() {
       return 1
     ;;
   esac
+}
+supports_systemd() {
+  which systemctl >/dev/null 2>&1
+  return $?
 }
