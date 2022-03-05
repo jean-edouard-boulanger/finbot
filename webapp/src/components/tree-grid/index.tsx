@@ -159,7 +159,6 @@ export function TreeGrid<UserNodeType extends TreeNode<UserNodeType>>(
         {topology
           .filter((n) => n.visible)
           .map((n) => {
-            console.log(n);
             const rowProps: TreeGridRowProps<UserNodeType> = {
               data: n.data,
               __expander: {

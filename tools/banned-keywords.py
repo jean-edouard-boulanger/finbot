@@ -2,11 +2,19 @@
 from typing import Optional, Pattern
 from pathlib import Path
 from dataclasses import dataclass
+from colorama import Fore, Style
 import argparse
+import colorama
 import fnmatch
 import re
 import sys
 import os
+
+
+colorama.init()
+
+
+JS_ALIKE = ["*.tsx", "*.ts", "*.js", "*.jsx"]
 
 
 @dataclass
@@ -51,12 +59,12 @@ RULES: list[Rule] = [
         message="Please use utils.format_stack instead of stackprinter",
     ),
     Rule(
-        match_files=["*.js"],
+        match_files=JS_ALIKE,
         banned_pattern=re.compile(r"console.log\("),
         message="Please remove calls to console.log",
     ),
     Rule(
-        match_files=["*.js", "*.ts"],
+        match_files=JS_ALIKE,
         banned_pattern=re.compile(r"FIXME"),
         message="All FIXMEs need to be addressed in the same PR",
     ),
@@ -92,16 +100,16 @@ def check_source_file(file_path: Path, rules: list[Rule]) -> list[Error]:
     return errors
 
 
-def file_matches_any_pattern(file_path: Path, patterns: Optional[list[str]]):
+def file_matches_any_pattern(file_path: Path, patterns: Optional[list[str]]) -> bool:
     if not patterns:
-        return None
+        return False
     for pattern in patterns:
         if fnmatch.fnmatch(str(file_path), pattern):
             return True
-        return False
+    return False
 
 
-def should_match_file_against_rule(file_path: Path, rule: Rule):
+def should_match_file_against_rule(file_path: Path, rule: Rule) -> bool:
     return file_matches_any_pattern(
         file_path, rule.match_files
     ) and not file_matches_any_pattern(file_path, rule.ignore_files)
@@ -140,19 +148,33 @@ def is_github_action() -> bool:
 
 def display_error_message(error: Error):
     relative_path = error.file_path.relative_to(Path.cwd())
-    print(
-        f"{relative_path}:"
-        f"{error.line_number}:"
-        f"{error.start_column}: "
-        f"error: {error.error_message}"
-    )
     if is_github_action():
         print(
-            f"::error file={relative_path},"
+            f"::error "
+            f"file={relative_path},"
             f"line={error.line_number},"
-            f"col={error.start_column}::"
+            f"col={error.start_column},"
+            f"endColumn={error.end_column},"
             f"{error.error_message}"
         )
+    else:
+        print(Style.BRIGHT)
+        print(
+            f"{relative_path}:" f"{error.line_number}:" f"{error.start_column}: ",
+            end="",
+        )
+        print(Fore.RED + "error: " + Fore.RESET + error.error_message + Style.RESET_ALL)
+        print(f"{error.line_number} | {error.line.rstrip()}")
+        spacing = len(f"{error.line_number} | ") + error.start_column
+        print(
+            Fore.GREEN
+            + (" " * spacing)
+            + "^"
+            + ("~" * (error.end_column - error.start_column - 2))
+            + "+"
+            + Style.RESET_ALL
+        )
+        print()
 
 
 def main():
@@ -163,15 +185,6 @@ def main():
     if errors:
         for error in errors:
             display_error_message(error)
-            print(f"{error.line_number} | {error.line.rstrip()}")
-            spacing = len(f"{error.line_number} | ") + error.start_column
-            print(
-                (" " * spacing)
-                + "^"
-                + ("~" * (error.end_column - error.start_column - 2))
-                + "+"
-            )
-            print()
         return 1
     else:
         return 0
