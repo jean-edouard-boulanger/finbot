@@ -36,7 +36,7 @@ class Credentials(object):
 
 
 class Api(SeleniumBased):
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.accounts: Optional[dict[str, providers.Account]] = None
 
