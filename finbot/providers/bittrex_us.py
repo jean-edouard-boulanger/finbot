@@ -5,7 +5,7 @@ from finbot.providers.errors import AuthenticationFailure
 from pycoingecko import CoinGeckoAPI
 from bittrex.bittrex import Bittrex
 
-from typing import Optional, Iterator, Tuple
+from typing import Optional, Iterator, Tuple, Any
 
 
 OWNERSHIP_UNITS_THRESHOLD = 0.00001
@@ -28,7 +28,7 @@ class Credentials(object):
 
 
 class Api(providers.Base):
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self._account_ccy = "USD"
         self._spot_api = CoinGeckoWrapper(CoinGeckoAPI())
@@ -47,7 +47,10 @@ class Api(providers.Base):
         for entry in self._api.get_balances()["result"]:
             units: float = entry["Available"]
             symbol: str = entry["Currency"]
-            if units > OWNERSHIP_UNITS_THRESHOLD and symbol.upper() not in TOKEN_BLACKLIST:
+            if (
+                units > OWNERSHIP_UNITS_THRESHOLD
+                and symbol.upper() not in TOKEN_BLACKLIST
+            ):
                 value = units * self._spot_api.get_spot_cached(
                     symbol, self._account_ccy
                 )
