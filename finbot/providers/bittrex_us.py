@@ -10,6 +10,7 @@ from typing import Optional, Iterator, Tuple
 
 OWNERSHIP_UNITS_THRESHOLD = 0.00001
 BITTREX_REWARDS_TOKEN = "BTXCRD"
+TOKEN_BLACKLIST = {"BTXCRD", "BCHA"}
 
 
 class Credentials(object):
@@ -27,8 +28,8 @@ class Credentials(object):
 
 
 class Api(providers.Base):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
         self._account_ccy = "USD"
         self._spot_api = CoinGeckoWrapper(CoinGeckoAPI())
         self._api: Optional[Bittrex] = None
@@ -44,9 +45,9 @@ class Api(providers.Base):
     def _iter_balances(self) -> Iterator[Tuple[str, float, float]]:
         assert self._api is not None
         for entry in self._api.get_balances()["result"]:
-            units = entry["Available"]
-            symbol = entry["Currency"]
-            if units > OWNERSHIP_UNITS_THRESHOLD and symbol != BITTREX_REWARDS_TOKEN:
+            units: float = entry["Available"]
+            symbol: str = entry["Currency"]
+            if units > OWNERSHIP_UNITS_THRESHOLD and symbol.upper() not in TOKEN_BLACKLIST:
                 value = units * self._spot_api.get_spot_cached(
                     symbol, self._account_ccy
                 )
