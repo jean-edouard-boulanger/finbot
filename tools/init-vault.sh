@@ -10,7 +10,7 @@ then
   log_info "creating ${FINBOT_VAULT_PATH}"
 	mkdir -p "${FINBOT_VAULT_PATH}"
   log_info "generating secret key in ${FINBOT_SECRET_PATH}"
-	python3.9 tools/crypt fernet-key > "${FINBOT_SECRET_PATH}"
+	python3.11 tools/crypt fernet-key > "${FINBOT_SECRET_PATH}"
 	chmod 600 "${FINBOT_SECRET_PATH}"
 else
   log_info "${FINBOT_VAULT_PATH} already exists, not overriding"

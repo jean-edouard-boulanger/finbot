@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.9
+#!/usr/bin/env python3.11
 from finbot.providers.support.selenium import DefaultBrowserFactory
 from finbot.providers.factory import get_provider
 from finbot.core.utils import format_stack
