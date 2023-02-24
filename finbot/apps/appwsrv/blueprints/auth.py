@@ -37,10 +37,10 @@ def auth_login(request_context: RequestContext):
     return {
         "auth": {
             "access_token": create_access_token(
-                identity=account.id, expires_delta=False
+                identity=account.id, expires_delta=None
             ),
             "refresh_token": create_refresh_token(
-                identity=account.id, expires_delta=False
+                identity=account.id, expires_delta=None
             ),
         },
         "account": serialize_user_account(account),

@@ -27,7 +27,7 @@ services:
       RABBITMQ_DEFAULT_PASS: finbot
 
   finbotwsrv:
-    image: "finbot/runtime-selenium:latest"
+    image: "finbot/runtime:latest"
     container_name: finbotwsrv
     working_dir: /finbot
     command: bash -c "source docker.env.sh && make run-finbotwsrv-dev"
@@ -139,7 +139,7 @@ services:
       FINBOT_ENV: ${FINBOT_ENV}
 
   operator:
-    image: "finbot/runtime-selenium:latest"
+    image: "finbot/runtime:latest"
     container_name: operator
     depends_on:
       - finbotdb

@@ -34,7 +34,7 @@ run-histwsrv-dev:
 		--port 5002
 
 run-finbotwsrv-dev:
-	tools/run-web-service.sh \
+	xvfb-run -a tools/run-web-service.sh \
 		--app finbotwsrv \
 		--workers 4 \
 		--timeout 300 \
@@ -52,13 +52,8 @@ run-appwsrv-dev:
   		--timeout 600 \
 		--port 5003
 
-docker-build-runtime:
+docker-build:
 	docker build -t finbot/runtime:latest -f runtime.Dockerfile --no-cache .
-
-docker-build-runtime-selenium:
-	docker build -t finbot/runtime-selenium:latest -f runtime-selenium.Dockerfile --no-cache .
-
-docker-build: docker-build-runtime docker-build-runtime-selenium
 
 trigger-valuation-docker:
 	tools/check-env.sh accounts;

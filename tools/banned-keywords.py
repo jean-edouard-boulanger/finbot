@@ -28,18 +28,6 @@ class Rule:
 RULES: list[Rule] = [
     Rule(
         match_files=["*.py"],
-        banned_pattern=re.compile(r"find_elements_by_[^(]+"),
-        message="Selenium find_elements_by_* commands are deprecated. "
-        "Please use find_elements(...) instead.",
-    ),
-    Rule(
-        match_files=["*.py"],
-        banned_pattern=re.compile(r"find_element_by_[^(]+"),
-        message="Selenium find_element_by_* commands are deprecated. "
-        "Please use find_element(...) instead.",
-    ),
-    Rule(
-        match_files=["*.py"],
         banned_pattern=re.compile(
             r"import(.+)\s+Dict|(\s+|typing\.)Dict\[|(\s+|typing\.)List\["
         ),

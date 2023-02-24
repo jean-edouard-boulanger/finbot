@@ -1,291 +1,52 @@
-#!/usr/bin/env python3.11
-from finbot.providers.support.selenium import DefaultBrowserFactory
-from finbot.providers.factory import get_provider
-from finbot.core.utils import format_stack
-from finbot.core import fx_market, environment, secure
-from finbot.core.serialization import pretty_dump
-from finbot.core.logging import configure_logging
-from finbot.model import (
-    LinkedAccount,
-    UserAccountSettings
-)
-
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
-
-from typing import Optional
-from functools import partial
-from contextlib import closing
-from multiprocessing.pool import ThreadPool
-import functools
-import argparse
-import logging
-import terminaltables
-import time
+#!/usr/bin/env python
 import json
+import logging
+import sys
+from argparse import ArgumentParser
+
+from finbot.providers import factory as providers_factory
+from finbot.providers.playwright_based import BrowserSettings
 
 
-configure_logging()
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 
-@functools.lru_cache(128)
-def get_fx_rate(home_ccy, foreign_ccy) -> Optional[float]:
-    return fx_market.get_rate(fx_market.Xccy(home_ccy, foreign_ccy))
-
-
-def wait_forever():
-    while True:
-        time.sleep(60)
-
-
-class Price(object):
-    def __init__(self, amount, currency):
-        self._amount = amount
-        self._currency = currency
-
-    def amount(self, currency_override=None):
-        if currency_override is not None:
-            return self._amount * get_fx_rate(self._currency, currency_override)
-        return self._amount
-
-    def currency(self):
-        return self._currency
-
-
-class Asset(object):
-    def __init__(self, name, amount, asset_type):
-        self.name = name
-        self.asset_type = asset_type
-        self._amount = amount
-
-    def amount(self, currency_override=None):
-        return self._amount.amount(currency_override)
-
-
-class ProviderData(object):
-    def __init__(self, name: str, linked_account: LinkedAccount, accounts=None):
-        self.name = name
-        self.linked_account = linked_account
-        self.accounts = accounts or {}
-
-    def amount(self, currency):
-        return sum(account.amount(currency) for account in self.accounts.values())
-
-
-class AccountData(object):
-    def __init__(self, account=None, balance=None, assets=None,
-                 liabilities=None):
-        self.account = account
-        self.balance = balance
-        self.assets = assets or []
-        self.liabilities = liabilities or []
-
-    def amount(self, currency_override=None):
-        return self.balance.amount(currency_override)
-
-
-class AssetTree(object):
-    def __init__(self, providers=None):
-        self.providers = providers or []
-
-    def amount(self, currency):
-        return sum(provider.amount(currency) for provider in self.providers)
-
-
-def fetch_data(settings, browser_factory, linked_account: LinkedAccount):
-    class DummyException(Exception):
-        pass
-    catch_exc = Exception if settings.pause_on_error else DummyException
-    provider = get_provider(linked_account.provider_id)
-    with closing(provider.api_module.Api(browser_factory=browser_factory)) as api:
-        try:
-            credentials = provider.api_module.Credentials.init(json.loads(
-                secure.fernet_decrypt(
-                    linked_account.encrypted_credentials.encode(),
-                    environment.get_secret_key()
-                ).decode()
-            ))
-            logging.info(f"[{provider.description}] authenticate {credentials.user_id}")
-            api.authenticate(credentials)
-            logging.info(f"[{provider.description}] authenticate - done")
-
-            provider_data = ProviderData(
-                name=linked_account.provider_id,
-                linked_account=linked_account)
-
-            logging.info(f"[{provider.description}] fetching balances")
-            balances = api.get_balances()
-            if settings.dump_balances:
-                logging.info(f"[{provider.description}] balances {pretty_dump(balances)}")
-            print(balances["accounts"])
-            for entry in balances["accounts"]:
-                account = entry["account"]
-                account_data = AccountData(
-                    account=account,
-                    balance=Price(entry["balance"], account["iso_currency"]))
-                provider_data.accounts[account["id"]] = account_data
-            logging.info(f"[{provider.description}] fetching balances - done")
-
-            logging.info(f"[{provider.description}] fetching assets")
-            assets = api.get_assets()
-            if settings.dump_assets:
-                logging.info(f"[{provider.description}] assets {pretty_dump(assets)}")
-            for entry in assets["accounts"]:
-                account = entry["account"]
-                account_data = provider_data.accounts[account["id"]]
-                for asset in entry["assets"]:
-                    account_data.assets.append(Asset(
-                        name=asset["name"],
-                        amount=Price(asset["value"], account["iso_currency"]),
-                        asset_type=asset["type"]))
-
-            logging.info(f"[{provider.description}] fetching assets - done")
-
-            logging.info(f"[{provider.description}] fetching liabilities")
-            liabilities = api.get_liabilities()
-            if settings.dump_liabilities:
-                logging.info(f"[{provider.description}] liabilities {pretty_dump(liabilities)}")
-            logging.info(f"[{provider.description}] fetching liabilities - done")
-            return provider_data
-        except KeyboardInterrupt:
-            raise
-        except catch_exc as e:
-            logging.warning(f"error while fetching data for"
-                            f" account_id={linked_account.id} ({linked_account.account_name})"
-                            f" provider_id={linked_account.provider.id}"
-                            f" : {e}")
-            logging.warning(format_stack(style="darkbg3"))
-            logging.warning("PAUSING execution")
-            logging.warning("CTRL^C to exit")
-            wait_forever()
-
-
-def create_arguments_parser():
-    parser = argparse.ArgumentParser("providers tester")
-    parser.add_argument("--database", type=str, default=environment.get_database_url())
-    parser.add_argument("--account-id", type=int, default=1)
-    parser.add_argument("--dump-balances", action="store_true", default=False)
-    parser.add_argument("--dump-assets", action="store_true", default=False)
-    parser.add_argument("--dump-liabilities", action="store_true", default=False)
-    parser.add_argument("--dump-transactions", action="store_true", default=False)
-    parser.add_argument("--show-browser", action="store_false", default=True, dest="headless")
-    parser.add_argument("--no-threadpool", action="store_false", default=True, dest="threadpool")
-    parser.add_argument("--pause-on-error", action="store_true", default=False, dest="pause_on_error")
-    parser.add_argument("--developer-tools", action="store_true", default=False, dest="developer_tools")
-    parser.add_argument("--providers", type=str, default=":all", required=False)
-    parser.add_argument("--list-linked-accounts", action='store_true', default=False)
+def create_parser() -> ArgumentParser:
+    parser = ArgumentParser("Test finbot provider")
+    parser.add_argument(
+        "-p", "--provider",
+        choices=list(providers_factory.PROVIDERS.keys()),
+        required=True,
+        type=str,
+        help="Provider"
+    )
+    parser.add_argument(
+        "-a", "--auth-payload",
+        type=str,
+        required=False,
+        default=None,
+        help="Provider authentication payload (JSON)"
+    )
     return parser
 
 
-def should_read_accounts_from_env(accounts_configuration):
-    return any(val.startswith(":env") for val in accounts_configuration)
-
-
-def resolve_accounts(providers: list[str], linked_accounts: list[LinkedAccount]) -> list[LinkedAccount]:
-    if ":all" in providers:
-        assert len(providers) == 1
-        return linked_accounts
-    return [
-        linked_account
-        for linked_account in linked_accounts
-        if linked_account.provider.id in providers
-    ]
-
-
-def find_linked_accounts(db_session, account_id: int) -> list[LinkedAccount]:
-    return (db_session.query(LinkedAccount)
-                      .filter_by(user_account_id=account_id)
-                      .filter_by(deleted=False)
-                      .all())
-
-
-def find_user_account_settings(db_session, account_id: int) -> UserAccountSettings:
-    return (db_session.query(UserAccountSettings)
-                      .filter_by(user_account_id=account_id)
-                      .first())
-
-
-def dump_linked_accounts(linked_accounts: list[LinkedAccount]):
-    raw_table = [["Account id", "Account name", "Provider id", "Provider description"]]
-    for linked_account in linked_accounts:
-        raw_table.append([
-            str(linked_account.id),
-            linked_account.account_name,
-            linked_account.provider.id,
-            linked_account.provider.description
-        ])
-    print(terminaltables.AsciiTable(raw_table).table)
-
-
 def main():
-    parser = create_arguments_parser()
-    settings = parser.parse_args()
-    db_session = sessionmaker(bind=create_engine(settings.database))()
-
-    linked_accounts = find_linked_accounts(db_session, settings.account_id)
-    selected_accounts = resolve_accounts(
-        settings.providers.split(","), linked_accounts)
-
-    logging.info("selection accounts / providers")
-
-    dump_linked_accounts(selected_accounts)
-
-    browser_factory = DefaultBrowserFactory(
-        headless=settings.headless,
-        developer_tools=settings.developer_tools)
-
-    fetcher = partial(fetch_data, settings, browser_factory)
-    if settings.threadpool:
-        with ThreadPool(processes=8) as pool:
-            all_data = pool.map(fetcher, selected_accounts)
-    else:
-        all_data = list(map(fetcher, selected_accounts))
-
-    user_account_settings = find_user_account_settings(db_session, settings.account_id)
-    currency = user_account_settings.valuation_ccy
-    logging.info(f"valuation currency is set to {currency}")
-
-    asset_tree = AssetTree(all_data)
-    all_assets_amount = asset_tree.amount(currency)
-    if all_assets_amount == 0.0:
-        print("no assets")
-        return
-
-    raw_table = [["Account", "Value", "Weight", "Currency"], [
-        "(All assets)",
-        f"{all_assets_amount:.2f}",
-        "100.00%",
-        currency
-    ], []]
-    for provider_data in asset_tree.providers:
-        provider_amount = provider_data.amount(currency)
-        provider_pc = (provider_amount / all_assets_amount) * 100.0
-        raw_table.append([
-            f"  + {provider_data.linked_account.account_name} (provider: {provider_data.name})",
-            f"{provider_amount:.2f}",
-            f"{provider_pc:.2f}%",
-            currency])
-        for account_data in provider_data.accounts.values():
-            account_amount = account_data.amount(currency)
-            account_pc = (account_amount / all_assets_amount) * 100.0
-            raw_table.append([
-                f"    + {account_data.account['name']} ({account_data.account['type'].capitalize()})",
-                f"{account_amount:.2f}",
-                f"{account_pc:.2f}%",
-                currency
-            ])
-            for asset in account_data.assets:
-                asset_amount = asset.amount(currency)
-                asset_pc = (asset_amount / all_assets_amount) * 100.0
-                raw_table.append([
-                    f"      * {asset.name} ({asset.asset_type.capitalize()})",
-                    f"{asset_amount:.2f}",
-                    f"{asset_pc:.2f}%",
-                    currency
-                ])
-        raw_table.append(["", "", ""])
-
-    print(terminaltables.AsciiTable(raw_table).table)
+    api_settings = dict(
+        playwright_settings=BrowserSettings(enable_virtual_display=False)
+    )
+    settings = create_parser().parse_args()
+    auth_payload = json.loads(settings.auth_payload) if settings.auth_payload else None
+    provider = providers_factory.get_provider(settings.provider)
+    api_module = provider.api_module
+    with api_module.Api(**api_settings) as provider_api:
+        credentials = api_module.Credentials.init(auth_payload)
+        provider_api.authenticate(credentials)
+        balances = provider_api.get_balances()
+        assets = provider_api.get_assets()
+        print(json.dumps({
+            "balances": balances,
+            "assets": assets
+        }, indent=2))
 
 
 if __name__ == "__main__":
