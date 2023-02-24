@@ -1,3 +1,4 @@
+PyVirtualDisplay==3.0
 alembic
 black
 celery
@@ -23,6 +24,7 @@ pandas
 pika
 pika-stubs
 plaid-python==7.5.0
+playwright
 price-parser
 psycopg2
 pycoingecko
@@ -34,8 +36,7 @@ pytz
 quickforex
 requests
 schedule
-selenium
-sqlalchemy
+sqlalchemy==1.4.46
 sqlalchemy-stubs
 stackprinter
 terminaltables
@@ -44,4 +45,3 @@ types-Flask
 types-filelock
 types-pytz
 types-requests
-undetected-chromedriver==3.0.3

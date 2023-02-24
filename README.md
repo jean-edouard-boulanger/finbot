@@ -8,9 +8,8 @@ Open-source personal wealth & financial data aggregation and reporting platform.
 Currently supports the following data providers:
 
 - Any provider available [via Plaid](https://plaid.com/uk/) (open banking)
-- Vanguard (via Selenium)
-- Credit agricole (via Selenium)
-- Aegon Targetplan (via Seleniun)
+- Credit agricole (via Playwright)
+- Aegon Targetplan (via Playwright)
 - Kraken, Binance, Bittrex (via respective APIs)
 - Manually managed via Google sheet
 
@@ -68,8 +67,8 @@ Similarly, you can stop all `finbot` endpoints with:
   database schema_)
 - `providers/`: Implement the `finbot.providers.Base`. Each module gives access to
    a specific financial data provider:
-   - Most implement `providers.SeleniumBased`, which use headless `Chrome` / 
-   `selenium` to interact and scrape financial data off of external providers
+   - Most implement `providers.PlaywrightBased`, which use headless `Chrome` / 
+   `playwright` to interact and scrape financial data off of external providers
    websites.
    - Others use proper APIs to access information (Google sheets API, Kraken for
    instance)

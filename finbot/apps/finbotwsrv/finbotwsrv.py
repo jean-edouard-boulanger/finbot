@@ -14,7 +14,6 @@ from flask import Flask
 from flask_pydantic import validate
 
 from typing import Any
-from contextlib import closing
 import logging
 
 
@@ -76,7 +75,7 @@ def get_financial_data_impl(
     credentials: Any,
     line_items: list[LineItemLiteral],
 ):
-    with closing(provider_descriptor.api_module.Api()) as provider_api:
+    with provider_descriptor.api_module.Api() as provider_api:
         with tracer.sub_step("authenticate") as step:
             step.metadata["user_id"] = credentials.user_id
             logging.info(f"authenticating {credentials.user_id}")

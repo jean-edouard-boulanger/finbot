@@ -1,5 +1,4 @@
-from finbot.providers.selenium_based import SeleniumBased
-from finbot.providers import retired
+from finbot import providers
 
 from typing import Any
 
@@ -18,7 +17,6 @@ class Credentials(object):
         return Credentials(data["username"], data["password"])
 
 
-@retired
-class Api(SeleniumBased):
-    def __init__(self) -> None:
-        super().__init__()
+@providers.retired
+class Api(providers.Base):
+    pass

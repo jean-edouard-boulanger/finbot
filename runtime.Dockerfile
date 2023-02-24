@@ -11,12 +11,17 @@ RUN apt-get update && \
         libpq-dev \
         postgresql-client \
         python3-pip \
-        python3.9 \
-        python3.9-dev
+        python3.11 \
+        python3.11-dev \
+        xvfb
 
 WORKDIR /finbot
 
 COPY requirements.txt .
 
-RUN python3.9 -m pip install --upgrade pip && \
-    python3.9 -m pip install -r requirements.txt
+RUN python3.11 -m pip install --upgrade pip && \
+    python3.11 -m pip install -r requirements.txt
+
+RUN playwright install-deps
+
+RUN playwright install chromium

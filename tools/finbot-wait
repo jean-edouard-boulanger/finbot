@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.9
+#!/usr/bin/env python3.11
 from finbot.clients.worker import WorkerClient
 from finbot.core.logging import configure_logging
 from finbot.core import environment

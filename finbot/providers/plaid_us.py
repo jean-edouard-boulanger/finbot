@@ -70,8 +70,8 @@ class Credentials(object):
 
 
 class Api(providers.Base):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
         self._accounts: Optional[dict[Any, Any]] = None
 
     @property

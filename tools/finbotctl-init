@@ -18,18 +18,9 @@ runtime_image="finbot/runtime:latest"
 if ! docker_image_exists ${runtime_image}
 then
   log_info "finbot runtime image (${runtime_image}) does not exist, building"
-  make docker-build-runtime
+  make docker-build
 else
   log_info "finbot runtime image (${runtime_image}) already exists, skipping build"
-fi
-
-runtime_selenium_image="finbot/runtime-selenium:latest"
-if ! docker_image_exists ${runtime_selenium_image}
-then
-  log_info "finbot selenium runtime image (${runtime_selenium_image}) does not exist, building"
-  make docker-build-runtime-selenium
-else
-  log_info "finbot selenium runtime image (${runtime_selenium_image}) already exists, skipping build"
 fi
 
 log_info "creating secret environment script"

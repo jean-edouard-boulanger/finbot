@@ -54,6 +54,16 @@ class Base(object):
     def __init__(self, **kwargs: Any):
         pass
 
+    def __enter__(self) -> "Base":
+        self.initialize()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:  # type: ignore
+        pass
+
+    def initialize(self) -> None:
+        pass
+
     def authenticate(self, credentials: Any) -> None:
         """Authenticate user with provided credentials. Should persist any
         information needed to perform further operations (get balances,
@@ -74,10 +84,6 @@ class Base(object):
     def get_liabilities(self) -> Liabilities:
         """ """
         return {"accounts": []}
-
-    def close(self) -> None:
-        """Implement to release any used resource at the end of the session"""
-        pass
 
 
 T = TypeVar("T")

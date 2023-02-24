@@ -65,7 +65,6 @@ def iter_user_accounts():
 
 
 def run_one_shot(requests: Iterable[ValuationRequest]):
-    user_account: UserAccount
     for request in requests:
         try:
             worker_client = WorkerClient()
