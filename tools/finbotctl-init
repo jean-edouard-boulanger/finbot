@@ -14,13 +14,13 @@ log_info checking docker-compose availability
 which docker-compose >/dev/null 2>&1 || die "'docker-compose' is not available on this machine, install and try again"
 log_info docker-compose is available
 
-runtime_image="finbot/runtime:latest"
-if ! docker_image_exists ${runtime_image}
+docker_image="finbot/finbot:latest"
+if ! docker_image_exists ${docker_image}
 then
-  log_info "finbot runtime image (${runtime_image}) does not exist, building"
+  log_info "finbot runtime image (${docker_image}) does not exist, building"
   make docker-build
 else
-  log_info "finbot runtime image (${runtime_image}) already exists, skipping build"
+  log_info "finbot runtime image (${docker_image}) already exists, skipping build"
 fi
 
 log_info "creating secret environment script"

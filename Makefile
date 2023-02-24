@@ -53,7 +53,7 @@ run-appwsrv-dev:
 		--port 5003
 
 docker-build:
-	docker build -t finbot/runtime:latest -f runtime.Dockerfile --no-cache .
+	docker build -t finbot/finbot:latest -f Dockerfile --no-cache .
 
 trigger-valuation-docker:
 	tools/check-env.sh accounts;
