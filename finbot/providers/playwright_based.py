@@ -109,10 +109,10 @@ class ConditionGuard(object):
             for index, cond in enumerate(self._conditions):
                 if val := cond.predicate():  # type: ignore
                     cond.when_fulfilled and cond.when_fulfilled(val)
-                    return val
+                    return index, val
         return -1, None
 
-    def wait(self):
+    def wait(self) -> Any:
         assert len(self._conditions) == 1
         return self.wait_all()[0]
 
