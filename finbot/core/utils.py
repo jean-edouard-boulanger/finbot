@@ -80,3 +80,7 @@ def format_stack(thing: Optional[Exception] = None, **kwargs: Any) -> str:
     sp_settings = _get_stack_printer_settings()
     output: str = stackprinter.format(thing, **{**sp_settings.as_kwargs(), **kwargs})
     return output
+
+
+def raise_(ex: Exception) -> None:
+    raise ex
