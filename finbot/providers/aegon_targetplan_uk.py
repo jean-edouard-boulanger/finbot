@@ -50,7 +50,7 @@ class MainDashboardPage(object):
     def get_accounts(self) -> list[providers.BalanceEntry]:
         account_locators = ConditionGuard(
             Condition(lambda: self.page.locator(".card-product-1").all())
-        ).wait_any()
+        ).wait()
         return [self._extract_account(locator) for locator in account_locators]
 
 
