@@ -33,6 +33,7 @@ import {
   FaExclamationCircle,
   FaCheckCircle,
   FaQuestionCircle,
+  FaGhost,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 
@@ -57,8 +58,7 @@ export const UnlinkAccountDialog: React.FC<UnlinkAccountDialogProps> = ({
       </Modal.Header>
       <Modal.Body>
         <p>
-          Are you sure you want to unlink account{" "}
-          <strong>{`"${accountName}"`}</strong>?
+          Are you sure you want to unlink (delete) account {`"${accountName}"`}?
         </p>
       </Modal.Body>
       <Modal.Footer>
@@ -66,7 +66,7 @@ export const UnlinkAccountDialog: React.FC<UnlinkAccountDialogProps> = ({
           Cancel
         </Button>
         <Button onClick={handleUnlink} variant="danger" size={"sm"}>
-          Unlink
+          Confirm
         </Button>
       </Modal.Footer>
     </Modal>
@@ -95,7 +95,10 @@ const UpdateLinkedAccountPanel = withRouter(() => {
 
 const getLinkedAccountStatus = (
   linkedAccount: LinkedAccount
-): "stable" | "unstable" | null => {
+): "stable" | "unstable" | "frozen" | null => {
+  if (linkedAccount.frozen) {
+    return "frozen";
+  }
   return (linkedAccount.status ?? { status: null }).status;
 };
 
@@ -109,8 +112,15 @@ const getLinkedAccountLastError = (
   return errors[errors.length - 1].error;
 };
 
+const activeAccountsFirst = (
+  account1: LinkedAccount,
+  account2: LinkedAccount
+): number => {
+  return Number(account1.frozen) - Number(account2.frozen);
+};
+
 interface LinkedAccountStatusIconProps {
-  status: "stable" | "unstable" | null;
+  status: "stable" | "unstable" | "frozen" | null;
 }
 
 const LinkedAccountStatusIcon: React.FC<LinkedAccountStatusIconProps> = ({
@@ -128,6 +138,7 @@ const LinkedAccountStatusIcon: React.FC<LinkedAccountStatusIconProps> = ({
           <FaExclamationCircle />
         </span>
       )}
+      {status === "frozen" && <FaGhost />}
       {status === null && <FaQuestionCircle />}
     </>
   );
@@ -233,6 +244,21 @@ const LinkedAccountStatusPanel = withRouter(() => {
           </Col>
         </Row>
       )}
+      {status === "frozen" && (
+        <Row className={"mb-4"}>
+          <Col>
+            <Alert variant={"info"}>
+              <Alert.Heading>This account is frozen</Alert.Heading>
+              <hr />
+              <p>
+                Frozen accounts can no longer be updated and are no longer
+                valuated. Their historical valuation is still used in the
+                calculation of the performance of your portfolio.
+              </p>
+            </Alert>
+          </Col>
+        </Row>
+      )}
       <Row className={"mb-4"}>
         <Col>
           <h5>Previous snapshots</h5>
@@ -304,7 +330,7 @@ export const AccountsPanel: React.FC<AccountsPanelProps> = () => {
           </tr>
         </thead>
         <tbody>
-          {accounts.map((linkedAccount) => {
+          {accounts.sort(activeAccountsFirst).map((linkedAccount) => {
             const status = getLinkedAccountStatus(linkedAccount);
             return (
               <tr key={`account-${linkedAccount.id}`}>
@@ -319,6 +345,7 @@ export const AccountsPanel: React.FC<AccountsPanelProps> = () => {
                 <td>
                   <SplitButton
                     id={`action-${linkedAccount.id}`}
+                    disabled={linkedAccount.frozen}
                     variant={"dark"}
                     title={"Edit"}
                     size={"sm"}
@@ -343,6 +370,7 @@ export const AccountsPanel: React.FC<AccountsPanelProps> = () => {
                     >
                       Unlink
                     </DropdownItem>
+                    <Dropdown.Divider />
                     <Dropdown.Divider />
                     <DropdownItem
                       onClick={() => {

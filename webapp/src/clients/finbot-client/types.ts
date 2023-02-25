@@ -276,6 +276,7 @@ export interface LinkedAccount {
   account_name: string;
   description: string;
   deleted: boolean;
+  frozen: boolean;
   status: LinkedAccountStatus | null;
   credentials?: LinkedAccountCredentials | null;
   provider?: Provider;
@@ -303,7 +304,8 @@ export interface GetLinkedAccountResponse {
 
 export interface UpdateLinkedAccountMetadata extends LinkedAccountResource {
   linked_account_id: number;
-  account_name: string;
+  account_name?: string;
+  frozen?: boolean;
 }
 
 export interface UpdateLinkedAccountCredentials extends LinkedAccountResource {
