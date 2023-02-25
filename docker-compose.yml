@@ -27,7 +27,7 @@ services:
       RABBITMQ_DEFAULT_PASS: finbot
 
   finbotwsrv:
-    image: "finbot/runtime:latest"
+    image: "finbot/finbot:latest"
     container_name: finbotwsrv
     working_dir: /finbot
     command: bash -c "source docker.env.sh && make run-finbotwsrv-dev"
@@ -41,7 +41,7 @@ services:
       FINBOT_WAIT_DEPS: "db"
 
   snapwsrv:
-    image: "finbot/runtime:latest"
+    image: "finbot/finbot:latest"
     container_name: snapwsrv
     depends_on:
       - finbotdb
@@ -58,7 +58,7 @@ services:
       FINBOT_WAIT_DEPS: "db,finbot"
 
   histwsrv:
-    image: "finbot/runtime:latest"
+    image: "finbot/finbot:latest"
     container_name: histwsrv
     depends_on:
       - finbotdb
@@ -74,7 +74,7 @@ services:
       FINBOT_WAIT_DEPS: "db"
 
   schedsrv:
-    image: "finbot/runtime:latest"
+    image: "finbot/finbot:latest"
     container_name: schedsrv
     depends_on:
       - finbotdb
@@ -89,7 +89,7 @@ services:
       FINBOT_WAIT_DEPS: "db,worker"
 
   workersrv:
-    image: "finbot/runtime:latest"
+    image: "finbot/finbot:latest"
     container_name: workersrv
     depends_on:
       - finbotdb
@@ -106,7 +106,7 @@ services:
       FINBOT_WAIT_DEPS: "db,rmq,snap,hist"
 
   appwsrv:
-    image: "finbot/runtime:latest"
+    image: "finbot/finbot:latest"
     container_name: appwsrv
     depends_on:
       - finbotdb
@@ -139,7 +139,7 @@ services:
       FINBOT_ENV: ${FINBOT_ENV}
 
   operator:
-    image: "finbot/runtime:latest"
+    image: "finbot/finbot:latest"
     container_name: operator
     depends_on:
       - finbotdb

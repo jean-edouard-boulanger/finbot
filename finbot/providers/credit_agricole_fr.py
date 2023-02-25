@@ -1,4 +1,6 @@
-from finbot.providers.playwright_based import PlaywrightBased
+from finbot.providers.playwright_based import PlaywrightBased, Condition, ConditionGuard
+from finbot.providers.errors import AuthenticationFailure
+from finbot.core.utils import raise_
 from finbot import providers
 
 from typing import Any, Iterator, cast
@@ -51,23 +53,41 @@ class Api(PlaywrightBased):
     def authenticate(self, credentials: Credentials) -> None:
         page = self.page
         page.goto(BASE_URL.format(region=credentials.region))
-        page.locator("#Login-account").wait_for()
+        ConditionGuard(
+            Condition(lambda: page.locator("#loginForm").is_visible()),
+            Condition(
+                lambda: self.get_element_or_none("div.AemBug-content"),
+                when_fulfilled=lambda element: raise_(
+                    AuthenticationFailure(element.inner_text().strip())
+                ),
+            ),
+        ).wait_any()
 
         # 1. Enter account number
 
         page.fill("#Login-account", credentials.account_number)
         page.click("xpath=//button[@login-submit-btn]")
+        ConditionGuard(Condition(lambda: self.get_element_or_none("#clavier_num")))
 
         # 2. Type password and validate
 
         login_keys_by_num = {}
         for key in page.locator(".Login-key").all():
-            self.wait(lambda: key.inner_text().strip().isdigit())
+            ConditionGuard(Condition(lambda: key.inner_text().strip().isdigit())).wait()
             login_keys_by_num[key.inner_text().strip()] = key
         for digit in credentials.password:
             login_keys_by_num[digit].click()
         page.click("#validation")
-        page.locator(".Synthesis-user")
+
+        ConditionGuard(
+            Condition(lambda: self.get_element_or_none(".Synthesis-user")),
+            Condition(
+                lambda: self.get_element_or_none("#erreur-keypad"),
+                when_fulfilled=lambda el: raise_(
+                    AuthenticationFailure(el.inner_text().strip())
+                ),
+            ),
+        ).wait_any()
 
         # 2. Get account data
 

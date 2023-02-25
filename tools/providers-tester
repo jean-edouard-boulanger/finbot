@@ -5,7 +5,6 @@ import sys
 from argparse import ArgumentParser
 
 from finbot.providers import factory as providers_factory
-from finbot.providers.playwright_based import BrowserSettings
 
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
@@ -31,14 +30,11 @@ def create_parser() -> ArgumentParser:
 
 
 def main():
-    api_settings = dict(
-        playwright_settings=BrowserSettings(enable_virtual_display=False)
-    )
     settings = create_parser().parse_args()
     auth_payload = json.loads(settings.auth_payload) if settings.auth_payload else None
     provider = providers_factory.get_provider(settings.provider)
     api_module = provider.api_module
-    with api_module.Api(**api_settings) as provider_api:
+    with api_module.Api() as provider_api:
         credentials = api_module.Credentials.init(auth_payload)
         provider_api.authenticate(credentials)
         balances = provider_api.get_balances()
