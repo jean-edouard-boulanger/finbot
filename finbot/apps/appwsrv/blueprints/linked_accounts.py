@@ -36,6 +36,7 @@ def get_linked_accounts(user_account_id: int):
                 "id": entry.id,
                 "account_name": entry.account_name,
                 "deleted": entry.deleted,
+                "frozen": entry.frozen,
                 "provider": entry.provider,
                 "provider_id": entry.provider_id,
                 "created_at": entry.created_at,
@@ -180,6 +181,7 @@ def get_linked_account(user_account_id: int, linked_account_id: int):
             "account_name": linked_account.account_name,
             "credentials": credentials,
             "deleted": linked_account.deleted,
+            "frozen": linked_account.frozen,
             "status": linked_account_status,
             "created_at": linked_account.created_at,
             "updated_at": linked_account.updated_at,
@@ -193,7 +195,10 @@ def get_linked_account(user_account_id: int, linked_account_id: int):
     schema={
         "type": "object",
         "additionalProperties": False,
-        "properties": {"account_name": {"type": "string"}},
+        "properties": {
+            "account_name": {"type": ["string", "null"]},
+            "frozen": {"type": ["boolean", "null"]},
+        },
     }
 )
 def update_linked_account_metadata(
@@ -203,13 +208,21 @@ def update_linked_account_metadata(
     linked_account = repository.get_linked_account(
         db_session, user_account_id, linked_account_id
     )
+    if linked_account.frozen:
+        raise InvalidUserInput(
+            f"Linked account '{linked_account.account_name}' is frozen and cannot be updated."
+        )
     with db_session.persist(linked_account):
-        account_name: str = request_data["account_name"]
-        if repository.linked_account_exists(db_session, user_account_id, account_name):
-            raise InvalidUserInput(
-                f"A linked account with name '{account_name}' already exists"
-            )
-        linked_account.account_name = account_name
+        if account_name := request_data.get("account_name"):
+            if repository.linked_account_exists(
+                db_session, user_account_id, account_name
+            ):
+                raise InvalidUserInput(
+                    f"A linked account with name '{account_name}' already exists"
+                )
+            linked_account.account_name = account_name
+        if request_data.get("frozen", False):
+            linked_account.frozen = True
     return {}
 
 
@@ -238,6 +251,11 @@ def update_linked_account_credentials(
     linked_account = repository.get_linked_account(
         db_session, user_account_id, linked_account_id
     )
+
+    if linked_account.frozen:
+        raise InvalidUserInput(
+            f"Linked account '{linked_account.account_name}' is frozen and cannot be updated."
+        )
 
     plaid_settings = repository.get_user_account_plaid_settings(
         db_session, user_account_id

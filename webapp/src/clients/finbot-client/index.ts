@@ -366,11 +366,13 @@ export class FinbotClient {
     account_id,
     linked_account_id,
     account_name,
+    frozen,
   }: UpdateLinkedAccountMetadata): Promise<void> {
     const response = await axios.put(
       `${this.endpoint}/accounts/${account_id}/linked_accounts/${linked_account_id}/metadata`,
       {
         account_name,
+        frozen,
       }
     );
     return handleResponse(response);
