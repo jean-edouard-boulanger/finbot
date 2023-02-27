@@ -98,7 +98,7 @@ class SchedulerThread(threading.Thread):
         self._scheduler.every().day.at("13:00").do(self._dispatch_valuation)
         self._scheduler.every().day.at("18:00").do(self._dispatch_valuation)
 
-    def _dispatch_valuation(self):
+    def _dispatch_valuation(self) -> None:
         logging.info("[scheduler thread] dispatching valuation for all accounts")
         user_account: UserAccount
         for user_account in iter_user_accounts():

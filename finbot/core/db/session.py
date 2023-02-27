@@ -58,7 +58,7 @@ class Session(object):
         return self._impl.execute(*args, **kwargs)
 
     def remove(self) -> None:
-        self._impl.remove()
+        self._impl.remove()  # type: ignore
 
     @contextmanager
     def begin(self, nested: bool = False) -> Iterator["Session"]:

@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from finbot.apps.appwsrv.db import db_session
 from finbot.apps.appwsrv.blueprints import API_V1
 from finbot.apps.appwsrv.serialization import serialize_user_account
@@ -33,14 +35,13 @@ def auth_login(request_context: RequestContext):
     if account.clear_password != data["password"]:
         raise InvalidUserInput(not_found_message)
 
-    # TODO: expires_delta should be set to a reasonable time interval
     return {
         "auth": {
             "access_token": create_access_token(
-                identity=account.id, expires_delta=None
+                identity=account.id, expires_delta=timedelta(days=1)
             ),
             "refresh_token": create_refresh_token(
-                identity=account.id, expires_delta=None
+                identity=account.id, expires_delta=timedelta(days=1)
             ),
         },
         "account": serialize_user_account(account),

@@ -5,6 +5,7 @@ from finbot.core.crypto_market import CoinGeckoWrapper
 from pycoingecko import CoinGeckoAPI
 from binance.client import Client as Binance
 from binance.exceptions import BinanceAPIException
+from pydantic import BaseModel, SecretStr
 
 from typing import Any, Optional, Iterator, Tuple
 
@@ -13,26 +14,26 @@ OWNERSHIP_UNITS_THRESHOLD = 0.00001
 RECV_WINDOW = 60 * 1000
 
 
-class Credentials(object):
-    def __init__(self, api_key: str, secret_key: str):
-        self.api_key = api_key
-        self.secret_key = secret_key
-
-    @property
-    def user_id(self) -> str:
-        return "<private>"
-
-    @staticmethod
-    def init(data: dict[Any, Any]) -> "Credentials":
-        return Credentials(data["api_key"], data["secret_key"])
+class Credentials(BaseModel):
+    api_key: SecretStr
+    secret_key: SecretStr
 
 
 class Api(providers.Base):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, credentials: Credentials, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        self._credentials = credentials
         self._account_ccy = "USD"
         self._spot_api = CoinGeckoWrapper(CoinGeckoAPI())
         self._api: Optional[Binance] = None
+
+    @staticmethod
+    def description() -> str:
+        return "Binance (US)"
+
+    @staticmethod
+    def create(authentication_payload: dict[str, Any], **kwargs: Any) -> "Api":
+        return Api(Credentials.parse_obj(authentication_payload), **kwargs)
 
     def _get_account(self) -> dict[Any, Any]:
         assert self._api is not None
@@ -47,9 +48,12 @@ class Api(providers.Base):
             "type": "investment",
         }
 
-    def authenticate(self, credentials: Credentials) -> None:
+    def initialize(self) -> None:
         try:
-            self._api = Binance(credentials.api_key, credentials.secret_key)
+            self._api = Binance(
+                self._credentials.api_key.get_secret_value(),
+                self._credentials.secret_key.get_secret_value(),
+            )
             self._get_account()
         except BinanceAPIException as e:
             raise AuthenticationFailure(str(e))

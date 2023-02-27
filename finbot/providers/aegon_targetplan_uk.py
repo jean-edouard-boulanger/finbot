@@ -2,6 +2,7 @@ from typing import Any, cast
 
 from playwright.sync_api import Page, Locator
 from price_parser import Price  # type: ignore
+from pydantic import BaseModel, SecretStr
 
 from finbot.providers.playwright_based import PlaywrightBased, Condition, ConditionGuard
 from finbot.providers.errors import AuthenticationFailure
@@ -13,18 +14,9 @@ AUTH_URL = "https://lwp.aegon.co.uk/targetplanUI/login"
 BALANCES_URL = "https://lwp.aegon.co.uk/targetplanUI/investments"
 
 
-class Credentials(object):
-    def __init__(self, username: str, password: str) -> None:
-        self.username = username
-        self.password = password
-
-    @property
-    def user_id(self) -> str:
-        return self.username
-
-    @staticmethod
-    def init(data: dict[str, Any]) -> "Credentials":
-        return Credentials(data["username"], data["password"])
+class Credentials(BaseModel):
+    username: str
+    password: SecretStr
 
 
 class MainDashboardPage(object):
@@ -55,19 +47,24 @@ class MainDashboardPage(object):
 
 
 class Api(PlaywrightBased):
-    def __init__(self, **kwargs: Any) -> None:
+    def __init__(self, credentials: Credentials, **kwargs: Any) -> None:
         super().__init__(**kwargs)
+        self._credentials = credentials
         self._accounts: list[providers.BalanceEntry] | None = None
 
-    def initialize(self) -> None:
-        self.page.set_default_timeout(60_000)  # Aegon is incredibly slow
-        self.page.set_default_navigation_timeout(60_000)  # Aegon is incredibly slow
+    @staticmethod
+    def description() -> str:
+        return "Aegon Targetplan (UK)"
 
-    def authenticate(self, credentials: Credentials) -> None:
+    @staticmethod
+    def create(authentication_payload: dict[str, Any], **kwargs: Any) -> "Api":
+        return Api(Credentials.parse_obj(authentication_payload), **kwargs)
+
+    def initialize(self) -> None:
         page = self.page
         page.goto(AUTH_URL)
-        page.type("input#username", credentials.username)
-        page.type("input#password", credentials.password)
+        page.type("input#username", self._credentials.username)
+        page.type("input#password", self._credentials.password.get_secret_value())
         page.click("#submitButtonAjaxId")
         ConditionGuard(
             Condition(lambda: self.get_element_or_none("a#nav-primary-profile")),

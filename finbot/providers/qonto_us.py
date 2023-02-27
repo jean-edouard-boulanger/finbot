@@ -2,6 +2,8 @@ from finbot.core.qonto_api import QontoApi, SimpleAuthentication, Unauthorized
 from finbot.providers.errors import AuthenticationFailure
 from finbot import providers
 
+from pydantic import BaseModel, SecretStr
+
 from typing import Any, Optional
 from copy import deepcopy
 
@@ -9,34 +11,37 @@ from copy import deepcopy
 AUTH_URL = "https://app.qonto.com/signin"
 
 
-class Credentials(object):
-    def __init__(self, identifier: str, secret_key: str):
-        self.identifier = identifier
-        self.secret_key = secret_key
-
-    @property
-    def user_id(self) -> str:
-        return self.identifier
-
-    @staticmethod
-    def init(data: dict[str, Any]) -> "Credentials":
-        return Credentials(data["identifier"], data["secret_key"])
+class Credentials(BaseModel):
+    identifier: str
+    secret_key: SecretStr
 
 
 class Api(providers.Base):
-    def __init__(self, **kwargs: Any) -> None:
+    def __init__(self, credentials: Credentials, **kwargs: Any) -> None:
         super().__init__(**kwargs)
-        self.accounts: Optional[providers.Balances] = None
+        self._credentials = credentials
+        self._accounts: Optional[providers.Balances] = None
 
-    def authenticate(self, credentials: Credentials) -> None:
+    @staticmethod
+    def description() -> str:
+        return "Qonto (US)"
+
+    @staticmethod
+    def create(authentication_payload: dict[str, Any], **kwargs: Any) -> "Api":
+        return Api(Credentials.parse_obj(authentication_payload), **kwargs)
+
+    def initialize(self) -> None:
         api = QontoApi(
-            SimpleAuthentication(credentials.identifier, credentials.secret_key)
+            SimpleAuthentication(
+                identifier=self._credentials.identifier,
+                secret_key=self._credentials.secret_key.get_secret_value(),
+            )
         )
         try:
             organization = api.list_organizations()[0]
         except Unauthorized as e:
             raise AuthenticationFailure(str(e))
-        self.accounts = {
+        self._accounts = {
             "accounts": [
                 {
                     "account": {
@@ -52,11 +57,11 @@ class Api(providers.Base):
         }
 
     def get_balances(self) -> providers.Balances:
-        assert self.accounts
-        return self.accounts
+        assert self._accounts
+        return self._accounts
 
     def get_assets(self) -> providers.Assets:
-        assert self.accounts is not None
+        assert self._accounts is not None
         return {
             "accounts": [
                 {
@@ -65,6 +70,6 @@ class Api(providers.Base):
                         {"name": "Cash", "type": "currency", "value": entry["balance"]}
                     ],
                 }
-                for entry in self.accounts["accounts"]
+                for entry in self._accounts["accounts"]
             ]
         }

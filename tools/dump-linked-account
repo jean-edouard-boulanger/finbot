@@ -41,7 +41,7 @@ def main():
         "frozen": linked_account.frozen,
         "created_at": linked_account.created_at.isoformat(),
         "updated_at": linked_account.updated_at.isoformat()
-    }))
+    }, indent=2))
 
 
 if __name__ == "__main__":

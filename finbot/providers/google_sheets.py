@@ -1,6 +1,7 @@
 from finbot.core.errors import FinbotError
 from finbot import providers
 
+from pydantic import BaseModel
 from oauth2client.service_account import ServiceAccountCredentials
 import gspread
 
@@ -13,25 +14,38 @@ class Error(FinbotError):
         super().__init__(error_message)
 
 
-class Credentials(object):
-    def __init__(self, google_api_credentials: dict[str, Any], sheet_key: str) -> None:
-        self.google_api_credentials = google_api_credentials
-        self.sheet_key = sheet_key
+class GoogleApiCredentials(TypedDict):
+    type: str
+    project_id: str
+    private_key_id: str
+    private_key: str
+    client_email: str
+    client_id: str
+    auth_uri: str
+    token_uri: str
+    auth_provider_x509_cert_url: str
+    client_x509_cert_url: str
 
-    @property
-    def user_id(self) -> str:
-        return str(self.google_api_credentials["client_email"])
 
-    @staticmethod
-    def init(data: dict[str, Any]) -> "Credentials":
-        return Credentials(data["google_api_credentials"], data["sheet_key"])
+class Credentials(BaseModel):
+    sheet_key: str
+    google_api_credentials: GoogleApiCredentials
 
 
 class Api(providers.Base):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, credentials: Credentials, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        self._credentials = credentials
         self._api: Optional[gspread.Client] = None
         self._sheet: Optional[gspread.Spreadsheet] = None
+
+    @staticmethod
+    def description() -> str:
+        return "Google sheets"
+
+    @staticmethod
+    def create(authentication_payload: dict[str, Any], **kwargs: Any) -> "Api":
+        return Api(Credentials.parse_obj(authentication_payload), **kwargs)
 
     def _iter_accounts(self) -> Iterator[dict[Any, Any]]:
         assert self._sheet is not None
@@ -55,14 +69,14 @@ class Api(providers.Base):
                 ],
             }
 
-    def authenticate(self, credentials: Credentials) -> None:
+    def initialize(self) -> None:
         scope = ["https://www.googleapis.com/auth/spreadsheets"]
         self._api = gspread.authorize(
             ServiceAccountCredentials.from_json_keyfile_dict(
-                credentials.google_api_credentials, scope
+                self._credentials.google_api_credentials, scope
             )
         )
-        self._sheet = self._api.open_by_key(credentials.sheet_key)
+        self._sheet = self._api.open_by_key(self._credentials.sheet_key)
 
     def get_balances(self) -> providers.Balances:
         return {

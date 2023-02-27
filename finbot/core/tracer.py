@@ -175,7 +175,7 @@ class ExcludeFileLogFilter(logging.Filter):
         return record.filename != self.file_name
 
 
-class LogHandler(logging.StreamHandler):
+class LogHandler(logging.StreamHandler):  # type: ignore
     def __init__(self, step_accessor: Callable[[], Step]):
         super().__init__()
         self._step_accessor = step_accessor

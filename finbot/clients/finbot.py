@@ -18,7 +18,7 @@ class FinbotClient(ClientBase):
     def get_financial_data(
         self,
         provider: str,
-        credentials_data: dict[Any, Any],
+        credentials_data: dict[str, Any],
         line_items: list[LineItem],
         account_metadata: Optional[str] = None,
         tracer_context: Optional[tracer.FlatContext] = None,

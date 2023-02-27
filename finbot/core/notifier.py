@@ -73,3 +73,7 @@ class CompositeNotifier(Notifier):
     ) -> None:
         for notifier in self.notifiers:
             notifier.notify_valuation(valuation, change_1day, currency)
+
+    def notify_twilio_settings_updated(self) -> None:
+        for notifier in self.notifiers:
+            notifier.notify_twilio_settings_updated()
