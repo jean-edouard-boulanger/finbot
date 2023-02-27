@@ -2,7 +2,6 @@ from finbot import providers
 from finbot.core.errors import FinbotError
 from finbot.providers.errors import AuthenticationFailure
 from finbot.core import fx_market
-from finbot.core import tracer
 
 from pydantic import BaseModel, SecretStr
 import krakenex
@@ -124,12 +123,9 @@ class KrakenPriceFetcher(object):
         if source_crypto_asset == target_ccy:
             return 1.0
         pair_str = f"{source_crypto_asset}/{target_ccy}"
-        with tracer.sub_step(f"Query {pair_str} rate from Kraken") as step:
-            pair = f"{source_crypto_asset}{target_ccy}"
-            args = "Ticker", {"pair": pair}
-            step.set_input(args)
-            results = self.api.query_public(*args)
-            step.set_output(results)
+        pair = f"{source_crypto_asset}{target_ccy}"
+        args = "Ticker", {"pair": pair}
+        results = self.api.query_public(*args)
         if results["error"]:
             raise KrakenPriceFetcher.Error(
                 f"{pair_str} " + _format_error(results["error"])

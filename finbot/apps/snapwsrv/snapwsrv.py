@@ -6,12 +6,11 @@ from finbot.apps.snapwsrv.schema import (
 )
 from finbot.clients.finbot import FinbotClient, LineItem
 from finbot.providers.plaid_us import pack_credentials as pack_plaid_credentials
-from finbot.core import secure, utils, fx_market, tracer, environment
+from finbot.core import secure, utils, fx_market, environment
 from finbot.core.utils import unwrap_optional, format_stack
 from finbot.core.db.session import Session
 from finbot.core.logging import configure_logging
 from finbot.core.web_service import service_endpoint, ApplicationErrorData
-from finbot.core.serialization import pretty_dump
 from finbot.model import (
     UserAccount,
     UserAccountSnapshot,
@@ -44,9 +43,6 @@ configure_logging(FINBOT_ENV.desired_log_level)
 
 db_engine = create_engine(FINBOT_ENV.database_url)
 db_session = Session(scoped_session(sessionmaker(bind=db_engine)))
-tracer.configure(
-    identity="snapwsrv", persistence_layer=tracer.DBPersistenceLayer(db_session)
-)
 
 app = Flask(__name__)
 
@@ -210,7 +206,6 @@ class AccountSnapshotRequest:
     credentials_data: dict[Any, Any]
     line_items: list[LineItem]
     account_metadata: Optional[str] = None
-    tracer_context: Optional[tracer.FlatContext] = None
 
 
 def dispatch_snapshot_entry(snap_request: AccountSnapshotRequest):
@@ -226,7 +221,6 @@ def dispatch_snapshot_entry(snap_request: AccountSnapshotRequest):
             credentials_data=snap_request.credentials_data,
             line_items=snap_request.line_items,
             account_metadata=snap_request.account_metadata,
-            tracer_context=snap_request.tracer_context,
         )
 
         logging.info(
@@ -271,7 +265,6 @@ def take_raw_snapshot(user_account: UserAccount, linked_accounts: Optional[list[
                 credentials_data=get_credentials_data(linked_account, user_account),
                 line_items=[LineItem.Balances, LineItem.Assets, LineItem.Liabilities],
                 account_metadata=f"{linked_account.account_name} (id: {linked_account.id})",
-                tracer_context=tracer.propagate(),
             )
             for linked_account in user_account.linked_accounts
             if not linked_account.deleted
@@ -310,10 +303,6 @@ def take_snapshot_impl(
         f" linked_accounts={linked_accounts}"
     )
 
-    tracer.current().set_input(
-        {"user_account_id": user_account_id, "linked_accounts": linked_accounts}
-    )
-
     user_account = (
         db_session.query(UserAccount)
         .options(joinedload(UserAccount.linked_accounts))
@@ -336,25 +325,15 @@ def take_snapshot_impl(
         new_snapshot.requested_ccy = requested_ccy
         new_snapshot.user_account_id = user_account_id
         new_snapshot.start_time = utils.now_utc()
-        new_snapshot.trace_guid = tracer.context_identifier()
 
-    tracer.milestone("blank snapshot created", output={"id": new_snapshot.id})
+    raw_snapshot = take_raw_snapshot(
+        user_account=user_account, linked_accounts=linked_accounts
+    )
+    xccy_collector = XccyCollector(requested_ccy)
+    visit_snapshot_tree(raw_snapshot, xccy_collector)
+    xccy_rates = fx_market.get_rates(xccy_collector.xccys)
 
-    with tracer.sub_step("raw snapshot") as step:
-        raw_snapshot = take_raw_snapshot(
-            user_account=user_account, linked_accounts=linked_accounts
-        )
-        logging.debug(pretty_dump(raw_snapshot))
-        step.set_output(raw_snapshot)
-
-    with tracer.sub_step("fetch currency pairs") as step:
-        xccy_collector = XccyCollector(requested_ccy)
-        visit_snapshot_tree(raw_snapshot, xccy_collector)
-        step.set_input(xccy_collector.xccys)
-        xccy_rates = fx_market.get_rates(xccy_collector.xccys)
-        step.set_output(xccy_rates)
-
-    logging.info("adding cross currency rates to snapshot")
+    logging.debug("adding cross currency rates to snapshot")
 
     with db_session.persist(new_snapshot):
         new_snapshot.xccy_rates_entries.extend(
@@ -366,7 +345,7 @@ def take_snapshot_impl(
             ]
         )
 
-    logging.info("building final snapshot")
+    logging.debug("building final snapshot")
 
     snapshot_builder = SnapshotBuilderVisitor(
         new_snapshot, CachedXccyRatesGetter(xccy_rates), new_snapshot.requested_ccy

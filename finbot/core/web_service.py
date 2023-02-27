@@ -5,7 +5,6 @@ from finbot.core.utils import (
 )
 from finbot.core.errors import FinbotError, ApplicationError
 from finbot.core.serialization import serialize, pretty_dump
-from finbot.core import tracer
 
 import jsonschema
 
@@ -54,24 +53,12 @@ def time_elapsed(
 
 
 def make_error(
-    user_message: str, debug_message: Optional[str] = None, trace: Optional[str] = None
+    user_message: str, debug_message: Optional[str] = None
 ) -> dict[str, Optional[str]]:
     return {
         "user_message": user_message,
         "debug_message": debug_message,
-        "trace": trace,
     }
-
-
-def _get_tracer_context(request_payload: Optional[Any]) -> Optional[tracer.FlatContext]:
-    if request_payload is None:
-        return None
-    if not isinstance(request_payload, dict):
-        return None
-    data = request_payload.get(tracer.CONTEXT_TAG)
-    if data is None:
-        return None
-    return tracer.FlatContext(**data)
 
 
 class RequestValidationError(FinbotError):
@@ -86,7 +73,6 @@ class ApplicationErrorData:
     error_code: Optional[str] = None
     exception_type: Optional[str] = None
     trace: Optional[str] = None
-    distributed_trace_key: Optional[tracer.Step.Key] = None
 
     def serialize(self) -> dict[str, Any]:
         return {
@@ -95,7 +81,6 @@ class ApplicationErrorData:
             "error_code": self.error_code,
             "exception_type": self.exception_type,
             "trace": self.trace,
-            "distributed_trace_key": self.distributed_trace_key,
         }
 
     @staticmethod
@@ -107,7 +92,6 @@ class ApplicationErrorData:
                 error_code=e.error_code,
                 exception_type=fully_qualified_type_name(e),
                 trace=format_stack(e),
-                distributed_trace_key=e.tracer_step_key,
             )
         generic_user_message = (
             "Internal error while processing request "
@@ -120,7 +104,6 @@ class ApplicationErrorData:
                 error_code="X001",
                 exception_type=fully_qualified_type_name(e),
                 trace=format_stack(e),
-                distributed_trace_key=e.tracer_step_key,
             )
         return ApplicationErrorData(
             user_message=generic_user_message,
@@ -128,7 +111,6 @@ class ApplicationErrorData:
             error_code="X002",
             exception_type=fully_qualified_type_name(e),
             trace=format_stack(e),
-            distributed_trace_key=tracer.current_key(),
         )
 
 
@@ -310,11 +292,9 @@ def service_endpoint(
                             kwargs["request_context"] = _init_request_context(
                                 payload, parsed_parameters
                             )
-                        flat_context = _get_tracer_context(payload)
-                        with tracer.adopt(flat_context, func.__name__):
-                            response = func(*args, **kwargs)
-                            logging.info("request processed successfully")
-                            return prepare_response(response)
+                        response = func(*args, **kwargs)
+                        logging.info("request processed successfully")
+                        return prepare_response(response)
                     except Exception as e:
                         logging.warning(
                             "error while processing request:"

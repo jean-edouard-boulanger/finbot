@@ -1,5 +1,5 @@
 from finbot.clients import WorkerClient, ValuationRequest
-from finbot.core import tracer, environment
+from finbot.core import environment
 from finbot.core.errors import FinbotError
 from finbot.core.logging import configure_logging
 from finbot.core.db.session import Session
@@ -26,9 +26,6 @@ configure_logging(FINBOT_ENV.desired_log_level)
 
 db_engine = create_engine(FINBOT_ENV.database_url)
 db_session = Session(scoped_session(sessionmaker(bind=db_engine)))
-tracer.configure(
-    identity="schedsrv", persistence_layer=tracer.DBPersistenceLayer(db_session)
-)
 
 
 def parse_valuation_requests(raw_accounts_str: str):

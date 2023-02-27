@@ -4,7 +4,7 @@ from finbot.core.serialization import pretty_dump
 from finbot.core.logging import configure_logging
 from finbot.core.db.session import Session
 from finbot.core.utils import unwrap_optional
-from finbot.core import tracer, environment
+from finbot.core import environment
 from finbot.model import (
     UserAccountSnapshot,
     UserAccountHistoryEntry,
@@ -29,9 +29,6 @@ configure_logging(FINBOT_ENV.desired_log_level)
 
 db_engine = create_engine(FINBOT_ENV.database_url)
 db_session = Session(scoped_session(sessionmaker(bind=db_engine)))
-tracer.configure(
-    identity="hitwsrv", persistence_layer=tracer.DBPersistenceLayer(db_session)
-)
 
 app = Flask(__name__)
 
@@ -97,7 +94,6 @@ def healthy():
 @app.route("/history/<snapshot_id>/write", methods=["POST"])
 @service_endpoint()
 def write_history(snapshot_id: int):
-    tracer.current().set_input({"snapshot_id": snapshot_id})
     repo = repository.ReportRepository(db_session)
 
     logging.info("fetching snapshot_id={} metadata".format(snapshot_id))
@@ -109,12 +105,7 @@ def write_history(snapshot_id: int):
 
     logging.info(f"snapshot is effective_at={valuation_date}")
     logging.info("fetching consistent snapshot")
-
-    with tracer.sub_step("get consistent snapshot") as step:
-        snapshot_data = repo.get_consistent_snapshot_data(snapshot_id)
-        step.set_output(snapshot_data.to_csv())
-
-    logging.debug(snapshot_data.to_csv())
+    snapshot_data = repo.get_consistent_snapshot_data(snapshot_id)
 
     logging.info(f"consistent snapshot has entries={len(snapshot_data)}")
     logging.info("creating new history entry (marked not available)")
@@ -126,22 +117,11 @@ def write_history(snapshot_id: int):
         history_entry.valuation_ccy = snapshot.requested_ccy
         history_entry.user_account_id = snapshot.user_account_id
         history_entry.available = False
-        history_entry.trace_guid = tracer.context_identifier()
-
-    tracer.milestone("blank history entry created", output={"id": history_entry.id})
 
     logging.info("handling basic valuation")
 
     user_account_valuation = get_user_account_valuation(snapshot_data)
-    tracer.milestone(
-        "user account valuation", output={"valuation": user_account_valuation}
-    )
-
     user_account_total_liabilities = get_user_account_liabilities(snapshot_data)
-    tracer.milestone(
-        "user account liabilities",
-        output={"liabilities": user_account_total_liabilities},
-    )
 
     with db_session.persist(history_entry):
         history_entry.user_account_valuation_history_entry = (
@@ -152,9 +132,6 @@ def write_history(snapshot_id: int):
         )
 
     linked_accounts_valuation = get_linked_accounts_valuation(snapshot_data)
-    tracer.milestone(
-        "linked accounts valuation", output={"valuation": linked_accounts_valuation}
-    )
     logging.debug(pretty_dump(linked_accounts_valuation))
 
     with db_session.persist(history_entry):
@@ -173,9 +150,6 @@ def write_history(snapshot_id: int):
         )
 
     sub_accounts_valuation = get_sub_accounts_valuation(snapshot_data)
-    tracer.milestone(
-        "sub accounts valuation", output={"valuation": sub_accounts_valuation}
-    )
     logging.debug(pretty_dump(sub_accounts_valuation))
 
     with db_session.persist(history_entry):

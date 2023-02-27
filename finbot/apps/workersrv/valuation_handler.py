@@ -2,7 +2,6 @@ from finbot.apps.workersrv.schema import ValuationRequest, ValuationResponse
 from finbot.model import repository
 from finbot.core.serialization import pretty_dump
 from finbot.core.db.session import Session
-from finbot.core import tracer
 from finbot.core.notifier import (
     Notifier,
     CompositeNotifier,
@@ -47,14 +46,11 @@ class ValuationHandler(object):
         user_account = repository.get_user_account(self.db_session, user_account_id)
         notifier = _configure_notifier(user_account)
 
-        with tracer.sub_step("snapshot") as step:
-            logger.info("taking snapshot")
-            snapshot_metadata = self.snap_client.take_snapshot(
-                account_id=user_account_id,
-                linked_accounts=request.linked_accounts,
-                tracer_context=tracer.propagate(),
-            )
-            step.set_output(snapshot_metadata)
+        logger.info("taking snapshot")
+        snapshot_metadata = self.snap_client.take_snapshot(
+            account_id=user_account_id,
+            linked_accounts=request.linked_accounts,
+        )
 
         logger.debug(snapshot_metadata)
         snapshot_id = snapshot_metadata.get("snapshot", {}).get("identifier")
@@ -67,13 +63,8 @@ class ValuationHandler(object):
         logger.info(f"raw snapshot created with id={snapshot_id}")
         logger.debug(snapshot_metadata)
 
-        with tracer.sub_step("history report") as step:
-            logger.info("taking history report")
-            step.metadata["snapshot_id"] = snapshot_id
-            history_metadata = self.hist_client.write_history(
-                snapshot_id, tracer_context=tracer.propagate()
-            )
-            step.set_output(history_metadata)
+        logger.info("taking history report")
+        history_metadata = self.hist_client.write_history(snapshot_id)
 
         history_entry_id = history_metadata.get("report", {}).get("history_entry_id")
         if history_entry_id is None:
@@ -89,11 +80,10 @@ class ValuationHandler(object):
         logger.info(f"valuation workflow done for user_id={user_account_id}")
 
         report = history_metadata["report"]
-        with tracer.sub_step("notifications"):
-            notifier.notify_valuation(
-                valuation=report["user_account_valuation"],
-                change_1day=report["valuation_change"]["change_1day"],
-                currency=report["valuation_currency"],
-            )
+        notifier.notify_valuation(
+            valuation=report["user_account_valuation"],
+            change_1day=report["valuation_change"]["change_1day"],
+            currency=report["valuation_currency"],
+        )
 
         return ValuationResponse.parse_obj(report)

@@ -13,8 +13,6 @@ import {
   GetAccountSettingsRequest,
   GetAccountValuationRequest,
   GetAccountValuationResponse,
-  GetTracesRequest,
-  GetTracesResponse,
   GetLinkedAccountRequest,
   GetLinkedAccountsRequest,
   GetLinkedAccountsValuationRequest,
@@ -44,7 +42,6 @@ import {
   UserAccountProfile,
   UserAccountValuation,
   ValidateLinkedAccountCredentialsRequest,
-  TracesTree,
   RegisterAccountResponse,
   GetAccountSettingsResponse,
   UserAccountSettings,
@@ -104,12 +101,6 @@ export class FinbotClient {
 
   constructor() {
     this.endpoint = getEndpoint();
-  }
-
-  async getTraces({ guid }: GetTracesRequest): Promise<TracesTree> {
-    const endpoint = `${this.endpoint}/admin/traces/${guid}?format=tree`;
-    const response = await axios.get(endpoint);
-    return handleResponse<GetTracesResponse>(response).tree;
   }
 
   async registerAccount({

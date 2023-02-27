@@ -140,6 +140,8 @@ services:
 
   operator:
     image: "finbot/finbot:latest"
+    profiles:
+      - operator
     container_name: operator
     depends_on:
       - finbotdb
