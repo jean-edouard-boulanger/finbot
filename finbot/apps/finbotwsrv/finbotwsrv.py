@@ -4,7 +4,7 @@ from finbot.core import tracer, environment
 from finbot.core.logging import configure_logging
 from finbot.core.utils import format_stack, configure_stack_printer
 from finbot.core.web_service import service_endpoint, ApplicationErrorData
-from finbot.providers.factory import get_provider, ProviderDescriptor
+from finbot.providers.factory import get_provider
 from finbot.apps.finbotwsrv.schema import FinancialDataRequest, LineItemLiteral
 
 from sqlalchemy import create_engine
@@ -71,15 +71,13 @@ def item_handler(item_type: LineItemLiteral, provider_api: providers.Base):
 
 
 def get_financial_data_impl(
-    provider_descriptor: ProviderDescriptor,
-    credentials: Any,
+    provider_type: type[providers.Base],
+    authentication_payload: dict[str, Any],
     line_items: list[LineItemLiteral],
 ):
-    with provider_descriptor.api_module.Api() as provider_api:
-        with tracer.sub_step("authenticate") as step:
-            step.metadata["user_id"] = credentials.user_id
-            logging.info(f"authenticating {credentials.user_id}")
-            provider_api.authenticate(credentials)
+    with provider_type.create(authentication_payload) as provider_api:
+        with tracer.sub_step("initialize"):
+            provider_api.initialize()
         return {
             "financial_data": [
                 item_handler(line_item, provider_api) for line_item in set(line_items)
@@ -98,9 +96,8 @@ def healthy():
 @validate()
 def get_financial_data(body: FinancialDataRequest):
     provider = get_provider(body.provider)
-    credentials = provider.api_module.Credentials.init(body.credentials)
     tracer.current().set_description(body.provider)
     tracer.current().metadata["provider_id"] = body.provider
     tracer.current().metadata["line_items"] = ", ".join(body.items)
     tracer.current().metadata["account"] = body.account_metadata
-    return get_financial_data_impl(provider, credentials, body.items)
+    return get_financial_data_impl(provider, body.credentials, body.items)

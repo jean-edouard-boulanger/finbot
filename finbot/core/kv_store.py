@@ -7,7 +7,7 @@ from sqlalchemy.exc import NoResultFound  # type: ignore
 from typing import Protocol, Any, Type, Union, Optional, TypeVar
 
 
-class KVEntity(object):
+class KVEntity(Protocol):
     key: str
 
     def serialize(self) -> Any:

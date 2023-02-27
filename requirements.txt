@@ -12,7 +12,7 @@ gspread
 gunicorn
 jsonschema
 krakenex
-mypy==0.910
+mypy==1.0.1
 oauth2client
 pandas
 pika

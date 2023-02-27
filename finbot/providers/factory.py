@@ -1,55 +1,37 @@
-from typing import Any
+from typing import TypeAlias
+
+from finbot.providers import Base, Retired
 from finbot.providers import (
     plaid_us,
     binance_us,
     credit_agricole_fr,
-    vanguard_uk,
-    october_fr,
     aegon_targetplan_uk,
-    lending_works_uk,
     kraken_us,
-    bittrex_us,
     qonto_us,
     google_sheets,
     dummy_uk,
 )
 
-
-class ProviderDescriptor(object):
-    def __init__(self, description: str, api_module: Any) -> None:
-        self.description = description
-        self.api_module = api_module
+ProviderId: TypeAlias = str
 
 
-PROVIDERS = {
-    "plaid_us": ProviderDescriptor(description="Plaid (US)", api_module=plaid_us),
-    "binance_us": ProviderDescriptor(description="Binance (US)", api_module=binance_us),
-    "ca_fr": ProviderDescriptor(
-        description="Credit agricole (FR)", api_module=credit_agricole_fr
-    ),
-    "vanguard_uk": ProviderDescriptor(
-        description="Vanguard (UK)", api_module=vanguard_uk
-    ),
-    "october_fr": ProviderDescriptor(description="October (FR)", api_module=october_fr),
-    "aegon_targetplan_uk": ProviderDescriptor(
-        description="Aegon Target Plan (UK)", api_module=aegon_targetplan_uk
-    ),
-    "lending_works_uk": ProviderDescriptor(
-        description="Lending Works (UK)", api_module=lending_works_uk
-    ),
-    "kraken_us": ProviderDescriptor(description="Kraken (US)", api_module=kraken_us),
-    "bittrex_us": ProviderDescriptor(description="Bittrex (US)", api_module=bittrex_us),
-    "google_sheets": ProviderDescriptor(
-        description="Google Sheets", api_module=google_sheets
-    ),
-    "dummy_uk": ProviderDescriptor(
-        description="Dummy (fake) provider", api_module=dummy_uk
-    ),
-    "qonto_us": ProviderDescriptor(description="Qonto (US)", api_module=qonto_us),
+PROVIDERS: dict[ProviderId, type[Base]] = {
+    "aegon_targetplan_uk": aegon_targetplan_uk.Api,
+    "binance_us": binance_us.Api,
+    "bittrex_us": Retired,
+    "ca_fr": credit_agricole_fr.Api,
+    "dummy_uk": dummy_uk.Api,
+    "google_sheets": google_sheets.Api,
+    "kraken_us": kraken_us.Api,
+    "lending_works_uk": Retired,
+    "october_fr": Retired,
+    "plaid_us": plaid_us.Api,
+    "qonto_us": qonto_us.Api,
+    "vanguard_uk": Retired,
 }
 
 
-def get_provider(provider_id: str) -> ProviderDescriptor:
+def get_provider(provider_id: str) -> type[Base]:
     provider = PROVIDERS.get(provider_id)
     if provider is None:
         raise KeyError(f"unknown provider: {provider_id}")

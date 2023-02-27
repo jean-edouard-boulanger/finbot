@@ -1,4 +1,4 @@
-from typing import Optional, Any, Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel
 
@@ -8,6 +8,6 @@ LineItemLiteral = Literal["balances", "assets", "liabilities"]
 
 class FinancialDataRequest(BaseModel):
     provider: str
-    credentials: Any
+    credentials: dict[str, Any]
     items: list[LineItemLiteral]
-    account_metadata: Optional[str] = None
+    account_metadata: str | None = None

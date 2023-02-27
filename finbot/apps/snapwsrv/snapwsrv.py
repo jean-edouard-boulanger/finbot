@@ -248,16 +248,17 @@ def dispatch_snapshot_entry(snap_request: AccountSnapshotRequest):
 
 def get_credentials_data(linked_account: LinkedAccount, user_account: UserAccount):
     assert linked_account.encrypted_credentials is not None
-    credentials = json.loads(
+    linked_account_credentials = json.loads(
         secure.fernet_decrypt(
             linked_account.encrypted_credentials.encode(),
             FINBOT_ENV.secret_key.encode(),
         ).decode()
     )
     if linked_account.provider_id == "plaid_us":
-        logging.info(credentials)
-        return pack_plaid_credentials(credentials, user_account.plaid_settings)
-    return credentials
+        return pack_plaid_credentials(
+            linked_account_credentials, user_account.plaid_settings
+        )
+    return linked_account_credentials
 
 
 def take_raw_snapshot(user_account: UserAccount, linked_accounts: Optional[list[int]]):

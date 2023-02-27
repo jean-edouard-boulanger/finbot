@@ -1,4 +1,5 @@
 import time
+from abc import ABC
 from typing import Any, Callable, Generator
 from contextlib import ExitStack
 from dataclasses import dataclass
@@ -91,7 +92,7 @@ class ConditionGuard(object):
     def wait_all(self) -> tuple[Any, ...]:
         when_fulfilled_callbacks = [cond.when_fulfilled for cond in self._conditions]
         for _ in self._timed_loop():
-            all_vals = tuple(cond.predicate() for cond in self._conditions)  # type: ignore
+            all_vals = tuple(cond.predicate() for cond in self._conditions)
             all_true = True
             for index, val in enumerate(all_vals):
                 if bool(val):
@@ -107,7 +108,7 @@ class ConditionGuard(object):
     def wait_any(self) -> tuple[int, Any]:
         for _ in self._timed_loop():
             for index, cond in enumerate(self._conditions):
-                if val := cond.predicate():  # type: ignore
+                if val := cond.predicate():
                     cond.when_fulfilled and cond.when_fulfilled(val)
                     return index, val
         return -1, None
@@ -117,7 +118,7 @@ class ConditionGuard(object):
         return self.wait_all()[0]
 
 
-class PlaywrightBased(providers.Base):
+class PlaywrightBased(providers.Base, ABC):
     def __init__(self, **kwargs: Any):
         super().__init__(**kwargs)
         self._launcher: BrowserLauncher | None = None
@@ -130,7 +131,6 @@ class PlaywrightBased(providers.Base):
             self._launcher = stack.enter_context(BrowserLauncher(playwright))
             self._page = self.browser.new_page()
             self._stack = stack.pop_all()
-        self.initialize()
         return self
 
     @property

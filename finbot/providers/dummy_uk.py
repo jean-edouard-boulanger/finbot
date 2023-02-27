@@ -1,17 +1,13 @@
 from finbot import providers
 
+from pydantic import BaseModel
+
 from copy import deepcopy
 from typing import Any
 
 
-class Credentials(object):
-    @property
-    def user_id(self) -> str:
-        return "dummy"
-
-    @staticmethod
-    def init(_: Any) -> "Credentials":
-        return Credentials()
+class Credentials(BaseModel):
+    pass
 
 
 DUMMY_BALANCE: float = 1000.0
@@ -24,10 +20,18 @@ DUMMY_ACCOUNT: providers.Account = {
 
 
 class Api(providers.Base):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
 
-    def authenticate(self, _: Any) -> None:
+    @staticmethod
+    def description() -> str:
+        return "Dummy provider (UK)"
+
+    @staticmethod
+    def create(authentication_payload: dict[str, Any], **kwargs: Any) -> "Api":
+        return Api(**kwargs)
+
+    def initialize(self) -> None:
         pass
 
     def get_balances(self) -> providers.Balances:

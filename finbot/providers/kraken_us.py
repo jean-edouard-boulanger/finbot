@@ -4,6 +4,7 @@ from finbot.providers.errors import AuthenticationFailure
 from finbot.core import fx_market
 from finbot.core import tracer
 
+from pydantic import BaseModel, SecretStr
 import krakenex
 
 from typing import Optional, Iterator, Tuple, Any
@@ -12,18 +13,9 @@ from typing import Optional, Iterator, Tuple, Any
 OWNERSHIP_UNITS_THRESHOLD = 0.00001
 
 
-class Credentials(object):
-    def __init__(self, api_key: str, private_key: str) -> None:
-        self.api_key = api_key
-        self.private_key = private_key
-
-    @property
-    def user_id(self) -> str:
-        return "<private>"
-
-    @staticmethod
-    def init(data: dict[Any, Any]) -> "Credentials":
-        return Credentials(data["api_key"], data["private_key"])
+class Credentials(BaseModel):
+    api_key: SecretStr
+    private_key: SecretStr
 
 
 def _format_error(errors: list[str]) -> str:
@@ -47,10 +39,19 @@ def _demangle_symbol(symbol: str) -> str:
 
 
 class Api(providers.Base):
-    def __init__(self, **kwargs: Any) -> None:
+    def __init__(self, credentials: Credentials, **kwargs: Any) -> None:
         super().__init__(**kwargs)
+        self._credentials = credentials
         self._api: Optional[krakenex.API] = None
         self._account_ccy = "EUR"
+
+    @staticmethod
+    def description() -> str:
+        return "Kraken (UK)"
+
+    @staticmethod
+    def create(authentication_payload: dict[str, Any], **kwargs: Any) -> "Api":
+        return Api(Credentials.parse_obj(authentication_payload), **kwargs)
 
     def _account_description(self) -> providers.Account:
         return {
@@ -78,8 +79,11 @@ class Api(providers.Base):
                     )
                 yield symbol, units, units * rate
 
-    def authenticate(self, credentials: Credentials) -> None:
-        self._api = krakenex.API(credentials.api_key, credentials.private_key)
+    def initialize(self) -> None:
+        self._api = krakenex.API(
+            key=self._credentials.api_key.get_secret_value(),
+            secret=self._credentials.private_key.get_secret_value(),
+        )
         results = self._api.query_private("Balance")
         if results["error"]:
             raise AuthenticationFailure(_format_error(results["error"]))

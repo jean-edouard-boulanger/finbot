@@ -6,6 +6,7 @@ from typing import Any
 from pathlib import Path
 from argparse import ArgumentParser
 
+from finbot.core.serialization import pretty_dump
 from finbot.providers import factory as providers_factory
 
 
@@ -50,16 +51,13 @@ def get_authentication_payload(settings) -> dict[str, Any] | None:
 def main():
     settings = create_parser().parse_args()
     auth_payload = get_authentication_payload(settings)
-    provider = providers_factory.get_provider(settings.provider)
-    api_module = provider.api_module
-    with api_module.Api() as provider_api:
-        credentials = api_module.Credentials.init(auth_payload)
-        provider_api.authenticate(credentials)
-        balances = provider_api.get_balances()
-        assets = provider_api.get_assets()
-        print(json.dumps({
-            "balances": balances,
-            "assets": assets
+    provider_type = providers_factory.get_provider(settings.provider)
+    with provider_type.create(auth_payload) as provider_api:
+        provider_api.initialize()
+        print(pretty_dump({
+            "balances": provider_api.get_balances(),
+            "assets": provider_api.get_assets(),
+            "liabilities": provider_api.get_liabilities()
         }, indent=2))
 
 
