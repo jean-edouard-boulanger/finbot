@@ -1,13 +1,24 @@
 import json
-from typing import Any, Iterator, cast
+from typing import Any, Generator, cast
 
 from playwright.sync_api import Locator
 from pydantic import BaseModel, SecretStr
 
-from finbot import providers
 from finbot.core.utils import raise_
 from finbot.providers.errors import AuthenticationFailure
-from finbot.providers.playwright_based import Condition, ConditionGuard, PlaywrightBased
+from finbot.providers.playwright_base import (
+    Condition,
+    ConditionGuard,
+    PlaywrightProviderBase,
+)
+from finbot.providers.schema import (
+    Account,
+    Asset,
+    Assets,
+    AssetsEntry,
+    BalanceEntry,
+    Balances,
+)
 
 BASE_URL = (
     "https://www.credit-agricole.fr/{region}/particulier/acceder-a-mes-comptes.html"
@@ -20,7 +31,7 @@ class Credentials(BaseModel):
     password: SecretStr
 
 
-class Api(PlaywrightBased):
+class Api(PlaywrightProviderBase):
     def __init__(self, credentials: Credentials, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self._credentials = credentials
@@ -34,17 +45,17 @@ class Api(PlaywrightBased):
     def create(authentication_payload: dict[str, Any], **kwargs: Any) -> "Api":
         return Api(Credentials.parse_obj(authentication_payload), **kwargs)
 
-    def _iter_accounts(self) -> Iterator[providers.BalanceEntry]:
-        def handle_account(data: dict[str, Any]) -> providers.BalanceEntry:
-            return {
-                "account": {
-                    "id": data["numeroCompte"].strip(),
-                    "name": data["libelleUsuelProduit"].strip(),
-                    "iso_currency": data["idDevise"].strip(),
-                    "type": "cash",
-                },
-                "balance": data["solde"],
-            }
+    def _iter_accounts(self) -> Generator[BalanceEntry, None, None]:
+        def handle_account(data: dict[str, Any]) -> BalanceEntry:
+            return BalanceEntry(
+                account=Account(
+                    id=data["numeroCompte"].strip(),
+                    name=data["libelleUsuelProduit"].strip(),
+                    iso_currency=data["idDevise"].strip(),
+                    type="cash",
+                ),
+                balance=data["solde"],
+            )
 
         assert self._account_data is not None
         yield handle_account(self._account_data["comptePrincipal"])
@@ -105,23 +116,21 @@ class Api(PlaywrightBased):
         ]
         self._account_data = json.loads("[" + account_data_str + "]")[0]
 
-    def get_balances(self) -> providers.Balances:
-        return {
-            "accounts": [
-                {"account": entry["account"], "balance": entry["balance"]}
+    def get_balances(self) -> Balances:
+        return Balances(
+            accounts=[
+                BalanceEntry(account=entry.account, balance=entry.balance)
                 for entry in self._iter_accounts()
             ]
-        }
+        )
 
-    def get_assets(self) -> providers.Assets:
-        return {
-            "accounts": [
-                {
-                    "account": entry["account"],
-                    "assets": [
-                        {"name": "Cash", "type": "currency", "value": entry["balance"]}
-                    ],
-                }
+    def get_assets(self) -> Assets:
+        return Assets(
+            accounts=[
+                AssetsEntry(
+                    account=entry.account,
+                    assets=[Asset(name="Cash", type="currency", value=entry.balance)],
+                )
                 for entry in self._iter_accounts()
             ]
-        }
+        )

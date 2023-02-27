@@ -208,6 +208,7 @@ mypy:
 	mypy --strict -p finbot.clients;
 	mypy --strict -p finbot.model;
 	mypy --strict -p finbot.providers;
+	mypy --strict -p finbot.apps.finbotwsrv;
 
 unit-tests-py:
 	python3.11 -m pytest -vv tests/unit

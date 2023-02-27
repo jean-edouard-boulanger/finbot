@@ -3,7 +3,7 @@ from abc import ABC
 from contextlib import ExitStack
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Callable, Generator
+from typing import Any, Callable, Generator, Self
 
 from playwright.sync_api import (
     Browser,
@@ -14,7 +14,7 @@ from playwright.sync_api import (
     sync_playwright,
 )
 
-from finbot import providers
+from finbot.providers.base import ProviderBase
 
 
 def _get_default_chrome_options(window_size: tuple[int, int]) -> list[str]:
@@ -118,14 +118,14 @@ class ConditionGuard(object):
         return self.wait_all()[0]
 
 
-class PlaywrightBased(providers.Base, ABC):
+class PlaywrightProviderBase(ProviderBase, ABC):
     def __init__(self, **kwargs: Any):
         super().__init__(**kwargs)
         self._launcher: BrowserLauncher | None = None
         self._stack: ExitStack | None = None
         self._page: Page | None = None
 
-    def __enter__(self) -> "PlaywrightBased":
+    def __enter__(self) -> Self:
         with ExitStack() as stack:
             playwright: Playwright = stack.enter_context(sync_playwright())
             self._launcher = stack.enter_context(BrowserLauncher(playwright))

@@ -6,13 +6,23 @@ from flask_pydantic import validate
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-from finbot import providers
-from finbot.apps.finbotwsrv.schema import FinancialDataRequest, LineItemLiteral
+from finbot.apps.finbotwsrv.schema import (
+    AssetsResults,
+    BalancesResults,
+    FinancialDataRequest,
+    FinancialDataResponse,
+    HealthResponse,
+    LiabilitiesResults,
+    LineItemError,
+    LineItemResults,
+    LineItemType,
+)
 from finbot.core import environment
 from finbot.core.db.session import Session
 from finbot.core.logging import configure_logging
 from finbot.core.utils import configure_stack_printer, format_stack
 from finbot.core.web_service import ApplicationErrorData, service_endpoint
+from finbot.providers import ProviderBase
 from finbot.providers.factory import get_provider
 
 FINBOT_ENV = environment.get()
@@ -25,28 +35,21 @@ db_session = Session(scoped_session(sessionmaker(bind=db_engine)))
 app = Flask(__name__)
 
 
-def balances_handler(provider_api: providers.Base) -> list[providers.BalanceEntry]:
-    return [
-        {"account": entry["account"], "balance": entry["balance"]}
-        for entry in provider_api.get_balances()["accounts"]
-    ]
+def balances_handler(provider_api: ProviderBase) -> LineItemResults:
+    return BalancesResults(results=provider_api.get_balances().accounts)
 
 
-def assets_handler(provider_api: providers.Base) -> list[providers.AssetEntry]:
-    return [
-        {"account": entry["account"], "assets": entry["assets"]}
-        for entry in provider_api.get_assets()["accounts"]
-    ]
+def assets_handler(provider_api: ProviderBase) -> LineItemResults:
+    return AssetsResults(results=provider_api.get_assets().accounts)
 
 
-def liabilities_handler(provider_api: providers.Base) -> list[providers.LiabilityEntry]:
-    return [
-        {"account": entry["account"], "liabilities": entry["liabilities"]}
-        for entry in provider_api.get_liabilities()["accounts"]
-    ]
+def liabilities_handler(provider_api: ProviderBase) -> LineItemResults:
+    return LiabilitiesResults(results=provider_api.get_liabilities().accounts)
 
 
-def item_handler(item_type: LineItemLiteral, provider_api: providers.Base):
+def item_handler(
+    item_type: LineItemType, provider_api: ProviderBase
+) -> LineItemResults:
     handler = {
         "balances": balances_handler,
         "assets": assets_handler,
@@ -55,37 +58,38 @@ def item_handler(item_type: LineItemLiteral, provider_api: providers.Base):
     try:
         if not handler:
             raise ValueError(f"unknown line item: '{item_type}'")
-        logging.info(f"handling '{item_type}' line item")
-        results = handler(provider_api)
-        return {"line_item": item_type, "results": results}
+        logging.debug(f"handling '{item_type}' line item")
+        return handler(provider_api)
     except Exception as e:
         logging.warning(f"error while handling '{item_type}': {e}\n{format_stack()}")
-        return {"line_item": item_type, "error": ApplicationErrorData.from_exception(e)}
+        return LineItemError(
+            line_item=item_type, error=ApplicationErrorData.from_exception(e)
+        )
 
 
 def get_financial_data_impl(
-    provider_type: type[providers.Base],
+    provider_type: type[ProviderBase],
     authentication_payload: dict[str, Any],
-    line_items: list[LineItemLiteral],
-):
+    line_items: list[LineItemType],
+) -> FinancialDataResponse:
     with provider_type.create(authentication_payload) as provider_api:
         provider_api.initialize()
-        return {
-            "financial_data": [
+        return FinancialDataResponse(
+            financial_data=[
                 item_handler(line_item, provider_api) for line_item in set(line_items)
             ]
-        }
+        )
 
 
 @app.route("/healthy", methods=["GET"])
 @service_endpoint()
-def healthy():
-    return {"healthy": True}
+def healthy() -> HealthResponse:
+    return HealthResponse(healthy=True)
 
 
 @app.route("/financial_data", methods=["POST"])
 @service_endpoint()
-@validate()
-def get_financial_data(body: FinancialDataRequest):
+@validate()  # type: ignore
+def get_financial_data(body: FinancialDataRequest) -> FinancialDataResponse:
     provider = get_provider(body.provider)
     return get_financial_data_impl(provider, body.credentials, body.items)
