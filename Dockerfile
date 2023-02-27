@@ -1,8 +1,7 @@
+# syntax=docker/dockerfile:1.3
 FROM ubuntu:latest
 
-ENV TZ=Europe/Paris
-
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get update && \
     apt-get install -y \
@@ -13,15 +12,14 @@ RUN apt-get update && \
         python3-pip \
         python3.11 \
         python3.11-dev \
-        xvfb
+        xvfb && \
+    python3.11 -m pip install --upgrade pip && \
+    python3.11 -m pip install --no-cache-dir playwright && \
+    playwright install chromium --with-deps && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /finbot
 
 COPY requirements.txt .
 
-RUN python3.11 -m pip install --upgrade pip && \
-    python3.11 -m pip install -r requirements.txt
-
-RUN playwright install-deps
-
-RUN playwright install chromium
+RUN python3.11 -m pip install --no-cache-dir -r requirements.txt

@@ -2,6 +2,8 @@
 import json
 import logging
 import sys
+from typing import Any
+from pathlib import Path
 from argparse import ArgumentParser
 
 from finbot.providers import factory as providers_factory
@@ -19,19 +21,35 @@ def create_parser() -> ArgumentParser:
         type=str,
         help="Provider"
     )
-    parser.add_argument(
+    auth_group = parser.add_mutually_exclusive_group()
+    auth_group.add_argument(
         "-a", "--auth-payload",
         type=str,
         required=False,
         default=None,
         help="Provider authentication payload (JSON)"
     )
+    auth_group.add_argument(
+        "-af", "--auth-payload-file",
+        type=Path,
+        required=False,
+        default=None,
+        help="Path to provider authentication payload file (JSON)"
+    )
     return parser
+
+
+def get_authentication_payload(settings) -> dict[str, Any] | None:
+    if settings.auth_payload:
+        return json.loads(settings.auth_payload)
+    if settings.auth_payload_file:
+        return json.loads(settings.auth_payload_file.read_text())
+    return None
 
 
 def main():
     settings = create_parser().parse_args()
-    auth_payload = json.loads(settings.auth_payload) if settings.auth_payload else None
+    auth_payload = get_authentication_payload(settings)
     provider = providers_factory.get_provider(settings.provider)
     api_module = provider.api_module
     with api_module.Api() as provider_api:

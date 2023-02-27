@@ -1,0 +1,48 @@
+#!/usr/bin/env python3.11
+import json
+from argparse import ArgumentParser
+from finbot.model import LinkedAccount
+from finbot.core.logging import configure_logging
+from finbot.core.db.session import Session
+from finbot.core.serialization import pretty_dump
+from finbot.core import environment, secure
+from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session, sessionmaker
+
+
+FINBOT_ENV = environment.get()
+configure_logging(FINBOT_ENV.desired_log_level)
+
+db_engine = create_engine(FINBOT_ENV.database_url)
+db_session = Session(scoped_session(sessionmaker(bind=db_engine)))
+
+def create_parser() -> ArgumentParser:
+    parser = ArgumentParser(description="Dump linked account metadata")
+    parser.add_argument("--id", type=int, required=True, help="Linked account id")
+    parser.add_argument("--decrypt", action='store_true', default=False, help="Decrypt linked account secrets")
+    return parser
+
+
+def main():
+    settings = create_parser().parse_args()
+    linked_account: LinkedAccount = db_session.query(LinkedAccount).filter_by(id=settings.id).one()
+    print(pretty_dump({
+        "id": linked_account.id,
+        "user_account_id": linked_account.user_account_id,
+        "provider_id": linked_account.provider_id,
+        "account_name": linked_account.account_name,
+        "credentials": (
+            "<encrypted blob>" if not settings.decrypt else json.loads(secure.fernet_decrypt(
+                linked_account.encrypted_credentials.encode(),
+                environment.get_secret_key().encode()
+            ).decode())
+        ),
+        "deleted": linked_account.deleted,
+        "frozen": linked_account.frozen,
+        "created_at": linked_account.created_at.isoformat(),
+        "updated_at": linked_account.updated_at.isoformat()
+    }))
+
+
+if __name__ == "__main__":
+    main()

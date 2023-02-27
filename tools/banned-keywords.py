@@ -2,16 +2,11 @@
 from typing import Optional, Pattern
 from pathlib import Path
 from dataclasses import dataclass
-from colorama import Fore, Style
 import argparse
-import colorama
 import fnmatch
 import re
 import sys
 import os
-
-
-colorama.init()
 
 
 JS_ALIKE = ["*.tsx", "*.ts", "*.js", "*.jsx"]
@@ -146,21 +141,18 @@ def display_error_message(error: Error):
             f"{error.error_message}"
         )
     else:
-        print(Style.BRIGHT)
         print(
             f"{relative_path}:" f"{error.line_number}:" f"{error.start_column}: ",
             end="",
         )
-        print(Fore.RED + "error: " + Fore.RESET + error.error_message + Style.RESET_ALL)
+        print("error: " + error.error_message)
         print(f"{error.line_number} | {error.line.rstrip()}")
         spacing = len(f"{error.line_number} | ") + error.start_column
         print(
-            Fore.GREEN
-            + (" " * spacing)
+            (" " * spacing)
             + "^"
             + ("~" * (error.end_column - error.start_column - 2))
             + "+"
-            + Style.RESET_ALL
         )
         print()
 

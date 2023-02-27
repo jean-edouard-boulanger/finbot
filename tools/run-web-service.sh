@@ -45,7 +45,7 @@ if [[ "${finbot_env}" == "development" ]]
 then
   echo "running ${app_name} with flask (environment: ${finbot_env})"
   export FLASK_APP=finbot/apps/${app_name}/${app_name}.py
-  export FLASK_ENV=development
+  export FLASK_DEBUG=1
   threads_args="--without-threads"
   if [[ "${workers}" -gt 1 ]]
   then
