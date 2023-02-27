@@ -1,29 +1,29 @@
 # mypy: allow-untyped-calls
-from finbot.core.db.session import Session
-from finbot.core.errors import InvalidUserInput, MissingUserData
-from finbot.model import (
-    LinkedAccount,
-    Provider,
-    UserAccount,
-    UserAccountSettings,
-    UserAccountSnapshot,
-    LinkedAccountSnapshotEntry,
-    UserAccountPlaidSettings,
-    UserAccountHistoryEntry,
-    UserAccountValuationHistoryEntry,
-    LinkedAccountValuationHistoryEntry,
-    SnapshotStatus,
-    SubAccountValuationHistoryEntry,
-    SubAccountItemValuationHistoryEntry,
-)
+import enum
+from dataclasses import dataclass
+from datetime import date, datetime
+from typing import Any, Optional, Protocol, Type, Union
 
 from sqlalchemy import desc
 from sqlalchemy.orm import joinedload
 
-from typing import Optional, Any, Union, Protocol, Type
-from dataclasses import dataclass
-from datetime import datetime, date
-import enum
+from finbot.core.db.session import Session
+from finbot.core.errors import InvalidUserInput, MissingUserData
+from finbot.model import (
+    LinkedAccount,
+    LinkedAccountSnapshotEntry,
+    LinkedAccountValuationHistoryEntry,
+    Provider,
+    SnapshotStatus,
+    SubAccountItemValuationHistoryEntry,
+    SubAccountValuationHistoryEntry,
+    UserAccount,
+    UserAccountHistoryEntry,
+    UserAccountPlaidSettings,
+    UserAccountSettings,
+    UserAccountSnapshot,
+    UserAccountValuationHistoryEntry,
+)
 
 
 def get_user_account(session: Session, user_account_id: int) -> UserAccount:

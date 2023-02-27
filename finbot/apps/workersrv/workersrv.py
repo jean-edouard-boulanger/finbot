@@ -1,17 +1,15 @@
-from finbot.apps.workersrv.schema import ValuationRequest
-from finbot.apps.workersrv.valuation_handler import ValuationHandler
-from finbot.clients import SnapClient, HistoryClient
-from finbot.core.logging import configure_logging
-from finbot.core.db.session import Session
-from finbot.core import environment
+from typing import Any
 
+from celery import Celery
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-from celery import Celery
-
-from typing import Any
-
+from finbot.apps.workersrv.schema import ValuationRequest
+from finbot.apps.workersrv.valuation_handler import ValuationHandler
+from finbot.clients import HistoryClient, SnapClient
+from finbot.core import environment
+from finbot.core.db.session import Session
+from finbot.core.logging import configure_logging
 
 FINBOT_ENV = environment.get()
 configure_logging(FINBOT_ENV.desired_log_level)

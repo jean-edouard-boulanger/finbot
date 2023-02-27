@@ -1,10 +1,11 @@
+import json
+from typing import Any, Optional
+
+import requests
+import requests.exceptions
+
 from finbot.core.errors import FinbotError
 from finbot.core.serialization import serialize
-
-from typing import Optional, Any
-import requests.exceptions
-import requests
-import json
 
 
 class ClientError(FinbotError):

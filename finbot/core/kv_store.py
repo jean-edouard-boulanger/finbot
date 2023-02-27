@@ -1,10 +1,10 @@
-from finbot.core.db.session import Session, Query
-from finbot.core.serialization import serialize
-from finbot.model import GenericKeyValueStore
+from typing import Any, Optional, Protocol, Type, TypeVar, Union
 
 from sqlalchemy.exc import NoResultFound  # type: ignore
 
-from typing import Protocol, Any, Type, Union, Optional, TypeVar
+from finbot.core.db.session import Query, Session
+from finbot.core.serialization import serialize
+from finbot.model import GenericKeyValueStore
 
 
 class KVEntity(Protocol):

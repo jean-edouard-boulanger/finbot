@@ -1,12 +1,11 @@
-from finbot.core.qonto_api import QontoApi, SimpleAuthentication, Unauthorized
-from finbot.providers.errors import AuthenticationFailure
-from finbot import providers
+from copy import deepcopy
+from typing import Any, Optional
 
 from pydantic import BaseModel, SecretStr
 
-from typing import Any, Optional
-from copy import deepcopy
-
+from finbot import providers
+from finbot.core.qonto_api import QontoApi, SimpleAuthentication, Unauthorized
+from finbot.providers.errors import AuthenticationFailure
 
 AUTH_URL = "https://app.qonto.com/signin"
 

@@ -1,14 +1,13 @@
-from finbot.model import Base
+from contextlib import contextmanager
+from typing import TYPE_CHECKING, Any, Generic, Iterator, Type, TypeVar, Union
 
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import scoped_session
 from sqlalchemy.orm.query import Query as SQLAlchemyQuery
 from sqlalchemy.orm.session import Session as SQLAlchemySession
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.types import TypeDecorator
 
-from typing import TypeVar, Type, Generic, Any, Union, Iterator, TYPE_CHECKING
-from contextlib import contextmanager
-
+from finbot.model import Base
 
 if TYPE_CHECKING:
     JSONEngine = TypeDecorator[Any]

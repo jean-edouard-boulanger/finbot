@@ -1,17 +1,16 @@
+import logging
+
 from finbot.apps.workersrv.schema import ValuationRequest, ValuationResponse
-from finbot.model import repository
-from finbot.core.serialization import pretty_dump
+from finbot.clients import HistoryClient, SnapClient
 from finbot.core.db.session import Session
 from finbot.core.notifier import (
-    Notifier,
     CompositeNotifier,
+    Notifier,
     TwilioNotifier,
     TwilioSettings,
 )
-from finbot.model import UserAccount
-from finbot.clients import SnapClient, HistoryClient
-
-import logging
+from finbot.core.serialization import pretty_dump
+from finbot.model import UserAccount, repository
 
 logger = logging.getLogger()
 

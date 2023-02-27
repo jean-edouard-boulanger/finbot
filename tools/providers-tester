@@ -2,13 +2,12 @@
 import json
 import logging
 import sys
-from typing import Any
-from pathlib import Path
 from argparse import ArgumentParser
+from pathlib import Path
+from typing import Any
 
 from finbot.core.serialization import pretty_dump
 from finbot.providers import factory as providers_factory
-
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 

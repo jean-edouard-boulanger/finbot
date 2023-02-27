@@ -1,6 +1,6 @@
-from typing import Iterator, TypeVar, Callable, Tuple, Optional
-from datetime import datetime, timedelta
 import enum
+from datetime import datetime, timedelta
+from typing import Callable, Iterator, Optional, Tuple, TypeVar
 
 
 class ScheduleFrequency(enum.Enum):

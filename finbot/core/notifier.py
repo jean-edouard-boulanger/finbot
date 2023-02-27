@@ -1,6 +1,6 @@
-from typing import Protocol
 from dataclasses import dataclass
 from textwrap import dedent
+from typing import Protocol
 
 from twilio.rest import Client as TwilioClient
 

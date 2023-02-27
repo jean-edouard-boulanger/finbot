@@ -1,21 +1,16 @@
 #!/usr/bin/env python3.11
-from finbot.core.logging import configure_logging
-from finbot.core.environment import get_database_url
-from finbot.model import (
-    Base,
-    Provider,
-    UserAccountHistoryEntry,
-)
-
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
-
-import logging
-import datetime
 import argparse
+import datetime
 import json
+import logging
 import sys
 
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+from finbot.core.environment import get_database_url
+from finbot.core.logging import configure_logging
+from finbot.model import Base, Provider, UserAccountHistoryEntry
 
 configure_logging()
 

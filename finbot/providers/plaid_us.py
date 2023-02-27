@@ -1,12 +1,13 @@
-from finbot import providers
-from finbot.model import UserAccountPlaidSettings
-from finbot.providers.errors import AuthenticationFailure
-from finbot.core.serialization import serialize
+from typing import Any, Optional
 
-from plaid import Client as PlaidClient, errors as plaid_errors
+from plaid import Client as PlaidClient
+from plaid import errors as plaid_errors
 from pydantic import BaseModel, SecretStr
 
-from typing import Optional, Any
+from finbot import providers
+from finbot.core.serialization import serialize
+from finbot.model import UserAccountPlaidSettings
+from finbot.providers.errors import AuthenticationFailure
 
 
 def pack_credentials(

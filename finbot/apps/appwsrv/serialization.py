@@ -1,13 +1,13 @@
+from datetime import datetime
+from typing import Any
+
 from finbot.core import timeseries
 from finbot.model import (
-    repository,
-    UserAccountSettings,
-    UserAccountHistoryEntry,
     UserAccount,
+    UserAccountHistoryEntry,
+    UserAccountSettings,
+    repository,
 )
-
-from typing import Any
-from datetime import datetime
 
 
 def serialize_user_account(account: UserAccount) -> dict[str, Any]:

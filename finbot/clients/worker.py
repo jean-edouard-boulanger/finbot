@@ -1,13 +1,11 @@
-from finbot.apps.workersrv.schema import ValuationRequest, ValuationResponse
-from finbot.apps.workersrv import workersrv
-
-from pydantic import BaseModel
+from datetime import timedelta
+from typing import Generic, Optional, Type, TypeVar, Union
 
 from celery.result import AsyncResult
+from pydantic import BaseModel
 
-from typing import TypeVar, Generic, Type, Optional, Union
-from datetime import timedelta
-
+from finbot.apps.workersrv import workersrv
+from finbot.apps.workersrv.schema import ValuationRequest, ValuationResponse
 
 ResponseType = TypeVar("ResponseType", bound=BaseModel)
 

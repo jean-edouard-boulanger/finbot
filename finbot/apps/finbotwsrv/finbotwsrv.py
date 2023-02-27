@@ -1,21 +1,19 @@
-from finbot import providers
-from finbot.core.db.session import Session
-from finbot.core import environment
-from finbot.core.logging import configure_logging
-from finbot.core.utils import format_stack, configure_stack_printer
-from finbot.core.web_service import service_endpoint, ApplicationErrorData
-from finbot.providers.factory import get_provider
-from finbot.apps.finbotwsrv.schema import FinancialDataRequest, LineItemLiteral
-
-from sqlalchemy import create_engine
-from sqlalchemy.orm import scoped_session, sessionmaker
+import logging
+from typing import Any
 
 from flask import Flask
 from flask_pydantic import validate
+from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session, sessionmaker
 
-from typing import Any
-import logging
-
+from finbot import providers
+from finbot.apps.finbotwsrv.schema import FinancialDataRequest, LineItemLiteral
+from finbot.core import environment
+from finbot.core.db.session import Session
+from finbot.core.logging import configure_logging
+from finbot.core.utils import configure_stack_printer, format_stack
+from finbot.core.web_service import ApplicationErrorData, service_endpoint
+from finbot.providers.factory import get_provider
 
 FINBOT_ENV = environment.get()
 configure_logging(FINBOT_ENV.desired_log_level)

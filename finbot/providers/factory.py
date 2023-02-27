@@ -1,15 +1,16 @@
 from typing import TypeAlias
 
-from finbot.providers import Base, Retired
 from finbot.providers import (
-    plaid_us,
+    Base,
+    Retired,
+    aegon_targetplan_uk,
     binance_us,
     credit_agricole_fr,
-    aegon_targetplan_uk,
-    kraken_us,
-    qonto_us,
-    google_sheets,
     dummy_uk,
+    google_sheets,
+    kraken_us,
+    plaid_us,
+    qonto_us,
 )
 
 ProviderId: TypeAlias = str

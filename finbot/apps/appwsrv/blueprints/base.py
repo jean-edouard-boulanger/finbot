@@ -1,8 +1,7 @@
-from finbot.core.web_service import Route
-from finbot.core import environment
-
 from flask import Blueprint
 
+from finbot.core import environment
+from finbot.core.web_service import Route
 
 API_V1 = Route("/api/v1")
 base_api = Blueprint("api", __name__)

@@ -1,5 +1,5 @@
 import abc
-from typing import Any, TypedDict, Optional
+from typing import Any, Optional, TypedDict
 
 from finbot.providers.errors import RetiredProviderError
 

@@ -1,17 +1,17 @@
 import time
 from abc import ABC
-from typing import Any, Callable, Generator
 from contextlib import ExitStack
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import Any, Callable, Generator
 
 from playwright.sync_api import (
-    sync_playwright,
-    Playwright,
     Browser,
-    Page,
-    Locator,
     Error,
+    Locator,
+    Page,
+    Playwright,
+    sync_playwright,
 )
 
 from finbot import providers

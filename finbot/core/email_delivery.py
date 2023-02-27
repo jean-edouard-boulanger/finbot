@@ -1,16 +1,15 @@
-from finbot.core.kv_store import KVEntity
-from finbot.core.errors import FinbotError, InvalidUserInput
+import smtplib
+from contextlib import contextmanager
+from dataclasses import dataclass
+from email.header import Header as EmailHeader
+from email.message import EmailMessage
+from email.utils import formataddr as format_email_address
+from typing import Any, Iterator, Optional, Protocol, Type, TypedDict
 
 import jsonschema
 
-from typing import Any, TypedDict, Protocol, Type, Optional, Iterator
-from dataclasses import dataclass
-from contextlib import contextmanager
-from email.header import Header as EmailHeader
-from email.utils import formataddr as format_email_address
-from email.message import EmailMessage
-import smtplib
-
+from finbot.core.errors import FinbotError, InvalidUserInput
+from finbot.core.kv_store import KVEntity
 
 DEFAULT_SMTP_PORT = 587
 

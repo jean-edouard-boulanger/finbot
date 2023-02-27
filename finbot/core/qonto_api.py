@@ -1,8 +1,9 @@
-from finbot.core.errors import FinbotError
-
-from typing import Any, Protocol
 from dataclasses import dataclass
+from typing import Any, Protocol
+
 import requests
+
+from finbot.core.errors import FinbotError
 
 
 @dataclass

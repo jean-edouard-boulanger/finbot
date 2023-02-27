@@ -1,7 +1,7 @@
-from finbot.clients.base import Base as ClientBase
-
-from typing import Optional, Any
 from enum import Enum
+from typing import Any, Optional
+
+from finbot.clients.base import Base as ClientBase
 
 
 class LineItem(Enum):

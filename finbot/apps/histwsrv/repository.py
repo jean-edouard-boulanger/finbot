@@ -1,10 +1,10 @@
-from finbot.model import ValuationChangeEntry
-from finbot.core.db.session import Session
+from datetime import date
+from typing import Tuple
 
 import pandas as pd
 
-from typing import Tuple
-from datetime import date
+from finbot.core.db.session import Session
+from finbot.model import ValuationChangeEntry
 
 
 class ReportRepository(object):
