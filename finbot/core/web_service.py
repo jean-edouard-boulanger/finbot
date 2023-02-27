@@ -10,6 +10,7 @@ import jsonschema
 from flask import Response as FlaskResponse
 from flask import jsonify, request
 from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
+from pydantic import BaseModel
 from werkzeug.datastructures import ImmutableMultiDict
 
 from finbot.core.errors import ApplicationError, FinbotError
@@ -64,22 +65,12 @@ class RequestValidationError(FinbotError):
         super().__init__(user_message)
 
 
-@dataclass
-class ApplicationErrorData:
+class ApplicationErrorData(BaseModel):
     user_message: str
-    debug_message: Optional[str] = None
-    error_code: Optional[str] = None
-    exception_type: Optional[str] = None
-    trace: Optional[str] = None
-
-    def serialize(self) -> dict[str, Any]:
-        return {
-            "user_message": self.user_message,
-            "debug_message": self.debug_message,
-            "error_code": self.error_code,
-            "exception_type": self.exception_type,
-            "trace": self.trace,
-        }
+    debug_message: str | None = None
+    error_code: str | None = None
+    exception_type: str | None = None
+    trace: str | None = None
 
     @staticmethod
     def from_exception(e: Exception) -> "ApplicationErrorData":

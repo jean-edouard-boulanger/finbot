@@ -1,12 +1,20 @@
 from collections import defaultdict
-from typing import Any, Callable, Iterator, Optional, Type, TypedDict, Union
+from typing import Any, Callable, Generator, Iterator, Optional, Type, TypedDict, Union
 
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from pydantic import BaseModel
 
-from finbot import providers
 from finbot.core.errors import FinbotError
+from finbot.providers.base import ProviderBase
+from finbot.providers.schema import (
+    Account,
+    Asset,
+    Assets,
+    AssetsEntry,
+    BalanceEntry,
+    Balances,
+)
 
 
 class Error(FinbotError):
@@ -32,7 +40,7 @@ class Credentials(BaseModel):
     google_api_credentials: GoogleApiCredentials
 
 
-class Api(providers.Base):
+class Api(ProviderBase):
     def __init__(self, credentials: Credentials, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self._credentials = credentials
@@ -47,7 +55,7 @@ class Api(providers.Base):
     def create(authentication_payload: dict[str, Any], **kwargs: Any) -> "Api":
         return Api(Credentials.parse_obj(authentication_payload), **kwargs)
 
-    def _iter_accounts(self) -> Iterator[dict[Any, Any]]:
+    def _iter_accounts(self) -> Generator[AssetsEntry, None, None]:
         assert self._sheet is not None
         sheet = LocalSheet(self._sheet.sheet1.get_all_values())
 
@@ -55,19 +63,23 @@ class Api(providers.Base):
         holdings_table = _get_table(sheet, HOLDING_SCHEMA)
 
         for entry in accounts_table:
-            yield {
-                "account": {
-                    "id": entry["identifier"],
-                    "name": entry["description"],
-                    "iso_currency": entry["currency"],
-                    "type": entry["type"],
-                },
-                "holdings": [
-                    holding
+            yield AssetsEntry(
+                account=Account(
+                    id=entry["identifier"],
+                    name=entry["description"],
+                    iso_currency=entry["currency"],
+                    type=entry["type"],
+                ),
+                assets=[
+                    Asset(
+                        name=holding["symbol"],
+                        type=holding["type"],
+                        value=holding["value"],
+                    )
                     for holding in holdings_table
                     if holding["account"] == entry["identifier"]
                 ],
-            }
+            )
 
     def initialize(self) -> None:
         scope = ["https://www.googleapis.com/auth/spreadsheets"]
@@ -78,34 +90,19 @@ class Api(providers.Base):
         )
         self._sheet = self._api.open_by_key(self._credentials.sheet_key)
 
-    def get_balances(self) -> providers.Balances:
-        return {
-            "accounts": [
-                {
-                    "account": entry["account"],
-                    "balance": sum(holding["value"] for holding in entry["holdings"]),
-                }
+    def get_balances(self) -> Balances:
+        return Balances(
+            accounts=[
+                BalanceEntry(
+                    account=entry.account,
+                    balance=sum(asset.value for asset in entry.assets),
+                )
                 for entry in self._iter_accounts()
             ]
-        }
+        )
 
-    def get_assets(self) -> providers.Assets:
-        return {
-            "accounts": [
-                {
-                    "account": entry["account"],
-                    "assets": [
-                        {
-                            "name": holding["symbol"],
-                            "type": holding["type"],
-                            "value": holding["value"],
-                        }
-                        for holding in entry["holdings"]
-                    ],
-                }
-                for entry in self._iter_accounts()
-            ]
-        }
+    def get_assets(self) -> Assets:
+        return Assets(accounts=list(self._iter_accounts()))
 
 
 class AttributeDef(TypedDict):

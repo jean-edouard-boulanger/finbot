@@ -5,9 +5,17 @@ from binance.exceptions import BinanceAPIException
 from pycoingecko import CoinGeckoAPI
 from pydantic import BaseModel, SecretStr
 
-from finbot import providers
 from finbot.core.crypto_market import CoinGeckoWrapper
+from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationFailure
+from finbot.providers.schema import (
+    Account,
+    Asset,
+    Assets,
+    AssetsEntry,
+    BalanceEntry,
+    Balances,
+)
 
 OWNERSHIP_UNITS_THRESHOLD = 0.00001
 RECV_WINDOW = 60 * 1000
@@ -18,7 +26,7 @@ class Credentials(BaseModel):
     secret_key: SecretStr
 
 
-class Api(providers.Base):
+class Api(ProviderBase):
     def __init__(self, credentials: Credentials, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self._credentials = credentials
@@ -39,13 +47,13 @@ class Api(providers.Base):
         account: dict[Any, Any] = self._api.get_account(recvWindow=RECV_WINDOW)
         return account
 
-    def _account_description(self) -> providers.Account:
-        return {
-            "id": "portfolio",
-            "name": "Portfolio",
-            "iso_currency": self._account_ccy,
-            "type": "investment",
-        }
+    def _account_description(self) -> Account:
+        return Account(
+            id="portfolio",
+            name="Portfolio",
+            iso_currency=self._account_ccy,
+            type="investment",
+        )
 
     def initialize(self) -> None:
         try:
@@ -57,7 +65,7 @@ class Api(providers.Base):
         except BinanceAPIException as e:
             raise AuthenticationFailure(str(e))
 
-    def _iter_balances(self) -> Iterator[Tuple[str, float, float]]:
+    def _iter_holdings(self) -> Iterator[Tuple[str, float, float]]:
         for entry in self._get_account()["balances"]:
             units = float(entry["free"]) + float(entry["locked"])
             if units > OWNERSHIP_UNITS_THRESHOLD:
@@ -67,26 +75,25 @@ class Api(providers.Base):
                 )
                 yield symbol, units, value
 
-    def get_balances(self) -> providers.Balances:
-        balance = sum(value for (_, _, value) in self._iter_balances())
-        return {
-            "accounts": [{"account": self._account_description(), "balance": balance}]
-        }
-
-    def get_assets(self) -> providers.Assets:
-        return {
-            "accounts": [
-                {
-                    "account": self._account_description(),
-                    "assets": [
-                        {
-                            "name": symbol,
-                            "type": "cryptocurrency",
-                            "units": units,
-                            "value": value,
-                        }
-                        for symbol, units, value in self._iter_balances()
-                    ],
-                }
+    def get_balances(self) -> Balances:
+        balance = sum(value for (_, _, value) in self._iter_holdings())
+        return Balances(
+            accounts=[
+                BalanceEntry(account=self._account_description(), balance=balance)
             ]
-        }
+        )
+
+    def get_assets(self) -> Assets:
+        return Assets(
+            accounts=[
+                AssetsEntry(
+                    account=self._account_description(),
+                    assets=[
+                        Asset(
+                            name=symbol, type="cryptocurrency", units=units, value=value
+                        )
+                        for symbol, units, value in self._iter_holdings()
+                    ],
+                )
+            ]
+        )

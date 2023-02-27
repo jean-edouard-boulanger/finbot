@@ -1,11 +1,18 @@
-from copy import deepcopy
 from typing import Any, Optional
 
 from pydantic import BaseModel, SecretStr
 
-from finbot import providers
 from finbot.core.qonto_api import QontoApi, SimpleAuthentication, Unauthorized
+from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationFailure
+from finbot.providers.schema import (
+    Account,
+    Asset,
+    Assets,
+    AssetsEntry,
+    BalanceEntry,
+    Balances,
+)
 
 AUTH_URL = "https://app.qonto.com/signin"
 
@@ -15,11 +22,11 @@ class Credentials(BaseModel):
     secret_key: SecretStr
 
 
-class Api(providers.Base):
+class Api(ProviderBase):
     def __init__(self, credentials: Credentials, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self._credentials = credentials
-        self._accounts: Optional[providers.Balances] = None
+        self._accounts: Optional[Balances] = None
 
     @staticmethod
     def description() -> str:
@@ -40,35 +47,32 @@ class Api(providers.Base):
             organization = api.list_organizations()[0]
         except Unauthorized as e:
             raise AuthenticationFailure(str(e))
-        self._accounts = {
-            "accounts": [
-                {
-                    "account": {
-                        "id": entry.slug,
-                        "name": entry.name,
-                        "iso_currency": entry.currency,
-                        "type": "cash",
-                    },
-                    "balance": entry.balance,
-                }
+        self._accounts = Balances(
+            accounts=[
+                BalanceEntry(
+                    account=Account(
+                        id=entry.slug,
+                        name=entry.name,
+                        iso_currency=entry.currency,
+                        type="cash",
+                    ),
+                    balance=entry.balance,
+                )
                 for entry in organization.bank_accounts
             ]
-        }
+        )
 
-    def get_balances(self) -> providers.Balances:
+    def get_balances(self) -> Balances:
         assert self._accounts
         return self._accounts
 
-    def get_assets(self) -> providers.Assets:
-        assert self._accounts is not None
-        return {
-            "accounts": [
-                {
-                    "account": deepcopy(entry["account"]),
-                    "assets": [
-                        {"name": "Cash", "type": "currency", "value": entry["balance"]}
-                    ],
-                }
-                for entry in self._accounts["accounts"]
+    def get_assets(self) -> Assets:
+        return Assets(
+            accounts=[
+                AssetsEntry(
+                    account=entry.account,
+                    assets=[Asset(name="Cash", type="currency", value=entry.balance)],
+                )
+                for entry in self.get_balances().accounts
             ]
-        }
+        )

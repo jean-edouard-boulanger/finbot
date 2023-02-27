@@ -4,10 +4,21 @@ from plaid import Client as PlaidClient
 from plaid import errors as plaid_errors
 from pydantic import BaseModel, SecretStr
 
-from finbot import providers
 from finbot.core.serialization import serialize
 from finbot.model import UserAccountPlaidSettings
+from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationFailure
+from finbot.providers.schema import (
+    Account,
+    Asset,
+    Assets,
+    AssetsEntry,
+    BalanceEntry,
+    Balances,
+    Liabilities,
+    LiabilitiesEntry,
+    Liability,
+)
 
 
 def pack_credentials(
@@ -28,13 +39,13 @@ def pack_credentials(
     return output
 
 
-def _make_account(account: dict[str, Any]) -> providers.Account:
-    return {
-        "id": account["name"],
-        "name": account["name"],
-        "iso_currency": account["balances"]["iso_currency_code"],
-        "type": account["type"],
-    }
+def _make_account(account: dict[str, Any]) -> Account:
+    return Account(
+        id=account["name"],
+        name=account["name"],
+        iso_currency=account["balances"]["iso_currency_code"],
+        type=account["type"],
+    )
 
 
 class PlaidCredentials(BaseModel):
@@ -50,7 +61,7 @@ class Credentials(BaseModel):
     plaid_credentials: PlaidCredentials
 
 
-class Api(providers.Base):
+class Api(ProviderBase):
     def __init__(self, credentials: Credentials, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self._credentials = credentials
@@ -79,53 +90,55 @@ class Api(providers.Base):
         except plaid_errors.ItemError as e:
             raise AuthenticationFailure(str(e))
 
-    def get_balances(self) -> providers.Balances:
-        return {
-            "accounts": [
-                {
-                    "account": _make_account(account),
-                    "balance": account["balances"]["current"]
-                    * (-1.0 if account["type"] == "credit" else 1.0),
-                }
+    def get_balances(self) -> Balances:
+        return Balances(
+            accounts=[
+                BalanceEntry(
+                    account=_make_account(account),
+                    balance=(
+                        account["balances"]["current"]
+                        * (-1.0 if account["type"] == "credit" else 1.0)
+                    ),
+                )
                 for account in self.accounts
             ]
-        }
+        )
 
-    def get_assets(self) -> providers.Assets:
-        return {
-            "accounts": [
-                {
-                    "account": _make_account(account),
-                    "assets": [
-                        {
-                            "name": "Cash",
-                            "type": "currency",
-                            "value": account["balances"]["current"],
-                        }
+    def get_assets(self) -> Assets:
+        return Assets(
+            accounts=[
+                AssetsEntry(
+                    account=_make_account(account),
+                    assets=[
+                        Asset(
+                            name="Cash",
+                            type="Currency",
+                            value=account["balances"]["current"],
+                        )
                     ],
-                }
+                )
                 for account in self.accounts
                 if account["type"] == "depository"
             ]
-        }
+        )
 
-    def get_liabilities(self) -> providers.Liabilities:
-        return {
-            "accounts": [
-                {
-                    "account": _make_account(account),
-                    "liabilities": [
-                        {
-                            "name": "credit",
-                            "type": "credit",
-                            "value": -1.0 * account["balances"]["current"],
-                        }
+    def get_liabilities(self) -> Liabilities:
+        return Liabilities(
+            accounts=[
+                LiabilitiesEntry(
+                    account=_make_account(account),
+                    liabilities=[
+                        Liability(
+                            name="credit",
+                            type="credit",
+                            value=(-1.0 * account["balances"]["current"]),
+                        )
                     ],
-                }
+                )
                 for account in self.accounts
                 if account["type"] == "credit"
             ]
-        }
+        )
 
     @staticmethod
     def _create_plaid_client(credentials: PlaidCredentials) -> PlaidClient:

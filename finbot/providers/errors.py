@@ -1,11 +1,21 @@
 from finbot.core.errors import ApplicationError
 
 
-class AuthenticationFailure(ApplicationError):
+class ProviderError(ApplicationError):
+    def __init__(self, error_message: str, error_code: str):
+        super().__init__(error_message, error_code)
+
+
+class AuthenticationFailure(ProviderError):
     def __init__(self, error_message: str):
         super().__init__(error_message, "P001")
 
 
-class RetiredProviderError(ApplicationError):
+class RetiredProviderError(ProviderError):
     def __init__(self) -> None:
         super().__init__("This provider has been retired", "P002")
+
+
+class UnknownProvider(ProviderError):
+    def __init__(self, provider_id: str) -> None:
+        super().__init__(f"Unknown provider '{provider_id}'", "P003")

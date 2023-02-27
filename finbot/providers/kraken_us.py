@@ -3,10 +3,18 @@ from typing import Any, Iterator, Optional, Tuple
 import krakenex
 from pydantic import BaseModel, SecretStr
 
-from finbot import providers
 from finbot.core import fx_market
 from finbot.core.errors import FinbotError
+from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationFailure
+from finbot.providers.schema import (
+    Account,
+    Asset,
+    Assets,
+    AssetsEntry,
+    BalanceEntry,
+    Balances,
+)
 
 OWNERSHIP_UNITS_THRESHOLD = 0.00001
 
@@ -36,7 +44,7 @@ def _demangle_symbol(symbol: str) -> str:
     return symbol
 
 
-class Api(providers.Base):
+class Api(ProviderBase):
     def __init__(self, credentials: Credentials, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self._credentials = credentials
@@ -51,13 +59,13 @@ class Api(providers.Base):
     def create(authentication_payload: dict[str, Any], **kwargs: Any) -> "Api":
         return Api(Credentials.parse_obj(authentication_payload), **kwargs)
 
-    def _account_description(self) -> providers.Account:
-        return {
-            "id": "portfolio",
-            "name": "Portfolio",
-            "iso_currency": self._account_ccy,
-            "type": "investment",
-        }
+    def _account_description(self) -> Account:
+        return Account(
+            id="portfolio",
+            name="Portfolio",
+            iso_currency=self._account_ccy,
+            type="investment",
+        )
 
     def _iter_balances(self) -> Iterator[Tuple[str, float, float]]:
         price_fetcher = KrakenPriceFetcher(self._api)
@@ -86,29 +94,31 @@ class Api(providers.Base):
         if results["error"]:
             raise AuthenticationFailure(_format_error(results["error"]))
 
-    def get_balances(self) -> providers.Balances:
+    def get_balances(self) -> Balances:
         balance = sum(value for (_, _, value) in self._iter_balances())
-        return {
-            "accounts": [{"account": self._account_description(), "balance": balance}]
-        }
-
-    def get_assets(self) -> providers.Assets:
-        return {
-            "accounts": [
-                {
-                    "account": self._account_description(),
-                    "assets": [
-                        {
-                            "name": _demangle_symbol(symbol),
-                            "type": _classify_asset(symbol),
-                            "units": units,
-                            "value": value,
-                        }
-                    ],
-                }
-                for symbol, units, value in self._iter_balances()
+        return Balances(
+            accounts=[
+                BalanceEntry(account=self._account_description(), balance=balance)
             ]
-        }
+        )
+
+    def get_assets(self) -> Assets:
+        return Assets(
+            accounts=[
+                AssetsEntry(
+                    account=self._account_description(),
+                    assets=[
+                        Asset(
+                            name=_demangle_symbol(symbol),
+                            type=_classify_asset(symbol),
+                            units=units,
+                            value=value,
+                        )
+                        for symbol, units, value in self._iter_balances()
+                    ],
+                )
+            ]
+        )
 
 
 class KrakenPriceFetcher(object):

@@ -4,10 +4,21 @@ from playwright.sync_api import Locator, Page
 from price_parser import Price  # type: ignore
 from pydantic import BaseModel, SecretStr
 
-from finbot import providers
 from finbot.core.utils import raise_
 from finbot.providers.errors import AuthenticationFailure
-from finbot.providers.playwright_based import Condition, ConditionGuard, PlaywrightBased
+from finbot.providers.playwright_base import (
+    Condition,
+    ConditionGuard,
+    PlaywrightProviderBase,
+)
+from finbot.providers.schema import (
+    Account,
+    Asset,
+    Assets,
+    AssetsEntry,
+    BalanceEntry,
+    Balances,
+)
 
 AUTH_URL = "https://lwp.aegon.co.uk/targetplanUI/login"
 BALANCES_URL = "https://lwp.aegon.co.uk/targetplanUI/investments"
@@ -24,32 +35,32 @@ class MainDashboardPage(object):
         assert "targetplanUI/investments" in self.page.url
 
     @staticmethod
-    def _extract_account(account_locator: Locator) -> providers.BalanceEntry:
+    def _extract_account(account_locator: Locator) -> BalanceEntry:
         body_locator = account_locator.locator(".card-body")
         footer_locator = account_locator.locator(".card-footer")
         balance_str = body_locator.locator("span.currency-hero").inner_text().strip()
-        return {
-            "account": {
-                "id": footer_locator.inner_text().strip().split(" ")[-1],
-                "name": body_locator.locator("h3").inner_text().strip(),
-                "iso_currency": "GBP",
-                "type": "investment",
-            },
-            "balance": cast(float, Price.fromstring(balance_str).amount_float),
-        }
+        return BalanceEntry(
+            account=Account(
+                id=footer_locator.inner_text().strip().split(" ")[-1],
+                name=body_locator.locator("h3").inner_text().strip(),
+                iso_currency="GBP",
+                type="investment",
+            ),
+            balance=cast(float, Price.fromstring(balance_str).amount_float),
+        )
 
-    def get_accounts(self) -> list[providers.BalanceEntry]:
+    def get_accounts(self) -> list[BalanceEntry]:
         account_locators = ConditionGuard(
             Condition(lambda: self.page.locator(".card-product-1").all())
         ).wait()
         return [self._extract_account(locator) for locator in account_locators]
 
 
-class Api(PlaywrightBased):
+class Api(PlaywrightProviderBase):
     def __init__(self, credentials: Credentials, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self._credentials = credentials
-        self._accounts: list[providers.BalanceEntry] | None = None
+        self._accounts: list[BalanceEntry] | None = None
 
     @staticmethod
     def description() -> str:
@@ -76,22 +87,22 @@ class Api(PlaywrightBased):
         ).wait_any()
         self._accounts = MainDashboardPage(page).get_accounts()
 
-    def get_balances(self) -> providers.Balances:
-        return {"accounts": cast(list[providers.BalanceEntry], self._accounts)}
+    def get_balances(self) -> Balances:
+        return Balances(accounts=cast(list[BalanceEntry], self._accounts))
 
-    def get_assets(self) -> providers.Assets:
-        return {
-            "accounts": [
-                {
-                    "account": entry["account"],
-                    "assets": [
-                        {
-                            "name": "Generic fund (unknown name)",
-                            "type": "blended fund",
-                            "value": entry["balance"],
-                        }
+    def get_assets(self) -> Assets:
+        return Assets(
+            accounts=[
+                AssetsEntry(
+                    account=entry.account,
+                    assets=[
+                        Asset(
+                            name="Generic fund (unknown name)",
+                            type="blended fund",
+                            value=entry.balance,
+                        )
                     ],
-                }
-                for entry in cast(list[providers.BalanceEntry], self._accounts)
+                )
+                for entry in cast(list[BalanceEntry], self._accounts)
             ]
-        }
+        )

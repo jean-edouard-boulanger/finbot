@@ -1,9 +1,16 @@
-from copy import deepcopy
 from typing import Any
 
 from pydantic import BaseModel
 
-from finbot import providers
+from finbot.providers.base import ProviderBase
+from finbot.providers.schema import (
+    Account,
+    Asset,
+    Assets,
+    AssetsEntry,
+    BalanceEntry,
+    Balances,
+)
 
 
 class Credentials(BaseModel):
@@ -11,15 +18,12 @@ class Credentials(BaseModel):
 
 
 DUMMY_BALANCE: float = 1000.0
-DUMMY_ACCOUNT: providers.Account = {
-    "id": "dummy",
-    "name": "Dummy account",
-    "iso_currency": "GBP",
-    "type": "cash",
-}
+DUMMY_ACCOUNT = Account(
+    id="dummy", name="Dummy account", iso_currency="GBP", type="cash"
+)
 
 
-class Api(providers.Base):
+class Api(ProviderBase):
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
 
@@ -34,28 +38,17 @@ class Api(providers.Base):
     def initialize(self) -> None:
         pass
 
-    def get_balances(self) -> providers.Balances:
-        return {
-            "accounts": [
-                {
-                    "account": deepcopy(DUMMY_ACCOUNT),
-                    "balance": DUMMY_BALANCE,
-                }
-            ]
-        }
+    def get_balances(self) -> Balances:
+        return Balances(
+            accounts=[BalanceEntry(account=DUMMY_ACCOUNT, balance=DUMMY_BALANCE)]
+        )
 
-    def get_assets(self) -> providers.Assets:
-        return {
-            "accounts": [
-                {
-                    "account": deepcopy(DUMMY_ACCOUNT),
-                    "assets": [
-                        {
-                            "name": "Cash",
-                            "type": "currency",
-                            "value": DUMMY_BALANCE,
-                        }
-                    ],
-                }
+    def get_assets(self) -> Assets:
+        return Assets(
+            accounts=[
+                AssetsEntry(
+                    account=DUMMY_ACCOUNT,
+                    assets=[Asset(name="Cash", type="currency", value=DUMMY_BALANCE)],
+                )
             ]
-        }
+        )
