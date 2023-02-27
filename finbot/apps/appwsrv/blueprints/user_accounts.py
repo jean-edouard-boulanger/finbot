@@ -1,27 +1,25 @@
-from finbot.apps.appwsrv.blueprints import API_V1
+import logging
+
+from flask import Blueprint
+from flask_jwt_extended import jwt_required
+from sqlalchemy.exc import IntegrityError
+
+from finbot.apps.appwsrv.blueprints.base import API_V1
 from finbot.apps.appwsrv.db import db_session
 from finbot.apps.appwsrv.serialization import (
     serialize_user_account,
     serialize_user_account_settings,
 )
 from finbot.core.errors import InvalidUserInput
-from finbot.core.web_service import Route, service_endpoint, RequestContext
 from finbot.core.notifier import TwilioNotifier, TwilioSettings
 from finbot.core.utils import unwrap_optional
+from finbot.core.web_service import RequestContext, Route, service_endpoint
 from finbot.model import (
-    repository,
     UserAccount,
-    UserAccountSettings,
     UserAccountPlaidSettings,
+    UserAccountSettings,
+    repository,
 )
-
-from sqlalchemy.exc import IntegrityError
-
-from flask import Blueprint
-from flask_jwt_extended import jwt_required
-
-import logging
-
 
 logger = logging.getLogger(__name__)
 

@@ -1,9 +1,9 @@
-from finbot.core.errors import FinbotError
+from dataclasses import dataclass
+from typing import Optional
 
 import quickforex
 
-from dataclasses import dataclass
-from typing import Optional
+from finbot.core.errors import FinbotError
 
 
 @dataclass(frozen=True, eq=True)

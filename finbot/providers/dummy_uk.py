@@ -1,9 +1,9 @@
-from finbot import providers
+from copy import deepcopy
+from typing import Any
 
 from pydantic import BaseModel
 
-from copy import deepcopy
-from typing import Any
+from finbot import providers
 
 
 class Credentials(BaseModel):

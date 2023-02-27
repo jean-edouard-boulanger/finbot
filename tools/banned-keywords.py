@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
-from typing import Optional, Pattern
-from pathlib import Path
-from dataclasses import dataclass
 import argparse
 import fnmatch
+import os
 import re
 import sys
-import os
-
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Optional, Pattern
 
 JS_ALIKE = ["*.tsx", "*.ts", "*.js", "*.jsx"]
 

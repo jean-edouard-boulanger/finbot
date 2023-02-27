@@ -1,28 +1,27 @@
-from finbot.apps.histwsrv import repository
-from finbot.core.web_service import service_endpoint
-from finbot.core.serialization import pretty_dump
-from finbot.core.logging import configure_logging
-from finbot.core.db.session import Session
-from finbot.core.utils import unwrap_optional
-from finbot.core import environment
-from finbot.model import (
-    UserAccountSnapshot,
-    UserAccountHistoryEntry,
-    UserAccountValuationHistoryEntry,
-    LinkedAccountValuationHistoryEntry,
-    SubAccountValuationHistoryEntry,
-    SubAccountItemValuationHistoryEntry,
-)
+import logging
+from decimal import Decimal
+from typing import Any
 
+import pandas as pd
 from flask import Flask
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
-import pandas as pd
 
-from typing import Any
-from decimal import Decimal
-import logging
-
+from finbot.apps.histwsrv import repository
+from finbot.core import environment
+from finbot.core.db.session import Session
+from finbot.core.logging import configure_logging
+from finbot.core.serialization import pretty_dump
+from finbot.core.utils import unwrap_optional
+from finbot.core.web_service import service_endpoint
+from finbot.model import (
+    LinkedAccountValuationHistoryEntry,
+    SubAccountItemValuationHistoryEntry,
+    SubAccountValuationHistoryEntry,
+    UserAccountHistoryEntry,
+    UserAccountSnapshot,
+    UserAccountValuationHistoryEntry,
+)
 
 FINBOT_ENV = environment.get()
 configure_logging(FINBOT_ENV.desired_log_level)

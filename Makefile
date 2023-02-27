@@ -1,6 +1,6 @@
 export FINBOT_EDIT_CMD ?= code --wait
 export BLACK_SETTINGS = --exclude 'migrations/|webapp/|venv/' .
-
+export ISORT_SETTINGS = --profile black finbot/ tools/
 
 alembic-gen:
 	tools/check-env.sh message;
@@ -196,6 +196,12 @@ black-check:
 black:
 	black $(BLACK_SETTINGS)
 
+isort-check:
+	isort --check $(ISORT_SETTINGS)
+
+isort:
+	isort $(ISORT_SETTINGS)
+
 mypy:
 	mypy -p finbot;
 	mypy --strict -p finbot.core;
@@ -215,10 +221,10 @@ lint-sh:
 	grep -rl '^#!/.*bash' --exclude-dir=webapp --exclude-dir='./.*' . |\
  		xargs shellcheck -e SC1090 -e SC1091 -e SC2002 -S style
 
-lint-py: mypy flake8 black-check banned-keywords-check-py unit-tests-py
+lint-py: mypy flake8 black-check isort-check banned-keywords-check-py unit-tests-py
 lint-ts: eslint tsc-build-check prettier-check-ts banned-keywords-check-ts
 lint-all: lint-py lint-ts lint-sh
 
-format-py: black
+format-py: black isort
 format-ts: prettier-ts
 format-all: format-py format-ts

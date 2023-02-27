@@ -1,42 +1,40 @@
-from finbot.apps.snapwsrv.schema import (
-    TakeSnapshotRequest,
-    TakeSnapshotResponse,
-    SnapshotResultsCount,
-    SnapshotSummary,
-)
-from finbot.clients.finbot import FinbotClient, LineItem
-from finbot.providers.plaid_us import pack_credentials as pack_plaid_credentials
-from finbot.core import secure, utils, fx_market, environment
-from finbot.core.utils import unwrap_optional, format_stack
-from finbot.core.db.session import Session
-from finbot.core.logging import configure_logging
-from finbot.core.web_service import service_endpoint, ApplicationErrorData
-from finbot.model import (
-    UserAccount,
-    UserAccountSnapshot,
-    SnapshotStatus,
-    LinkedAccount,
-    LinkedAccountSnapshotEntry,
-    SubAccountSnapshotEntry,
-    SubAccountItemSnapshotEntry,
-    SubAccountItemType,
-    XccyRateSnapshotEntry,
-)
+import json
+import logging
+from concurrent.futures import ThreadPoolExecutor
+from copy import deepcopy
+from dataclasses import dataclass
+from decimal import Decimal
+from typing import Any, Optional, Tuple
 
 from flask import Flask
 from flask_pydantic import validate
-
 from sqlalchemy import create_engine
-from sqlalchemy.orm import scoped_session, sessionmaker, joinedload
+from sqlalchemy.orm import joinedload, scoped_session, sessionmaker
 
-from concurrent.futures import ThreadPoolExecutor
-from decimal import Decimal
-from dataclasses import dataclass
-from typing import Optional, Tuple, Any
-from copy import deepcopy
-import logging
-import json
-
+from finbot.apps.snapwsrv.schema import (
+    SnapshotResultsCount,
+    SnapshotSummary,
+    TakeSnapshotRequest,
+    TakeSnapshotResponse,
+)
+from finbot.clients.finbot import FinbotClient, LineItem
+from finbot.core import environment, fx_market, secure, utils
+from finbot.core.db.session import Session
+from finbot.core.logging import configure_logging
+from finbot.core.utils import format_stack, unwrap_optional
+from finbot.core.web_service import ApplicationErrorData, service_endpoint
+from finbot.model import (
+    LinkedAccount,
+    LinkedAccountSnapshotEntry,
+    SnapshotStatus,
+    SubAccountItemSnapshotEntry,
+    SubAccountItemType,
+    SubAccountSnapshotEntry,
+    UserAccount,
+    UserAccountSnapshot,
+    XccyRateSnapshotEntry,
+)
+from finbot.providers.plaid_us import pack_credentials as pack_plaid_credentials
 
 FINBOT_ENV = environment.get()
 configure_logging(FINBOT_ENV.desired_log_level)

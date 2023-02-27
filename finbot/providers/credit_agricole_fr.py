@@ -1,14 +1,13 @@
-from finbot.providers.playwright_based import PlaywrightBased, Condition, ConditionGuard
-from finbot.providers.errors import AuthenticationFailure
-from finbot.core.utils import raise_
-from finbot import providers
+import json
+from typing import Any, Iterator, cast
 
 from playwright.sync_api import Locator
 from pydantic import BaseModel, SecretStr
 
-from typing import Any, Iterator, cast
-import json
-
+from finbot import providers
+from finbot.core.utils import raise_
+from finbot.providers.errors import AuthenticationFailure
+from finbot.providers.playwright_based import Condition, ConditionGuard, PlaywrightBased
 
 BASE_URL = (
     "https://www.credit-agricole.fr/{region}/particulier/acceder-a-mes-comptes.html"

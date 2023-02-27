@@ -1,14 +1,13 @@
-from finbot import providers
-from finbot.providers.errors import AuthenticationFailure
-from finbot.core.crypto_market import CoinGeckoWrapper
+from typing import Any, Iterator, Optional, Tuple
 
-from pycoingecko import CoinGeckoAPI
 from binance.client import Client as Binance
 from binance.exceptions import BinanceAPIException
+from pycoingecko import CoinGeckoAPI
 from pydantic import BaseModel, SecretStr
 
-from typing import Any, Optional, Iterator, Tuple
-
+from finbot import providers
+from finbot.core.crypto_market import CoinGeckoWrapper
+from finbot.providers.errors import AuthenticationFailure
 
 OWNERSHIP_UNITS_THRESHOLD = 0.00001
 RECV_WINDOW = 60 * 1000

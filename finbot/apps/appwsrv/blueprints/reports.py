@@ -1,20 +1,17 @@
-from finbot.apps.appwsrv.blueprints import API_V1
-from finbot.apps.appwsrv.reports import (
-    holdings as holdings_report,
-    earnings as earnings_report,
-)
-from finbot.apps.appwsrv.db import db_session
-from finbot.core.errors import MissingUserData
-from finbot.core.web_service import Route, service_endpoint, RequestContext
-from finbot.core.utils import now_utc
-from finbot.model import repository
+import logging
+from datetime import timedelta
 
 from flask import Blueprint
 from flask_jwt_extended import jwt_required
 
-from datetime import timedelta
-import logging
-
+from finbot.apps.appwsrv.blueprints.base import API_V1
+from finbot.apps.appwsrv.db import db_session
+from finbot.apps.appwsrv.reports import earnings as earnings_report
+from finbot.apps.appwsrv.reports import holdings as holdings_report
+from finbot.core.errors import MissingUserData
+from finbot.core.utils import now_utc
+from finbot.core.web_service import RequestContext, Route, service_endpoint
+from finbot.model import repository
 
 logger = logging.getLogger(__name__)
 

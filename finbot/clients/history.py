@@ -1,6 +1,6 @@
-from finbot.clients.base import Base as ClientBase
-
 from typing import Any
+
+from finbot.clients.base import Base as ClientBase
 
 
 class HistoryClient(ClientBase):

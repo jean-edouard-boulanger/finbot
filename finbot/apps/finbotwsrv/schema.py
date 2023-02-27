@@ -2,7 +2,6 @@ from typing import Any, Literal
 
 from pydantic import BaseModel
 
-
 LineItemLiteral = Literal["balances", "assets", "liabilities"]
 
 

@@ -3,13 +3,14 @@ black
 celery
 cffi
 cryptography
-flake8
+flake8==6.0.0
 flask
 flask-cors
 flask-jwt-extended>=4.3,<5.0
 flask-pydantic
 gspread
 gunicorn
+isort==5.12.0
 jsonschema
 krakenex
 mypy==1.0.1

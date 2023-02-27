@@ -1,9 +1,8 @@
-from sqlalchemy.types import TypeDecorator, VARCHAR
-from sqlalchemy import DateTime
-
-from typing import Optional, Any, TYPE_CHECKING
 import json
+from typing import TYPE_CHECKING, Any, Optional
 
+from sqlalchemy import DateTime
+from sqlalchemy.types import VARCHAR, TypeDecorator
 
 if TYPE_CHECKING:
     JSONEngine = TypeDecorator[Any]

@@ -1,14 +1,13 @@
 from typing import Any, cast
 
-from playwright.sync_api import Page, Locator
+from playwright.sync_api import Locator, Page
 from price_parser import Price  # type: ignore
 from pydantic import BaseModel, SecretStr
 
-from finbot.providers.playwright_based import PlaywrightBased, Condition, ConditionGuard
-from finbot.providers.errors import AuthenticationFailure
 from finbot import providers
 from finbot.core.utils import raise_
-
+from finbot.providers.errors import AuthenticationFailure
+from finbot.providers.playwright_based import Condition, ConditionGuard, PlaywrightBased
 
 AUTH_URL = "https://lwp.aegon.co.uk/targetplanUI/login"
 BALANCES_URL = "https://lwp.aegon.co.uk/targetplanUI/investments"

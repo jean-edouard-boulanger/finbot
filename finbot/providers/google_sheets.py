@@ -1,12 +1,12 @@
-from finbot.core.errors import FinbotError
-from finbot import providers
-
-from pydantic import BaseModel
-from oauth2client.service_account import ServiceAccountCredentials
-import gspread
-
-from typing import Any, Optional, Iterator, TypedDict, Callable, Union, Type
 from collections import defaultdict
+from typing import Any, Callable, Iterator, Optional, Type, TypedDict, Union
+
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+from pydantic import BaseModel
+
+from finbot import providers
+from finbot.core.errors import FinbotError
 
 
 class Error(FinbotError):

@@ -1,8 +1,9 @@
 #!/usr/bin/env python3.11
-from finbot.clients.snap import SnapClient
-from finbot.core.serialization import pretty_dump
-from finbot.core.environment import get_snapwsrv_endpoint
 import argparse
+
+from finbot.clients.snap import SnapClient
+from finbot.core.environment import get_snapwsrv_endpoint
+from finbot.core.serialization import pretty_dump
 
 
 def create_parser():

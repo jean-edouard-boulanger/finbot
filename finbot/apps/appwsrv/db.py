@@ -1,11 +1,10 @@
-from finbot.core.db.session import Session
-from finbot.core import environment
+import logging
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-import logging
-
+from finbot.core import environment
+from finbot.core.db.session import Session
 
 logger = logging.getLogger(__name__)
 

@@ -1,25 +1,23 @@
-from finbot.clients import WorkerClient, ValuationRequest
-from finbot.core import environment
-from finbot.core.errors import FinbotError
-from finbot.core.logging import configure_logging
-from finbot.core.db.session import Session
-from finbot.core.utils import format_stack
-from finbot.model import UserAccount
+import argparse
+import logging
+import queue
+import signal
+import sys
+import threading
+from datetime import timedelta
+from typing import Iterable
 
+import schedule
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-import schedule
-
-from typing import Iterable
-from datetime import timedelta
-import sys
-import queue
-import threading
-import argparse
-import signal
-import logging
-
+from finbot.clients import ValuationRequest, WorkerClient
+from finbot.core import environment
+from finbot.core.db.session import Session
+from finbot.core.errors import FinbotError
+from finbot.core.logging import configure_logging
+from finbot.core.utils import format_stack
+from finbot.model import UserAccount
 
 FINBOT_ENV = environment.get()
 configure_logging(FINBOT_ENV.desired_log_level)

@@ -1,14 +1,14 @@
-from finbot.apps.appwsrv.db import db_session
-from finbot.clients import FinbotClient, WorkerClient, ValuationRequest
-from finbot.core import environment
-from finbot.model import repository, UserAccountPlaidSettings
-from finbot.apps.finbotwsrv.errors import AuthenticationFailure
-from finbot.providers.plaid_us import pack_credentials as pack_plaid_credentials
+import logging
+from typing import Optional
 
 from plaid import Client as PlaidClient
 
-from typing import Optional
-import logging
+from finbot.apps.appwsrv.db import db_session
+from finbot.apps.finbotwsrv.errors import AuthenticationFailure
+from finbot.clients import FinbotClient, ValuationRequest, WorkerClient
+from finbot.core import environment
+from finbot.model import UserAccountPlaidSettings, repository
+from finbot.providers.plaid_us import pack_credentials as pack_plaid_credentials
 
 
 def get_finbot_client() -> FinbotClient:

@@ -1,5 +1,5 @@
-from typing import Optional
 import logging.config
+from typing import Optional
 
 
 def configure_logging(log_level: Optional[str] = None) -> None:

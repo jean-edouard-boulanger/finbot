@@ -1,26 +1,24 @@
-from finbot.core.utils import (
-    fully_qualified_type_name,
-    format_stack,
-    scoped_stack_printer_configuration,
-)
-from finbot.core.errors import FinbotError, ApplicationError
-from finbot.core.serialization import serialize, pretty_dump
+import functools
+import inspect
+import logging
+from contextlib import contextmanager
+from dataclasses import dataclass
+from datetime import date, datetime, timedelta
+from typing import Any, Callable, Iterator, Optional, Type, TypedDict, Union
 
 import jsonschema
-
-from flask import jsonify, request
 from flask import Response as FlaskResponse
+from flask import jsonify, request
 from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
-
 from werkzeug.datastructures import ImmutableMultiDict
 
-from typing import Optional, Callable, Iterator, Any, TypedDict, Union, Type
-from contextlib import contextmanager
-from datetime import datetime, timedelta, date
-from dataclasses import dataclass
-import functools
-import logging
-import inspect
+from finbot.core.errors import ApplicationError, FinbotError
+from finbot.core.serialization import pretty_dump, serialize
+from finbot.core.utils import (
+    format_stack,
+    fully_qualified_type_name,
+    scoped_stack_printer_configuration,
+)
 
 
 class Route(object):

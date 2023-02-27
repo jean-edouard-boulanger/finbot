@@ -1,25 +1,25 @@
-from finbot.core.db.types import JSONEncoded, DateTimeTz
-from finbot.core import secure, environment
-
-from typing import Optional, TypeVar, Type, TYPE_CHECKING, Any
+import enum
 from datetime import datetime
-from sqlalchemy.sql import expression
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+from typing import TYPE_CHECKING, Any, Optional, Type, TypeVar
+
 from sqlalchemy import (
-    Column,
-    Integer,
-    String,
     Boolean,
-    Numeric,
-    Text,
+    Column,
     ForeignKey,
     ForeignKeyConstraint,
+    Integer,
+    Numeric,
+    String,
+    Text,
     UniqueConstraint,
     func,
 )
-import enum
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql import expression
 
+from finbot.core import environment, secure
+from finbot.core.db.types import DateTimeTz, JSONEncoded
 
 if TYPE_CHECKING:
     from sqlalchemy.sql.type_api import TypeEngine

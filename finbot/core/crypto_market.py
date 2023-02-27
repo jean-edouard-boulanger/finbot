@@ -1,7 +1,8 @@
-from finbot.core.errors import FinbotError
-
 from functools import lru_cache
+
 from pycoingecko import CoinGeckoAPI
+
+from finbot.core.errors import FinbotError
 
 
 class Error(FinbotError):

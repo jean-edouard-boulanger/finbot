@@ -1,21 +1,20 @@
-from finbot.apps.appwsrv.db import db_session
-from finbot.apps.appwsrv.blueprints import (
-    base_api,
-    admin_api,
-    auth_api,
-    providers_api,
-    user_accounts_api,
-    linked_accounts_api,
-    reports_api,
-    valuation_api,
-)
-from finbot.core.logging import configure_logging
-from finbot.core import environment
-
 from flask import Flask
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 
+from finbot.apps.appwsrv.blueprints import (
+    admin_api,
+    auth_api,
+    base_api,
+    linked_accounts_api,
+    providers_api,
+    reports_api,
+    user_accounts_api,
+    valuation_api,
+)
+from finbot.apps.appwsrv.db import db_session
+from finbot.core import environment
+from finbot.core.logging import configure_logging
 
 # logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 FINBOT_ENV = environment.get()

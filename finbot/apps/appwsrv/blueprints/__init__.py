@@ -1,20 +1,19 @@
-from finbot.apps.appwsrv.blueprints.base import base_api, API_V1
-from finbot.apps.appwsrv.blueprints.admin import admin_api, ADMIN
-from finbot.apps.appwsrv.blueprints.auth import auth_api, AUTH
-from finbot.apps.appwsrv.blueprints.providers import providers_api, PROVIDERS
-from finbot.apps.appwsrv.blueprints.user_accounts import (
-    user_accounts_api,
-    ACCOUNT,
-    ACCOUNTS,
-)
+from finbot.apps.appwsrv.blueprints.admin import ADMIN, admin_api
+from finbot.apps.appwsrv.blueprints.auth import AUTH, auth_api
+from finbot.apps.appwsrv.blueprints.base import API_V1, base_api
 from finbot.apps.appwsrv.blueprints.linked_accounts import (
-    linked_accounts_api,
     LINKED_ACCOUNT,
     LINKED_ACCOUNTS,
+    linked_accounts_api,
 )
-from finbot.apps.appwsrv.blueprints.reports import reports_api, REPORTS
+from finbot.apps.appwsrv.blueprints.providers import PROVIDERS, providers_api
+from finbot.apps.appwsrv.blueprints.reports import REPORTS, reports_api
+from finbot.apps.appwsrv.blueprints.user_accounts import (
+    ACCOUNT,
+    ACCOUNTS,
+    user_accounts_api,
+)
 from finbot.apps.appwsrv.blueprints.valuation import valuation_api
-
 
 __all__ = [
     "API_V1",

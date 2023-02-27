@@ -1,13 +1,12 @@
+from typing import Any, Iterator, Optional, Tuple
+
+import krakenex
+from pydantic import BaseModel, SecretStr
+
 from finbot import providers
+from finbot.core import fx_market
 from finbot.core.errors import FinbotError
 from finbot.providers.errors import AuthenticationFailure
-from finbot.core import fx_market
-
-from pydantic import BaseModel, SecretStr
-import krakenex
-
-from typing import Optional, Iterator, Tuple, Any
-
 
 OWNERSHIP_UNITS_THRESHOLD = 0.00001
 

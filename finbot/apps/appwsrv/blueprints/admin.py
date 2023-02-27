@@ -1,15 +1,15 @@
-from finbot.apps.appwsrv.blueprints import API_V1
-from finbot.apps.appwsrv.db import db_session
-from finbot.core.email_delivery import EmailService, Email
-from finbot.core import email_delivery
-from finbot.core.web_service import Route, service_endpoint, RequestContext
-from finbot.core.kv_store import DBKVStore
-from finbot.model import repository
+from textwrap import dedent
 
 from flask import Blueprint
 from flask_jwt_extended import jwt_required
 
-from textwrap import dedent
+from finbot.apps.appwsrv.blueprints.base import API_V1
+from finbot.apps.appwsrv.db import db_session
+from finbot.core import email_delivery
+from finbot.core.email_delivery import Email, EmailService
+from finbot.core.kv_store import DBKVStore
+from finbot.core.web_service import RequestContext, Route, service_endpoint
+from finbot.model import repository
 
 ADMIN: Route = API_V1.admin
 admin_api = Blueprint("admin_api", __name__)
