@@ -1,12 +1,8 @@
-from finbot.core import tracer
-
-
 class FinbotError(Exception):
     """Base class for all Finbot errors"""
 
     def __init__(self, error_message: str) -> None:
         super().__init__(error_message)
-        self.tracer_step_key = tracer.current_key()
 
 
 class ApplicationError(FinbotError):

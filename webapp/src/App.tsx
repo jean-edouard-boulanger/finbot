@@ -6,7 +6,6 @@ import { AuthProvider, AuthContext, ServicesProvider } from "contexts";
 import { ToastContainer, Slide, toast } from "react-toastify";
 import { MainContainer, Navigation } from "components";
 import {
-  Admin,
   LoginForm,
   SignupForm,
   Logout,
@@ -39,7 +38,6 @@ const UserRouter = () => {
       <Route exact path="/welcome" render={() => <Welcome />} />
       <Route exact path="/dashboard" render={() => <MainDashboard />} />
       <Route exact path="/logout" render={() => <Logout />} />
-      <Route exact path="/admin/traces/:guid" render={() => <Admin />} />
       <Route path="/settings" render={() => <Settings />} />
 
       <Redirect to={"/dashboard"} />

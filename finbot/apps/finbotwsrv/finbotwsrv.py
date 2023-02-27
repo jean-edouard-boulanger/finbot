@@ -1,6 +1,6 @@
 from finbot import providers
 from finbot.core.db.session import Session
-from finbot.core import tracer, environment
+from finbot.core import environment
 from finbot.core.logging import configure_logging
 from finbot.core.utils import format_stack, configure_stack_printer
 from finbot.core.web_service import service_endpoint, ApplicationErrorData
@@ -23,9 +23,6 @@ configure_stack_printer(show_vals=None)
 
 db_engine = create_engine(FINBOT_ENV.database_url)
 db_session = Session(scoped_session(sessionmaker(bind=db_engine)))
-tracer.configure(
-    identity="finbotwsrv", persistence_layer=tracer.DBPersistenceLayer(db_session)
-)
 
 app = Flask(__name__)
 
@@ -61,10 +58,8 @@ def item_handler(item_type: LineItemLiteral, provider_api: providers.Base):
         if not handler:
             raise ValueError(f"unknown line item: '{item_type}'")
         logging.info(f"handling '{item_type}' line item")
-        with tracer.sub_step(f"fetch {item_type}") as step:
-            results = handler(provider_api)
-            step.set_output(results)
-            return {"line_item": item_type, "results": results}
+        results = handler(provider_api)
+        return {"line_item": item_type, "results": results}
     except Exception as e:
         logging.warning(f"error while handling '{item_type}': {e}\n{format_stack()}")
         return {"line_item": item_type, "error": ApplicationErrorData.from_exception(e)}
@@ -76,8 +71,7 @@ def get_financial_data_impl(
     line_items: list[LineItemLiteral],
 ):
     with provider_type.create(authentication_payload) as provider_api:
-        with tracer.sub_step("initialize"):
-            provider_api.initialize()
+        provider_api.initialize()
         return {
             "financial_data": [
                 item_handler(line_item, provider_api) for line_item in set(line_items)
@@ -96,8 +90,4 @@ def healthy():
 @validate()
 def get_financial_data(body: FinancialDataRequest):
     provider = get_provider(body.provider)
-    tracer.current().set_description(body.provider)
-    tracer.current().metadata["provider_id"] = body.provider
-    tracer.current().metadata["line_items"] = ", ".join(body.items)
-    tracer.current().metadata["account"] = body.account_metadata
     return get_financial_data_impl(provider, body.credentials, body.items)

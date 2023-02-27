@@ -1,5 +1,4 @@
 from finbot.clients.base import Base as ClientBase
-from finbot.core import tracer
 
 from typing import Any, Optional
 
@@ -12,9 +11,7 @@ class SnapClient(ClientBase):
         self,
         account_id: int,
         linked_accounts: Optional[list[int]] = None,
-        tracer_context: Optional[tracer.FlatContext] = None,
     ) -> Any:
         return self.post(
-            f"snapshot/{account_id}/take",
-            tracer.pack_context({"linked_accounts": linked_accounts}, tracer_context),
+            f"snapshot/{account_id}/take", {"linked_accounts": linked_accounts}
         )

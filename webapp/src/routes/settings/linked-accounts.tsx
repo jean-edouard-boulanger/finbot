@@ -181,7 +181,6 @@ const LinkedAccountStatusPanel = withRouter(() => {
 
   const status = getLinkedAccountStatus(linkedAccount!);
   const lastError = getLinkedAccountLastError(linkedAccount!);
-  const distributedTraceKey = lastError?.distributed_trace_key;
 
   return (
     <>
@@ -212,15 +211,6 @@ const LinkedAccountStatusPanel = withRouter(() => {
                     <strong>Internal details</strong>:{" "}
                     {lastError!.debug_message}
                   </p>
-                </>
-              )}
-              {distributedTraceKey && (
-                <>
-                  <hr />
-                  <span className={"font-italic"}>
-                    Reference: {distributedTraceKey.guid}/
-                    {distributedTraceKey.path}
-                  </span>
                 </>
               )}
             </Alert>

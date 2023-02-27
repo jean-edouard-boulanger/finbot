@@ -1,4 +1,3 @@
-from finbot.core import tracer
 from finbot.core.errors import FinbotError
 
 import quickforex
@@ -50,9 +49,7 @@ def get_rates(pairs: set[Xccy]) -> dict[Xccy, Optional[float]]:
             _format_quickforex_xccy(pair) for pair in pairs_needing_lookup
         )
         try:
-            with tracer.sub_step(f"Getting {pairs_str} rates from quickforex") as step:
-                step.set_input(pairs_str)
-                quickforex_rates = quickforex.get_latest_rates(pairs_needing_lookup)
+            quickforex_rates = quickforex.get_latest_rates(pairs_needing_lookup)
         except Exception as e:
             raise Error(
                 f"Error while getting rates for currency pairs {pairs_str}: {e}"

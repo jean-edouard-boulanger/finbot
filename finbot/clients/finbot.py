@@ -1,4 +1,3 @@
-from finbot.core import tracer
 from finbot.clients.base import Base as ClientBase
 
 from typing import Optional, Any
@@ -21,17 +20,13 @@ class FinbotClient(ClientBase):
         credentials_data: dict[str, Any],
         line_items: list[LineItem],
         account_metadata: Optional[str] = None,
-        tracer_context: Optional[tracer.FlatContext] = None,
     ) -> Any:
         return self.post(
             "financial_data",
-            payload=tracer.pack_context(
-                {
-                    "provider": provider,
-                    "credentials": credentials_data,
-                    "items": [item.value for item in line_items],
-                    "account_metadata": account_metadata,
-                },
-                tracer_context,
-            ),
+            {
+                "provider": provider,
+                "credentials": credentials_data,
+                "items": [item.value for item in line_items],
+                "account_metadata": account_metadata,
+            },
         )

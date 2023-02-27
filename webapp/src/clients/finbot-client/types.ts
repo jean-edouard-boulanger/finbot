@@ -15,11 +15,6 @@ export interface SeriesData {
   series: Array<SeriesYAxisData>;
 }
 
-export interface DistributedTraceKey {
-  guid: string;
-  path: string;
-}
-
 export interface TimeRange {
   from_time?: DateTime | null;
   to_time?: DateTime | null;
@@ -31,31 +26,6 @@ export interface FinbotErrorMetadata {
   error_code: string | null;
   exception_type: string | null;
   trace: string | null;
-  distributed_trace_key: DistributedTraceKey | null;
-}
-
-export interface GetTracesRequest {
-  guid: string;
-}
-
-export interface TracesTreeNodeData {
-  path: string;
-  name: string;
-  metadata: Record<string, any>;
-  start_time: string;
-  end_time: string;
-}
-
-export interface TracesTreeNode {
-  children: Array<TracesTreeNode>;
-  data: TracesTreeNodeData;
-  extra_properties: Record<string, any>;
-}
-
-export type TracesTree = TracesTreeNode;
-
-export interface GetTracesResponse {
-  tree: TracesTree;
 }
 
 export interface RegisterAccountRequest {
