@@ -3,9 +3,12 @@ script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 source "${script_dir}/bash-utils.sh"
 service_name=$1
 
+"${script_dir}/finbot-wait"
+
 if [[ -z "${service_name}" ]]
 then
   echo "usage: $0 < service name >"
+  echo "usage: $0 -- < arguments >"
   exit 1
 elif [[ "${service_name}" == "webapp" ]]
 then
@@ -41,6 +44,11 @@ then
 	  --app appwsrv \
     --timeout 600 \
 	  --port 5003
+elif [[ "${service_name}" == "--" ]]
+then
+  shift
+  echo "running command: ${*}"
+  exec "${@}"
 else
   log_error "unknown service: ${service_name}"
   exit 1

@@ -26,8 +26,6 @@ services:
       - envs/secrets.prod.env
     working_dir: /finbot
     command: bash -c "./tools/run finbotwsrv"
-    environment:
-      FINBOT_WAIT_DEPS: "db"
 
   snapwsrv:
     image: "finbotapp/runtime:latest"
@@ -38,7 +36,7 @@ services:
       - finbotdb
       - finbotwsrv
     working_dir: /finbot
-    command: bash -c "tools/finbot-wait && ./tools/run snapwsrv"
+    command: bash -c "./tools/run snapwsrv"
     environment:
       FINBOT_WAIT_DEPS: "db,finbot"
 
@@ -50,7 +48,7 @@ services:
     depends_on:
       - finbotdb
     working_dir: /finbot
-    command: bash -c "tools/finbot-wait && ./tools/run histwsrv"
+    command: bash -c "./tools/run histwsrv"
     environment:
       FINBOT_WAIT_DEPS: "db"
 
@@ -63,7 +61,7 @@ services:
       - finbotdb
       - workersrv
     working_dir: /finbot
-    command: bash -c "tools/finbot-wait && ./tools/run schedsrv"
+    command: bash -c "./tools/run schedsrv"
     environment:
       FINBOT_WAIT_DEPS: "db,worker"
 
@@ -78,7 +76,7 @@ services:
       - snapwsrv
       - histwsrv
     working_dir: /finbot
-    command: bash -c "tools/finbot-wait && ./tools/run workersrv"
+    command: bash -c "./tools/run workersrv"
     environment:
       FINBOT_WAIT_DEPS: "db,rmq,snap,hist"
 
@@ -92,7 +90,7 @@ services:
       - finbotwsrv
       - workersrv
     working_dir: /finbot
-    command: bash -c "tools/finbot-wait && ./tools/run appwsrv"
+    command: bash -c "./tools/run appwsrv"
     ports:
       - "5003:5003"
     volumes:
