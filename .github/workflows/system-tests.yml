@@ -23,6 +23,6 @@ jobs:
       - name: Start finbot backend
         run: ./finbotctl start --no-frontend
       - name: Run system tests
-        run: make run-system-tests-docker
+        run: make run-system-tests
       - name: Stop finbot backend
         run: ./finbotctl stop

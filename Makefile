@@ -29,10 +29,12 @@ docker-build-all: docker-build-dev docker-build-prod docker-build-webapp
 trigger-valuation:
 	tools/check-env.sh accounts;
 	docker-compose run --rm schedsrv \
-		make trigger-valuation accounts=${accounts}
+		./tools/run -- python3.11 finbot/apps/schedsrv/schedsrv.py \
+			--mode one_shot \
+			--accounts ${accounts}
 
-run-system-tests-docker:
-	docker-compose run --rm operator env FINBOT_WAIT_DEPS=api,finbot,hist,snap ./tools/finbot-wait
+run-system-tests:
+	docker-compose run --rm operator env FINBOT_WAIT_DEPS=api,finbot,hist,snap ./tools/finbot-wait;
 	docker-compose run --rm operator python3.11 -m pytest tests/system/
 
 finbotdb-build:
@@ -73,9 +75,6 @@ finbotdb-psql:
 
 init-dev:
 	tools/init-dev.sh
-
-docker-dev:
-	docker exec -it operator /bin/bash
 
 py-unit-tests:
 	python3.11 -m pytest tests/unit_tests

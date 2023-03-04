@@ -34,8 +34,6 @@ services:
       - "5001:5001"
     volumes:
       - .:/finbot
-    environment:
-      FINBOT_WAIT_DEPS: "db"
 
   snapwsrv:
     image: "finbotapp/runtime-dev:latest"
@@ -46,7 +44,7 @@ services:
       - finbotdb
       - finbotwsrv
     working_dir: /finbot
-    command: bash -c "tools/finbot-wait && ./tools/run snapwsrv"
+    command: bash -c "./tools/run snapwsrv"
     tty: true
     ports:
       - "5000:5000"
@@ -63,7 +61,7 @@ services:
     depends_on:
       - finbotdb
     working_dir: /finbot
-    command: bash -c "tools/finbot-wait && ./tools/run histwsrv"
+    command: bash -c "./tools/run histwsrv"
     tty: true
     ports:
       - "5002:5002"
@@ -81,7 +79,7 @@ services:
       - finbotdb
       - workersrv
     working_dir: /finbot
-    command: bash -c "tools/finbot-wait && tools/autorestart finbot/ ./tools/run schedsrv"
+    command: bash -c "tools/autorestart finbot/ ./tools/run schedsrv"
     tty: true
     volumes:
       - .:/finbot
@@ -99,7 +97,7 @@ services:
       - snapwsrv
       - histwsrv
     working_dir: /finbot
-    command: bash -c "tools/finbot-wait && tools/autorestart finbot/ ./tools/run workersrv"
+    command: bash -c "tools/autorestart finbot/ ./tools/run workersrv"
     tty: true
     volumes:
       - .:/finbot
@@ -116,7 +114,7 @@ services:
       - finbotwsrv
       - workersrv
     working_dir: /finbot
-    command: bash -c "tools/finbot-wait && ./tools/run appwsrv"
+    command: bash -c "./tools/run appwsrv"
     tty: true
     ports:
       - "5003:5003"
