@@ -1,0 +1,56 @@
+#!/usr/bin/env python3.11
+import re
+import sys
+from pathlib import Path
+from subprocess import check_output
+
+import semver
+import click
+
+from finbot._version import __version__
+
+
+VERSION_FILE_PATH = Path("finbot/_version.py")
+assert VERSION_FILE_PATH.is_file()
+
+
+def get_master_version() -> semver.VersionInfo:
+    output = check_output(f"git show master:{VERSION_FILE_PATH}", shell=True).decode().strip()
+    matches = re.findall(r"^__version__ = (.+)$", output)
+    version = matches[0].strip('"')
+    return semver.VersionInfo.parse(version)
+
+
+def get_current_version() -> semver.VersionInfo:
+    return semver.VersionInfo.parse(__version__)
+
+
+cli = click.Group()
+
+
+@cli.command()
+def check_version_bump():
+    master_version = get_master_version()
+    was_bumped = semver.VersionInfo.parse(__version__).compare(master_version) > 0
+    if not was_bumped:
+        print(f"Error: please bump __version__ in {VERSION_FILE_PATH}", file=sys.stderr)
+        sys.exit(1)
+    sys.exit(0)
+
+
+@cli.command()
+def get_current_version():
+    print(__version__, end='')
+
+
+@cli.command()
+@click.argument("mode", nargs=1, type=click.Choice(["patch", "minor", "major"]))
+def bump(mode: str):
+    master_version = get_master_version()
+    new_version = getattr(master_version, f"bump_{mode}")()
+    VERSION_FILE_PATH.write_text(f'__version__ = "{new_version}"\n')
+    print(f"bumped master version from {master_version} to {new_version} ({mode})", file=sys.stderr)
+
+
+if __name__ == "__main__":
+    cli()
