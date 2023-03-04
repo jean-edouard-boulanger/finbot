@@ -1,0 +1,20 @@
+name: Versioning checks
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  version-bump-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out finbot source
+        uses: actions/checkout@v3
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.11
+      - run: git fetch origin master:master
+      - name: Install Python dependencies
+        run: python3.11 -m pip install -r requirements-dev.txt
+      - name: Check version bump
+        run: env PYTHONPATH=$PWD:$PYTHONPATH ./tools/versioning check-version-bump
