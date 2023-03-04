@@ -52,9 +52,9 @@
     "prettier": "^2.2.1"
   },
   "scripts": {
-    "start": "HOST=0.0.0.0 react-scripts start",
+    "start": "HOST=0.0.0.0 PORT=5005 react-scripts start",
     "build": "react-scripts build",
-    "serve": "serve -s build/",
+    "serve": "serve -l 5005 -s build/",
     "tsc-build-check": "tsc --build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",

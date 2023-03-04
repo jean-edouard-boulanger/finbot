@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+source "${script_dir}/bash-utils.sh"
+service_name=$1
+
+if [[ -z "${service_name}" ]]
+then
+  echo "usage: $0 < service name >"
+  exit 1
+elif [[ "${service_name}" == "webapp" ]]
+then
+  exec "${script_dir}/run-webapp.sh"
+elif [[ "${service_name}" == "schedsrv" ]]
+then
+  exec python3.11 finbot/apps/schedsrv/schedsrv.py
+elif [[ "${service_name}" == "workersrv" ]]
+then
+  exec python3.11 -m celery -A finbot.apps.workersrv.workersrv worker --loglevel INFO
+elif [[ "${service_name}" == "histwsrv" ]]
+then
+	exec "${script_dir}/run-web-service.sh" \
+	  --app histwsrv \
+	  --timeout 30 \
+	  --port 5002
+elif [[ "${service_name}" == "finbotwsrv" ]]
+then
+	xvfb-run -a "${script_dir}/run-web-service.sh" \
+		--app finbotwsrv \
+		--workers 4 \
+		--timeout 300 \
+		--port 5001
+elif [[ "${service_name}" == "snapwsrv" ]]
+then
+  exec "${script_dir}/run-web-service.sh" \
+		--app snapwsrv \
+		--timeout 1200 \
+		--port 5000
+elif [[ "${service_name}" == "appwsrv" ]]
+then
+	exec "${script_dir}/run-web-service.sh" \
+	  --app appwsrv \
+    --timeout 600 \
+	  --port 5003
+else
+  log_error "unknown service: ${service_name}"
+  exit 1
+fi

@@ -21,17 +21,6 @@ docker_image_exists() {
   fi
   return 0
 }
-docker_run_operator() {
-  echo "$@"
-  docker-compose run --rm operator \
-    tools/with-env.sh docker "$@"
-}
-add_to_python_path() {
-  value=$1
-  if [ -d "${value}" ] && [[ ":${PATH}:" != *":${value}:"* ]]; then
-    export PYTHONPATH="${PYTHONPATH:+"$PATH:"}$1"
-  fi
-}
 run_and_trace() {
   echo "running: ${*}"
   exec "$@"

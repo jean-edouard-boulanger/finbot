@@ -1,0 +1,113 @@
+version: "3"
+services:
+
+  finbotdb:
+    image: "postgres:12"
+    env_file:
+      - envs/prod.env
+      - envs/secrets.prod.env
+    restart: always
+    shm_size: 256MB
+    ports:
+      - "5432:5432"
+    volumes:
+      - .finbotdb:/var/lib/postgresql/data
+
+  finbotrmq:
+    image: "rabbitmq:3-management-alpine"
+    env_file:
+      - envs/prod.env
+      - envs/secrets.prod.env
+
+  finbotwsrv:
+    image: "finbotapp/runtime:latest"
+    env_file:
+      - envs/prod.env
+      - envs/secrets.prod.env
+    working_dir: /finbot
+    command: bash -c "./tools/run finbotwsrv"
+    environment:
+      FINBOT_WAIT_DEPS: "db"
+
+  snapwsrv:
+    image: "finbotapp/runtime:latest"
+    env_file:
+      - envs/prod.env
+      - envs/secrets.prod.env
+    depends_on:
+      - finbotdb
+      - finbotwsrv
+    working_dir: /finbot
+    command: bash -c "tools/finbot-wait && ./tools/run snapwsrv"
+    environment:
+      FINBOT_WAIT_DEPS: "db,finbot"
+
+  histwsrv:
+    image: "finbotapp/runtime:latest"
+    env_file:
+      - envs/prod.env
+      - envs/secrets.prod.env
+    depends_on:
+      - finbotdb
+    working_dir: /finbot
+    command: bash -c "tools/finbot-wait && ./tools/run histwsrv"
+    environment:
+      FINBOT_WAIT_DEPS: "db"
+
+  schedsrv:
+    image: "finbotapp/runtime:latest"
+    env_file:
+      - envs/prod.env
+      - envs/secrets.prod.env
+    depends_on:
+      - finbotdb
+      - workersrv
+    working_dir: /finbot
+    command: bash -c "tools/finbot-wait && ./tools/run schedsrv"
+    environment:
+      FINBOT_WAIT_DEPS: "db,worker"
+
+  workersrv:
+    image: "finbotapp/runtime:latest"
+    env_file:
+      - envs/prod.env
+      - envs/secrets.prod.env
+    depends_on:
+      - finbotdb
+      - finbotrmq
+      - snapwsrv
+      - histwsrv
+    working_dir: /finbot
+    command: bash -c "tools/finbot-wait && ./tools/run workersrv"
+    environment:
+      FINBOT_WAIT_DEPS: "db,rmq,snap,hist"
+
+  appwsrv:
+    image: "finbotapp/runtime:latest"
+    env_file:
+      - envs/prod.env
+      - envs/secrets.prod.env
+    depends_on:
+      - finbotdb
+      - finbotwsrv
+      - workersrv
+    working_dir: /finbot
+    command: bash -c "tools/finbot-wait && ./tools/run appwsrv"
+    ports:
+      - "5003:5003"
+    volumes:
+      - .:/finbot
+    environment:
+      FINBOT_WAIT_DEPS: "db,finbot,worker"
+
+  webapp:
+    image: "finbotapp/webapp:latest"
+    env_file:
+      - envs/prod.env
+      - envs/secrets.prod.env
+    depends_on:
+      - appwsrv
+    working_dir: /finbot
+    command: npm run serve
+    ports:
+      - "5005:5005"

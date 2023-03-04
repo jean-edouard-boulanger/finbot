@@ -3,9 +3,7 @@ OWN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "${OWN_DIR}/bash-utils.sh"
 
 wait_dep () {
-docker-compose run --rm operator \
-  tools/with-env.sh docker \
-    env FINBOT_WAIT_DEPS="${1}" make finbot-wait
+  docker-compose run --rm operator env FINBOT_WAIT_DEPS="${1}" ./tools/finbot-wait
 }
 
 start_frontend=1
@@ -74,7 +72,4 @@ if [[ "${start_frontend}" == "1" ]]
 then
   log_info "waiting for frontend availability"
   wait_dep webapp
-
-  webapp_url=$(tools/with-env.sh local tools/get-env.sh FINBOT_WEBAPP_ENDPOINT)
-  log_info "you can now access finbot on: ${webapp_url}"
 fi

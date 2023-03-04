@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -e
+echo "compiling prod requirements"
+docker-compose run --no-deps --rm operator pip-compile --resolver=backtracking -o requirements.txt requirements.in
+echo "compiling dev requirements"
+docker-compose run --no-deps --rm operator pip-compile --resolver=backtracking -o requirements-dev.txt requirements-dev.in
