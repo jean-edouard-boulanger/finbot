@@ -4,11 +4,10 @@ import sys
 from pathlib import Path
 from subprocess import check_output
 
-import semver
 import click
+import semver
 
 from finbot._version import __version__
-
 
 VERSION_FILE_PATH = Path("finbot/_version.py")
 assert VERSION_FILE_PATH.is_file()

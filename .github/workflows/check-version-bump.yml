@@ -16,4 +16,4 @@ jobs:
       - name: Install Python dependencies
         run: python3.11 -m pip install -r requirements-dev.txt
       - name: Check version bump
-        run: ./tools/versioning check-version-bump
+        run: env PYTHONPATH=$PWD:$PYTHONPATH ./tools/versioning check-version-bump
