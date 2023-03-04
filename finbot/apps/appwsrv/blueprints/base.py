@@ -1,5 +1,6 @@
 from flask import Blueprint
 
+from finbot._version import __version__
 from finbot.core import environment
 from finbot.core.web_service import Route
 
@@ -16,7 +17,7 @@ def healthy():
 def get_system_report():
     return {
         "system_report": {
-            "finbot_version": "0.0.1",
+            "finbot_version": __version__,
             "runtime": environment.get_finbot_runtime(),
         }
     }
