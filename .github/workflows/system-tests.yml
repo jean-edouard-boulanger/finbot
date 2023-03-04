@@ -15,9 +15,9 @@ jobs:
       - uses: satackey/action-docker-layer-caching@v0.0.11
         continue-on-error: true
         with:
-          key: finbot-docker-${{ hashFiles('*.Dockerfile', 'docker-compose*', 'requirements.txt') }}-{hash}
+          key: finbot-docker-${{ hashFiles('Dockerfile', 'docker-compose*', 'requirements*.txt') }}-{hash}
           restore-keys: |
-            finbot-docker-${{ hashFiles('*.Dockerfile', 'docker-compose*', 'requirements.txt') }}-
+            finbot-docker-${{ hashFiles('Dockerfile', 'docker-compose*', 'requirements*.txt') }}-
       - name: Initialise finbot environment
         run: ./finbotctl init
       - name: Start finbot backend

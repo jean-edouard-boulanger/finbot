@@ -15,104 +15,25 @@ alembic-downgrade:
 alembic-history:
 	alembic history
 
-run-schedsrv-dev:
-	tools/autorestart.sh \
-		finbot/ \
-		python3.11 finbot/apps/schedsrv/schedsrv.py
+docker-build-webapp:
+	cd webapp && docker build -t finbotapp/webapp:latest -f Dockerfile --pull .
 
-run-workersrv-dev:
-	tools/autorestart.sh \
-		finbot/ \
-		python3.11 -m celery \
-			-A finbot.apps.workersrv.workersrv worker \
-			--loglevel INFO
+docker-build-prod:
+	docker build --target prod -t finbotapp/runtime:latest -f Dockerfile --pull .
 
-run-histwsrv-dev:
-	tools/run-web-service.sh \
-		--app histwsrv \
-		--timeout 30 \
-		--port 5002
+docker-build-dev:
+	docker build --target dev -t finbotapp/runtime-dev:latest -f Dockerfile --pull .
 
-run-finbotwsrv-dev:
-	xvfb-run -a tools/run-web-service.sh \
-		--app finbotwsrv \
-		--workers 4 \
-		--timeout 300 \
-		--port 5001
-
-run-snapwsrv-dev:
-	tools/run-web-service.sh \
-		--app snapwsrv \
-		--timeout 1200 \
-		--port 5000
-
-run-appwsrv-dev:
-	tools/run-web-service.sh \
-		--app appwsrv \
-  		--timeout 600 \
-		--port 5003
-
-docker-build:
-	docker build -t finbot/finbot:latest -f Dockerfile --no-cache .
-
-trigger-valuation-docker:
-	tools/check-env.sh accounts;
-	docker-compose run --rm schedsrv \
-		tools/with-env.sh docker \
-			make trigger-valuation accounts=${accounts}
+docker-build-all: docker-build-dev docker-build-prod docker-build-webapp
 
 trigger-valuation:
 	tools/check-env.sh accounts;
-	env FINBOT_WAIT_DEPS=db,worker make finbot-wait;
-	python3.11 finbot/apps/schedsrv/schedsrv.py \
-		--mode one_shot \
-		--accounts ${accounts}
-
-test-providers-docker:
-	tools/check-env.sh account_id;
-	tools/check-env.sh providers;
-	docker-compose run --rm operator \
-		tools/with-env.sh docker \
-			python3.11 tools/providers-tester \
-				--dump-balances --dump-assets --dump-liabilities \
-				--account-id ${account_id} \
-				--providers ${providers}
-
-test-providers-debug:
-	tools/check-env.sh account_id;
-	tools/check-env.sh providers;
-	python3.11 tools/providers-tester \
-			--dump-balances --dump-assets --dump-liabilities \
-			--show-browser \
-			--pause-on-error \
-			--no-threadpool \
-			--developer-tools \
-			--account-id ${account_id} \
-			--providers ${providers}
-
-test-providers:
-	tools/check-env.sh account_id;
-	tools/check-env.sh providers;
-	python3.11 tools/providers-tester \
-			--dump-balances --dump-assets --dump-liabilities \
-			--account-id ${account_id} \
-			--providers ${providers}
-
-test-snap:
-	tools/check-env.sh account;
-	python3.11 tools/snapwsrv-tester \
-		--account-id ${account}
-
-test-hist:
-	tools/check-env.sh snapshot;
-	python3.11 tools/histwsrv-tester \
-		--snapshot-id ${snapshot}
+	docker-compose run --rm schedsrv \
+		make trigger-valuation accounts=${accounts}
 
 run-system-tests-docker:
-	env FINBOT_WAIT_DEPS=api,finbot,hist,snap make finbot-wait-docker;
-	docker-compose run --rm operator \
-		tools/with-env.sh docker \
-			python3.11 -m pytest tests/system/
+	docker-compose run --rm operator env FINBOT_WAIT_DEPS=api,finbot,hist,snap ./tools/finbot-wait
+	docker-compose run --rm operator python3.11 -m pytest tests/system/
 
 finbotdb-build:
 	python3.11 tools/finbotdb build
@@ -149,19 +70,6 @@ finbotdb-psql:
 	tools/check-env.sh FINBOT_DB_DBNAME;
 	env PGPASSWORD=${FINBOT_DB_PASSWORD} \
 		psql -h ${FINBOT_DB_HOSTNAME} -U ${FINBOT_DB_USER} -d ${FINBOT_DB_DBNAME}
-
-finbot-wait:
-	tools/check-env.sh FINBOT_WAIT_DEPS;
-	tools/finbot-wait
-
-finbot-wait-docker:
-	tools/check-env.sh FINBOT_WAIT_DEPS;
-	docker-compose run \
-		-e FINBOT_WAIT_DEPS=${FINBOT_WAIT_DEPS} \
-		-e FINBOT_WAIT_TIMEOUT=${FINBOT_WAIT_TIMEOUT} \
-		--rm operator \
-		tools/with-env.sh docker \
-			python3.11 tools/finbot-wait
 
 init-dev:
 	tools/init-dev.sh

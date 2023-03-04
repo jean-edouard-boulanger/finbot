@@ -3,14 +3,11 @@ services:
 
   finbotdb:
     image: "postgres:12"
-    container_name: finbotdb
+    env_file:
+      - envs/dev.env
+      - envs/secrets.dev.env
     restart: always
     shm_size: 256MB
-    environment:
-      POSTGRES_PORT: 5432
-      POSTGRES_DB: finbot
-      POSTGRES_USER: finbot
-      POSTGRES_PASSWORD: finbot
     ports:
       - "5432:5432"
     volumes:
@@ -18,140 +15,146 @@ services:
 
   finbotrmq:
     image: "rabbitmq:3-management-alpine"
-    container_name: finbotrmq
+    env_file:
+      - envs/dev.env
+      - envs/secrets.dev.env
     ports:
       - "5672:5672"
       - "15672:15672"
-    environment:
-      RABBITMQ_DEFAULT_USER: finbot
-      RABBITMQ_DEFAULT_PASS: finbot
 
   finbotwsrv:
-    image: "finbot/finbot:latest"
-    container_name: finbotwsrv
+    image: "finbotapp/runtime-dev:latest"
+    env_file:
+      - envs/dev.env
+      - envs/secrets.dev.env
     working_dir: /finbot
-    command: bash -c "source docker.env.sh && make run-finbotwsrv-dev"
+    command: bash -c "./tools/run finbotwsrv"
     tty: true
     ports:
       - "5001:5001"
     volumes:
       - .:/finbot
     environment:
-      FINBOT_ENV: ${FINBOT_ENV}
       FINBOT_WAIT_DEPS: "db"
 
   snapwsrv:
-    image: "finbot/finbot:latest"
-    container_name: snapwsrv
+    image: "finbotapp/runtime-dev:latest"
+    env_file:
+      - envs/dev.env
+      - envs/secrets.dev.env
     depends_on:
       - finbotdb
       - finbotwsrv
     working_dir: /finbot
-    command: bash -c "source docker.env.sh && make finbot-wait && make run-snapwsrv-dev"
+    command: bash -c "tools/finbot-wait && ./tools/run snapwsrv"
     tty: true
     ports:
       - "5000:5000"
     volumes:
       - .:/finbot
     environment:
-      FINBOT_ENV: ${FINBOT_ENV}
       FINBOT_WAIT_DEPS: "db,finbot"
 
   histwsrv:
-    image: "finbot/finbot:latest"
-    container_name: histwsrv
+    image: "finbotapp/runtime-dev:latest"
+    env_file:
+      - envs/dev.env
+      - envs/secrets.dev.env
     depends_on:
       - finbotdb
     working_dir: /finbot
-    command: bash -c "source docker.env.sh && make finbot-wait && make run-histwsrv-dev"
+    command: bash -c "tools/finbot-wait && ./tools/run histwsrv"
     tty: true
     ports:
       - "5002:5002"
     volumes:
       - .:/finbot
     environment:
-      FINBOT_ENV: ${FINBOT_ENV}
       FINBOT_WAIT_DEPS: "db"
 
   schedsrv:
-    image: "finbot/finbot:latest"
-    container_name: schedsrv
+    image: "finbotapp/runtime-dev:latest"
+    env_file:
+      - envs/dev.env
+      - envs/secrets.dev.env
     depends_on:
       - finbotdb
       - workersrv
     working_dir: /finbot
-    command: bash -c "source docker.env.sh && make finbot-wait && make run-schedsrv-dev"
+    command: bash -c "tools/finbot-wait && tools/autorestart finbot/ ./tools/run schedsrv"
     tty: true
     volumes:
       - .:/finbot
     environment:
-      FINBOT_ENV: ${FINBOT_ENV}
       FINBOT_WAIT_DEPS: "db,worker"
 
   workersrv:
-    image: "finbot/finbot:latest"
-    container_name: workersrv
+    image: "finbotapp/runtime-dev:latest"
+    env_file:
+      - envs/dev.env
+      - envs/secrets.dev.env
     depends_on:
       - finbotdb
       - finbotrmq
       - snapwsrv
       - histwsrv
     working_dir: /finbot
-    command: bash -c "source docker.env.sh && make finbot-wait && make run-workersrv-dev"
+    command: bash -c "tools/finbot-wait && tools/autorestart finbot/ ./tools/run workersrv"
     tty: true
     volumes:
       - .:/finbot
     environment:
-      FINBOT_ENV: ${FINBOT_ENV}
       FINBOT_WAIT_DEPS: "db,rmq,snap,hist"
 
   appwsrv:
-    image: "finbot/finbot:latest"
-    container_name: appwsrv
+    image: "finbotapp/runtime-dev:latest"
+    env_file:
+      - envs/dev.env
+      - envs/secrets.dev.env
     depends_on:
       - finbotdb
       - finbotwsrv
       - workersrv
     working_dir: /finbot
-    command: bash -c "source docker.env.sh && make finbot-wait && make run-appwsrv-dev"
+    command: bash -c "tools/finbot-wait && ./tools/run appwsrv"
     tty: true
     ports:
       - "5003:5003"
     volumes:
       - .:/finbot
     environment:
-      FINBOT_ENV: ${FINBOT_ENV}
       FINBOT_WAIT_DEPS: "db,finbot,worker"
 
-  webapp:
-    image: "node:16-buster"
-    container_name: webapp
-    depends_on:
-      - appwsrv
-    volumes:
-      - .:/finbot
-    working_dir: /finbot
-    command: bash -c "source docker.env.sh && tools/run-webapp.sh"
-    tty: true
-    ports:
-      - "5005:5005"
-    environment:
-      FINBOT_ENV: ${FINBOT_ENV}
-
   operator:
-    image: "finbot/finbot:latest"
+    image: "finbotapp/runtime-dev:latest"
+    env_file:
+      - envs/dev.env
+      - envs/secrets.dev.env
     profiles:
       - operator
     container_name: operator
     depends_on:
       - finbotdb
     working_dir: /finbot
-    command: bash -c "source docker.env.sh && sleep infinity"
+    command: sleep infinity
     stdin_open: true
     tty: true
     volumes:
       - .:/finbot
 
-volumes:
-    .finbotdb:
-    .:
+  webapp:
+    image: "node:16-buster"
+    env_file:
+      - envs/dev.env
+      - envs/secrets.dev.env
+    profiles:
+      - webapp
+    depends_on:
+      - appwsrv
+    volumes:
+      - .:/finbot
+    working_dir: /finbot
+    command: bash -c "tools/run webapp"
+    tty: true
+    ports:
+      - "5005:5005"

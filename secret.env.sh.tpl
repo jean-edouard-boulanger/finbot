@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-export FINBOT_SECRET_KEY=FINBOT_SECRET_KEY_PLACEHOLDER
-export FINBOT_DB_PASSWORD=finbot
-export FINBOT_RMQ_PASSWORD=finbot

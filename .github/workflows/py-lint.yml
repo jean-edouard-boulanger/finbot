@@ -35,7 +35,7 @@ jobs:
         with:
           python-version: 3.11
       - name: Install Python dependencies
-        run: python3.11 -m pip install -r requirements.txt
+        run: python3.11 -m pip install -r requirements-dev.txt
       - name: black lint
         run: make black-check
   mypy-check:
@@ -47,7 +47,7 @@ jobs:
         with:
           python-version: 3.11
       - name: Install Python dependencies
-        run: python3.11 -m pip install -r requirements.txt
+        run: python3.11 -m pip install -r requirements-dev.txt
       - name: mypy lint
         run: make mypy
   isort-check:
@@ -59,7 +59,7 @@ jobs:
         with:
           python-version: 3.11
       - name: Install Python dependencies
-        run: python3.11 -m pip install -r requirements.txt
+        run: python3.11 -m pip install -r requirements-dev.txt
       - name: isort lint
         run: make isort-check
   banned-keywords-check:
@@ -71,7 +71,7 @@ jobs:
         with:
           python-version: 3.11
       - name: Install Python dependencies
-        run: python3.11 -m pip install -r requirements.txt
+        run: python3.11 -m pip install -r requirements-dev.txt
       - name: Check banned keywords
         run: make banned-keywords-check-py
   unit-tests:
@@ -83,6 +83,6 @@ jobs:
         with:
           python-version: 3.11
       - name: Install Python dependencies
-        run: python3.11 -m pip install -r requirements.txt
+        run: python3.11 -m pip install -r requirements-dev.txt
       - name: Run unit tests
         run: make unit-tests-py
