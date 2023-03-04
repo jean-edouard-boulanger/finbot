@@ -14,7 +14,7 @@ assert VERSION_FILE_PATH.is_file()
 
 
 def get_master_version() -> semver.VersionInfo:
-    output = check_output(f"git show master:{VERSION_FILE_PATH}", shell=True).decode().strip()
+    output = check_output(f"git show origin/master:{VERSION_FILE_PATH}", shell=True).decode().strip()
     matches = re.findall(r"^__version__ = (.+)$", output)
     version = matches[0].strip('"')
     return semver.VersionInfo.parse(version)
