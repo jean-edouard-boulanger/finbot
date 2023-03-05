@@ -9,6 +9,7 @@ on:
 
 jobs:
   tag-release:
+    name: tag-release${{ github.event_name == 'pull_request' && '-dry-run' }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out finbot source
