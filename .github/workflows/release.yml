@@ -13,6 +13,9 @@ jobs:
     steps:
       - name: Check out finbot source
         uses: actions/checkout@v3
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.11
       - name: Install Python dependencies
         run: python3.11 -m pip install -r requirements-dev.txt
       - name: Get current version
@@ -25,3 +28,6 @@ jobs:
           tag: ${{ steps.meta.outputs.FINBOT_REL_VERSION }}
           tag_exists_error: true
           message: "Finbot release ${{ steps.meta.outputs.FINBOT_REL_VERSION }}"
+      - name: Create release tag (dry-run)
+        if: ${{ github.event_name == 'pull_request' }}
+        run: echo "Finbot version ${{ steps.meta.outputs.FINBOT_REL_VERSION }} will be released after this MR is merged"
