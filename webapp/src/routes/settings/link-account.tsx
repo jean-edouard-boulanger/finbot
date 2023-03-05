@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext, useRef } from "react";
-import { Redirect } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 
 import { AuthContext, ServicesContext } from "contexts";
 import { LoadingButton } from "components";
@@ -276,7 +276,7 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
   };
 
   if (linked) {
-    return <Redirect to={"/settings/linked"} />;
+    return <Navigate to={"/settings/linked"} />;
   }
 
   return (

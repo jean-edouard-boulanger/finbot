@@ -135,8 +135,8 @@ def main_impl() -> ExitCode:
     if not timeout:
         logging.warning("no timeout specified")
     start_time = datetime.now()
-    if not raw_deps:
-        logging.warning("No dependencies to wait on (FINBOT_WAIT_DEPS not defined)")
+    if str(raw_deps).lower() in {"none", "0", "disabled"}:
+        logging.warning(f"No dependencies to wait on (FINBOT_WAIT_DEPS={raw_deps})")
         return ExitCode.Ok
     deps = list(set(raw_deps.split(",")))
     resolved = set()

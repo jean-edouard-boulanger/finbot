@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import { Redirect } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 
 import { AuthContext, ServicesContext } from "contexts";
 
@@ -63,7 +63,7 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
   }, [finbotClient, configured, userAccountId]);
 
   if (configured === false) {
-    return <Redirect to={"/welcome"} />;
+    return <Navigate to={"/welcome"} />;
   }
 
   return (

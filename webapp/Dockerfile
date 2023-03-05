@@ -4,7 +4,7 @@ WORKDIR /finbot
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm install --omit=dev
 
 COPY . .
 

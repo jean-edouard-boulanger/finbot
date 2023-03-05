@@ -1,5 +1,5 @@
 import React, { useContext, useState } from "react";
-import { withRouter, NavLink, RouteComponentProps } from "react-router-dom";
+import { useLocation, NavLink } from "react-router-dom";
 
 import AuthContext from "contexts/auth/auth-context";
 import { useInterval } from "utils/use-interval";
@@ -23,7 +23,7 @@ const SystemStatusBadge: React.FC<Record<string, never>> = () => {
       setBackendReachable(false);
       setReport(null);
     }
-  }, 1000);
+  }, 10000);
 
   return (
     <>
@@ -37,12 +37,11 @@ const SystemStatusBadge: React.FC<Record<string, never>> = () => {
   );
 };
 
-const UserNavbar: React.FC<RouteComponentProps<Record<string, never>>> = (
-  props
-) => {
+const UserNavbar: React.FC = () => {
+  const { pathname } = useLocation();
   return (
     <Navbar.Collapse id="responsive-navbar-nav">
-      <Nav activeKey={props.location.pathname} className="ml-auto">
+      <Nav activeKey={pathname} className="ml-auto">
         <NavLink className="px-5 nav-link" to="/dashboard">
           Dashboard
         </NavLink>
@@ -57,12 +56,11 @@ const UserNavbar: React.FC<RouteComponentProps<Record<string, never>>> = (
   );
 };
 
-const GuestNavbar: React.FC<RouteComponentProps<Record<string, never>>> = (
-  props
-) => {
+const GuestNavbar: React.FC = () => {
+  const { pathname } = useLocation();
   return (
     <Navbar.Collapse id="responsive-navbar-nav">
-      <Nav activeKey={props.location.pathname} className="ml-auto">
+      <Nav activeKey={pathname} className="ml-auto">
         <NavLink className="px-5 nav-link" to="/login">
           Sign in
         </NavLink>
@@ -74,7 +72,7 @@ const GuestNavbar: React.FC<RouteComponentProps<Record<string, never>>> = (
   );
 };
 
-export const Navigation = withRouter((props) => {
+export const Navigation: React.FC = () => {
   const { isAuthenticated } = useContext(AuthContext);
 
   return (
@@ -93,9 +91,9 @@ export const Navigation = withRouter((props) => {
         <SystemStatusBadge />
       </NavLink>
       <Navbar.Toggle aria-controls="responsive-navbar-nav" />
-      {isAuthenticated ? <UserNavbar {...props} /> : <GuestNavbar {...props} />}
+      {isAuthenticated ? <UserNavbar /> : <GuestNavbar />}
     </Navbar>
   );
-});
+};
 
 export default Navigation;
