@@ -16,5 +16,6 @@ jobs:
       - run: git fetch origin master:master
       - name: Install Python dependencies
         run: python3.11 -m pip install -r requirements-dev.txt
+      - run: echo "PYTHONPATH=$PWD:$PYTHONPATH" >> $GITHUB_ENV
       - name: Check version bump
-        run: env PYTHONPATH=$PWD:$PYTHONPATH ./tools/versioning check-version-bump
+        run: ./tools/versioning check-version-bump

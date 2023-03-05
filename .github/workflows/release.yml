@@ -18,6 +18,7 @@ jobs:
           python-version: 3.11
       - name: Install Python dependencies
         run: python3.11 -m pip install -r requirements-dev.txt
+      - run: echo "PYTHONPATH=$PWD:$PYTHONPATH" >> $GITHUB_ENV
       - name: Get current version
         id: meta
         run: echo "FINBOT_REL_VERSION=v$(./tools/versioning get-current-version)" >> $GITHUB_OUTPUT
