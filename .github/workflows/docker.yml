@@ -9,6 +9,9 @@ on:
     tags:
       - 'v*'
 
+concurrency:
+  group: ${{ github.head_ref || github.event_name }}
+
 jobs:
   publish-docker-images:
     runs-on: ubuntu-latest

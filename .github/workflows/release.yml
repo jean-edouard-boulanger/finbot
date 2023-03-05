@@ -1,0 +1,27 @@
+name: Versioning
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+
+jobs:
+  tag-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out finbot source
+        uses: actions/checkout@v3
+      - name: Install Python dependencies
+        run: python3.11 -m pip install -r requirements-dev.txt
+      - name: Get current version
+        id: meta
+        run: echo "FINBOT_REL_VERSION=v$(./tools/versioning get-current-version)" >> $GITHUB_OUTPUT
+      - name: Create release tag
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: rickstaa/action-create-tag@v1
+        with:
+          tag: ${{ steps.meta.outputs.FINBOT_REL_VERSION }}
+          tag_exists_error: true
+          message: "Finbot release ${{ steps.meta.outputs.FINBOT_REL_VERSION }}"
