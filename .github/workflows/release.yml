@@ -25,7 +25,7 @@ jobs:
         run: ./tools/versioning check-version-bump
 
   tag-release:
-    name: tag-release${{ github.event_name == 'pull_request' && '-dry-run' }}
+    name: tag-release
     runs-on: ubuntu-latest
     steps:
       - name: Check out finbot source
@@ -41,12 +41,8 @@ jobs:
         run: echo "FINBOT_REL_VERSION=v$(./tools/versioning get-current-version)" >> $GITHUB_OUTPUT
       - run: '[[ -n "${{ steps.meta.outputs.FINBOT_REL_VERSION }}" ]] || exit 1'
       - name: Create release tag
-        if: ${{ github.event_name != 'pull_request' }}
-        uses: rickstaa/action-create-tag@v1
+        uses: mathieudutour/github-tag-action@v6.1
         with:
-          tag: ${{ steps.meta.outputs.FINBOT_REL_VERSION }}
-          tag_exists_error: true
-          message: "Finbot release ${{ steps.meta.outputs.FINBOT_REL_VERSION }}"
-      - name: Create release tag (dry-run)
-        if: ${{ github.event_name == 'pull_request' }}
-        run: echo "Finbot version ${{ steps.meta.outputs.FINBOT_REL_VERSION }} will be released after this MR is merged"
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          custom_tag: ${{ steps.meta.outputs.FINBOT_REL_VERSION }}
+          dry_run: ${{ github.event_name == 'pull_request' }}
