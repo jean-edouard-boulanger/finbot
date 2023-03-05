@@ -1,4 +1,4 @@
-name: Versioning
+name: Release
 on:
   pull_request:
     branches:
@@ -8,6 +8,22 @@ on:
       - master
 
 jobs:
+  check-version-bump:
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out finbot source
+        uses: actions/checkout@v3
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.11
+      - run: git fetch origin master:master
+      - name: Install Python dependencies
+        run: python3.11 -m pip install -r requirements-dev.txt
+      - run: echo "PYTHONPATH=$PWD:$PYTHONPATH" >> $GITHUB_ENV
+      - name: Check version bump
+        run: ./tools/versioning check-version-bump
+
   tag-release:
     name: tag-release${{ github.event_name == 'pull_request' && '-dry-run' }}
     runs-on: ubuntu-latest
