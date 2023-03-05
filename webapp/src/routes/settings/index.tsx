@@ -1,63 +1,56 @@
 import React from "react";
-import { withRouter, Switch, Route, Redirect } from "react-router-dom";
-
-import { ProfileSettings } from "./profile";
-import { LinkedAccountsSettings } from "./linked-accounts";
-import { ProvidersSettings } from "./providers";
-import { PlaidIntegrationSettings } from "./plaid-integration";
-import { TwilioIntegrationSettings } from "./twilio-integration";
-import { AccountSecuritySettings } from "./account-security";
-import { EmailDeliverySettingsPanel } from "./email-delivery";
+import { useLocation, useNavigate, Outlet } from "react-router-dom";
 
 import { ListGroup, Row, Col } from "react-bootstrap";
 
-export const NavigationPanel = withRouter((props) => {
-  const route = props.location.pathname;
+export const NavigationPanel: React.FC = () => {
+  const { pathname } = useLocation();
+  const push = useNavigate();
   return (
     <ListGroup>
       <ListGroup.Item>
         <strong>My settings</strong>
       </ListGroup.Item>
       <ListGroup.Item
-        active={route.startsWith("/settings/profile")}
+        active={pathname.startsWith("/settings/profile")}
         onClick={() => {
-          props.history.push("/settings/profile");
+          push("/settings/profile");
         }}
         action
       >
         Profile
       </ListGroup.Item>
       <ListGroup.Item
-        active={route.startsWith("/settings/security")}
+        active={pathname.startsWith("/settings/security")}
         onClick={() => {
-          props.history.push("/settings/security");
+          push("/settings/security");
         }}
         action
       >
         Account security
       </ListGroup.Item>
       <ListGroup.Item
-        active={route.startsWith("/settings/linked")}
+        active={pathname.startsWith("/settings/linked")}
         onClick={() => {
-          props.history.push("/settings/linked");
+          push("/settings/linked");
         }}
         action
       >
         Linked accounts
       </ListGroup.Item>
       <ListGroup.Item
-        active={route.startsWith("/settings/twilio")}
+        active={pathname.startsWith("/settings/twilio")}
         onClick={() => {
-          props.history.push("/settings/twilio");
+          push("/settings/twilio");
         }}
         action
       >
         Twilio integration
       </ListGroup.Item>
       <ListGroup.Item
-        active={route.startsWith("/settings/plaid")}
+        active={pathname.startsWith("/settings/plaid")}
         onClick={() => {
-          props.history.push("/settings/plaid");
+          push("/settings/plaid");
         }}
         action
       >
@@ -67,18 +60,18 @@ export const NavigationPanel = withRouter((props) => {
         <strong>Administration</strong>
       </ListGroup.Item>
       <ListGroup.Item
-        active={route.startsWith("/settings/admin/providers")}
+        active={pathname.startsWith("/settings/admin/providers")}
         onClick={() => {
-          props.history.push("/settings/admin/providers");
+          push("/settings/admin/providers");
         }}
         action
       >
         Providers
       </ListGroup.Item>
       <ListGroup.Item
-        active={route.startsWith("/settings/admin/email_delivery")}
+        active={pathname.startsWith("/settings/admin/email_delivery")}
         onClick={() => {
-          props.history.push("/settings/admin/email_delivery");
+          push("/settings/admin/email_delivery");
         }}
         action
       >
@@ -86,7 +79,7 @@ export const NavigationPanel = withRouter((props) => {
       </ListGroup.Item>
     </ListGroup>
   );
-});
+};
 
 export const Settings: React.FC<Record<string, never>> = () => {
   return (
@@ -95,40 +88,7 @@ export const Settings: React.FC<Record<string, never>> = () => {
         <NavigationPanel />
       </Col>
       <Col md={9}>
-        <Switch>
-          <Route
-            exact
-            path="/settings/profile"
-            render={() => <ProfileSettings />}
-          />
-          <Route
-            exact
-            path="/settings/security"
-            render={() => <AccountSecuritySettings />}
-          />
-          <Route
-            path="/settings/linked"
-            render={() => <LinkedAccountsSettings />}
-          />
-          <Route
-            path="/settings/twilio"
-            render={() => <TwilioIntegrationSettings />}
-          />
-          <Route
-            path="/settings/plaid"
-            render={() => <PlaidIntegrationSettings />}
-          />
-          <Route
-            path="/settings/admin/providers"
-            render={() => <ProvidersSettings />}
-          />
-          <Route
-            path="/settings/admin/email_delivery"
-            render={() => <EmailDeliverySettingsPanel />}
-          />
-
-          <Redirect to={"/settings/profile"} />
-        </Switch>
+        <Outlet />
       </Col>
     </Row>
   );

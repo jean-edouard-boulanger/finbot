@@ -1,13 +1,11 @@
 import React, { useContext, useEffect, useState } from "react";
 import {
-  withRouter,
-  Switch,
-  Route,
-  Redirect,
+  useLocation,
+  Outlet,
   Link,
   matchPath,
   useParams,
-  useHistory,
+  useNavigate,
 } from "react-router-dom";
 
 import { ServicesContext, AuthContext } from "contexts";
@@ -28,7 +26,6 @@ import {
   SplitButton,
   Dropdown,
 } from "react-bootstrap";
-import DropdownItem from "react-bootstrap/DropdownItem";
 import {
   FaExclamationCircle,
   FaCheckCircle,
@@ -73,7 +70,7 @@ export const UnlinkAccountDialog: React.FC<UnlinkAccountDialogProps> = ({
   );
 };
 
-const UpdateLinkedAccountPanel = withRouter(() => {
+export const UpdateLinkedAccountPanel: React.FC = () => {
   const { finbotClient } = useContext(ServicesContext);
   const { account } = useContext(AuthContext);
   const { linkedAccountId } = useParams<Record<string, string | undefined>>();
@@ -91,7 +88,7 @@ const UpdateLinkedAccountPanel = withRouter(() => {
     fetch();
   }, [finbotClient, account, linkedAccountId]);
   return <LinkAccount linkedAccount={linkedAccount} />;
-});
+};
 
 const getLinkedAccountStatus = (
   linkedAccount: LinkedAccount
@@ -144,7 +141,7 @@ const LinkedAccountStatusIcon: React.FC<LinkedAccountStatusIconProps> = ({
   );
 };
 
-const LinkedAccountStatusPanel = withRouter(() => {
+export const LinkedAccountStatusPanel: React.FC = () => {
   const { finbotClient } = useContext(ServicesContext);
   const { account } = useContext(AuthContext);
   const { linkedAccountId } = useParams<Record<string, string | undefined>>();
@@ -256,12 +253,12 @@ const LinkedAccountStatusPanel = withRouter(() => {
       </Row>
     </>
   );
-});
+};
 
 export interface AccountsPanelProps {}
 
 export const AccountsPanel: React.FC<AccountsPanelProps> = () => {
-  const { push } = useHistory();
+  const push = useNavigate();
   const { finbotClient } = useContext(ServicesContext);
   const { account } = useContext(AuthContext);
   const [accounts, setAccounts] = useState<Array<LinkedAccount>>([]);
@@ -339,11 +336,12 @@ export const AccountsPanel: React.FC<AccountsPanelProps> = () => {
                     variant={"dark"}
                     title={"Edit"}
                     size={"sm"}
+                    toggleLabel={""}
                     onClick={() => {
                       push(`/settings/linked/${linkedAccount.id}/edit`);
                     }}
                   >
-                    <DropdownItem
+                    <Dropdown.Item
                       onClick={() => {
                         setDialog({
                           show: true,
@@ -359,16 +357,15 @@ export const AccountsPanel: React.FC<AccountsPanelProps> = () => {
                       }}
                     >
                       Unlink
-                    </DropdownItem>
+                    </Dropdown.Item>
                     <Dropdown.Divider />
-                    <Dropdown.Divider />
-                    <DropdownItem
+                    <Dropdown.Item
                       onClick={() => {
                         push(`/settings/linked/${linkedAccount.id}/status`);
                       }}
                     >
                       Status
-                    </DropdownItem>
+                    </Dropdown.Item>
                   </SplitButton>
                 </td>
               </tr>
@@ -380,31 +377,19 @@ export const AccountsPanel: React.FC<AccountsPanelProps> = () => {
   );
 };
 
-export const LinkedAccountsSettings = withRouter((props) => {
-  const route = props.location.pathname;
+export const LinkedAccountsSettings: React.FC = () => {
+  const { pathname } = useLocation();
   return (
     <>
       <Row className={"mb-4"}>
         <Col>
           <h3>
             <Link to={"/settings/linked"}>Linked accounts</Link>{" "}
-            {matchPath(route, {
-              path: "/settings/linked/new",
-              exact: true,
-              strict: true,
-            }) ? (
+            {matchPath("/settings/linked/new", pathname) ? (
               <small>{"| New"}</small>
-            ) : matchPath(route, {
-                path: "/settings/linked/:id/edit",
-                exact: true,
-                strict: true,
-              }) ? (
+            ) : matchPath("/settings/linked/:id/edit", pathname) ? (
               <small>{"| Edit"}</small>
-            ) : matchPath(route, {
-                path: "/settings/linked/:id/status",
-                exact: true,
-                strict: true,
-              }) ? (
+            ) : matchPath("/settings/linked/:id/status", pathname) ? (
               <small>{"| Status"}</small>
             ) : (
               <></>
@@ -413,7 +398,7 @@ export const LinkedAccountsSettings = withRouter((props) => {
           <hr />
         </Col>
       </Row>
-      {route === "/settings/linked" && (
+      {pathname === "/settings/linked" && (
         <Row className={"mb-4"}>
           <Col>
             <Link to={"/settings/linked/new"}>
@@ -426,31 +411,9 @@ export const LinkedAccountsSettings = withRouter((props) => {
       )}
       <Row>
         <Col>
-          <Switch>
-            <Route
-              exact
-              path="/settings/linked/new"
-              render={() => <LinkAccount />}
-            />
-            <Route
-              exact
-              path="/settings/linked/:linkedAccountId/edit"
-              render={() => <UpdateLinkedAccountPanel />}
-            />
-            <Route
-              exact
-              path="/settings/linked/:linkedAccountId/status"
-              render={() => <LinkedAccountStatusPanel />}
-            />
-            <Route
-              exact
-              path="/settings/linked"
-              render={() => <AccountsPanel />}
-            />
-            <Redirect to={"/settings/linked"} />
-          </Switch>
+          <Outlet />
         </Col>
       </Row>
     </>
   );
-});
+};

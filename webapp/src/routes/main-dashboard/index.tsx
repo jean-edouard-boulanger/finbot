@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import { Redirect } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 
 import { AuthContext, ServicesContext } from "contexts";
 
@@ -63,7 +63,7 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
   }, [finbotClient, configured, userAccountId]);
 
   if (configured === false) {
-    return <Redirect to={"/welcome"} />;
+    return <Navigate to={"/welcome"} />;
   }
 
   return (
@@ -98,14 +98,12 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
             <Card.Body>
               <Card.Title>Liabilities</Card.Title>
               {valuation !== null && (
-                <strong>
-                  <Money
-                    amount={valuation.total_liabilities}
-                    locale={locale}
-                    ccy={valuation.currency}
-                    moneyFormatter={defaultMoneyFormatter}
-                  />
-                </strong>
+                <Money
+                  amount={valuation.total_liabilities}
+                  locale={locale}
+                  ccy={valuation.currency}
+                  moneyFormatter={defaultMoneyFormatter}
+                />
               )}
             </Card.Body>
             {valuation === null && <BarLoader width={"100%"} />}

@@ -56,7 +56,9 @@ function topologicalSort<UserNodeType extends TreeNode<UserNodeType>>(
   return topology;
 }
 
-function refreshTopology<UserNodeType>(topology: Topology<UserNodeType>): void {
+function refreshTopology<UserNodeType extends TreeNode<UserNodeType>>(
+  topology: Topology<UserNodeType>
+): void {
   let displayLimit: number | null = null;
   topology.forEach((node) => {
     if (displayLimit === null) {

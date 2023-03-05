@@ -6,7 +6,6 @@ services:
     env_file:
       - envs/dev.env
       - envs/secrets.dev.env
-    restart: always
     shm_size: 256MB
     ports:
       - "5432:5432"
@@ -51,7 +50,7 @@ services:
     volumes:
       - .:/finbot
     environment:
-      FINBOT_WAIT_DEPS: "db,finbot"
+      FINBOT_WAIT_DEPS: "${FINBOT_WAIT_DEPS:-db,finbot}"
 
   histwsrv:
     image: "finbotapp/runtime-dev:latest"
@@ -68,7 +67,7 @@ services:
     volumes:
       - .:/finbot
     environment:
-      FINBOT_WAIT_DEPS: "db"
+      FINBOT_WAIT_DEPS: "${FINBOT_WAIT_DEPS:-db}"
 
   schedsrv:
     image: "finbotapp/runtime-dev:latest"
@@ -84,7 +83,7 @@ services:
     volumes:
       - .:/finbot
     environment:
-      FINBOT_WAIT_DEPS: "db,worker"
+      FINBOT_WAIT_DEPS: "${FINBOT_WAIT_DEPS:-db,worker}"
 
   workersrv:
     image: "finbotapp/runtime-dev:latest"
@@ -102,7 +101,7 @@ services:
     volumes:
       - .:/finbot
     environment:
-      FINBOT_WAIT_DEPS: "db,rmq,snap,hist"
+      FINBOT_WAIT_DEPS: "${FINBOT_WAIT_DEPS:-db,rmq,snap,hist}"
 
   appwsrv:
     image: "finbotapp/runtime-dev:latest"
@@ -121,7 +120,7 @@ services:
     volumes:
       - .:/finbot
     environment:
-      FINBOT_WAIT_DEPS: "db,finbot,worker"
+      FINBOT_WAIT_DEPS: "${FINBOT_WAIT_DEPS:-db,finbot,worker}"
 
   operator:
     image: "finbotapp/runtime-dev:latest"

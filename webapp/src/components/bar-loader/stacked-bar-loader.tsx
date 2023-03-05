@@ -1,7 +1,7 @@
 import React from "react";
 
 import { BarLoader } from "./bar-loader";
-import { LoaderHeightWidthProps } from "react-spinners/interfaces";
+import { LoaderHeightWidthProps } from "react-spinners/helpers/props";
 
 const DEFAULT_COUNT = 3;
 const DEFAULT_SPACING = "0.5em";

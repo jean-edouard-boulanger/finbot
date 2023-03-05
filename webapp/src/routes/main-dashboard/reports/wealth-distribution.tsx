@@ -73,7 +73,7 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
   return (
     <Card style={{ height: "22rem" }}>
       <Card.Header className={"d-flex justify-content-between"}>
-        Wealth Distribution
+        Asset diversification
         <DropdownButton
           variant={""}
           size={"xs" as any}

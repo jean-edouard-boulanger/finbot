@@ -219,8 +219,8 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
 
   return (
     <Card style={{ height: "22rem" }}>
-      <Card.Header className={"d-flex"}>
-        <div className={"mr-auto"}>Historical Valuation</div>
+      <Card.Header className="d-flex">
+        Historical Valuation
         <div>
           <DropdownButton
             variant={""}

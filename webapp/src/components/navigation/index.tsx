@@ -1,5 +1,5 @@
 import React, { useContext, useState } from "react";
-import { withRouter, NavLink, RouteComponentProps } from "react-router-dom";
+import { useLocation, NavLink } from "react-router-dom";
 
 import AuthContext from "contexts/auth/auth-context";
 import { useInterval } from "utils/use-interval";
@@ -23,7 +23,7 @@ const SystemStatusBadge: React.FC<Record<string, never>> = () => {
       setBackendReachable(false);
       setReport(null);
     }
-  }, 1000);
+  }, 10000);
 
   return (
     <>
@@ -37,44 +37,38 @@ const SystemStatusBadge: React.FC<Record<string, never>> = () => {
   );
 };
 
-const UserNavbar: React.FC<RouteComponentProps<Record<string, never>>> = (
-  props
-) => {
+const UserNavbar: React.FC = () => {
+  const { pathname } = useLocation();
   return (
-    <Navbar.Collapse id="responsive-navbar-nav">
-      <Nav activeKey={props.location.pathname} className="ml-auto">
-        <NavLink className="px-5 nav-link" to="/dashboard">
-          Dashboard
-        </NavLink>
-        <NavLink className="px-5 nav-link" to="/settings">
-          Settings
-        </NavLink>
-        <NavLink className="px-5 nav-link" to="/logout">
-          Logout
-        </NavLink>
-      </Nav>
-    </Navbar.Collapse>
+    <Nav activeKey={pathname} className="ml-auto">
+      <NavLink className="px-5 nav-link" to="/dashboard">
+        Dashboard
+      </NavLink>
+      <NavLink className="px-5 nav-link" to="/settings">
+        Settings
+      </NavLink>
+      <NavLink className="px-5 nav-link" to="/logout">
+        Logout
+      </NavLink>
+    </Nav>
   );
 };
 
-const GuestNavbar: React.FC<RouteComponentProps<Record<string, never>>> = (
-  props
-) => {
+const GuestNavbar: React.FC = () => {
+  const { pathname } = useLocation();
   return (
-    <Navbar.Collapse id="responsive-navbar-nav">
-      <Nav activeKey={props.location.pathname} className="ml-auto">
-        <NavLink className="px-5 nav-link" to="/login">
-          Sign in
-        </NavLink>
-        <NavLink className="px-5 nav-link" to="/signup">
-          Sign up
-        </NavLink>
-      </Nav>
-    </Navbar.Collapse>
+    <Nav activeKey={pathname} className="ml-auto">
+      <NavLink className="px-5 nav-link" to="/login">
+        Sign in
+      </NavLink>
+      <NavLink className="px-5 nav-link" to="/signup">
+        Sign up
+      </NavLink>
+    </Nav>
   );
 };
 
-export const Navigation = withRouter((props) => {
+export const Navigation: React.FC = () => {
   const { isAuthenticated } = useContext(AuthContext);
 
   return (
@@ -92,10 +86,12 @@ export const Navigation = withRouter((props) => {
         Finbot{` `}
         <SystemStatusBadge />
       </NavLink>
-      <Navbar.Toggle aria-controls="responsive-navbar-nav" />
-      {isAuthenticated ? <UserNavbar {...props} /> : <GuestNavbar {...props} />}
+      <Navbar.Collapse id="responsive-navbar-nav">
+        <Nav className="me-auto" />
+        {isAuthenticated ? <UserNavbar /> : <GuestNavbar />}
+      </Navbar.Collapse>
     </Navbar>
   );
-});
+};
 
 export default Navigation;

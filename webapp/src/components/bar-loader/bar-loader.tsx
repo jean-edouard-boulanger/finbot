@@ -1,7 +1,7 @@
 import React from "react";
 
 import { BarLoader as BarLoaderImpl } from "react-spinners";
-import { LoaderHeightWidthProps } from "react-spinners/interfaces";
+import { LoaderHeightWidthProps } from "react-spinners/helpers/props";
 
 import { DEFAULT_BACKGROUND_COLOR } from "./constants";
 
