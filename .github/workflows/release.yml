@@ -38,11 +38,11 @@ jobs:
       - run: echo "PYTHONPATH=$PWD:$PYTHONPATH" >> $GITHUB_ENV
       - name: Get current version
         id: meta
-        run: echo "FINBOT_REL_VERSION=v$(./tools/versioning get-current-version)" >> $GITHUB_OUTPUT
+        run: echo "FINBOT_REL_VERSION=$(./tools/versioning get-current-version)" >> $GITHUB_OUTPUT
       - run: '[[ -n "${{ steps.meta.outputs.FINBOT_REL_VERSION }}" ]] || exit 1'
       - name: Create release tag
         uses: mathieudutour/github-tag-action@v6.1
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.RELEASE_TAG_CREATION_TOKEN }}
           custom_tag: ${{ steps.meta.outputs.FINBOT_REL_VERSION }}
           dry_run: ${{ github.event_name == 'pull_request' }}
