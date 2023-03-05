@@ -98,14 +98,12 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
             <Card.Body>
               <Card.Title>Liabilities</Card.Title>
               {valuation !== null && (
-                <strong>
-                  <Money
-                    amount={valuation.total_liabilities}
-                    locale={locale}
-                    ccy={valuation.currency}
-                    moneyFormatter={defaultMoneyFormatter}
-                  />
-                </strong>
+                <Money
+                  amount={valuation.total_liabilities}
+                  locale={locale}
+                  ccy={valuation.currency}
+                  moneyFormatter={defaultMoneyFormatter}
+                />
               )}
             </Card.Body>
             {valuation === null && <BarLoader width={"100%"} />}

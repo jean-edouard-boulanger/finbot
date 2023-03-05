@@ -1,4 +1,5 @@
 import React from "react";
+import Badge from "react-bootstrap/Badge";
 
 export type MoneyFormatterType = (
   amount: number,
@@ -32,9 +33,7 @@ export const Money: React.FC<MoneyProps> = (props) => {
     return <span>{moneyFormatter(amount, locale, ccy)}</span>;
   } else {
     return (
-      <span className="badge badge-danger">
-        {moneyFormatter(amount, locale, ccy)}
-      </span>
+      <span className="text-danger">{moneyFormatter(amount, locale, ccy)}</span>
     );
   }
 };
