@@ -26,7 +26,6 @@ import {
   SplitButton,
   Dropdown,
 } from "react-bootstrap";
-import DropdownItem from "react-bootstrap/DropdownItem";
 import {
   FaExclamationCircle,
   FaCheckCircle,
@@ -337,11 +336,12 @@ export const AccountsPanel: React.FC<AccountsPanelProps> = () => {
                     variant={"dark"}
                     title={"Edit"}
                     size={"sm"}
+                    toggleLabel={""}
                     onClick={() => {
                       push(`/settings/linked/${linkedAccount.id}/edit`);
                     }}
                   >
-                    <DropdownItem
+                    <Dropdown.Item
                       onClick={() => {
                         setDialog({
                           show: true,
@@ -357,16 +357,15 @@ export const AccountsPanel: React.FC<AccountsPanelProps> = () => {
                       }}
                     >
                       Unlink
-                    </DropdownItem>
+                    </Dropdown.Item>
                     <Dropdown.Divider />
-                    <Dropdown.Divider />
-                    <DropdownItem
+                    <Dropdown.Item
                       onClick={() => {
                         push(`/settings/linked/${linkedAccount.id}/status`);
                       }}
                     >
                       Status
-                    </DropdownItem>
+                    </Dropdown.Item>
                   </SplitButton>
                 </td>
               </tr>
