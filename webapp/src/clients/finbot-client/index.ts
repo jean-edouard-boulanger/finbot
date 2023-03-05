@@ -69,13 +69,12 @@ import {
   EmailDeliveryProvider,
   GetEmailDeliveryProvidersResponse,
 } from "./types";
+import { FINBOT_SERVER_ENDPOINT } from "utils/env-config";
+
+const DEFAULT_FINBOT_SERVER_ENDPOINT = "http://127.0.0.1:5003/api/v1";
 
 function getEndpoint(): string {
-  const endpoint = process.env.REACT_APP_FINBOT_SERVER_ENDPOINT;
-  if (endpoint) {
-    return endpoint;
-  }
-  return "http://127.0.0.1:5003/api/v1";
+  return FINBOT_SERVER_ENDPOINT ?? DEFAULT_FINBOT_SERVER_ENDPOINT;
 }
 
 function handleResponse<T>(response: AxiosResponse): T {
