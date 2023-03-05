@@ -21,6 +21,8 @@ jobs:
           - repository: finbotapp/runtime-dev
             context: .
             target: dev
+          - repository: finbotapp/webapp
+            context: ./webapp
     steps:
       - name: Check out finbot source
         uses: actions/checkout@v3
