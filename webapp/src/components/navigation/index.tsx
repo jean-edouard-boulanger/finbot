@@ -40,35 +40,31 @@ const SystemStatusBadge: React.FC<Record<string, never>> = () => {
 const UserNavbar: React.FC = () => {
   const { pathname } = useLocation();
   return (
-    <Navbar.Collapse id="responsive-navbar-nav">
-      <Nav activeKey={pathname} className="ml-auto">
-        <NavLink className="px-5 nav-link" to="/dashboard">
-          Dashboard
-        </NavLink>
-        <NavLink className="px-5 nav-link" to="/settings">
-          Settings
-        </NavLink>
-        <NavLink className="px-5 nav-link" to="/logout">
-          Logout
-        </NavLink>
-      </Nav>
-    </Navbar.Collapse>
+    <Nav activeKey={pathname} className="ml-auto">
+      <NavLink className="px-5 nav-link" to="/dashboard">
+        Dashboard
+      </NavLink>
+      <NavLink className="px-5 nav-link" to="/settings">
+        Settings
+      </NavLink>
+      <NavLink className="px-5 nav-link" to="/logout">
+        Logout
+      </NavLink>
+    </Nav>
   );
 };
 
 const GuestNavbar: React.FC = () => {
   const { pathname } = useLocation();
   return (
-    <Navbar.Collapse id="responsive-navbar-nav">
-      <Nav activeKey={pathname} className="ml-auto">
-        <NavLink className="px-5 nav-link" to="/login">
-          Sign in
-        </NavLink>
-        <NavLink className="px-5 nav-link" to="/signup">
-          Sign up
-        </NavLink>
-      </Nav>
-    </Navbar.Collapse>
+    <Nav activeKey={pathname} className="ml-auto">
+      <NavLink className="px-5 nav-link" to="/login">
+        Sign in
+      </NavLink>
+      <NavLink className="px-5 nav-link" to="/signup">
+        Sign up
+      </NavLink>
+    </Nav>
   );
 };
 
@@ -90,8 +86,10 @@ export const Navigation: React.FC = () => {
         Finbot{` `}
         <SystemStatusBadge />
       </NavLink>
-      <Navbar.Toggle aria-controls="responsive-navbar-nav" />
-      {isAuthenticated ? <UserNavbar /> : <GuestNavbar />}
+      <Navbar.Collapse id="responsive-navbar-nav">
+        <Nav className="me-auto" />
+        {isAuthenticated ? <UserNavbar /> : <GuestNavbar />}
+      </Navbar.Collapse>
     </Navbar>
   );
 };
