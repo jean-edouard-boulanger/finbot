@@ -12,6 +12,15 @@ on:
 jobs:
   publish-docker-images:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        build:
+          - repository: finbotapp/runtime
+            context: .
+            target: prod
+          - repository: finbotapp/runtime-dev
+            context: .
+            target: dev
     steps:
       - name: Check out finbot source
         uses: actions/checkout@v3
@@ -24,4 +33,12 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: finbotapp/runtime
+          images: ${{ matrix.build.repository }}
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: ${{ matrix.build.context }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          target: ${{ matrix.build.target }}
