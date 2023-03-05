@@ -31,7 +31,7 @@ import {
 import "datejs";
 
 import "react-toastify/dist/ReactToastify.css";
-import "bootswatch/dist/lux/bootstrap.min.css";
+import "bootswatch/dist/zephyr/bootstrap.min.css";
 import "./assets/css/index.css";
 import { LinkAccount } from "./routes/settings/link-account";
 
