@@ -1,0 +1,27 @@
+name: Docker
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+    tags:
+      - 'v*'
+
+jobs:
+  publish-docker-images:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out finbot source
+        uses: actions/checkout@v3
+      - name: Log in to Docker Hub
+        uses: docker/login-action
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action
+        with:
+          images: finbotapp/runtime
