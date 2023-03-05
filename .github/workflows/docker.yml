@@ -10,7 +10,7 @@ on:
       - 'v*'
 
 concurrency:
-  group: ${{ github.head_ref || github.event_name }}
+  group: ${{ github.head_ref || github.ref_type }}
 
 jobs:
   publish-docker-images:
