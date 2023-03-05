@@ -105,7 +105,8 @@ services:
       - envs/secrets.prod.env
     depends_on:
       - appwsrv
-    working_dir: /finbot
-    command: npm run serve
+    working_dir: /webapp
     ports:
       - "5005:5005"
+    volumes:
+      - ./envs/env-config.prod.js:/usr/share/nginx/html/env-config.js
