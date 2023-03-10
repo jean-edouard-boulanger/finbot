@@ -112,7 +112,7 @@ class Api(ProviderBase):
                     assets=[
                         Asset(
                             name="Cash",
-                            type="Currency",
+                            type="currency",
                             value=account["balances"]["current"],
                         )
                     ],

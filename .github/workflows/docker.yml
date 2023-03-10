@@ -25,8 +25,13 @@ jobs:
           - repository: finbotapp/runtime-dev
             context: .
             target: dev
+            skip: ${{ github.event_name == 'pull_request' }}
           - repository: finbotapp/webapp
             context: ./webapp
+        exclude:
+          - build:
+              skip: true
+
     steps:
       - name: Check out finbot source
         uses: actions/checkout@v3
