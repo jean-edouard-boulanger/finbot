@@ -1,6 +1,7 @@
 export FINBOT_EDIT_CMD ?= code --wait
 export BLACK_SETTINGS = --exclude 'migrations/|webapp/|venv/' .
 export ISORT_SETTINGS = --profile black finbot/ tools/
+export PYTHONPATH := ${PWD}:${PYTHONPATH}
 
 alembic-gen:
 	tools/check-env.sh message;
@@ -97,6 +98,9 @@ banned-keywords-check-ts:
 flake8:
 	flake8 --exclude migrations/,venv/,webapp/ --max-line-length 100
 
+version-bump-check:
+	tools/versioning check-version-bump
+
 black-check:
 	black --check $(BLACK_SETTINGS)
 
@@ -131,7 +135,7 @@ lint-sh:
 
 lint-py: mypy flake8 black-check isort-check banned-keywords-check-py unit-tests-py
 lint-ts: eslint tsc-build-check prettier-check-ts banned-keywords-check-ts
-lint-all: lint-py lint-ts lint-sh
+lint-all: version-bump-check lint-py lint-ts lint-sh
 
 format-py: black isort
 format-ts: prettier-ts
