@@ -43,9 +43,12 @@ COPY alembic.ini finbotctl Makefile ./
 FROM runtime AS runtime-dev
 
 RUN apt-get update && \
-    apt-get install -y git inotify-tools postgresql-client && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get install -y \
+      git \
+      make \
+      inotify-tools \
+      postgresql-client && \
+    apt-get clean
 
 COPY requirements-dev.txt .
 
