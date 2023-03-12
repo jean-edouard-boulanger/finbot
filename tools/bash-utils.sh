@@ -1,7 +1,4 @@
 #!/usr/bin/env bash
-FINBOT_CHECKOUT_DIR=$( git rev-parse --show-toplevel )
-export FINBOT_CHECKOUT_DIR
-
 log() {
   log_level=$1
   shift

@@ -21,11 +21,11 @@ jobs:
         build:
           - repository: finbotapp/runtime
             context: .
-            target: prod
+            target: runtime
+            skip: ${{ github.event_name == 'pull_request' }}
           - repository: finbotapp/runtime-dev
             context: .
-            target: dev
-            skip: ${{ github.event_name == 'pull_request' }}
+            target: runtime-dev
           - repository: finbotapp/webapp
             context: ./webapp
         exclude:
