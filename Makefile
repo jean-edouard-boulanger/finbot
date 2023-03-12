@@ -19,13 +19,13 @@ alembic-history:
 docker-build-webapp:
 	cd webapp && docker build -t finbotapp/webapp:latest -f Dockerfile --pull .
 
-docker-build-prod:
-	docker build --target prod -t finbotapp/runtime:latest -f Dockerfile --pull .
+docker-build-runtime:
+	docker build --target runtime -t finbotapp/runtime:latest -f Dockerfile --pull .
 
-docker-build-dev:
-	docker build --target dev -t finbotapp/runtime-dev:latest -f Dockerfile --pull .
+docker-build-runtime-dev:
+	docker build --target runtime-dev -t finbotapp/runtime-dev:latest -f Dockerfile --pull .
 
-docker-build-all: docker-build-dev docker-build-prod docker-build-webapp
+docker-build-all: docker-build-runtime docker-build-runtime-dev docker-build-webapp
 
 trigger-valuation:
 	tools/check-env.sh accounts;

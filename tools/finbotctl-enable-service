@@ -9,6 +9,11 @@ usage () {
   echo "    --start    additionally immediately start the finbot application using systemd"
 }
 
+if [[ -z "${FINBOT_ROOT_DIR}" ]]
+then
+  FINBOT_ROOT_DIR=$(git rev-parse --show-toplevel)
+fi
+
 start_immediately=0
 while [[ $# -gt 0 ]]
 do
@@ -42,7 +47,7 @@ systemd_service_name=finbot-docker
 docker_compose_path=$(which docker-compose)
 service_tpl_file_path=${OWN_DIR}/../finbot-docker.service.tpl
 cat "${service_tpl_file_path}" \
-  | sed "s/FINBOT_CHECKOUT_DIR/${FINBOT_CHECKOUT_DIR//\//\\/}/g" \
+  | sed "s/FINBOT_CHECKOUT_DIR/${FINBOT_ROOT_DIR//\//\\/}/g" \
   | sed "s/DOCKER_COMPOSE_PATH/${docker_compose_path//\//\\/}/g" > /etc/systemd/system/${systemd_service_name}.service
 
 systemctl daemon-reload
