@@ -25,7 +25,7 @@ docker-build-runtime:
 docker-build-runtime-dev:
 	docker build --target runtime-dev -t finbotapp/runtime-dev:latest -f Dockerfile --pull .
 
-docker-build-all: docker-build-runtime docker-build-runtime-playwright docker-build-runtime-dev docker-build-webapp
+docker-build-all: docker-build-runtime docker-build-runtime-dev docker-build-webapp
 
 trigger-valuation:
 	tools/check-env.sh accounts;
