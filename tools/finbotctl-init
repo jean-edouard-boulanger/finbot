@@ -15,7 +15,7 @@ which docker-compose >/dev/null 2>&1 || die "'docker-compose' is not available o
 log_info docker-compose is available
 
 log_info "building docker images"
-make docker-build-dev
+make docker-build-runtime-dev
 
 log_info "creating secret environment"
 cp envs/secrets.env.tpl envs/secrets.dev.env
