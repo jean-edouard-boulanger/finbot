@@ -1,5 +1,15 @@
 from collections import defaultdict
-from typing import Any, Callable, Generator, Iterator, Optional, Type, TypedDict, Union
+from typing import (
+    Any,
+    Callable,
+    Generator,
+    Iterator,
+    Optional,
+    Type,
+    TypedDict,
+    TypeVar,
+    Union,
+)
 
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
@@ -140,12 +150,24 @@ class ValidationError(RuntimeError):
 
 
 def union(*values: str) -> Callable[[Optional[str]], Optional[str]]:
-    def validate(value: Optional[str]) -> Optional[str]:
+    def impl(value: Optional[str]) -> Optional[str]:
         if value not in values:
             raise ValidationError(f"should be either {', '.join(values)}")
         return value
 
-    return validate
+    return impl
+
+
+T = TypeVar("T")
+
+
+def optional(t: type[T]) -> Callable[[Optional[str]], Optional[T]]:
+    def impl(value: Optional[str]) -> Optional[T]:
+        if value is None or value.lower() in ("", "null", "none", "n/a"):
+            return None
+        return t(value)  # type: ignore
+
+    return impl
 
 
 ACCOUNT_SCHEMA = Schema(
@@ -165,7 +187,7 @@ HOLDING_SCHEMA = Schema(
         "account": {"type": str, "required": True},
         "symbol": {"type": str, "required": True},
         "type": {"type": str, "required": True},
-        "units": {"type": float, "required": True},
+        "units": {"type": optional(float), "required": True},
         "value": {"type": float, "required": True},
     },
 )
