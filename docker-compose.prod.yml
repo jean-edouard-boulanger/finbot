@@ -20,7 +20,7 @@ services:
       - envs/secrets.prod.env
 
   finbotwsrv:
-    image: "finbotapp/runtime:latest"
+    image: "finbotapp/runtime-playwright:latest"
     env_file:
       - envs/prod.env
       - envs/secrets.prod.env
