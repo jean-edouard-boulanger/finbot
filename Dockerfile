@@ -39,7 +39,7 @@ COPY alembic.ini finbotctl Makefile ./
 
 FROM runtime AS runtime-playwright
 
-RUN playwright install chromium --with-deps
+RUN playwright install chromium --with-deps && apt-get clean
 
 FROM runtime-playwright AS runtime-dev
 
