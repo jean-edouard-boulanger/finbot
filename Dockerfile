@@ -13,8 +13,6 @@ COPY requirements.txt .
 
 RUN python3.11 -m pip install --upgrade --no-cache-dir -r requirements.txt
 
-RUN playwright install chromium --with-deps
-
 FROM python:3.11-slim-bullseye AS runtime
 
 ENV FINBOT_ROOT_DIR="/finbot"
@@ -31,7 +29,6 @@ COPY --from=builder /usr/lib/x86_64-linux-gnu/libpq* /usr/lib/x86_64-linux-gnu/
 COPY --from=builder /usr/lib/x86_64-linux-gnu/libldap* /usr/lib/x86_64-linux-gnu/
 COPY --from=builder /usr/lib/x86_64-linux-gnu/liblber* /usr/lib/x86_64-linux-gnu/
 COPY --from=builder /usr/lib/x86_64-linux-gnu/libsasl* /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /root/.cache/ms-playwright/ /root/.cache/ms-playwright/
 
 WORKDIR ${FINBOT_ROOT_DIR}
 
@@ -40,7 +37,11 @@ COPY migrations/ migrations/
 COPY tools/ tools/
 COPY alembic.ini finbotctl Makefile ./
 
-FROM runtime AS runtime-dev
+FROM runtime AS runtime-playwright
+
+RUN playwright install chromium --with-deps && apt-get clean
+
+FROM runtime-playwright AS runtime-dev
 
 RUN apt-get update && \
     apt-get install -y \

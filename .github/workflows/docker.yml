@@ -23,6 +23,10 @@ jobs:
             context: .
             target: runtime
             skip: ${{ github.event_name == 'pull_request' }}
+          - repository: finbotapp/runtime-playwright
+            context: .
+            target: runtime-playwright
+            skip: ${{ github.event_name == 'pull_request' }}
           - repository: finbotapp/runtime-dev
             context: .
             target: runtime-dev
