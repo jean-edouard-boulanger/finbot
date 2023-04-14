@@ -1,12 +1,14 @@
-from typing import Any
+from typing import Any, TypeAlias
 
 from pydantic import BaseModel
+
+CurrencyCode: TypeAlias = str
 
 
 class Account(BaseModel):
     id: str
     name: str
-    iso_currency: str
+    iso_currency: CurrencyCode
     type: str
 
 

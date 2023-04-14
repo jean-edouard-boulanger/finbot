@@ -49,7 +49,9 @@ click-plugins==1.1.1
 click-repl==0.2.0
     # via celery
 cryptography==39.0.2
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   pgpy
 dateparser==1.1.7
     # via python-binance
 flask==2.2.3
@@ -117,6 +119,8 @@ oauthlib==3.2.2
     # via requests-oauthlib
 pandas==1.5.3
     # via -r requirements.in
+pgpy==0.6.0
+    # via -r requirements.in
 pika==1.3.1
     # via -r requirements.in
 plaid-python==7.5.0
@@ -132,6 +136,7 @@ psycopg2==2.9.5
 pyasn1==0.4.8
     # via
     #   oauth2client
+    #   pgpy
     #   pyasn1-modules
     #   rsa
 pyasn1-modules==0.2.8

@@ -12,6 +12,7 @@ from finbot.providers import (
 )
 from finbot.providers.base import ProviderBase, RetiredProvider
 from finbot.providers.errors import UnknownProvider
+from finbot.providers.interactive_brokers_uk import provider as interactive_brokers_uk
 
 ProviderId: TypeAlias = str
 
@@ -23,6 +24,7 @@ PROVIDERS: dict[ProviderId, type[ProviderBase]] = {
     "ca_fr": credit_agricole_fr.Api,
     "dummy_uk": dummy_uk.Api,
     "google_sheets": google_sheets.Api,
+    "interactive_brokers_uk": interactive_brokers_uk.Api,
     "kraken_us": kraken_us.Api,
     "lending_works_uk": RetiredProvider,
     "october_fr": RetiredProvider,

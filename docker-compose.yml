@@ -33,6 +33,7 @@ services:
       - "5001:5001"
     volumes:
       - .:/finbot
+      - .intake_data:/intake_data
 
   snapwsrv:
     image: "finbotapp/runtime-dev:latest"

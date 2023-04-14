@@ -54,7 +54,9 @@ click-plugins==1.1.1
 click-repl==0.2.0
     # via celery
 cryptography==39.0.2
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   pgpy
 dateparser==1.1.7
     # via python-binance
 flake8==6.0.0
@@ -144,6 +146,8 @@ pandas==1.5.3
     # via -r requirements.in
 pathspec==0.11.0
     # via black
+pgpy==0.6.0
+    # via -r requirements.in
 pika==1.3.1
     # via -r requirements.in
 pika-stubs==0.1.3
@@ -165,6 +169,7 @@ psycopg2==2.9.5
 pyasn1==0.4.8
     # via
     #   oauth2client
+    #   pgpy
     #   pyasn1-modules
     #   rsa
 pyasn1-modules==0.2.8
