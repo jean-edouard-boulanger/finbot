@@ -21,3 +21,4 @@ yarn-debug.log*
 yarn-error.log*
 envs/secrets*.env
 venv/
+.intake_data/

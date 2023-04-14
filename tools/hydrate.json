@@ -1,411 +1,580 @@
 {
-    "providers": [
-        {
-            "id": "plaid_us",
-            "description": "Open banking via Plaid",
-            "website_url": "https://plaid.com/",
-            "credentials_schema": {
-                "json_schema": {}
-            }
-        },
-        {
-            "id": "vanguard_uk",
-            "description": "Vanguard Investors (UK)",
-            "website_url": "https://www.vanguardinvestor.co.uk/",
-            "credentials_schema": {
-                "json_schema": {
-                    "$schema": "http://json-schema.org/draft-07/schema#",
-                    "type": "object",
-                    "required": ["username", "password"],
-                    "properties": {
-                        "username": {
-                            "title": "Username",
-                            "type": "string"
-                        },
-                        "password": {
-                            "title": "Password",
-                            "type": "string"
-                        }
-                    }
-                },
-                "ui_schema": {
-                    "password": {
-                        "ui:widget": "password"
-                    },
-                    "ui:order": [
-                        "username",
-                        "password"
-                    ]
-                }
-            }
-        },
-        {
-            "id": "aegon_targetplan_uk",
-            "description": "Aegon Targetplan (UK)",
-            "website_url": "https://lwp.aegon.co.uk/targetplanUI/login",
-            "credentials_schema": {
-                "json_schema": {
-                    "$schema": "http://json-schema.org/draft-07/schema#",
-                    "type": "object",
-                    "required": ["email", "password"],
-                    "properties": {
-                        "username": {
-                            "title": "Email",
-                            "type": "string"
-                        },
-                        "password": {
-                            "title": "Password",
-                            "type": "string"
-                        }
-                    }
-                },
-                "ui_schema": {
-                    "password": {
-                        "ui:widget": "password"
-                    },
-                    "ui:order": [
-                        "username",
-                        "password"
-                    ]
-                }
-            }
-        },
-        {
-            "id": "ca_fr",
-            "description": "Credit Agricole (FR)",
-            "website_url": "https://www.credit-agricole.fr/",
-            "credentials_schema": {
-                "json_schema": {
-                    "type": "object",
-                    "required": ["region", "account_number", "password"],
-                    "properties": {
-                        "region": {
-                            "title": "Region",
-                            "type": "string",
-                            "enum": [
-                                "ca-alpesprovence",
-                                "ca-alsace-vosges",
-                                "ca-anjou-maine",
-                                "ca-aquitaine",
-                                "ca-atlantique-vendee",
-                                "ca-briepicardie",
-                                "ca-centrest",
-                                "ca-centrefrance",
-                                "ca-centreloire",
-                                "ca-centreouest",
-                                "ca-cb",
-                                "ca-cmds",
-                                "ca-charente-perigord",
-                                "ca-corse",
-                                "ca-cotesdarmor",
-                                "ca-des-savoie",
-                                "ca-finistere",
-                                "ca-franchecomte",
-                                "ca-guadeloupe",
-                                "ca-illeetvilaine",
-                                "ca-languedoc",
-                                "ca-loirehauteloire",
-                                "ca-lorraine",
-                                "ca-martinique",
-                                "ca-morbihan",
-                                "ca-norddefrance",
-                                "ca-nord-est",
-                                "ca-nmpNord",
-                                "ca-normandie",
-                                "ca-normandie-seine",
-                                "ca-paris",
-                                "ca-pcaProvence",
-                                "ca-pyrenees-gascogne",
-                                "ca-reunion",
-                                "ca-sudrhonealpes",
-                                "ca-sudmed",
-                                "ca-toulouse31",
-                                "ca-tourainepoitou",
-                                "ca-valdefrance"
-                            ],
-                            "enumNames": [
-                                "Alpes Provences",
-                                "Alsace Vosges",
-                                "Anjou Maine",
-                                "Aquitaine",
-                                "Atlantique Vendee",
-                                "Brie Picardie",
-                                "Centre Est",
-                                "Centre France",
-                                "Centre Loire",
-                                "Centre Ouest",
-                                "Champagne Bourgogne",
-                                "Charente Maritime Deux Sevres",
-                                "Charente Perigord",
-                                "Corse",
-                                "Cote d'Armor",
-                                "Savoie",
-                                "Finistere",
-                                "Franche Conte",
-                                "Guadeloupe",
-                                "Ille et Vilaine",
-                                "Languedoc",
-                                "Loire et Haute Loire",
-                                "Lorraine",
-                                "Martinique Guyane",
-                                "Morbihan",
-                                "Nordde France",
-                                "Nord Est",
-                                "Midi Pyrenees",
-                                "Normandie",
-                                "Normandie Seine",
-                                "Paris Ile de France",
-                                "Cote d'Azur",
-                                "Pyrenees Gascogne",
-                                "Reunion",
-                                "Sud Rhone Alpes",
-                                "Sud Mediterrannee",
-                                "Toulouse",
-                                "Touraine Poitou",
-                                "Val de France"
-                            ]
-                        },
-                        "account_number": {
-                            "title": "Account number",
-                            "type": "string"
-                        },
-                        "password": {
-                            "title": "Password",
-                            "type": "string"
-                        }
-                    }
-                },
-                "ui_schema": {
-                    "password": {
-                        "ui:widget": "password"
-                    },
-                    "ui:order": [
-                        "region",
-                        "account_number",
-                        "password"
-                    ]
-                }
-            }
-        },
-        {
-            "id": "lending_works_uk",
-            "description": "Lending Works (UK)",
-            "website_url": "https://www.lendingworks.co.uk/",
-            "credentials_schema": {
-                "json_schema": {
-                    "$schema": "http://json-schema.org/draft-07/schema#",
-                    "type": "object",
-                    "required": ["email", "password"],
-                    "properties": {
-                        "email": {
-                            "title": "Email",
-                            "type": "string"
-                        },
-                        "password": {
-                            "title": "Password",
-                            "type": "string"
-                        }
-                    }
-                },
-                "ui_schema": {
-                    "email": {
-                        "ui:widget": "email"
-                    },
-                    "password": {
-                        "ui:widget": "password"
-                    },
-                    "ui:order": [
-                        "email",
-                        "password"
-                    ]
-                }
-            }
-        },
-        {
-            "id": "october_fr",
-            "description": "October (FR)",
-            "website_url": "https://fr.october.eu/",
-            "credentials_schema": {
-                "json_schema": {
-                    "$schema": "http://json-schema.org/draft-07/schema#",
-                    "type": "object",
-                    "required": ["email", "password"],
-                    "properties": {
-                        "email": {
-                            "title": "Email",
-                            "type": "string"
-                        },
-                        "password": {
-                            "title": "Password",
-                            "type": "string"
-                        }
-                    }
-                },
-                "ui_schema": {
-                    "email": {
-                        "ui:widget": "email"
-                    },
-                    "password": {
-                        "ui:widget": "password"
-                    },
-                    "ui:order": [
-                        "email",
-                        "password"
-                    ]
-                }
-            }
-        },
-        {
-            "id": "kraken_us",
-            "description": "Kraken (US)",
-            "website_url": "https://www.kraken.com/",
-            "credentials_schema": {
-                "json_schema": {
-                    "$schema": "http://json-schema.org/draft-07/schema#",
-                    "type": "object",
-                    "required": ["api_key", "private_key"],
-                    "properties": {
-                        "api_key": {
-                            "title": "API key",
-                            "type": "string"
-                        },
-                        "private_key": {
-                            "title": "Private key",
-                            "type": "string"
-                        }
-                    }
-                },
-                "ui_schema": {
-                    "ui:order": [
-                        "api_key",
-                        "private_key"
-                    ]
-                }
-            }
-        },
-        {
-            "id": "binance_us",
-            "description": "Binance (US)",
-            "website_url": "https://www.binance.com/en",
-            "credentials_schema": {
-                "json_schema": {
-                    "$schema": "http://json-schema.org/draft-07/schema#",
-                    "type": "object",
-                    "required": ["api_key", "secret_key"],
-                    "properties": {
-                        "api_key": {
-                            "title": "API key",
-                            "type": "string"
-                        },
-                        "secret_key": {
-                            "title": "Secret key",
-                            "type": "string"
-                        }
-                    }
-                },
-                "ui_schema": {
-                    "ui:order": [
-                        "api_key",
-                        "secret_key"
-                    ]
-                }
-            }
-        },
-        {
-            "id": "bittrex_us",
-            "description": "Bittrex (US)",
-            "website_url": "https://global.bittrex.com/",
-            "credentials_schema": {
-                "json_schema": {
-                    "$schema": "http://json-schema.org/draft-07/schema#",
-                    "type": "object",
-                    "required": ["api_key", "private_key"],
-                    "properties": {
-                        "api_key": {
-                            "title": "API key",
-                            "type": "string"
-                        },
-                        "private_key": {
-                            "title": "Private key",
-                            "type": "string"
-                        }
-                    }
-                },
-                "ui_schema": {
-                    "ui:order": [
-                        "api_key",
-                        "private_key"
-                    ]
-                }
-            }
-        },
-        {
-            "id": "google_sheets",
-            "description": "Portfolio managed via Google sheets",
-            "website_url": "https://www.google.com/sheets/about/",
-            "credentials_schema": {
-                "json_schema": {
-                    "$schema": "http://json-schema.org/draft-07/schema#",
-                    "type": "object",
-                    "required": ["sheet_key", "google_api_credentials"],
-                    "properties": {
-                        "sheet_key": {
-                            "title": "Sheet identifier",
-                            "type": "string"
-                        },
-                        "google_api_credentials": {
-                            "title": "API credentials (json)",
-                            "type": "string"
-                        }
-                    }
-                },
-                "ui_schema": {
-                    "google_api_credentials": {
-                        "ui:widget": "textarea"
-                    },
-                    "ui:order": [
-                        "sheet_key",
-                        "google_api_credentials"
-                    ]
-                }
-            }
-        },
-        {
-          "id": "qonto_us",
-          "description": "Qonto",
-          "website_url": "https://qonto.com",
-          "credentials_schema": {
-            "json_schema": {
-              "$schema": "http://json-schema.org/draft-07/schema#",
-              "properties": {
-                "identifier": {
-                  "title": "Identifier",
-                  "type": "string"
-                },
-                "secret_key": {
-                  "title": "Secret key",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "identifier",
-                "secret_key"
-              ],
-              "type": "object"
+  "providers": [
+    {
+      "id": "plaid_us",
+      "description": "Open banking via Plaid",
+      "website_url": "https://plaid.com/",
+      "credentials_schema": {
+        "json_schema": {}
+      }
+    },
+    {
+      "id": "vanguard_uk",
+      "description": "Vanguard Investors (UK)",
+      "website_url": "https://www.vanguardinvestor.co.uk/",
+      "credentials_schema": {
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "required": [
+            "username",
+            "password"
+          ],
+          "properties": {
+            "username": {
+              "title": "Username",
+              "type": "string"
             },
-            "ui_schema": {
-              "ui:order": [
-                "identifier",
-                "secret_key"
+            "password": {
+              "title": "Password",
+              "type": "string"
+            }
+          }
+        },
+        "ui_schema": {
+          "password": {
+            "ui:widget": "password"
+          },
+          "ui:order": [
+            "username",
+            "password"
+          ]
+        }
+      }
+    },
+    {
+      "id": "aegon_targetplan_uk",
+      "description": "Aegon Targetplan (UK)",
+      "website_url": "https://lwp.aegon.co.uk/targetplanUI/login",
+      "credentials_schema": {
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "required": [
+            "email",
+            "password"
+          ],
+          "properties": {
+            "username": {
+              "title": "Email",
+              "type": "string"
+            },
+            "password": {
+              "title": "Password",
+              "type": "string"
+            }
+          }
+        },
+        "ui_schema": {
+          "password": {
+            "ui:widget": "password"
+          },
+          "ui:order": [
+            "username",
+            "password"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ca_fr",
+      "description": "Credit Agricole (FR)",
+      "website_url": "https://www.credit-agricole.fr/",
+      "credentials_schema": {
+        "json_schema": {
+          "type": "object",
+          "required": [
+            "region",
+            "account_number",
+            "password"
+          ],
+          "properties": {
+            "region": {
+              "title": "Region",
+              "type": "string",
+              "enum": [
+                "ca-alpesprovence",
+                "ca-alsace-vosges",
+                "ca-anjou-maine",
+                "ca-aquitaine",
+                "ca-atlantique-vendee",
+                "ca-briepicardie",
+                "ca-centrest",
+                "ca-centrefrance",
+                "ca-centreloire",
+                "ca-centreouest",
+                "ca-cb",
+                "ca-cmds",
+                "ca-charente-perigord",
+                "ca-corse",
+                "ca-cotesdarmor",
+                "ca-des-savoie",
+                "ca-finistere",
+                "ca-franchecomte",
+                "ca-guadeloupe",
+                "ca-illeetvilaine",
+                "ca-languedoc",
+                "ca-loirehauteloire",
+                "ca-lorraine",
+                "ca-martinique",
+                "ca-morbihan",
+                "ca-norddefrance",
+                "ca-nord-est",
+                "ca-nmpNord",
+                "ca-normandie",
+                "ca-normandie-seine",
+                "ca-paris",
+                "ca-pcaProvence",
+                "ca-pyrenees-gascogne",
+                "ca-reunion",
+                "ca-sudrhonealpes",
+                "ca-sudmed",
+                "ca-toulouse31",
+                "ca-tourainepoitou",
+                "ca-valdefrance"
+              ],
+              "enumNames": [
+                "Alpes Provences",
+                "Alsace Vosges",
+                "Anjou Maine",
+                "Aquitaine",
+                "Atlantique Vendee",
+                "Brie Picardie",
+                "Centre Est",
+                "Centre France",
+                "Centre Loire",
+                "Centre Ouest",
+                "Champagne Bourgogne",
+                "Charente Maritime Deux Sevres",
+                "Charente Perigord",
+                "Corse",
+                "Cote d'Armor",
+                "Savoie",
+                "Finistere",
+                "Franche Conte",
+                "Guadeloupe",
+                "Ille et Vilaine",
+                "Languedoc",
+                "Loire et Haute Loire",
+                "Lorraine",
+                "Martinique Guyane",
+                "Morbihan",
+                "Nordde France",
+                "Nord Est",
+                "Midi Pyrenees",
+                "Normandie",
+                "Normandie Seine",
+                "Paris Ile de France",
+                "Cote d'Azur",
+                "Pyrenees Gascogne",
+                "Reunion",
+                "Sud Rhone Alpes",
+                "Sud Mediterrannee",
+                "Toulouse",
+                "Touraine Poitou",
+                "Val de France"
+              ]
+            },
+            "account_number": {
+              "title": "Account number",
+              "type": "string"
+            },
+            "password": {
+              "title": "Password",
+              "type": "string"
+            }
+          }
+        },
+        "ui_schema": {
+          "password": {
+            "ui:widget": "password"
+          },
+          "ui:order": [
+            "region",
+            "account_number",
+            "password"
+          ]
+        }
+      }
+    },
+    {
+      "id": "lending_works_uk",
+      "description": "Lending Works (UK)",
+      "website_url": "https://www.lendingworks.co.uk/",
+      "credentials_schema": {
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "required": [
+            "email",
+            "password"
+          ],
+          "properties": {
+            "email": {
+              "title": "Email",
+              "type": "string"
+            },
+            "password": {
+              "title": "Password",
+              "type": "string"
+            }
+          }
+        },
+        "ui_schema": {
+          "email": {
+            "ui:widget": "email"
+          },
+          "password": {
+            "ui:widget": "password"
+          },
+          "ui:order": [
+            "email",
+            "password"
+          ]
+        }
+      }
+    },
+    {
+      "id": "october_fr",
+      "description": "October (FR)",
+      "website_url": "https://fr.october.eu/",
+      "credentials_schema": {
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "required": [
+            "email",
+            "password"
+          ],
+          "properties": {
+            "email": {
+              "title": "Email",
+              "type": "string"
+            },
+            "password": {
+              "title": "Password",
+              "type": "string"
+            }
+          }
+        },
+        "ui_schema": {
+          "email": {
+            "ui:widget": "email"
+          },
+          "password": {
+            "ui:widget": "password"
+          },
+          "ui:order": [
+            "email",
+            "password"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kraken_us",
+      "description": "Kraken (US)",
+      "website_url": "https://www.kraken.com/",
+      "credentials_schema": {
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "required": [
+            "api_key",
+            "private_key"
+          ],
+          "properties": {
+            "api_key": {
+              "title": "API key",
+              "type": "string"
+            },
+            "private_key": {
+              "title": "Private key",
+              "type": "string"
+            }
+          }
+        },
+        "ui_schema": {
+          "ui:order": [
+            "api_key",
+            "private_key"
+          ]
+        }
+      }
+    },
+    {
+      "id": "binance_us",
+      "description": "Binance (US)",
+      "website_url": "https://www.binance.com/en",
+      "credentials_schema": {
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "required": [
+            "api_key",
+            "secret_key"
+          ],
+          "properties": {
+            "api_key": {
+              "title": "API key",
+              "type": "string"
+            },
+            "secret_key": {
+              "title": "Secret key",
+              "type": "string"
+            }
+          }
+        },
+        "ui_schema": {
+          "ui:order": [
+            "api_key",
+            "secret_key"
+          ]
+        }
+      }
+    },
+    {
+      "id": "bittrex_us",
+      "description": "Bittrex (US)",
+      "website_url": "https://global.bittrex.com/",
+      "credentials_schema": {
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "required": [
+            "api_key",
+            "private_key"
+          ],
+          "properties": {
+            "api_key": {
+              "title": "API key",
+              "type": "string"
+            },
+            "private_key": {
+              "title": "Private key",
+              "type": "string"
+            }
+          }
+        },
+        "ui_schema": {
+          "ui:order": [
+            "api_key",
+            "private_key"
+          ]
+        }
+      }
+    },
+    {
+      "id": "google_sheets",
+      "description": "Portfolio managed via Google sheets",
+      "website_url": "https://www.google.com/sheets/about/",
+      "credentials_schema": {
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "required": [
+            "sheet_key",
+            "google_api_credentials"
+          ],
+          "properties": {
+            "sheet_key": {
+              "title": "Sheet identifier",
+              "type": "string"
+            },
+            "google_api_credentials": {
+              "title": "API credentials (json)",
+              "type": "string"
+            }
+          }
+        },
+        "ui_schema": {
+          "google_api_credentials": {
+            "ui:widget": "textarea"
+          },
+          "ui:order": [
+            "sheet_key",
+            "google_api_credentials"
+          ]
+        }
+      }
+    },
+    {
+      "id": "qonto_us",
+      "description": "Qonto",
+      "website_url": "https://qonto.com",
+      "credentials_schema": {
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "properties": {
+            "identifier": {
+              "title": "Identifier",
+              "type": "string"
+            },
+            "secret_key": {
+              "title": "Secret key",
+              "type": "string"
+            }
+          },
+          "required": [
+            "identifier",
+            "secret_key"
+          ],
+          "type": "object"
+        },
+        "ui_schema": {
+          "ui:order": [
+            "identifier",
+            "secret_key"
+          ]
+        }
+      }
+    },
+    {
+      "id": "interactive_brokers_uk",
+      "description": "Interactive Brokers (UK)",
+      "website_url": "https://www.interactivebrokers.com/en/home.php",
+      "credentials_schema": {
+        "json_schema": {},
+        "ui_schema": {}
+      }
+    },
+    {
+      "id": "interactive_brokers_uk",
+      "description": "Interactive Brokers (UK)",
+      "website_url": "https://www.interactivebrokers.com/en/home.php",
+      "credentials_schema": {
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "intake_method": {
+              "type": "object",
+              "title": "How would you like us to load your InteractiveBrokers Flex reports?",
+              "oneOf": [
+                {
+                  "title": "From a local directory",
+                  "required": [
+                    "method_type",
+                    "local_intake_dir"
+                  ],
+                  "properties": {
+                    "method_type": {
+                      "type": "string",
+                      "default": "local_file"
+                    },
+                    "local_intake_dir": {
+                      "title": "Local directory",
+                      "type": "string"
+                    }
+                  }
+                },
+                {
+                  "title": "From an FTP server",
+                  "required": [
+                    "method_type",
+                    "ftp_host",
+                    "username",
+                    "password",
+                    "directory",
+                    "port"
+                  ],
+                  "properties": {
+                    "method_type": {
+                      "type": "string",
+                      "default": "ftp"
+                    },
+                    "ftp_host": {
+                      "title": "Host",
+                      "type": "string",
+                      "default": "ftp2.interactivebrokers.com"
+                    },
+                    "username": {
+                      "title": "Username",
+                      "type": "string"
+                    },
+                    "password": {
+                      "title": "Password",
+                      "type": "string"
+                    },
+                    "directory": {
+                      "title": "Directory",
+                      "type": "string",
+                      "default": "outgoing"
+                    },
+                    "port": {
+                      "title": "Port",
+                      "type": "number",
+                      "default": 21
+                    }
+                  }
+                }
+              ]
+            },
+            "pgp_key": {
+              "type": "object",
+              "title": "Report encryption",
+              "oneOf": [
+                {
+                  "title": "Unencrypted report"
+                },
+                {
+                  "title": "Decrypt report using PGP key (no passphrase)",
+                  "required": [
+                    "data_base64"
+                  ],
+                  "properties": {
+                    "data_base64": {
+                      "title": "PGP key (base64-encoded)",
+                      "type": "string"
+                    }
+                  }
+                },
+                {
+                  "title": "Decrypt report using PGP key and passphrase",
+                  "required": [
+                    "data_base64",
+                    "passphrase"
+                  ],
+                  "properties": {
+                    "data_base64": {
+                      "title": "PGP key (base64-encoded)",
+                      "type": "string"
+                    },
+                    "passphrase": {
+                      "title": "Passphrase",
+                      "type": "string"
+                    }
+                  }
+                }
               ]
             }
           }
         },
-        {
-            "id": "dummy_uk",
-            "description": "Dummy financial provider (UK)",
-            "website_url": "http://www.dummy.com",
-            "credentials_schema": {}
+        "ui_schema": {
+          "intake_method": {
+            "method_type": {
+              "ui:widget": "hidden"
+            },
+            "password": {
+              "ui:widget": "password"
+            }
+          },
+          "pgp_key": {
+            "data_base64": {
+              "ui:widget": "textarea"
+            },
+            "passphrase": {
+              "ui:widget": "password"
+            }
+          }
         }
-    ]
+      }
+    },
+    {
+      "id": "dummy_uk",
+      "description": "Dummy financial provider (UK)",
+      "website_url": "http://www.dummy.com",
+      "credentials_schema": {}
+    }
+  ]
 }

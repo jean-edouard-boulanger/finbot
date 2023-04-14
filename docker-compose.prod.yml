@@ -26,6 +26,8 @@ services:
       - envs/secrets.prod.env
     working_dir: /finbot
     command: bash -c "./tools/run finbotwsrv"
+    volumes:
+      - .intake_data:/intake_data
 
   snapwsrv:
     image: "finbotapp/runtime:latest"
