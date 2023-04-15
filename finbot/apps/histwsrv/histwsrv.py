@@ -83,7 +83,9 @@ def iter_sub_accounts_valuation_history_entries(data: pd.DataFrame):
             units=row["item_units"],
             valuation=row["value_snapshot_ccy"],
             valuation_sub_account_ccy=row["value_sub_account_ccy"],
-            provider_specific_data=deserialize_provider_specific_data(row["item_provider_specific_data"])
+            provider_specific_data=deserialize_provider_specific_data(
+                row["item_provider_specific_data"]
+            ),
         )
 
 

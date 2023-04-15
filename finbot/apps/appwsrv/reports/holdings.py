@@ -1,6 +1,6 @@
 from collections import defaultdict
 from datetime import timedelta
-from typing import Tuple
+from typing import Any
 
 from finbot.core import timeseries, utils
 from finbot.model import (
@@ -11,7 +11,9 @@ from finbot.model import (
 )
 
 
-def extract_provider_specific_data(item: SubAccountItemValuationHistoryEntry) -> list[tuple[str, int | float | str]]:
+def extract_provider_specific_data(
+    item: SubAccountItemValuationHistoryEntry,
+) -> list[tuple[str, Any]]:
     provider_specific_data = item.provider_specific_data or {}
     return list(provider_specific_data.items())
 
@@ -33,7 +35,7 @@ def generate(session, history_entry: UserAccountHistoryEntry):
         mapped_sub_accounts[sub_account.linked_account_id].append(sub_account)
     items_valuation = repository.find_items_valuation(session, history_entry.id)
     mapped_items: dict[
-        Tuple[int, str], list[SubAccountItemValuationHistoryEntry]
+        tuple[int, str], list[SubAccountItemValuationHistoryEntry]
     ] = defaultdict(list)
     for item in items_valuation:
         mapped_items[(item.linked_account_id, item.sub_account_id)].append(item)
@@ -158,7 +160,8 @@ def generate(session, history_entry: UserAccountHistoryEntry):
                                         ),
                                         ("Type", item_v.item_subtype),
                                         ("Account currency", sa_v.sub_account_ccy),
-                                    ] + extract_provider_specific_data(item_v)
+                                    ]
+                                    + extract_provider_specific_data(item_v)
                                     if value is not None
                                 ],
                             }
