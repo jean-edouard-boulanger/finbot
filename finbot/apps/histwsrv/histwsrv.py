@@ -1,3 +1,4 @@
+import json
 import logging
 from decimal import Decimal
 from typing import Any
@@ -65,6 +66,12 @@ def get_sub_accounts_valuation(data: pd.DataFrame):
     }
 
 
+def deserialize_provider_specific_data(raw_data: str | None) -> dict[str, Any] | None:
+    if raw_data is None:
+        return None
+    return json.loads(raw_data)
+
+
 def iter_sub_accounts_valuation_history_entries(data: pd.DataFrame):
     for _, row in data.iterrows():
         yield SubAccountItemValuationHistoryEntry(
@@ -76,6 +83,7 @@ def iter_sub_accounts_valuation_history_entries(data: pd.DataFrame):
             units=row["item_units"],
             valuation=row["value_snapshot_ccy"],
             valuation_sub_account_ccy=row["value_sub_account_ccy"],
+            provider_specific_data=deserialize_provider_specific_data(row["item_provider_specific_data"])
         )
 
 

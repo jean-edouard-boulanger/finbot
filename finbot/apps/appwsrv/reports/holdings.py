@@ -11,6 +11,11 @@ from finbot.model import (
 )
 
 
+def extract_provider_specific_data(item: SubAccountItemValuationHistoryEntry) -> list[tuple[str, int | float | str]]:
+    provider_specific_data = item.provider_specific_data or {}
+    return list(provider_specific_data.items())
+
+
 def generate(session, history_entry: UserAccountHistoryEntry):
     user_account_valuation = repository.get_user_account_valuation(
         session, history_entry.id
@@ -153,7 +158,7 @@ def generate(session, history_entry: UserAccountHistoryEntry):
                                         ),
                                         ("Type", item_v.item_subtype),
                                         ("Account currency", sa_v.sub_account_ccy),
-                                    ]
+                                    ] + extract_provider_specific_data(item_v)
                                     if value is not None
                                 ],
                             }
