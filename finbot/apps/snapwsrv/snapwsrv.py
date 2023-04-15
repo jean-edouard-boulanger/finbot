@@ -193,6 +193,7 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
                     domestic=sub_account["iso_currency"], foreign=self.target_ccy
                 )
             ),
+            provider_specific_data=item.get("provider_specific"),
         )
         sub_account_entry.items_entries.append(new_item)
 

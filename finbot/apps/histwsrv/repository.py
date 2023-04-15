@@ -27,7 +27,8 @@ class ReportRepository(object):
                    sais.item_subtype AS item_subtype,
                    sais.units AS item_units,
                    sais.value_snapshot_ccy AS value_snapshot_ccy,
-                   sais.value_sub_account_ccy AS value_sub_account_ccy
+                   sais.value_sub_account_ccy AS value_sub_account_ccy,
+                   sais.provider_specific_data AS item_provider_specific_data
             FROM (
                 -- Find the latest linked account snapshot entry in a
                 -- successful snapshot (can be the requested raw snapshot or any

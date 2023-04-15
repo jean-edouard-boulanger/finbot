@@ -285,6 +285,7 @@ class SubAccountItemSnapshotEntry(Base):
     units = Column(Numeric)
     value_sub_account_ccy = Column(Numeric)
     value_snapshot_ccy = Column(Numeric)
+    provider_specific_data = Column(JSONEncoded)
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
@@ -477,6 +478,7 @@ class SubAccountItemValuationHistoryEntry(Base):
     valuation_change_id = Column(
         Integer, ForeignKey(ValuationChangeEntry.id, ondelete="SET NULL")
     )
+    provider_specific_data = Column(JSONEncoded)
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
