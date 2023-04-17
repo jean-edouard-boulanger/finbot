@@ -1,4 +1,5 @@
 import base64
+import logging
 from contextlib import contextmanager
 from functools import cached_property
 from typing import Any, Generator, cast
@@ -45,6 +46,7 @@ class PGPKey(BaseModel):
 
 
 class Credentials(BaseModel):
+    report_file_pattern: str = "*.xml"
     intake_method: IntakeMethod
     pgp_key: PGPKey | None
 
@@ -56,7 +58,9 @@ class Api(ProviderBase):
         self.__statement: FlexStatement | None = None
 
     def initialize(self) -> None:
-        raw_report_payload = load_latest_report_payload(self._credentials.intake_method)
+        raw_report_payload = load_latest_report_payload(
+            self._credentials.report_file_pattern, self._credentials.intake_method
+        )
         if self._credentials.pgp_key:
             with self._credentials.pgp_key.unlocked_pgp_key() as pgp_key:
                 report_payload = _attempt_decrypt_flex_report_payload(
@@ -194,5 +198,6 @@ def _attempt_decrypt_flex_report_payload(payload: bytes, pgp_key: pgpy.PGPKey) -
     except ValueError:
         # This is an indication that we tried to load a clear-text (i.e. not encrypted)
         # flex report payload. In that case, simply attempt to decode.
+        logging.debug("report does not appear encrypted, although pgp key was provided")
         return payload.decode()
     return cast(str, pgp_key.decrypt(pgp_message).message)

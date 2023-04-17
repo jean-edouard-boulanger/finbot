@@ -446,7 +446,16 @@
         "json_schema": {
           "$schema": "http://json-schema.org/draft-07/schema#",
           "type": "object",
+          "required": [
+            "report_file_pattern",
+            "intake_method"
+          ],
           "properties": {
+            "report_file_pattern": {
+              "type": "string",
+              "title": "Report file pattern",
+              "default": "*.xml"
+            },
             "intake_method": {
               "type": "object",
               "title": "How would you like us to load your InteractiveBrokers Flex reports?",
@@ -512,41 +521,20 @@
             },
             "pgp_key": {
               "type": "object",
-              "title": "Report encryption",
-              "oneOf": [
-                {
-                  "title": "Unencrypted report"
+              "title": "PGP key (used to decrypt report)",
+              "required": [
+                "data_base64"
+              ],
+              "properties": {
+                "data_base64": {
+                  "title": "PGP key (base64-encoded)",
+                  "type": "string"
                 },
-                {
-                  "title": "Decrypt report using PGP key (no passphrase)",
-                  "required": [
-                    "data_base64"
-                  ],
-                  "properties": {
-                    "data_base64": {
-                      "title": "PGP key (base64-encoded)",
-                      "type": "string"
-                    }
-                  }
-                },
-                {
-                  "title": "Decrypt report using PGP key and passphrase",
-                  "required": [
-                    "data_base64",
-                    "passphrase"
-                  ],
-                  "properties": {
-                    "data_base64": {
-                      "title": "PGP key (base64-encoded)",
-                      "type": "string"
-                    },
-                    "passphrase": {
-                      "title": "Passphrase",
-                      "type": "string"
-                    }
-                  }
+                "passphrase": {
+                  "title": "Passphrase",
+                  "type": "string"
                 }
-              ]
+              }
             }
           }
         },
@@ -557,7 +545,16 @@
             },
             "password": {
               "ui:widget": "password"
-            }
+            },
+            "ui:order": [
+              "method_type",
+              "local_intake_dir",
+              "ftp_host",
+              "port",
+              "username",
+              "password",
+              "directory"
+            ]
           },
           "pgp_key": {
             "data_base64": {
@@ -566,7 +563,12 @@
             "passphrase": {
               "ui:widget": "password"
             }
-          }
+          },
+          "ui:order": [
+            "report_file_pattern",
+            "intake_method",
+            "pgp_key"
+          ]
         }
       }
     },
