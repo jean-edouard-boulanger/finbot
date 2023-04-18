@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 from xml.etree.ElementTree import Element
 from xml.etree.ElementTree import ParseError as XMLParseError
@@ -25,6 +25,7 @@ class MTMPerformanceSummaryUnderlying:
     close_quantity: float
     close_price: float
     commissions: float
+    report_date: date
 
     @property
     def full_security_id(self) -> str:
@@ -126,6 +127,7 @@ def _parse_mtm_performance_summary_underlying(
         close_quantity=float(node.attrib["closeQuantity"]),
         close_price=float(node.attrib["closePrice"]),
         commissions=float(node.attrib["commissions"]),
+        report_date=datetime.strptime(node.attrib["reportDate"], "%Y-%m-%d").date(),
     )
 
 

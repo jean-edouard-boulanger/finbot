@@ -180,6 +180,7 @@ def _make_asset(
                 "Stock currency": stock_currency,
                 "Listing exchange": entry.listing_exchange,
                 f"Close price ({stock_currency})": entry.close_price,
+                "Report date": entry.report_date.isoformat(),
             },
         )
     elif asset_category == "CASH":
@@ -188,6 +189,7 @@ def _make_asset(
             type="currency",
             value=entry.close_quantity * entry.close_price,
             units=entry.close_quantity,
+            provider_specific={"Report date": entry.report_date.isoformat()},
         )
     raise ValueError(f"unknown asset category: {asset_category}")
 
