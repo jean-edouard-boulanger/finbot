@@ -437,11 +437,11 @@ def get_linked_accounts_statuses(
                from finbot_linked_accounts_snapshots
               where linked_account_id in (
                   select id
-                  from finbot_linked_accounts
-                  where user_account_id = :user_account_id
-                  and not deleted and {linked_account_ids_filter or '1 = 1'}
+                    from finbot_linked_accounts
+                    where user_account_id = :user_account_id
+                      and not deleted and {linked_account_ids_filter or '1 = 1'}
               )
-             group by linked_account_id
+           group by linked_account_id
         )
     """
     query_params = {"user_account_id": user_account_id}
