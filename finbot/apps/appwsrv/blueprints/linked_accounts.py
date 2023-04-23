@@ -26,7 +26,7 @@ linked_accounts_api = Blueprint("linked_accounts_api", __name__)
 @jwt_required()
 @service_endpoint()
 def get_linked_accounts(user_account_id: int):
-    results = repository.find_linked_accounts(db_session, user_account_id)
+    linked_accounts = repository.find_linked_accounts(db_session, user_account_id)
     statuses = repository.get_linked_accounts_statuses(db_session, user_account_id)
     return {
         "linked_accounts": [
@@ -41,7 +41,7 @@ def get_linked_accounts(user_account_id: int):
                 "updated_at": entry.updated_at,
                 "status": statuses.get(entry.id),
             }
-            for entry in sorted(results, key=lambda entry: entry.account_name)
+            for entry in sorted(linked_accounts, key=lambda entry: entry.account_name)
         ]
     }
 

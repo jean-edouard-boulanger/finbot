@@ -1,8 +1,9 @@
 # mypy: allow-untyped-calls
 import enum
+import json
 from dataclasses import dataclass
 from datetime import date, datetime
-from typing import Any, Optional, Protocol, Type, Union
+from typing import Any, Literal, Optional, Protocol, Type, TypedDict, Union
 
 from sqlalchemy import desc
 from sqlalchemy.orm import joinedload
@@ -11,17 +12,14 @@ from finbot.core.db.session import Session
 from finbot.core.errors import InvalidUserInput, MissingUserData
 from finbot.model import (
     LinkedAccount,
-    LinkedAccountSnapshotEntry,
     LinkedAccountValuationHistoryEntry,
     Provider,
-    SnapshotStatus,
     SubAccountItemValuationHistoryEntry,
     SubAccountValuationHistoryEntry,
     UserAccount,
     UserAccountHistoryEntry,
     UserAccountPlaidSettings,
     UserAccountSettings,
-    UserAccountSnapshot,
     UserAccountValuationHistoryEntry,
 )
 
@@ -410,39 +408,64 @@ def get_historical_valuation_by_asset_type(
     ]
 
 
+class LinkedAccountStatus(TypedDict):
+    status: Literal["stable", "unstable"]
+    errors: list[Any] | None
+    snapshot_id: int
+    snapshot_time: datetime
+
+
 def get_linked_accounts_statuses(
-    session: Session, user_account_id: int
-) -> dict[int, dict[str, Any]]:
-    last_snapshot = (
-        session.query(UserAccountSnapshot)
-        .filter_by(user_account_id=user_account_id)
-        .filter_by(status=SnapshotStatus.Success)
-        .options(joinedload(UserAccountSnapshot.linked_accounts_entries))
-        .order_by(desc(UserAccountSnapshot.start_time))
-        .limit(1)
-        .one_or_none()
-    )
-    output: dict[int, dict[str, Any]] = {}
-    if not last_snapshot:
-        return output
-    entry: LinkedAccountSnapshotEntry
-    for entry in last_snapshot.linked_accounts_entries:
-        linked_account_id = entry.linked_account_id
-        if linked_account_id is not None:
-            if entry.success:
-                output[linked_account_id] = {"status": "stable", "errors": None}
-            else:
-                output[linked_account_id] = {
-                    "status": "unstable",
-                    "errors": entry.failure_details,
-                }
-    return output
+    session: Session, user_account_id: int, linked_account_ids: set[int] | None = None
+) -> dict[int, LinkedAccountStatus]:
+    linked_account_ids_filter = None
+    if linked_account_ids:
+        assert all(
+            isinstance(linked_account_id, int)
+            for linked_account_id in linked_account_ids
+        )
+        linked_account_ids_filter = f"linked_account_id IN ({', '.join(str(entry) for entry in linked_account_ids)})"
+    query = f"""
+        select linked_account_id,
+               snapshot_id,
+               success,
+               failure_details,
+               created_at as snapshot_time
+          from finbot_linked_accounts_snapshots
+         where (linked_account_id, created_at) in (
+             select linked_account_id, max(created_at)
+               from finbot_linked_accounts_snapshots
+              where linked_account_id in (
+                  select id
+                    from finbot_linked_accounts
+                    where user_account_id = :user_account_id
+                      and not deleted and {linked_account_ids_filter or '1 = 1'}
+              )
+           group by linked_account_id
+        )
+    """
+    query_params = {"user_account_id": user_account_id}
+    results: dict[int, LinkedAccountStatus] = {}
+    for row in session.execute(query, query_params):
+        success = row["success"]
+        raw_failure_details = row["failure_details"]
+        results[row["linked_account_id"]] = {
+            "status": "stable" if success else "unstable",
+            "errors": json.loads(raw_failure_details) if raw_failure_details else None,
+            "snapshot_id": row["snapshot_id"],
+            "snapshot_time": row["snapshot_time"],
+        }
+    return results
 
 
 def get_linked_account_status(
     session: Session, user_account_id: int, linked_account_id: int
-) -> Optional[dict[str, Any]]:
-    return get_linked_accounts_statuses(session, user_account_id).get(linked_account_id)
+) -> LinkedAccountStatus | None:
+    return get_linked_accounts_statuses(
+        session=session,
+        user_account_id=user_account_id,
+        linked_account_ids={linked_account_id},
+    ).get(linked_account_id)
 
 
 def get_user_account_valuation(

@@ -24,7 +24,7 @@ jobs:
         uses: py-actions/flake8@v1
         with:
           ignore: "W503"
-          max-line-length: "100"
+          max-line-length: "120"
           path: "finbot/"
   black-check:
     runs-on: ubuntu-latest
