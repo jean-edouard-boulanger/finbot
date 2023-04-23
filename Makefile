@@ -101,7 +101,7 @@ banned-keywords-check-ts:
 	tools/banned-keywords.py --source-dirs webapp/src
 
 flake8:
-	flake8 --exclude migrations/,venv/,webapp/ --max-line-length 100
+	flake8 --exclude migrations/,venv/,webapp/ --max-line-length 120
 
 version-bump-check:
 	tools/versioning check-version-bump
