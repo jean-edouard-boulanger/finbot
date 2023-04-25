@@ -411,8 +411,8 @@ def get_historical_valuation_by_asset_type(
 class LinkedAccountStatus(TypedDict):
     status: Literal["stable", "unstable"]
     errors: list[Any] | None
-    snapshot_id: int
-    snapshot_time: datetime
+    last_snapshot_id: int
+    last_snapshot_time: datetime
 
 
 def get_linked_accounts_statuses(
@@ -452,8 +452,8 @@ def get_linked_accounts_statuses(
         results[row["linked_account_id"]] = {
             "status": "stable" if success else "unstable",
             "errors": json.loads(raw_failure_details) if raw_failure_details else None,
-            "snapshot_id": row["snapshot_id"],
-            "snapshot_time": row["snapshot_time"],
+            "last_snapshot_id": row["snapshot_id"],
+            "last_snapshot_time": row["snapshot_time"],
         }
     return results
 

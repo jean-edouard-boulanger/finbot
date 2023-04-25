@@ -14,6 +14,7 @@ import {
   FinbotErrorMetadata,
   LinkedAccount,
 } from "clients/finbot-client/types";
+import { asDateTime } from "utils/time";
 import { LinkAccount } from "./link-account";
 
 import {
@@ -33,6 +34,7 @@ import {
   FaGhost,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
+import { DateTime } from "luxon";
 
 interface UnlinkAccountDialogProps {
   show: boolean;
@@ -90,13 +92,15 @@ export const UpdateLinkedAccountPanel: React.FC = () => {
   return <LinkAccount linkedAccount={linkedAccount} />;
 };
 
+type LinkedAccountStatus = "stable" | "unstable" | "frozen" | "unknown";
+
 const getLinkedAccountStatus = (
   linkedAccount: LinkedAccount
-): "stable" | "unstable" | "frozen" | null => {
+): LinkedAccountStatus => {
   if (linkedAccount.frozen) {
     return "frozen";
   }
-  return (linkedAccount.status ?? { status: null }).status;
+  return (linkedAccount.status ?? { status: "unknown" }).status;
 };
 
 const getLinkedAccountLastError = (
@@ -117,7 +121,7 @@ const activeAccountsFirst = (
 };
 
 interface LinkedAccountStatusIconProps {
-  status: "stable" | "unstable" | "frozen" | null;
+  status: LinkedAccountStatus;
 }
 
 const LinkedAccountStatusIcon: React.FC<LinkedAccountStatusIconProps> = ({
@@ -136,7 +140,7 @@ const LinkedAccountStatusIcon: React.FC<LinkedAccountStatusIconProps> = ({
         </span>
       )}
       {status === "frozen" && <FaGhost />}
-      {status === null && <FaQuestionCircle />}
+      {status === "unknown" && <FaQuestionCircle />}
     </>
   );
 };
@@ -312,21 +316,30 @@ export const AccountsPanel: React.FC<AccountsPanelProps> = () => {
         <thead>
           <tr>
             <th>Account name</th>
+            <th>Last snapshot</th>
             <th>Provider</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           {accounts.sort(activeAccountsFirst).map((linkedAccount) => {
-            const status = getLinkedAccountStatus(linkedAccount);
+            const linkedAccountStatus = getLinkedAccountStatus(linkedAccount);
+            const lastSnapshotTime = asDateTime(
+              linkedAccount!.status?.last_snapshot_time
+            );
             return (
               <tr key={`account-${linkedAccount.id}`}>
                 <td>
                   <Link to={`/settings/linked/${linkedAccount.id}/status`}>
                     {linkedAccount.account_name}
-                    {` `}
-                    <LinkedAccountStatusIcon status={status} />
                   </Link>
+                </td>
+                <td>
+                  <LinkedAccountStatusIcon status={linkedAccountStatus} />
+                  {"  "}
+                  {lastSnapshotTime === null
+                    ? ""
+                    : lastSnapshotTime.toLocaleString(DateTime.DATETIME_MED)}
                 </td>
                 <td>{linkedAccount!.provider!.description}</td>
                 <td>
