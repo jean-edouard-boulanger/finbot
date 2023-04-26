@@ -237,6 +237,8 @@ export interface LinkedAccountStatusErrorEntry {
 export interface LinkedAccountStatus {
   status: "stable" | "unstable";
   errors: Array<LinkedAccountStatusErrorEntry>;
+  last_snapshot_id: number | null;
+  last_snapshot_time: DateTime | null;
 }
 
 export interface LinkedAccount {
