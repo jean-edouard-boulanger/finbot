@@ -24,6 +24,8 @@ billiard==3.6.4.0
     # via celery
 black==23.1.0
     # via -r requirements-dev.in
+blinker==1.6.2
+    # via flask
 cachetools==5.3.0
     # via google-auth
 celery==5.2.7
@@ -61,7 +63,7 @@ dateparser==1.1.7
     # via python-binance
 flake8==6.0.0
     # via -r requirements-dev.in
-flask==2.2.3
+flask==2.3.2
     # via
     #   -r requirements.in
     #   flask-cors
@@ -298,7 +300,7 @@ wcwidth==0.2.6
     # via prompt-toolkit
 websockets==10.4
     # via python-binance
-werkzeug==2.2.3
+werkzeug==2.3.3
     # via
     #   flask
     #   flask-jwt-extended
