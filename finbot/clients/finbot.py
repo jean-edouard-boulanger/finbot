@@ -22,7 +22,7 @@ class FinbotClient(ClientBase):
         account_metadata: Optional[str] = None,
     ) -> Any:
         return self.post(
-            "financial_data",
+            "financial_data/",
             {
                 "provider": provider,
                 "credentials": credentials_data,

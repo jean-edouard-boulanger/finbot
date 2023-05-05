@@ -81,13 +81,13 @@ def get_financial_data_impl(
         )
 
 
-@app.route("/healthy", methods=["GET"])
+@app.route("/healthy/", methods=["GET"])
 @service_endpoint()
 def healthy() -> HealthResponse:
     return HealthResponse(healthy=True)
 
 
-@app.route("/financial_data", methods=["POST"])
+@app.route("/financial_data/", methods=["POST"])
 @service_endpoint()
 @validate()  # type: ignore
 def get_financial_data(body: FinancialDataRequest) -> FinancialDataResponse:

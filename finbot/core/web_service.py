@@ -228,14 +228,14 @@ def service_endpoint(
     def impl(func: Callable[..., Any]) -> Callable[..., Any]:
         def prepare_response(response_data: Any) -> Any:
             if isinstance(response_data, FlaskResponse):
-                # if logging.getLogger().isEnabledFor(logging.DEBUG):
-                #    logging.debug(
-                #        f"response_dump={pretty_dump(response_data.get_json(silent=True))}"
-                #    )
+                if logging.getLogger().isEnabledFor(logging.DEBUG):
+                    logging.debug(
+                        f"response_dump={pretty_dump(response_data.get_json(silent=True))}"
+                    )
                 return response_data
             serialized_response = serialize(response_data)
-            # if logging.getLogger().isEnabledFor(logging.DEBUG):
-            #    logging.debug(f"response_dump={pretty_dump(serialized_response)}")
+            if logging.getLogger().isEnabledFor(logging.DEBUG):
+                logging.debug(f"response_dump={pretty_dump(serialized_response)}")
             return jsonify(serialized_response)
 
         include_request_context = (

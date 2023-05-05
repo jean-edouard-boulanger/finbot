@@ -9,6 +9,6 @@ class HistoryClient(ClientBase):
 
     def write_history(self, snapshot_id: str) -> Any:
         return self.post(
-            f"history/{snapshot_id}/write",
+            f"history/{snapshot_id}/write/",
             payload={},
         )
