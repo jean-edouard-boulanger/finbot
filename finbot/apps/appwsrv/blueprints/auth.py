@@ -2,12 +2,14 @@ from datetime import timedelta
 
 from flask import Blueprint
 from flask_jwt_extended import create_access_token, create_refresh_token
+from flask_pydantic import validate
 
+from finbot.apps.appwsrv.schema import LoginResponse, LoginRequest, AuthenticationPayload
 from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
 from finbot.apps.appwsrv.db import db_session
-from finbot.apps.appwsrv.serialization import serialize_user_account
+from finbot.apps.appwsrv.serialization import serialize_user_account_v2
 from finbot.core.errors import InvalidUserInput
-from finbot.core.web_service import RequestContext, service_endpoint
+from finbot.core.web_service import service_endpoint
 from finbot.model import repository
 
 auth_api = Blueprint(
@@ -16,32 +18,25 @@ auth_api = Blueprint(
 
 
 @auth_api.route("/login/", methods=["POST"])
-@service_endpoint(
-    schema={
-        "type": "object",
-        "additionalProperties": False,
-        "required": ["email", "password"],
-        "properties": {"email": {"type": "string"}, "password": {"type": "string"}},
-    },
-)
-def auth_login(request_context: RequestContext):
-    data = request_context.request
-    account = repository.find_user_account_by_email(db_session, data["email"])
+@service_endpoint()
+@validate()
+def auth_login(body: LoginRequest) -> LoginResponse:
+    account = repository.find_user_account_by_email(db_session, body.email)
     not_found_message = "Invalid email or password"
     if not account:
         raise InvalidUserInput(not_found_message)
 
-    if account.clear_password != data["password"]:
+    if account.clear_password != body.password:
         raise InvalidUserInput(not_found_message)
 
-    return {
-        "auth": {
-            "access_token": create_access_token(
+    return LoginResponse(
+        auth=AuthenticationPayload(
+            access_token=create_access_token(
                 identity=account.id, expires_delta=timedelta(days=1)
             ),
-            "refresh_token": create_refresh_token(
+            refresh_token=create_refresh_token(
                 identity=account.id, expires_delta=timedelta(days=1)
-            ),
-        },
-        "account": serialize_user_account(account),
-    }
+            )
+        ),
+        account=serialize_user_account_v2(account)
+    )

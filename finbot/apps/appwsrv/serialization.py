@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Any
 
+from finbot.apps.appwsrv import schema
 from finbot.core import timeseries
 from finbot.model import (
     UserAccount,
@@ -19,6 +20,10 @@ def serialize_user_account(account: UserAccount) -> dict[str, Any]:
         "created_at": account.created_at,
         "updated_at": account.updated_at,
     }
+
+
+def serialize_user_account_v2(account: UserAccount) -> schema.UserAccount:
+    return schema.UserAccount(**serialize_user_account(account))
 
 
 def serialize_user_account_valuation(
