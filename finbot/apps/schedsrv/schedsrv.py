@@ -4,6 +4,7 @@ import queue
 import signal
 import sys
 import threading
+import traceback
 from datetime import timedelta
 from typing import Iterable
 
@@ -16,7 +17,6 @@ from finbot.core import environment
 from finbot.core.db.session import Session
 from finbot.core.errors import FinbotError
 from finbot.core.logging import configure_logging
-from finbot.core.utils import format_stack
 from finbot.model import UserAccount
 
 FINBOT_ENV = environment.get()
@@ -73,7 +73,7 @@ def run_one_shot(requests: Iterable[ValuationRequest]):
             logging.warning(
                 f"failure while running workflow for "
                 f"user_id={request.user_account_id}: {e}, "
-                f"trace: \n{format_stack()}"
+                f"trace: \n{traceback.format_exc()}"
             )
 
 
@@ -163,7 +163,7 @@ def main():
         main_impl()
         return 0
     except Exception:
-        logging.error(f"fatal error while running schedsrv: \n{format_stack()}")
+        logging.error(f"fatal error while running schedsrv: \n{traceback.format_exc()}")
         return 1
 
 
