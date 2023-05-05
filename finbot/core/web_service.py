@@ -22,20 +22,6 @@ from finbot.core.utils import (
 )
 
 
-class Route(object):
-    def __init__(self, base: Optional[str] = None) -> None:
-        self.base = base or str()
-
-    def p(self, identifier: str) -> "Route":
-        return Route(str(f"{self.base}/<{identifier}>"))
-
-    def __getattr__(self, path: str) -> "Route":
-        return Route(str(f"{self.base}/{path}"))
-
-    def __call__(self) -> str:
-        return str(self.base)
-
-
 def log_time_elapsed(elapsed: timedelta) -> None:
     logging.info(f"time elapsed: {elapsed}")
 

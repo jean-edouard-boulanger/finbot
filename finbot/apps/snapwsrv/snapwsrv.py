@@ -363,13 +363,13 @@ def take_snapshot_impl(
     )
 
 
-@app.route("/healthy", methods=["GET"])
+@app.route("/healthy/", methods=["GET"])
 @service_endpoint()
 def healthy():
     return {"healthy": True}
 
 
-@app.route("/snapshot/<user_account_id>/take", methods=["POST"])
+@app.route("/snapshot/<user_account_id>/take/", methods=["POST"])
 @service_endpoint()
 @validate()
 def take_snapshot(user_account_id: int, body: TakeSnapshotRequest):

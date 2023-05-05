@@ -7,22 +7,24 @@ from flask_jwt_extended import jwt_required
 from sqlalchemy.exc import IntegrityError
 
 from finbot.apps.appwsrv import core as appwsrv_core
-from finbot.apps.appwsrv.blueprints.user_accounts import ACCOUNT
+from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
 from finbot.apps.appwsrv.db import db_session
 from finbot.core import environment, secure
 from finbot.core.errors import InvalidOperation, InvalidUserInput
 from finbot.core.utils import unwrap_optional
-from finbot.core.web_service import RequestContext, Route, service_endpoint
+from finbot.core.web_service import RequestContext, service_endpoint
 from finbot.model import LinkedAccount, repository
 
 logger = logging.getLogger(__name__)
 
-LINKED_ACCOUNTS: Route = ACCOUNT.linked_accounts
-LINKED_ACCOUNT: Route = LINKED_ACCOUNTS.p("int:linked_account_id")
-linked_accounts_api = Blueprint("linked_accounts_api", __name__)
+linked_accounts_api = Blueprint(
+    name="linked_accounts_api",
+    import_name=__name__,
+    url_prefix=f"{API_URL_PREFIX}/accounts/<int:user_account_id>/linked_accounts",
+)
 
 
-@linked_accounts_api.route(LINKED_ACCOUNTS(), methods=["GET"])
+@linked_accounts_api.route("/", methods=["GET"])
 @jwt_required()
 @service_endpoint()
 def get_linked_accounts(user_account_id: int):
@@ -46,7 +48,7 @@ def get_linked_accounts(user_account_id: int):
     }
 
 
-@linked_accounts_api.route(LINKED_ACCOUNTS(), methods=["POST"])
+@linked_accounts_api.route("/", methods=["POST"])
 @jwt_required()
 @service_endpoint(
     trace_values=False,
@@ -146,7 +148,7 @@ def link_new_account(request_context: RequestContext, user_account_id: int):
     return {}
 
 
-@linked_accounts_api.route(LINKED_ACCOUNT(), methods=["GET"])
+@linked_accounts_api.route("/<int:linked_account_id>/", methods=["GET"])
 @jwt_required()
 @service_endpoint()
 def get_linked_account(user_account_id: int, linked_account_id: int):
@@ -187,7 +189,32 @@ def get_linked_account(user_account_id: int, linked_account_id: int):
     }
 
 
-@linked_accounts_api.route(LINKED_ACCOUNT.metadata(), methods=["PUT"])
+@linked_accounts_api.route("/<int:linked_account_id>/", methods=["DELETE"])
+@jwt_required()
+@service_endpoint()
+def delete_linked_account(user_account_id: int, linked_account_id: int):
+    linked_account = repository.get_linked_account(
+        db_session, user_account_id, linked_account_id
+    )
+
+    with db_session.persist(linked_account):
+        linked_account.account_name = (
+            f"DELETED {uuid.uuid4()} / {linked_account.account_name}"
+        )
+        linked_account.deleted = True
+
+    try:
+        logging.info(f"triggering full valuation for account_id={user_account_id}")
+        appwsrv_core.trigger_valuation(user_account_id)
+    except Exception as e:
+        logging.warning(
+            f"failed to trigger valuation for account_id={user_account_id}: {e}"
+        )
+
+    return {}
+
+
+@linked_accounts_api.route("/<int:linked_account_id>/metadata/", methods=["PUT"])
 @jwt_required()
 @service_endpoint(
     schema={
@@ -224,7 +251,7 @@ def update_linked_account_metadata(
     return {}
 
 
-@linked_accounts_api.route(LINKED_ACCOUNT.credentials(), methods=["PUT"])
+@linked_accounts_api.route("/<int:linked_account_id>/credentials/", methods=["PUT"])
 @jwt_required()
 @service_endpoint(
     trace_values=False,
@@ -285,30 +312,5 @@ def update_linked_account_credentials(
             linked_account.encrypted_credentials = secure.fernet_encrypt(
                 json.dumps(credentials).encode(), environment.get_secret_key().encode()
             ).decode()
-
-    return {}
-
-
-@linked_accounts_api.route(LINKED_ACCOUNT(), methods=["DELETE"])
-@jwt_required()
-@service_endpoint()
-def delete_linked_account(user_account_id: int, linked_account_id: int):
-    linked_account = repository.get_linked_account(
-        db_session, user_account_id, linked_account_id
-    )
-
-    with db_session.persist(linked_account):
-        linked_account.account_name = (
-            f"DELETED {uuid.uuid4()} / {linked_account.account_name}"
-        )
-        linked_account.deleted = True
-
-    try:
-        logging.info(f"triggering full valuation for account_id={user_account_id}")
-        appwsrv_core.trigger_valuation(user_account_id)
-    except Exception as e:
-        logging.warning(
-            f"failed to trigger valuation for account_id={user_account_id}: {e}"
-        )
 
     return {}

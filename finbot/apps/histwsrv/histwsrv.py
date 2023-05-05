@@ -94,13 +94,13 @@ def cleanup_context(*args, **kwargs):
     db_session.remove()
 
 
-@app.route("/healthy", methods=["GET"])
+@app.route("/healthy/", methods=["GET"])
 @service_endpoint()
 def healthy():
     return {"healthy": True}
 
 
-@app.route("/history/<snapshot_id>/write", methods=["POST"])
+@app.route("/history/<snapshot_id>/write/", methods=["POST"])
 @service_endpoint()
 def write_history(snapshot_id: int):
     repo = repository.ReportRepository(db_session)

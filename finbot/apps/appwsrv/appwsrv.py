@@ -7,16 +7,16 @@ from finbot.apps.appwsrv.blueprints import (
     auth_api,
     base_api,
     linked_accounts_api,
+    linked_accounts_valuation_api,
     providers_api,
     reports_api,
+    user_account_valuation_api,
     user_accounts_api,
-    valuation_api,
 )
 from finbot.apps.appwsrv.db import db_session
 from finbot.core import environment
 from finbot.core.logging import configure_logging
 
-# logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 FINBOT_ENV = environment.get()
 configure_logging(FINBOT_ENV.desired_log_level)
 
@@ -40,4 +40,5 @@ app.register_blueprint(providers_api)
 app.register_blueprint(user_accounts_api)
 app.register_blueprint(linked_accounts_api)
 app.register_blueprint(reports_api)
-app.register_blueprint(valuation_api)
+app.register_blueprint(user_account_valuation_api)
+app.register_blueprint(linked_accounts_valuation_api)

@@ -13,5 +13,5 @@ class SnapClient(ClientBase):
         linked_accounts: Optional[list[int]] = None,
     ) -> Any:
         return self.post(
-            f"snapshot/{account_id}/take", {"linked_accounts": linked_accounts}
+            f"snapshot/{account_id}/take/", {"linked_accounts": linked_accounts}
         )
