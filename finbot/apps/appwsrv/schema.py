@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from finbot.core.schema import BaseModel
 
 
 class AuthenticationPayload(BaseModel):
@@ -17,6 +17,11 @@ class UserAccount(BaseModel):
     updated_at: datetime
 
 
+class SystemReport(BaseModel):
+    finbot_version: str
+    runtime: str
+
+
 class LoginRequest(BaseModel):
     email: str
     password: str
@@ -25,3 +30,11 @@ class LoginRequest(BaseModel):
 class LoginResponse(BaseModel):
     auth: AuthenticationPayload
     account: UserAccount
+
+
+class HealthResponse(BaseModel):
+    healthy: bool
+
+
+class SystemReportResponse(BaseModel):
+    system_report: SystemReport

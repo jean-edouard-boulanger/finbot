@@ -4,9 +4,13 @@ from flask import Blueprint
 from flask_jwt_extended import create_access_token, create_refresh_token
 from flask_pydantic import validate
 
-from finbot.apps.appwsrv.schema import LoginResponse, LoginRequest, AuthenticationPayload
 from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
 from finbot.apps.appwsrv.db import db_session
+from finbot.apps.appwsrv.schema import (
+    AuthenticationPayload,
+    LoginRequest,
+    LoginResponse,
+)
 from finbot.apps.appwsrv.serialization import serialize_user_account_v2
 from finbot.core.errors import InvalidUserInput
 from finbot.core.web_service import service_endpoint
@@ -36,7 +40,7 @@ def auth_login(body: LoginRequest) -> LoginResponse:
             ),
             refresh_token=create_refresh_token(
                 identity=account.id, expires_delta=timedelta(days=1)
-            )
+            ),
         ),
-        account=serialize_user_account_v2(account)
+        account=serialize_user_account_v2(account),
     )
