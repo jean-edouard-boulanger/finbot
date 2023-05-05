@@ -4,7 +4,7 @@ from flask import Blueprint
 from flask_jwt_extended import jwt_required
 from sqlalchemy.exc import IntegrityError
 
-from finbot.apps.appwsrv.blueprints.base import API_V1
+from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
 from finbot.apps.appwsrv.db import db_session
 from finbot.apps.appwsrv.serialization import (
     serialize_user_account,
@@ -13,7 +13,7 @@ from finbot.apps.appwsrv.serialization import (
 from finbot.core.errors import InvalidUserInput
 from finbot.core.notifier import TwilioNotifier, TwilioSettings
 from finbot.core.utils import unwrap_optional
-from finbot.core.web_service import RequestContext, Route, service_endpoint
+from finbot.core.web_service import RequestContext, service_endpoint
 from finbot.model import (
     UserAccount,
     UserAccountPlaidSettings,
@@ -23,12 +23,14 @@ from finbot.model import (
 
 logger = logging.getLogger(__name__)
 
-ACCOUNTS: Route = API_V1.accounts
-ACCOUNT: Route = ACCOUNTS.p("int:user_account_id")
-user_accounts_api = Blueprint("user_accounts_api", __name__)
+user_accounts_api = Blueprint(
+    name="user_accounts_api",
+    import_name=__name__,
+    url_prefix=f"{API_URL_PREFIX}/accounts",
+)
 
 
-@user_accounts_api.route(ACCOUNTS.email_available(), methods=["GET"])
+@user_accounts_api.route("/email_available/", methods=["GET"])
 @service_endpoint(parameters={"email": {"type": str, "required": True}})
 def is_email_available(request_context: RequestContext):
     email = request_context.parameters["email"]
@@ -36,7 +38,7 @@ def is_email_available(request_context: RequestContext):
     return {"available": user_account is None}
 
 
-@user_accounts_api.route(ACCOUNTS(), methods=["POST"])
+@user_accounts_api.route("/", methods=["POST"])
 @service_endpoint(
     trace_values=False,
     schema={
@@ -75,7 +77,7 @@ def create_user_account(request_context: RequestContext):
     return {"user_account": serialize_user_account(user_account)}
 
 
-@user_accounts_api.route(ACCOUNT(), methods=["GET"])
+@user_accounts_api.route("/<int:user_account_id>/", methods=["GET"])
 @jwt_required()
 @service_endpoint()
 def get_user_account(user_account_id: int):
@@ -83,7 +85,7 @@ def get_user_account(user_account_id: int):
     return {"user_account": serialize_user_account(account)}
 
 
-@user_accounts_api.route(ACCOUNT.password(), methods=["PUT"])
+@user_accounts_api.route("/<int:user_account_id>/password/", methods=["PUT"])
 @jwt_required()
 @service_endpoint(
     schema={
@@ -110,7 +112,7 @@ def update_user_account_password(request_context: RequestContext, user_account_i
     return {}
 
 
-@user_accounts_api.route(ACCOUNT.profile(), methods=["PUT"])
+@user_accounts_api.route("/<int:user_account_id>/profile/", methods=["PUT"])
 @jwt_required()
 @service_endpoint(
     schema={
@@ -139,7 +141,7 @@ def update_user_account_profile(request_context: RequestContext, user_account_id
     }
 
 
-@user_accounts_api.route(ACCOUNT.settings(), methods=["GET"])
+@user_accounts_api.route("/<int:user_account_id>/settings/", methods=["GET"])
 @jwt_required()
 @service_endpoint()
 def get_user_account_settings(user_account_id: int):
@@ -147,7 +149,7 @@ def get_user_account_settings(user_account_id: int):
     return {"settings": serialize_user_account_settings(settings)}
 
 
-@user_accounts_api.route(ACCOUNT.settings(), methods=["PUT"])
+@user_accounts_api.route("/<int:user_account_id>/settings/", methods=["PUT"])
 @jwt_required()
 @service_endpoint(
     schema={
@@ -189,7 +191,7 @@ def update_user_account_settings(request_context: RequestContext, user_account_i
     return {"settings": serialize_user_account_settings(settings)}
 
 
-@user_accounts_api.route(ACCOUNT.settings.plaid(), methods=["GET"])
+@user_accounts_api.route("/<int:user_account_id>/settings/plaid/", methods=["GET"])
 @jwt_required()
 @service_endpoint()
 def get_user_account_plaid_settings(user_account_id: int):
@@ -197,7 +199,7 @@ def get_user_account_plaid_settings(user_account_id: int):
     return {"plaid_settings": settings.serialize() if settings is not None else None}
 
 
-@user_accounts_api.route(ACCOUNT.settings.plaid(), methods=["PUT"])
+@user_accounts_api.route("/<int:user_account_id>/settings/plaid/", methods=["PUT"])
 @jwt_required()
 @service_endpoint(
     trace_values=False,
@@ -232,7 +234,7 @@ def update_user_account_plaid_settings(
     return {"plaid_settings": plaid_settings}
 
 
-@user_accounts_api.route(ACCOUNT.settings.plaid(), methods=["DELETE"])
+@user_accounts_api.route("/<int:user_account_id>/settings/plaid/", methods=["DELETE"])
 @jwt_required()
 @service_endpoint()
 def delete_user_account_plaid_settings(user_account_id: int):
@@ -243,7 +245,7 @@ def delete_user_account_plaid_settings(user_account_id: int):
     return {}
 
 
-@user_accounts_api.route(ACCOUNT.is_configured())
+@user_accounts_api.route("/<int:user_account_id>/is_configured/")
 @jwt_required()
 @service_endpoint()
 def is_user_account_configured(user_account_id: int):

@@ -22,20 +22,6 @@ from finbot.core.utils import (
 )
 
 
-class Route(object):
-    def __init__(self, base: Optional[str] = None) -> None:
-        self.base = base or str()
-
-    def p(self, identifier: str) -> "Route":
-        return Route(str(f"{self.base}/<{identifier}>"))
-
-    def __getattr__(self, path: str) -> "Route":
-        return Route(str(f"{self.base}/{path}"))
-
-    def __call__(self) -> str:
-        return str(self.base)
-
-
 def log_time_elapsed(elapsed: timedelta) -> None:
     logging.info(f"time elapsed: {elapsed}")
 
@@ -242,14 +228,14 @@ def service_endpoint(
     def impl(func: Callable[..., Any]) -> Callable[..., Any]:
         def prepare_response(response_data: Any) -> Any:
             if isinstance(response_data, FlaskResponse):
-                if logging.getLogger().isEnabledFor(logging.DEBUG):
-                    logging.debug(
-                        f"response_dump={pretty_dump(response_data.get_json(silent=True))}"
-                    )
+                # if logging.getLogger().isEnabledFor(logging.DEBUG):
+                #    logging.debug(
+                #        f"response_dump={pretty_dump(response_data.get_json(silent=True))}"
+                #    )
                 return response_data
             serialized_response = serialize(response_data)
-            if logging.getLogger().isEnabledFor(logging.DEBUG):
-                logging.debug(f"response_dump={pretty_dump(serialized_response)}")
+            # if logging.getLogger().isEnabledFor(logging.DEBUG):
+            #    logging.debug(f"response_dump={pretty_dump(serialized_response)}")
             return jsonify(serialized_response)
 
         include_request_context = (

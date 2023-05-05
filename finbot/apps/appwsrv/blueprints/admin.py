@@ -3,20 +3,21 @@ from textwrap import dedent
 from flask import Blueprint
 from flask_jwt_extended import jwt_required
 
-from finbot.apps.appwsrv.blueprints.base import API_V1
+from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
 from finbot.apps.appwsrv.db import db_session
 from finbot.core import email_delivery
 from finbot.core.email_delivery import Email, EmailService
 from finbot.core.kv_store import DBKVStore
-from finbot.core.web_service import RequestContext, Route, service_endpoint
+from finbot.core.web_service import RequestContext, service_endpoint
 from finbot.model import repository
 
-ADMIN: Route = API_V1.admin
-admin_api = Blueprint("admin_api", __name__)
+admin_api = Blueprint(
+    name="admin_api", import_name=__name__, url_prefix=f"{API_URL_PREFIX}/admin"
+)
 kv_store = DBKVStore(db_session)
 
 
-@admin_api.route(ADMIN.settings.email_delivery.providers(), methods=["GET"])
+@admin_api.route("/settings/email_delivery/providers/", methods=["GET"])
 @jwt_required()
 @service_endpoint()
 def get_email_delivery_providers():
@@ -25,7 +26,7 @@ def get_email_delivery_providers():
     }
 
 
-@admin_api.route(ADMIN.settings.email_delivery(), methods=["GET"])
+@admin_api.route("/settings/email_delivery/", methods=["GET"])
 @jwt_required()
 @service_endpoint()
 def get_email_delivery_settings():
@@ -35,7 +36,7 @@ def get_email_delivery_settings():
     }
 
 
-@admin_api.route(ADMIN.settings.email_delivery(), methods=["PUT"])
+@admin_api.route("/settings/email_delivery/", methods=["PUT"])
 @jwt_required()
 @service_endpoint(parameters={"validate": {"type": bool, "default": False}})
 def set_email_delivery_settings(request_context: RequestContext):
@@ -68,7 +69,7 @@ def set_email_delivery_settings(request_context: RequestContext):
     return {}
 
 
-@admin_api.route(ADMIN.settings.email_delivery(), methods=["DELETE"])
+@admin_api.route("/settings/email_delivery/", methods=["DELETE"])
 @jwt_required()
 @service_endpoint()
 def remove_email_delivery_settings():

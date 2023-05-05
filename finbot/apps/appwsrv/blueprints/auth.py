@@ -3,18 +3,19 @@ from datetime import timedelta
 from flask import Blueprint
 from flask_jwt_extended import create_access_token, create_refresh_token
 
-from finbot.apps.appwsrv.blueprints.base import API_V1
+from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
 from finbot.apps.appwsrv.db import db_session
 from finbot.apps.appwsrv.serialization import serialize_user_account
 from finbot.core.errors import InvalidUserInput
-from finbot.core.web_service import RequestContext, Route, service_endpoint
+from finbot.core.web_service import RequestContext, service_endpoint
 from finbot.model import repository
 
-AUTH: Route = API_V1.auth
-auth_api = Blueprint("auth_api", __name__)
+auth_api = Blueprint(
+    name="auth_api", import_name=__name__, url_prefix=f"{API_URL_PREFIX}/auth"
+)
 
 
-@auth_api.route(AUTH.login(), methods=["POST"])
+@auth_api.route("/login/", methods=["POST"])
 @service_endpoint(
     trace_values=False,
     schema={

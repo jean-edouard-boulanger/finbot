@@ -2,19 +2,20 @@ import logging
 
 from flask import Blueprint
 
-from finbot.apps.appwsrv.blueprints.base import API_V1
+from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
 from finbot.apps.appwsrv.db import db_session
 from finbot.core.errors import InvalidOperation, InvalidUserInput
-from finbot.core.web_service import RequestContext, Route, service_endpoint
+from finbot.core.web_service import RequestContext, service_endpoint
 from finbot.model import LinkedAccount, Provider, repository
 
 logger = logging.getLogger(__name__)
 
-PROVIDERS: Route = API_V1.providers
-providers_api = Blueprint("providers_api", __name__)
+providers_api = Blueprint(
+    name="providers_api", import_name=__name__, url_prefix=f"{API_URL_PREFIX}/providers"
+)
 
 
-@providers_api.route(PROVIDERS(), methods=["PUT"])
+@providers_api.route("/", methods=["PUT"])
 @service_endpoint(
     schema={
         "type": "object",
@@ -39,14 +40,14 @@ def update_or_create_provider(request_context: RequestContext):
     return {"provider": provider}
 
 
-@providers_api.route(PROVIDERS(), methods=["GET"])
+@providers_api.route("/", methods=["GET"])
 @service_endpoint()
 def get_providers():
     providers = db_session.query(Provider).all()
     return {"providers": [provider for provider in providers]}
 
 
-@providers_api.route(API_V1.providers.p("provider_id")(), methods=["GET"])
+@providers_api.route("/<provider_id>/", methods=["GET"])
 @service_endpoint()
 def get_provider(provider_id: str):
     provider = repository.find_provider(db_session, provider_id)
@@ -55,7 +56,7 @@ def get_provider(provider_id: str):
     return {"provider": provider}
 
 
-@providers_api.route(API_V1.providers.p("provider_id")(), methods=["DELETE"])
+@providers_api.route("/<provider_id>/", methods=["DELETE"])
 @service_endpoint()
 def delete_provider(provider_id: str):
     provider = repository.get_provider(db_session, provider_id)
