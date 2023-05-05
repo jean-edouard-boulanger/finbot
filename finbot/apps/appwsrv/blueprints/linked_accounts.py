@@ -51,7 +51,6 @@ def get_linked_accounts(user_account_id: int):
 @linked_accounts_api.route("/", methods=["POST"])
 @jwt_required()
 @service_endpoint(
-    trace_values=False,
     schema={
         "type": "object",
         "additionalProperties": False,
@@ -254,7 +253,6 @@ def update_linked_account_metadata(
 @linked_accounts_api.route("/<int:linked_account_id>/credentials/", methods=["PUT"])
 @jwt_required()
 @service_endpoint(
-    trace_values=False,
     schema={
         "type": "object",
         "additionalProperties": False,

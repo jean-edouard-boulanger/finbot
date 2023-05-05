@@ -1,6 +1,7 @@
 import functools
 import inspect
 import logging
+import traceback
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
@@ -15,11 +16,7 @@ from werkzeug.datastructures import ImmutableMultiDict
 
 from finbot.core.errors import ApplicationError, FinbotError
 from finbot.core.serialization import pretty_dump, serialize
-from finbot.core.utils import (
-    format_stack,
-    fully_qualified_type_name,
-    scoped_stack_printer_configuration,
-)
+from finbot.core.utils import fully_qualified_type_name
 
 
 def log_time_elapsed(elapsed: timedelta) -> None:
@@ -66,7 +63,7 @@ class ApplicationErrorData(BaseModel):
                 debug_message=str(e),
                 error_code=e.error_code,
                 exception_type=fully_qualified_type_name(e),
-                trace=format_stack(e),
+                trace=traceback.format_exc(),
             )
         generic_user_message = (
             "Internal error while processing request "
@@ -78,14 +75,14 @@ class ApplicationErrorData(BaseModel):
                 debug_message=str(e),
                 error_code="X001",
                 exception_type=fully_qualified_type_name(e),
-                trace=format_stack(e),
+                trace=traceback.format_exc(),
             )
         return ApplicationErrorData(
             user_message=generic_user_message,
             debug_message=str(e),
             error_code="X002",
             exception_type=fully_qualified_type_name(e),
-            trace=format_stack(e),
+            trace=traceback.format_exc(),
         )
 
 
@@ -221,7 +218,6 @@ def _parse_url_parameters(
 
 
 def service_endpoint(
-    trace_values: bool = True,
     schema: Optional[dict[Any, Any]] = None,
     parameters: Optional[dict[Any, ParameterDef]] = None,
 ) -> Callable[..., Any]:
@@ -244,40 +240,34 @@ def service_endpoint(
 
         @functools.wraps(func)
         def handler(*args: Any, **kwargs: Any) -> Any:
-            fs_show_vals = "all" if trace_values else None
             with time_elapsed():
-                with scoped_stack_printer_configuration(show_vals=fs_show_vals):
-                    try:
-                        logging.info(
-                            f"process {func.__name__} request route={request.full_path}"
-                        )
-                        payload = request.get_json(silent=True)
-                        if schema:
-                            try:
-                                jsonschema.validate(instance=payload, schema=schema)
-                            except jsonschema.ValidationError as e:
-                                raise RequestValidationError(
-                                    f"failed to validate request: {e}"
-                                )
-                        parsed_parameters = _parse_url_parameters(
-                            parameters, request.args
-                        )
-                        if include_request_context:
-                            logging.debug("initializing request context")
-                            kwargs["request_context"] = _init_request_context(
-                                payload, parsed_parameters
+                try:
+                    logging.info(
+                        f"process {func.__name__} request route={request.full_path}"
+                    )
+                    payload = request.get_json(silent=True)
+                    if schema:
+                        try:
+                            jsonschema.validate(instance=payload, schema=schema)
+                        except jsonschema.ValidationError as e:
+                            raise RequestValidationError(
+                                f"failed to validate request: {e}"
                             )
-                        response = func(*args, **kwargs)
-                        logging.info("request processed successfully")
-                        return prepare_response(response)
-                    except Exception as e:
-                        logging.warning(
-                            "error while processing request:"
-                            f" {e}\n{format_stack(style='darkbg3')}"
+                    parsed_parameters = _parse_url_parameters(parameters, request.args)
+                    if include_request_context:
+                        logging.debug("initializing request context")
+                        kwargs["request_context"] = _init_request_context(
+                            payload, parsed_parameters
                         )
-                        return prepare_response(
-                            ApplicationErrorResponse.from_exception(e)
-                        )
+                    response = func(*args, **kwargs)
+                    logging.info("request processed successfully")
+                    return prepare_response(response)
+                except Exception as e:
+                    logging.warning(
+                        "error while processing request:"
+                        f" {e}\n{traceback.format_exc()}"
+                    )
+                    return prepare_response(ApplicationErrorResponse.from_exception(e))
 
         return handler
 

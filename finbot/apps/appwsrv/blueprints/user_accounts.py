@@ -40,7 +40,6 @@ def is_email_available(request_context: RequestContext):
 
 @user_accounts_api.route("/", methods=["POST"])
 @service_endpoint(
-    trace_values=False,
     schema={
         "type": "object",
         "additionalProperties": False,
@@ -202,7 +201,6 @@ def get_user_account_plaid_settings(user_account_id: int):
 @user_accounts_api.route("/<int:user_account_id>/settings/plaid/", methods=["PUT"])
 @jwt_required()
 @service_endpoint(
-    trace_values=False,
     schema={
         "type": "object",
         "additionalProperties": False,

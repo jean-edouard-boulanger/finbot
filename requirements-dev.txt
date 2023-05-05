@@ -255,8 +255,6 @@ sqlalchemy==1.4.46
     #   alembic
 sqlalchemy-stubs==0.4
     # via -r requirements-dev.in
-stackprinter==0.2.10
-    # via -r requirements.in
 twilio==7.16.4
     # via -r requirements.in
 types-click==7.1.8

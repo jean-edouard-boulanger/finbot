@@ -212,8 +212,6 @@ sqlalchemy==1.4.46
     # via
     #   -r requirements.in
     #   alembic
-stackprinter==0.2.10
-    # via -r requirements.in
 twilio==7.16.4
     # via -r requirements.in
 typing-extensions==4.5.0

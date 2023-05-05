@@ -17,7 +17,6 @@ auth_api = Blueprint(
 
 @auth_api.route("/login/", methods=["POST"])
 @service_endpoint(
-    trace_values=False,
     schema={
         "type": "object",
         "additionalProperties": False,
