@@ -1,25 +1,71 @@
 from datetime import datetime
 from typing import Any
 
+from pydantic import SecretStr
+
 from finbot import model
 from finbot.apps.appwsrv import schema
 from finbot.core import timeseries
 from finbot.model import repository
 
 
-def serialize_user_account(account: model.UserAccount) -> dict[str, Any]:
-    return {
-        "id": account.id,
-        "email": account.email,
-        "full_name": account.full_name,
-        "mobile_phone_number": account.mobile_phone_number,
-        "created_at": account.created_at,
-        "updated_at": account.updated_at,
-    }
+def serialize_user_account(user_account: model.UserAccount) -> schema.UserAccount:
+    return schema.UserAccount(
+        id=user_account.id,
+        email=user_account.email,
+        full_name=user_account.full_name,
+        mobile_phone_number=user_account.mobile_phone_number,
+        created_at=user_account.created_at,
+        updated_at=user_account.updated_at,
+    )
 
 
-def serialize_user_account_v2(account: model.UserAccount) -> schema.UserAccount:
-    return schema.UserAccount(**serialize_user_account(account))
+def serialize_user_account_profile(
+    user_account: model.UserAccount,
+) -> schema.UserAccountProfile:
+    return schema.UserAccountProfile(
+        email=user_account.email,
+        full_name=user_account.full_name,
+        mobile_phone_number=user_account.mobile_phone_number,
+    )
+
+
+def serialize_user_account_twilio_settings(
+    twilio_settings_payload: dict[str, Any] | None
+) -> schema.UserAccountTwilioSettings | None:
+    return (
+        schema.UserAccountTwilioSettings.parse_obj(twilio_settings_payload)
+        if twilio_settings_payload
+        else None
+    )
+
+
+def serialize_user_account_plaid_settings(
+    plaid_settings: model.UserAccountPlaidSettings | None,
+) -> schema.UserAccountPlaidSettings | None:
+    if plaid_settings is None:
+        return None
+    return schema.UserAccountPlaidSettings(
+        env=plaid_settings.env,
+        client_id=plaid_settings.client_id,
+        public_key=plaid_settings.public_key,
+        secret_key=SecretStr(plaid_settings.secret_key),
+        created_at=plaid_settings.created_at,
+        updated_at=plaid_settings.updated_at,
+    )
+
+
+def serialize_user_account_settings(
+    settings: model.UserAccountSettings,
+) -> schema.UserAccountSettings:
+    return schema.UserAccountSettings(
+        valuation_ccy=settings.valuation_ccy,
+        twilio_settings=serialize_user_account_twilio_settings(
+            settings.twilio_settings
+        ),
+        created_at=settings.created_at,
+        updated_at=settings.updated_at,
+    )
 
 
 def serialize_linked_account_status(
@@ -84,15 +130,4 @@ def serialize_user_account_valuation(
                 sparkline_schedule, history, lambda uas_v: uas_v.period_end
             )
         ],
-    }
-
-
-def serialize_user_account_settings(
-    settings: model.UserAccountSettings,
-) -> dict[str, Any]:
-    return {
-        "valuation_ccy": settings.valuation_ccy,
-        "twilio_settings": settings.twilio_settings,
-        "created_at": settings.created_at,
-        "updated_at": settings.updated_at,
     }

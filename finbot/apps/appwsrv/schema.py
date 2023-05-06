@@ -1,13 +1,17 @@
 from datetime import datetime
 from typing import Any, Literal, TypeAlias
 
-from pydantic import Extra, Field
+from pydantic import Extra, Field, SecretStr
 
 from finbot.core.schema import BaseModel
 
 JsonSchemaType: TypeAlias = dict[str, Any]
 CredentialsSchemaType: TypeAlias = JsonSchemaType
 CredentialsPayloadType: TypeAlias = dict[str, Any]
+
+
+class UnsetField(BaseModel):
+    pass
 
 
 class ErrorMetadata(BaseModel):
@@ -26,11 +30,39 @@ class AuthenticationPayload(BaseModel):
     refresh_token: str
 
 
+class UserAccountProfile(BaseModel):
+    email: str
+    full_name: str
+    mobile_phone_number: str | None
+
+
+class UserAccountTwilioSettings(BaseModel):
+    account_sid: str
+    auth_token: str
+    phone_number: str
+
+
+class UserAccountPlaidSettings(BaseModel):
+    env: str
+    client_id: str
+    public_key: str
+    secret_key: SecretStr
+    created_at: datetime
+    updated_at: datetime | None
+
+
+class UserAccountSettings(BaseModel):
+    valuation_ccy: str
+    twilio_settings: UserAccountTwilioSettings | None
+    created_at: datetime
+    updated_at: datetime | None
+
+
 class UserAccount(BaseModel):
     id: int
     email: str
     full_name: str
-    mobile_phone_number: str
+    mobile_phone_number: str | None
     created_at: datetime
     updated_at: datetime | None
 
@@ -158,3 +190,86 @@ class GetProviderResponse(BaseModel):
 
 class DeleteProviderResponse(BaseModel):
     pass
+
+
+class UserAccountCreationSettings(BaseModel):
+    valuation_ccy: str
+
+
+class CreateUserAccountRequest(BaseModel):
+    email: str
+    password: str
+    full_name: str
+    settings: UserAccountCreationSettings
+
+
+class CreateUserAccountResponse(BaseModel):
+    user_account: UserAccount
+
+
+class GetUserAccountResponse(BaseModel):
+    user_account: UserAccount
+
+
+class UpdateUserAccountPasswordRequest(BaseModel):
+    old_password: SecretStr
+    new_password: SecretStr
+
+
+class UpdateUserAccountPasswordResponse(BaseModel):
+    pass
+
+
+class UpdateUserAccountProfileRequest(BaseModel):
+    email: str
+    full_name: str
+    mobile_phone_number: str | None = None
+
+
+class UpdateUserAccountProfileResponse(BaseModel):
+    profile: UserAccountProfile
+
+
+class GetUserAccountSettingsResponse(BaseModel):
+    settings: UserAccountSettings
+
+
+class UpdateUserAccountSettingsRequest(BaseModel):
+    twilio_settings: UserAccountTwilioSettings | UnsetField | None = Field(
+        default_factory=UnsetField
+    )
+
+
+class UpdateUserAccountSettingsResponse(BaseModel):
+    settings: UserAccountSettings
+
+
+class GetUserAccountPlaidSettingsResponse(BaseModel):
+    plaid_settings: UserAccountPlaidSettings | None
+
+
+class UpdateUserAccountPlaidSettingsRequest(BaseModel):
+    env: str
+    client_id: str
+    public_key: str
+    secret_key: SecretStr
+
+
+class UpdateUserAccountPlaidSettingsResponse(BaseModel):
+    plaid_settings: UserAccountPlaidSettings
+
+
+class DeleteUserAccountPlaidSettings(BaseModel):
+    pass
+
+
+class IsUserAccountConfiguredResponse(BaseModel):
+    configured: bool
+
+
+class IsEmailAvailableRequestParams(BaseModel):
+    email: str
+
+
+class IsEmailAvailableResponse(BaseModel):
+    available: bool

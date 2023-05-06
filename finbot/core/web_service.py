@@ -205,6 +205,8 @@ def _parse_url_parameters(
     parameters_def: Optional[dict[str, ParameterDef]],
     raw_parameters: ImmutableMultiDict[Any, Any],
 ) -> dict[str, Optional[Any]]:
+    if not parameters_def:
+        return {}
     parameters_def = parameters_def or {}
     for param_name in raw_parameters:
         if param_name not in parameters_def:
