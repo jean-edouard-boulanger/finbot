@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 
 from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
 from finbot.apps.appwsrv.db import db_session
-from finbot.apps.appwsrv.serialization import (
+from finbot.apps.appwsrv.serializer import (
     serialize_user_account,
     serialize_user_account_settings,
 )

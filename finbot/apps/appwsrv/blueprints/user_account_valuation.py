@@ -9,7 +9,7 @@ from flask_jwt_extended import jwt_required
 from finbot.apps.appwsrv import core as appwsrv_core
 from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
 from finbot.apps.appwsrv.db import db_session
-from finbot.apps.appwsrv.serialization import serialize_user_account_valuation
+from finbot.apps.appwsrv.serializer import serialize_user_account_valuation
 from finbot.core import timeseries
 from finbot.core.errors import InvalidUserInput, MissingUserData
 from finbot.core.utils import now_utc

@@ -11,7 +11,7 @@ from finbot.apps.appwsrv.schema import (
     LoginRequest,
     LoginResponse,
 )
-from finbot.apps.appwsrv.serialization import serialize_user_account_v2
+from finbot.apps.appwsrv.serializer import serialize_user_account_v2
 from finbot.core.errors import InvalidUserInput
 from finbot.core.web_service import service_endpoint
 from finbot.model import repository
