@@ -1,9 +1,13 @@
 from datetime import datetime
-from typing import Any, Literal
+from typing import Any, Literal, TypeAlias
 
 from pydantic import Extra, Field
 
 from finbot.core.schema import BaseModel
+
+JsonSchemaType: TypeAlias = dict[str, Any]
+CredentialsSchemaType: TypeAlias = JsonSchemaType
+CredentialsPayloadType: TypeAlias = dict[str, Any]
 
 
 class ErrorMetadata(BaseModel):
@@ -35,7 +39,7 @@ class Provider(BaseModel):
     id: str
     description: str
     website_url: str
-    credentials_schema: Any
+    credentials_schema: CredentialsSchemaType
     created_at: datetime
     updated_at: datetime | None
 
@@ -61,7 +65,7 @@ class LinkedAccount(BaseModel):
     provider_id: str
     provider: Provider
     status: LinkedAccountStatus | None
-    credentials: Any
+    credentials: CredentialsPayloadType | None
     created_at: datetime
     updated_at: datetime | None
 
@@ -105,7 +109,7 @@ class LinkAccountCommitParams(BaseModel):
 
 class LinkAccountRequest(BaseModel):
     provider_id: str
-    credentials: Any
+    credentials: CredentialsPayloadType
     account_name: str
 
 
@@ -114,7 +118,7 @@ class LinkAccountResponse(BaseModel):
 
 
 class UpdateLinkedAccountCredentialsRequest(BaseModel):
-    credentials: Any
+    credentials: CredentialsPayloadType
 
 
 class UpdateLinkedAccountCredentialsResponse(BaseModel):
@@ -130,4 +134,27 @@ class GetLinkedAccountResponse(BaseModel):
 
 
 class DeleteLinkedAccountResponse(BaseModel):
+    pass
+
+
+class CreateOrUpdateProviderRequest(BaseModel):
+    id: str
+    description: str
+    website_url: str
+    credentials_schema: CredentialsSchemaType
+
+
+class CreateOrUpdateProviderResponse(BaseModel):
+    provider: Provider
+
+
+class GetProvidersResponse(BaseModel):
+    providers: list[Provider]
+
+
+class GetProviderResponse(BaseModel):
+    provider: Provider
+
+
+class DeleteProviderResponse(BaseModel):
     pass
