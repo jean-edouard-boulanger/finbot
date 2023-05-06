@@ -461,7 +461,7 @@ export interface EmailDeliveryProviderSchema {
 export interface EmailDeliveryProvider {
   provider_id: string;
   description: string;
-  schema: EmailDeliveryProviderSchema;
+  settings_schema: EmailDeliveryProviderSchema;
 }
 
 export interface GetEmailDeliveryProvidersResponse {

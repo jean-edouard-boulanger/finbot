@@ -4,6 +4,7 @@ from pydantic import SecretStr
 
 from finbot import model
 from finbot.apps.appwsrv import schema
+from finbot.core.email_delivery import DeliverySettings
 from finbot.model import repository
 
 
@@ -118,4 +119,19 @@ def serialize_valuation_change(
         change_6months=change.change_6months,
         change_1year=change.change_1year,
         change_2years=change.change_2years,
+    )
+
+
+def serialize_email_delivery_settings(
+    settings: DeliverySettings | None,
+) -> schema.EmailDeliverySettings | None:
+    return (
+        schema.EmailDeliverySettings(
+            subject_prefix=settings.subject_prefix,
+            sender_name=settings.sender_name,
+            provider_id=settings.provider_id,
+            provider_settings=settings.provider_settings,
+        )
+        if settings
+        else None
     )

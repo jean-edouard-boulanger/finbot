@@ -375,3 +375,32 @@ class GetLinkedAccountsValuationResponse(BaseModel):
 
 class GetLinkedAccountsHistoricalValuation(BaseModel):
     historical_valuation: HistoricalValuation
+
+
+class EmailProviderMetadata(BaseModel):
+    provider_id: str
+    description: str
+    settings_schema: dict[str, Any]
+
+
+class GetEmailDeliveryProvidersResponse(BaseModel):
+    providers: list[EmailProviderMetadata]
+
+
+class EmailDeliverySettings(BaseModel):
+    subject_prefix: str
+    sender_name: str
+    provider_id: str
+    provider_settings: dict[str, Any]
+
+
+class GetEmailDeliverySettingsResponse(BaseModel):
+    settings: EmailDeliverySettings | None
+
+
+class SetEmailDeliverySettingsParams(BaseModel):
+    do_validate: bool = Field(default=False, alias="validate")
+
+
+class RemoveEmailDeliverySettingsResponse(BaseModel):
+    pass

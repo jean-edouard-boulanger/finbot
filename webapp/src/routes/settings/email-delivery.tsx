@@ -175,8 +175,8 @@ export const EmailDeliverySettingsPanel: React.FC<
                 handleSaveWithProviderSettings(formData);
               }}
               disabled={!enableDelivery}
-              uiSchema={provider.schema.ui_schema ?? {}}
-              schema={provider.schema.settings_schema}
+              uiSchema={provider.settings_schema.ui_schema ?? {}}
+              schema={provider.settings_schema.settings_schema}
             >
               <LoadingButton
                 style={{
