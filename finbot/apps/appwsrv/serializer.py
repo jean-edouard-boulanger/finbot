@@ -1,11 +1,9 @@
-from datetime import datetime
 from typing import Any
 
 from pydantic import SecretStr
 
 from finbot import model
 from finbot.apps.appwsrv import schema
-from finbot.core import timeseries
 from finbot.model import repository
 
 
@@ -109,25 +107,15 @@ def serialize_linked_account(
     )
 
 
-def serialize_user_account_valuation(
-    entry: model.UserAccountHistoryEntry,
-    history: list[repository.HistoricalValuationEntry],
-    sparkline_schedule: list[datetime],
-):
-    valuation_entry = entry.user_account_valuation_history_entry
-    return {
-        "date": entry.effective_at,
-        "currency": entry.valuation_ccy,
-        "value": valuation_entry.valuation,
-        "total_liabilities": valuation_entry.total_liabilities,
-        "change": valuation_entry.valuation_change,
-        "sparkline": [
-            {
-                "effective_at": valuation_time,
-                "value": uas_v.last_value if uas_v is not None else None,
-            }
-            for valuation_time, uas_v in timeseries.schedulify(
-                sparkline_schedule, history, lambda uas_v: uas_v.period_end
-            )
-        ],
-    }
+def serialize_valuation_change(
+    change: model.ValuationChangeEntry,
+) -> schema.ValuationChange:
+    return schema.ValuationChange(
+        change_1hour=change.change_1hour,
+        change_1day=change.change_1day,
+        change_1week=change.change_1week,
+        change_1month=change.change_1month,
+        change_6months=change.change_6months,
+        change_1year=change.change_1year,
+        change_2years=change.change_2years,
+    )

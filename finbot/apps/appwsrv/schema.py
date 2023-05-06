@@ -1,9 +1,9 @@
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any, Literal, TypeAlias
 
 from pydantic import Extra, Field, SecretStr
 
-from finbot.core.schema import BaseModel
+from finbot.core.schema import BaseModel, ValuationFrequency
 
 JsonSchemaType: TypeAlias = dict[str, Any]
 CredentialsSchemaType: TypeAlias = JsonSchemaType
@@ -105,6 +105,16 @@ class LinkedAccount(BaseModel):
 class SystemReport(BaseModel):
     finbot_version: str
     runtime: str
+
+
+class ValuationChange(BaseModel):
+    change_1hour: float | None
+    change_1day: float | None
+    change_1week: float | None
+    change_1month: float | None
+    change_6months: float | None
+    change_1year: float | None
+    change_2years: float | None
 
 
 class LoginRequest(BaseModel):
@@ -273,3 +283,64 @@ class IsEmailAvailableRequestParams(BaseModel):
 
 class IsEmailAvailableResponse(BaseModel):
     available: bool
+
+
+class UserAccountValuationSparklineEntry(BaseModel):
+    effective_at: datetime
+    value: float | None
+
+
+class UserAccountValuation(BaseModel):
+    date: datetime
+    currency: str
+    value: float
+    total_liabilities: float
+    change: ValuationChange
+    sparkline: list[UserAccountValuationSparklineEntry]
+
+
+class GetUserAccountValuationResponse(BaseModel):
+    valuation: UserAccountValuation
+
+
+class ValuationByAssetType(BaseModel):
+    valuation_ccy: str
+    by_asset_type: dict[str, float]
+
+
+class GetUserAccountValuationByAssetTypeResponse(BaseModel):
+    valuation: ValuationByAssetType
+
+
+class HistoricalPricingParams(BaseModel):
+    from_time: datetime | None = None
+    to_time: datetime | None = None
+    frequency: ValuationFrequency = ValuationFrequency.Daily
+
+
+class XAxisDescription(BaseModel):
+    type: str
+    categories: list[str] | list[date] | list[datetime]
+
+
+class SeriesDescription(BaseModel):
+    name: str
+    data: list[int | None] | list[float | None]
+
+
+class SeriesData(BaseModel):
+    x_axis: XAxisDescription
+    series: list[SeriesDescription]
+
+
+class HistoricalValuation(BaseModel):
+    valuation_currency: str
+    series_data: SeriesData
+
+
+class GetUserAccountValuationHistoryResponse(BaseModel):
+    historical_valuation: HistoricalValuation
+
+
+class GetUserAccountValuationHistoryByAssetTypeResponse(BaseModel):
+    historical_valuation: HistoricalValuation
