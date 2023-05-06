@@ -312,7 +312,7 @@ class GetUserAccountValuationByAssetTypeResponse(BaseModel):
     valuation: ValuationByAssetType
 
 
-class HistoricalPricingParams(BaseModel):
+class HistoricalValuationParams(BaseModel):
     from_time: datetime | None = None
     to_time: datetime | None = None
     frequency: ValuationFrequency = ValuationFrequency.Daily
@@ -334,7 +334,7 @@ class SeriesData(BaseModel):
 
 
 class HistoricalValuation(BaseModel):
-    valuation_currency: str
+    valuation_ccy: str
     series_data: SeriesData
 
 
@@ -343,4 +343,35 @@ class GetUserAccountValuationHistoryResponse(BaseModel):
 
 
 class GetUserAccountValuationHistoryByAssetTypeResponse(BaseModel):
+    historical_valuation: HistoricalValuation
+
+
+class LinkedAccountValuation(BaseModel):
+    date: datetime
+    currency: str
+    value: float
+    change: ValuationChange
+
+
+class LinkedAccountValuationLinkedAccountDescription(BaseModel):
+    id: int
+    provider_id: str
+    description: str
+
+
+class LinkedAccountValuationEntry(BaseModel):
+    linked_account: LinkedAccountValuationLinkedAccountDescription
+    valuation: LinkedAccountValuation
+
+
+class LinkedAccountsValuation(BaseModel):
+    valuation_ccy: str
+    entries: list[LinkedAccountValuationEntry]
+
+
+class GetLinkedAccountsValuationResponse(BaseModel):
+    valuation: LinkedAccountsValuation
+
+
+class GetLinkedAccountsHistoricalValuation(BaseModel):
     historical_valuation: HistoricalValuation

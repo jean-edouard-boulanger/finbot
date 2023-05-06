@@ -30,6 +30,7 @@ user_account_valuation_api = Blueprint(
 @user_account_valuation_api.route("/trigger/", methods=["POST"])
 @jwt_required()
 @service_endpoint()
+@validate()
 def trigger_user_account_valuation(user_account_id: int):
     return appwsrv_core.trigger_valuation(user_account_id)
 
@@ -106,7 +107,7 @@ def get_user_account_valuation_by_asset_type(user_account_id: int):
 @service_endpoint()
 @validate()
 def get_user_account_valuation_history(
-    user_account_id: int, query: schema.HistoricalPricingParams
+    user_account_id: int, query: schema.HistoricalValuationParams
 ) -> schema.GetUserAccountValuationHistoryResponse:
     settings = repository.get_user_account_settings(db_session, user_account_id)
     from_time = query.from_time
@@ -132,7 +133,7 @@ def get_user_account_valuation_history(
 
     return schema.GetUserAccountValuationHistoryResponse(
         historical_valuation=schema.HistoricalValuation(
-            valuation_currency=settings.valuation_ccy,
+            valuation_ccy=settings.valuation_ccy,
             series_data=schema.SeriesData(
                 x_axis=schema.XAxisDescription(
                     type="datetime" if is_daily else "category",
@@ -155,8 +156,9 @@ def get_user_account_valuation_history(
 @user_account_valuation_api.route("/history/by/asset_type/", methods=["GET"])
 @jwt_required()
 @service_endpoint()
+@validate()
 def get_user_account_valuation_history_by_asset_type(
-    user_account_id: int, query: schema.HistoricalPricingParams
+    user_account_id: int, query: schema.HistoricalValuationParams
 ) -> schema.GetUserAccountValuationHistoryByAssetTypeResponse:
     settings = repository.get_user_account_settings(db_session, user_account_id)
     from_time = query.from_time
@@ -193,7 +195,7 @@ def get_user_account_valuation_history_by_asset_type(
 
     return schema.GetUserAccountValuationHistoryByAssetTypeResponse(
         historical_valuation=schema.HistoricalValuation(
-            valuation_currency=settings.valuation_ccy,
+            valuation_ccy=settings.valuation_ccy,
             series_data=schema.SeriesData(
                 x_axis=schema.XAxisDescription(
                     type="datetime" if is_daily else "category",
