@@ -219,6 +219,12 @@ def _parse_url_parameters(
     }
 
 
+def get_user_account_id() -> int:
+    user_account_id = get_jwt_identity()
+    assert isinstance(user_account_id, int)
+    return user_account_id
+
+
 def service_endpoint(
     schema: Optional[dict[Any, Any]] = None,
     parameters: Optional[dict[Any, ParameterDef]] = None,
