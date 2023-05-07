@@ -2,7 +2,6 @@ from textwrap import dedent
 
 from flask import Blueprint
 from flask_jwt_extended import jwt_required
-from flask_pydantic import validate
 
 from finbot.apps.appwsrv import schema, serializer
 from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
@@ -10,7 +9,7 @@ from finbot.apps.appwsrv.db import db_session
 from finbot.core import email_delivery
 from finbot.core.email_delivery import Email, EmailService
 from finbot.core.kv_store import DBKVStore
-from finbot.core.web_service import get_user_account_id, service_endpoint
+from finbot.core.web_service import get_user_account_id, service_endpoint, validate
 from finbot.model import repository
 
 admin_api = Blueprint(

@@ -3,7 +3,6 @@ import traceback
 from typing import Any
 
 from flask import Flask
-from flask_pydantic import validate
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
@@ -21,7 +20,7 @@ from finbot.apps.finbotwsrv.schema import (
 from finbot.core import environment
 from finbot.core.db.session import Session
 from finbot.core.logging import configure_logging
-from finbot.core.web_service import ApplicationErrorData, service_endpoint
+from finbot.core.web_service import ApplicationErrorData, service_endpoint, validate
 from finbot.providers import ProviderBase
 from finbot.providers.factory import get_provider
 
@@ -90,7 +89,7 @@ def healthy() -> HealthResponse:
 
 @app.route("/financial_data/", methods=["POST"])
 @service_endpoint()
-@validate()  # type: ignore
+@validate()
 def get_financial_data(body: FinancialDataRequest) -> FinancialDataResponse:
     provider = get_provider(body.provider)
     return get_financial_data_impl(provider, body.credentials, body.items)

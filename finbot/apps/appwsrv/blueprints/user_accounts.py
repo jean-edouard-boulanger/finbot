@@ -2,7 +2,6 @@ import logging
 
 from flask import Blueprint
 from flask_jwt_extended import jwt_required
-from flask_pydantic import validate
 from sqlalchemy.exc import IntegrityError
 
 from finbot.apps.appwsrv import schema, serializer
@@ -11,7 +10,7 @@ from finbot.apps.appwsrv.db import db_session
 from finbot.core.errors import InvalidUserInput
 from finbot.core.notifier import TwilioNotifier, TwilioSettings
 from finbot.core.utils import unwrap_optional
-from finbot.core.web_service import service_endpoint
+from finbot.core.web_service import service_endpoint, validate
 from finbot.model import (
     UserAccount,
     UserAccountPlaidSettings,

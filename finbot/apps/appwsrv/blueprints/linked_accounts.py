@@ -4,7 +4,6 @@ import uuid
 
 from flask import Blueprint
 from flask_jwt_extended import jwt_required
-from flask_pydantic import validate
 from sqlalchemy.exc import IntegrityError
 
 from finbot.apps.appwsrv import core as appwsrv_core
@@ -14,7 +13,7 @@ from finbot.apps.appwsrv.db import db_session
 from finbot.core import environment, secure
 from finbot.core.errors import InvalidOperation, InvalidUserInput
 from finbot.core.utils import unwrap_optional
-from finbot.core.web_service import service_endpoint
+from finbot.core.web_service import service_endpoint, validate
 from finbot.model import LinkedAccount, repository
 
 logger = logging.getLogger(__name__)

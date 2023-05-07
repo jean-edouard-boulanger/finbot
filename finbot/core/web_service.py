@@ -2,11 +2,12 @@ import functools
 import logging
 import traceback
 from dataclasses import dataclass
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, ParamSpec, TypeVar, cast
 
 from flask import Response as FlaskResponse
 from flask import jsonify, request
 from flask_jwt_extended import get_jwt_identity
+from flask_pydantic import validate as _validate
 from pydantic import BaseModel
 
 from finbot.core.errors import ApplicationError, FinbotError
@@ -116,3 +117,34 @@ def service_endpoint() -> Callable[..., Any]:
         return handler
 
     return impl
+
+
+RT = TypeVar("RT")
+P = ParamSpec("P")
+
+
+def validate(
+    body: type[BaseModel] | None = None,
+    query: type[BaseModel] | None = None,
+    on_success_status: int = 200,
+    exclude_none: bool = False,
+    response_many: bool = False,
+    request_body_many: bool = False,
+    response_by_alias: bool = False,
+    get_json_params: dict[str, Any] | None = None,
+    form: type[BaseModel] | None = None,
+) -> Callable[[Callable[P, RT]], Callable[P, FlaskResponse]]:
+    return cast(
+        Callable[[Callable[P, RT]], Callable[P, FlaskResponse]],
+        _validate(
+            body=body,
+            query=query,
+            on_success_status=on_success_status,
+            exclude_none=exclude_none,
+            response_many=response_many,
+            request_body_many=request_body_many,
+            response_by_alias=response_by_alias,
+            get_json_params=get_json_params,
+            form=form,
+        ),
+    )

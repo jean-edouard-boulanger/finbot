@@ -8,7 +8,6 @@ from decimal import Decimal
 from typing import Any, Optional, Tuple
 
 from flask import Flask
-from flask_pydantic import validate
 from sqlalchemy import create_engine
 from sqlalchemy.orm import joinedload, scoped_session, sessionmaker
 
@@ -23,7 +22,7 @@ from finbot.core import environment, fx_market, secure, utils
 from finbot.core.db.session import Session
 from finbot.core.logging import configure_logging
 from finbot.core.utils import unwrap_optional
-from finbot.core.web_service import ApplicationErrorData, service_endpoint
+from finbot.core.web_service import ApplicationErrorData, service_endpoint, validate
 from finbot.model import (
     LinkedAccount,
     LinkedAccountSnapshotEntry,

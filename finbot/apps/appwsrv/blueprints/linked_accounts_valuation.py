@@ -5,13 +5,12 @@ from typing import Optional, Tuple, Union
 
 from flask import Blueprint
 from flask_jwt_extended import jwt_required
-from flask_pydantic import validate
 
 from finbot.apps.appwsrv import schema, serializer
 from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
 from finbot.apps.appwsrv.db import db_session
 from finbot.core.errors import InvalidUserInput
-from finbot.core.web_service import service_endpoint
+from finbot.core.web_service import service_endpoint, validate
 from finbot.model import repository
 
 logger = logging.getLogger(__name__)

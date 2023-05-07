@@ -5,7 +5,6 @@ from typing import Optional, Union
 
 from flask import Blueprint
 from flask_jwt_extended import jwt_required
-from flask_pydantic import validate
 
 from finbot.apps.appwsrv import core as appwsrv_core
 from finbot.apps.appwsrv import schema, serializer
@@ -14,7 +13,7 @@ from finbot.apps.appwsrv.db import db_session
 from finbot.core import timeseries
 from finbot.core.errors import InvalidUserInput, MissingUserData
 from finbot.core.utils import now_utc
-from finbot.core.web_service import service_endpoint
+from finbot.core.web_service import service_endpoint, validate
 from finbot.model import SubAccountItemValuationHistoryEntry, repository
 
 logger = logging.getLogger(__name__)
