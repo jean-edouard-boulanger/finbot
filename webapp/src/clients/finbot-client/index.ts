@@ -380,9 +380,9 @@ export class FinbotClient {
     const response = await axios.put(
       `${
         this.endpoint
-      }/accounts/${account_id}/linked_accounts/${linked_account_id}/credentials?validate=${
+      }/accounts/${account_id}/linked_accounts/${linked_account_id}/credentials/?validate=${
         validate ?? 0
-      }&persist=${persist ?? 0}/`,
+      }&persist=${persist ?? 0}`,
       {
         credentials,
       }
@@ -431,7 +431,7 @@ export class FinbotClient {
     account_name,
   }: ValidateLinkedAccountCredentialsRequest): Promise<void> {
     const response = await axios.post(
-      `${this.endpoint}/accounts/${account_id}/linked_accounts?persist=0/`,
+      `${this.endpoint}/accounts/${account_id}/linked_accounts/?persist=0`,
       { provider_id, credentials, account_name }
     );
     handleResponse<void>(response);
@@ -444,7 +444,7 @@ export class FinbotClient {
     account_name,
   }: LinkAccountRequest): Promise<void> {
     const response = await axios.post(
-      `${this.endpoint}/accounts/${account_id}/linked_accounts?validate=0/`,
+      `${this.endpoint}/accounts/${account_id}/linked_accounts/?validate=0`,
       { provider_id, credentials, account_name }
     );
     handleResponse<void>(response);

@@ -35,12 +35,6 @@ RULES: list[Rule] = [
         " (this is automatically done upstream)",
     ),
     Rule(
-        match_files=["*.py"],
-        ignore_files=["finbot/core/utils.py"],
-        banned_pattern=re.compile("stackprinter"),
-        message="Please use utils.format_stack instead of stackprinter",
-    ),
-    Rule(
         match_files=JS_ALIKE,
         banned_pattern=re.compile(r"console.log\("),
         message="Please remove calls to console.log",

@@ -1,5 +1,6 @@
 import json
 import logging
+import traceback
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from dataclasses import dataclass
@@ -21,7 +22,7 @@ from finbot.clients.finbot import FinbotClient, LineItem
 from finbot.core import environment, fx_market, secure, utils
 from finbot.core.db.session import Session
 from finbot.core.logging import configure_logging
-from finbot.core.utils import format_stack, unwrap_optional
+from finbot.core.utils import unwrap_optional
 from finbot.core.web_service import ApplicationErrorData, service_endpoint
 from finbot.model import (
     LinkedAccount,
@@ -229,12 +230,11 @@ def dispatch_snapshot_entry(snap_request: AccountSnapshotRequest):
 
         return snap_request, account_snapshot
     except Exception as e:
-        trace = format_stack(e)
         logging.warning(
             f"fatal error while taking snapshot for account_id={snap_request.account_id}"
             f" provider_id={snap_request.provider_id}"
             f" error: {e}"
-            f" trace:\n{trace}"
+            f" trace:\n{traceback.format_exc()}"
         )
         return snap_request, ApplicationErrorData.from_exception(e)
 

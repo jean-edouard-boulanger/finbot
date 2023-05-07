@@ -48,6 +48,7 @@ RUN apt-get update && \
       git \
       make \
       inotify-tools \
+      libpq-dev \
       postgresql-client && \
     apt-get clean
 

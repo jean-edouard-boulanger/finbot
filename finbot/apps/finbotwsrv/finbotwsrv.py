@@ -1,4 +1,5 @@
 import logging
+import traceback
 from typing import Any
 
 from flask import Flask
@@ -20,14 +21,12 @@ from finbot.apps.finbotwsrv.schema import (
 from finbot.core import environment
 from finbot.core.db.session import Session
 from finbot.core.logging import configure_logging
-from finbot.core.utils import configure_stack_printer, format_stack
 from finbot.core.web_service import ApplicationErrorData, service_endpoint
 from finbot.providers import ProviderBase
 from finbot.providers.factory import get_provider
 
 FINBOT_ENV = environment.get()
 configure_logging(FINBOT_ENV.desired_log_level)
-configure_stack_printer(show_vals=None)
 
 db_engine = create_engine(FINBOT_ENV.database_url)
 db_session = Session(scoped_session(sessionmaker(bind=db_engine)))
@@ -61,7 +60,9 @@ def item_handler(
         logging.debug(f"handling '{item_type}' line item")
         return handler(provider_api)
     except Exception as e:
-        logging.warning(f"error while handling '{item_type}': {e}\n{format_stack()}")
+        logging.warning(
+            f"error while handling '{item_type}': {e}\n{traceback.format_exc()}"
+        )
         return LineItemError(
             line_item=item_type, error=ApplicationErrorData.from_exception(e)
         )

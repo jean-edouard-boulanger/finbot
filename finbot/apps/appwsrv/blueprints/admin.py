@@ -2,13 +2,15 @@ from textwrap import dedent
 
 from flask import Blueprint
 from flask_jwt_extended import jwt_required
+from flask_pydantic import validate
 
+from finbot.apps.appwsrv import schema, serializer
 from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
 from finbot.apps.appwsrv.db import db_session
 from finbot.core import email_delivery
 from finbot.core.email_delivery import Email, EmailService
 from finbot.core.kv_store import DBKVStore
-from finbot.core.web_service import RequestContext, service_endpoint
+from finbot.core.web_service import get_user_account_id, service_endpoint
 from finbot.model import repository
 
 admin_api = Blueprint(
@@ -20,35 +22,49 @@ kv_store = DBKVStore(db_session)
 @admin_api.route("/settings/email_delivery/providers/", methods=["GET"])
 @jwt_required()
 @service_endpoint()
-def get_email_delivery_providers():
-    return {
-        "providers": email_delivery.get_providers_metadata(),
-    }
+@validate()
+def get_email_delivery_providers() -> schema.GetEmailDeliveryProvidersResponse:
+    return schema.GetEmailDeliveryProvidersResponse(
+        providers=[
+            schema.EmailProviderMetadata(
+                provider_id=provider_metadata["provider_id"],
+                description=provider_metadata["description"],
+                settings_schema=provider_metadata["schema"],
+            )
+            for provider_metadata in email_delivery.get_providers_metadata()
+        ]
+    )
 
 
 @admin_api.route("/settings/email_delivery/", methods=["GET"])
 @jwt_required()
 @service_endpoint()
-def get_email_delivery_settings():
-    email_settings = kv_store.get_entity(email_delivery.DeliverySettings)
-    return {
-        "settings": email_settings,
-    }
+@validate()
+def get_email_delivery_settings() -> schema.GetEmailDeliverySettingsResponse:
+    settings = kv_store.get_entity(email_delivery.DeliverySettings)
+    return schema.GetEmailDeliverySettingsResponse(
+        settings=serializer.serialize_email_delivery_settings(settings)
+    )
 
 
 @admin_api.route("/settings/email_delivery/", methods=["PUT"])
 @jwt_required()
-@service_endpoint(parameters={"validate": {"type": bool, "default": False}})
-def set_email_delivery_settings(request_context: RequestContext):
-    validate = request_context.parameters["validate"]
-    delivery_settings = email_delivery.DeliverySettings.deserialize(
-        request_context.request
+@service_endpoint()
+@validate()
+def set_email_delivery_settings(
+    body: schema.EmailDeliverySettings, query: schema.SetEmailDeliverySettingsParams
+):
+    delivery_settings = email_delivery.DeliverySettings(
+        subject_prefix=body.subject_prefix,
+        sender_name=body.sender_name,
+        provider_id=body.provider_id,
+        provider_settings=body.provider_settings,
     )
-    if validate:
+    if query.do_validate:
         try:
             service = EmailService(delivery_settings)
             user_account = repository.get_user_account(
-                db_session, request_context.user_id
+                db_session, get_user_account_id()
             )
             service.send_email(
                 Email(
@@ -72,6 +88,7 @@ def set_email_delivery_settings(request_context: RequestContext):
 @admin_api.route("/settings/email_delivery/", methods=["DELETE"])
 @jwt_required()
 @service_endpoint()
-def remove_email_delivery_settings():
+@validate()
+def remove_email_delivery_settings() -> schema.RemoveEmailDeliverySettingsResponse:
     kv_store.delete_entity(email_delivery.DeliverySettings)
-    return {}
+    return schema.RemoveEmailDeliverySettingsResponse()

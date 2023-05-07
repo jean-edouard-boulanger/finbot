@@ -1,5 +1,4 @@
 # mypy: allow-untyped-calls
-import enum
 import json
 from dataclasses import dataclass
 from datetime import date, datetime
@@ -10,6 +9,7 @@ from sqlalchemy.orm import joinedload
 
 from finbot.core.db.session import Session
 from finbot.core.errors import InvalidUserInput, MissingUserData
+from finbot.core.schema import ValuationFrequency
 from finbot.model import (
     LinkedAccount,
     LinkedAccountValuationHistoryEntry,
@@ -106,27 +106,6 @@ def get_last_history_entry(
     if entry is None:
         raise MissingUserData("No valuation available for this account")
     return entry
-
-
-class ValuationFrequency(enum.Enum):
-    Daily = enum.auto()
-    Weekly = enum.auto()
-    Monthly = enum.auto()
-    Quarterly = enum.auto()
-    Yearly = enum.auto()
-
-    def serialize(self) -> str:
-        return self.name.lower()
-
-    @staticmethod
-    def deserialize(data: str) -> "ValuationFrequency":
-        return {
-            "daily": ValuationFrequency.Daily,
-            "weekly": ValuationFrequency.Weekly,
-            "monthly": ValuationFrequency.Monthly,
-            "quarterly": ValuationFrequency.Quarterly,
-            "yearly": ValuationFrequency.Yearly,
-        }[data.lower()]
 
 
 @dataclass
