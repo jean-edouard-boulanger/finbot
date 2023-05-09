@@ -1,18 +1,17 @@
-from typing import Any, Literal, TypeAlias
+from enum import Enum
+from typing import Literal, TypeAlias
 
 from pydantic import BaseModel
 
+from finbot.core.schema import CredentialsPayloadType
 from finbot.core.web_service import ApplicationErrorData
-from finbot.providers.schema import AssetsEntry, BalanceEntry, LiabilitiesEntry
-
-LineItemType = Literal["balances", "assets", "liabilities"]
+from finbot.providers import schema as providers_schema
 
 
-class FinancialDataRequest(BaseModel):
-    provider: str
-    credentials: dict[str, Any]
-    items: list[LineItemType]
-    account_metadata: str | None = None
+class LineItem(str, Enum):
+    Balances = "Balances"
+    Assets = "Assets"
+    Liabilities = "Liabilities"
 
 
 class ApplicationError(BaseModel):
@@ -24,23 +23,23 @@ class ApplicationError(BaseModel):
 
 
 class LineItemError(BaseModel):
-    line_item: LineItemType
+    line_item: LineItem
     error: ApplicationErrorData
 
 
 class BalancesResults(BaseModel):
-    line_item: LineItemType = "balances"
-    results: list[BalanceEntry]
+    line_item: Literal[LineItem.Balances] = LineItem.Balances
+    results: list[providers_schema.BalanceEntry]
 
 
 class AssetsResults(BaseModel):
-    line_item: LineItemType = "assets"
-    results: list[AssetsEntry]
+    line_item: Literal[LineItem.Assets] = LineItem.Assets
+    results: list[providers_schema.AssetsEntry]
 
 
 class LiabilitiesResults(BaseModel):
-    line_item: LineItemType = "liabilities"
-    results: list[LiabilitiesEntry]
+    line_item: Literal[LineItem.Liabilities] = LineItem.Liabilities
+    results: list[providers_schema.LiabilitiesEntry]
 
 
 LineItemResults: TypeAlias = (
@@ -48,9 +47,21 @@ LineItemResults: TypeAlias = (
 )
 
 
-class FinancialDataResponse(BaseModel):
+class ValidateCredentialsRequest(BaseModel):
+    provider_id: str
+    credentials: CredentialsPayloadType
+
+
+class ValidateCredentialsResponse(BaseModel):
+    valid: bool
+    error_message: str | None = None
+
+
+class GetFinancialDataRequest(BaseModel):
+    provider_id: str
+    credentials: CredentialsPayloadType
+    items: list[LineItem]
+
+
+class GetFinancialDataResponse(BaseModel):
     financial_data: list[LineItemResults]
-
-
-class HealthResponse(BaseModel):
-    healthy: bool

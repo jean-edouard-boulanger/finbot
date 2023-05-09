@@ -3,6 +3,7 @@ from typing import Any, Literal, TypeAlias
 
 from pydantic import Extra, Field, SecretStr
 
+from finbot.apps.appwsrv.reports import EarningsReport, HoldingsReport
 from finbot.core.schema import BaseModel, ValuationFrequency
 
 JsonSchemaType: TypeAlias = dict[str, Any]
@@ -404,3 +405,11 @@ class SetEmailDeliverySettingsParams(BaseModel):
 
 class RemoveEmailDeliverySettingsResponse(BaseModel):
     pass
+
+
+class GetHoldingsReportResponse(BaseModel):
+    report: HoldingsReport
+
+
+class GetEarningsReportResponse(BaseModel):
+    report: EarningsReport

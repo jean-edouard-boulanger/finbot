@@ -1,5 +1,4 @@
 from flask import Blueprint
-from flask_pydantic import validate
 
 from finbot._version import __version__
 from finbot.apps.appwsrv.schema import (
@@ -8,7 +7,7 @@ from finbot.apps.appwsrv.schema import (
     SystemReportResponse,
 )
 from finbot.core import environment
-from finbot.core.web_service import service_endpoint
+from finbot.core.web_service import service_endpoint, validate
 
 API_URL_PREFIX = "/api/v1/"
 base_api = Blueprint(name="api", import_name=__name__, url_prefix=API_URL_PREFIX)

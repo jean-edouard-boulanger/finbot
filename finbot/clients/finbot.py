@@ -1,13 +1,6 @@
-from enum import Enum
-from typing import Any, Optional
-
+from finbot.apps.finbotwsrv import schema
 from finbot.clients.base import Base as ClientBase
-
-
-class LineItem(Enum):
-    Balances = "balances"
-    Assets = "assets"
-    Liabilities = "liabilities"
+from finbot.core.schema import CredentialsPayloadType
 
 
 class FinbotClient(ClientBase):
@@ -16,17 +9,32 @@ class FinbotClient(ClientBase):
 
     def get_financial_data(
         self,
-        provider: str,
-        credentials_data: dict[str, Any],
-        line_items: list[LineItem],
-        account_metadata: Optional[str] = None,
-    ) -> Any:
-        return self.post(
-            "financial_data/",
-            {
-                "provider": provider,
-                "credentials": credentials_data,
-                "items": [item.value for item in line_items],
-                "account_metadata": account_metadata,
-            },
+        provider_id: str,
+        credentials_data: CredentialsPayloadType,
+        line_items: list[schema.LineItem],
+    ) -> schema.GetFinancialDataResponse:
+        return schema.GetFinancialDataResponse.parse_obj(
+            self.post(
+                "financial_data/",
+                schema.GetFinancialDataRequest(
+                    provider_id=provider_id,
+                    credentials=credentials_data,
+                    items=line_items,
+                ),
+            )
+        )
+
+    def validate_credentials(
+        self,
+        provider_id: str,
+        credentials_data: CredentialsPayloadType,
+    ) -> schema.ValidateCredentialsResponse:
+        return schema.ValidateCredentialsResponse.parse_obj(
+            self.post(
+                "validate_credentials/",
+                schema.ValidateCredentialsRequest(
+                    provider_id=provider_id,
+                    credentials=credentials_data,
+                ),
+            )
         )

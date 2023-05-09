@@ -1,13 +1,12 @@
 import logging
 
 from flask import Blueprint
-from flask_pydantic import validate
 
 from finbot.apps.appwsrv import schema, serializer
 from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
 from finbot.apps.appwsrv.db import db_session
 from finbot.core.errors import InvalidOperation, InvalidUserInput
-from finbot.core.web_service import service_endpoint
+from finbot.core.web_service import service_endpoint, validate
 from finbot.model import LinkedAccount, Provider, repository
 
 logger = logging.getLogger(__name__)

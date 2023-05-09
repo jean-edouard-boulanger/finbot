@@ -2,7 +2,6 @@ from datetime import timedelta
 
 from flask import Blueprint
 from flask_jwt_extended import create_access_token, create_refresh_token
-from flask_pydantic import validate
 
 from finbot.apps.appwsrv import serializer
 from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
@@ -13,7 +12,7 @@ from finbot.apps.appwsrv.schema import (
     LoginResponse,
 )
 from finbot.core.errors import InvalidUserInput
-from finbot.core.web_service import service_endpoint
+from finbot.core.web_service import service_endpoint, validate
 from finbot.model import repository
 
 auth_api = Blueprint(

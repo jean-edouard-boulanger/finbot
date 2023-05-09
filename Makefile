@@ -34,7 +34,7 @@ docker-build-all: docker-build-dev docker-build-prod
 
 trigger-valuation:
 	tools/check-env.sh accounts;
-	docker-compose run --rm schedsrv \
+	docker-compose exec schedsrv \
 		./tools/run -- python3.11 finbot/apps/schedsrv/schedsrv.py \
 			--mode one_shot \
 			--accounts ${accounts}
@@ -125,6 +125,7 @@ mypy:
 	mypy --strict -p finbot.model;
 	mypy --strict -p finbot.providers;
 	mypy --strict -p finbot.apps.finbotwsrv;
+	mypy --strict -p finbot.apps.snapwsrv;
 
 unit-tests-py:
 	python3.11 -m pytest -vv tests/unit

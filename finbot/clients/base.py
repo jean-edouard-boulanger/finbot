@@ -6,10 +6,17 @@ import requests.exceptions
 
 from finbot.core.errors import FinbotError
 from finbot.core.serialization import serialize
+from finbot.core.web_service import ApplicationErrorData, ApplicationErrorResponse
 
 
 class ClientError(FinbotError):
     pass
+
+
+class ApplicationError(ClientError):
+    def __init__(self, error_message: str, error: ApplicationErrorData):
+        super().__init__(error_message)
+        self.error = error
 
 
 class Base(object):
@@ -26,7 +33,14 @@ class Base(object):
             response.raise_for_status()
         except requests.exceptions.RequestException as e:
             raise ClientError(f"error while sending request to {resource}: {e}")
-        return json.loads(response.content)
+        response_payload = json.loads(response.content)
+        if "error" in response_payload:
+            error = ApplicationErrorResponse.parse_obj(response_payload).error
+            raise ApplicationError(
+                f"received error response while calling {resource}: {error.user_message}",
+                error=error,
+            )
+        return response_payload
 
     def get(self, route: str) -> Any:
         return self.send_request("get", route)

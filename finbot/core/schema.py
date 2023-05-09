@@ -1,4 +1,5 @@
 import enum
+from typing import Any, TypeAlias
 
 from pydantic import BaseModel as _BaseModel
 from pydantic import Extra
@@ -16,6 +17,9 @@ class ValuationFrequency(str, enum.Enum):
     Quarterly = "Quarterly"
     Yearly = "Yearly"
 
-    @staticmethod
-    def deserialize(_: str) -> "ValuationFrequency":  # TODO: TEMPORARY REMOVE THIS
-        return ValuationFrequency.Daily
+
+CredentialsPayloadType: TypeAlias = dict[str, Any]
+
+
+class HealthResponse(BaseModel):
+    healthy: bool

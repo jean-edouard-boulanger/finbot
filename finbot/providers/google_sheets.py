@@ -17,6 +17,7 @@ from pydantic import BaseModel
 
 from finbot.core.errors import FinbotError
 from finbot.providers.base import ProviderBase
+from finbot.providers.errors import AuthenticationFailure
 from finbot.providers.schema import (
     Account,
     Asset,
@@ -92,13 +93,16 @@ class Api(ProviderBase):
             )
 
     def initialize(self) -> None:
-        scope = ["https://www.googleapis.com/auth/spreadsheets"]
-        self._api = gspread.authorize(
-            ServiceAccountCredentials.from_json_keyfile_dict(
-                self._credentials.google_api_credentials, scope
+        try:
+            scope = ["https://www.googleapis.com/auth/spreadsheets"]
+            self._api = gspread.authorize(
+                ServiceAccountCredentials.from_json_keyfile_dict(
+                    self._credentials.google_api_credentials, scope
+                )
             )
-        )
-        self._sheet = self._api.open_by_key(self._credentials.sheet_key)
+            self._sheet = self._api.open_by_key(self._credentials.sheet_key)
+        except Exception as e:
+            raise AuthenticationFailure(str(e)) from e
 
     def get_balances(self) -> Balances:
         return Balances(
