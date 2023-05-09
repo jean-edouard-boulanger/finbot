@@ -1,12 +1,12 @@
-import logging
 from typing import Optional
 
 from plaid import Client as PlaidClient
 
 from finbot.apps.appwsrv.db import db_session
-from finbot.apps.finbotwsrv.errors import AuthenticationFailure
 from finbot.clients import FinbotClient, ValuationRequest, WorkerClient
 from finbot.core import environment
+from finbot.core.errors import InvalidUserInput
+from finbot.core.schema import CredentialsPayloadType
 from finbot.model import UserAccountPlaidSettings, repository
 from finbot.providers.plaid_us import pack_credentials as pack_plaid_credentials
 
@@ -33,19 +33,17 @@ def validate_credentials(
     finbot_client: FinbotClient,
     plaid_settings: Optional[UserAccountPlaidSettings],
     provider_id: str,
-    credentials: dict,
+    credentials: CredentialsPayloadType,
 ) -> None:
     if provider_id == "plaid_us":
         assert plaid_settings is not None
         credentials = pack_plaid_credentials(credentials, plaid_settings)
-    finbot_response = finbot_client.get_financial_data(
-        provider=provider_id, credentials_data=credentials, line_items=[]
+    result = finbot_client.validate_credentials(
+        provider_id=provider_id, credentials_data=credentials
     )
-    if "error" in finbot_response:
-        logging.info(finbot_response)
-        user_message = finbot_response["error"]["user_message"]
-        raise AuthenticationFailure(
-            f"Unable to validate provided credentials ({user_message})"
+    if not result.valid:
+        raise InvalidUserInput(
+            f"Unable to validate provided credentials ({result.error_message})"
         )
 
 

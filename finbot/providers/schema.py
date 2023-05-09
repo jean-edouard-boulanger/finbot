@@ -42,6 +42,7 @@ class Liability(BaseModel):
     name: str
     type: str
     value: float
+    provider_specific: dict[str, Any] | None = None
 
 
 class LiabilitiesEntry(BaseModel):
@@ -51,3 +52,6 @@ class LiabilitiesEntry(BaseModel):
 
 class Liabilities(BaseModel):
     accounts: list[LiabilitiesEntry]
+
+
+ItemType: TypeAlias = Asset | Liability

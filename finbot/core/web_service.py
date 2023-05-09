@@ -1,8 +1,7 @@
 import functools
 import logging
 import traceback
-from dataclasses import dataclass
-from typing import Any, Callable, Optional, ParamSpec, TypeVar, cast
+from typing import Any, Callable, ParamSpec, TypeVar, cast
 
 from flask import Response as FlaskResponse
 from flask import jsonify, request
@@ -13,15 +12,6 @@ from pydantic import BaseModel
 from finbot.core.errors import ApplicationError, FinbotError
 from finbot.core.serialization import pretty_dump, serialize
 from finbot.core.utils import fully_qualified_type_name
-
-
-def make_error(
-    user_message: str, debug_message: Optional[str] = None
-) -> dict[str, Optional[str]]:
-    return {
-        "user_message": user_message,
-        "debug_message": debug_message,
-    }
 
 
 class RequestValidationError(FinbotError):
@@ -67,16 +57,12 @@ class ApplicationErrorData(BaseModel):
         )
 
 
-@dataclass
-class ApplicationErrorResponse:
+class ApplicationErrorResponse(BaseModel):
     error: ApplicationErrorData
-
-    def serialize(self) -> dict[str, ApplicationErrorData]:
-        return {"error": self.error}
 
     @staticmethod
     def from_exception(e: Exception) -> "ApplicationErrorResponse":
-        return ApplicationErrorResponse(ApplicationErrorData.from_exception(e))
+        return ApplicationErrorResponse(error=ApplicationErrorData.from_exception(e))
 
 
 def get_user_account_id() -> int:

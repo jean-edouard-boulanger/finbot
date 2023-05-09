@@ -4,6 +4,7 @@ from plaid import Client as PlaidClient
 from plaid import errors as plaid_errors
 from pydantic import BaseModel, SecretStr
 
+from finbot.core import schema as core_schema
 from finbot.core.serialization import serialize
 from finbot.model import UserAccountPlaidSettings
 from finbot.providers.base import ProviderBase
@@ -23,7 +24,7 @@ from finbot.providers.schema import (
 
 def pack_credentials(
     linked_account_credentials: dict[Any, Any], plaid_settings: UserAccountPlaidSettings
-) -> dict[str, Any]:
+) -> core_schema.CredentialsPayloadType:
     output: dict[str, Any] = serialize(
         {
             "item_id": str(linked_account_credentials["item_id"]),
