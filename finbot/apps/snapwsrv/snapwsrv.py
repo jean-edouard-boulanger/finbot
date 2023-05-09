@@ -11,7 +11,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import joinedload, scoped_session, sessionmaker
 
 from finbot import model
-from finbot.apps.finbotwsrv import schema as finbot_schema
+from finbot.apps.finbotwsrv import schema as finbotwsrv_schema
 from finbot.apps.snapwsrv import schema
 from finbot.clients.finbot import FinbotClient
 from finbot.core import environment, fx_market
@@ -44,13 +44,13 @@ class LinkedAccountSnapshotRequest:
     linked_account_id: int
     provider_id: str
     credentials_data: dict[Any, Any]
-    line_items: list[finbot_schema.LineItem]
+    line_items: list[finbotwsrv_schema.LineItem]
 
 
 @dataclass
 class LinkedAccountSnapshotResult:
     request: LinkedAccountSnapshotRequest
-    snapshot_data: finbot_schema.GetFinancialDataResponse | ApplicationErrorData
+    snapshot_data: finbotwsrv_schema.GetFinancialDataResponse | ApplicationErrorData
 
 
 @dataclass
@@ -87,8 +87,8 @@ class SnapshotTreeVisitor(Protocol):
 def visit_snapshot_tree(
     raw_snapshot: list[LinkedAccountSnapshotResult], visitor: SnapshotTreeVisitor
 ) -> None:
-    def visit_balances_first(data: finbot_schema.LineItemResults) -> int:
-        if data.line_item == finbot_schema.LineItem.Balances:
+    def visit_balances_first(data: finbotwsrv_schema.LineItemResults) -> int:
+        if data.line_item == finbotwsrv_schema.LineItem.Balances:
             return 0
         return 1
 
@@ -100,7 +100,7 @@ def visit_snapshot_tree(
             yield SnapshotErrorEntry(scope="linked_account", error=snapshot_data)
             return
         for snapshot_data_entry in snapshot_data.financial_data:
-            if isinstance(snapshot_data_entry, finbot_schema.LineItemError):
+            if isinstance(snapshot_data_entry, finbotwsrv_schema.LineItemError):
                 yield SnapshotErrorEntry(
                     scope=f"linked_account.{snapshot_data_entry.line_item.name}",
                     error=snapshot_data_entry.error,
@@ -113,16 +113,16 @@ def visit_snapshot_tree(
             continue
         assert isinstance(
             linked_account_snapshot.snapshot_data,
-            finbot_schema.GetFinancialDataResponse,
+            finbotwsrv_schema.GetFinancialDataResponse,
         )
         financial_data = linked_account_snapshot.snapshot_data.financial_data
         for entry in sorted(financial_data, key=visit_balances_first):
             assert isinstance(
                 entry,
                 (
-                    finbot_schema.BalancesResults,
-                    finbot_schema.AssetsResults,
-                    finbot_schema.LiabilitiesResults,
+                    finbotwsrv_schema.BalancesResults,
+                    finbotwsrv_schema.AssetsResults,
+                    finbotwsrv_schema.LiabilitiesResults,
                 ),
             )
             for result in entry.results:
@@ -332,9 +332,9 @@ def take_raw_snapshot(
                 provider_id=linked_account.provider_id,
                 credentials_data=get_credentials_data(linked_account, user_account),
                 line_items=[
-                    finbot_schema.LineItem.Balances,
-                    finbot_schema.LineItem.Assets,
-                    finbot_schema.LineItem.Liabilities,
+                    finbotwsrv_schema.LineItem.Balances,
+                    finbotwsrv_schema.LineItem.Assets,
+                    finbotwsrv_schema.LineItem.Liabilities,
                 ],
             )
             for linked_account in user_account.linked_accounts
