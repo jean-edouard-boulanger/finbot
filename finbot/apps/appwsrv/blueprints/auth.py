@@ -3,14 +3,10 @@ from datetime import timedelta
 from flask import Blueprint
 from flask_jwt_extended import create_access_token, create_refresh_token
 
+from finbot.apps.appwsrv import schema as appwsrv_schema
 from finbot.apps.appwsrv import serializer
 from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
 from finbot.apps.appwsrv.db import db_session
-from finbot.apps.appwsrv.schema import (
-    AuthenticationPayload,
-    LoginRequest,
-    LoginResponse,
-)
 from finbot.core.errors import InvalidUserInput
 from finbot.core.web_service import service_endpoint, validate
 from finbot.model import repository
@@ -23,7 +19,7 @@ auth_api = Blueprint(
 @auth_api.route("/login/", methods=["POST"])
 @service_endpoint()
 @validate()
-def auth_login(body: LoginRequest) -> LoginResponse:
+def auth_login(body: appwsrv_schema.LoginRequest) -> appwsrv_schema.LoginResponse:
     account = repository.find_user_account_by_email(db_session, body.email)
     not_found_message = "Invalid email or password"
     if not account:
@@ -32,8 +28,8 @@ def auth_login(body: LoginRequest) -> LoginResponse:
     if account.clear_password != body.password:
         raise InvalidUserInput(not_found_message)
 
-    return LoginResponse(
-        auth=AuthenticationPayload(
+    return appwsrv_schema.LoginResponse(
+        auth=appwsrv_schema.AuthenticationPayload(
             access_token=create_access_token(
                 identity=account.id, expires_delta=timedelta(days=1)
             ),

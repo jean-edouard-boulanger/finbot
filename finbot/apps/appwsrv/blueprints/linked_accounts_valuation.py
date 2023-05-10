@@ -4,13 +4,14 @@ from datetime import date, datetime
 from typing import Optional, Tuple, Union
 
 from flask import Blueprint
-from flask_jwt_extended import jwt_required
 
-from finbot.apps.appwsrv import schema, serializer
+from finbot.apps.appwsrv import schema as appwsrv_schema
+from finbot.apps.appwsrv import serializer
 from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
 from finbot.apps.appwsrv.db import db_session
+from finbot.core import schema as core_schema
 from finbot.core.errors import InvalidUserInput
-from finbot.core.web_service import service_endpoint, validate
+from finbot.core.web_service import jwt_required, service_endpoint, validate
 from finbot.model import repository
 
 logger = logging.getLogger(__name__)
@@ -29,23 +30,23 @@ linked_accounts_valuation_api = Blueprint(
 @validate()
 def get_linked_accounts_valuation(
     user_account_id: int,
-) -> schema.GetLinkedAccountsValuationResponse:
+) -> appwsrv_schema.GetLinkedAccountsValuationResponse:
     history_entry = repository.get_last_history_entry(db_session, user_account_id)
     valuation_ccy = repository.get_user_account_settings(
         db_session, user_account_id
     ).valuation_ccy
     results = repository.find_linked_accounts_valuation(db_session, history_entry.id)
-    return schema.GetLinkedAccountsValuationResponse(
-        valuation=schema.LinkedAccountsValuation(
+    return appwsrv_schema.GetLinkedAccountsValuationResponse(
+        valuation=appwsrv_schema.LinkedAccountsValuation(
             valuation_ccy=valuation_ccy,
             entries=[
-                schema.LinkedAccountValuationEntry(
-                    linked_account=schema.LinkedAccountValuationLinkedAccountDescription(
+                appwsrv_schema.LinkedAccountValuationEntry(
+                    linked_account=appwsrv_schema.LinkedAccountValuationLinkedAccountDescription(
                         id=entry.linked_account.id,
                         provider_id=entry.linked_account.provider_id,
                         description=entry.linked_account.account_name,
                     ),
-                    valuation=schema.LinkedAccountValuation(
+                    valuation=appwsrv_schema.LinkedAccountValuation(
                         date=(
                             entry.effective_snapshot.effective_at
                             if entry.effective_snapshot
@@ -70,15 +71,15 @@ def get_linked_accounts_valuation(
 @service_endpoint()
 @validate()
 def get_linked_accounts_historical_valuation(
-    user_account_id: int, query: schema.HistoricalValuationParams
-) -> schema.GetLinkedAccountsHistoricalValuation:
+    user_account_id: int, query: appwsrv_schema.HistoricalValuationParams
+) -> appwsrv_schema.GetLinkedAccountsHistoricalValuation:
     settings = repository.get_user_account_settings(db_session, user_account_id)
     from_time = query.from_time
     to_time = query.to_time
     if from_time and to_time and from_time >= to_time:
         raise InvalidUserInput("Start time parameter must be before end time parameter")
     frequency = query.frequency
-    is_daily = frequency == repository.ValuationFrequency.Daily
+    is_daily = frequency == core_schema.ValuationFrequency.Daily
     valuation_history = repository.get_historical_valuation_by_linked_account(
         session=db_session,
         user_account_id=user_account_id,
@@ -99,11 +100,11 @@ def get_linked_accounts_historical_valuation(
         descriptor = (entry.linked_account_id, entry.linked_account_name)
         entry_index = x_axis_layout[entry.valuation_period]
         valuation_history_by_linked_account[descriptor][entry_index] = entry
-    return schema.GetLinkedAccountsHistoricalValuation(
-        historical_valuation=schema.HistoricalValuation(
+    return appwsrv_schema.GetLinkedAccountsHistoricalValuation(
+        historical_valuation=appwsrv_schema.HistoricalValuation(
             valuation_ccy=settings.valuation_ccy,
-            series_data=schema.SeriesData(
-                x_axis=schema.XAxisDescription(
+            series_data=appwsrv_schema.SeriesData(
+                x_axis=appwsrv_schema.XAxisDescription(
                     type="datetime" if is_daily else "category",
                     categories=[
                         datetime(year=period.year, month=period.month, day=period.day)
@@ -113,7 +114,7 @@ def get_linked_accounts_historical_valuation(
                     ],
                 ),
                 series=[
-                    schema.SeriesDescription(
+                    appwsrv_schema.SeriesDescription(
                         name=f"{account_name} (Last)",
                         data=[
                             (entry.last_value if entry is not None else None)

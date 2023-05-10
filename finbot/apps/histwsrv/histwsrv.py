@@ -8,21 +8,15 @@ from flask import Flask
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-from finbot.apps.histwsrv import repository
+from finbot import model
+from finbot.apps.histwsrv import repository, schema
 from finbot.core import environment
+from finbot.core import schema as core_schema
 from finbot.core.db.session import Session
 from finbot.core.logging import configure_logging
-from finbot.core.serialization import pretty_dump
+from finbot.core.serialization import pretty_dump, to_pydantic
 from finbot.core.utils import unwrap_optional
-from finbot.core.web_service import service_endpoint
-from finbot.model import (
-    LinkedAccountValuationHistoryEntry,
-    SubAccountItemValuationHistoryEntry,
-    SubAccountValuationHistoryEntry,
-    UserAccountHistoryEntry,
-    UserAccountSnapshot,
-    UserAccountValuationHistoryEntry,
-)
+from finbot.core.web_service import service_endpoint, validate
 
 FINBOT_ENV = environment.get()
 configure_logging(FINBOT_ENV.desired_log_level)
@@ -74,7 +68,7 @@ def deserialize_provider_specific_data(raw_data: str | None) -> dict[str, Any] |
 
 def iter_sub_accounts_valuation_history_entries(data: pd.DataFrame):
     for _, row in data.iterrows():
-        yield SubAccountItemValuationHistoryEntry(
+        yield model.SubAccountItemValuationHistoryEntry(
             linked_account_id=row["linked_account_id"],
             sub_account_id=row["sub_account_id"],
             item_type=row["item_type"],
@@ -96,18 +90,20 @@ def cleanup_context(*args, **kwargs):
 
 @app.route("/healthy/", methods=["GET"])
 @service_endpoint()
-def healthy():
-    return {"healthy": True}
+@validate()
+def healthy() -> core_schema.HealthResponse:
+    return core_schema.HealthResponse(healthy=True)
 
 
 @app.route("/history/<snapshot_id>/write/", methods=["POST"])
 @service_endpoint()
-def write_history(snapshot_id: int):
+@validate()
+def write_history(snapshot_id: int) -> schema.WriteHistoryResponse:
     repo = repository.ReportRepository(db_session)
 
     logging.info("fetching snapshot_id={} metadata".format(snapshot_id))
-    snapshot: UserAccountSnapshot = (
-        db_session.query(UserAccountSnapshot).filter_by(id=snapshot_id).one()
+    snapshot: model.UserAccountSnapshot = (
+        db_session.query(model.UserAccountSnapshot).filter_by(id=snapshot_id).one()
     )
 
     valuation_date = unwrap_optional(snapshot.end_time)
@@ -119,7 +115,7 @@ def write_history(snapshot_id: int):
     logging.info(f"consistent snapshot has entries={len(snapshot_data)}")
     logging.info("creating new history entry (marked not available)")
 
-    with db_session.persist(UserAccountHistoryEntry()) as history_entry:
+    with db_session.persist(model.UserAccountHistoryEntry()) as history_entry:
         history_entry.user_account_id = snapshot.user_account_id
         history_entry.source_snapshot_id = snapshot_id
         history_entry.effective_at = valuation_date
@@ -134,7 +130,7 @@ def write_history(snapshot_id: int):
 
     with db_session.persist(history_entry):
         history_entry.user_account_valuation_history_entry = (
-            UserAccountValuationHistoryEntry(
+            model.UserAccountValuationHistoryEntry(
                 valuation=user_account_valuation,
                 total_liabilities=user_account_total_liabilities,
             )
@@ -146,7 +142,7 @@ def write_history(snapshot_id: int):
     with db_session.persist(history_entry):
         history_entry.linked_accounts_valuation_history_entries.extend(
             [
-                LinkedAccountValuationHistoryEntry(
+                model.LinkedAccountValuationHistoryEntry(
                     linked_account_id=linked_account_id,
                     effective_snapshot_id=effective_snapshot_id,
                     valuation=valuation,
@@ -164,7 +160,7 @@ def write_history(snapshot_id: int):
     with db_session.persist(history_entry):
         history_entry.sub_accounts_valuation_history_entries.extend(
             [
-                SubAccountValuationHistoryEntry(
+                model.SubAccountValuationHistoryEntry(
                     linked_account_id=linked_account_id,
                     sub_account_id=sub_account_id,
                     sub_account_ccy=sub_account_ccy,
@@ -271,12 +267,14 @@ def write_history(snapshot_id: int):
 
     logging.info("new history entry added and enabled successfully")
 
-    return {
-        "report": {
-            "history_entry_id": history_entry.id,
-            "valuation_date": valuation_date,
-            "valuation_currency": history_entry.valuation_ccy,
-            "user_account_valuation": user_account_valuation,
-            "valuation_change": user_account_valuation_change,
-        }
-    }
+    return schema.WriteHistoryResponse(
+        report=schema.NewHistoryEntryReport(
+            history_entry_id=history_entry.id,
+            valuation_date=valuation_date,
+            valuation_currency=history_entry.valuation_ccy,
+            user_account_valuation=float(user_account_valuation),
+            valuation_change=to_pydantic(
+                core_schema.ValuationChange, user_account_valuation_change
+            ),
+        )
+    )

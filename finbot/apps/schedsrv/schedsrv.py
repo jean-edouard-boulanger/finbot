@@ -1,12 +1,12 @@
 import argparse
 import logging
-import queue
 import signal
 import sys
 import threading
 import traceback
-from datetime import timedelta
-from typing import Iterable
+import abc
+from types import FrameType
+from typing import Iterable, Generator
 
 import schedule
 from sqlalchemy import create_engine
@@ -26,7 +26,16 @@ db_engine = create_engine(FINBOT_ENV.database_url)
 db_session = Session(scoped_session(sessionmaker(bind=db_engine)))
 
 
-def parse_valuation_requests(raw_accounts_str: str):
+class Worker(abc.ABC, threading.Thread):
+    def __init__(self) -> None:
+        super().__init__()
+
+    @abc.abstractmethod
+    def stop(self) -> None:
+        pass
+
+
+def parse_valuation_requests(raw_accounts_str: str) -> list[ValuationRequest]:
     requests = []
     raw_accounts = raw_accounts_str.split(";")
     for raw_account in raw_accounts:
@@ -54,12 +63,12 @@ def create_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def iter_user_accounts():
+def iter_user_accounts() -> Generator[UserAccount, None, None]:
     for user_account in db_session.query(UserAccount).all():
         yield user_account
 
 
-def run_one_shot(requests: Iterable[ValuationRequest]):
+def run_one_shot(requests: Iterable[ValuationRequest]) -> None:
     for request in requests:
         try:
             worker_client = WorkerClient()
@@ -77,15 +86,8 @@ def run_one_shot(requests: Iterable[ValuationRequest]):
             )
 
 
-def pop_queue(work_queue: queue.Queue, timeout: timedelta):
-    try:
-        return work_queue.get(timeout=timeout.total_seconds())
-    except queue.Empty:
-        return None
-
-
-class SchedulerThread(threading.Thread):
-    def __init__(self):
+class Scheduler(Worker):
+    def __init__(self) -> None:
         super().__init__()
         self._scheduler = schedule.Scheduler()
         self._stop_event = threading.Event()
@@ -117,23 +119,24 @@ class SchedulerThread(threading.Thread):
             self._stop_event.wait(self._scheduler.idle_seconds)
         logging.info("[scheduler thread] going down now")
 
-    def stop(self):
+    def stop(self) -> None:
         logging.info("[scheduler thread] stop requested")
         self._stop_event.set()
 
 
 class StopHandler(object):
-    def __init__(self, threads):
-        self._threads = threads
+    def __init__(self, workers: list[Worker]) -> None:
+        self._workers = workers
         signal.signal(signal.SIGINT, self.handle_stop)
         signal.signal(signal.SIGTERM, self.handle_stop)
 
-    def handle_stop(self, signum, frame):
-        logging.info(f"received signal ({signum}), stopping all worker threads")
-        [t.stop() for t in self._threads]
+    def handle_stop(self, signum: int, _: FrameType | None) -> None:
+        logging.info(f"received signal ({signum}), stopping all workers")
+        for worker in self._workers:
+            worker.stop()
 
 
-def main_impl():
+def main_impl() -> None:
     settings = create_parser().parse_args()
 
     logging.info(f"running in mode: {settings.mode}")
@@ -143,22 +146,24 @@ def main_impl():
         run_one_shot(settings.accounts)
         return
 
-    threads = []
+    workers: list[Worker] = []
 
     logging.info("initializing scheduler thread")
-    scheduler_thread = SchedulerThread()
-    threads.append(scheduler_thread)
+    scheduler = Scheduler()
+    workers.append(scheduler)
 
-    StopHandler(threads)
+    StopHandler(workers)
 
-    logging.info("starting all worker threads")
-    [t.start() for t in threads]
+    logging.info("starting all workers")
+    for worker in workers:
+        worker.start()
 
     logging.info("scheduler service is ready")
-    [t.join() for t in threads]
+    for worker in workers:
+        worker.join()
 
 
-def main():
+def main() -> int:
     try:
         main_impl()
         return 0

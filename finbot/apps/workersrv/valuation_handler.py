@@ -47,42 +47,36 @@ class ValuationHandler(object):
 
         logger.info("taking snapshot")
         snapshot_metadata = self.snap_client.take_snapshot(
-            account_id=user_account_id,
-            linked_accounts=request.linked_accounts,
+            user_account_id=user_account_id,
+            linked_account_ids=request.linked_accounts,
         )
 
-        logger.debug(snapshot_metadata)
-        snapshot_id = snapshot_metadata.get("snapshot", {}).get("identifier")
-        if snapshot_id is None:
-            raise RuntimeError(
-                f"missing snapshot_id in snapshot metadata: "
-                f"{pretty_dump(snapshot_metadata)}"
-            )
+        logger.debug(pretty_dump(snapshot_metadata))
+        snapshot_id = snapshot_metadata.snapshot.identifier
 
         logger.info(f"raw snapshot created with id={snapshot_id}")
-        logger.debug(snapshot_metadata)
 
         logger.info("taking history report")
         history_metadata = self.hist_client.write_history(snapshot_id)
 
-        history_entry_id = history_metadata.get("report", {}).get("history_entry_id")
-        if history_entry_id is None:
-            raise RuntimeError(
-                f"missing history_entry_id in history metadata: "
-                f"{pretty_dump(history_metadata)}"
-            )
+        history_report = history_metadata.report
 
         logger.info(
-            f"history report written with id={history_entry_id}"
+            f"history report written with id={history_report.history_entry_id}"
             f" {pretty_dump(history_metadata)}"
         )
         logger.info(f"valuation workflow done for user_id={user_account_id}")
 
-        report = history_metadata["report"]
         notifier.notify_valuation(
-            valuation=report["user_account_valuation"],
-            change_1day=report["valuation_change"]["change_1day"],
-            currency=report["valuation_currency"],
+            valuation=history_report.user_account_valuation,
+            change_1day=history_report.valuation_change.change_1day,
+            currency=history_report.valuation_currency,
         )
 
-        return ValuationResponse.parse_obj(report)
+        return ValuationResponse(
+            history_entry_id=history_report.history_entry_id,
+            user_account_valuation=history_report.user_account_valuation,
+            valuation_currency=history_report.valuation_currency,
+            valuation_date=history_report.valuation_date,
+            valuation_change=history_report.valuation_change,
+        )

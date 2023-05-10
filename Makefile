@@ -126,6 +126,8 @@ mypy:
 	mypy --strict -p finbot.providers;
 	mypy --strict -p finbot.apps.finbotwsrv;
 	mypy --strict -p finbot.apps.snapwsrv;
+	mypy --strict -p finbot.apps.appwsrv;
+	mypy --strict -p finbot.apps.schedsrv
 
 unit-tests-py:
 	python3.11 -m pytest -vv tests/unit

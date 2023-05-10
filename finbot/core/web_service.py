@@ -6,6 +6,8 @@ from typing import Any, Callable, ParamSpec, TypeVar, cast
 from flask import Response as FlaskResponse
 from flask import jsonify, request
 from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import jwt_required as _jwt_required
+from flask_jwt_extended.view_decorators import LocationType
 from flask_pydantic import validate as _validate
 from pydantic import BaseModel
 
@@ -71,9 +73,13 @@ def get_user_account_id() -> int:
     return user_account_id
 
 
-def service_endpoint() -> Callable[..., Any]:
-    def impl(func: Callable[..., Any]) -> Callable[..., Any]:
-        def prepare_response(response_data: Any) -> Any:
+RT = TypeVar("RT")
+P = ParamSpec("P")
+
+
+def service_endpoint() -> Callable[[Callable[P, RT]], Callable[P, FlaskResponse]]:
+    def impl(func: Callable[P, RT]) -> Callable[P, FlaskResponse]:
+        def prepare_response(response_data: RT | FlaskResponse | ApplicationErrorResponse) -> FlaskResponse:
             if isinstance(response_data, FlaskResponse):
                 if logging.getLogger().isEnabledFor(logging.DEBUG):
                     logging.debug(
@@ -83,10 +89,10 @@ def service_endpoint() -> Callable[..., Any]:
             serialized_response = serialize(response_data)
             if logging.getLogger().isEnabledFor(logging.DEBUG):
                 logging.debug(f"response_dump={pretty_dump(serialized_response)}")
-            return jsonify(serialized_response)
+            return cast(FlaskResponse, jsonify(serialized_response))
 
         @functools.wraps(func)
-        def handler(*args: Any, **kwargs: Any) -> Any:
+        def handler(*args: P.args, **kwargs: P.kwargs) -> FlaskResponse:
             try:
                 logging.info(
                     f"process {func.__name__} request route={request.full_path}"
@@ -103,10 +109,6 @@ def service_endpoint() -> Callable[..., Any]:
         return handler
 
     return impl
-
-
-RT = TypeVar("RT")
-P = ParamSpec("P")
 
 
 def validate(
@@ -132,5 +134,24 @@ def validate(
             response_by_alias=response_by_alias,
             get_json_params=get_json_params,
             form=form,
+        ),
+    )
+
+
+def jwt_required(
+    optional: bool = False,
+    fresh: bool = False,
+    refresh: bool = False,
+    locations: LocationType = None,
+    verify_type: bool = True,
+) -> Callable[[Callable[P, RT]], Callable[P, RT]]:
+    return cast(
+        Callable[[Callable[P, RT]], Callable[P, RT]],
+        _jwt_required(
+            optional=optional,
+            fresh=fresh,
+            refresh=refresh,
+            locations=locations,
+            verify_type=verify_type,
         ),
     )

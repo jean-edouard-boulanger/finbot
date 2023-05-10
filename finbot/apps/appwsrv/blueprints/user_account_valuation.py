@@ -4,16 +4,17 @@ from datetime import date, datetime, timedelta
 from typing import Optional, Union
 
 from flask import Blueprint
-from flask_jwt_extended import jwt_required
 
 from finbot.apps.appwsrv import core as appwsrv_core
-from finbot.apps.appwsrv import schema, serializer
+from finbot.apps.appwsrv import schema as appwsrv_schema
+from finbot.apps.appwsrv import serializer
 from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
 from finbot.apps.appwsrv.db import db_session
+from finbot.core import schema as core_schema
 from finbot.core import timeseries
 from finbot.core.errors import InvalidUserInput, MissingUserData
 from finbot.core.utils import now_utc
-from finbot.core.web_service import service_endpoint, validate
+from finbot.core.web_service import jwt_required, service_endpoint, validate
 from finbot.model import SubAccountItemValuationHistoryEntry, repository
 
 logger = logging.getLogger(__name__)
@@ -30,8 +31,8 @@ user_account_valuation_api = Blueprint(
 @jwt_required()
 @service_endpoint()
 @validate()
-def trigger_user_account_valuation(user_account_id: int):
-    return appwsrv_core.trigger_valuation(user_account_id)
+def trigger_user_account_valuation(user_account_id: int) -> None:
+    appwsrv_core.trigger_valuation(user_account_id)
 
 
 @user_account_valuation_api.route("/", methods=["GET"])
@@ -40,7 +41,7 @@ def trigger_user_account_valuation(user_account_id: int):
 @validate()
 def get_user_account_valuation(
     user_account_id: int,
-) -> schema.GetUserAccountValuationResponse:
+) -> appwsrv_schema.GetUserAccountValuationResponse:
     to_time = now_utc()
     from_time = to_time - timedelta(days=30)
     last_valuation = repository.get_last_history_entry(db_session, user_account_id)
@@ -56,8 +57,8 @@ def get_user_account_valuation(
         to_time=to_time,
         frequency=timeseries.ScheduleFrequency.Daily,
     )
-    return schema.GetUserAccountValuationResponse(
-        valuation=schema.UserAccountValuation(
+    return appwsrv_schema.GetUserAccountValuationResponse(
+        valuation=appwsrv_schema.UserAccountValuation(
             date=last_valuation.effective_at,
             currency=last_valuation.valuation_ccy,
             value=user_account_valuation.valuation,
@@ -66,7 +67,7 @@ def get_user_account_valuation(
                 user_account_valuation.valuation_change
             ),
             sparkline=[
-                schema.UserAccountValuationSparklineEntry(
+                appwsrv_schema.UserAccountValuationSparklineEntry(
                     effective_at=valuation_time,
                     value=uas_v.last_value if uas_v is not None else None,
                 )
@@ -84,7 +85,9 @@ def get_user_account_valuation(
 @jwt_required()
 @service_endpoint()
 @validate()
-def get_user_account_valuation_by_asset_type(user_account_id: int):
+def get_user_account_valuation_by_asset_type(
+    user_account_id: int,
+) -> appwsrv_schema.GetUserAccountValuationByAssetTypeResponse:
     last_history_entry = repository.get_last_history_entry(db_session, user_account_id)
     items = repository.find_items_valuation(db_session, last_history_entry.id)
     valuation_ccy = repository.get_user_account_settings(
@@ -94,8 +97,8 @@ def get_user_account_valuation_by_asset_type(user_account_id: int):
     item: SubAccountItemValuationHistoryEntry
     for item in items:
         valuation_by_asset_type[item.item_subtype] += float(item.valuation)
-    return schema.GetUserAccountValuationByAssetTypeResponse(
-        valuation=schema.ValuationByAssetType(
+    return appwsrv_schema.GetUserAccountValuationByAssetTypeResponse(
+        valuation=appwsrv_schema.ValuationByAssetType(
             valuation_ccy=valuation_ccy, by_asset_type=valuation_by_asset_type
         )
     )
@@ -106,8 +109,8 @@ def get_user_account_valuation_by_asset_type(user_account_id: int):
 @service_endpoint()
 @validate()
 def get_user_account_valuation_history(
-    user_account_id: int, query: schema.HistoricalValuationParams
-) -> schema.GetUserAccountValuationHistoryResponse:
+    user_account_id: int, query: appwsrv_schema.HistoricalValuationParams
+) -> appwsrv_schema.GetUserAccountValuationHistoryResponse:
     settings = repository.get_user_account_settings(db_session, user_account_id)
     from_time = query.from_time
     to_time = query.to_time
@@ -115,7 +118,7 @@ def get_user_account_valuation_history(
         raise InvalidUserInput("Start time parameter must be before end time parameter")
 
     frequency = query.frequency
-    is_daily = frequency == repository.ValuationFrequency.Daily
+    is_daily = frequency == core_schema.ValuationFrequency.Daily
 
     historical_valuation: list[
         repository.HistoricalValuationEntry
@@ -130,11 +133,11 @@ def get_user_account_valuation_history(
     if len(historical_valuation) == 0:
         raise MissingUserData("No valuation available for selected time range")
 
-    return schema.GetUserAccountValuationHistoryResponse(
-        historical_valuation=schema.HistoricalValuation(
+    return appwsrv_schema.GetUserAccountValuationHistoryResponse(
+        historical_valuation=appwsrv_schema.HistoricalValuation(
             valuation_ccy=settings.valuation_ccy,
-            series_data=schema.SeriesData(
-                x_axis=schema.XAxisDescription(
+            series_data=appwsrv_schema.SeriesData(
+                x_axis=appwsrv_schema.XAxisDescription(
                     type="datetime" if is_daily else "category",
                     categories=[
                         entry.period_end if is_daily else entry.valuation_period
@@ -142,7 +145,7 @@ def get_user_account_valuation_history(
                     ],
                 ),
                 series=[
-                    schema.SeriesDescription(
+                    appwsrv_schema.SeriesDescription(
                         name="Last",
                         data=[entry.last_value for entry in historical_valuation],
                     )
@@ -157,8 +160,8 @@ def get_user_account_valuation_history(
 @service_endpoint()
 @validate()
 def get_user_account_valuation_history_by_asset_type(
-    user_account_id: int, query: schema.HistoricalValuationParams
-) -> schema.GetUserAccountValuationHistoryByAssetTypeResponse:
+    user_account_id: int, query: appwsrv_schema.HistoricalValuationParams
+) -> appwsrv_schema.GetUserAccountValuationHistoryByAssetTypeResponse:
     settings = repository.get_user_account_settings(db_session, user_account_id)
     from_time = query.from_time
     to_time = query.to_time
@@ -166,7 +169,7 @@ def get_user_account_valuation_history_by_asset_type(
         raise InvalidUserInput("Start time parameter must be before end time parameter")
 
     frequency = query.frequency
-    is_daily = frequency == repository.ValuationFrequency.Daily
+    is_daily = frequency == core_schema.ValuationFrequency.Daily
 
     valuation_history: list[
         repository.AssetTypeHistoricalValuationEntry
@@ -192,11 +195,11 @@ def get_user_account_valuation_history_by_asset_type(
         entry_index = x_axis_layout[entry.valuation_period]
         valuation_history_by_asset_type[entry.asset_type][entry_index] = entry
 
-    return schema.GetUserAccountValuationHistoryByAssetTypeResponse(
-        historical_valuation=schema.HistoricalValuation(
+    return appwsrv_schema.GetUserAccountValuationHistoryByAssetTypeResponse(
+        historical_valuation=appwsrv_schema.HistoricalValuation(
             valuation_ccy=settings.valuation_ccy,
-            series_data=schema.SeriesData(
-                x_axis=schema.XAxisDescription(
+            series_data=appwsrv_schema.SeriesData(
+                x_axis=appwsrv_schema.XAxisDescription(
                     type="datetime" if is_daily else "category",
                     categories=[
                         datetime(year=period.year, month=period.month, day=period.day)
@@ -206,7 +209,7 @@ def get_user_account_valuation_history_by_asset_type(
                     ],
                 ),
                 series=[
-                    schema.SeriesDescription(
+                    appwsrv_schema.SeriesDescription(
                         name=f"{asset_type.capitalize()} (Last)",
                         data=[
                             (entry.last_value if entry is not None else None)

@@ -1,16 +1,16 @@
 import logging
 
 from flask import Blueprint
-from flask_jwt_extended import jwt_required
 from sqlalchemy.exc import IntegrityError
 
-from finbot.apps.appwsrv import schema, serializer
+from finbot.apps.appwsrv import schema as appwsrv_schema
+from finbot.apps.appwsrv import serializer
 from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
 from finbot.apps.appwsrv.db import db_session
 from finbot.core.errors import InvalidUserInput
 from finbot.core.notifier import TwilioNotifier, TwilioSettings
 from finbot.core.utils import unwrap_optional
-from finbot.core.web_service import service_endpoint, validate
+from finbot.core.web_service import jwt_required, service_endpoint, validate
 from finbot.model import (
     UserAccount,
     UserAccountPlaidSettings,
@@ -31,8 +31,8 @@ user_accounts_api = Blueprint(
 @service_endpoint()
 @validate()
 def create_user_account(
-    body: schema.CreateUserAccountRequest,
-) -> schema.CreateUserAccountResponse:
+    body: appwsrv_schema.CreateUserAccountRequest,
+) -> appwsrv_schema.CreateUserAccountResponse:
     try:
         user_account: UserAccount
         with db_session.persist(UserAccount()) as user_account:
@@ -48,7 +48,7 @@ def create_user_account(
             f"User account with email '{user_account.email}' already exists"
         )
 
-    return schema.CreateUserAccountResponse(
+    return appwsrv_schema.CreateUserAccountResponse(
         user_account=serializer.serialize_user_account(user_account)
     )
 
@@ -57,9 +57,9 @@ def create_user_account(
 @jwt_required()
 @service_endpoint()
 @validate()
-def get_user_account(user_account_id: int) -> schema.GetUserAccountResponse:
+def get_user_account(user_account_id: int) -> appwsrv_schema.GetUserAccountResponse:
     user_account = repository.get_user_account(db_session, user_account_id)
-    return schema.GetUserAccountResponse(
+    return appwsrv_schema.GetUserAccountResponse(
         user_account=serializer.serialize_user_account(user_account)
     )
 
@@ -69,8 +69,8 @@ def get_user_account(user_account_id: int) -> schema.GetUserAccountResponse:
 @service_endpoint()
 @validate()
 def update_user_account_password(
-    user_account_id: int, body: schema.UpdateUserAccountPasswordRequest
-):
+    user_account_id: int, body: appwsrv_schema.UpdateUserAccountPasswordRequest
+) -> appwsrv_schema.UpdateUserAccountPasswordResponse:
     account = repository.get_user_account(db_session, user_account_id)
     if body.old_password.get_secret_value() != account.clear_password:
         raise InvalidUserInput("The old password is incorrect")
@@ -81,7 +81,7 @@ def update_user_account_password(
         )
     with db_session.persist(account):
         account.clear_password = new_password
-    return schema.UpdateUserAccountPasswordResponse()
+    return appwsrv_schema.UpdateUserAccountPasswordResponse()
 
 
 @user_accounts_api.route("/<int:user_account_id>/profile/", methods=["PUT"])
@@ -89,14 +89,14 @@ def update_user_account_password(
 @service_endpoint()
 @validate()
 def update_user_account_profile(
-    user_account_id: int, body: schema.UpdateUserAccountProfileRequest
-) -> schema.UpdateUserAccountProfileResponse:
+    user_account_id: int, body: appwsrv_schema.UpdateUserAccountProfileRequest
+) -> appwsrv_schema.UpdateUserAccountProfileResponse:
     user_account = repository.get_user_account(db_session, user_account_id)
     with db_session.persist(user_account):
         user_account.email = body.email
         user_account.full_name = body.full_name
         user_account.mobile_phone_number = body.mobile_phone_number
-    return schema.UpdateUserAccountProfileResponse(
+    return appwsrv_schema.UpdateUserAccountProfileResponse(
         profile=serializer.serialize_user_account_profile(user_account)
     )
 
@@ -107,9 +107,9 @@ def update_user_account_profile(
 @validate()
 def get_user_account_settings(
     user_account_id: int,
-) -> schema.GetUserAccountSettingsResponse:
+) -> appwsrv_schema.GetUserAccountSettingsResponse:
     settings = repository.get_user_account_settings(db_session, user_account_id)
-    return schema.GetUserAccountSettingsResponse(
+    return appwsrv_schema.GetUserAccountSettingsResponse(
         settings=serializer.serialize_user_account_settings(settings)
     )
 
@@ -119,11 +119,11 @@ def get_user_account_settings(
 @service_endpoint()
 @validate()
 def update_user_account_settings(
-    user_account_id: int, body: schema.UpdateUserAccountSettingsRequest
-) -> schema.UpdateUserAccountSettingsResponse:
+    user_account_id: int, body: appwsrv_schema.UpdateUserAccountSettingsRequest
+) -> appwsrv_schema.UpdateUserAccountSettingsResponse:
     user_account = repository.get_user_account(db_session, user_account_id)
     settings = repository.get_user_account_settings(db_session, user_account_id)
-    if not isinstance(body.twilio_settings, schema.UnsetField):
+    if not isinstance(body.twilio_settings, appwsrv_schema.UnsetField):
         serialized_twilio_settings = body.twilio_settings
         with db_session.persist(settings):
             settings.twilio_settings = (
@@ -143,7 +143,7 @@ def update_user_account_settings(
                 ),
             )
             notifier.notify_twilio_settings_updated()
-    return schema.UpdateUserAccountSettingsResponse(
+    return appwsrv_schema.UpdateUserAccountSettingsResponse(
         settings=serializer.serialize_user_account_settings(settings)
     )
 
@@ -154,11 +154,11 @@ def update_user_account_settings(
 @validate()
 def get_user_account_plaid_settings(
     user_account_id: int,
-) -> schema.GetUserAccountPlaidSettingsResponse:
+) -> appwsrv_schema.GetUserAccountPlaidSettingsResponse:
     plaid_settings = repository.get_user_account_plaid_settings(
         db_session, user_account_id
     )
-    return schema.GetUserAccountPlaidSettingsResponse(
+    return appwsrv_schema.GetUserAccountPlaidSettingsResponse(
         plaid_settings=serializer.serialize_user_account_plaid_settings(plaid_settings)
     )
 
@@ -168,8 +168,8 @@ def get_user_account_plaid_settings(
 @service_endpoint()
 @validate()
 def update_user_account_plaid_settings(
-    user_account_id: int, body: schema.UpdateUserAccountPlaidSettingsRequest
-) -> schema.UpdateUserAccountPlaidSettingsResponse:
+    user_account_id: int, body: appwsrv_schema.UpdateUserAccountPlaidSettingsRequest
+) -> appwsrv_schema.UpdateUserAccountPlaidSettingsResponse:
     existing_settings = repository.get_user_account_plaid_settings(
         db_session, user_account_id
     )
@@ -182,7 +182,7 @@ def update_user_account_plaid_settings(
         plaid_settings.client_id = body.client_id
         plaid_settings.public_key = body.public_key
         plaid_settings.secret_key = body.secret_key.get_secret_value()
-    return schema.UpdateUserAccountPlaidSettingsResponse(
+    return appwsrv_schema.UpdateUserAccountPlaidSettingsResponse(
         plaid_settings=serializer.serialize_user_account_plaid_settings(plaid_settings)
     )
 
@@ -193,12 +193,12 @@ def update_user_account_plaid_settings(
 @validate()
 def delete_user_account_plaid_settings(
     user_account_id: int,
-) -> schema.DeleteUserAccountPlaidSettings:
+) -> appwsrv_schema.DeleteUserAccountPlaidSettings:
     settings = repository.get_user_account_plaid_settings(db_session, user_account_id)
     if settings:
         db_session.delete(settings)
         db_session.commit()
-    return schema.DeleteUserAccountPlaidSettings()
+    return appwsrv_schema.DeleteUserAccountPlaidSettings()
 
 
 @user_accounts_api.route("/<int:user_account_id>/is_configured/")
@@ -207,17 +207,17 @@ def delete_user_account_plaid_settings(
 @validate()
 def is_user_account_configured(
     user_account_id: int,
-) -> schema.IsUserAccountConfiguredResponse:
+) -> appwsrv_schema.IsUserAccountConfiguredResponse:
     account = repository.get_user_account(db_session, user_account_id)
     configured = len(account.linked_accounts) > 0
-    return schema.IsUserAccountConfiguredResponse(configured=configured)
+    return appwsrv_schema.IsUserAccountConfiguredResponse(configured=configured)
 
 
 @user_accounts_api.route("/email_available/", methods=["GET"])
 @service_endpoint()
 @validate()
 def is_email_available(
-    query: schema.IsEmailAvailableRequestParams,
-) -> schema.IsEmailAvailableResponse:
+    query: appwsrv_schema.IsEmailAvailableRequestParams,
+) -> appwsrv_schema.IsEmailAvailableResponse:
     user_account = repository.find_user_account_by_email(db_session, query.email)
-    return schema.IsEmailAvailableResponse(available=user_account is None)
+    return appwsrv_schema.IsEmailAvailableResponse(available=user_account is None)

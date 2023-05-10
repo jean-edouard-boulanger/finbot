@@ -1,5 +1,6 @@
-from typing import Any, Optional
+from typing import Optional
 
+from finbot.apps.snapwsrv import schema as snapwsrv_schema
 from finbot.clients.base import Base as ClientBase
 
 
@@ -9,9 +10,14 @@ class SnapClient(ClientBase):
 
     def take_snapshot(
         self,
-        account_id: int,
-        linked_accounts: Optional[list[int]] = None,
-    ) -> Any:
-        return self.post(
-            f"snapshot/{account_id}/take/", {"linked_accounts": linked_accounts}
+        user_account_id: int,
+        linked_account_ids: Optional[list[int]] = None,
+    ) -> snapwsrv_schema.TakeSnapshotResponse:
+        return snapwsrv_schema.TakeSnapshotResponse.parse_obj(
+            self.post(
+                f"snapshot/{user_account_id}/take/",
+                snapwsrv_schema.TakeSnapshotRequest(
+                    linked_account_ids=linked_account_ids
+                ),
+            )
         )

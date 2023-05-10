@@ -322,7 +322,7 @@ def get_credentials_data(
 
 
 def take_raw_snapshot(
-    user_account: model.UserAccount, linked_accounts: Optional[list[int]]
+    user_account: model.UserAccount, linked_account_ids: Optional[list[int]]
 ) -> list[LinkedAccountSnapshotResult]:
     with ThreadPoolExecutor(max_workers=4) as executor:
         logging.info("initializing accounts snapshot requests")
@@ -340,7 +340,7 @@ def take_raw_snapshot(
             for linked_account in user_account.linked_accounts
             if not linked_account.deleted
             and not linked_account.frozen
-            and (not linked_accounts or linked_account.id in linked_accounts)
+            and (not linked_account_ids or linked_account.id in linked_account_ids)
         ]
 
         logging.info(f"starting snapshot with {len(requests)} request(s)")
@@ -358,12 +358,12 @@ def validate_fx_rates(rates: dict[fx_market.Xccy, Optional[float]]) -> None:
 
 
 def take_snapshot_impl(
-    user_account_id: int, linked_accounts: Optional[list[int]]
+    user_account_id: int, linked_account_ids: Optional[list[int]]
 ) -> schema.SnapshotSummary:
     logging.info(
         f"fetching user information for"
         f" user_account_id={user_account_id}"
-        f" linked_accounts={linked_accounts}"
+        f" linked_account_ids={linked_account_ids}"
     )
 
     user_account = (
@@ -390,7 +390,7 @@ def take_snapshot_impl(
         new_snapshot.start_time = utils.now_utc()
 
     raw_snapshot = take_raw_snapshot(
-        user_account=user_account, linked_accounts=linked_accounts
+        user_account=user_account, linked_account_ids=linked_account_ids
     )
     xccy_collector = XccyCollector(requested_ccy)
     visit_snapshot_tree(raw_snapshot, xccy_collector)
@@ -442,6 +442,6 @@ def take_snapshot(
 ) -> schema.TakeSnapshotResponse:
     return schema.TakeSnapshotResponse(
         snapshot=take_snapshot_impl(
-            user_account_id=user_account_id, linked_accounts=body.linked_accounts
+            user_account_id=user_account_id, linked_account_ids=body.linked_account_ids
         )
     )

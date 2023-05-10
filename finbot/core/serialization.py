@@ -6,6 +6,8 @@ from typing import Any, Optional, TypeVar, Union
 
 import pydantic
 
+from finbot.core.schema import BaseModel
+
 T = TypeVar("T")
 
 
@@ -42,3 +44,11 @@ def pretty_dump(data: Any, **json_override_kwarg: Any) -> str:
 
     json_kwargs = {"indent": 4, "default": fallback, **json_override_kwarg}
     return json.dumps(serialize(data), **json_kwargs)  # type: ignore
+
+
+PydanticType = TypeVar("PydanticType", bound=BaseModel)
+
+
+def to_pydantic(pydantic_type: type[PydanticType], obj: T) -> PydanticType:
+    data = {attr: getattr(obj, attr) for attr in pydantic_type.__fields__}
+    return pydantic_type(**data)

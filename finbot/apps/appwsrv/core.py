@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, Optional
 
 from plaid import Client as PlaidClient
 
@@ -20,8 +20,8 @@ def get_worker_client() -> WorkerClient:
 
 
 def trigger_valuation(
-    user_account_id: int, linked_accounts: Optional[list[int]] = None
-):
+    user_account_id: int, linked_accounts: list[int] | None = None
+) -> None:
     account = repository.get_user_account(db_session, user_account_id)
     worker_client = get_worker_client()
     worker_client.trigger_valuation(
@@ -48,8 +48,8 @@ def validate_credentials(
 
 
 def make_plaid_credentials(
-    raw_credentials: dict, plaid_settings: UserAccountPlaidSettings
-) -> dict:
+    raw_credentials: CredentialsPayloadType, plaid_settings: UserAccountPlaidSettings
+) -> CredentialsPayloadType:
     plaid_client = PlaidClient(
         client_id=plaid_settings.client_id,
         secret=plaid_settings.secret_key,
@@ -61,8 +61,8 @@ def make_plaid_credentials(
 
 
 def create_plaid_link_token(
-    raw_credentials: dict, plaid_settings: UserAccountPlaidSettings
-) -> dict:
+    raw_credentials: CredentialsPayloadType, plaid_settings: UserAccountPlaidSettings
+) -> Any:
     plaid_client = PlaidClient(
         client_id=plaid_settings.client_id,
         secret=plaid_settings.secret_key,
@@ -80,5 +80,5 @@ def create_plaid_link_token(
     return link_token
 
 
-def get_plaid_access_token(raw_credentials: dict) -> dict:
+def get_plaid_access_token(raw_credentials: CredentialsPayloadType) -> dict[str, Any]:
     return {"access_token": raw_credentials["access_token"]}

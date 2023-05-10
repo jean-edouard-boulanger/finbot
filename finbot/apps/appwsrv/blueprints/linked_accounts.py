@@ -3,17 +3,17 @@ import logging
 import uuid
 
 from flask import Blueprint
-from flask_jwt_extended import jwt_required
 from sqlalchemy.exc import IntegrityError
 
 from finbot.apps.appwsrv import core as appwsrv_core
-from finbot.apps.appwsrv import schema, serializer
+from finbot.apps.appwsrv import schema as appwsrv_schema
+from finbot.apps.appwsrv import serializer
 from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
 from finbot.apps.appwsrv.db import db_session
 from finbot.core import environment, secure
 from finbot.core.errors import InvalidOperation, InvalidUserInput
 from finbot.core.utils import unwrap_optional
-from finbot.core.web_service import service_endpoint, validate
+from finbot.core.web_service import jwt_required, service_endpoint, validate
 from finbot.model import LinkedAccount, repository
 
 logger = logging.getLogger(__name__)
@@ -29,10 +29,12 @@ linked_accounts_api = Blueprint(
 @jwt_required()
 @service_endpoint()
 @validate()
-def get_linked_accounts(user_account_id: int) -> schema.GetLinkedAccountsResponse:
+def get_linked_accounts(
+    user_account_id: int,
+) -> appwsrv_schema.GetLinkedAccountsResponse:
     linked_accounts = repository.find_linked_accounts(db_session, user_account_id)
     statuses = repository.get_linked_accounts_statuses(db_session, user_account_id)
-    return schema.GetLinkedAccountsResponse(
+    return appwsrv_schema.GetLinkedAccountsResponse(
         linked_accounts=[
             serializer.serialize_linked_account(
                 linked_account=entry,
@@ -50,9 +52,9 @@ def get_linked_accounts(user_account_id: int) -> schema.GetLinkedAccountsRespons
 @validate()
 def link_new_account(
     user_account_id: int,
-    body: schema.LinkAccountRequest,
-    query: schema.LinkAccountCommitParams,
-) -> schema.LinkAccountResponse:
+    body: appwsrv_schema.LinkAccountRequest,
+    query: appwsrv_schema.LinkAccountCommitParams,
+) -> appwsrv_schema.LinkAccountResponse:
     do_validate = query.do_validate
     do_persist = query.do_persist
     logging.info(f"validate={do_validate} persist={do_persist}")
@@ -128,7 +130,7 @@ def link_new_account(
                 f"failed to trigger valuation for account_id={user_account.id}: {e}"
             )
 
-    return schema.LinkAccountResponse()
+    return appwsrv_schema.LinkAccountResponse()
 
 
 @linked_accounts_api.route("/<int:linked_account_id>/", methods=["GET"])
@@ -137,7 +139,7 @@ def link_new_account(
 @validate()
 def get_linked_account(
     user_account_id: int, linked_account_id: int
-) -> schema.GetLinkedAccountResponse:
+) -> appwsrv_schema.GetLinkedAccountResponse:
     linked_account = repository.get_linked_account(
         db_session, user_account_id, linked_account_id
     )
@@ -158,7 +160,7 @@ def get_linked_account(
     linked_account_status = repository.get_linked_account_status(
         db_session, user_account_id, linked_account_id
     )
-    return schema.GetLinkedAccountResponse(
+    return appwsrv_schema.GetLinkedAccountResponse(
         linked_account=serializer.serialize_linked_account(
             linked_account=linked_account,
             linked_account_status=linked_account_status,
@@ -171,7 +173,9 @@ def get_linked_account(
 @jwt_required()
 @service_endpoint()
 @validate()
-def delete_linked_account(user_account_id: int, linked_account_id: int):
+def delete_linked_account(
+    user_account_id: int, linked_account_id: int
+) -> appwsrv_schema.DeleteLinkedAccountResponse:
     linked_account = repository.get_linked_account(
         db_session, user_account_id, linked_account_id
     )
@@ -190,7 +194,7 @@ def delete_linked_account(user_account_id: int, linked_account_id: int):
             f"failed to trigger valuation for account_id={user_account_id}: {e}"
         )
 
-    return schema.DeleteLinkedAccountResponse()
+    return appwsrv_schema.DeleteLinkedAccountResponse()
 
 
 @linked_accounts_api.route("/<int:linked_account_id>/metadata/", methods=["PUT"])
@@ -199,8 +203,8 @@ def delete_linked_account(user_account_id: int, linked_account_id: int):
 def update_linked_account_metadata(
     user_account_id: int,
     linked_account_id: int,
-    body: schema.UpdateLinkedAccountMetadataRequest,
-):
+    body: appwsrv_schema.UpdateLinkedAccountMetadataRequest,
+) -> appwsrv_schema.UpdateLinkedAccountMetadataResponse:
     linked_account = repository.get_linked_account(
         db_session, user_account_id, linked_account_id
     )
@@ -219,7 +223,7 @@ def update_linked_account_metadata(
             linked_account.account_name = account_name
         if body.frozen is True:
             linked_account.frozen = True
-    return schema.UpdateLinkedAccountMetadataResponse()
+    return appwsrv_schema.UpdateLinkedAccountMetadataResponse()
 
 
 @linked_accounts_api.route("/<int:linked_account_id>/credentials/", methods=["PUT"])
@@ -229,9 +233,9 @@ def update_linked_account_metadata(
 def update_linked_account_credentials(
     user_account_id: int,
     linked_account_id: int,
-    body: schema.UpdateLinkedAccountCredentialsRequest,
-    query: schema.LinkAccountCommitParams,
-):
+    body: appwsrv_schema.UpdateLinkedAccountCredentialsRequest,
+    query: appwsrv_schema.LinkAccountCommitParams,
+) -> appwsrv_schema.UpdateLinkedAccountCredentialsResponse:
     do_validate = query.do_validate
     do_persist = query.do_persist
 
@@ -276,4 +280,4 @@ def update_linked_account_credentials(
                 json.dumps(credentials).encode(), environment.get_secret_key().encode()
             ).decode()
 
-    return schema.UpdateLinkedAccountCredentialsResponse()
+    return appwsrv_schema.UpdateLinkedAccountCredentialsResponse()

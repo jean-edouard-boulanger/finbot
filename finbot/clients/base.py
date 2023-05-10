@@ -4,6 +4,7 @@ from typing import Any, Optional
 import requests
 import requests.exceptions
 
+from finbot.core import schema as core_schema
 from finbot.core.errors import FinbotError
 from finbot.core.serialization import serialize
 from finbot.core.web_service import ApplicationErrorData, ApplicationErrorResponse
@@ -50,5 +51,4 @@ class Base(object):
 
     @property
     def healthy(self) -> bool:
-        result: bool = self.get("healthy")["healthy"]
-        return result
+        return core_schema.HealthResponse.parse_obj(self.get("healthy/")).healthy

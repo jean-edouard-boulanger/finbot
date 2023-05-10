@@ -3,8 +3,10 @@ from typing import Any, Literal, TypeAlias
 
 from pydantic import Extra, Field, SecretStr
 
-from finbot.apps.appwsrv.reports import EarningsReport, HoldingsReport
-from finbot.core.schema import BaseModel, ValuationFrequency
+from finbot.apps.appwsrv.reports.holdings import schema as holdings_schema
+from finbot.apps.appwsrv.reports.earnings import schema as earnings_schema
+from finbot.core import schema as core_schema
+from finbot.core.schema import BaseModel
 
 JsonSchemaType: TypeAlias = dict[str, Any]
 CredentialsSchemaType: TypeAlias = JsonSchemaType
@@ -108,16 +110,6 @@ class SystemReport(BaseModel):
     runtime: str
 
 
-class ValuationChange(BaseModel):
-    change_1hour: float | None
-    change_1day: float | None
-    change_1week: float | None
-    change_1month: float | None
-    change_6months: float | None
-    change_1year: float | None
-    change_2years: float | None
-
-
 class LoginRequest(BaseModel):
     email: str
     password: str
@@ -126,10 +118,6 @@ class LoginRequest(BaseModel):
 class LoginResponse(BaseModel):
     auth: AuthenticationPayload
     account: UserAccount
-
-
-class HealthResponse(BaseModel):
-    healthy: bool
 
 
 class SystemReportResponse(BaseModel):
@@ -296,7 +284,7 @@ class UserAccountValuation(BaseModel):
     currency: str
     value: float
     total_liabilities: float
-    change: ValuationChange
+    change: core_schema.ValuationChange
     sparkline: list[UserAccountValuationSparklineEntry]
 
 
@@ -316,7 +304,7 @@ class GetUserAccountValuationByAssetTypeResponse(BaseModel):
 class HistoricalValuationParams(BaseModel):
     from_time: datetime | None = None
     to_time: datetime | None = None
-    frequency: ValuationFrequency = ValuationFrequency.Daily
+    frequency: core_schema.ValuationFrequency = core_schema.ValuationFrequency.Daily
 
 
 class XAxisDescription(BaseModel):
@@ -351,7 +339,7 @@ class LinkedAccountValuation(BaseModel):
     date: datetime
     currency: str
     value: float
-    change: ValuationChange
+    change: core_schema.ValuationChange
 
 
 class LinkedAccountValuationLinkedAccountDescription(BaseModel):
@@ -403,13 +391,17 @@ class SetEmailDeliverySettingsParams(BaseModel):
     do_validate: bool = Field(default=False, alias="validate")
 
 
+class SetEmailDeliverySettingsResponse(BaseModel):
+    pass
+
+
 class RemoveEmailDeliverySettingsResponse(BaseModel):
     pass
 
 
 class GetHoldingsReportResponse(BaseModel):
-    report: HoldingsReport
+    report: holdings_schema.ValuationTree
 
 
 class GetEarningsReportResponse(BaseModel):
-    report: EarningsReport
+    report: earnings_schema.EarningsReport
