@@ -8,7 +8,7 @@ aiohttp==3.8.4
     # via python-binance
 aiosignal==1.3.1
     # via aiohttp
-alembic==1.9.4
+alembic==1.10.4
     # via -r requirements.in
 amqp==5.1.1
     # via kombu
@@ -251,7 +251,7 @@ six==1.16.0
     #   oauth2client
     #   python-binance
     #   python-dateutil
-sqlalchemy==1.4.46
+sqlalchemy==2.0.12
     # via
     #   -r requirements.in
     #   alembic
@@ -277,9 +277,11 @@ types-werkzeug==1.0.9
     # via types-flask
 typing-extensions==4.5.0
     # via
+    #   alembic
     #   mypy
     #   pydantic
     #   pyee
+    #   sqlalchemy
     #   sqlalchemy-stubs
 tzdata==2022.7
     # via pytz-deprecation-shim

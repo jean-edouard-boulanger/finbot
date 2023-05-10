@@ -6,8 +6,10 @@ from typing import Any, Literal, Optional, Protocol, Type, TypedDict, Union
 
 from sqlalchemy import desc
 from sqlalchemy.orm import joinedload
+from sqlalchemy.sql import text
 
 from finbot.core.db.session import Session
+from finbot.core.db.utils import row_to_dict
 from finbot.core.errors import InvalidUserInput, MissingUserData
 from finbot.core.schema import ValuationFrequency
 from finbot.model import (
@@ -229,7 +231,8 @@ def get_user_account_historical_valuation(
       order by q.period_start
     """
     return [
-        HistoricalValuationEntry(**row) for row in session.execute(query, query_params)
+        HistoricalValuationEntry(**row_to_dict(row))
+        for row in session.execute(text(query), query_params)
     ]
 
 
@@ -302,8 +305,8 @@ def get_historical_valuation_by_linked_account(
       order by q.period_start, q.linked_account_id
     """
     return [
-        LinkedAccountHistoricalValuationEntry(**row)
-        for row in session.execute(query, query_params)
+        LinkedAccountHistoricalValuationEntry(**row_to_dict(row))
+        for row in session.execute(text(query), query_params)
     ]
 
 
@@ -382,8 +385,8 @@ def get_historical_valuation_by_asset_type(
       order by q.period_start, q.asset_type
     """
     return [
-        AssetTypeHistoricalValuationEntry(**row)
-        for row in session.execute(query, query_params)
+        AssetTypeHistoricalValuationEntry(**row_to_dict(row))
+        for row in session.execute(text(query), query_params)
     ]
 
 
@@ -425,7 +428,7 @@ def get_linked_accounts_statuses(
     """
     query_params = {"user_account_id": user_account_id}
     results: dict[int, LinkedAccountStatus] = {}
-    for row in session.execute(query, query_params):
+    for row in session.execute(text(query), query_params):
         success = row["success"]
         raw_failure_details = row["failure_details"]
         results[row["linked_account_id"]] = {

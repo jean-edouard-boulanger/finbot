@@ -15,11 +15,12 @@ import requests
 from sqlalchemy import create_engine
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.sql import text
 
 from finbot.apps.workersrv.client import WorkersrvClient
 from finbot.core import environment
-from finbot.core.utils import float_or_none
 from finbot.core.logging import configure_logging
+from finbot.core.utils import float_or_none
 
 configure_logging()
 
@@ -71,7 +72,7 @@ class DbChecker(object):
 
     def __call__(self) -> bool:
         try:
-            self._session.execute("SELECT 1")
+            self._session.execute(text("SELECT 1"))
             return True
         except OperationalError:
             return False

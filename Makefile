@@ -16,6 +16,9 @@ alembic-downgrade:
 alembic-history:
 	alembic history
 
+pip-compile-all:
+	./tools/pip-compile-all
+
 docker-build-webapp:
 	cd webapp && docker build -t finbotapp/webapp:latest -f Dockerfile --pull .
 

@@ -2,8 +2,10 @@ from datetime import date
 from typing import Tuple
 
 import pandas as pd
+from sqlalchemy.sql import text
 
 from finbot.core.db.session import Session
+from finbot.core.db.utils import row_to_dict
 from finbot.model import ValuationChangeEntry
 
 
@@ -60,8 +62,8 @@ class ReportRepository(object):
             JOIN finbot_sub_accounts_items_snapshot_entries sais
               ON sais.sub_account_snapshot_entry_id = sase.id
         """
-        results = self.db_session.execute(query, {"snapshot_id": snapshot_id})
-        return pd.DataFrame([dict(row) for row in results])
+        results = self.db_session.execute(text(query), {"snapshot_id": snapshot_id})
+        return pd.DataFrame([row_to_dict(row) for row in results])
 
     def get_reference_history_entry_ids(
         self, baseline_id: int, user_account_id: int, valuation_date: date
@@ -143,10 +145,10 @@ class ReportRepository(object):
             ) AS c2y ON dummy.pk = c2y.pk
         """
         results = self.db_session.execute(
-            query,
+            text(query),
             {"user_account_id": user_account_id, "valuation_date": valuation_date},
         )
-        past_results = dict(next(results))
+        past_results = row_to_dict(next(results))
         past_results["baseline_id"] = baseline_id
         return past_results
 
@@ -178,8 +180,8 @@ class ReportRepository(object):
                 ON val_c2y.history_entry_id = :change_2y_id
              WHERE val.history_entry_id = :baseline_id
         """
-        row = next(self.db_session.execute(query, reference_ids))
-        return ValuationChangeEntry(**dict(row))
+        row = next(self.db_session.execute(text(query), reference_ids))
+        return ValuationChangeEntry(**row_to_dict(row))
 
     def get_linked_accounts_valuation_change(
         self, reference_ids: dict[str, int]
@@ -217,10 +219,10 @@ class ReportRepository(object):
                AND val_c2y.history_entry_id = :change_2y_id
              WHERE val.history_entry_id = :baseline_id
         """
-        rows = self.db_session.execute(query, reference_ids)
+        rows = self.db_session.execute(text(query), reference_ids)
         results = {}
         for row in rows:
-            row = dict(row)
+            row = row_to_dict(row)
             results[row["linked_account_id"]] = ValuationChangeEntry(
                 **({k: v for k, v in row.items() if k.startswith("change_")})
             )
@@ -270,10 +272,10 @@ class ReportRepository(object):
                AND val_c2y.history_entry_id = :change_2y_id
              WHERE val.history_entry_id = :baseline_id
         """
-        rows = self.db_session.execute(query, reference_ids)
+        rows = self.db_session.execute(text(query), reference_ids)
         results = {}
         for row in rows:
-            row = dict(row)
+            row = row_to_dict(row)
             path = (row["linked_account_id"], row["sub_account_id"])
             results[path] = ValuationChangeEntry(
                 **({k: v for k, v in row.items() if k.startswith("change_")})
@@ -340,10 +342,10 @@ class ReportRepository(object):
                AND val_c2y.history_entry_id = :change_1y_id
              WHERE val.history_entry_id = :baseline_id
         """
-        rows = self.db_session.execute(query, reference_ids)
+        rows = self.db_session.execute(text(query), reference_ids)
         results = {}
         for row in rows:
-            row = dict(row)
+            row = row_to_dict(row)
             path = (
                 row["linked_account_id"],
                 row["sub_account_id"],
