@@ -1,8 +1,10 @@
 from finbot.apps.histwsrv import schema as histwsrv_schema
-from finbot.clients.base import Base as ClientBase
+from finbot.core.web_service import WebServiceClient
 
 
-class HistoryClient(ClientBase):
+class HistwsrvClient(WebServiceClient):
+    service_name = "histwsrv"
+
     def __init__(self, server_endpoint: str):
         super().__init__(server_endpoint)
 

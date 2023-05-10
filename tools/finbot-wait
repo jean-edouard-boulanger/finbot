@@ -16,15 +16,17 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import sessionmaker
 
-from finbot.clients.worker import WorkerClient
+from finbot.apps.workersrv.client import WorkersrvClient
 from finbot.core import environment
+from finbot.core.utils import float_or_none
 from finbot.core.logging import configure_logging
 
 configure_logging()
 
 
+DEFAULT_TIMEOUT = timedelta(seconds=120)
 FINBOT_ENV = environment.get()
-
+WEB_SERVICES = ("appwsrv", "finbotwsrv", "histwsrv", "snapwsrv")
 
 class ExitCode(enum.Enum):
     Ok = 0
@@ -89,7 +91,7 @@ class RabbitMQChecker(object):
 
 
 class CeleryWorkerChecker(object):
-    def __init__(self, client: WorkerClient):
+    def __init__(self, client: WorkersrvClient):
         self._client = client
 
     def __call__(self) -> bool:
@@ -101,27 +103,19 @@ class CeleryWorkerChecker(object):
 
 
 def get_checker(dep_name: str):
-    if dep_name == "db":
-        logging.info(f"will wait on 'db': {FINBOT_ENV.database_url}")
+    if dep_name == "finbotdb":
+        logging.info(f"will wait on '{dep_name}': {FINBOT_ENV.database_url}")
         return DbChecker(FINBOT_ENV.database_url)
-    if dep_name == "rmq":
-        logging.info(f"will wait on 'rmq': {FINBOT_ENV.rmq_url}")
+    if dep_name == "finbotrmq":
+        logging.info(f"will wait on '{dep_name}': {FINBOT_ENV.rmq_url}")
         return RabbitMQChecker(FINBOT_ENV.rmq_url)
-    if dep_name == "worker":
-        logging.info("will wait on 'worker'")
-        return CeleryWorkerChecker(WorkerClient())
-    if dep_name == "api":
-        logging.info(f"will wait on 'api': {FINBOT_ENV.appwsrv_endpoint}")
-        return ClientChecker(FINBOT_ENV.appwsrv_endpoint)
-    if dep_name == "finbot":
-        logging.info(f"will wait on 'finbot': {FINBOT_ENV.finbotwsrv_endpoint}")
-        return ClientChecker(FINBOT_ENV.finbotwsrv_endpoint)
-    if dep_name == "hist":
-        logging.info(f"will wait on 'hist': {FINBOT_ENV.histwsrv_endpoint}")
-        return ClientChecker(FINBOT_ENV.histwsrv_endpoint)
-    if dep_name == "snap":
-        logging.info(f"will wait on 'snap': {FINBOT_ENV.snapwsrv_endpoint}")
-        return ClientChecker(FINBOT_ENV.snapwsrv_endpoint)
+    if dep_name == "workersrv":
+        logging.info(f"will wait on '{dep_name}'")
+        return CeleryWorkerChecker(WorkersrvClient())
+    if dep_name in WEB_SERVICES:
+        endpoint = environment.get_web_service_endpoint(dep_name)
+        logging.info(f"will wait on '{dep_name}': {endpoint}")
+        return ClientChecker(endpoint)
     if dep_name == "webapp":
         logging.info(f"will wait on 'webapp': {FINBOT_ENV.webapp_endpoint}")
         return WebsiteChecker(FINBOT_ENV.webapp_endpoint)
@@ -131,9 +125,16 @@ def get_checker(dep_name: str):
 def main_impl() -> ExitCode:
     raw_deps = os.environ.get("FINBOT_WAIT_DEPS")
     raw_timeout = os.environ.get("FINBOT_WAIT_TIMEOUT")
-    timeout = raw_timeout if not raw_timeout else timedelta(seconds=float(raw_timeout))
-    if not timeout:
-        logging.warning("no timeout specified")
+    if raw_timeout is None:
+        timeout = DEFAULT_TIMEOUT
+        logging.warning(f"no timeout specified, defaulting to {timeout.total_seconds()}s")
+    else:
+        timeout_seconds = float_or_none(raw_timeout)
+        if not timeout_seconds:
+            timeout = DEFAULT_TIMEOUT
+            logging.warning(f"invalid timeout specified ({raw_timeout}), defaulting to {timeout.total_seconds()}s")
+        else:
+            timeout = timedelta(seconds=timeout_seconds)
     start_time = datetime.now()
     if str(raw_deps).lower() in {"none", "0", "disabled"}:
         logging.warning(f"No dependencies to wait on (FINBOT_WAIT_DEPS={raw_deps})")

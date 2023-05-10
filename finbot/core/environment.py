@@ -25,7 +25,7 @@ class Environment:
 
     @property
     def desired_log_level(self) -> str:
-        return "DEBUG" if self.runtime == "development" else "DEBUG"
+        return "DEBUG" if self.runtime == "development" else "INFO"
 
 
 T = TypeVar("T")
@@ -71,6 +71,10 @@ def get_appwsrv_endpoint() -> str:
 
 def get_webapp_endpoint() -> str:
     return get_environment_value("FINBOT_WEBAPP_ENDPOINT")
+
+
+def get_web_service_endpoint(service_name: str) -> str:
+    return get_environment_value(f"FINBOT_{service_name.upper()}_ENDPOINT")
 
 
 def get_finbot_runtime() -> str:

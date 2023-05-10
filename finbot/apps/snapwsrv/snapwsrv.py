@@ -12,8 +12,8 @@ from sqlalchemy.orm import joinedload, scoped_session, sessionmaker
 
 from finbot import model
 from finbot.apps.finbotwsrv import schema as finbotwsrv_schema
+from finbot.apps.finbotwsrv.client import FinbotwsrvClient
 from finbot.apps.snapwsrv import schema
-from finbot.clients.finbot import FinbotClient
 from finbot.core import environment, fx_market
 from finbot.core import schema as core_schema
 from finbot.core import secure, utils
@@ -276,7 +276,7 @@ def dispatch_snapshot_entry(
             f" provider_id={snap_request.provider_id}"
         )
 
-        finbot_client = FinbotClient(FINBOT_ENV.finbotwsrv_endpoint)
+        finbot_client = FinbotwsrvClient.create()
         account_snapshot = finbot_client.get_financial_data(
             provider_id=snap_request.provider_id,
             credentials_data=snap_request.credentials_data,

@@ -1,9 +1,11 @@
 from finbot.apps.finbotwsrv import schema
-from finbot.clients.base import Base as ClientBase
 from finbot.core.schema import CredentialsPayloadType
+from finbot.core.web_service import WebServiceClient
 
 
-class FinbotClient(ClientBase):
+class FinbotwsrvClient(WebServiceClient):
+    service_name = "finbotwsrv"
+
     def __init__(self, server_endpoint: str):
         super().__init__(server_endpoint)
 

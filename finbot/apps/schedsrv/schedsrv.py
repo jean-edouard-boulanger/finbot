@@ -1,18 +1,19 @@
+import abc
 import argparse
 import logging
 import signal
 import sys
 import threading
 import traceback
-import abc
 from types import FrameType
-from typing import Iterable, Generator
+from typing import Generator, Iterable
 
 import schedule
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-from finbot.clients import ValuationRequest, WorkerClient
+from finbot.apps.workersrv import schema as workersrv_schema
+from finbot.apps.workersrv.client import WorkersrvClient
 from finbot.core import environment
 from finbot.core.db.session import Session
 from finbot.core.errors import FinbotError
@@ -35,13 +36,15 @@ class Worker(abc.ABC, threading.Thread):
         pass
 
 
-def parse_valuation_requests(raw_accounts_str: str) -> list[ValuationRequest]:
+def parse_valuation_requests(
+    raw_accounts_str: str,
+) -> list[workersrv_schema.ValuationRequest]:
     requests = []
     raw_accounts = raw_accounts_str.split(";")
     for raw_account in raw_accounts:
         if ":" in raw_account:
             account_id_str, linked_accounts_str = raw_account.split(":")
-            request = ValuationRequest(
+            request = workersrv_schema.ValuationRequest(
                 user_account_id=int(account_id_str),
                 linked_accounts=[
                     int(linked_account_id_str)
@@ -49,7 +52,9 @@ def parse_valuation_requests(raw_accounts_str: str) -> list[ValuationRequest]:
                 ],
             )
         else:
-            request = ValuationRequest(user_account_id=int(raw_account))
+            request = workersrv_schema.ValuationRequest(
+                user_account_id=int(raw_account)
+            )
         requests.append(request)
     return requests
 
@@ -68,10 +73,10 @@ def iter_user_accounts() -> Generator[UserAccount, None, None]:
         yield user_account
 
 
-def run_one_shot(requests: Iterable[ValuationRequest]) -> None:
+def run_one_shot(requests: Iterable[workersrv_schema.ValuationRequest]) -> None:
     for request in requests:
         try:
-            worker_client = WorkerClient()
+            worker_client = WorkersrvClient.create()
             logging.info(f"handling valuation request {request}")
             valuation = worker_client.get_valuation(request)
             logging.info(
@@ -103,9 +108,9 @@ class Scheduler(Worker):
             logging.info(
                 f"[scheduler thread] dispatching valuation for user_account_id={user_account_id}"
             )
-            worker_client = WorkerClient()
+            worker_client = WorkersrvClient.create()
             worker_client.trigger_valuation(
-                ValuationRequest(user_account_id=user_account_id)
+                workersrv_schema.ValuationRequest(user_account_id=user_account_id)
             )
 
     def run(self) -> None:

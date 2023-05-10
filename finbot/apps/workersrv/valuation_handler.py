@@ -1,7 +1,8 @@
 import logging
 
+from finbot.apps.histwsrv.client import HistwsrvClient
+from finbot.apps.snapwsrv.client import SnapwsrvClient
 from finbot.apps.workersrv.schema import ValuationRequest, ValuationResponse
-from finbot.clients import HistoryClient, SnapClient
 from finbot.core.db.session import Session
 from finbot.core.notifier import (
     CompositeNotifier,
@@ -29,7 +30,10 @@ def _configure_notifier(user_account: UserAccount) -> Notifier:
 
 class ValuationHandler(object):
     def __init__(
-        self, db_session: Session, snap_client: SnapClient, hist_client: HistoryClient
+        self,
+        db_session: Session,
+        snap_client: SnapwsrvClient,
+        hist_client: HistwsrvClient,
     ):
         self.db_session = db_session
         self.snap_client = snap_client

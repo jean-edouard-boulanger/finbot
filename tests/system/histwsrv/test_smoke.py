@@ -1,12 +1,11 @@
-from finbot.core.environment import get_histwsrv_endpoint
-from finbot.clients import HistoryClient
+from finbot.apps.histwsrv.client import HistwsrvClient
 import pytest
 
 
 @pytest.fixture
-def api() -> HistoryClient:
-    return HistoryClient(get_histwsrv_endpoint())
+def api() -> HistwsrvClient:
+    return HistwsrvClient.create()
 
 
-def test_healthy(api: HistoryClient):
+def test_healthy(api: HistwsrvClient):
     assert api.healthy

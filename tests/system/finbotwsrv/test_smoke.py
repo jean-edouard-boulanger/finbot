@@ -1,16 +1,15 @@
-from finbot.core.environment import get_finbotwsrv_endpoint
-from finbot.clients.finbot import FinbotClient
+from finbot.apps.finbotwsrv.client import FinbotwsrvClient
 from finbot.apps.finbotwsrv import schema as finbotwsrv_schema
 from finbot.providers import schema as providers_schema
 import pytest
 
 
 @pytest.fixture
-def api() -> FinbotClient:
-    return FinbotClient(get_finbotwsrv_endpoint())
+def api() -> FinbotwsrvClient:
+    return FinbotwsrvClient.create()
 
 
-def test_healthy(api: FinbotClient):
+def test_healthy(api: FinbotwsrvClient):
     assert api.healthy
 
 
@@ -39,7 +38,7 @@ def check_balances_financial_data(results: list[providers_schema.BalanceEntry]):
     assert balances_entry.balance == 1000.0
 
 
-def test_get_financial_data(api: FinbotClient):
+def test_get_financial_data(api: FinbotwsrvClient):
     response = api.get_financial_data(
         provider_id="dummy_uk",
         credentials_data={},

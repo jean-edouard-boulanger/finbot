@@ -10,6 +10,7 @@ from finbot.apps.appwsrv import schema as appwsrv_schema
 from finbot.apps.appwsrv import serializer
 from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
 from finbot.apps.appwsrv.db import db_session
+from finbot.apps.finbotwsrv.client import FinbotwsrvClient
 from finbot.core import environment, secure
 from finbot.core.errors import InvalidOperation, InvalidUserInput
 from finbot.core.utils import unwrap_optional
@@ -80,7 +81,7 @@ def link_new_account(
             f"account_id={user_account_id} and provider_id={provider_id}"
         )
         appwsrv_core.validate_credentials(
-            finbot_client=appwsrv_core.get_finbot_client(),
+            finbot_client=FinbotwsrvClient.create(),
             plaid_settings=user_account.plaid_settings,
             provider_id=provider_id,
             credentials=credentials,
@@ -268,7 +269,7 @@ def update_linked_account_credentials(
 
     if do_validate:
         appwsrv_core.validate_credentials(
-            finbot_client=appwsrv_core.get_finbot_client(),
+            finbot_client=FinbotwsrvClient.create(),
             plaid_settings=plaid_settings,
             provider_id=linked_account.provider_id,
             credentials=credentials,

@@ -1,12 +1,11 @@
-from finbot.core.environment import get_snapwsrv_endpoint
-from finbot.clients import SnapClient
+from finbot.apps.snapwsrv.client import SnapwsrvClient
 import pytest
 
 
 @pytest.fixture
-def api() -> SnapClient:
-    return SnapClient(get_snapwsrv_endpoint())
+def api() -> SnapwsrvClient:
+    return SnapwsrvClient.create()
 
 
-def test_healthy(api: SnapClient):
+def test_healthy(api: SnapwsrvClient):
     assert api.healthy

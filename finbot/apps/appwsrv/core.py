@@ -3,34 +3,29 @@ from typing import Any, Optional
 from plaid import Client as PlaidClient
 
 from finbot.apps.appwsrv.db import db_session
-from finbot.clients import FinbotClient, ValuationRequest, WorkerClient
-from finbot.core import environment
+from finbot.apps.finbotwsrv.client import FinbotwsrvClient
+from finbot.apps.workersrv import schema as workersrv_schema
+from finbot.apps.workersrv.client import WorkersrvClient
 from finbot.core.errors import InvalidUserInput
 from finbot.core.schema import CredentialsPayloadType
 from finbot.model import UserAccountPlaidSettings, repository
 from finbot.providers.plaid_us import pack_credentials as pack_plaid_credentials
 
 
-def get_finbot_client() -> FinbotClient:
-    return FinbotClient(environment.get_finbotwsrv_endpoint())
-
-
-def get_worker_client() -> WorkerClient:
-    return WorkerClient()
-
-
 def trigger_valuation(
     user_account_id: int, linked_accounts: list[int] | None = None
 ) -> None:
     account = repository.get_user_account(db_session, user_account_id)
-    worker_client = get_worker_client()
+    worker_client = WorkersrvClient.create()
     worker_client.trigger_valuation(
-        ValuationRequest(user_account_id=account.id, linked_accounts=linked_accounts)
+        workersrv_schema.ValuationRequest(
+            user_account_id=account.id, linked_accounts=linked_accounts
+        )
     )
 
 
 def validate_credentials(
-    finbot_client: FinbotClient,
+    finbot_client: FinbotwsrvClient,
     plaid_settings: Optional[UserAccountPlaidSettings],
     provider_id: str,
     credentials: CredentialsPayloadType,

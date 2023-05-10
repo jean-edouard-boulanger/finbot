@@ -6,8 +6,12 @@ from flask import Blueprint
 from finbot.apps.appwsrv import schema as appwsrv_schema
 from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
 from finbot.apps.appwsrv.db import db_session
-from finbot.apps.appwsrv.reports.earnings.report import generate as generate_earnings_report
-from finbot.apps.appwsrv.reports.holdings.report import generate as generate_holdings_report
+from finbot.apps.appwsrv.reports.earnings.report import (
+    generate as generate_earnings_report,
+)
+from finbot.apps.appwsrv.reports.holdings.report import (
+    generate as generate_holdings_report,
+)
 from finbot.core.errors import MissingUserData
 from finbot.core.utils import now_utc
 from finbot.core.web_service import (

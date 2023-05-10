@@ -1,10 +1,12 @@
 from typing import Optional
 
 from finbot.apps.snapwsrv import schema as snapwsrv_schema
-from finbot.clients.base import Base as ClientBase
+from finbot.core.web_service import WebServiceClient
 
 
-class SnapClient(ClientBase):
+class SnapwsrvClient(WebServiceClient):
+    service_name = "snapwsrv"
+
     def __init__(self, server_endpoint: str):
         super().__init__(server_endpoint)
 

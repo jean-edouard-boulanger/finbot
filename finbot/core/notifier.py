@@ -7,7 +7,7 @@ from twilio.rest import Client as TwilioClient
 
 class Notifier(Protocol):
     def notify_valuation(
-        self, valuation: float, change_1day: float, currency: str
+        self, valuation: float, change_1day: float | None, currency: str
     ) -> None:
         ...
 
@@ -39,17 +39,15 @@ class TwilioNotifier(Notifier):
         )
 
     def notify_valuation(
-        self, valuation: float, change_1day: float, currency: str
+        self, valuation: float, change_1day: float | None, currency: str
     ) -> None:
+        message_body = f"💰 Finbot valuation: {valuation:,.1f} {currency}\n"
+        if change_1day is not None:
+            message_body += f"1 day change: {change_1day:,.1f} {currency} {'⬆️' if change_1day >= 0 else '⬇️'}\n"
         self._client.messages.create(
             to=self._recipient_phone_number,
             from_=self._settings.phone_number,
-            body=dedent(
-                f"""\
-                💰 Finbot valuation: {valuation:,.1f} {currency}
-                1 day change: {change_1day:,.1f} {currency} {'⬆️' if change_1day >= 0 else '⬇️'}
-            """
-            ).strip(),
+            body=message_body,
         )
 
     def notify_twilio_settings_updated(self) -> None:
@@ -69,7 +67,7 @@ class CompositeNotifier(Notifier):
         self.notifiers = notifiers
 
     def notify_valuation(
-        self, valuation: float, change_1day: float, currency: str
+        self, valuation: float, change_1day: float | None, currency: str
     ) -> None:
         for notifier in self.notifiers:
             notifier.notify_valuation(valuation, change_1day, currency)

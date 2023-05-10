@@ -3,8 +3,8 @@ from typing import Any, Literal, TypeAlias
 
 from pydantic import Extra, Field, SecretStr
 
-from finbot.apps.appwsrv.reports.holdings import schema as holdings_schema
 from finbot.apps.appwsrv.reports.earnings import schema as earnings_schema
+from finbot.apps.appwsrv.reports.holdings import schema as holdings_schema
 from finbot.core import schema as core_schema
 from finbot.core.schema import BaseModel
 
