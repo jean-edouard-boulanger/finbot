@@ -1,19 +1,157 @@
+import dataclasses
+import json
+from collections import defaultdict
 from datetime import date
-from typing import Tuple
+from decimal import Decimal
+from typing import Any, cast
 
-import pandas as pd
 from sqlalchemy.sql import text
 
+from finbot import model
 from finbot.core.db.session import Session
 from finbot.core.db.utils import row_to_dict
-from finbot.model import ValuationChangeEntry
+
+
+@dataclasses.dataclass(frozen=True, eq=True)
+class LinkedAccountKey:
+    linked_account_id: int
+
+
+@dataclasses.dataclass(frozen=True, eq=True)
+class SubAccountKey:
+    linked_account_id: int
+    sub_account_id: str
+
+
+@dataclasses.dataclass(frozen=True, eq=True)
+class SubAccountItemKey:
+    linked_account_id: int
+    sub_account_id: str
+    item_type: str
+    name: str
+
+
+@dataclasses.dataclass(frozen=True, eq=True)
+class LinkedAccountValuationDescriptor:
+    linked_account_id: int
+    snapshot_id: int
+
+
+@dataclasses.dataclass(frozen=True, eq=True)
+class SubAccountValuationDescriptor:
+    linked_account_id: int
+    sub_account_id: str
+    sub_account_ccy: str
+    sub_account_description: str
+    sub_account_type: str
+
+
+@dataclasses.dataclass
+class SubAccountValuationAgg:
+    value_sub_account_ccy: Decimal = dataclasses.field(default_factory=Decimal)
+    value_snapshot_ccy: Decimal = dataclasses.field(default_factory=Decimal)
+
+    def agg(self, value_sub_account_ccy: Decimal, value_snapshot_ccy: Decimal) -> None:
+        self.value_sub_account_ccy += value_sub_account_ccy
+        self.value_snapshot_ccy += value_snapshot_ccy
+
+
+@dataclasses.dataclass(frozen=True)
+class ConsistencySnapshotEntry:
+    snapshot_id: int
+    linked_account_snapshot_entry_id: int
+    linked_account_id: int
+    sub_account_id: str
+    sub_account_ccy: str
+    sub_account_description: str
+    sub_account_type: str
+    sub_account_snapshot_entry_id: int
+    sub_account_item_snapshot_entry_id: int
+    item_name: str
+    item_type: model.SubAccountItemType
+    item_subtype: str
+    item_units: Decimal
+    value_snapshot_ccy: Decimal
+    value_sub_account_ccy: Decimal
+    item_provider_specific_data: dict[str, Any]
+
+    @property
+    def linked_account_valuation_descriptor(self) -> LinkedAccountValuationDescriptor:
+        return LinkedAccountValuationDescriptor(
+            linked_account_id=self.linked_account_id, snapshot_id=self.snapshot_id
+        )
+
+    @property
+    def sub_account_valuation_descriptor(self) -> SubAccountValuationDescriptor:
+        return SubAccountValuationDescriptor(
+            linked_account_id=self.linked_account_id,
+            sub_account_id=self.sub_account_id,
+            sub_account_ccy=self.sub_account_ccy,
+            sub_account_description=self.sub_account_description,
+            sub_account_type=self.sub_account_type,
+        )
+
+
+@dataclasses.dataclass(frozen=True)
+class ConsistentSnapshot:
+    snapshot_data: list[ConsistencySnapshotEntry]
+
+    def __len__(self) -> int:
+        return len(self.snapshot_data)
+
+    def get_user_account_valuation(self) -> Decimal:
+        return Decimal(sum(entry.value_snapshot_ccy for entry in self.snapshot_data))
+
+    def get_user_account_liabilities(self) -> Decimal:
+        return Decimal(
+            sum(
+                entry.value_snapshot_ccy
+                for entry in self.snapshot_data
+                if entry.value_snapshot_ccy < 0
+            )
+        )
+
+    def get_linked_accounts_valuation(
+        self,
+    ) -> dict[LinkedAccountValuationDescriptor, Decimal]:
+        result: dict[LinkedAccountValuationDescriptor, Decimal] = defaultdict(Decimal)
+        for entry in self.snapshot_data:
+            result[
+                entry.linked_account_valuation_descriptor
+            ] += entry.value_snapshot_ccy
+        return result
+
+    def get_sub_accounts_valuation(
+        self,
+    ) -> dict[SubAccountValuationDescriptor, SubAccountValuationAgg]:
+        result: dict[
+            SubAccountValuationDescriptor, SubAccountValuationAgg
+        ] = defaultdict(SubAccountValuationAgg)
+        for entry in self.snapshot_data:
+            result[entry.sub_account_valuation_descriptor].agg(
+                value_sub_account_ccy=entry.value_sub_account_ccy,
+                value_snapshot_ccy=entry.value_snapshot_ccy,
+            )
+        return result
+
+
+@dataclasses.dataclass(frozen=True)
+class ReferenceHistoryEntryIds:
+    baseline_id: int
+    change_1h_id: int
+    change_1d_id: int
+    change_1w_id: int
+    change_1m_id: int
+    change_6m_id: int
+    change_1y_id: int
+    change_2y_id: int
 
 
 class ReportRepository(object):
     def __init__(self, db_session: Session):
-        self.db_session = db_session
+        self._db_session = db_session
 
-    def get_consistent_snapshot_data(self, snapshot_id: int) -> pd.DataFrame:
+    def get_consistent_snapshot_data(self, snapshot_id: int) -> ConsistentSnapshot:
         query = """
             SELECT slas.snapshot_id AS snapshot_id,
                    sase.linked_account_snapshot_entry_id AS linked_account_snapshot_entry_id,
@@ -62,12 +200,16 @@ class ReportRepository(object):
             JOIN finbot_sub_accounts_items_snapshot_entries sais
               ON sais.sub_account_snapshot_entry_id = sase.id
         """
-        results = self.db_session.execute(text(query), {"snapshot_id": snapshot_id})
-        return pd.DataFrame([row_to_dict(row) for row in results])
+        results = self._db_session.execute(text(query), {"snapshot_id": snapshot_id})
+        return ConsistentSnapshot(
+            snapshot_data=[
+                _parse_consistent_snapshot_data_row(row_to_dict(row)) for row in results
+            ]
+        )
 
     def get_reference_history_entry_ids(
         self, baseline_id: int, user_account_id: int, valuation_date: date
-    ) -> dict:
+    ) -> ReferenceHistoryEntryIds:
         """Return user account history entry identifiers for different 'reference'
         dates in the past (1 day, 1 month, 6 months, 1 year, 2 years)
         """
@@ -144,17 +286,17 @@ class ReportRepository(object):
                 LIMIT 1
             ) AS c2y ON dummy.pk = c2y.pk
         """
-        results = self.db_session.execute(
+        results = self._db_session.execute(
             text(query),
             {"user_account_id": user_account_id, "valuation_date": valuation_date},
         )
-        past_results = row_to_dict(next(results))
-        past_results["baseline_id"] = baseline_id
-        return past_results
+        raw_reference_ids = row_to_dict(next(results))
+        raw_reference_ids["baseline_id"] = baseline_id
+        return ReferenceHistoryEntryIds(**raw_reference_ids)
 
     def get_user_account_valuation_change(
-        self, reference_ids: dict[str, int]
-    ) -> ValuationChangeEntry:
+        self, reference_ids: ReferenceHistoryEntryIds
+    ) -> model.ValuationChangeEntry:
         query = """
             SELECT val.valuation - val_c1h.valuation AS change_1hour,
                    val.valuation - val_c1d.valuation AS change_1day,
@@ -180,12 +322,14 @@ class ReportRepository(object):
                 ON val_c2y.history_entry_id = :change_2y_id
              WHERE val.history_entry_id = :baseline_id
         """
-        row = next(self.db_session.execute(text(query), reference_ids))
-        return ValuationChangeEntry(**row_to_dict(row))
+        row = next(
+            self._db_session.execute(text(query), dataclasses.asdict(reference_ids))
+        )
+        return model.ValuationChangeEntry(**row_to_dict(row))
 
     def get_linked_accounts_valuation_change(
-        self, reference_ids: dict[str, int]
-    ) -> dict[int, ValuationChangeEntry]:
+        self, reference_ids: ReferenceHistoryEntryIds
+    ) -> dict[LinkedAccountKey, model.ValuationChangeEntry]:
         query = """
             SELECT val.linked_account_id AS linked_account_id,
                    val.valuation - val_c1h.valuation AS change_1hour,
@@ -219,18 +363,19 @@ class ReportRepository(object):
                AND val_c2y.history_entry_id = :change_2y_id
              WHERE val.history_entry_id = :baseline_id
         """
-        rows = self.db_session.execute(text(query), reference_ids)
-        results = {}
+        rows = self._db_session.execute(text(query), dataclasses.asdict(reference_ids))
+        results: dict[LinkedAccountKey, model.ValuationChangeEntry] = {}
         for row in rows:
             row = row_to_dict(row)
-            results[row["linked_account_id"]] = ValuationChangeEntry(
+            descriptor = LinkedAccountKey(linked_account_id=row["linked_account_id"])
+            results[descriptor] = model.ValuationChangeEntry(
                 **({k: v for k, v in row.items() if k.startswith("change_")})
             )
         return results
 
     def get_sub_accounts_valuation_change(
-        self, reference_ids: dict[str, int]
-    ) -> dict[Tuple[int, str], ValuationChangeEntry]:
+        self, reference_ids: ReferenceHistoryEntryIds
+    ) -> dict[SubAccountKey, model.ValuationChangeEntry]:
         query = """
             SELECT val.linked_account_id AS linked_account_id,
                    val.sub_account_id AS sub_account_id,
@@ -272,19 +417,22 @@ class ReportRepository(object):
                AND val_c2y.history_entry_id = :change_2y_id
              WHERE val.history_entry_id = :baseline_id
         """
-        rows = self.db_session.execute(text(query), reference_ids)
-        results = {}
+        rows = self._db_session.execute(text(query), dataclasses.asdict(reference_ids))
+        results: dict[SubAccountKey, model.ValuationChangeEntry] = {}
         for row in rows:
             row = row_to_dict(row)
-            path = (row["linked_account_id"], row["sub_account_id"])
-            results[path] = ValuationChangeEntry(
+            descriptor = SubAccountKey(
+                linked_account_id=row["linked_account_id"],
+                sub_account_id=row["sub_account_id"],
+            )
+            results[descriptor] = model.ValuationChangeEntry(
                 **({k: v for k, v in row.items() if k.startswith("change_")})
             )
         return results
 
     def get_sub_accounts_items_valuation_change(
-        self, reference_ids
-    ) -> dict[Tuple[int, str, str, str], ValuationChangeEntry]:
+        self, reference_ids: ReferenceHistoryEntryIds
+    ) -> dict[SubAccountItemKey, model.ValuationChangeEntry]:
         query = """
             SELECT val.linked_account_id AS linked_account_id,
                    val.sub_account_id AS sub_account_id,
@@ -342,17 +490,33 @@ class ReportRepository(object):
                AND val_c2y.history_entry_id = :change_1y_id
              WHERE val.history_entry_id = :baseline_id
         """
-        rows = self.db_session.execute(text(query), reference_ids)
-        results = {}
+        rows = self._db_session.execute(text(query), dataclasses.asdict(reference_ids))
+        results: dict[SubAccountItemKey, model.ValuationChangeEntry] = {}
         for row in rows:
             row = row_to_dict(row)
-            path = (
-                row["linked_account_id"],
-                row["sub_account_id"],
-                row["item_type"],
-                row["item_name"],
+            descriptor = SubAccountItemKey(
+                linked_account_id=row["linked_account_id"],
+                sub_account_id=row["sub_account_id"],
+                item_type=row["item_type"],
+                name=row["item_name"],
             )
-            results[path] = ValuationChangeEntry(
+            results[descriptor] = model.ValuationChangeEntry(
                 **({k: v for k, v in row.items() if k.startswith("change_")})
             )
         return results
+
+
+def _parse_provider_specific_data(raw_data: str | None) -> dict[str, Any] | None:
+    if raw_data is None:
+        return None
+    return cast(dict[str, Any], json.loads(raw_data))
+
+
+def _parse_consistent_snapshot_data_row(
+    row_data: dict[str, Any]
+) -> ConsistencySnapshotEntry:
+    row_data["item_provider_specific_data"] = _parse_provider_specific_data(
+        row_data["item_provider_specific_data"]
+    )
+    row_data["item_type"] = model.SubAccountItemType[row_data["item_type"]]
+    return ConsistencySnapshotEntry(**row_data)

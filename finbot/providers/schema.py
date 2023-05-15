@@ -3,6 +3,7 @@ from typing import Any, TypeAlias
 from pydantic import BaseModel
 
 CurrencyCode: TypeAlias = str
+ProviderSpecificPayload: TypeAlias = dict[str, str | int | float | bool]
 
 
 class Account(BaseModel):
@@ -42,7 +43,7 @@ class Liability(BaseModel):
     name: str
     type: str
     value: float
-    provider_specific: dict[str, Any] | None = None
+    provider_specific: ProviderSpecificPayload | None = None
 
 
 class LiabilitiesEntry(BaseModel):

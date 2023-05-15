@@ -19,10 +19,9 @@ attrs==22.2.0
     #   aiohttp
     #   jsonschema
     #   price-parser
-    #   pytest
 billiard==3.6.4.0
     # via celery
-black==23.1.0
+black==23.3.0
     # via -r requirements-dev.in
 blinker==1.6.2
     # via flask
@@ -126,7 +125,7 @@ multidict==6.0.4
     # via
     #   aiohttp
     #   yarl
-mypy==1.0.1
+mypy==1.2.0
     # via
     #   -r requirements-dev.in
     #   sqlalchemy-stubs
@@ -202,7 +201,7 @@ pyparsing==3.0.9
     # via httplib2
 pyrsistent==0.19.3
     # via jsonschema
-pytest==7.2.2
+pytest==7.3.1
     # via -r requirements-dev.in
 python-binance==1.0.17
     # via -r requirements.in
@@ -267,9 +266,9 @@ types-jinja2==2.11.9
     # via types-flask
 types-markupsafe==1.1.10
     # via types-jinja2
-types-pytz==2022.7.1.0
+types-pytz==2023.3.0.0
     # via -r requirements-dev.in
-types-requests==2.28.11.15
+types-requests==2.30.0.0
     # via -r requirements-dev.in
 types-urllib3==1.26.25.8
     # via types-requests

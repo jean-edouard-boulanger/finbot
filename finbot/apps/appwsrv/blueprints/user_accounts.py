@@ -6,8 +6,9 @@ from sqlalchemy.exc import IntegrityError
 from finbot.apps.appwsrv import schema as appwsrv_schema
 from finbot.apps.appwsrv import serializer
 from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
+from finbot.apps.appwsrv.core import is_active_plaid_linked_account
 from finbot.apps.appwsrv.db import db_session
-from finbot.core.errors import InvalidUserInput
+from finbot.core.errors import InvalidOperation, InvalidUserInput
 from finbot.core.notifier import TwilioNotifier, TwilioSettings
 from finbot.core.utils import unwrap_optional
 from finbot.core.web_service import jwt_required, service_endpoint, validate
@@ -194,6 +195,13 @@ def update_user_account_plaid_settings(
 def delete_user_account_plaid_settings(
     user_account_id: int,
 ) -> appwsrv_schema.DeleteUserAccountPlaidSettings:
+    linked_accounts = repository.find_linked_accounts(db_session, user_account_id)
+    for linked_account in linked_accounts:
+        if is_active_plaid_linked_account(linked_account):
+            raise InvalidOperation(
+                "Plaid is currently in use by one or more linked accounts,"
+                " please unlink or freeze these accounts first"
+            )
     settings = repository.get_user_account_plaid_settings(db_session, user_account_id)
     if settings:
         db_session.delete(settings)

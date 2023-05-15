@@ -429,13 +429,14 @@ def get_linked_accounts_statuses(
     query_params = {"user_account_id": user_account_id}
     results: dict[int, LinkedAccountStatus] = {}
     for row in session.execute(text(query), query_params):
-        success = row["success"]
-        raw_failure_details = row["failure_details"]
-        results[row["linked_account_id"]] = {
+        data = row_to_dict(row)
+        success = data["success"]
+        raw_failure_details = data["failure_details"]
+        results[data["linked_account_id"]] = {
             "status": "stable" if success else "unstable",
             "errors": json.loads(raw_failure_details) if raw_failure_details else None,
-            "last_snapshot_id": row["snapshot_id"],
-            "last_snapshot_time": row["snapshot_time"],
+            "last_snapshot_id": data["snapshot_id"],
+            "last_snapshot_time": data["snapshot_time"],
         }
     return results
 

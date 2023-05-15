@@ -1,34 +1,66 @@
+import logging
 from typing import Any, Optional
 
 from plaid import Client as PlaidClient
 
+from finbot import model
 from finbot.apps.appwsrv.db import db_session
 from finbot.apps.finbotwsrv.client import FinbotwsrvClient
 from finbot.apps.workersrv import schema as workersrv_schema
 from finbot.apps.workersrv.client import WorkersrvClient
+from finbot.core import schema as core_schema
 from finbot.core.errors import InvalidUserInput
-from finbot.core.schema import CredentialsPayloadType
-from finbot.model import UserAccountPlaidSettings, repository
+from finbot.model import repository
 from finbot.providers.plaid_us import pack_credentials as pack_plaid_credentials
+
+logger = logging.getLogger(__name__)
+
+PLAID_PROVIDER_ID = "plaid_us"
+
+
+def is_plaid_linked_account(linked_account: model.LinkedAccount) -> bool:
+    return linked_account.provider_id == PLAID_PROVIDER_ID
+
+
+def is_active_plaid_linked_account(linked_account: model.LinkedAccount) -> bool:
+    return (
+        is_plaid_linked_account(linked_account)
+        and not linked_account.frozen
+        and not linked_account.deleted
+    )
 
 
 def trigger_valuation(
-    user_account_id: int, linked_accounts: list[int] | None = None
+    user_account_id: int, linked_account_ids: list[int] | None = None
 ) -> None:
+    logger.info(
+        f"triggering valuation for account_id={user_account_id} linked_account_ids={linked_account_ids}"
+    )
     account = repository.get_user_account(db_session, user_account_id)
     worker_client = WorkersrvClient.create()
     worker_client.trigger_valuation(
         workersrv_schema.ValuationRequest(
-            user_account_id=account.id, linked_accounts=linked_accounts
+            user_account_id=account.id, linked_accounts=linked_account_ids
         )
     )
 
 
+def try_trigger_valuation(
+    user_account_id: int, linked_account_ids: list[int] | None = None
+) -> None:
+    try:
+        trigger_valuation(user_account_id, linked_account_ids)
+    except Exception as e:
+        logger.warning(
+            f"failed to trigger valuation for account_id={user_account_id} linked_account_ids={linked_account_ids}: {e}"
+        )
+
+
 def validate_credentials(
     finbot_client: FinbotwsrvClient,
-    plaid_settings: Optional[UserAccountPlaidSettings],
+    plaid_settings: Optional[model.UserAccountPlaidSettings],
     provider_id: str,
-    credentials: CredentialsPayloadType,
+    credentials: core_schema.CredentialsPayloadType,
 ) -> None:
     if provider_id == "plaid_us":
         assert plaid_settings is not None
@@ -43,8 +75,9 @@ def validate_credentials(
 
 
 def make_plaid_credentials(
-    raw_credentials: CredentialsPayloadType, plaid_settings: UserAccountPlaidSettings
-) -> CredentialsPayloadType:
+    raw_credentials: core_schema.CredentialsPayloadType,
+    plaid_settings: model.UserAccountPlaidSettings,
+) -> core_schema.CredentialsPayloadType:
     plaid_client = PlaidClient(
         client_id=plaid_settings.client_id,
         secret=plaid_settings.secret_key,
@@ -56,7 +89,8 @@ def make_plaid_credentials(
 
 
 def create_plaid_link_token(
-    raw_credentials: CredentialsPayloadType, plaid_settings: UserAccountPlaidSettings
+    raw_credentials: core_schema.CredentialsPayloadType,
+    plaid_settings: model.UserAccountPlaidSettings,
 ) -> Any:
     plaid_client = PlaidClient(
         client_id=plaid_settings.client_id,
@@ -75,5 +109,7 @@ def create_plaid_link_token(
     return link_token
 
 
-def get_plaid_access_token(raw_credentials: CredentialsPayloadType) -> dict[str, Any]:
+def get_plaid_access_token(
+    raw_credentials: core_schema.CredentialsPayloadType,
+) -> dict[str, Any]:
     return {"access_token": raw_credentials["access_token"]}

@@ -65,7 +65,7 @@ def link_new_account(
     provider_id = body.provider_id
     provider = repository.get_provider(db_session, provider_id)
 
-    is_plaid = provider.id == "plaid_us"
+    is_plaid = provider.id == appwsrv_core.PLAID_PROVIDER_ID
     if is_plaid and not user_account.plaid_settings:
         raise InvalidUserInput("user account is not setup for Plaid")
 
@@ -116,20 +116,9 @@ def link_new_account(
             )
 
     if do_persist:
-        try:
-            linked_account_id = new_linked_account.id
-            logging.info(
-                f"triggering partial valuation for"
-                f" account_id={user_account.id}"
-                f" linked_account_id={linked_account_id}"
-            )
-            appwsrv_core.trigger_valuation(
-                user_account_id, linked_accounts=[linked_account_id]
-            )
-        except Exception as e:
-            logging.warning(
-                f"failed to trigger valuation for account_id={user_account.id}: {e}"
-            )
+        appwsrv_core.try_trigger_valuation(
+            user_account_id=user_account_id, linked_account_ids=[new_linked_account.id]
+        )
 
     return appwsrv_schema.LinkAccountResponse()
 
@@ -145,7 +134,7 @@ def get_linked_account(
         db_session, user_account_id, linked_account_id
     )
     credentials = None
-    if linked_account.provider.id == "plaid_us":
+    if appwsrv_core.is_plaid_linked_account(linked_account):
         plaid_settings = repository.get_user_account_plaid_settings(
             db_session, user_account_id
         )
@@ -187,14 +176,7 @@ def delete_linked_account(
         )
         linked_account.deleted = True
 
-    try:
-        logging.info(f"triggering full valuation for account_id={user_account_id}")
-        appwsrv_core.trigger_valuation(user_account_id)
-    except Exception as e:
-        logging.warning(
-            f"failed to trigger valuation for account_id={user_account_id}: {e}"
-        )
-
+    appwsrv_core.try_trigger_valuation(user_account_id=user_account_id)
     return appwsrv_schema.DeleteLinkedAccountResponse()
 
 
@@ -254,12 +236,12 @@ def update_linked_account_credentials(
         db_session, user_account_id
     )
 
-    is_plaid = linked_account.provider_id == "plaid_us"
+    is_plaid = appwsrv_core.is_plaid_linked_account(linked_account)
     if is_plaid and not plaid_settings:
         raise InvalidUserInput("user account is not setup for Plaid")
 
     credentials = body.credentials
-    if linked_account.provider.id == "plaid_us":
+    if is_plaid:
         credentials = json.loads(
             secure.fernet_decrypt(
                 unwrap_optional(linked_account.encrypted_credentials).encode(),
@@ -280,5 +262,10 @@ def update_linked_account_credentials(
             linked_account.encrypted_credentials = secure.fernet_encrypt(
                 json.dumps(credentials).encode(), environment.get_secret_key().encode()
             ).decode()
+
+    if do_persist:
+        appwsrv_core.try_trigger_valuation(
+            user_account_id=user_account_id, linked_account_ids=[linked_account.id]
+        )
 
     return appwsrv_schema.UpdateLinkedAccountCredentialsResponse()
