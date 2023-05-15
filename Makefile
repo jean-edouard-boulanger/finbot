@@ -43,7 +43,7 @@ trigger-valuation:
 			--accounts ${accounts}
 
 run-system-tests:
-	docker-compose run --rm operator env FINBOT_WAIT_DEPS=api,finbot,hist,snap ./tools/finbot-wait;
+	docker-compose run --rm operator env FINBOT_WAIT_DEPS=appwsrv,finbotwsrv,histwsrv,snapwsrv ./tools/finbot-wait;
 	docker-compose run --rm operator python3.11 -m pytest tests/system/
 
 finbotdb-build:
