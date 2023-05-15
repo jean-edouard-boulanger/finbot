@@ -44,7 +44,7 @@ class UserAccount(Base):
     encrypted_password = Column(Text, nullable=False)
     full_name = Column(String(128), nullable=False)
     mobile_phone_number = Column(String(128))
-    created_at = Column(DateTimeTz, server_default=func.now())
+    created_at = Column(DateTimeTz, server_default=func.now(), nullable=False)
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
     linked_accounts = relationship(
@@ -77,7 +77,7 @@ class UserAccountSettings(Base):
     )
     valuation_ccy = Column(String(3), nullable=False)
     twilio_settings = Column(JSONEncoded)
-    created_at = Column(DateTimeTz, server_default=func.now())
+    created_at = Column(DateTimeTz, server_default=func.now(), nullable=False)
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
     user_account = relationship(UserAccount, uselist=False, back_populates="settings")
@@ -99,7 +99,7 @@ class UserAccountPlaidSettings(Base):
     client_id = Column(String(64), nullable=False)
     public_key = Column(String(64), nullable=False)
     secret_key = Column(String(64), nullable=False)
-    created_at = Column(DateTimeTz, server_default=func.now())
+    created_at = Column(DateTimeTz, server_default=func.now(), nullable=False)
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
     user_account = relationship(
@@ -123,7 +123,7 @@ class Provider(Base):
     description = Column(String(256), nullable=False)
     website_url = Column(String(256), nullable=False)
     credentials_schema = Column(JSONEncoded, nullable=False)
-    created_at = Column(DateTimeTz, server_default=func.now())
+    created_at = Column(DateTimeTz, server_default=func.now(), nullable=False)
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
     linked_accounts = relationship("LinkedAccount", uselist=True)
@@ -154,7 +154,7 @@ class LinkedAccount(Base):
     frozen = Column(
         Boolean, nullable=False, default=False, server_default=expression.false()
     )
-    created_at = Column(DateTimeTz, server_default=func.now())
+    created_at = Column(DateTimeTz, server_default=func.now(), nullable=False)
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
     user_account = relationship(
@@ -190,7 +190,7 @@ class UserAccountSnapshot(Base):
     requested_ccy = Column(String(3), nullable=False)
     start_time = Column(DateTimeTz, index=True)
     end_time = Column(DateTimeTz, index=True)
-    created_at = Column(DateTimeTz, server_default=func.now())
+    created_at = Column(DateTimeTz, server_default=func.now(), nullable=False)
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
     user_account = relationship(UserAccount, uselist=False)
@@ -215,7 +215,7 @@ class XccyRateSnapshotEntry(Base):
     )
     xccy_pair = Column(String(6), primary_key=True)
     rate = Column(Numeric, nullable=False)
-    created_at = Column(DateTimeTz, server_default=func.now())
+    created_at = Column(DateTimeTz, server_default=func.now(), nullable=False)
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
     snapshot = relationship(
@@ -234,7 +234,7 @@ class LinkedAccountSnapshotEntry(Base):
     )
     success = Column(Boolean, nullable=False)
     failure_details = Column(JSONEncoded)
-    created_at = Column(DateTimeTz, server_default=func.now())
+    created_at = Column(DateTimeTz, server_default=func.now(), nullable=False)
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
     snapshot = relationship(
@@ -255,7 +255,7 @@ class SubAccountSnapshotEntry(Base):
     sub_account_ccy = Column(String(3), nullable=False)
     sub_account_description = Column(String(256), nullable=False)
     sub_account_type = Column(String(32), nullable=False)
-    created_at = Column(DateTimeTz, server_default=func.now())
+    created_at = Column(DateTimeTz, server_default=func.now(), nullable=False)
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
     linked_account_entry = relationship(
@@ -286,7 +286,7 @@ class SubAccountItemSnapshotEntry(Base):
     value_sub_account_ccy = Column(Numeric)
     value_snapshot_ccy = Column(Numeric)
     provider_specific_data = Column(JSONEncoded)
-    created_at = Column(DateTimeTz, server_default=func.now())
+    created_at = Column(DateTimeTz, server_default=func.now(), nullable=False)
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
     sub_account_entry = relationship(
@@ -329,7 +329,7 @@ class UserAccountHistoryEntry(Base):
     valuation_ccy = Column(String(3), nullable=False)
     effective_at = Column(DateTimeTz, nullable=False, index=True)
     available = Column(Boolean, nullable=False, default=False, index=True)
-    created_at = Column(DateTimeTz, server_default=func.now())
+    created_at = Column(DateTimeTz, server_default=func.now(), nullable=False)
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
     user_account = relationship(UserAccount, uselist=False)
@@ -368,7 +368,7 @@ class UserAccountValuationHistoryEntry(Base):
     valuation_change_id = Column(
         Integer, ForeignKey(ValuationChangeEntry.id, ondelete="SET NULL")
     )
-    created_at = Column(DateTimeTz, server_default=func.now())
+    created_at = Column(DateTimeTz, server_default=func.now(), nullable=False)
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
     valuation_change = relationship(ValuationChangeEntry, uselist=False)
@@ -401,7 +401,7 @@ class LinkedAccountValuationHistoryEntry(Base):
     valuation_change_id = Column(
         Integer, ForeignKey(ValuationChangeEntry.id, ondelete="SET NULL")
     )
-    created_at = Column(DateTimeTz, server_default=func.now())
+    created_at = Column(DateTimeTz, server_default=func.now(), nullable=False)
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
     effective_snapshot = relationship(UserAccountSnapshot, uselist=False)
@@ -438,7 +438,7 @@ class SubAccountValuationHistoryEntry(Base):
     valuation_change_id = Column(
         Integer, ForeignKey(ValuationChangeEntry.id, ondelete="SET NULL")
     )
-    created_at = Column(DateTimeTz, server_default=func.now())
+    created_at = Column(DateTimeTz, server_default=func.now(), nullable=False)
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
     valuation_change = relationship(ValuationChangeEntry, uselist=False)
@@ -479,7 +479,7 @@ class SubAccountItemValuationHistoryEntry(Base):
         Integer, ForeignKey(ValuationChangeEntry.id, ondelete="SET NULL")
     )
     provider_specific_data = Column(JSONEncoded)
-    created_at = Column(DateTimeTz, server_default=func.now())
+    created_at = Column(DateTimeTz, server_default=func.now(), nullable=False)
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
     valuation_change = relationship(ValuationChangeEntry, uselist=False)

@@ -309,12 +309,12 @@ class HistoricalValuationParams(BaseModel):
 
 class XAxisDescription(BaseModel):
     type: str
-    categories: list[str] | list[date] | list[datetime]
+    categories: list[str | date | datetime]
 
 
 class SeriesDescription(BaseModel):
     name: str
-    data: list[int | None] | list[float | None]
+    data: list[int | float | None]
 
 
 class SeriesData(BaseModel):

@@ -184,7 +184,9 @@ def update_user_account_plaid_settings(
         plaid_settings.public_key = body.public_key
         plaid_settings.secret_key = body.secret_key.get_secret_value()
     return appwsrv_schema.UpdateUserAccountPlaidSettingsResponse(
-        plaid_settings=serializer.serialize_user_account_plaid_settings(plaid_settings)
+        plaid_settings=unwrap_optional(
+            serializer.serialize_user_account_plaid_settings(plaid_settings)
+        )
     )
 
 

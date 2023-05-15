@@ -61,8 +61,8 @@ def get_user_account_valuation(
         valuation=appwsrv_schema.UserAccountValuation(
             date=last_valuation.effective_at,
             currency=last_valuation.valuation_ccy,
-            value=user_account_valuation.valuation,
-            total_liabilities=user_account_valuation.total_liabilities,
+            value=float(user_account_valuation.valuation),
+            total_liabilities=float(user_account_valuation.total_liabilities),
             change=serializer.serialize_valuation_change(
                 user_account_valuation.valuation_change
             ),

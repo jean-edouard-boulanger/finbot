@@ -11,6 +11,7 @@ from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
 from finbot.apps.appwsrv.db import db_session
 from finbot.core import schema as core_schema
 from finbot.core.errors import InvalidUserInput
+from finbot.core.utils import unwrap_optional
 from finbot.core.web_service import jwt_required, service_endpoint, validate
 from finbot.model import repository
 
@@ -48,12 +49,12 @@ def get_linked_accounts_valuation(
                     ),
                     valuation=appwsrv_schema.LinkedAccountValuation(
                         date=(
-                            entry.effective_snapshot.effective_at
+                            unwrap_optional(entry.effective_snapshot.effective_at)
                             if entry.effective_snapshot
                             else history_entry.effective_at
                         ),
                         currency=history_entry.valuation_ccy,
-                        value=entry.valuation,
+                        value=float(entry.valuation),
                         change=serializer.serialize_valuation_change(
                             entry.valuation_change
                         ),

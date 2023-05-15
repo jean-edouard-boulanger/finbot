@@ -1,4 +1,5 @@
 from textwrap import dedent
+from typing import Any, cast
 
 from flask import Blueprint
 
@@ -33,7 +34,7 @@ def get_email_delivery_providers() -> appwsrv_schema.GetEmailDeliveryProvidersRe
             appwsrv_schema.EmailProviderMetadata(
                 provider_id=provider_metadata["provider_id"],
                 description=provider_metadata["description"],
-                settings_schema=provider_metadata["schema"],
+                settings_schema=cast(dict[str, Any], provider_metadata["schema"]),
             )
             for provider_metadata in email_delivery.get_providers_metadata()
         ]
