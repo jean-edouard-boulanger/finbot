@@ -90,7 +90,7 @@ def get_financial_data(
     return get_financial_data_impl(provider_type, body.credentials, body.items)
 
 
-@app.route("/validate_credentials", methods=["POST"])
+@app.route("/validate_credentials/", methods=["POST"])
 @service_endpoint()
 @validate()
 def validate_credentials(

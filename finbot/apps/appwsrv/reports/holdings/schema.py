@@ -1,35 +1,13 @@
 from typing import Literal
 
-from finbot import model
+from finbot.core import schema as core_schema
 from finbot.core.schema import BaseModel
-
-
-class ValuationChange(BaseModel):
-    change_1hour: float | None
-    change_1day: float | None
-    change_1week: float | None
-    change_1month: float | None
-    change_6months: float | None
-    change_1year: float | None
-    change_2years: float | None
-
-    @staticmethod
-    def from_model(change: model.ValuationChangeEntry):
-        return ValuationChange(
-            change_1hour=change.change_1hour,
-            change_1day=change.change_1day,
-            change_1week=change.change_1week,
-            change_1month=change.change_1month,
-            change_6months=change.change_6months,
-            change_1year=change.change_1year,
-            change_2years=change.change_2years,
-        )
 
 
 class Valuation(BaseModel):
     currency: str
     value: float
-    change: ValuationChange
+    change: core_schema.ValuationChange
 
 
 class ValuationWithSparkline(Valuation):

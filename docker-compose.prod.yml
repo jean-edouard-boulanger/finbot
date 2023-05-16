@@ -40,7 +40,7 @@ services:
     working_dir: /finbot
     command: bash -c "./tools/run snapwsrv"
     environment:
-      FINBOT_WAIT_DEPS: "db,finbot"
+      FINBOT_WAIT_DEPS: "finbotdb,finbotwsrv"
 
   histwsrv:
     image: "finbotapp/runtime:latest"
@@ -52,7 +52,7 @@ services:
     working_dir: /finbot
     command: bash -c "./tools/run histwsrv"
     environment:
-      FINBOT_WAIT_DEPS: "db"
+      FINBOT_WAIT_DEPS: "finbotdb"
 
   schedsrv:
     image: "finbotapp/runtime:latest"
@@ -65,7 +65,7 @@ services:
     working_dir: /finbot
     command: bash -c "./tools/run schedsrv"
     environment:
-      FINBOT_WAIT_DEPS: "db,worker"
+      FINBOT_WAIT_DEPS: "finbotdb,workersrv"
 
   workersrv:
     image: "finbotapp/runtime:latest"
@@ -80,7 +80,7 @@ services:
     working_dir: /finbot
     command: bash -c "./tools/run workersrv"
     environment:
-      FINBOT_WAIT_DEPS: "db,rmq,snap,hist"
+      FINBOT_WAIT_DEPS: "finbotdb,finbotrmq,snapwsrv,histwsrv"
 
   appwsrv:
     image: "finbotapp/runtime:latest"
@@ -98,7 +98,7 @@ services:
     volumes:
       - .:/finbot
     environment:
-      FINBOT_WAIT_DEPS: "db,finbot,worker"
+      FINBOT_WAIT_DEPS: "finbotdb,finbotwsrv,workersrv"
 
   webapp:
     image: "finbotapp/webapp:latest"

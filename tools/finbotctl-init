@@ -25,7 +25,7 @@ cp envs/secrets.dev.env envs/secrets.prod.env
 chmod 700 envs/secrets*.env
 
 log_info "starting finbot database container"
-docker-compose run --rm operator env FINBOT_WAIT_DEPS=db ./tools/finbot-wait
+docker-compose run --rm operator env FINBOT_WAIT_DEPS=finbotdb ./tools/finbot-wait
 
 log_info "creating finbot database schema"
 docker-compose run --rm operator make finbotdb-rebuild

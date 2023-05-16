@@ -1,6 +1,8 @@
 from datetime import date, datetime
 
 from finbot.apps.appwsrv.reports.earnings import schema as earnings_schema
+from finbot.core import schema as core_schema
+from finbot.core.db.session import Session
 from finbot.model import UserAccountHistoryEntry, repository
 
 
@@ -53,7 +55,7 @@ def _get_rollup_metrics(
 
 
 def generate(
-    session, user_account_id: int, from_time: datetime, to_time: datetime
+    session: Session, user_account_id: int, from_time: datetime, to_time: datetime
 ) -> earnings_schema.EarningsReport:
     user_settings = repository.get_user_account(session, user_account_id)
     historical_valuation = repository.get_user_account_historical_valuation(
@@ -61,7 +63,7 @@ def generate(
         user_account_id=user_account_id,
         from_time=from_time,
         to_time=to_time,
-        frequency=repository.ValuationFrequency.Monthly,
+        frequency=core_schema.ValuationFrequency.Monthly,
     )
     entries = [
         earnings_schema.ReportEntry(

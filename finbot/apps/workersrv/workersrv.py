@@ -4,9 +4,10 @@ from celery import Celery
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-from finbot.apps.workersrv.schema import ValuationRequest
+from finbot.apps.histwsrv.client import HistwsrvClient
+from finbot.apps.snapwsrv.client import SnapwsrvClient
+from finbot.apps.workersrv import schema
 from finbot.apps.workersrv.valuation_handler import ValuationHandler
-from finbot.clients import HistoryClient, SnapClient
 from finbot.core import environment
 from finbot.core.db.session import Session
 from finbot.core.logging import configure_logging
@@ -35,8 +36,8 @@ def handle_healthy() -> bool:
 def handle_valuation_request(serialized_request: dict[str, Any]) -> dict[str, Any]:
     handler = ValuationHandler(
         db_session=db_session,
-        snap_client=SnapClient(FINBOT_ENV.snapwsrv_endpoint),
-        hist_client=HistoryClient(FINBOT_ENV.histwsrv_endpoint),
+        snap_client=SnapwsrvClient(FINBOT_ENV.snapwsrv_endpoint),
+        hist_client=HistwsrvClient(FINBOT_ENV.histwsrv_endpoint),
     )
-    request = ValuationRequest.parse_obj(serialized_request)
+    request = schema.ValuationRequest.parse_obj(serialized_request)
     return handler.handle_valuation(request).dict()

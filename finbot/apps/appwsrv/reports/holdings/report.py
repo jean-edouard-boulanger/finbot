@@ -5,6 +5,7 @@ from typing import Any, TypeAlias
 
 from finbot import model
 from finbot.apps.appwsrv.reports.holdings import schema as holdings_schema
+from finbot.apps.appwsrv.serializer import serialize_valuation_change
 from finbot.core import timeseries, utils
 from finbot.core.db.session import Session
 from finbot.model import repository
@@ -83,8 +84,8 @@ def build_sub_account_item_node(
         ),
         valuation=holdings_schema.Valuation(
             currency=report_data.valuation_currency,
-            value=sub_account_item_valuation.valuation,
-            change=holdings_schema.ValuationChange.from_model(
+            value=float(sub_account_item_valuation.valuation),
+            change=serialize_valuation_change(
                 sub_account_item_valuation.valuation_change
             ),
         ),
@@ -109,10 +110,8 @@ def build_sub_account_node(
         ),
         valuation=holdings_schema.Valuation(
             currency=report_data.valuation_currency,
-            value=sub_account_valuation.valuation,
-            change=holdings_schema.ValuationChange.from_model(
-                sub_account_valuation.valuation_change
-            ),
+            value=float(sub_account_valuation.valuation),
+            change=serialize_valuation_change(sub_account_valuation.valuation_change),
         ),
         children=[
             build_sub_account_item_node(
@@ -139,8 +138,8 @@ def build_linked_account_node(
         ),
         valuation=holdings_schema.ValuationWithSparkline(
             currency=report_data.valuation_currency,
-            value=linked_account_valuation.valuation,
-            change=holdings_schema.ValuationChange.from_model(
+            value=float(linked_account_valuation.valuation),
+            change=serialize_valuation_change(
                 linked_account_valuation.valuation_change
             ),
             sparkline=[
@@ -171,8 +170,8 @@ def build_user_account_node(report_data: ReportData) -> holdings_schema.UserAcco
     return holdings_schema.UserAccountNode(
         valuation=holdings_schema.ValuationWithSparkline(
             currency=report_data.valuation_currency,
-            value=report_data.user_account_valuation.valuation,
-            change=holdings_schema.ValuationChange.from_model(
+            value=float(report_data.user_account_valuation.valuation),
+            change=serialize_valuation_change(
                 report_data.user_account_valuation.valuation_change
             ),
             sparkline=[

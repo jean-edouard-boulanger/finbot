@@ -1,12 +1,11 @@
-from finbot.core.environment import get_appwsrv_endpoint
-from finbot.clients.app import AppClient
+from finbot.apps.appwsrv.client import AppwsrvClient
 import pytest
 
 
 @pytest.fixture
-def api() -> AppClient:
-    return AppClient(get_appwsrv_endpoint())
+def api() -> AppwsrvClient:
+    return AppwsrvClient.create()
 
 
-def test_healthy(api: AppClient):
+def test_healthy(api: AppwsrvClient):
     assert api.healthy

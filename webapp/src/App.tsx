@@ -3,7 +3,7 @@ import { Route, Routes, Navigate } from "react-router-dom";
 
 import { AuthProvider, AuthContext, ServicesProvider } from "contexts";
 
-import { ToastContainer, Slide, toast } from "react-toastify";
+import { ToastContainer, Slide } from "react-toastify";
 import { MainContainer, Navigation } from "components";
 import { ProfileSettings } from "./routes/settings/profile";
 import { AccountSecuritySettings } from "./routes/settings/account-security";
@@ -34,8 +34,6 @@ import "react-toastify/dist/ReactToastify.css";
 import "bootswatch/dist/zephyr/bootstrap.min.css";
 import "./assets/css/index.css";
 import { LinkAccount } from "./routes/settings/link-account";
-
-toast.configure();
 
 const GuestRouter = () => {
   return (

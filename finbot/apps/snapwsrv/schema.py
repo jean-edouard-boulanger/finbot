@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 
 class TakeSnapshotRequest(BaseModel):
-    linked_accounts: Optional[list[int]] = None
+    linked_account_ids: Optional[list[int]] = None
 
 
 class SnapshotResultsCount(BaseModel):

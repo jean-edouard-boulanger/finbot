@@ -40,3 +40,10 @@ def unwrap_optional(val: Optional[T]) -> T:
 
 def raise_(ex: Exception) -> None:
     raise ex
+
+
+def float_or_none(value: int | float | str) -> float | None:
+    try:
+        return float(value)
+    except ValueError:
+        return None

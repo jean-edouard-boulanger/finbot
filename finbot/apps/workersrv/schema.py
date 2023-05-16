@@ -3,20 +3,12 @@ from typing import Optional
 
 from pydantic import BaseModel
 
+from finbot.core import schema as core_schema
+
 
 class ValuationRequest(BaseModel):
     user_account_id: int
     linked_accounts: Optional[list[int]] = None
-
-
-class ValuationChange(BaseModel):
-    change_1hour: float
-    change_1day: float
-    change_1week: float
-    change_1month: float
-    change_6months: float
-    change_1year: float
-    change_2years: float
 
 
 class ValuationResponse(BaseModel):
@@ -24,4 +16,4 @@ class ValuationResponse(BaseModel):
     user_account_valuation: float
     valuation_currency: str
     valuation_date: datetime
-    valuation_change: ValuationChange
+    valuation_change: core_schema.ValuationChange

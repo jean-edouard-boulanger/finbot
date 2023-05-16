@@ -39,7 +39,7 @@ class Session(object):
         self._impl.add_all(entities)
 
     def merge(self, instance: Entity, load: bool = True) -> Entity:
-        return self._impl.merge(instance, load)
+        return self._impl.merge(instance, load=load)
 
     def query(self, entity: Type[Entity]) -> Query[Entity]:
         return self._impl.query(entity)
@@ -74,16 +74,6 @@ class Session(object):
         try:
             yield entity
             self.add(entity)
-            self.commit()
-        except SQLAlchemyError:
-            self.rollback()
-            raise
-
-    @contextmanager
-    def persist_all(self, entities: list[Entity]) -> Iterator[list[Entity]]:
-        try:
-            yield entities
-            self.add_all(entities)
             self.commit()
         except SQLAlchemyError:
             self.rollback()

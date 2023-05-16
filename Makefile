@@ -16,6 +16,9 @@ alembic-downgrade:
 alembic-history:
 	alembic history
 
+pip-compile-all:
+	./tools/pip-compile-all
+
 docker-build-webapp:
 	cd webapp && docker build -t finbotapp/webapp:latest -f Dockerfile --pull .
 
@@ -40,7 +43,7 @@ trigger-valuation:
 			--accounts ${accounts}
 
 run-system-tests:
-	docker-compose run --rm operator env FINBOT_WAIT_DEPS=api,finbot,hist,snap ./tools/finbot-wait;
+	docker-compose run --rm operator env FINBOT_WAIT_DEPS=appwsrv,finbotwsrv,histwsrv,snapwsrv ./tools/finbot-wait;
 	docker-compose run --rm operator python3.11 -m pytest tests/system/
 
 finbotdb-build:
@@ -121,11 +124,12 @@ isort:
 mypy:
 	mypy -p finbot;
 	mypy --strict -p finbot.core;
-	mypy --strict -p finbot.clients;
 	mypy --strict -p finbot.model;
 	mypy --strict -p finbot.providers;
 	mypy --strict -p finbot.apps.finbotwsrv;
 	mypy --strict -p finbot.apps.snapwsrv;
+	mypy --strict -p finbot.apps.appwsrv;
+	mypy --strict -p finbot.apps.schedsrv
 
 unit-tests-py:
 	python3.11 -m pytest -vv tests/unit

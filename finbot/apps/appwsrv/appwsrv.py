@@ -1,3 +1,5 @@
+from typing import Any
+
 from flask import Flask
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
@@ -29,7 +31,7 @@ JWTManager(app)
 
 
 @app.teardown_appcontext
-def cleanup_context(*args, **kwargs):
+def cleanup_context(*args: Any, **kwargs: Any) -> None:
     db_session.remove()
 
 

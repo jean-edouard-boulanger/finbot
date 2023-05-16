@@ -1,5 +1,5 @@
 from datetime import timedelta
-from typing import Generic, Optional, Type, TypeVar, Union
+from typing import Generic, Optional, Self, Type, TypeVar, Union
 
 from celery.result import AsyncResult
 from pydantic import BaseModel
@@ -32,7 +32,7 @@ class AsyncResponse(Generic[ResponseType]):
         )
 
 
-class WorkerClient(object):
+class WorkersrvClient(object):
     def get_valuation_async(
         self, request: ValuationRequest
     ) -> AsyncResponse[ValuationResponse]:
@@ -52,3 +52,7 @@ class WorkerClient(object):
             timeout=_get_timeout(timeout)
         )
         return healthy
+
+    @classmethod
+    def create(cls) -> Self:
+        return cls()
