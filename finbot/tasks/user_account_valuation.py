@@ -1,19 +1,35 @@
 import logging
+from datetime import datetime
+from typing import Any, Optional
 
 from finbot.apps.histwsrv.client import HistwsrvClient
 from finbot.apps.snapwsrv.client import SnapwsrvClient
-from finbot.apps.workersrv.schema import ValuationRequest, ValuationResponse
-from finbot.core.db.session import Session
+from finbot.core import schema as core_schema
 from finbot.core.notifier import (
     CompositeNotifier,
     Notifier,
     TwilioNotifier,
     TwilioSettings,
 )
+from finbot.core.schema import BaseModel
 from finbot.core.serialization import pretty_dump
 from finbot.model import UserAccount, repository
+from finbot.tasks.base import Client, celery_app, db_session
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
+
+
+class ValuationRequest(BaseModel):
+    user_account_id: int
+    linked_accounts: Optional[list[int]] = None
+
+
+class ValuationResponse(BaseModel):
+    history_entry_id: int
+    user_account_valuation: float
+    valuation_currency: str
+    valuation_date: datetime
+    valuation_change: core_schema.ValuationChange
 
 
 def _configure_notifier(user_account: UserAccount) -> Notifier:
@@ -31,7 +47,6 @@ def _configure_notifier(user_account: UserAccount) -> Notifier:
 class ValuationHandler(object):
     def __init__(
         self,
-        db_session: Session,
         snap_client: SnapwsrvClient,
         hist_client: HistwsrvClient,
     ):
@@ -84,3 +99,18 @@ class ValuationHandler(object):
             valuation_date=history_report.valuation_date,
             valuation_change=history_report.valuation_change,
         )
+
+
+@celery_app.task()  # type: ignore
+def user_account_valuation_task(serialized_request: dict[str, Any]) -> dict[str, Any]:
+    handler = ValuationHandler(
+        snap_client=SnapwsrvClient.create(),
+        hist_client=HistwsrvClient.create(),
+    )
+    request = ValuationRequest.parse_obj(serialized_request)
+    return handler.handle_valuation(request).dict()
+
+
+client = Client[ValuationRequest, ValuationResponse](
+    user_account_valuation_task, ValuationRequest, ValuationResponse
+)

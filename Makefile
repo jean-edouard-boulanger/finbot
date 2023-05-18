@@ -122,14 +122,7 @@ isort:
 	isort $(ISORT_SETTINGS)
 
 mypy:
-	mypy -p finbot;
-	mypy --strict -p finbot.core;
-	mypy --strict -p finbot.model;
-	mypy --strict -p finbot.providers;
-	mypy --strict -p finbot.apps.finbotwsrv;
-	mypy --strict -p finbot.apps.snapwsrv;
-	mypy --strict -p finbot.apps.appwsrv;
-	mypy --strict -p finbot.apps.schedsrv
+	mypy --strict finbot/
 
 unit-tests-py:
 	python3.11 -m pytest -vv tests/unit

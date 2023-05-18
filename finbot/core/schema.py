@@ -31,5 +31,9 @@ class ValuationChange(BaseModel):
 CredentialsPayloadType: TypeAlias = dict[str, Any]
 
 
+class HealthRequest(BaseModel):
+    pass
+
+
 class HealthResponse(BaseModel):
     healthy: bool

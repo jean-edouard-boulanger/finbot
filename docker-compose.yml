@@ -94,15 +94,13 @@ services:
     depends_on:
       - finbotdb
       - finbotrmq
-      - snapwsrv
-      - histwsrv
     working_dir: /finbot
     command: bash -c "tools/autorestart finbot/ ./tools/run workersrv"
     tty: true
     volumes:
       - .:/finbot
     environment:
-      FINBOT_WAIT_DEPS: "${FINBOT_WAIT_DEPS:-finbotdb,finbotrmq,snapwsrv,histwsrv}"
+      FINBOT_WAIT_DEPS: "${FINBOT_WAIT_DEPS:-finbotdb,finbotrmq}"
 
   appwsrv:
     image: "finbotapp/runtime-dev:latest"

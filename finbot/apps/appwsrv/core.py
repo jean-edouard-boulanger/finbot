@@ -6,12 +6,11 @@ from plaid import Client as PlaidClient
 from finbot import model
 from finbot.apps.appwsrv.db import db_session
 from finbot.apps.finbotwsrv.client import FinbotwsrvClient
-from finbot.apps.workersrv import schema as workersrv_schema
-from finbot.apps.workersrv.client import WorkersrvClient
 from finbot.core import schema as core_schema
 from finbot.core.errors import InvalidUserInput
 from finbot.model import repository
 from finbot.providers.plaid_us import pack_credentials as pack_plaid_credentials
+from finbot.tasks import user_account_valuation
 
 logger = logging.getLogger(__name__)
 
@@ -37,9 +36,8 @@ def trigger_valuation(
         f"triggering valuation for account_id={user_account_id} linked_account_ids={linked_account_ids}"
     )
     account = repository.get_user_account(db_session, user_account_id)
-    worker_client = WorkersrvClient.create()
-    worker_client.trigger_valuation(
-        workersrv_schema.ValuationRequest(
+    user_account_valuation.client.run_async(
+        user_account_valuation.ValuationRequest(
             user_account_id=account.id, linked_accounts=linked_account_ids
         )
     )

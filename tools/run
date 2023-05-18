@@ -18,7 +18,9 @@ then
   exec python3.11 finbot/apps/schedsrv/schedsrv.py
 elif [[ "${service_name}" == "workersrv" ]]
 then
-  exec python3.11 -m celery -A finbot.apps.workersrv.workersrv worker --loglevel INFO
+  exec python3.11 -m celery \
+    -A finbot.tasks.base worker \
+    --loglevel INFO
 elif [[ "${service_name}" == "histwsrv" ]]
 then
 	exec "${script_dir}/run-web-service.sh" \

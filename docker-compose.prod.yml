@@ -8,8 +8,6 @@ services:
       - envs/secrets.prod.env
     restart: always
     shm_size: 256MB
-    ports:
-      - "5432:5432"
     volumes:
       - .finbotdb:/var/lib/postgresql/data
 
