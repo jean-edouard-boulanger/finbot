@@ -1,9 +1,12 @@
 from finbot.core import schema as core_schema
-from finbot.tasks.base import Client, Payload, celery_app
+from finbot.core.typing_extensions import JSONSerialized
+from finbot.tasks.base import Client, celery_app
 
 
 @celery_app.task()  # type: ignore
-def health_task(_: Payload) -> Payload:
+def health_task(
+    _: JSONSerialized[core_schema.HealthRequest],
+) -> JSONSerialized[core_schema.HealthResponse]:
     return core_schema.HealthResponse(healthy=True).dict()
 
 

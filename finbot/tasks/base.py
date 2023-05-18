@@ -25,7 +25,6 @@ celery_app.conf.update(
     result_serializer="json",
 )
 
-Payload: TypeAlias = dict[str, Any]
 RequestType = TypeVar("RequestType", bound=BaseModel)
 ResponseType = TypeVar("ResponseType", bound=BaseModel)
 TimeoutType: TypeAlias = int | float | timedelta
