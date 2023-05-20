@@ -6,37 +6,23 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any, Generator, Optional, Protocol, cast
 
-from flask import Flask
-from sqlalchemy import create_engine
-from sqlalchemy.orm import joinedload, scoped_session, sessionmaker
+from sqlalchemy.orm import joinedload
 
 from finbot import model
 from finbot.apps.finbotwsrv import schema as finbotwsrv_schema
 from finbot.apps.finbotwsrv.client import FinbotwsrvClient
-from finbot.apps.snapwsrv import schema
 from finbot.core import environment, fx_market
 from finbot.core import schema as core_schema
 from finbot.core import secure, utils
 from finbot.core.db.session import Session
-from finbot.core.logging import configure_logging
+from finbot.core.schema import ApplicationErrorData
 from finbot.core.serialization import serialize
 from finbot.core.utils import unwrap_optional
-from finbot.core.web_service import ApplicationErrorData, service_endpoint, validate
 from finbot.providers import schema as providers_schema
 from finbot.providers.plaid_us import pack_credentials as pack_plaid_credentials
+from finbot.services.user_account_snapshot import schema
 
 FINBOT_ENV = environment.get()
-configure_logging(FINBOT_ENV.desired_log_level)
-
-db_engine = create_engine(FINBOT_ENV.database_url)
-db_session = Session(scoped_session(sessionmaker(bind=db_engine)))
-
-app = Flask(__name__)
-
-
-@app.teardown_appcontext
-def cleanup_context(*args: Any, **kwargs: Any) -> None:
-    db_session.remove()
 
 
 @dataclass
@@ -358,7 +344,7 @@ def validate_fx_rates(rates: dict[fx_market.Xccy, Optional[float]]) -> None:
 
 
 def take_snapshot_impl(
-    user_account_id: int, linked_account_ids: Optional[list[int]]
+    user_account_id: int, linked_account_ids: Optional[list[int]], db_session: Session
 ) -> schema.SnapshotSummary:
     logging.info(
         f"fetching user information for"
@@ -427,21 +413,17 @@ def take_snapshot_impl(
     )
 
 
-@app.route("/healthy/", methods=["GET"])
-@service_endpoint()
-@validate()
-def healthy() -> core_schema.HealthResponse:
-    return core_schema.HealthResponse(healthy=True)
+class UserAccountSnapshotService(object):
+    def __init__(self, db_session: Session) -> None:
+        self._db_session = db_session
 
-
-@app.route("/snapshot/<user_account_id>/take/", methods=["POST"])
-@service_endpoint()
-@validate()
-def take_snapshot(
-    user_account_id: int, body: schema.TakeSnapshotRequest
-) -> schema.TakeSnapshotResponse:
-    return schema.TakeSnapshotResponse(
-        snapshot=take_snapshot_impl(
-            user_account_id=user_account_id, linked_account_ids=body.linked_account_ids
+    def take_snapshot(
+        self, user_account_id: int, linked_account_ids: list[int] | None = None
+    ) -> schema.TakeSnapshotResponse:
+        return schema.TakeSnapshotResponse(
+            snapshot=take_snapshot_impl(
+                user_account_id=user_account_id,
+                linked_account_ids=linked_account_ids,
+                db_session=self._db_session,
+            )
         )
-    )

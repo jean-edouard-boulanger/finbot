@@ -3,8 +3,7 @@ from typing import Literal, TypeAlias
 
 from pydantic import BaseModel
 
-from finbot.core.schema import CredentialsPayloadType
-from finbot.core.web_service import ApplicationErrorData
+from finbot.core.schema import ApplicationErrorData, CredentialsPayloadType
 from finbot.providers import schema as providers_schema
 
 

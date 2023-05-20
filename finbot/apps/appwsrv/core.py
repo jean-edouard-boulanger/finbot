@@ -10,6 +10,7 @@ from finbot.core import schema as core_schema
 from finbot.core.errors import InvalidUserInput
 from finbot.model import repository
 from finbot.providers.plaid_us import pack_credentials as pack_plaid_credentials
+from finbot.services.user_account_valuation import ValuationRequest
 from finbot.tasks import user_account_valuation
 
 logger = logging.getLogger(__name__)
@@ -37,7 +38,7 @@ def trigger_valuation(
     )
     account = repository.get_user_account(db_session, user_account_id)
     user_account_valuation.client.run_async(
-        user_account_valuation.ValuationRequest(
+        request=ValuationRequest(
             user_account_id=account.id, linked_accounts=linked_account_ids
         )
     )

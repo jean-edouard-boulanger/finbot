@@ -1,9 +1,13 @@
 import logging
 
-from finbot.services.user_account_valuation import ValuationResponse, ValuationRequest, UserAccountValuationService
-from finbot.apps.histwsrv.client import HistwsrvClient
-from finbot.apps.snapwsrv.client import SnapwsrvClient
 from finbot.core.typing_extensions import JSONSerialized
+from finbot.services.user_account_snapshot import UserAccountSnapshotService
+from finbot.services.user_account_valuation import (
+    UserAccountValuationService,
+    ValuationRequest,
+    ValuationResponse,
+)
+from finbot.services.valuation_history_writer import ValuationHistoryWriterService
 from finbot.tasks.base import Client, celery_app, db_session
 
 logger = logging.getLogger(__name__)
@@ -15,8 +19,8 @@ def user_account_valuation_task(
 ) -> JSONSerialized[ValuationResponse]:
     service = UserAccountValuationService(
         db_session=db_session,
-        snap_client=SnapwsrvClient.create(),
-        hist_client=HistwsrvClient.create(),
+        user_account_snapshot_service=UserAccountSnapshotService(db_session),
+        valuation_history_writer_service=ValuationHistoryWriterService(db_session),
     )
     request = ValuationRequest.parse_obj(serialized_request)
     return service.process_valuation(request).dict()

@@ -28,7 +28,7 @@ configure_logging()
 
 DEFAULT_TIMEOUT = timedelta(seconds=120)
 FINBOT_ENV = environment.get()
-WEB_SERVICES = ("appwsrv", "finbotwsrv", "histwsrv", "snapwsrv")
+WEB_SERVICES = ("appwsrv", "finbotwsrv")
 
 class ExitCode(enum.Enum):
     Ok = 0

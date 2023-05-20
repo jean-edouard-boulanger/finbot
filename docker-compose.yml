@@ -35,41 +35,6 @@ services:
       - .:/finbot
       - .intake_data:/intake_data
 
-  snapwsrv:
-    image: "finbotapp/runtime-dev:latest"
-    env_file:
-      - envs/dev.env
-      - envs/secrets.dev.env
-    depends_on:
-      - finbotdb
-      - finbotwsrv
-    working_dir: /finbot
-    command: bash -c "./tools/run snapwsrv"
-    tty: true
-    ports:
-      - "5000:5000"
-    volumes:
-      - .:/finbot
-    environment:
-      FINBOT_WAIT_DEPS: "${FINBOT_WAIT_DEPS:-finbotdb,finbotwsrv}"
-
-  histwsrv:
-    image: "finbotapp/runtime-dev:latest"
-    env_file:
-      - envs/dev.env
-      - envs/secrets.dev.env
-    depends_on:
-      - finbotdb
-    working_dir: /finbot
-    command: bash -c "./tools/run histwsrv"
-    tty: true
-    ports:
-      - "5002:5002"
-    volumes:
-      - .:/finbot
-    environment:
-      FINBOT_WAIT_DEPS: "${FINBOT_WAIT_DEPS:-finbotdb}"
-
   schedsrv:
     image: "finbotapp/runtime-dev:latest"
     env_file:

@@ -21,12 +21,6 @@ then
   exec python3.11 -m celery \
     -A finbot.tasks.base worker \
     --loglevel INFO
-elif [[ "${service_name}" == "histwsrv" ]]
-then
-	exec "${script_dir}/run-web-service.sh" \
-	  --app histwsrv \
-	  --timeout 30 \
-	  --port 5002
 elif [[ "${service_name}" == "finbotwsrv" ]]
 then
 	xvfb-run -a "${script_dir}/run-web-service.sh" \
@@ -34,12 +28,6 @@ then
 		--workers 4 \
 		--timeout 300 \
 		--port 5001
-elif [[ "${service_name}" == "snapwsrv" ]]
-then
-  exec "${script_dir}/run-web-service.sh" \
-		--app snapwsrv \
-		--timeout 1200 \
-		--port 5000
 elif [[ "${service_name}" == "appwsrv" ]]
 then
 	exec "${script_dir}/run-web-service.sh" \

@@ -2,28 +2,15 @@ import json
 import logging
 from typing import Any, Generator, cast
 
-from flask import Flask
-from sqlalchemy import create_engine
-from sqlalchemy.orm import scoped_session, sessionmaker
-
 from finbot import model
-from finbot.apps.histwsrv import repository
-from finbot.apps.histwsrv import schema as histwsrv_schema
 from finbot.core import environment
 from finbot.core import schema as core_schema
 from finbot.core.db.session import Session
-from finbot.core.logging import configure_logging
 from finbot.core.serialization import pretty_dump, to_pydantic
 from finbot.core.utils import unwrap_optional
-from finbot.core.web_service import service_endpoint, validate
+from finbot.services.valuation_history_writer import repository, schema
 
 FINBOT_ENV = environment.get()
-configure_logging(FINBOT_ENV.desired_log_level)
-
-db_engine = create_engine(FINBOT_ENV.database_url)
-db_session = Session(scoped_session(sessionmaker(bind=db_engine)))
-
-app = Flask(__name__)
 
 
 def deserialize_provider_specific_data(raw_data: str | None) -> dict[str, Any] | None:
@@ -49,22 +36,9 @@ def iter_sub_account_item_valuation_history_entries(
         )
 
 
-@app.teardown_appcontext
-def cleanup_context(*args: Any, **kwargs: Any) -> None:
-    db_session.remove()
-
-
-@app.route("/healthy/", methods=["GET"])
-@service_endpoint()
-@validate()
-def healthy() -> core_schema.HealthResponse:
-    return core_schema.HealthResponse(healthy=True)
-
-
-@app.route("/history/<snapshot_id>/write/", methods=["POST"])
-@service_endpoint()
-@validate()
-def write_history(snapshot_id: int) -> histwsrv_schema.WriteHistoryResponse:
+def write_history_impl(
+    snapshot_id: int, db_session: Session
+) -> schema.WriteHistoryResponse:
     repo = repository.ReportRepository(db_session)
 
     logging.info("fetching snapshot_id={} metadata".format(snapshot_id))
@@ -220,8 +194,8 @@ def write_history(snapshot_id: int) -> histwsrv_schema.WriteHistoryResponse:
 
     logging.info("new history entry added and enabled successfully")
 
-    return histwsrv_schema.WriteHistoryResponse(
-        report=histwsrv_schema.NewHistoryEntryReport(
+    return schema.WriteHistoryResponse(
+        report=schema.NewHistoryEntryReport(
             history_entry_id=history_entry.id,
             valuation_date=valuation_date,
             valuation_currency=history_entry.valuation_ccy,
@@ -231,3 +205,11 @@ def write_history(snapshot_id: int) -> histwsrv_schema.WriteHistoryResponse:
             ),
         )
     )
+
+
+class ValuationHistoryWriterService(object):
+    def __init__(self, db_session: Session):
+        self._db_session = db_session
+
+    def write_history(self, snapshot_id: int) -> schema.WriteHistoryResponse:
+        return write_history_impl(snapshot_id=snapshot_id, db_session=self._db_session)

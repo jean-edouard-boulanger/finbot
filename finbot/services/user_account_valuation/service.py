@@ -1,9 +1,6 @@
 import logging
 
 from finbot.core.db.session import Session
-from finbot.apps.histwsrv.client import HistwsrvClient
-from finbot.apps.snapwsrv.client import SnapwsrvClient
-from finbot.services.user_account_valuation.schema import ValuationRequest, ValuationResponse
 from finbot.core.notifier import (
     CompositeNotifier,
     Notifier,
@@ -12,6 +9,14 @@ from finbot.core.notifier import (
 )
 from finbot.core.serialization import pretty_dump
 from finbot.model import UserAccount, repository
+from finbot.services.user_account_snapshot.service import UserAccountSnapshotService
+from finbot.services.user_account_valuation.schema import (
+    ValuationRequest,
+    ValuationResponse,
+)
+from finbot.services.valuation_history_writer.service import (
+    ValuationHistoryWriterService,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -32,12 +37,12 @@ class UserAccountValuationService(object):
     def __init__(
         self,
         db_session: Session,
-        snap_client: SnapwsrvClient,
-        hist_client: HistwsrvClient,
+        user_account_snapshot_service: UserAccountSnapshotService,
+        valuation_history_writer_service: ValuationHistoryWriterService,
     ):
         self._db_session = db_session
-        self._snap_client = snap_client
-        self._hist_client = hist_client
+        self._user_account_snapshot_service = user_account_snapshot_service
+        self._valuation_history_writer_service = valuation_history_writer_service
 
     def process_valuation(self, request: ValuationRequest) -> ValuationResponse:
         user_account_id = request.user_account_id
@@ -50,7 +55,7 @@ class UserAccountValuationService(object):
         notifier = _configure_notifier(user_account)
 
         logger.info("taking snapshot")
-        snapshot_metadata = self._snap_client.take_snapshot(
+        snapshot_metadata = self._user_account_snapshot_service.take_snapshot(
             user_account_id=user_account_id,
             linked_account_ids=request.linked_accounts,
         )
@@ -61,7 +66,9 @@ class UserAccountValuationService(object):
         logger.info(f"raw snapshot created with id={snapshot_id}")
 
         logger.info("taking history report")
-        history_metadata = self._hist_client.write_history(snapshot_id)
+        history_metadata = self._valuation_history_writer_service.write_history(
+            snapshot_id=snapshot_id
+        )
 
         history_report = history_metadata.report
 
