@@ -17,17 +17,18 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import text
 
-from finbot.apps.workersrv.client import WorkersrvClient
 from finbot.core import environment
+from finbot.core import schema as core_schema
 from finbot.core.logging import configure_logging
 from finbot.core.utils import float_or_none
+from finbot.tasks import health as health_task
 
 configure_logging()
 
 
 DEFAULT_TIMEOUT = timedelta(seconds=120)
 FINBOT_ENV = environment.get()
-WEB_SERVICES = ("appwsrv", "finbotwsrv", "histwsrv", "snapwsrv")
+WEB_SERVICES = ("appwsrv", "finbotwsrv")
 
 class ExitCode(enum.Enum):
     Ok = 0
@@ -92,14 +93,10 @@ class RabbitMQChecker(object):
 
 
 class CeleryWorkerChecker(object):
-    def __init__(self, client: WorkersrvClient):
-        self._client = client
-
     def __call__(self) -> bool:
         try:
-            self._client.get_healthy(timeout=1.0)
-            return True
-        except Exception as e:
+            return health_task.client.run(core_schema.HealthRequest(), timeout=timedelta(seconds=1.0)).healthy
+        except Exception:
             return False
 
 
@@ -112,7 +109,7 @@ def get_checker(dep_name: str):
         return RabbitMQChecker(FINBOT_ENV.rmq_url)
     if dep_name == "workersrv":
         logging.info(f"will wait on '{dep_name}'")
-        return CeleryWorkerChecker(WorkersrvClient())
+        return CeleryWorkerChecker()
     if dep_name in WEB_SERVICES:
         endpoint = environment.get_web_service_endpoint(dep_name)
         logging.info(f"will wait on '{dep_name}': {endpoint}")

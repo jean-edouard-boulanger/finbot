@@ -1,8 +1,5 @@
 import logging
 
-from finbot.apps.histwsrv.client import HistwsrvClient
-from finbot.apps.snapwsrv.client import SnapwsrvClient
-from finbot.apps.workersrv.schema import ValuationRequest, ValuationResponse
 from finbot.core.db.session import Session
 from finbot.core.notifier import (
     CompositeNotifier,
@@ -12,8 +9,16 @@ from finbot.core.notifier import (
 )
 from finbot.core.serialization import pretty_dump
 from finbot.model import UserAccount, repository
+from finbot.services.user_account_snapshot.service import UserAccountSnapshotService
+from finbot.services.user_account_valuation.schema import (
+    ValuationRequest,
+    ValuationResponse,
+)
+from finbot.services.valuation_history_writer.service import (
+    ValuationHistoryWriterService,
+)
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 def _configure_notifier(user_account: UserAccount) -> Notifier:
@@ -28,29 +33,29 @@ def _configure_notifier(user_account: UserAccount) -> Notifier:
     return CompositeNotifier(notifiers)
 
 
-class ValuationHandler(object):
+class UserAccountValuationService(object):
     def __init__(
         self,
         db_session: Session,
-        snap_client: SnapwsrvClient,
-        hist_client: HistwsrvClient,
+        user_account_snapshot_service: UserAccountSnapshotService,
+        valuation_history_writer_service: ValuationHistoryWriterService,
     ):
-        self.db_session = db_session
-        self.snap_client = snap_client
-        self.hist_client = hist_client
+        self._db_session = db_session
+        self._user_account_snapshot_service = user_account_snapshot_service
+        self._valuation_history_writer_service = valuation_history_writer_service
 
-    def handle_valuation(self, request: ValuationRequest) -> ValuationResponse:
+    def process_valuation(self, request: ValuationRequest) -> ValuationResponse:
         user_account_id = request.user_account_id
         logger.info(
             f"starting workflow for user_id={user_account_id} "
             f"linked_accounts={request.linked_accounts}"
         )
 
-        user_account = repository.get_user_account(self.db_session, user_account_id)
+        user_account = repository.get_user_account(self._db_session, user_account_id)
         notifier = _configure_notifier(user_account)
 
         logger.info("taking snapshot")
-        snapshot_metadata = self.snap_client.take_snapshot(
+        snapshot_metadata = self._user_account_snapshot_service.take_snapshot(
             user_account_id=user_account_id,
             linked_account_ids=request.linked_accounts,
         )
@@ -61,7 +66,9 @@ class ValuationHandler(object):
         logger.info(f"raw snapshot created with id={snapshot_id}")
 
         logger.info("taking history report")
-        history_metadata = self.hist_client.write_history(snapshot_id)
+        history_metadata = self._valuation_history_writer_service.write_history(
+            snapshot_id=snapshot_id
+        )
 
         history_report = history_metadata.report
 

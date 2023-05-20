@@ -1,9 +1,8 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel
-
 from finbot.core import schema as core_schema
+from finbot.core.schema import BaseModel
 
 
 class ValuationRequest(BaseModel):

@@ -59,8 +59,6 @@ log_info "starting finbot backend containers"
 docker-compose up -d \
   workersrv \
   appwsrv \
-  histwsrv \
-  snapwsrv \
   finbotwsrv \
   schedsrv \
   || die failed to start containers

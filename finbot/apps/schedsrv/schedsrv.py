@@ -12,13 +12,13 @@ import schedule
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-from finbot.apps.workersrv import schema as workersrv_schema
-from finbot.apps.workersrv.client import WorkersrvClient
 from finbot.core import environment
 from finbot.core.db.session import Session
 from finbot.core.errors import FinbotError
 from finbot.core.logging import configure_logging
 from finbot.model import UserAccount
+from finbot.services.user_account_valuation import ValuationRequest
+from finbot.tasks.user_account_valuation import client as user_account_valuation_client
 
 FINBOT_ENV = environment.get()
 configure_logging(FINBOT_ENV.desired_log_level)
@@ -38,13 +38,13 @@ class Worker(abc.ABC, threading.Thread):
 
 def parse_valuation_requests(
     raw_accounts_str: str,
-) -> list[workersrv_schema.ValuationRequest]:
+) -> list[ValuationRequest]:
     requests = []
     raw_accounts = raw_accounts_str.split(";")
     for raw_account in raw_accounts:
         if ":" in raw_account:
             account_id_str, linked_accounts_str = raw_account.split(":")
-            request = workersrv_schema.ValuationRequest(
+            request = ValuationRequest(
                 user_account_id=int(account_id_str),
                 linked_accounts=[
                     int(linked_account_id_str)
@@ -52,9 +52,7 @@ def parse_valuation_requests(
                 ],
             )
         else:
-            request = workersrv_schema.ValuationRequest(
-                user_account_id=int(raw_account)
-            )
+            request = ValuationRequest(user_account_id=int(raw_account))
         requests.append(request)
     return requests
 
@@ -73,12 +71,11 @@ def iter_user_accounts() -> Generator[UserAccount, None, None]:
         yield user_account
 
 
-def run_one_shot(requests: Iterable[workersrv_schema.ValuationRequest]) -> None:
+def run_one_shot(requests: Iterable[ValuationRequest]) -> None:
     for request in requests:
         try:
-            worker_client = WorkersrvClient.create()
             logging.info(f"handling valuation request {request}")
-            valuation = worker_client.get_valuation(request)
+            valuation = user_account_valuation_client.run(request)
             logging.info(
                 f"user account {request.user_account_id} valuation"
                 f" (linked_accounts={request.linked_accounts}): {valuation.dict()}"
@@ -108,9 +105,8 @@ class Scheduler(Worker):
             logging.info(
                 f"[scheduler thread] dispatching valuation for user_account_id={user_account_id}"
             )
-            worker_client = WorkersrvClient.create()
-            worker_client.trigger_valuation(
-                workersrv_schema.ValuationRequest(user_account_id=user_account_id)
+            user_account_valuation_client.run_async(
+                ValuationRequest(user_account_id=user_account_id)
             )
 
     def run(self) -> None:

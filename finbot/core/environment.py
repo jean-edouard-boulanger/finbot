@@ -16,8 +16,6 @@ class Environment:
     secret_key: str
     database_url: str
     finbotwsrv_endpoint: str
-    snapwsrv_endpoint: str
-    histwsrv_endpoint: str
     appwsrv_endpoint: str
     webapp_endpoint: str
     runtime: str
@@ -57,14 +55,6 @@ def get_finbotwsrv_endpoint() -> str:
     return get_environment_value("FINBOT_FINBOTWSRV_ENDPOINT")
 
 
-def get_snapwsrv_endpoint() -> str:
-    return get_environment_value("FINBOT_SNAPWSRV_ENDPOINT")
-
-
-def get_histwsrv_endpoint() -> str:
-    return get_environment_value("FINBOT_HISTWSRV_ENDPOINT")
-
-
 def get_appwsrv_endpoint() -> str:
     return get_environment_value("FINBOT_APPWSRV_ENDPOINT")
 
@@ -94,8 +84,6 @@ def get() -> Environment:
         secret_key=get_secret_key(),
         database_url=get_database_url(),
         finbotwsrv_endpoint=get_finbotwsrv_endpoint(),
-        snapwsrv_endpoint=get_snapwsrv_endpoint(),
-        histwsrv_endpoint=get_histwsrv_endpoint(),
         appwsrv_endpoint=get_appwsrv_endpoint(),
         webapp_endpoint=get_webapp_endpoint(),
         runtime=get_finbot_runtime(),

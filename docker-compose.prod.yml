@@ -8,8 +8,6 @@ services:
       - envs/secrets.prod.env
     restart: always
     shm_size: 256MB
-    ports:
-      - "5432:5432"
     volumes:
       - .finbotdb:/var/lib/postgresql/data
 
@@ -28,31 +26,6 @@ services:
     command: bash -c "./tools/run finbotwsrv"
     volumes:
       - .intake_data:/intake_data
-
-  snapwsrv:
-    image: "finbotapp/runtime:latest"
-    env_file:
-      - envs/prod.env
-      - envs/secrets.prod.env
-    depends_on:
-      - finbotdb
-      - finbotwsrv
-    working_dir: /finbot
-    command: bash -c "./tools/run snapwsrv"
-    environment:
-      FINBOT_WAIT_DEPS: "finbotdb,finbotwsrv"
-
-  histwsrv:
-    image: "finbotapp/runtime:latest"
-    env_file:
-      - envs/prod.env
-      - envs/secrets.prod.env
-    depends_on:
-      - finbotdb
-    working_dir: /finbot
-    command: bash -c "./tools/run histwsrv"
-    environment:
-      FINBOT_WAIT_DEPS: "finbotdb"
 
   schedsrv:
     image: "finbotapp/runtime:latest"
@@ -75,12 +48,10 @@ services:
     depends_on:
       - finbotdb
       - finbotrmq
-      - snapwsrv
-      - histwsrv
     working_dir: /finbot
     command: bash -c "./tools/run workersrv"
     environment:
-      FINBOT_WAIT_DEPS: "finbotdb,finbotrmq,snapwsrv,histwsrv"
+      FINBOT_WAIT_DEPS: "finbotdb,finbotrmq"
 
   appwsrv:
     image: "finbotapp/runtime:latest"
