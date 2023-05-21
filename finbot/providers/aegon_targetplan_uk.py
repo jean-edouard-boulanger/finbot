@@ -4,6 +4,7 @@ from playwright.sync_api import Locator, Page
 from price_parser import Price  # type: ignore
 from pydantic import BaseModel, SecretStr
 
+from finbot.core import schema as core_schema
 from finbot.core.utils import raise_
 from finbot.providers.errors import AuthenticationFailure
 from finbot.providers.playwright_base import (
@@ -67,7 +68,9 @@ class Api(PlaywrightProviderBase):
         return "Aegon Targetplan (UK)"
 
     @staticmethod
-    def create(authentication_payload: dict[str, Any], **kwargs: Any) -> "Api":
+    def create(
+        authentication_payload: core_schema.CredentialsPayloadType, **kwargs: Any
+    ) -> "Api":
         return Api(Credentials.parse_obj(authentication_payload), **kwargs)
 
     def initialize(self) -> None:

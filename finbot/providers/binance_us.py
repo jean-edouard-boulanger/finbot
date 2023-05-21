@@ -5,6 +5,7 @@ from binance.exceptions import BinanceAPIException
 from pycoingecko import CoinGeckoAPI
 from pydantic import BaseModel, SecretStr
 
+from finbot.core import schema as core_schema
 from finbot.core.crypto_market import CoinGeckoWrapper
 from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationFailure
@@ -39,7 +40,9 @@ class Api(ProviderBase):
         return "Binance (US)"
 
     @staticmethod
-    def create(authentication_payload: dict[str, Any], **kwargs: Any) -> "Api":
+    def create(
+        authentication_payload: core_schema.CredentialsPayloadType, **kwargs: Any
+    ) -> "Api":
         return Api(Credentials.parse_obj(authentication_payload), **kwargs)
 
     def _get_account(self) -> dict[Any, Any]:

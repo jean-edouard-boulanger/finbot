@@ -15,11 +15,11 @@ from finbot.core import environment, fx_market
 from finbot.core import schema as core_schema
 from finbot.core import secure, utils
 from finbot.core.db.session import Session
+from finbot.core.plaid import PlaidClient, PlaidSettings
 from finbot.core.schema import ApplicationErrorData
 from finbot.core.serialization import serialize
 from finbot.core.utils import unwrap_optional
 from finbot.providers import schema as providers_schema
-from finbot.providers.plaid_us import pack_credentials as pack_plaid_credentials
 from finbot.services.user_account_snapshot import schema
 
 FINBOT_ENV = environment.get()
@@ -301,8 +301,12 @@ def get_credentials_data(
         ),
     )
     if linked_account.provider_id == "plaid_us":
-        return pack_plaid_credentials(
-            linked_account_credentials, user_account.plaid_settings
+        return cast(
+            core_schema.CredentialsPayloadType,
+            PlaidClient.pack_credentials(
+                linked_account_credentials=linked_account_credentials,
+                plaid_settings=PlaidSettings.from_model(user_account.plaid_settings),
+            ),
         )
     return linked_account_credentials
 

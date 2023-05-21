@@ -1,6 +1,7 @@
 import abc
 from typing import Any, Self
 
+from finbot.core import schema as core_schema
 from finbot.providers.errors import RetiredProviderError
 from finbot.providers.schema import Assets, Balances, Liabilities
 
@@ -11,7 +12,9 @@ class ProviderBase(object):
 
     @staticmethod
     @abc.abstractmethod
-    def create(authentication_payload: dict[str, Any], **kwargs: Any) -> "ProviderBase":
+    def create(
+        authentication_payload: core_schema.CredentialsPayloadType, **kwargs: Any
+    ) -> "ProviderBase":
         raise NotImplementedError("create")
 
     @staticmethod
