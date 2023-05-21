@@ -75,7 +75,9 @@ def link_new_account(
         plaid_client = PlaidClient(
             PlaidSettings.from_model(unwrap_optional(user_account.plaid_settings))
         )
-        credentials = plaid_client.exchange_public_token(credentials["public_token"])
+        credentials = plaid_client.exchange_public_token(
+            credentials["public_token"]
+        ).dict()
 
     if do_validate:
         logging.info(
@@ -150,7 +152,9 @@ def get_linked_account(
             PlaidSettings.from_model(unwrap_optional(plaid_settings))
         )
         credentials = {
-            "link_token": plaid_client.create_link_token(credentials["access_token"])
+            "link_token": plaid_client.create_link_token(
+                credentials["access_token"]
+            ).link_token
         }
     linked_account_status = repository.get_linked_account_status(
         db_session, user_account_id, linked_account_id

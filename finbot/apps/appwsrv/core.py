@@ -1,12 +1,12 @@
 import logging
-from typing import Optional
+from typing import Optional, cast
 
 from finbot import model
 from finbot.apps.appwsrv.db import db_session
 from finbot.apps.finbotwsrv.client import FinbotwsrvClient
 from finbot.core import schema as core_schema
 from finbot.core.errors import InvalidUserInput
-from finbot.core.plaid import PlaidClient
+from finbot.core.plaid import PlaidClient, PlaidSettings
 from finbot.model import repository
 from finbot.services.user_account_valuation import ValuationRequest
 from finbot.tasks import user_account_valuation
@@ -61,7 +61,13 @@ def validate_credentials(
 ) -> None:
     if provider_id == "plaid_us":
         assert plaid_settings is not None
-        credentials = PlaidClient.pack_credentials(credentials, plaid_settings)
+        credentials = cast(
+            core_schema.CredentialsPayloadType,
+            PlaidClient.pack_credentials(
+                linked_account_credentials=credentials,
+                plaid_settings=PlaidSettings.from_model(plaid_settings),
+            ),
+        )
     result = finbot_client.validate_credentials(
         provider_id=provider_id, credentials_data=credentials
     )

@@ -1,8 +1,8 @@
-from typing import Any, Optional, cast
+from typing import Any
 
 from pydantic import BaseModel, SecretStr
 
-from finbot.core.plaid import PlaidClient, PlaidClientError, PlaidSettings
+from finbot.core.plaid import AccountData, PlaidClient, PlaidClientError, PlaidSettings
 from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationFailure
 from finbot.providers.schema import (
@@ -34,7 +34,7 @@ class Api(ProviderBase):
     def __init__(self, credentials: Credentials, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self._credentials = credentials
-        self._accounts: Optional[dict[Any, Any]] = None
+        self._accounts: list[AccountData] | None = None
 
     @staticmethod
     def description() -> str:
@@ -45,15 +45,14 @@ class Api(ProviderBase):
         return Api(Credentials.parse_obj(authentication_payload), **kwargs)
 
     @property
-    def accounts(self) -> list[dict[str, Any]]:
+    def accounts(self) -> list[AccountData]:
         assert self._accounts is not None
-        accounts: list[dict[Any, Any]] = self._accounts["accounts"]
-        return accounts
+        return self._accounts
 
     def initialize(self) -> None:
         try:
             client = self._create_plaid_client(self._credentials.plaid_credentials)
-            self._accounts = client.get_accounts(
+            self._accounts = client.get_accounts_data(
                 access_token=self._credentials.access_token.get_secret_value()
             )
         except PlaidClientError as e:
@@ -64,10 +63,7 @@ class Api(ProviderBase):
             accounts=[
                 BalanceEntry(
                     account=make_account(account),
-                    balance=(
-                        account["balances"]["current"]
-                        * (-1.0 if is_credit_account(account) else 1.0)
-                    ),
+                    balance=(account.balance * (-1.0 if account.is_credit else 1.0)),
                 )
                 for account in self.accounts
             ]
@@ -82,12 +78,12 @@ class Api(ProviderBase):
                         Asset(
                             name="Cash",
                             type="currency",
-                            value=account["balances"]["current"],
+                            value=account.balance,
                         )
                     ],
                 )
                 for account in self.accounts
-                if is_depository_account(account)
+                if account.is_depository
             ]
         )
 
@@ -100,12 +96,12 @@ class Api(ProviderBase):
                         Liability(
                             name="credit",
                             type="credit",
-                            value=(-1.0 * account["balances"]["current"]),
+                            value=(-1.0 * account.balance),
                         )
                     ],
                 )
                 for account in self.accounts
-                if is_credit_account(account)
+                if account.is_credit
             ]
         )
 
@@ -120,18 +116,10 @@ class Api(ProviderBase):
         )
 
 
-def make_account(raw_account: dict[str, Any]) -> Account:
+def make_account(account_data: AccountData) -> Account:
     return Account(
-        id=raw_account["name"],
-        name=raw_account["name"],
-        iso_currency=raw_account["balances"]["iso_currency_code"],
-        type=raw_account["type"].value,
+        id=account_data.name,
+        name=account_data.name,
+        iso_currency=account_data.currency,
+        type=account_data.account_type,
     )
-
-
-def is_credit_account(account: Any) -> bool:
-    return cast(bool, account["type"].value == "credit")
-
-
-def is_depository_account(account: Any) -> bool:
-    return cast(bool, account["type"].value == "depository")

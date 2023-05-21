@@ -15,6 +15,7 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from pydantic import BaseModel
 
+from finbot.core import schema as core_schema
 from finbot.core.errors import FinbotError
 from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationFailure
@@ -63,7 +64,9 @@ class Api(ProviderBase):
         return "Google sheets"
 
     @staticmethod
-    def create(authentication_payload: dict[str, Any], **kwargs: Any) -> "Api":
+    def create(
+        authentication_payload: core_schema.CredentialsPayloadType, **kwargs: Any
+    ) -> "Api":
         return Api(Credentials.parse_obj(authentication_payload), **kwargs)
 
     def _iter_accounts(self) -> Generator[AssetsEntry, None, None]:

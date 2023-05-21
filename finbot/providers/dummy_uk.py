@@ -2,6 +2,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
+from finbot.core import schema as core_schema
 from finbot.providers.base import ProviderBase
 from finbot.providers.schema import (
     Account,
@@ -32,7 +33,9 @@ class Api(ProviderBase):
         return "Dummy provider (UK)"
 
     @staticmethod
-    def create(authentication_payload: dict[str, Any], **kwargs: Any) -> "Api":
+    def create(
+        authentication_payload: core_schema.CredentialsPayloadType, **kwargs: Any
+    ) -> "Api":
         return Api(**kwargs)
 
     def initialize(self) -> None:
