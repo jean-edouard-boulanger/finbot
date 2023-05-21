@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 import plaid
 from plaid.api import plaid_api
@@ -82,7 +82,7 @@ class PlaidClient(object):
                     access_token=access_token,
                 )
             )
-            return response["link_token"]
+            return cast(str, response["link_token"])
         except plaid.ApiException as e:
             raise PlaidClientError(
                 f"failure while creating Plaid link token: {e}"
@@ -90,8 +90,11 @@ class PlaidClient(object):
 
     def get_accounts(self, access_token: str) -> dict[str, Any]:
         try:
-            return self._impl.accounts_get(
-                accounts_get_request=AccountsGetRequest(access_token=access_token)
+            return cast(
+                dict[str, Any],
+                self._impl.accounts_get(
+                    accounts_get_request=AccountsGetRequest(access_token=access_token)
+                ),
             )
         except plaid.ApiException as e:
             raise PlaidClientError(f"failure while getting Plaid accounts: {e}") from e
@@ -100,16 +103,18 @@ class PlaidClient(object):
     def pack_credentials(
         linked_account_credentials: dict[Any, Any],
         plaid_settings: model.UserAccountPlaidSettings,
-    ):
-        output: dict[str, Any] = serialize(
-            {
-                "item_id": str(linked_account_credentials["item_id"]),
-                "access_token": str(linked_account_credentials["access_token"]),
-                "plaid_credentials": {
-                    "env": plaid_settings.env,
-                    "client_id": plaid_settings.client_id,
-                    "secret_key": plaid_settings.secret_key,
-                },
-            }
+    ) -> dict[str, Any]:
+        return cast(
+            dict[str, Any],
+            serialize(
+                {
+                    "item_id": str(linked_account_credentials["item_id"]),
+                    "access_token": str(linked_account_credentials["access_token"]),
+                    "plaid_credentials": {
+                        "env": plaid_settings.env,
+                        "client_id": plaid_settings.client_id,
+                        "secret_key": plaid_settings.secret_key,
+                    },
+                }
+            ),
         )
-        return output

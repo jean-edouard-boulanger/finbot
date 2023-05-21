@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 from pydantic import BaseModel, SecretStr
 
@@ -130,8 +130,8 @@ def make_account(raw_account: dict[str, Any]) -> Account:
 
 
 def is_credit_account(account: Any) -> bool:
-    return account["type"].value == "credit"
+    return cast(bool, account["type"].value == "credit")
 
 
 def is_depository_account(account: Any) -> bool:
-    return account["type"].value == "depository"
+    return cast(bool, account["type"].value == "depository")
