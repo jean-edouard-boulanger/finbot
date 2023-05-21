@@ -1,12 +1,8 @@
 from typing import Any, Optional
 
-from plaid import Client as PlaidClient
-from plaid import errors as plaid_errors
 from pydantic import BaseModel, SecretStr
 
-from finbot.core import schema as core_schema
-from finbot.core.serialization import serialize
-from finbot.model import UserAccountPlaidSettings
+from finbot.core.plaid import PlaidClient, PlaidClientError, PlaidSettings
 from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationFailure
 from finbot.providers.schema import (
@@ -22,37 +18,9 @@ from finbot.providers.schema import (
 )
 
 
-def pack_credentials(
-    linked_account_credentials: dict[Any, Any], plaid_settings: UserAccountPlaidSettings
-) -> core_schema.CredentialsPayloadType:
-    output: dict[str, Any] = serialize(
-        {
-            "item_id": str(linked_account_credentials["item_id"]),
-            "access_token": str(linked_account_credentials["access_token"]),
-            "plaid_credentials": {
-                "env": plaid_settings.env,
-                "client_id": plaid_settings.client_id,
-                "public_key": plaid_settings.public_key,
-                "secret_key": plaid_settings.secret_key,
-            },
-        }
-    )
-    return output
-
-
-def _make_account(account: dict[str, Any]) -> Account:
-    return Account(
-        id=account["name"],
-        name=account["name"],
-        iso_currency=account["balances"]["iso_currency_code"],
-        type=account["type"],
-    )
-
-
 class PlaidCredentials(BaseModel):
     env: str
     client_id: str
-    public_key: str
     secret_key: SecretStr
 
 
@@ -85,20 +53,20 @@ class Api(ProviderBase):
     def initialize(self) -> None:
         try:
             client = self._create_plaid_client(self._credentials.plaid_credentials)
-            self._accounts = client.Accounts.get(
+            self._accounts = client.get_accounts(
                 access_token=self._credentials.access_token.get_secret_value()
             )
-        except plaid_errors.ItemError as e:
+        except PlaidClientError as e:
             raise AuthenticationFailure(str(e))
 
     def get_balances(self) -> Balances:
         return Balances(
             accounts=[
                 BalanceEntry(
-                    account=_make_account(account),
+                    account=make_account(account),
                     balance=(
                         account["balances"]["current"]
-                        * (-1.0 if account["type"] == "credit" else 1.0)
+                        * (-1.0 if is_credit_account(account) else 1.0)
                     ),
                 )
                 for account in self.accounts
@@ -109,7 +77,7 @@ class Api(ProviderBase):
         return Assets(
             accounts=[
                 AssetsEntry(
-                    account=_make_account(account),
+                    account=make_account(account),
                     assets=[
                         Asset(
                             name="Cash",
@@ -119,7 +87,7 @@ class Api(ProviderBase):
                     ],
                 )
                 for account in self.accounts
-                if account["type"] == "depository"
+                if is_depository_account(account)
             ]
         )
 
@@ -127,7 +95,7 @@ class Api(ProviderBase):
         return Liabilities(
             accounts=[
                 LiabilitiesEntry(
-                    account=_make_account(account),
+                    account=make_account(account),
                     liabilities=[
                         Liability(
                             name="credit",
@@ -137,14 +105,33 @@ class Api(ProviderBase):
                     ],
                 )
                 for account in self.accounts
-                if account["type"] == "credit"
+                if is_credit_account(account)
             ]
         )
 
     @staticmethod
     def _create_plaid_client(credentials: PlaidCredentials) -> PlaidClient:
         return PlaidClient(
-            client_id=credentials.client_id,
-            secret=credentials.secret_key.get_secret_value(),
-            environment=credentials.env,
+            settings=PlaidSettings(
+                client_id=credentials.client_id,
+                secret_key=credentials.secret_key.get_secret_value(),
+                environment=credentials.env,
+            )
         )
+
+
+def make_account(raw_account: dict[str, Any]) -> Account:
+    return Account(
+        id=raw_account["name"],
+        name=raw_account["name"],
+        iso_currency=raw_account["balances"]["iso_currency_code"],
+        type=raw_account["type"].value,
+    )
+
+
+def is_credit_account(account: Any) -> bool:
+    return account["type"].value == "credit"
+
+
+def is_depository_account(account: Any) -> bool:
+    return account["type"].value == "depository"

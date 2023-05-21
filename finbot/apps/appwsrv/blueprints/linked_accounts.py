@@ -13,6 +13,7 @@ from finbot.apps.appwsrv.db import db_session
 from finbot.apps.finbotwsrv.client import FinbotwsrvClient
 from finbot.core import environment, secure
 from finbot.core.errors import InvalidOperation, InvalidUserInput
+from finbot.core.plaid import PlaidClient, PlaidSettings
 from finbot.core.utils import unwrap_optional
 from finbot.core.web_service import jwt_required, service_endpoint, validate
 from finbot.model import LinkedAccount, repository
@@ -71,9 +72,10 @@ def link_new_account(
 
     credentials = body.credentials
     if is_plaid:
-        credentials = appwsrv_core.make_plaid_credentials(
-            credentials, user_account.plaid_settings
+        plaid_client = PlaidClient(
+            PlaidSettings.from_model(unwrap_optional(user_account.plaid_settings))
         )
+        credentials = plaid_client.exchange_public_token(credentials["public_token"])
 
     if do_validate:
         logging.info(
@@ -144,9 +146,12 @@ def get_linked_account(
                 environment.get_secret_key().encode(),
             ).decode()
         )
-        credentials["link_token"] = appwsrv_core.create_plaid_link_token(
-            credentials, unwrap_optional(plaid_settings)
+        plaid_client = PlaidClient(
+            PlaidSettings.from_model(unwrap_optional(plaid_settings))
         )
+        credentials = {
+            "link_token": plaid_client.create_link_token(credentials["access_token"])
+        }
     linked_account_status = repository.get_linked_account_status(
         db_session, user_account_id, linked_account_id
     )

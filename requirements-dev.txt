@@ -5,10 +5,15 @@
 #    pip-compile --output-file=requirements-dev.txt --resolver=backtracking requirements-dev.in
 #
 aiohttp==3.8.4
-    # via python-binance
+    # via
+    #   aiohttp-retry
+    #   python-binance
+    #   twilio
+aiohttp-retry==2.8.3
+    # via twilio
 aiosignal==1.3.1
     # via aiohttp
-alembic==1.10.4
+alembic==1.11.1
     # via -r requirements.in
 amqp==5.1.1
     # via kombu
@@ -54,7 +59,7 @@ click-plugins==1.1.1
     # via celery
 click-repl==0.2.0
     # via celery
-cryptography==39.0.2
+cryptography==40.0.2
     # via
     #   -r requirements.in
     #   pgpy
@@ -88,7 +93,7 @@ greenlet==2.0.1
     # via
     #   playwright
     #   sqlalchemy
-gspread==5.8.0
+gspread==5.9.0
     # via -r requirements.in
 gunicorn==20.1.0
     # via -r requirements.in
@@ -125,7 +130,7 @@ multidict==6.0.4
     # via
     #   aiohttp
     #   yarl
-mypy==1.2.0
+mypy==1.3.0
     # via
     #   -r requirements-dev.in
     #   sqlalchemy-stubs
@@ -133,8 +138,8 @@ mypy-extensions==1.0.0
     # via
     #   black
     #   mypy
-numpy==1.24.2
-    # via pandas
+nulltype==2.3.1
+    # via plaid-python
 oauth2client==4.1.3
     # via -r requirements.in
 oauthlib==3.2.2
@@ -143,8 +148,6 @@ packaging==23.0
     # via
     #   black
     #   pytest
-pandas==1.5.3
-    # via -r requirements.in
 pathspec==0.11.0
     # via black
 pgpy==0.6.0
@@ -153,7 +156,7 @@ pika==1.3.2
     # via -r requirements.in
 pika-stubs==0.1.3
     # via -r requirements-dev.in
-plaid-python==7.5.0
+plaid-python==14.0.0
     # via -r requirements.in
 platformdirs==3.1.0
     # via black
@@ -208,13 +211,12 @@ python-binance==1.0.17
 python-dateutil==2.8.2
     # via
     #   dateparser
-    #   pandas
-pytz==2022.7.1
+    #   plaid-python
+pytz==2023.3
     # via
     #   -r requirements.in
     #   celery
     #   dateparser
-    #   pandas
     #   twilio
 pytz-deprecation-shim==0.1.0.post0
     # via tzlocal
@@ -226,7 +228,6 @@ requests==2.30.0
     # via
     #   -r requirements.in
     #   krakenex
-    #   plaid-python
     #   pycoingecko
     #   python-binance
     #   quickforex
@@ -240,7 +241,7 @@ rsa==4.9
     #   oauth2client
 schedule==1.2.0
     # via -r requirements.in
-semver==2.13.0
+semver==3.0.0
     # via -r requirements-dev.in
 six==1.16.0
     # via
@@ -250,13 +251,13 @@ six==1.16.0
     #   oauth2client
     #   python-binance
     #   python-dateutil
-sqlalchemy==2.0.12
+sqlalchemy==2.0.15
     # via
     #   -r requirements.in
     #   alembic
 sqlalchemy-stubs==0.4
     # via -r requirements-dev.in
-twilio==7.16.4
+twilio==8.2.1
     # via -r requirements.in
 types-click==7.1.8
     # via types-flask
@@ -289,7 +290,9 @@ tzlocal==4.2
 ujson==5.7.0
     # via python-binance
 urllib3==1.26.14
-    # via requests
+    # via
+    #   plaid-python
+    #   requests
 vine==5.0.0
     # via
     #   amqp
