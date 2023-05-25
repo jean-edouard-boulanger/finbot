@@ -93,11 +93,26 @@ class Scheduler(Worker):
         super().__init__()
         self._scheduler = schedule.Scheduler()
         self._stop_event = threading.Event()
-        self._scheduler.every().day.at("08:00").do(self._dispatch_valuation)
-        self._scheduler.every().day.at("13:00").do(self._dispatch_valuation)
-        self._scheduler.every().day.at("18:00").do(self._dispatch_valuation)
+        self._scheduler.every().day.at("08:00", tz="Europe/Paris").do(
+            self._dispatch_valuation
+        )
+        self._scheduler.every().day.at("10:00", tz="Europe/Paris").do(
+            self._dispatch_valuation
+        )
+        self._scheduler.every().day.at("12:00", tz="Europe/Paris").do(
+            self._dispatch_valuation
+        )
+        self._scheduler.every().day.at("14:00", tz="Europe/Paris").do(
+            self._dispatch_valuation
+        )
+        self._scheduler.every().day.at("16:00", tz="Europe/Paris").do(
+            self._dispatch_valuation
+        )
+        self._scheduler.every().day.at("18:00", tz="Europe/Paris").do(
+            self._dispatch_valuation, notify_valuation=True
+        )
 
-    def _dispatch_valuation(self) -> None:
+    def _dispatch_valuation(self, notify_valuation: bool = False) -> None:
         logging.info("[scheduler thread] dispatching valuation for all accounts")
         user_account: UserAccount
         for user_account in iter_user_accounts():
@@ -106,7 +121,9 @@ class Scheduler(Worker):
                 f"[scheduler thread] dispatching valuation for user_account_id={user_account_id}"
             )
             user_account_valuation_client.run_async(
-                ValuationRequest(user_account_id=user_account_id)
+                request=ValuationRequest(
+                    user_account_id=user_account_id, notify_valuation=notify_valuation
+                )
             )
 
     def run(self) -> None:

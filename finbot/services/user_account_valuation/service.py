@@ -78,11 +78,15 @@ class UserAccountValuationService(object):
         )
         logger.info(f"valuation workflow done for user_id={user_account_id}")
 
-        notifier.notify_valuation(
-            valuation=history_report.user_account_valuation,
-            change_1day=history_report.valuation_change.change_1day,
-            currency=history_report.valuation_currency,
-        )
+        if request.notify_valuation:
+            try:
+                notifier.notify_valuation(
+                    valuation=history_report.user_account_valuation,
+                    change_1day=history_report.valuation_change.change_1day,
+                    currency=history_report.valuation_currency,
+                )
+            except Exception as e:
+                logger.warning("failed to send valuation notification: %s", e)
 
         return ValuationResponse(
             history_entry_id=history_report.history_entry_id,
