@@ -8,6 +8,7 @@ from finbot.core.schema import BaseModel
 class ValuationRequest(BaseModel):
     user_account_id: int
     linked_accounts: Optional[list[int]] = None
+    notify_valuation: bool = False
 
 
 class ValuationResponse(BaseModel):
