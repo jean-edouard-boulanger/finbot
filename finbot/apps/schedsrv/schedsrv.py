@@ -5,6 +5,7 @@ import signal
 import sys
 import threading
 import traceback
+from dataclasses import dataclass
 from types import FrameType
 from typing import Generator, Iterable
 
@@ -25,6 +26,23 @@ configure_logging(FINBOT_ENV.desired_log_level)
 
 db_engine = create_engine(FINBOT_ENV.database_url)
 db_session = Session(scoped_session(sessionmaker(bind=db_engine)))
+
+
+@dataclass(frozen=True)
+class ValuationScheduleEntry:
+    time_str: str
+    tz: str = "Europe/Paris"
+    notify_valuation: bool = False
+
+
+VALUATION_SCHEDULE = [
+    ValuationScheduleEntry("08:00"),
+    ValuationScheduleEntry("10:00"),
+    ValuationScheduleEntry("12:00"),
+    ValuationScheduleEntry("14:00"),
+    ValuationScheduleEntry("16:00"),
+    ValuationScheduleEntry("18:00", notify_valuation=True),
+]
 
 
 class Worker(abc.ABC, threading.Thread):
@@ -93,24 +111,13 @@ class Scheduler(Worker):
         super().__init__()
         self._scheduler = schedule.Scheduler()
         self._stop_event = threading.Event()
-        self._scheduler.every().day.at("08:00", tz="Europe/Paris").do(
-            self._dispatch_valuation
-        )
-        self._scheduler.every().day.at("10:00", tz="Europe/Paris").do(
-            self._dispatch_valuation
-        )
-        self._scheduler.every().day.at("12:00", tz="Europe/Paris").do(
-            self._dispatch_valuation
-        )
-        self._scheduler.every().day.at("14:00", tz="Europe/Paris").do(
-            self._dispatch_valuation
-        )
-        self._scheduler.every().day.at("16:00", tz="Europe/Paris").do(
-            self._dispatch_valuation
-        )
-        self._scheduler.every().day.at("18:00", tz="Europe/Paris").do(
-            self._dispatch_valuation, notify_valuation=True
-        )
+        for schedule_entry in VALUATION_SCHEDULE:
+            self._scheduler.every().day.at(
+                schedule_entry.time_str, tz=schedule_entry.tz
+            ).do(
+                self._dispatch_valuation,
+                notify_valuation=schedule_entry.notify_valuation,
+            )
 
     def _dispatch_valuation(self, notify_valuation: bool = False) -> None:
         logging.info("[scheduler thread] dispatching valuation for all accounts")
