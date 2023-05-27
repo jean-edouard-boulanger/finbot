@@ -52,6 +52,7 @@ export const LoginForm: React.FC<LoginFormProps> = () => {
       await login!(event.formData);
     } catch (e) {
       toast.error(`${e}`);
+      throw e;
     }
   };
 

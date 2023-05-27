@@ -45,19 +45,18 @@ const makeUpdateRequest = (
 
 export const ProfileSettings: React.FC<Record<string, never>> = () => {
   const { finbotClient } = useContext(ServicesContext);
-  const auth = useContext(AuthContext);
+  const { userAccountId } = useContext(AuthContext);
   const [profile, setProfile] = useState<UserAccountProfile | null>(null);
-  const userAccountId = auth.account!.id;
 
   useEffect(() => {
     const fetch = async () => {
       const userAccount = await finbotClient!.getUserAccount({
-        account_id: userAccountId,
+        account_id: userAccountId!,
       });
       setProfile(makeProfile(userAccount));
     };
     fetch();
-  }, [finbotClient, auth.account]);
+  }, [finbotClient, userAccountId]);
 
   const handleSubmit = async (
     values: UserAccountProfile,
@@ -65,7 +64,7 @@ export const ProfileSettings: React.FC<Record<string, never>> = () => {
   ) => {
     try {
       const newProfile = await finbotClient!.updateAccountProfile(
-        makeUpdateRequest(userAccountId, values)
+        makeUpdateRequest(userAccountId!, values)
       );
       setProfile(newProfile);
       toast.success("Profile updated");

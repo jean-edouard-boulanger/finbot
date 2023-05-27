@@ -1,6 +1,4 @@
-import React, { useContext } from "react";
-
-import { AuthContext } from "contexts";
+import React from "react";
 
 import { Link } from "react-router-dom";
 
@@ -9,7 +7,6 @@ import { Card, Row, Col } from "react-bootstrap";
 export interface WelcomeProps {}
 
 export const Welcome: React.FC<WelcomeProps> = () => {
-  const { account } = useContext(AuthContext);
   return (
     <>
       <Row className={"mb-4"}>
@@ -17,10 +14,7 @@ export const Welcome: React.FC<WelcomeProps> = () => {
           <Row>
             <Col>
               <div className={"page-header"}>
-                <h1>
-                  Welcome to finbot
-                  <small>{` ${account?.full_name.split(" ")[0]}`}</small>
-                </h1>
+                <h1>Welcome to finbot!</h1>
               </div>
             </Col>
           </Row>

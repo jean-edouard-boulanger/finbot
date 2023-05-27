@@ -29,18 +29,17 @@ const REPORTS = {
 const DEFAULT_REPORT = REPORTS.HOLDINGS;
 
 export const MainDashboard: React.FC<Record<string, never>> = () => {
-  const { account } = useContext(AuthContext);
+  const { userAccountId } = useContext(AuthContext);
   const { finbotClient } = useContext(ServicesContext);
   const locale = "en-GB";
   const [configured, setConfigured] = useState<boolean | null>(null);
   const [valuation, setValuation] = useState<UserAccountValuation | null>(null);
   const [selectedReport, setSelectedReport] = useState<string>(DEFAULT_REPORT);
-  const userAccountId = account!.id;
 
   useEffect(() => {
     const fetch = async () => {
       const configured = await finbotClient!.isAccountConfigured({
-        account_id: userAccountId,
+        account_id: userAccountId!,
       });
       setConfigured(configured);
     };
@@ -54,7 +53,7 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
     const fetch = async () => {
       {
         const result = await finbotClient!.getAccountValuation({
-          account_id: userAccountId,
+          account_id: userAccountId!,
         });
         setValuation(result);
       }
@@ -129,14 +128,14 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
       <Row>
         <Col lg={6} md={12} sm={12} xs={12} className="mt-3">
           <HistoricalValuationPanel
-            userAccountId={userAccountId}
+            userAccountId={userAccountId!}
             locale={locale}
             moneyFormatter={defaultMoneyFormatter}
           />
         </Col>
         <Col lg={6} md={12} sm={12} xs={12} className="mt-3">
           <WealthDistributionPanel
-            userAccountId={userAccountId}
+            userAccountId={userAccountId!}
             locale={locale}
             moneyFormatter={defaultMoneyFormatter}
           />
@@ -160,14 +159,14 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
             <Card.Body>
               {selectedReport === REPORTS.HOLDINGS && (
                 <HoldingsReportPanel
-                  userAccountId={userAccountId}
+                  userAccountId={userAccountId!}
                   locale={locale}
                   moneyFormatter={defaultMoneyFormatter}
                 />
               )}
               {selectedReport === REPORTS.EARNINGS && (
                 <EarningsReportPanel
-                  userAccountId={userAccountId}
+                  userAccountId={userAccountId!}
                   locale={locale}
                   moneyFormatter={defaultMoneyFormatter}
                 />

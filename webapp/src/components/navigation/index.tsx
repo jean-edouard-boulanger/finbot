@@ -69,7 +69,8 @@ const GuestNavbar: React.FC = () => {
 };
 
 export const Navigation: React.FC = () => {
-  const { isAuthenticated } = useContext(AuthContext);
+  const { userAccountId } = useContext(AuthContext);
+  const isAuthenticated = userAccountId !== null;
 
   return (
     <Navbar

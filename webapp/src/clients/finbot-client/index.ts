@@ -1,4 +1,4 @@
-import axios, { AxiosResponse } from "axios";
+import axios, { AxiosInstance, AxiosResponse } from "axios";
 
 import {
   DeleteAccountPlaidSettingsRequest,
@@ -96,10 +96,12 @@ export class FinbotClientError extends Error {
 }
 
 export class FinbotClient {
-  endpoint: string;
+  axiosInstance: AxiosInstance;
 
   constructor() {
-    this.endpoint = getEndpoint();
+    this.axiosInstance = axios.create({
+      baseURL: getEndpoint(),
+    });
   }
 
   async registerAccount({
@@ -109,7 +111,7 @@ export class FinbotClient {
     valuation_ccy,
   }: RegisterAccountRequest): Promise<UserAccount> {
     const settings = { valuation_ccy };
-    const response = await axios.post(`${this.endpoint}/accounts/`, {
+    const response = await this.axiosInstance.post(`/accounts/`, {
       email,
       full_name,
       password,
@@ -120,9 +122,11 @@ export class FinbotClient {
 
   async isEmailAvailable(email: string): Promise<boolean> {
     const params = { email };
-    const response = await axios.get(
-      `${this.endpoint}/accounts/email_available/`,
-      { params }
+    const response = await this.axiosInstance.get(
+      `/accounts/email_available/`,
+      {
+        params,
+      }
     );
     return handleResponse<IsEmailAvailableResponse>(response).available;
   }
@@ -131,7 +135,7 @@ export class FinbotClient {
     email,
     password,
   }: LoginRequest): Promise<LoginResponse> {
-    const response = await axios.post(`${this.endpoint}/auth/login/`, {
+    const response = await this.axiosInstance.post(`/auth/login/`, {
       email,
       password,
     });
@@ -141,9 +145,7 @@ export class FinbotClient {
   async getUserAccount({
     account_id,
   }: GetUserAccountRequest): Promise<UserAccount> {
-    const response = await axios.get(
-      `${this.endpoint}/accounts/${account_id}/`
-    );
+    const response = await this.axiosInstance.get(`/accounts/${account_id}/`);
     return handleResponse<GetUserAccountResponse>(response).user_account;
   }
 
@@ -152,8 +154,8 @@ export class FinbotClient {
     old_password,
     new_password,
   }: UpdateUserAccountPasswordRequest): Promise<void> {
-    const response = await axios.put(
-      `${this.endpoint}/accounts/${account_id}/password/`,
+    const response = await this.axiosInstance.put(
+      `/accounts/${account_id}/password/`,
       {
         old_password,
         new_password,
@@ -168,8 +170,8 @@ export class FinbotClient {
     email,
     mobile_phone_number,
   }: UpdateAccountProfileRequest): Promise<UserAccountProfile> {
-    const response = await axios.put(
-      `${this.endpoint}/accounts/${account_id}/profile/`,
+    const response = await this.axiosInstance.put(
+      `/accounts/${account_id}/profile/`,
       {
         full_name,
         email,
@@ -182,8 +184,8 @@ export class FinbotClient {
   async isAccountConfigured({
     account_id,
   }: IsAccountConfiguredRequest): Promise<boolean> {
-    const response = await axios.get(
-      `${this.endpoint}/accounts/${account_id}/is_configured/`
+    const response = await this.axiosInstance.get(
+      `/accounts/${account_id}/is_configured/`
     );
     return handleResponse<IsAccountConfiguredResponse>(response).configured;
   }
@@ -191,8 +193,8 @@ export class FinbotClient {
   async getAccountSettings({
     account_id,
   }: GetAccountSettingsRequest): Promise<UserAccountSettings> {
-    const response = await axios.get(
-      `${this.endpoint}/accounts/${account_id}/settings/`
+    const response = await this.axiosInstance.get(
+      `/accounts/${account_id}/settings/`
     );
     return handleResponse<GetAccountSettingsResponse>(response).settings;
   }
@@ -201,8 +203,8 @@ export class FinbotClient {
     account_id,
     twilio_settings,
   }: UpdateTwilioAccountSettingsRequest): Promise<TwilioSettings> {
-    const response = await axios.put(
-      `${this.endpoint}/accounts/${account_id}/settings/`,
+    const response = await this.axiosInstance.put(
+      `/accounts/${account_id}/settings/`,
       { twilio_settings }
     );
     return handleResponse<UpdateTwilioAccountSettingsResponse>(response)
@@ -212,8 +214,8 @@ export class FinbotClient {
   async getAccountPlaidSettings({
     account_id,
   }: GetAccountPlaidSettingsRequest): Promise<PlaidSettings> {
-    const response = await axios.get(
-      `${this.endpoint}/accounts/${account_id}/settings/plaid/`
+    const response = await this.axiosInstance.get(
+      `/accounts/${account_id}/settings/plaid/`
     );
     return handleResponse<GetAccountPlaidSettingsResponse>(response)
       .plaid_settings;
@@ -226,8 +228,8 @@ export class FinbotClient {
     public_key,
     secret_key,
   }: UpdateAccountPlaidSettingsRequest): Promise<PlaidSettings> {
-    const response = await axios.put(
-      `${this.endpoint}/accounts/${account_id}/settings/plaid/`,
+    const response = await this.axiosInstance.put(
+      `/accounts/${account_id}/settings/plaid/`,
       {
         env,
         client_id,
@@ -242,8 +244,8 @@ export class FinbotClient {
   async deleteAccountPlaidSettings({
     account_id,
   }: DeleteAccountPlaidSettingsRequest): Promise<void> {
-    const response = await axios.delete(
-      `${this.endpoint}/accounts/${account_id}/settings/plaid/`
+    const response = await this.axiosInstance.delete(
+      `/accounts/${account_id}/settings/plaid/`
     );
     handleResponse(response);
   }
@@ -251,8 +253,8 @@ export class FinbotClient {
   async getAccountValuation({
     account_id,
   }: GetAccountValuationRequest): Promise<UserAccountValuation | null> {
-    const response = await axios.get(
-      `${this.endpoint}/accounts/${account_id}/valuation/`
+    const response = await this.axiosInstance.get(
+      `/accounts/${account_id}/valuation/`
     );
     return handleResponse<GetAccountValuationResponse>(response).valuation;
   }
@@ -268,8 +270,8 @@ export class FinbotClient {
       to_time: to_time?.toISO(),
       frequency: frequency,
     };
-    const response = await axios.get(
-      `${this.endpoint}/accounts/${account_id}/valuation/history/`,
+    const response = await this.axiosInstance.get(
+      `/accounts/${account_id}/valuation/history/`,
       { params }
     );
     return handleResponse<GetAccountHistoricalValuationResponse>(response)
@@ -287,8 +289,8 @@ export class FinbotClient {
       to_time: to_time?.toISO(),
       frequency: frequency,
     };
-    const response = await axios.get(
-      `${this.endpoint}/accounts/${account_id}/valuation/history/by/asset_type/`,
+    const response = await this.axiosInstance.get(
+      `/accounts/${account_id}/valuation/history/by/asset_type/`,
       { params }
     );
     return handleResponse<GetAccountHistoricalValuationResponse>(response)
@@ -298,8 +300,8 @@ export class FinbotClient {
   async getLinkedAccountsValuation({
     account_id,
   }: GetLinkedAccountsValuationRequest): Promise<LinkedAccountsValuation> {
-    const response = await axios.get(
-      `${this.endpoint}/accounts/${account_id}/linked_accounts/valuation/`
+    const response = await this.axiosInstance.get(
+      `/accounts/${account_id}/linked_accounts/valuation/`
     );
     return handleResponse<GetLinkedAccountsValuationResponse>(response)
       .valuation;
@@ -316,8 +318,8 @@ export class FinbotClient {
       to_time: to_time?.toISO(),
       frequency: frequency,
     };
-    const response = await axios.get(
-      `${this.endpoint}/accounts/${account_id}/linked_accounts/valuation/history/`,
+    const response = await this.axiosInstance.get(
+      `/accounts/${account_id}/linked_accounts/valuation/history/`,
       { params }
     );
     return handleResponse<GetLinkedAccountsHistoricalValuationResponse>(
@@ -328,8 +330,8 @@ export class FinbotClient {
   async getUserAccountValuationByAssetType({
     account_id,
   }: GetUserAccountValuationByAssetTypeRequest): Promise<UserAccountValuationByAssetType> {
-    const response = await axios.get(
-      `${this.endpoint}/accounts/${account_id}/valuation/by/asset_type/`
+    const response = await this.axiosInstance.get(
+      `/accounts/${account_id}/valuation/by/asset_type/`
     );
     return handleResponse<GetUserAccountValuationByAssetTypeResponse>(response)
       .valuation;
@@ -338,8 +340,8 @@ export class FinbotClient {
   async getLinkedAccounts({
     account_id,
   }: GetLinkedAccountsRequest): Promise<Array<LinkedAccount>> {
-    const response = await axios.get(
-      `${this.endpoint}/accounts/${account_id}/linked_accounts/`
+    const response = await this.axiosInstance.get(
+      `/accounts/${account_id}/linked_accounts/`
     );
     return handleResponse<GetLinkedAccountsResponse>(response).linked_accounts;
   }
@@ -348,8 +350,8 @@ export class FinbotClient {
     account_id,
     linked_account_id,
   }: GetLinkedAccountRequest): Promise<LinkedAccount> {
-    const response = await axios.get(
-      `${this.endpoint}/accounts/${account_id}/linked_accounts/${linked_account_id}/`
+    const response = await this.axiosInstance.get(
+      `/accounts/${account_id}/linked_accounts/${linked_account_id}/`
     );
     return handleResponse<GetLinkedAccountResponse>(response).linked_account;
   }
@@ -360,8 +362,8 @@ export class FinbotClient {
     account_name,
     frozen,
   }: UpdateLinkedAccountMetadata): Promise<void> {
-    const response = await axios.put(
-      `${this.endpoint}/accounts/${account_id}/linked_accounts/${linked_account_id}/metadata/`,
+    const response = await this.axiosInstance.put(
+      `/accounts/${account_id}/linked_accounts/${linked_account_id}/metadata/`,
       {
         account_name,
         frozen,
@@ -377,10 +379,8 @@ export class FinbotClient {
     persist,
     credentials,
   }: UpdateLinkedAccountCredentials): Promise<void> {
-    const response = await axios.put(
-      `${
-        this.endpoint
-      }/accounts/${account_id}/linked_accounts/${linked_account_id}/credentials/?validate=${
+    const response = await this.axiosInstance.put(
+      `/accounts/${account_id}/linked_accounts/${linked_account_id}/credentials/?validate=${
         validate ?? 0
       }&persist=${persist ?? 0}`,
       {
@@ -394,33 +394,31 @@ export class FinbotClient {
     account_id,
     linked_account_id,
   }: DeleteLinkedAccountRequest): Promise<void> {
-    const response = await axios.delete(
-      `${this.endpoint}/accounts/${account_id}/linked_accounts/${linked_account_id}/`
+    const response = await this.axiosInstance.delete(
+      `/accounts/${account_id}/linked_accounts/${linked_account_id}/`
     );
     handleResponse(response);
   }
 
   async getProviders(): Promise<Array<Provider>> {
-    const response = await axios.get(`${this.endpoint}/providers/`);
+    const response = await this.axiosInstance.get(`/providers/`);
     return handleResponse<GetProvidersResponse>(response).providers;
   }
 
   async saveProvider(provider: SaveProviderRequest): Promise<Provider> {
-    const response = await axios.put(`${this.endpoint}/providers/`, provider);
+    const response = await this.axiosInstance.put(`/providers/`, provider);
     return handleResponse<SaveProviderResponse>(response).provider;
   }
 
   async deleteProvider({ provider_id }: DeleteProviderRequest): Promise<void> {
-    const response = await axios.delete(
-      `${this.endpoint}/providers/${provider_id}/`
+    const response = await this.axiosInstance.delete(
+      `/providers/${provider_id}/`
     );
     handleResponse(response);
   }
 
   async getProvider({ provider_id }: GetProviderRequest): Promise<Provider> {
-    const response = await axios.get(
-      `${this.endpoint}/providers/${provider_id}/`
-    );
+    const response = await this.axiosInstance.get(`/providers/${provider_id}/`);
     return handleResponse<GetProviderResponse>(response).provider;
   }
 
@@ -430,8 +428,8 @@ export class FinbotClient {
     credentials,
     account_name,
   }: ValidateLinkedAccountCredentialsRequest): Promise<void> {
-    const response = await axios.post(
-      `${this.endpoint}/accounts/${account_id}/linked_accounts/?persist=0`,
+    const response = await this.axiosInstance.post(
+      `/accounts/${account_id}/linked_accounts/?persist=0`,
       { provider_id, credentials, account_name }
     );
     handleResponse<void>(response);
@@ -443,39 +441,39 @@ export class FinbotClient {
     credentials,
     account_name,
   }: LinkAccountRequest): Promise<void> {
-    const response = await axios.post(
-      `${this.endpoint}/accounts/${account_id}/linked_accounts/?validate=0`,
+    const response = await this.axiosInstance.post(
+      `/accounts/${account_id}/linked_accounts/?validate=0`,
       { provider_id, credentials, account_name }
     );
     handleResponse<void>(response);
   }
 
   async getHoldingsReport(): Promise<HoldingsReport> {
-    const response = await axios.get(`${this.endpoint}/reports/holdings/`);
+    const response = await this.axiosInstance.get(`/reports/holdings/`);
     return handleResponse<ReportResponse<HoldingsReport>>(response).report;
   }
 
   async getEarningsReport(): Promise<EarningsReport> {
-    const response = await axios.get(`${this.endpoint}/reports/earnings/`);
+    const response = await this.axiosInstance.get(`/reports/earnings/`);
     return handleResponse<ReportResponse<EarningsReport>>(response).report;
   }
 
   async getSystemReport(): Promise<SystemReport> {
-    const response = await axios.get(`${this.endpoint}/system_report/`);
+    const response = await this.axiosInstance.get(`/system_report/`);
     return handleResponse<GetSystemReportResponse>(response).system_report;
   }
 
   async getEmailDeliveryProviders(): Promise<Array<EmailDeliveryProvider>> {
-    const response = await axios.get(
-      `${this.endpoint}/admin/settings/email_delivery/providers/`
+    const response = await this.axiosInstance.get(
+      `/admin/settings/email_delivery/providers/`
     );
     return handleResponse<GetEmailDeliveryProvidersResponse>(response)
       .providers;
   }
 
   async getEmailDeliverySettings(): Promise<EmailDeliverySettings | null> {
-    const response = await axios.get(
-      `${this.endpoint}/admin/settings/email_delivery/`
+    const response = await this.axiosInstance.get(
+      `/admin/settings/email_delivery/`
     );
     return handleResponse<GetEmailDeliverySettingsResponse>(response).settings;
   }
@@ -485,8 +483,8 @@ export class FinbotClient {
     validate?: boolean
   ): Promise<void> {
     const params = { validate: validate ?? false };
-    const response = await axios.put(
-      `${this.endpoint}/admin/settings/email_delivery/`,
+    const response = await this.axiosInstance.put(
+      `/admin/settings/email_delivery/`,
       settings,
       { params }
     );
@@ -494,8 +492,8 @@ export class FinbotClient {
   }
 
   async disableEmailDelivery(): Promise<void> {
-    const response = await axios.delete(
-      `${this.endpoint}/admin/settings/email_delivery/`
+    const response = await this.axiosInstance.delete(
+      `/admin/settings/email_delivery/`
     );
     return handleResponse<void>(response);
   }

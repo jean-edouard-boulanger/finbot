@@ -3,7 +3,7 @@ import React, { useContext, useState, useEffect, useRef } from "react";
 import AceEditor from "react-ace";
 import { default as DataDrivenForm } from "react-jsonschema-form";
 import { Alert, Row, Col, Button, Tabs, Tab, Form } from "react-bootstrap";
-import { ServicesContext, AuthContext } from "contexts";
+import { ServicesContext } from "contexts";
 import { LoadingButton } from "components";
 import { Formik, Form as MetaForm, Field, ErrorMessage } from "formik";
 import { ProviderSelector } from "./components";
@@ -80,7 +80,6 @@ const makeProviderDescription = (
 
 export const EditProviderPanel: React.FC<Record<string, never>> = () => {
   const { finbotClient } = useContext(ServicesContext);
-  const { account } = useContext(AuthContext);
   const [selectedProviderId, setSelectedProviderId] = useState<string | null>(
     null
   );
@@ -154,7 +153,7 @@ export const EditProviderPanel: React.FC<Record<string, never>> = () => {
       setRawSchema(JSON.stringify(provider.credentials_schema, null, 2));
     };
     fetch();
-  }, [finbotClient, account, selectedProviderId]);
+  }, [finbotClient, selectedProviderId]);
 
   const isNew = selectedProviderId === null;
 

@@ -27,7 +27,7 @@ export const AccountSecuritySettings: React.FC<
   AccountSecuritySettingsProps
 > = () => {
   const { finbotClient } = useContext(ServicesContext);
-  const auth = useContext(AuthContext);
+  const { userAccountId } = useContext(AuthContext);
   const [loading, setLoading] = useState<boolean>(false);
   const [passwordForm, setPasswordForm] = useState<PasswordForm>(
     DEFAULT_PASSWORD_FORM
@@ -36,7 +36,6 @@ export const AccountSecuritySettings: React.FC<
     useState<PasswordValidationResult>(() => {
       return validatePassword(passwordForm);
     });
-  const userAccountId = auth.account!.id;
 
   useEffect(() => {
     setPasswordValidation(validatePassword(passwordForm));
@@ -54,7 +53,7 @@ export const AccountSecuritySettings: React.FC<
     try {
       setLoading(true);
       await finbotClient!.updateUserAccountPassword({
-        account_id: userAccountId,
+        account_id: userAccountId!,
         old_password: form.oldPassword,
         new_password: form.password,
       });

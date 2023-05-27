@@ -114,7 +114,7 @@ export interface LinkAccountProps {
 }
 
 export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
-  const { account } = useContext(AuthContext);
+  const { userAccountId } = useContext(AuthContext);
   const { finbotClient } = useContext(ServicesContext);
 
   const [linkedAccount, setLinkedAccount] = useState<LinkedAccount | null>(
@@ -132,7 +132,6 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
   const [linked, setLinked] = useState<boolean>(false);
   const accountNameRef = useRef(accountName);
   const updateMode = linkedAccount !== null;
-  const userAccountId = account!.id;
 
   useEffect(() => {
     const fetch = async () => {
@@ -150,12 +149,12 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
     const fetch = async () => {
       setPlaidSettings(
         await finbotClient!.getAccountPlaidSettings({
-          account_id: userAccountId,
+          account_id: userAccountId!,
         })
       );
     };
     fetch();
-  }, [finbotClient, account]);
+  }, [finbotClient, userAccountId]);
 
   useEffect(() => {
     if (props.linkedAccount) {
@@ -191,7 +190,7 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
     try {
       const newAccountName = accountNameRef.current!;
       await finbotClient!.updateLinkedAccountMetadata({
-        account_id: userAccountId,
+        account_id: userAccountId!,
         linked_account_id: linkedAccount!.id,
         account_name: newAccountName,
       });
@@ -207,7 +206,7 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
   ) => {
     setOperation("Validating credentials");
     const settings = {
-      account_id: userAccountId,
+      account_id: userAccountId!,
       linked_account_id: linkedAccount!.id,
       credentials: credentials,
     };
@@ -252,7 +251,7 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
     setOperation("Validating credentials");
     try {
       await finbotClient!.validateLinkedAccountCredentials({
-        account_id: userAccountId,
+        account_id: userAccountId!,
         ...link_settings,
       });
     } catch (e) {
@@ -263,7 +262,7 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
     setOperation("Linking account");
     try {
       await finbotClient!.linkAccount({
-        account_id: userAccountId,
+        account_id: userAccountId!,
         ...link_settings,
       });
     } catch (e) {

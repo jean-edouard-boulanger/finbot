@@ -1,34 +1,39 @@
 import { AuthState } from "./auth-state";
 
-const IDENTITY_LOCAL_KEY = "identity";
+const IDENTITY_LOCAL_KEY = "finbot:auth:state";
 
-export function persistLocal(state: AuthState): void {
-  localStorage.setItem(
-    IDENTITY_LOCAL_KEY,
-    JSON.stringify({
-      token: state.token,
-      account: state.account,
-    })
-  );
+function deserializeAuthState(data: Record<string, any>): AuthState | null {
+  if (
+    typeof data.accessToken === "string" &&
+    typeof data.refreshToken === "string" &&
+    Number.isInteger(data.userAccountId)
+  ) {
+    return {
+      accessToken: data.accessToken,
+      refreshToken: data.refreshToken,
+      userAccountId: data.userAccountId,
+    };
+  }
+  return null;
 }
 
-export function restoreLocal(currentState: AuthState): AuthState {
-  const jsonData = localStorage.getItem(IDENTITY_LOCAL_KEY);
-  if (jsonData === null) {
-    return { ...currentState };
+export function saveAuthStateInLocalStorage(authState: AuthState): void {
+  localStorage.setItem(IDENTITY_LOCAL_KEY, JSON.stringify(authState));
+}
+
+export function clearAuthStateFromLocalStorage(): void {
+  localStorage.removeItem(IDENTITY_LOCAL_KEY);
+}
+
+export function loadAuthStateFromLocalStorage(): AuthState | null {
+  const rawAuthState = localStorage.getItem(IDENTITY_LOCAL_KEY);
+  if (rawAuthState === null) {
+    return null;
   }
   try {
-    const data = JSON.parse(jsonData);
-    return {
-      ...currentState,
-      token: data.token,
-      account: data.account,
-    };
+    return deserializeAuthState(JSON.parse(rawAuthState));
   } catch {
-    return { ...currentState };
+    clearAuthStateFromLocalStorage();
+    return null;
   }
-}
-
-export function clearLocal(): void {
-  localStorage.removeItem(IDENTITY_LOCAL_KEY);
 }
