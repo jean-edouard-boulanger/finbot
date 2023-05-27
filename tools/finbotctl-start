@@ -53,9 +53,9 @@ fi
 
 log_info "starting finbot database and message queue containers"
 docker-compose up -d finbotdb finbotrmq || die failed to start containers
-wait_dep db,rmq
+wait_dep finbotdb,finbotrmq
 
-log_info "starting finbot backend containers"
+log_info "starting finbot application containers"
 docker-compose up -d \
   workersrv \
   appwsrv \
@@ -63,8 +63,8 @@ docker-compose up -d \
   schedsrv \
   || die failed to start containers
 
-log_info "waiting for finbot endpoints"
-wait_dep worker,api,hist,snap,finbot
+log_info "waiting for finbot application containers"
+wait_dep workersrv,appwsrv,finbotwsrv,schedsrv
 
 if [[ "${start_frontend}" == "1" ]]
 then
