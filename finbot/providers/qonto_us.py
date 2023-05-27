@@ -3,7 +3,7 @@ from typing import Any, Optional
 from pydantic import BaseModel, SecretStr
 
 from finbot.core import schema as core_schema
-from finbot.core.qonto_api import QontoApi, SimpleAuthentication, Unauthorized
+from finbot.core.qonto_api import QontoApi, Unauthorized
 from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationFailure
 from finbot.providers.schema import (
@@ -41,10 +41,8 @@ class Api(ProviderBase):
 
     def initialize(self) -> None:
         api = QontoApi(
-            SimpleAuthentication(
-                identifier=self._credentials.identifier,
-                secret_key=self._credentials.secret_key.get_secret_value(),
-            )
+            identifier=self._credentials.identifier,
+            secret_key=self._credentials.secret_key.get_secret_value(),
         )
         try:
             organization = api.list_organizations()[0]

@@ -1,13 +1,13 @@
-from dataclasses import dataclass
-from typing import Any, Protocol
+from typing import cast
 
 import requests
+from pydantic import BaseModel
 
 from finbot.core.errors import FinbotError
+from finbot.core.typing_extensions import JSON
 
 
-@dataclass
-class BankAccount:
+class BankAccount(BaseModel):
     slug: str
     iban: str
     bic: str
@@ -19,41 +19,13 @@ class BankAccount:
     name: str
     updated_at: str
     status: str
-
-    @staticmethod
-    def deserialize(data: dict[str, Any]) -> "BankAccount":
-        return BankAccount(**data)
+    main: bool
 
 
-@dataclass
-class Organization:
+class Organization(BaseModel):
     slug: str
     legal_name: str
     bank_accounts: list[BankAccount]
-
-    @staticmethod
-    def deserialize(data: dict[str, Any]) -> "Organization":
-        return Organization(
-            slug=data["slug"],
-            legal_name=data["legal_name"],
-            bank_accounts=[
-                BankAccount.deserialize(entry) for entry in data["bank_accounts"]
-            ],
-        )
-
-
-class AuthenticationMethod(Protocol):
-    def as_http_header(self) -> dict[str, str]:
-        ...
-
-
-class SimpleAuthentication(AuthenticationMethod):
-    def __init__(self, identifier: str, secret_key: str):
-        self.identifier = identifier
-        self.secret_key = secret_key
-
-    def as_http_header(self) -> dict[str, str]:
-        return {"Authorization": f"{self.identifier}:{self.secret_key}"}
 
 
 class QontoError(FinbotError):
@@ -67,12 +39,12 @@ class Unauthorized(QontoError):
 
 
 class QontoApi(object):
-    def __init__(self, auth_method: AuthenticationMethod):
+    def __init__(self, identifier: str, secret_key: str):
         self._session = requests.Session()
-        self._session.headers.update(auth_method.as_http_header())
+        self._session.headers.update({"Authorization": f"{identifier}:{secret_key}"})
 
     @staticmethod
-    def _handle_response(response: requests.Response) -> Any:
+    def _handle_response(response: requests.Response) -> JSON:
         response.raise_for_status()
         payload = response.json()
         if "errors" in payload:
@@ -82,9 +54,10 @@ class QontoApi(object):
             raise QontoError(
                 "Errors: " + ", ".join(error["detail"] for error in errors)
             )
-        return payload
+        return cast(JSON, payload)
 
     def list_organizations(self) -> list[Organization]:
         response = self._session.get("https://thirdparty.qonto.com/v2/organization")
         payload = QontoApi._handle_response(response)
-        return [Organization.deserialize(payload["organization"])]
+        assert isinstance(payload, dict)
+        return [Organization.parse_obj(payload["organization"])]
