@@ -64,7 +64,7 @@ docker-compose up -d \
   || die failed to start containers
 
 log_info "waiting for finbot application containers"
-wait_dep workersrv,appwsrv,finbotwsrv,schedsrv
+wait_dep workersrv,appwsrv,finbotwsrv
 
 if [[ "${start_frontend}" == "1" ]]
 then
