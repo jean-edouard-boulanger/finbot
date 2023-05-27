@@ -32,7 +32,7 @@ const makePlaidSettings = (settings?: PlaidSettings | null) => {
 };
 
 export const PlaidIntegrationSettings: React.FC<Record<string, never>> = () => {
-  const { account } = useContext(AuthContext);
+  const { userAccountId } = useContext(AuthContext);
   const { finbotClient } = useContext(ServicesContext);
 
   const [enablePlaid, setEnablePlaid] = useState(false);
@@ -40,18 +40,16 @@ export const PlaidIntegrationSettings: React.FC<Record<string, never>> = () => {
     null
   );
 
-  const userAccountId = account!.id;
-
   useEffect(() => {
     const fetch = async () => {
       const plaidSettings = await finbotClient!.getAccountPlaidSettings({
-        account_id: userAccountId,
+        account_id: userAccountId!,
       });
       setEnablePlaid(plaidSettings !== null);
       setPlaidSettings(makePlaidSettings(plaidSettings));
     };
     fetch();
-  }, [account, finbotClient]);
+  }, [userAccountId, finbotClient]);
 
   const handleSubmit = async (
     values: PlaidSettings,
@@ -60,7 +58,7 @@ export const PlaidIntegrationSettings: React.FC<Record<string, never>> = () => {
     try {
       if (enablePlaid) {
         const newSettings = await finbotClient!.updateAccountPlaidSettings({
-          account_id: userAccountId,
+          account_id: userAccountId!,
           env: values.env,
           client_id: values.client_id,
           public_key: values.public_key,
@@ -69,7 +67,7 @@ export const PlaidIntegrationSettings: React.FC<Record<string, never>> = () => {
         setPlaidSettings(makePlaidSettings(newSettings));
       } else {
         await finbotClient!.deleteAccountPlaidSettings({
-          account_id: userAccountId,
+          account_id: userAccountId!,
         });
         setPlaidSettings(makePlaidSettings());
       }

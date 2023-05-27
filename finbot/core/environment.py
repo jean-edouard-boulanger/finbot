@@ -14,6 +14,7 @@ class _Raises(object):
 @dataclass
 class Environment:
     secret_key: str
+    jwt_secret_key: str
     database_url: str
     finbotwsrv_endpoint: str
     appwsrv_endpoint: str
@@ -40,6 +41,10 @@ def get_environment_value(
 
 def get_secret_key() -> str:
     return get_environment_value("FINBOT_SECRET_KEY")
+
+
+def get_jwt_secret_key() -> str:
+    return get_environment_value("FINBOT_JWT_SECRET_KEY")
 
 
 def get_database_url() -> str:
@@ -82,6 +87,7 @@ def get_rmq_url() -> str:
 def get() -> Environment:
     return Environment(
         secret_key=get_secret_key(),
+        jwt_secret_key=get_jwt_secret_key(),
         database_url=get_database_url(),
         finbotwsrv_endpoint=get_finbotwsrv_endpoint(),
         appwsrv_endpoint=get_appwsrv_endpoint(),

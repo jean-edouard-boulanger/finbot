@@ -83,8 +83,8 @@ const UserRouter = () => {
 };
 
 const AppRouter = () => {
-  const { isAuthenticated } = useContext(AuthContext);
-  return isAuthenticated ? <UserRouter /> : <GuestRouter />;
+  const { userAccountId } = useContext(AuthContext);
+  return userAccountId ? <UserRouter /> : <GuestRouter />;
 };
 
 interface AppProps {}

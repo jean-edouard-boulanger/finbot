@@ -24,7 +24,7 @@ configure_logging(FINBOT_ENV.desired_log_level)
 
 
 app = Flask(__name__)
-app.config["JWT_SECRET_KEY"] = environment.get_secret_key()
+app.config["JWT_SECRET_KEY"] = FINBOT_ENV.jwt_secret_key
 
 CORS(app)
 JWTManager(app)

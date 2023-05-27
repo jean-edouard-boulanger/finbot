@@ -1,23 +1,5 @@
 export interface AuthState {
-  token: string | null;
-  account: any;
+  accessToken: string;
+  refreshToken: string;
+  userAccountId: number;
 }
-
-export const makeFreshAuthState = (): AuthState => {
-  return {
-    token: null,
-    account: null,
-  };
-};
-
-export const isValidAuthState = (state: Record<string, any>): boolean => {
-  if (state.token === null && state.account === null) {
-    return true;
-  }
-  return (
-    state.token !== null &&
-    state.token !== undefined &&
-    state.account !== null &&
-    state.account !== undefined
-  );
-};

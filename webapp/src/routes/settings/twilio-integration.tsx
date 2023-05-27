@@ -27,7 +27,7 @@ const makeTwilioSettings = (settings?: TwilioSettings | null) => {
 export const TwilioIntegrationSettings: React.FC<
   Record<string, never>
 > = () => {
-  const { account } = useContext(AuthContext);
+  const { userAccountId } = useContext(AuthContext);
   const { finbotClient } = useContext(ServicesContext);
 
   const [enableTwilio, setEnableTwilio] = useState(false);
@@ -38,14 +38,14 @@ export const TwilioIntegrationSettings: React.FC<
   useEffect(() => {
     const fetch = async () => {
       const settings = await finbotClient!.getAccountSettings({
-        account_id: account!.id,
+        account_id: userAccountId!,
       });
       const twilioSettings = settings.twilio_settings;
       setEnableTwilio(twilioSettings !== null);
       setTwilioSettings(makeTwilioSettings(twilioSettings));
     };
     fetch();
-  }, [account, finbotClient]);
+  }, [userAccountId, finbotClient]);
 
   const handleSubmit = async (
     values: TwilioSettings,
@@ -54,7 +54,7 @@ export const TwilioIntegrationSettings: React.FC<
     try {
       const newSettings = enableTwilio ? values : null;
       await finbotClient!.updateTwilioAccountSettings({
-        account_id: account!.id,
+        account_id: userAccountId!,
         twilio_settings: newSettings,
       });
       setSubmitting(false);

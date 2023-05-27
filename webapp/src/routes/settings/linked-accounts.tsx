@@ -74,7 +74,7 @@ export const UnlinkAccountDialog: React.FC<UnlinkAccountDialogProps> = ({
 
 export const UpdateLinkedAccountPanel: React.FC = () => {
   const { finbotClient } = useContext(ServicesContext);
-  const { account } = useContext(AuthContext);
+  const { userAccountId } = useContext(AuthContext);
   const { linkedAccountId } = useParams<Record<string, string | undefined>>();
   const [linkedAccount, setLinkedAccount] = useState<LinkedAccount | null>(
     null
@@ -82,13 +82,13 @@ export const UpdateLinkedAccountPanel: React.FC = () => {
   useEffect(() => {
     const fetch = async () => {
       const linkedAccount = await finbotClient!.getLinkedAccount({
-        account_id: account!.id,
+        account_id: userAccountId!,
         linked_account_id: parseInt(linkedAccountId!),
       });
       setLinkedAccount(linkedAccount);
     };
     fetch();
-  }, [finbotClient, account, linkedAccountId]);
+  }, [finbotClient, userAccountId, linkedAccountId]);
   return <LinkAccount linkedAccount={linkedAccount} />;
 };
 
@@ -147,7 +147,7 @@ const LinkedAccountStatusIcon: React.FC<LinkedAccountStatusIconProps> = ({
 
 export const LinkedAccountStatusPanel: React.FC = () => {
   const { finbotClient } = useContext(ServicesContext);
-  const { account } = useContext(AuthContext);
+  const { userAccountId } = useContext(AuthContext);
   const { linkedAccountId } = useParams<Record<string, string | undefined>>();
   const [linkedAccount, setLinkedAccount] = useState<LinkedAccount | null>(
     null
@@ -157,7 +157,7 @@ export const LinkedAccountStatusPanel: React.FC = () => {
     const fetch = async () => {
       try {
         const linkedAccount = await finbotClient!.getLinkedAccount({
-          account_id: account!.id,
+          account_id: userAccountId!,
           linked_account_id: parseInt(linkedAccountId!),
         });
         setLinkedAccount(linkedAccount);
@@ -166,7 +166,7 @@ export const LinkedAccountStatusPanel: React.FC = () => {
       }
     };
     fetch();
-  }, [finbotClient, account, linkedAccountId]);
+  }, [finbotClient, userAccountId, linkedAccountId]);
 
   if (linkedAccount === null) {
     return (
@@ -264,7 +264,7 @@ export interface AccountsPanelProps {}
 export const AccountsPanel: React.FC<AccountsPanelProps> = () => {
   const push = useNavigate();
   const { finbotClient } = useContext(ServicesContext);
-  const { account } = useContext(AuthContext);
+  const { userAccountId } = useContext(AuthContext);
   const [accounts, setAccounts] = useState<Array<LinkedAccount>>([]);
   const [dialog, setDialog] = useState<UnlinkAccountDialogProps>({
     show: false,
@@ -272,7 +272,6 @@ export const AccountsPanel: React.FC<AccountsPanelProps> = () => {
     handleUnlink: () => {},
     handleClose: () => {},
   });
-  const userAccountId = account!.id;
 
   const hideDialog = () => {
     setDialog({
@@ -285,7 +284,7 @@ export const AccountsPanel: React.FC<AccountsPanelProps> = () => {
 
   const refreshAccounts = async () => {
     const results = await finbotClient!.getLinkedAccounts({
-      account_id: userAccountId,
+      account_id: userAccountId!,
     });
     setAccounts(results);
   };
@@ -297,7 +296,7 @@ export const AccountsPanel: React.FC<AccountsPanelProps> = () => {
   const handleUnlinkAccount = async (linkedAccount: LinkedAccount) => {
     try {
       await finbotClient!.deleteLinkedAccount({
-        account_id: userAccountId,
+        account_id: userAccountId!,
         linked_account_id: linkedAccount.id,
       });
       toast.success(`Successfully unlinked '${linkedAccount.account_name}'`);
