@@ -2,7 +2,7 @@
 import json
 from dataclasses import dataclass
 from datetime import date, datetime
-from typing import Any, Literal, Optional, Protocol, Type, TypedDict, Union
+from typing import Any, Literal, Optional, Protocol, Type, TypedDict, Union, cast
 
 from sqlalchemy import desc
 from sqlalchemy.orm import joinedload
@@ -14,6 +14,7 @@ from finbot.core.errors import InvalidUserInput, MissingUserData
 from finbot.core.schema import ValuationFrequency
 from finbot.model import (
     LinkedAccount,
+    LinkedAccountSnapshotEntry,
     LinkedAccountValuationHistoryEntry,
     Provider,
     SubAccountItemValuationHistoryEntry,
@@ -388,6 +389,19 @@ def get_historical_valuation_by_asset_type(
         AssetTypeHistoricalValuationEntry(**row_to_dict(row))
         for row in session.execute(text(query), query_params)
     ]
+
+
+def find_snapshot_linked_account_errors(
+    session: Session, snapshot_id: int
+) -> list[LinkedAccountSnapshotEntry]:
+    return cast(
+        list[LinkedAccountSnapshotEntry],
+        session.query(LinkedAccountSnapshotEntry)
+        .filter_by(snapshot_id=snapshot_id)
+        .filter_by(success=False)
+        .options(joinedload(LinkedAccountSnapshotEntry.linked_account))
+        .all(),
+    )
 
 
 class LinkedAccountStatus(TypedDict):

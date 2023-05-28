@@ -243,6 +243,7 @@ class LinkedAccountSnapshotEntry(Base):
     sub_accounts_entries = relationship(
         "SubAccountSnapshotEntry", back_populates="linked_account_entry"
     )
+    linked_account = relationship(LinkedAccount, uselist=False)
 
 
 class SubAccountSnapshotEntry(Base):

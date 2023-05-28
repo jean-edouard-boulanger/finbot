@@ -1,14 +1,18 @@
 import logging
 
+from finbot import model
 from finbot.core.db.session import Session
+from finbot.core.email_delivery import DeliverySettings as EmailDeliverySettings
+from finbot.core.kv_store import DBKVStore
 from finbot.core.notifier import (
     CompositeNotifier,
+    EmailNotifier,
     Notifier,
     TwilioNotifier,
     TwilioSettings,
 )
 from finbot.core.serialization import pretty_dump
-from finbot.model import UserAccount, repository
+from finbot.model import repository
 from finbot.services.user_account_snapshot.service import UserAccountSnapshotService
 from finbot.services.user_account_valuation.schema import (
     ValuationRequest,
@@ -21,14 +25,28 @@ from finbot.services.valuation_history_writer.service import (
 logger = logging.getLogger(__name__)
 
 
-def _configure_notifier(user_account: UserAccount) -> Notifier:
+def _configure_notifier(
+    db_session: Session, user_account: model.UserAccount
+) -> Notifier:
     notifiers: list[Notifier] = []
     if user_account.mobile_phone_number and user_account.settings.twilio_settings:
-        twilio_settings = TwilioSettings.deserialize(
+        twilio_settings = TwilioSettings.parse_obj(
             user_account.settings.twilio_settings
         )
         notifiers.append(
-            TwilioNotifier(twilio_settings, user_account.mobile_phone_number)
+            TwilioNotifier(
+                twilio_settings=twilio_settings,
+                recipient_phone_number=user_account.mobile_phone_number,
+            )
+        )
+    kv_store = DBKVStore(db_session)
+    email_delivery_settings = kv_store.get_entity(EmailDeliverySettings)
+    if email_delivery_settings:
+        notifiers.append(
+            EmailNotifier(
+                email_delivery_settings=email_delivery_settings,
+                recipient_email=user_account.email,
+            )
         )
     return CompositeNotifier(notifiers)
 
@@ -52,7 +70,9 @@ class UserAccountValuationService(object):
         )
 
         user_account = repository.get_user_account(self._db_session, user_account_id)
-        notifier = _configure_notifier(user_account)
+        notifier = _configure_notifier(
+            db_session=self._db_session, user_account=user_account
+        )
 
         logger.info("taking snapshot")
         snapshot_metadata = self._user_account_snapshot_service.take_snapshot(
@@ -87,6 +107,22 @@ class UserAccountValuationService(object):
                 )
             except Exception as e:
                 logger.warning("failed to send valuation notification: %s", e)
+
+        try:
+            failed_snapshot_entries = repository.find_snapshot_linked_account_errors(
+                session=self._db_session, snapshot_id=snapshot_id
+            )
+            logger.warning(
+                "notifying account owner of %s snapshot errors: %s",
+                len(failed_snapshot_entries),
+                failed_snapshot_entries,
+            )
+            if failed_snapshot_entries:
+                notifier.notify_linked_accounts_snapshot_errors(failed_snapshot_entries)
+        except Exception as e:
+            logger.warning(
+                "failed to send linked accounts snapshot errors notification: %s", e
+            )
 
         return ValuationResponse(
             history_entry_id=history_report.history_entry_id,
