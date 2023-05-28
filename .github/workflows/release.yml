@@ -1,11 +1,11 @@
 name: Release
 on:
   pull_request:
-    branches:
-      - master
+    branches: ['master']
+    paths: ['finbot/_version.py']
   push:
-    branches:
-      - master
+    branches: ['master']
+    paths: ['finbot/_version.py']
 
 jobs:
   check-version-bump:
