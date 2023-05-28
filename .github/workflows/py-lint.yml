@@ -5,11 +5,13 @@ on:
       - master
     paths:
       - "**.py"
+      - "requirements*.in"
   pull_request:
     branches:
       - master
     paths:
       - "**.py"
+      - "requirements*.in"
 
 jobs:
   flake8-check:
