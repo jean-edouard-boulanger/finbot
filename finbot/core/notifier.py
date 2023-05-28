@@ -1,4 +1,3 @@
-import logging
 from textwrap import dedent
 from typing import Protocol
 
@@ -7,8 +6,6 @@ from twilio.rest import Client as TwilioClient
 
 from finbot import model
 from finbot.core import email_delivery
-
-logger = logging.getLogger(__name__)
 
 
 class Notifier(Protocol):

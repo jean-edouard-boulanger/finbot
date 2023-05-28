@@ -112,11 +112,6 @@ class UserAccountValuationService(object):
             failed_snapshot_entries = repository.find_snapshot_linked_account_errors(
                 session=self._db_session, snapshot_id=snapshot_id
             )
-            logger.warning(
-                "notifying account owner of %s snapshot errors: %s",
-                len(failed_snapshot_entries),
-                failed_snapshot_entries,
-            )
             if failed_snapshot_entries:
                 notifier.notify_linked_accounts_snapshot_errors(failed_snapshot_entries)
         except Exception as e:
