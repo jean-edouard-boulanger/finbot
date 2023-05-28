@@ -4,7 +4,7 @@ celery==5.2.7
 cffi==1.15.1
 cryptography==40.0.2
 flask-cors==3.0.10
-flask-jwt-extended==4.4.4
+flask-jwt-extended==4.5.2
 flask-pydantic==0.11.0
 flask==2.3.2
 gspread==5.9.0
