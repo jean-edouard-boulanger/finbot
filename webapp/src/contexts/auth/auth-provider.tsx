@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 
 import { Credentials } from "clients/finbot-client/types";
 import { ServicesContext } from "contexts";
@@ -17,48 +17,48 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = (props) => {
   const { finbotClient } = useContext(ServicesContext);
-  const [authState, setAuthStateImpl] = useState<AuthState | null>(() => {
-    return loadAuthStateFromLocalStorage();
-  });
+  const [authState, _setAuthState] = useState<AuthState | null>(null);
+  const responseInterceptorIdRef = useRef<number | null>(null);
 
-  const setAuthState = (newAuthState: AuthState | null) => {
+  const updateAuthState = (newAuthState: AuthState | null) => {
+    const axiosInstance = finbotClient!.axiosInstance;
+    if (newAuthState !== null && responseInterceptorIdRef.current === null) {
+      responseInterceptorIdRef.current =
+        axiosInstance.interceptors.response.use(
+          (value) => value,
+          (error) => {
+            if (error.response.status === 401) {
+              updateAuthState(null);
+            }
+            return error;
+          }
+        );
+    }
+    if (newAuthState === null && responseInterceptorIdRef.current !== null) {
+      axiosInstance.interceptors.response.eject(
+        responseInterceptorIdRef.current
+      );
+      responseInterceptorIdRef.current = null;
+    }
     if (newAuthState !== null) {
       saveAuthStateInLocalStorage(newAuthState);
-    } else {
-      clearAuthStateFromLocalStorage();
-    }
-    setAuthStateImpl(newAuthState);
-  };
-
-  function logout() {
-    setAuthState(null);
-  }
-
-  useEffect(() => {
-    const axiosInstance = finbotClient!.axiosInstance;
-    axiosInstance.interceptors.response.use(
-      (response) => {
-        return response;
-      },
-      (error) => {
-        if (error.response.status === 401) {
-          setAuthState(null);
-        }
-        return error;
-      }
-    );
-  }, [finbotClient]);
-
-  useEffect(() => {
-    const axiosInstance = finbotClient!.axiosInstance;
-    if (authState !== null) {
       axiosInstance.defaults.headers.common[
         "Authorization"
-      ] = `Bearer ${authState.accessToken}`;
+      ] = `Bearer ${newAuthState.accessToken}`;
     } else {
+      clearAuthStateFromLocalStorage();
       delete axiosInstance.defaults.headers.common["Authorization"];
     }
-  }, [finbotClient, authState]);
+    _setAuthState(newAuthState);
+  };
+
+  useEffect(() => {
+    updateAuthState(loadAuthStateFromLocalStorage());
+  }, []);
+
+  function logout() {
+    updateAuthState(null);
+  }
 
   async function login(credentials: Credentials) {
     const { email, password } = credentials;
@@ -68,7 +68,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = (props) => {
       refreshToken: authResponse.auth.refresh_token,
       userAccountId: authResponse.account.id,
     };
-    setAuthState(authState);
+    updateAuthState(authState);
   }
 
   return (
