@@ -188,7 +188,7 @@ pycparser==2.21
     # via cffi
 pycryptodome==3.17
     # via python-binance
-pydantic==1.10.7
+pydantic==1.10.8
     # via
     #   -r requirements.in
     #   flask-pydantic
