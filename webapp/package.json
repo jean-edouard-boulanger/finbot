@@ -13,7 +13,7 @@
     "ace-builds": "^1.21.0",
     "apexcharts": "^3.40.0",
     "axios": "^1.4.0",
-    "bootstrap": "^4.6.2",
+    "bootstrap": "^5.2.3",
     "bootswatch": "^5.2.3",
     "datejs": "^1.0.0-rc3",
     "email-addresses": "^5.0.0",
