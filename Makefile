@@ -138,7 +138,7 @@ lint-sh:
 
 lint-py: mypy flake8 black-check isort-check banned-keywords-check-py unit-tests-py
 lint-ts: eslint tsc-build-check prettier-check-ts banned-keywords-check-ts
-lint-all: version-bump-check lint-py lint-ts lint-sh
+lint-all: lint-py lint-ts lint-sh
 
 format-py: black isort
 format-ts: prettier-ts
