@@ -3,12 +3,12 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Optional, Type, TypeVar
 
 from sqlalchemy import (
-    LargeBinary,
     Boolean,
     Column,
     ForeignKey,
     ForeignKeyConstraint,
     Integer,
+    LargeBinary,
     Numeric,
     String,
     Text,
