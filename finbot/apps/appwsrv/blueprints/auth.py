@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+import bcrypt
 from flask import Blueprint
 from flask_jwt_extended import create_access_token, create_refresh_token
 
@@ -25,7 +26,7 @@ def auth_login(body: appwsrv_schema.LoginRequest) -> appwsrv_schema.LoginRespons
     if not account:
         raise InvalidUserInput(not_found_message)
 
-    if account.clear_password != body.password:
+    if not bcrypt.checkpw(body.password.encode(), account.password_hash):
         raise InvalidUserInput(not_found_message)
 
     return appwsrv_schema.LoginResponse(

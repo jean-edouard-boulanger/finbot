@@ -197,7 +197,7 @@ class UserAccountCreationSettings(BaseModel):
 
 class CreateUserAccountRequest(BaseModel):
     email: str
-    password: str
+    password: SecretStr
     full_name: str
     settings: UserAccountCreationSettings
 

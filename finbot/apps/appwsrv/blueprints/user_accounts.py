@@ -1,5 +1,6 @@
 import logging
 
+import bcrypt
 from flask import Blueprint
 from sqlalchemy.exc import IntegrityError
 
@@ -38,7 +39,9 @@ def create_user_account(
         user_account: UserAccount
         with db_session.persist(UserAccount()) as user_account:
             user_account.email = body.email
-            user_account.clear_password = body.password
+            user_account.password_hash = bcrypt.hashpw(
+                body.password.get_secret_value().encode(), bcrypt.gensalt()
+            )
             user_account.full_name = body.full_name
             user_account.settings = UserAccountSettings(
                 valuation_ccy=body.settings.valuation_ccy
@@ -73,15 +76,13 @@ def update_user_account_password(
     user_account_id: int, body: appwsrv_schema.UpdateUserAccountPasswordRequest
 ) -> appwsrv_schema.UpdateUserAccountPasswordResponse:
     account = repository.get_user_account(db_session, user_account_id)
-    if body.old_password.get_secret_value() != account.clear_password:
+    old_password = body.old_password.get_secret_value()
+    if not bcrypt.checkpw(old_password.encode(), account.password_hash):
         raise InvalidUserInput("The old password is incorrect")
-    new_password = body.new_password.get_secret_value()
-    if account.clear_password == new_password:
-        raise InvalidUserInput(
-            "The new password must be different from the old password"
-        )
     with db_session.persist(account):
-        account.clear_password = new_password
+        account.password_hash = bcrypt.hashpw(
+            body.new_password.get_secret_value().encode(), bcrypt.gensalt()
+        )
     return appwsrv_schema.UpdateUserAccountPasswordResponse()
 
 
