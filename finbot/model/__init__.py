@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Optional, Type, TypeVar
 
 from sqlalchemy import (
-    BINARY,
+    LargeBinary,
     Boolean,
     Column,
     ForeignKey,
@@ -41,7 +41,7 @@ class UserAccount(Base):
     __tablename__ = "finbot_user_accounts"
     id = Column(Integer, primary_key=True)
     email = Column(String(128), nullable=False, unique=True)
-    password_hash = Column(BINARY(60), nullable=False)
+    password_hash = Column(LargeBinary, nullable=False)
     full_name = Column(String(128), nullable=False)
     mobile_phone_number = Column(String(128))
     created_at = Column(DateTimeTz, server_default=func.now(), nullable=False)
