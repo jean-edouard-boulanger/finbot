@@ -215,7 +215,7 @@ sqlalchemy==2.0.15
     # via
     #   -r requirements.in
     #   alembic
-twilio==8.2.1
+twilio==8.2.2
     # via -r requirements.in
 typing-extensions==4.5.0
     # via

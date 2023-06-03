@@ -10,6 +10,7 @@ from finbot.core.notifier import (
     Notifier,
     TwilioNotifier,
     TwilioSettings,
+    ValuationNotification,
 )
 from finbot.core.serialization import pretty_dump
 from finbot.model import repository
@@ -101,9 +102,11 @@ class UserAccountValuationService(object):
         if request.notify_valuation:
             try:
                 notifier.notify_valuation(
-                    valuation=history_report.user_account_valuation,
-                    change_1day=history_report.valuation_change.change_1day,
-                    currency=history_report.valuation_currency,
+                    notification=ValuationNotification(
+                        user_account_valuation=history_report.user_account_valuation,
+                        change_1day=history_report.valuation_change.change_1day,
+                        valuation_currency=history_report.valuation_currency,
+                    )
                 )
             except Exception as e:
                 logger.warning("failed to send valuation notification: %s", e)
