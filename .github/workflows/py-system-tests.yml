@@ -1,11 +1,21 @@
-name: System tests
+name: System tests (Python)
 on:
   push:
     branches:
       - master
+    paths:
+      - "**.py"
+      - "requirements*.txt"
+      - "Dockerfile"
+      - "docker-compose.yml"
   pull_request:
     branches:
       - master
+    paths:
+      - "**.py"
+      - "requirements*.txt"
+      - "Dockerfile"
+      - "docker-compose.yml"
 jobs:
   run-system-tests:
     runs-on: ubuntu-latest
