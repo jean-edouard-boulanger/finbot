@@ -1,5 +1,5 @@
 from textwrap import dedent
-from typing import Protocol
+from typing import Callable, Protocol
 
 from pydantic import BaseModel
 from twilio.rest import Client as TwilioClient
@@ -8,10 +8,20 @@ from finbot import model
 from finbot.core import email_delivery
 
 
+class TwilioSettings(BaseModel):
+    account_sid: str
+    auth_token: str
+    phone_number: str
+
+
+class ValuationNotification(BaseModel):
+    user_account_valuation: float
+    change_1day: float | None
+    valuation_currency: str
+
+
 class Notifier(Protocol):
-    def notify_valuation(
-        self, valuation: float, change_1day: float | None, currency: str
-    ) -> None:
+    def notify_valuation(self, notification: ValuationNotification) -> None:
         ...
 
     def notify_twilio_settings_updated(self) -> None:
@@ -21,12 +31,6 @@ class Notifier(Protocol):
         self, error_entries: list[model.LinkedAccountSnapshotEntry]
     ) -> None:
         ...
-
-
-class TwilioSettings(BaseModel):
-    account_sid: str
-    auth_token: str
-    phone_number: str
 
 
 class EmailNotifier(Notifier):
@@ -39,9 +43,7 @@ class EmailNotifier(Notifier):
         self._recipient_email = recipient_email
         self._service = email_delivery.EmailService(email_delivery_settings)
 
-    def notify_valuation(
-        self, valuation: float, change_1day: float | None, currency: str
-    ) -> None:
+    def notify_valuation(self, notification: ValuationNotification) -> None:
         pass
 
     def notify_twilio_settings_updated(self) -> None:
@@ -64,28 +66,40 @@ class EmailNotifier(Notifier):
         )
 
 
+def _default_twilio_client_factory(settings: TwilioSettings) -> TwilioClient:
+    return TwilioClient(settings.account_sid, settings.auth_token)
+
+
 class TwilioNotifier(Notifier):
-    def __init__(self, twilio_settings: TwilioSettings, recipient_phone_number: str):
+    def __init__(
+        self,
+        twilio_settings: TwilioSettings,
+        recipient_phone_number: str,
+        twilio_client_factory: Callable[[TwilioSettings], TwilioClient] | None = None,
+    ):
+        twilio_client_factory = twilio_client_factory or _default_twilio_client_factory
         self._settings = twilio_settings
         self._recipient_phone_number = recipient_phone_number
-        self._client = TwilioClient(
-            self._settings.account_sid, self._settings.auth_token
-        )
+        self._twilio_client = twilio_client_factory(self._settings)
 
-    def notify_valuation(
-        self, valuation: float, change_1day: float | None, currency: str
-    ) -> None:
-        message_body = f"💰 Finbot valuation: {valuation:,.1f} {currency}\n"
-        if change_1day is not None:
-            message_body += f"1 day change: {change_1day:,.1f} {currency} {'⬆️' if change_1day >= 0 else '⬇️'}\n"
-        self._client.messages.create(
+    def notify_valuation(self, notification: ValuationNotification) -> None:
+        message_body = (
+            f"💰 Finbot valuation: {notification.user_account_valuation:,.1f}"
+            f" {notification.valuation_currency}\n"
+        )
+        if notification.change_1day is not None:
+            message_body += (
+                f"1 day change: {notification.change_1day:,.1f} {notification.valuation_currency}"
+                f" {'⬆️' if notification.change_1day >= 0 else '⬇️'}\n"
+            )
+        self._twilio_client.messages.create(
             to=self._recipient_phone_number,
             from_=self._settings.phone_number,
             body=message_body,
         )
 
     def notify_twilio_settings_updated(self) -> None:
-        self._client.messages.create(
+        self._twilio_client.messages.create(
             to=self._recipient_phone_number,
             from_=self._settings.phone_number,
             body=dedent(
@@ -105,11 +119,9 @@ class CompositeNotifier(Notifier):
     def __init__(self, notifiers: list[Notifier]):
         self._notifiers = notifiers
 
-    def notify_valuation(
-        self, valuation: float, change_1day: float | None, currency: str
-    ) -> None:
+    def notify_valuation(self, notification: ValuationNotification) -> None:
         for notifier in self._notifiers:
-            notifier.notify_valuation(valuation, change_1day, currency)
+            notifier.notify_valuation(notification)
 
     def notify_twilio_settings_updated(self) -> None:
         for notifier in self._notifiers:
