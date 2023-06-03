@@ -5,16 +5,16 @@ export PYTHONPATH := ${PWD}:${PYTHONPATH}
 
 alembic-gen:
 	tools/check-env.sh message;
-	alembic revision --autogenerate -m "${message}"
+	docker-compose run --rm operator bash -c 'env FINBOT_WAIT_DEPS=finbotdb ./tools/finbot-wait && alembic revision -m "${message}"'
 
 alembic-upgrade:
-	alembic upgrade head
+	docker-compose run --rm operator bash -c 'env FINBOT_WAIT_DEPS=finbotdb ./tools/finbot-wait && alembic upgrade head'
 
 alembic-downgrade:
-	alembic downgrade -1
+	docker-compose run --rm operator bash -c 'env FINBOT_WAIT_DEPS=finbotdb ./tools/finbot-wait && alembic downgrade -1'
 
 alembic-history:
-	alembic history
+	docker-compose run --rm operator bash -c 'env FINBOT_WAIT_DEPS=finbotdb ./tools/finbot-wait && alembic history'
 
 pip-compile-all:
 	./tools/pip-compile-all

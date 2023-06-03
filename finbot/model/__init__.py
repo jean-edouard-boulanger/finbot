@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Optional, Type, TypeVar
 
 from sqlalchemy import (
+    BINARY,
     Boolean,
     Column,
     ForeignKey,
@@ -18,7 +19,6 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
 
-from finbot.core import environment, secure
 from finbot.core.db.types import DateTimeTz, JSONEncoded
 
 if TYPE_CHECKING:
@@ -41,7 +41,7 @@ class UserAccount(Base):
     __tablename__ = "finbot_user_accounts"
     id = Column(Integer, primary_key=True)
     email = Column(String(128), nullable=False, unique=True)
-    encrypted_password = Column(Text, nullable=False)
+    password_hash = Column(BINARY(60), nullable=False)
     full_name = Column(String(128), nullable=False)
     mobile_phone_number = Column(String(128))
     created_at = Column(DateTimeTz, server_default=func.now(), nullable=False)
@@ -56,18 +56,6 @@ class UserAccount(Base):
     plaid_settings = relationship(
         "UserAccountPlaidSettings", uselist=False, back_populates="user_account"
     )
-
-    @property
-    def clear_password(self) -> str:
-        return secure.fernet_decrypt(
-            self.encrypted_password.encode(), environment.get_secret_key().encode()
-        ).decode()
-
-    @clear_password.setter
-    def clear_password(self, new_password: str) -> None:
-        self.encrypted_password = secure.fernet_encrypt(
-            new_password.encode(), environment.get_secret_key().encode()
-        ).decode()
 
 
 class UserAccountSettings(Base):
