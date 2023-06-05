@@ -1,13 +1,19 @@
+import logging
 import os
 from dataclasses import dataclass
 from typing import Type, TypeVar, Union
+
+logger = logging.getLogger(__name__)
+
+PRODUCTION_ENV = "production"
+DEVELOPMENT_ENV = "development"
 
 
 class MissingEnvironment(RuntimeError):
     pass
 
 
-class _Raises(object):
+class _Raise(object):
     pass
 
 
@@ -23,19 +29,21 @@ class Environment:
     rmq_url: str
 
     @property
+    def is_production(self) -> bool:
+        return self.runtime == PRODUCTION_ENV
+
+    @property
     def desired_log_level(self) -> str:
-        return "DEBUG" if self.runtime == "development" else "INFO"
+        return "INFO" if self.runtime == PRODUCTION_ENV else "DEBUG"
 
 
 T = TypeVar("T")
 
 
-def get_environment_value(
-    name: str, default: Union[str, Type[_Raises]] = _Raises
-) -> str:
+def get_environment_value(name: str, default: Union[str, Type[_Raise]] = _Raise) -> str:
     value = os.environ.get(name, default)
-    if value == _Raises:
-        raise MissingEnvironment(f"environment variable {name} not available")
+    if value == _Raise:
+        raise MissingEnvironment(f"{name}")
     return str(value)
 
 
@@ -73,7 +81,19 @@ def get_web_service_endpoint(service_name: str) -> str:
 
 
 def get_finbot_runtime() -> str:
-    return get_environment_value("FINBOT_ENV", "production")
+    env_var_name = "FINBOT_ENV"
+    raw_value = get_environment_value(env_var_name, PRODUCTION_ENV)
+    if raw_value not in (DEVELOPMENT_ENV, PRODUCTION_ENV):
+        logger.warning(
+            f"got bad value for '{env_var_name}' (expected {DEVELOPMENT_ENV} or {PRODUCTION_ENV}),"
+            f" defaulting to '{DEVELOPMENT_ENV}'"
+        )
+        return PRODUCTION_ENV
+    return raw_value
+
+
+def is_production() -> bool:
+    return get_finbot_runtime() == PRODUCTION_ENV
 
 
 def get_rmq_url() -> str:
