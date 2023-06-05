@@ -86,7 +86,7 @@ init-dev:
 	tools/init-dev.sh
 
 py-unit-tests:
-	python3.11 -m pytest tests/unit_tests
+	python3.11 -m pytest tests/unit
 
 prettier-ts:
 	cd webapp && npm run prettier

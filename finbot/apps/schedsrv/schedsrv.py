@@ -4,6 +4,7 @@ import logging
 import signal
 import sys
 import threading
+import time
 import traceback
 from dataclasses import dataclass
 from types import FrameType
@@ -135,13 +136,21 @@ class Scheduler(Worker):
 
     def run(self) -> None:
         logging.info("[scheduler thread] starting")
-        while not self._stop_event.is_set():
-            self._scheduler.run_pending()
-            logging.info(
-                f"[scheduler thread] sleeping {self._scheduler.idle_seconds}s "
-                f"until next job at {self._scheduler.next_run.isoformat()}"
+        if not environment.is_production():
+            logging.warning(
+                f"[scheduler thread] not scheduling jobs in the"
+                f" '{environment.get_finbot_runtime()}' environment"
             )
-            self._stop_event.wait(self._scheduler.idle_seconds)
+            while not self._stop_event.is_set():
+                time.sleep(1.0)
+        else:
+            while not self._stop_event.is_set():
+                self._scheduler.run_pending()
+                logging.info(
+                    f"[scheduler thread] sleeping {self._scheduler.idle_seconds}s "
+                    f"until next job at {self._scheduler.next_run.isoformat()}"
+                )
+                self._stop_event.wait(self._scheduler.idle_seconds)
         logging.info("[scheduler thread] going down now")
 
     def stop(self) -> None:
