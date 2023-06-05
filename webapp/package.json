@@ -17,7 +17,7 @@
     "bootswatch": "^5.2.3",
     "datejs": "^1.0.0-rc3",
     "email-addresses": "^5.0.0",
-    "formik": "^2.2.6",
+    "formik": "^2.4.1",
     "luxon": "^3.3.0",
     "react": "^18.2.0",
     "react-ace": "^10.1.0",
