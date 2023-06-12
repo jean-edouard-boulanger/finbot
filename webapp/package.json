@@ -40,7 +40,7 @@
     "chokidar": "^3.5.2",
     "eslint": "^8.42.0",
     "eslint-plugin-react": "^7.32.2",
-    "@typescript-eslint/eslint-plugin": "^5.54.0",
+    "@typescript-eslint/eslint-plugin": "^5.59.11",
     "@typescript-eslint/parser": "^5.59.8",
     "prettier": "^2.8.8"
   },
