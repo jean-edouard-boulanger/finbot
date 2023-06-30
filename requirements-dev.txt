@@ -17,6 +17,8 @@ alembic==1.11.1
     # via -r requirements.in
 amqp==5.1.1
     # via kombu
+annotated-types==0.5.0
+    # via pydantic
 async-timeout==4.0.2
     # via aiohttp
 attrs==22.2.0
@@ -190,10 +192,12 @@ pycparser==2.21
     # via cffi
 pycryptodome==3.17
     # via python-binance
-pydantic==1.10.8
+pydantic==2.0
     # via
     #   -r requirements.in
     #   flask-pydantic
+pydantic-core==2.0.1
+    # via pydantic
 pyee==9.0.4
     # via playwright
 pyflakes==3.0.1
@@ -277,11 +281,12 @@ types-urllib3==1.26.25.8
     # via types-requests
 types-werkzeug==1.0.9
     # via types-flask
-typing-extensions==4.5.0
+typing-extensions==4.7.0
     # via
     #   alembic
     #   mypy
     #   pydantic
+    #   pydantic-core
     #   pyee
     #   sqlalchemy
     #   sqlalchemy-stubs
