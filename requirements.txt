@@ -17,6 +17,8 @@ alembic==1.11.1
     # via -r requirements.in
 amqp==5.1.1
     # via kombu
+annotated-types==0.5.0
+    # via pydantic
 async-timeout==4.0.2
     # via aiohttp
 attrs==22.2.0
@@ -156,10 +158,12 @@ pycparser==2.21
     # via cffi
 pycryptodome==3.17
     # via python-binance
-pydantic==1.10.8
+pydantic==2.0.1
     # via
     #   -r requirements.in
     #   flask-pydantic
+pydantic-core==2.0.2
+    # via pydantic
 pyee==9.0.4
     # via playwright
 pyjwt==2.6.0
@@ -219,10 +223,11 @@ sqlalchemy==2.0.15
     #   alembic
 twilio==8.2.2
     # via -r requirements.in
-typing-extensions==4.5.0
+typing-extensions==4.7.1
     # via
     #   alembic
     #   pydantic
+    #   pydantic-core
     #   pyee
     #   sqlalchemy
 tzdata==2022.7
