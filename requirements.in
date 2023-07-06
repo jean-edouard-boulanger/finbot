@@ -25,5 +25,5 @@ pytz==2023.3
 quickforex==0.1.3
 requests==2.31.0
 schedule==1.2.0
-sqlalchemy==2.0.15
+sqlalchemy==2.0.18
 twilio==8.2.2
