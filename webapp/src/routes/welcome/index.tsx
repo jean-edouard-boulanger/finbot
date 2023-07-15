@@ -22,7 +22,10 @@ export const Welcome: React.FC<WelcomeProps> = () => {
       </Row>
       <Row>
         <Col md={2} className={"mr-4"}>
-          <img src={"/finbot_medium.png"} alt={"finbot"} />
+          <img
+            src={`${process.env.PUBLIC_URL}/finbot_medium.png`}
+            alt={"finbot"}
+          />
         </Col>
         <Col md={6}>
           <Card>
