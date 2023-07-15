@@ -331,17 +331,16 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
                         updateAccountName(event.target.value);
                       }}
                     />
-                    {updateMode &&
-                      accountName !== linkedAccount!.account_name && (
-                        <InputGroup.Append>
-                          <Button
-                            variant={"secondary"}
-                            onClick={onUpdateExistingAccountMetadata}
-                          >
-                            <FaCheck />
-                          </Button>
-                        </InputGroup.Append>
-                      )}
+                    {updateMode && accountName !== linkedAccount!.account_name && (
+                      <InputGroup.Append>
+                        <Button
+                          variant={"secondary"}
+                          onClick={onUpdateExistingAccountMetadata}
+                        >
+                          <FaCheck />
+                        </Button>
+                      </InputGroup.Append>
+                    )}
                   </InputGroup>
                 </Col>
               </Row>
@@ -356,24 +355,20 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
           )}
           <Row>
             <Col>
-              {selectedProvider !== null &&
-                !isPlaidSelected(selectedProvider) && (
-                  <DataDrivenAccountForm
-                    operation={operation}
-                    schema={selectedProvider.credentials_schema}
-                    updateMode={updateMode}
-                    onSubmit={(credentials: LinkedAccountCredentials) => {
-                      if (updateMode) {
-                        requestUpdateCredentials(credentials);
-                      } else {
-                        requestLinkAccount(
-                          { ...selectedProvider },
-                          credentials
-                        );
-                      }
-                    }}
-                  />
-                )}
+              {selectedProvider !== null && !isPlaidSelected(selectedProvider) && (
+                <DataDrivenAccountForm
+                  operation={operation}
+                  schema={selectedProvider.credentials_schema}
+                  updateMode={updateMode}
+                  onSubmit={(credentials: LinkedAccountCredentials) => {
+                    if (updateMode) {
+                      requestUpdateCredentials(credentials);
+                    } else {
+                      requestLinkAccount({ ...selectedProvider }, credentials);
+                    }
+                  }}
+                />
+              )}
               {isPlaidSelected(selectedProvider) &&
                 isPlaidSupported(plaidSettings) && (
                   <PlaidForm
