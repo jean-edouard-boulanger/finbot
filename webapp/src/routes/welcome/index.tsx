@@ -1,4 +1,5 @@
 import React from "react";
+import FinbotMediumImage from "assets/finbot_medium.png";
 
 import { Link } from "react-router-dom";
 
@@ -22,7 +23,7 @@ export const Welcome: React.FC<WelcomeProps> = () => {
       </Row>
       <Row>
         <Col md={2} className={"mr-4"}>
-          <img src={"/finbot_medium.png"} alt={"finbot"} />
+          <img src={FinbotMediumImage} alt={"finbot"} />
         </Col>
         <Col md={6}>
           <Card>
