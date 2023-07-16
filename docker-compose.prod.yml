@@ -82,4 +82,4 @@ services:
     ports:
       - "5005:5005"
     volumes:
-      - ./envs/env-config.prod.js:/usr/share/nginx/html/env-config.js
+      - ./envs/env-config.prod.js:/usr/share/nginx/html/finbot/env-config.js
