@@ -69,7 +69,7 @@ flask==2.3.2
     #   flask-cors
     #   flask-jwt-extended
     #   flask-pydantic
-flask-cors==3.0.10
+flask-cors==4.0.0
     # via -r requirements.in
 flask-jwt-extended==4.5.2
     # via -r requirements.in
@@ -208,7 +208,6 @@ schedule==1.2.0
 six==1.16.0
     # via
     #   click-repl
-    #   flask-cors
     #   google-auth
     #   oauth2client
     #   python-binance
