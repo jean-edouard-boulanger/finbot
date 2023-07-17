@@ -130,7 +130,7 @@ pgpy==0.6.0
     # via -r requirements.in
 pika==1.3.2
     # via -r requirements.in
-plaid-python==14.0.0
+plaid-python==15.0.0
     # via -r requirements.in
 playwright==1.34.0
     # via -r requirements.in
