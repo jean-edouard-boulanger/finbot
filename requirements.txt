@@ -213,7 +213,7 @@ six==1.16.0
     #   oauth2client
     #   python-binance
     #   python-dateutil
-sqlalchemy==2.0.15
+sqlalchemy==2.0.19
     # via
     #   -r requirements.in
     #   alembic
