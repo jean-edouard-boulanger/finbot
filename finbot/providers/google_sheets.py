@@ -89,6 +89,9 @@ class Api(ProviderBase):
                         name=holding["symbol"],
                         type=holding["type"],
                         value=holding["value"],
+                        provider_specific=_parse_provider_specific(
+                            holding.get("custom")
+                        ),
                     )
                     for holding in holdings_table
                     if holding["account"] == entry["identifier"]
@@ -196,6 +199,7 @@ HOLDING_SCHEMA = Schema(
         "type": {"type": str, "required": True},
         "units": {"type": optional(float), "required": True},
         "value": {"type": float, "required": True},
+        "custom": {"type": str, "required": False},
     },
 )
 
@@ -312,8 +316,19 @@ def _extract_generic_table(
 
 
 def _get_table(sheet: LocalSheet, schema: Schema) -> list[dict[Any, Any]]:
-    accounts_marker = schema.type_identifier
-    accounts_marker_cell = sheet.find(accounts_marker)
-    if not accounts_marker_cell:
-        raise Error(f"unable to find '{accounts_marker}' cell")
-    return _extract_generic_table(sheet, accounts_marker_cell, schema)
+    marker = schema.type_identifier
+    marker_cell = sheet.find(marker)
+    if not marker_cell:
+        raise Error(f"unable to find '{marker}' cell")
+    return _extract_generic_table(sheet, marker_cell, schema)
+
+
+def _parse_provider_specific(data: str | None) -> dict[str, Any] | None:
+    provider_specific = {}
+    if not data:
+        return None
+    entries = data.split(";")
+    for entry in entries:
+        key, value = entry.split("=")
+        provider_specific[key.strip()] = value.strip()
+    return provider_specific
