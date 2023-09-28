@@ -222,8 +222,6 @@ pytz==2023.3
     #   twilio
 pytz-deprecation-shim==0.1.0.post0
     # via tzlocal
-quickforex==0.1.3
-    # via -r requirements.in
 regex==2022.10.31
     # via dateparser
 requests==2.31.0
@@ -232,7 +230,6 @@ requests==2.31.0
     #   krakenex
     #   pycoingecko
     #   python-binance
-    #   quickforex
     #   requests-oauthlib
     #   twilio
 requests-oauthlib==1.3.1

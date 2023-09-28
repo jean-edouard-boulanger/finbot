@@ -1,15 +1,23 @@
+import logging
 from dataclasses import dataclass
-from typing import Optional
+from datetime import datetime, timedelta
+from typing import Optional, TypeAlias, cast
 
-import quickforex
+import requests
 
+from finbot.core.environment import get_freecurrencyapi_key
 from finbot.core.errors import FinbotError
+
+logger = logging.getLogger(__name__)
+
+
+CurrencyType: TypeAlias = str
 
 
 @dataclass(frozen=True, eq=True)
 class Xccy(object):
-    domestic: str
-    foreign: str
+    domestic: CurrencyType
+    foreign: CurrencyType
 
     def __str__(self) -> str:
         return f"{self.domestic}{self.foreign}"
@@ -17,49 +25,52 @@ class Xccy(object):
     def serialize(self) -> dict[str, str]:
         return {"domestic": self.domestic, "foreign": self.foreign}
 
-    def to_quickforex(self) -> quickforex.CurrencyPair:
-        return quickforex.CurrencyPair(self.domestic, self.foreign)
-
-
-def _xccy_to_quickforex(xccy: Xccy) -> quickforex.CurrencyPair:
-    return quickforex.CurrencyPair(xccy.domestic, xccy.foreign)
-
-
-def _xccy_from_quickforex(xccy: quickforex.CurrencyPair) -> Xccy:
-    return Xccy(xccy.domestic, xccy.foreign)
-
-
-def _format_quickforex_xccy(xccy: quickforex.CurrencyPair) -> str:
-    return f"{xccy.domestic}/{xccy.foreign}"
-
 
 class Error(FinbotError):
     pass
 
 
-def get_rates(pairs: set[Xccy]) -> dict[Xccy, Optional[float]]:
-    rates: dict[Xccy, Optional[float]] = {
-        pair: 1.0 for pair in pairs if pair.foreign == pair.domestic
-    }
-    pairs_needing_lookup: set[quickforex.CurrencyPair] = {
-        _xccy_to_quickforex(pair) for pair in pairs if pair not in rates
-    }
-    if pairs_needing_lookup:
-        pairs_str = ",".join(
-            _format_quickforex_xccy(pair) for pair in pairs_needing_lookup
+class Client:
+    @dataclass(frozen=True)
+    class _CacheEntry:
+        expiry: datetime
+        data: dict[CurrencyType, float]
+
+    def __init__(self, api_key: str, cache_ttl: timedelta | None = None):
+        self._api_key = api_key
+        self._cache_ttl = cache_ttl or timedelta(hours=1)
+        self._cache: dict[CurrencyType, Client._CacheEntry] = {}
+
+    def get_rates_for_base(self, base_ccy: CurrencyType) -> dict[CurrencyType, float]:
+        if cache_entry := self._cache.get(base_ccy):
+            if cache_entry.expiry > datetime.now():
+                logger.debug("cache hit for base_ccy=%s", base_ccy)
+                return cache_entry.data
+        response = requests.get(
+            f"https://api.freecurrencyapi.com/v1/latest?apikey={self._api_key}&base_currency={base_ccy}"
         )
-        try:
-            quickforex_rates = quickforex.get_latest_rates(pairs_needing_lookup)
-        except Exception as e:
-            raise Error(
-                f"Error while getting rates for currency pairs {pairs_str}: {e}"
-            ) from e
-        for currency_pair, rate in quickforex_rates.items():
-            rates[_xccy_from_quickforex(currency_pair)] = float(rate)
+        response.raise_for_status()
+        data = cast(dict[CurrencyType, float], response.json()["data"])
+        self._cache[base_ccy] = self._CacheEntry(
+            expiry=datetime.now() + self._cache_ttl, data=data
+        )
+        return data
+
+
+_CLIENT = Client(api_key=get_freecurrencyapi_key())
+
+
+def get_rates(pairs: set[Xccy]) -> dict[Xccy, Optional[float]]:
+    result: dict[Xccy, Optional[float]] = {}
     for pair in pairs:
-        if pair not in rates:
-            rates[pair] = None
-    return rates
+        if pair.foreign == pair.domestic:
+            result[pair] = 1.0
+        else:
+            rates = _CLIENT.get_rates_for_base(base_ccy=pair.foreign)
+            rate = rates.get(pair.domestic)
+            rate = 1.0 / rate if rate else None
+            result[pair] = rate
+    return result
 
 
 def get_rate(pair: Xccy) -> Optional[float]:

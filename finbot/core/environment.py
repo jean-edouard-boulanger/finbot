@@ -27,6 +27,7 @@ class Environment:
     webapp_endpoint: str
     runtime: str
     rmq_url: str
+    freecurrencyapi_key: str
 
     @property
     def is_production(self) -> bool:
@@ -92,6 +93,10 @@ def get_finbot_runtime() -> str:
     return raw_value
 
 
+def get_freecurrencyapi_key() -> str:
+    return get_environment_value("FINBOT_FREECURRENCYAPI_KEY")
+
+
 def is_production() -> bool:
     return get_finbot_runtime() == PRODUCTION_ENV
 
@@ -114,4 +119,5 @@ def get() -> Environment:
         webapp_endpoint=get_webapp_endpoint(),
         runtime=get_finbot_runtime(),
         rmq_url=get_rmq_url(),
+        freecurrencyapi_key=get_freecurrencyapi_key(),
     )
