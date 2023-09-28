@@ -1,7 +1,7 @@
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Optional, TypeAlias
+from typing import Optional, TypeAlias, cast
 
 import requests
 
@@ -39,7 +39,7 @@ class Client:
     def __init__(self, api_key: str, cache_ttl: timedelta | None = None):
         self._api_key = api_key
         self._cache_ttl = cache_ttl or timedelta(hours=1)
-        self._cache: dict[CurrencyType, FreeCurrencyApiClient._CacheEntry] = {}
+        self._cache: dict[CurrencyType, Client._CacheEntry] = {}
 
     def get_rates_for_base(self, base_ccy: CurrencyType) -> dict[CurrencyType, float]:
         if cache_entry := self._cache.get(base_ccy):
@@ -50,7 +50,7 @@ class Client:
             f"https://api.freecurrencyapi.com/v1/latest?apikey={self._api_key}&base_currency={base_ccy}"
         )
         response.raise_for_status()
-        data = response.json()["data"]
+        data = cast(dict[CurrencyType, float], response.json()["data"])
         self._cache[base_ccy] = self._CacheEntry(
             expiry=datetime.now() + self._cache_ttl, data=data
         )
