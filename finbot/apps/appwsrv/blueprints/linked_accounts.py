@@ -192,6 +192,7 @@ def delete_linked_account(
 @linked_accounts_api.route("/<int:linked_account_id>/metadata/", methods=["PUT"])
 @jwt_required()
 @service_endpoint()
+@validate()
 def update_linked_account_metadata(
     user_account_id: int,
     linked_account_id: int,
