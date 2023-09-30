@@ -1,7 +1,7 @@
 import logging
 import os
 from dataclasses import dataclass
-from typing import Type, TypeVar, Union
+from typing import TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +28,7 @@ class Environment:
     runtime: str
     rmq_url: str
     freecurrencyapi_key: str
+    saxo_gateway_url: str | None
 
     @property
     def is_production(self) -> bool:
@@ -41,11 +42,15 @@ class Environment:
 T = TypeVar("T")
 
 
-def get_environment_value(name: str, default: Union[str, Type[_Raise]] = _Raise) -> str:
-    value = os.environ.get(name, default)
+def get_environment_value(name: str) -> str:
+    value = os.environ.get(name, _Raise)
     if value == _Raise:
         raise MissingEnvironment(f"{name}")
     return str(value)
+
+
+def get_environment_value_or(name: str, default: str | None = None) -> str | None:
+    return os.environ.get(name, default)
 
 
 def get_secret_key() -> str:
@@ -81,9 +86,13 @@ def get_web_service_endpoint(service_name: str) -> str:
     return get_environment_value(f"FINBOT_{service_name.upper()}_ENDPOINT")
 
 
+def get_saxo_gateway_url() -> str | None:
+    return get_environment_value_or("FINBOT_SAXO_GATEWAY_URL", None)
+
+
 def get_finbot_runtime() -> str:
     env_var_name = "FINBOT_ENV"
-    raw_value = get_environment_value(env_var_name, PRODUCTION_ENV)
+    raw_value = get_environment_value_or(env_var_name, PRODUCTION_ENV)
     if raw_value not in (DEVELOPMENT_ENV, PRODUCTION_ENV):
         logger.warning(
             f"got bad value for '{env_var_name}' (expected {DEVELOPMENT_ENV} or {PRODUCTION_ENV}),"
@@ -120,4 +129,5 @@ def get() -> Environment:
         runtime=get_finbot_runtime(),
         rmq_url=get_rmq_url(),
         freecurrencyapi_key=get_freecurrencyapi_key(),
+        saxo_gateway_url=get_saxo_gateway_url(),
     )

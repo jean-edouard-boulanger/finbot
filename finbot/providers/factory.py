@@ -9,6 +9,7 @@ from finbot.providers import (
     kraken_us,
     plaid_us,
     qonto_us,
+    saxo_gw_fr,
 )
 from finbot.providers.base import ProviderBase, RetiredProvider
 from finbot.providers.errors import UnknownProvider
@@ -30,6 +31,7 @@ PROVIDERS: dict[ProviderId, type[ProviderBase]] = {
     "october_fr": RetiredProvider,
     "plaid_us": plaid_us.Api,
     "qonto_us": qonto_us.Api,
+    "saxo_gw_fr": saxo_gw_fr.Api,
     "vanguard_uk": RetiredProvider,
 }
 
