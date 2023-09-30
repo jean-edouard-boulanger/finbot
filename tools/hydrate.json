@@ -334,6 +334,31 @@
       }
     },
     {
+      "id": "saxo_gw_fr",
+      "description": "Saxo (FR)",
+      "website_url": "https://www.home.saxo/fr-fr",
+      "credentials_schema": {
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "required": [
+            "api_key"
+          ],
+          "properties": {
+            "api_key": {
+              "title": "API key",
+              "type": "string"
+            }
+          }
+        },
+        "ui_schema": {
+          "ui:order": [
+            "api_key"
+          ]
+        }
+      }
+    },
+    {
       "id": "bittrex_us",
       "description": "Bittrex (US)",
       "website_url": "https://global.bittrex.com/",

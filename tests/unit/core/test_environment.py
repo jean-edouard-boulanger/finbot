@@ -10,12 +10,19 @@ def test_get_environment_value():
         assert environment.get_environment_value("SOME_KEY") == "SOME_VALUE"
 
 
-def test_get_environment_value_returns_default():
+def test_get_environment_value_or_returns_default():
     with patch.dict(os.environ, {}, clear=True):
         assert (
-            environment.get_environment_value("SOME_MISSING_KEY", "SOME_DEFAULT_VALUE")
+            environment.get_environment_value_or(
+                "SOME_MISSING_KEY", "SOME_DEFAULT_VALUE"
+            )
             == "SOME_DEFAULT_VALUE"
         )
+
+
+def test_get_environment_value_or_returns_none_by_default():
+    with patch.dict(os.environ, {}, clear=True):
+        assert environment.get_environment_value_or("SOME_MISSING_KEY") is None
 
 
 def test_get_environment_value_raises_when_variable_is_missing():
