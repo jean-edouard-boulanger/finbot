@@ -12,9 +12,9 @@ from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
 from finbot.apps.appwsrv.db import db_session
 from finbot.apps.finbotwsrv.client import FinbotwsrvClient
 from finbot.core import environment, secure
-from finbot.core.environment import get_plaid_environment, is_plaid_configured
+from finbot.core.environment import is_plaid_configured
 from finbot.core.errors import InvalidOperation, InvalidUserInput
-from finbot.core.plaid import PlaidClient, PlaidSettings
+from finbot.core.plaid import PlaidClient
 from finbot.core.utils import unwrap_optional
 from finbot.core.web_service import jwt_required, service_endpoint, validate
 from finbot.model import LinkedAccount, repository
@@ -72,9 +72,9 @@ def link_new_account(
         raise InvalidUserInput("user account is not setup for Plaid")
     credentials = body.credentials
     if is_plaid:
-        credentials = PlaidClient().exchange_public_token(
-            credentials["public_token"]
-        ).dict()
+        credentials = (
+            PlaidClient().exchange_public_token(credentials["public_token"]).dict()
+        )
 
     if do_validate:
         logging.info(

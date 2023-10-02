@@ -24,6 +24,7 @@ sed -i'' "s/FINBOT_SECRET_KEY_PLACEHOLDER/${secret_key}/g" envs/secrets.dev.env
 jwt_secret_key=$(docker-compose run --rm operator tools/crypt fernet-key | tail -n 1)
 sed -i'' "s/FINBOT_JWT_SECRET_KEY_PLACEHOLDER/${jwt_secret_key}/g" envs/secrets.dev.env
 cp envs/secrets.dev.env envs/secrets.prod.env
+touch envs/dev-overrides.env
 chmod 700 envs/secrets*.env
 
 log_info "starting finbot database container"
