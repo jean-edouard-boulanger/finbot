@@ -15,7 +15,6 @@ from finbot.core import environment, fx_market
 from finbot.core import schema as core_schema
 from finbot.core import secure, utils
 from finbot.core.db.session import Session
-from finbot.core.plaid import PlaidClient, PlaidSettings
 from finbot.core.schema import ApplicationErrorData
 from finbot.core.serialization import serialize
 from finbot.core.utils import unwrap_optional
@@ -288,10 +287,10 @@ def dispatch_snapshot_entry(
 
 
 def get_credentials_data(
-    linked_account: model.LinkedAccount, user_account: model.UserAccount
+    linked_account: model.LinkedAccount,
 ) -> core_schema.CredentialsPayloadType:
     assert linked_account.encrypted_credentials is not None
-    linked_account_credentials = cast(
+    return cast(
         core_schema.CredentialsPayloadType,
         json.loads(
             secure.fernet_decrypt(
@@ -300,15 +299,6 @@ def get_credentials_data(
             ).decode()
         ),
     )
-    if linked_account.provider_id == "plaid_us":
-        return cast(
-            core_schema.CredentialsPayloadType,
-            PlaidClient.pack_credentials(
-                linked_account_credentials=linked_account_credentials,
-                plaid_settings=PlaidSettings.from_model(user_account.plaid_settings),
-            ),
-        )
-    return linked_account_credentials
 
 
 def take_raw_snapshot(
@@ -320,7 +310,7 @@ def take_raw_snapshot(
             LinkedAccountSnapshotRequest(
                 linked_account_id=linked_account.id,
                 provider_id=linked_account.provider_id,
-                credentials_data=get_credentials_data(linked_account, user_account),
+                credentials_data=get_credentials_data(linked_account),
                 line_items=[
                     finbotwsrv_schema.LineItem.Balances,
                     finbotwsrv_schema.LineItem.Assets,
@@ -360,7 +350,6 @@ def take_snapshot_impl(
         db_session.query(model.UserAccount)  # type: ignore
         .options(joinedload(model.UserAccount.linked_accounts))
         .options(joinedload(model.UserAccount.settings))
-        .options(joinedload(model.UserAccount.plaid_settings))
         .filter_by(id=user_account_id)
         .first()
     )

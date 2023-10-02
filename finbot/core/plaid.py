@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Literal, TypedDict
+from typing import Literal, Optional
 
 import plaid
 from plaid.api import plaid_api
@@ -16,8 +16,7 @@ from plaid.model.link_token_create_request import LinkTokenCreateRequest
 from plaid.model.link_token_create_request_user import LinkTokenCreateRequestUser
 from plaid.model.link_token_create_response import LinkTokenCreateResponse
 
-from finbot import model
-from finbot.core import schema as core_schema
+from finbot.core.environment import PlaidEnvironment, get_plaid_environment
 from finbot.core.errors import FinbotError
 
 ALL_COUNTRY_CODES = [
@@ -28,18 +27,6 @@ FINBOT_PLAID_CLIENT_NAME = "Finbot"
 
 class PlaidClientError(FinbotError):
     pass
-
-
-class SerializedPlaidCredentials(TypedDict):
-    env: str
-    client_id: str
-    secret_key: str
-
-
-class PackedPlaidCredentials(TypedDict):
-    item_id: str
-    access_token: str
-    plaid_credentials: SerializedPlaidCredentials
 
 
 @dataclass(frozen=True)
@@ -55,12 +42,17 @@ class PlaidSettings:
         )
 
     @staticmethod
-    def from_model(settings: model.UserAccountPlaidSettings) -> "PlaidSettings":
+    def from_env(plaid_environment: PlaidEnvironment) -> "PlaidSettings":
         return PlaidSettings(
-            environment=settings.env,
-            client_id=settings.client_id,
-            secret_key=settings.secret_key,
+            environment=plaid_environment.environment,
+            client_id=plaid_environment.client_id,
+            secret_key=plaid_environment.secret_key,
         )
+
+    @staticmethod
+    def get_default() -> Optional["PlaidSettings"]:
+        plaid_env = get_plaid_environment()
+        return PlaidSettings.from_env(plaid_env) if plaid_env else None
 
 
 @dataclass(frozen=True)
@@ -94,8 +86,10 @@ class AccessToken:
 
 
 class PlaidClient(object):
-    def __init__(self, settings: PlaidSettings):
-        self._settings = settings
+    def __init__(self, settings: PlaidSettings | None = None):
+        settings = settings or PlaidSettings.get_default()
+        assert isinstance(settings, PlaidSettings), "missing plaid configuration"
+        self._settings: PlaidSettings = settings
         self._impl = plaid_api.PlaidApi(
             api_client=plaid.ApiClient(configuration=self._settings.to_plaid())
         )
@@ -152,18 +146,3 @@ class PlaidClient(object):
             ]
         except plaid.ApiException as e:
             raise PlaidClientError(f"failure while getting Plaid accounts: {e}") from e
-
-    @staticmethod
-    def pack_credentials(
-        linked_account_credentials: core_schema.CredentialsPayloadType,
-        plaid_settings: PlaidSettings,
-    ) -> PackedPlaidCredentials:
-        return {
-            "item_id": str(linked_account_credentials["item_id"]),
-            "access_token": str(linked_account_credentials["access_token"]),
-            "plaid_credentials": {
-                "env": plaid_settings.environment,
-                "client_id": plaid_settings.client_id,
-                "secret_key": plaid_settings.secret_key,
-            },
-        }

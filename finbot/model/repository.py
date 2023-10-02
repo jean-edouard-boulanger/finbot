@@ -21,7 +21,6 @@ from finbot.model import (
     SubAccountValuationHistoryEntry,
     UserAccount,
     UserAccountHistoryEntry,
-    UserAccountPlaidSettings,
     UserAccountSettings,
     UserAccountValuationHistoryEntry,
 )
@@ -51,16 +50,6 @@ def get_user_account_settings(
     if not settings:
         raise InvalidUserInput(f"user account '{user_account_id}' not found")
     return settings
-
-
-def get_user_account_plaid_settings(
-    session: Session, user_account_id: int
-) -> Optional[UserAccountPlaidSettings]:
-    return (
-        session.query(UserAccountPlaidSettings)
-        .filter_by(user_account_id=user_account_id)
-        .first()
-    )
 
 
 def find_provider(session: Session, provider_id: str) -> Optional[Provider]:

@@ -45,15 +45,6 @@ class UserAccountTwilioSettings(BaseModel):
     phone_number: str
 
 
-class UserAccountPlaidSettings(BaseModel):
-    env: str
-    client_id: str
-    public_key: str
-    secret_key: SecretStr
-    created_at: datetime
-    updated_at: datetime | None
-
-
 class UserAccountSettings(BaseModel):
     valuation_ccy: str
     twilio_settings: UserAccountTwilioSettings | None
@@ -243,25 +234,6 @@ class UpdateUserAccountSettingsResponse(BaseModel):
     settings: UserAccountSettings
 
 
-class GetUserAccountPlaidSettingsResponse(BaseModel):
-    plaid_settings: UserAccountPlaidSettings | None
-
-
-class UpdateUserAccountPlaidSettingsRequest(BaseModel):
-    env: str
-    client_id: str
-    public_key: str
-    secret_key: SecretStr
-
-
-class UpdateUserAccountPlaidSettingsResponse(BaseModel):
-    plaid_settings: UserAccountPlaidSettings
-
-
-class DeleteUserAccountPlaidSettings(BaseModel):
-    pass
-
-
 class IsUserAccountConfiguredResponse(BaseModel):
     configured: bool
 
@@ -405,3 +377,13 @@ class GetHoldingsReportResponse(BaseModel):
 
 class GetEarningsReportResponse(BaseModel):
     report: earnings_schema.EarningsReport
+
+
+class PlaidSettings(BaseModel):
+    environment: str
+    client_id: str
+    public_key: str
+
+
+class GetPlaidSettingsResponse(BaseModel):
+    settings: PlaidSettings | None

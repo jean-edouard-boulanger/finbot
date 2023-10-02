@@ -2,7 +2,7 @@ from typing import Any
 
 from pydantic import BaseModel, SecretStr
 
-from finbot.core.plaid import AccountData, PlaidClient, PlaidClientError, PlaidSettings
+from finbot.core.plaid import AccountData, PlaidClient, PlaidClientError
 from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationFailure
 from finbot.providers.schema import (
@@ -18,16 +18,9 @@ from finbot.providers.schema import (
 )
 
 
-class PlaidCredentials(BaseModel):
-    env: str
-    client_id: str
-    secret_key: SecretStr
-
-
 class Credentials(BaseModel):
     item_id: str
     access_token: SecretStr
-    plaid_credentials: PlaidCredentials
 
 
 class Api(ProviderBase):
@@ -51,8 +44,7 @@ class Api(ProviderBase):
 
     def initialize(self) -> None:
         try:
-            client = self._create_plaid_client(self._credentials.plaid_credentials)
-            self._accounts = client.get_accounts_data(
+            self._accounts = PlaidClient().get_accounts_data(
                 access_token=self._credentials.access_token.get_secret_value()
             )
         except PlaidClientError as e:
@@ -103,16 +95,6 @@ class Api(ProviderBase):
                 for account in self.accounts
                 if account.is_credit
             ]
-        )
-
-    @staticmethod
-    def _create_plaid_client(credentials: PlaidCredentials) -> PlaidClient:
-        return PlaidClient(
-            settings=PlaidSettings(
-                client_id=credentials.client_id,
-                secret_key=credentials.secret_key.get_secret_value(),
-                environment=credentials.env,
-            )
         )
 
 

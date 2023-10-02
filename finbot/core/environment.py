@@ -1,7 +1,7 @@
 import logging
 import os
 from dataclasses import dataclass
-from typing import TypeVar
+from typing import TypeVar, cast
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,15 @@ class _Raise(object):
     pass
 
 
-@dataclass
+@dataclass(frozen=True)
+class PlaidEnvironment:
+    environment: str
+    client_id: str
+    public_key: str
+    secret_key: str
+
+
+@dataclass(frozen=True)
 class Environment:
     secret_key: str
     jwt_secret_key: str
@@ -29,6 +37,7 @@ class Environment:
     rmq_url: str
     freecurrencyapi_key: str
     saxo_gateway_url: str | None
+    plaid_environment: PlaidEnvironment | None
 
     @property
     def is_production(self) -> bool:
@@ -106,6 +115,25 @@ def get_freecurrencyapi_key() -> str:
     return get_environment_value("FINBOT_FREECURRENCYAPI_KEY")
 
 
+def get_plaid_environment() -> PlaidEnvironment | None:
+    payload = {
+        "environment": get_environment_value_or("FINBOT_PLAID_ENVIRONMENT"),
+        "client_id": get_environment_value_or("FINBOT_PLAID_CLIENT_ID"),
+        "public_key": get_environment_value_or("FINBOT_PLAID_PUBLIC_KEY"),
+        "secret_key": get_environment_value_or("FINBOT_PLAID_SECRET_KEY"),
+    }
+    is_configured = all(value for value in payload.values())
+    return PlaidEnvironment(**cast(dict[str, str], payload)) if is_configured else None
+
+
+def is_plaid_configured() -> bool:
+    return get_plaid_environment() is not None
+
+
+def is_saxo_configured() -> bool:
+    return get_saxo_gateway_url() is not None
+
+
 def is_production() -> bool:
     return get_finbot_runtime() == PRODUCTION_ENV
 
@@ -130,4 +158,5 @@ def get() -> Environment:
         rmq_url=get_rmq_url(),
         freecurrencyapi_key=get_freecurrencyapi_key(),
         saxo_gateway_url=get_saxo_gateway_url(),
+        plaid_environment=get_plaid_environment(),
     )

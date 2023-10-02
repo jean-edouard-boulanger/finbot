@@ -12,7 +12,6 @@ import {
   LinkedAccountsSettings,
 } from "./routes/settings/linked-accounts";
 import { TwilioIntegrationSettings } from "./routes/settings/twilio-integration";
-import { PlaidIntegrationSettings } from "./routes/settings/plaid-integration";
 import { ProvidersSettings } from "./routes/settings/providers";
 import { EmailDeliverySettingsPanel } from "./routes/settings/email-delivery";
 import {
@@ -68,7 +67,6 @@ const UserRouter = () => {
           <Route path="*" element={<AccountsPanel />} />
         </Route>
         <Route path="twilio" element={<TwilioIntegrationSettings />} />
-        <Route path="plaid" element={<PlaidIntegrationSettings />} />
         <Route path="admin/providers" element={<ProvidersSettings />} />
         <Route
           path="admin/email_delivery"

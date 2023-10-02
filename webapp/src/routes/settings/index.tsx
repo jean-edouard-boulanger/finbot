@@ -47,15 +47,6 @@ export const NavigationPanel: React.FC = () => {
       >
         Twilio integration
       </ListGroup.Item>
-      <ListGroup.Item
-        active={pathname.startsWith("/settings/plaid")}
-        onClick={() => {
-          push("/settings/plaid");
-        }}
-        action
-      >
-        Plaid integration
-      </ListGroup.Item>
       <ListGroup.Item>
         <strong>Administration</strong>
       </ListGroup.Item>

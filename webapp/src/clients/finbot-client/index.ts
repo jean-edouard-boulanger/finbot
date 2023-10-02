@@ -1,15 +1,12 @@
 import axios, { AxiosInstance, AxiosResponse } from "axios";
 
 import {
-  DeleteAccountPlaidSettingsRequest,
   DeleteLinkedAccountRequest,
   DeleteProviderRequest,
   EarningsReport,
   FinbotErrorMetadata,
   GetAccountHistoricalValuationRequest,
   GetAccountHistoricalValuationResponse,
-  GetAccountPlaidSettingsRequest,
-  GetAccountPlaidSettingsResponse,
   GetAccountSettingsRequest,
   GetAccountValuationRequest,
   GetAccountValuationResponse,
@@ -32,7 +29,6 @@ import {
   RegisterAccountRequest,
   ReportResponse,
   SaveProviderRequest,
-  UpdateAccountPlaidSettingsRequest,
   UpdateAccountProfileRequest,
   UpdateAccountProfileResponse,
   UpdateLinkedAccountCredentials,
@@ -47,8 +43,8 @@ import {
   UserAccountSettings,
   UpdateTwilioAccountSettingsResponse,
   TwilioSettings,
-  UpdateAccountPlaidSettingsResponse,
   LinkedAccount,
+  GetPlaidSettingsResponse,
   GetLinkedAccountsResponse,
   GetLinkedAccountResponse,
   SaveProviderResponse,
@@ -211,43 +207,9 @@ export class FinbotClient {
       .settings.twilio_settings;
   }
 
-  async getAccountPlaidSettings({
-    account_id,
-  }: GetAccountPlaidSettingsRequest): Promise<PlaidSettings> {
-    const response = await this.axiosInstance.get(
-      `/accounts/${account_id}/settings/plaid/`
-    );
-    return handleResponse<GetAccountPlaidSettingsResponse>(response)
-      .plaid_settings;
-  }
-
-  async updateAccountPlaidSettings({
-    account_id,
-    env,
-    client_id,
-    public_key,
-    secret_key,
-  }: UpdateAccountPlaidSettingsRequest): Promise<PlaidSettings> {
-    const response = await this.axiosInstance.put(
-      `/accounts/${account_id}/settings/plaid/`,
-      {
-        env,
-        client_id,
-        public_key,
-        secret_key,
-      }
-    );
-    return handleResponse<UpdateAccountPlaidSettingsResponse>(response)
-      .plaid_settings;
-  }
-
-  async deleteAccountPlaidSettings({
-    account_id,
-  }: DeleteAccountPlaidSettingsRequest): Promise<void> {
-    const response = await this.axiosInstance.delete(
-      `/accounts/${account_id}/settings/plaid/`
-    );
-    handleResponse(response);
+  async getPlaidSettings(): Promise<PlaidSettings | null> {
+    const response = await this.axiosInstance.get(`/admin/plaid/settings/`);
+    return handleResponse<GetPlaidSettingsResponse>(response).settings;
   }
 
   async getAccountValuation({
