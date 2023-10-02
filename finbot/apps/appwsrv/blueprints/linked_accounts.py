@@ -12,6 +12,7 @@ from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
 from finbot.apps.appwsrv.db import db_session
 from finbot.apps.finbotwsrv.client import FinbotwsrvClient
 from finbot.core import environment, secure
+from finbot.core.environment import get_plaid_environment, is_plaid_configured
 from finbot.core.errors import InvalidOperation, InvalidUserInput
 from finbot.core.plaid import PlaidClient, PlaidSettings
 from finbot.core.utils import unwrap_optional
@@ -67,15 +68,11 @@ def link_new_account(
     provider = repository.get_provider(db_session, provider_id)
 
     is_plaid = provider.id == appwsrv_core.PLAID_PROVIDER_ID
-    if is_plaid and not user_account.plaid_settings:
+    if is_plaid and not is_plaid_configured():
         raise InvalidUserInput("user account is not setup for Plaid")
-
     credentials = body.credentials
     if is_plaid:
-        plaid_client = PlaidClient(
-            PlaidSettings.from_model(unwrap_optional(user_account.plaid_settings))
-        )
-        credentials = plaid_client.exchange_public_token(
+        credentials = PlaidClient().exchange_public_token(
             credentials["public_token"]
         ).dict()
 
@@ -86,7 +83,6 @@ def link_new_account(
         )
         appwsrv_core.validate_credentials(
             finbot_client=FinbotwsrvClient.create(),
-            plaid_settings=user_account.plaid_settings,
             provider_id=provider_id,
             credentials=credentials,
         )
@@ -139,22 +135,16 @@ def get_linked_account(
     )
     credentials = None
     if appwsrv_core.is_plaid_linked_account(linked_account):
-        plaid_settings = repository.get_user_account_plaid_settings(
-            db_session, user_account_id
-        )
         credentials = json.loads(
             secure.fernet_decrypt(
                 unwrap_optional(linked_account.encrypted_credentials).encode(),
                 environment.get_secret_key().encode(),
             ).decode()
         )
-        plaid_client = PlaidClient(
-            PlaidSettings.from_model(unwrap_optional(plaid_settings))
-        )
         credentials = {
-            "link_token": plaid_client.create_link_token(
-                credentials["access_token"]
-            ).link_token
+            "link_token": PlaidClient()
+            .create_link_token(credentials["access_token"])
+            .link_token
         }
     linked_account_status = repository.get_linked_account_status(
         db_session, user_account_id, linked_account_id
@@ -242,12 +232,8 @@ def update_linked_account_credentials(
             f"Linked account '{linked_account.account_name}' is frozen and cannot be updated."
         )
 
-    plaid_settings = repository.get_user_account_plaid_settings(
-        db_session, user_account_id
-    )
-
     is_plaid = appwsrv_core.is_plaid_linked_account(linked_account)
-    if is_plaid and not plaid_settings:
+    if is_plaid and not is_plaid_configured():
         raise InvalidUserInput("user account is not setup for Plaid")
 
     credentials = body.credentials
@@ -262,7 +248,6 @@ def update_linked_account_credentials(
     if do_validate:
         appwsrv_core.validate_credentials(
             finbot_client=FinbotwsrvClient.create(),
-            plaid_settings=plaid_settings,
             provider_id=linked_account.provider_id,
             credentials=credentials,
         )

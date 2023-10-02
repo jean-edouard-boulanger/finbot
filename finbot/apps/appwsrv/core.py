@@ -1,12 +1,11 @@
 import logging
-from typing import Optional, cast
 
 from finbot import model
 from finbot.apps.appwsrv.db import db_session
 from finbot.apps.finbotwsrv.client import FinbotwsrvClient
 from finbot.core import schema as core_schema
+from finbot.core.environment import is_plaid_configured, is_saxo_configured
 from finbot.core.errors import InvalidUserInput
-from finbot.core.plaid import PlaidClient, PlaidSettings
 from finbot.model import repository
 from finbot.services.user_account_valuation import ValuationRequest
 from finbot.tasks import user_account_valuation
@@ -14,18 +13,19 @@ from finbot.tasks import user_account_valuation
 logger = logging.getLogger(__name__)
 
 PLAID_PROVIDER_ID = "plaid_us"
+SAXO_PROVIDER_ID = "saxo_gw_fr"
 
 
 def is_plaid_linked_account(linked_account: model.LinkedAccount) -> bool:
     return linked_account.provider_id == PLAID_PROVIDER_ID
 
 
-def is_active_plaid_linked_account(linked_account: model.LinkedAccount) -> bool:
-    return (
-        is_plaid_linked_account(linked_account)
-        and not linked_account.frozen
-        and not linked_account.deleted
-    )
+def is_provider_supported(provider: model.Provider) -> bool:
+    if provider.id == PLAID_PROVIDER_ID:
+        return is_plaid_configured()
+    if provider.id == SAXO_PROVIDER_ID:
+        return is_saxo_configured()
+    return True
 
 
 def trigger_valuation(
@@ -55,19 +55,9 @@ def try_trigger_valuation(
 
 def validate_credentials(
     finbot_client: FinbotwsrvClient,
-    plaid_settings: Optional[model.UserAccountPlaidSettings],
     provider_id: str,
     credentials: core_schema.CredentialsPayloadType,
 ) -> None:
-    if provider_id == "plaid_us":
-        assert plaid_settings is not None
-        credentials = cast(
-            core_schema.CredentialsPayloadType,
-            PlaidClient.pack_credentials(
-                linked_account_credentials=credentials,
-                plaid_settings=PlaidSettings.from_model(plaid_settings),
-            ),
-        )
     result = finbot_client.validate_credentials(
         provider_id=provider_id, credentials_data=credentials
     )

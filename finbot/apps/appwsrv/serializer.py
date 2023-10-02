@@ -1,7 +1,5 @@
 from typing import Any
 
-from pydantic import SecretStr
-
 from finbot import model
 from finbot.apps.appwsrv import schema as appwsrv_schema
 from finbot.core import schema as core_schema
@@ -40,21 +38,6 @@ def serialize_user_account_twilio_settings(
         appwsrv_schema.UserAccountTwilioSettings.parse_obj(twilio_settings_payload)
         if twilio_settings_payload
         else None
-    )
-
-
-def serialize_user_account_plaid_settings(
-    plaid_settings: model.UserAccountPlaidSettings | None,
-) -> appwsrv_schema.UserAccountPlaidSettings | None:
-    if plaid_settings is None:
-        return None
-    return appwsrv_schema.UserAccountPlaidSettings(
-        env=plaid_settings.env,
-        client_id=plaid_settings.client_id,
-        public_key=plaid_settings.public_key,
-        secret_key=SecretStr(plaid_settings.secret_key),
-        created_at=plaid_settings.created_at,
-        updated_at=plaid_settings.updated_at,
     )
 
 

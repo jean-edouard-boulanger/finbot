@@ -144,25 +144,14 @@ export interface UpdateTwilioAccountSettingsResponse {
   settings: UserAccountSettings;
 }
 
-export interface GetAccountPlaidSettingsRequest extends UserAccountResource {}
-
 export interface PlaidSettings {
-  env: string;
+  environment: string;
   client_id: string;
   public_key: string;
-  secret_key: string;
 }
 
-export interface GetAccountPlaidSettingsResponse {
-  plaid_settings: PlaidSettings;
-}
-
-export interface UpdateAccountPlaidSettingsRequest
-  extends UserAccountResource,
-    PlaidSettings {}
-
-export interface UpdateAccountPlaidSettingsResponse {
-  plaid_settings: PlaidSettings;
+export interface GetPlaidSettingsResponse {
+  settings: PlaidSettings | null;
 }
 
 export interface GetAccountHistoricalValuationRequest
@@ -179,9 +168,6 @@ export interface HistoricalValuation {
 export interface GetAccountHistoricalValuationResponse {
   historical_valuation: HistoricalValuation;
 }
-
-export interface DeleteAccountPlaidSettingsRequest
-  extends UserAccountResource {}
 
 export interface GetLinkedAccountsRequest extends UserAccountResource {}
 

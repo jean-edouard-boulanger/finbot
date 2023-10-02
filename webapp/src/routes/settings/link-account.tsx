@@ -12,7 +12,7 @@ import {
 
 import { default as DataDrivenForm, ISubmitEvent } from "react-jsonschema-form";
 import { toast } from "react-toastify";
-import { Row, Col, Form, Alert, InputGroup, Button } from "react-bootstrap";
+import { Row, Col, Form, InputGroup, Button } from "react-bootstrap";
 import { FaCheck } from "react-icons/fa";
 import { PlaidLink } from "react-plaid-link";
 
@@ -92,7 +92,7 @@ const PlaidForm: React.FC<PlaidFormProps> = ({
       }}
       token={updateMode ? linkToken! : undefined}
       publicKey={settings.public_key}
-      env={settings.env}
+      env={settings.environment}
       countryCodes={["GB", "US", "CA", "IE", "FR", "ES", "NL"]}
       product={updateMode ? [] : ["transactions", "identity"]}
     >
@@ -103,10 +103,6 @@ const PlaidForm: React.FC<PlaidFormProps> = ({
 
 const isPlaidSelected = (provider?: Provider | null) => {
   return provider && provider.id === PLAID_PROVIDER_ID;
-};
-
-const isPlaidSupported = (plaidSettings: PlaidSettings | null) => {
-  return plaidSettings !== null;
 };
 
 export interface LinkAccountProps {
@@ -147,11 +143,7 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
 
   useEffect(() => {
     const fetch = async () => {
-      setPlaidSettings(
-        await finbotClient!.getAccountPlaidSettings({
-          account_id: userAccountId!,
-        })
-      );
+      setPlaidSettings(await finbotClient!.getPlaidSettings());
     };
     fetch();
   }, [finbotClient, userAccountId]);
@@ -374,36 +366,24 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
                     }}
                   />
                 )}
-              {isPlaidSelected(selectedProvider) &&
-                isPlaidSupported(plaidSettings) && (
-                  <PlaidForm
-                    operation={operation}
-                    settings={plaidSettings!}
-                    linkToken={
-                      updateMode
-                        ? (linkedAccount!.credentials!.link_token as string)
-                        : null
+              {isPlaidSelected(selectedProvider) && (
+                <PlaidForm
+                  operation={operation}
+                  settings={plaidSettings!}
+                  linkToken={
+                    updateMode
+                      ? (linkedAccount!.credentials!.link_token as string)
+                      : null
+                  }
+                  onSubmit={(credentials) => {
+                    if (updateMode) {
+                      requestUpdateCredentials(credentials);
+                    } else {
+                      requestLinkAccount({ ...selectedProvider! }, credentials);
                     }
-                    onSubmit={(credentials) => {
-                      if (updateMode) {
-                        requestUpdateCredentials(credentials);
-                      } else {
-                        requestLinkAccount(
-                          { ...selectedProvider! },
-                          credentials
-                        );
-                      }
-                    }}
-                  />
-                )}
-              {isPlaidSelected(selectedProvider) &&
-                !isPlaidSupported(plaidSettings) && (
-                  <Alert variant={"warning"}>
-                    To link an external account via Plaid (open banking), please
-                    first provide your Plaid API details in your account
-                    settings.
-                  </Alert>
-                )}
+                  }}
+                />
+              )}
             </Col>
           </Row>
         </Col>

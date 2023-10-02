@@ -2,10 +2,12 @@ import logging
 
 from flask import Blueprint
 
+from finbot.apps.appwsrv import core as appwsrv_core
 from finbot.apps.appwsrv import schema as appwsrv_schema
 from finbot.apps.appwsrv import serializer
 from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
 from finbot.apps.appwsrv.db import db_session
+from finbot.core.environment import get_plaid_environment
 from finbot.core.errors import InvalidOperation, InvalidUserInput
 from finbot.core.web_service import jwt_required, service_endpoint, validate
 from finbot.model import LinkedAccount, Provider, repository
@@ -44,6 +46,7 @@ def get_providers() -> appwsrv_schema.GetProvidersResponse:
         providers=[
             serializer.serialize_provider(provider)
             for provider in db_session.query(Provider).all()
+            if appwsrv_core.is_provider_supported(provider)
         ]
     )
 
@@ -74,3 +77,20 @@ def delete_provider(provider_id: str) -> appwsrv_schema.DeleteProviderResponse:
     db_session.commit()
     logging.info(f"deleted provider_id={provider_id}")
     return appwsrv_schema.DeleteProviderResponse()
+
+
+@providers_api.route("/plaid/settings/", methods=["GET"])
+@jwt_required()
+@service_endpoint()
+@validate()
+def get_plaid_settings() -> appwsrv_schema.GetPlaidSettingsResponse:
+    plaid_env = get_plaid_environment()
+    if not plaid_env:
+        return appwsrv_schema.GetPlaidSettingsResponse(settings=None)
+    return appwsrv_schema.GetPlaidSettingsResponse(
+        settings=appwsrv_schema.PlaidSettings(
+            environment=plaid_env.environment,
+            client_id=plaid_env.client_id,
+            public_key=plaid_env.public_key,
+        )
+    )
