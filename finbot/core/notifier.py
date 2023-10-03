@@ -6,12 +6,21 @@ from twilio.rest import Client as TwilioClient
 
 from finbot import model
 from finbot.core import email_delivery
+from finbot.core.environment import TwilioEnvironment
 
 
 class TwilioSettings(BaseModel):
     account_sid: str
     auth_token: str
-    phone_number: str
+    sender_name: str
+
+    @staticmethod
+    def from_env(twilio_env: TwilioEnvironment) -> "TwilioSettings":
+        return TwilioSettings(
+            account_sid=twilio_env.account_sid,
+            auth_token=twilio_env.auth_token,
+            sender_name=twilio_env.sender_name,
+        )
 
 
 class ValuationNotification(BaseModel):
@@ -22,9 +31,6 @@ class ValuationNotification(BaseModel):
 
 class Notifier(Protocol):
     def notify_valuation(self, notification: ValuationNotification) -> None:
-        ...
-
-    def notify_twilio_settings_updated(self) -> None:
         ...
 
     def notify_linked_accounts_snapshot_errors(
@@ -44,9 +50,6 @@ class EmailNotifier(Notifier):
         self._service = email_delivery.EmailService(email_delivery_settings)
 
     def notify_valuation(self, notification: ValuationNotification) -> None:
-        pass
-
-    def notify_twilio_settings_updated(self) -> None:
         pass
 
     def notify_linked_accounts_snapshot_errors(
@@ -94,19 +97,8 @@ class TwilioNotifier(Notifier):
             )
         self._twilio_client.messages.create(
             to=self._recipient_phone_number,
-            from_=self._settings.phone_number,
+            from_=self._settings.sender_name,
             body=message_body,
-        )
-
-    def notify_twilio_settings_updated(self) -> None:
-        self._twilio_client.messages.create(
-            to=self._recipient_phone_number,
-            from_=self._settings.phone_number,
-            body=dedent(
-                """\
-                ☎️ Your Twilio integration settings have been successfully updated
-            """
-            ).strip(),
         )
 
     def notify_linked_accounts_snapshot_errors(
@@ -122,10 +114,6 @@ class CompositeNotifier(Notifier):
     def notify_valuation(self, notification: ValuationNotification) -> None:
         for notifier in self._notifiers:
             notifier.notify_valuation(notification)
-
-    def notify_twilio_settings_updated(self) -> None:
-        for notifier in self._notifiers:
-            notifier.notify_twilio_settings_updated()
 
     def notify_linked_accounts_snapshot_errors(
         self, error_entries: list[model.LinkedAccountSnapshotEntry]

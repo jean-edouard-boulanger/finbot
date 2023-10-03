@@ -31,24 +31,11 @@ def serialize_user_account_profile(
     )
 
 
-def serialize_user_account_twilio_settings(
-    twilio_settings_payload: dict[str, Any] | None
-) -> appwsrv_schema.UserAccountTwilioSettings | None:
-    return (
-        appwsrv_schema.UserAccountTwilioSettings.parse_obj(twilio_settings_payload)
-        if twilio_settings_payload
-        else None
-    )
-
-
 def serialize_user_account_settings(
     settings: model.UserAccountSettings,
 ) -> appwsrv_schema.UserAccountSettings:
     return appwsrv_schema.UserAccountSettings(
         valuation_ccy=settings.valuation_ccy,
-        twilio_settings=serialize_user_account_twilio_settings(
-            settings.twilio_settings
-        ),
         created_at=settings.created_at,
         updated_at=settings.updated_at,
     )

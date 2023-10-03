@@ -39,15 +39,8 @@ class UserAccountProfile(BaseModel):
     mobile_phone_number: str | None
 
 
-class UserAccountTwilioSettings(BaseModel):
-    account_sid: str
-    auth_token: str
-    phone_number: str
-
-
 class UserAccountSettings(BaseModel):
     valuation_ccy: str
-    twilio_settings: UserAccountTwilioSettings | None
     created_at: datetime
     updated_at: datetime | None
 
@@ -221,16 +214,6 @@ class UpdateUserAccountProfileResponse(BaseModel):
 
 
 class GetUserAccountSettingsResponse(BaseModel):
-    settings: UserAccountSettings
-
-
-class UpdateUserAccountSettingsRequest(BaseModel):
-    twilio_settings: UserAccountTwilioSettings | UnsetField | None = Field(
-        default_factory=UnsetField
-    )
-
-
-class UpdateUserAccountSettingsResponse(BaseModel):
     settings: UserAccountSettings
 
 

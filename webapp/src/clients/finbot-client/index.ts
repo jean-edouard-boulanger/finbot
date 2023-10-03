@@ -7,7 +7,6 @@ import {
   FinbotErrorMetadata,
   GetAccountHistoricalValuationRequest,
   GetAccountHistoricalValuationResponse,
-  GetAccountSettingsRequest,
   GetAccountValuationRequest,
   GetAccountValuationResponse,
   GetLinkedAccountRequest,
@@ -33,16 +32,11 @@ import {
   UpdateAccountProfileResponse,
   UpdateLinkedAccountCredentials,
   UpdateLinkedAccountMetadata,
-  UpdateTwilioAccountSettingsRequest,
   UserAccount,
   UserAccountProfile,
   UserAccountValuation,
   ValidateLinkedAccountCredentialsRequest,
   RegisterAccountResponse,
-  GetAccountSettingsResponse,
-  UserAccountSettings,
-  UpdateTwilioAccountSettingsResponse,
-  TwilioSettings,
   LinkedAccount,
   GetPlaidSettingsResponse,
   GetLinkedAccountsResponse,
@@ -184,27 +178,6 @@ export class FinbotClient {
       `/accounts/${account_id}/is_configured/`
     );
     return handleResponse<IsAccountConfiguredResponse>(response).configured;
-  }
-
-  async getAccountSettings({
-    account_id,
-  }: GetAccountSettingsRequest): Promise<UserAccountSettings> {
-    const response = await this.axiosInstance.get(
-      `/accounts/${account_id}/settings/`
-    );
-    return handleResponse<GetAccountSettingsResponse>(response).settings;
-  }
-
-  async updateTwilioAccountSettings({
-    account_id,
-    twilio_settings,
-  }: UpdateTwilioAccountSettingsRequest): Promise<TwilioSettings> {
-    const response = await this.axiosInstance.put(
-      `/accounts/${account_id}/settings/`,
-      { twilio_settings }
-    );
-    return handleResponse<UpdateTwilioAccountSettingsResponse>(response)
-      .settings.twilio_settings;
   }
 
   async getPlaidSettings(): Promise<PlaidSettings | null> {

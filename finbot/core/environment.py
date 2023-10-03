@@ -26,6 +26,13 @@ class PlaidEnvironment:
 
 
 @dataclass(frozen=True)
+class TwilioEnvironment:
+    account_sid: str
+    auth_token: str
+    sender_name: str
+
+
+@dataclass(frozen=True)
 class Environment:
     secret_key: str
     jwt_secret_key: str
@@ -38,6 +45,7 @@ class Environment:
     freecurrencyapi_key: str
     saxo_gateway_url: str | None
     plaid_environment: PlaidEnvironment | None
+    twilio_environment: TwilioEnvironment | None
 
     @property
     def is_production(self) -> bool:
@@ -99,6 +107,10 @@ def get_saxo_gateway_url() -> str | None:
     return get_environment_value_or("FINBOT_SAXO_GATEWAY_URL", None)
 
 
+def is_saxo_configured() -> bool:
+    return bool(get_saxo_gateway_url())
+
+
 def get_finbot_runtime() -> str:
     env_var_name = "FINBOT_ENV"
     raw_value = get_environment_value_or(env_var_name, PRODUCTION_ENV)
@@ -130,8 +142,18 @@ def is_plaid_configured() -> bool:
     return get_plaid_environment() is not None
 
 
-def is_saxo_configured() -> bool:
-    return bool(get_saxo_gateway_url())
+def get_twilio_environment() -> TwilioEnvironment | None:
+    payload = {
+        "account_sid": get_environment_value_or("FINBOT_TWILIO_ACCOUNT_SID"),
+        "auth_token": get_environment_value_or("FINBOT_TWILIO_AUTH_TOKEN"),
+        "sender_name": get_environment_value_or("FINBOT_TWILIO_SENDER_NAME"),
+    }
+    is_configured = all(value for value in payload.values())
+    return TwilioEnvironment(**cast(dict[str, str], payload)) if is_configured else None
+
+
+def is_twilio_configured() -> bool:
+    return get_twilio_environment() is not None
 
 
 def is_production() -> bool:
@@ -159,4 +181,5 @@ def get() -> Environment:
         freecurrencyapi_key=get_freecurrencyapi_key(),
         saxo_gateway_url=get_saxo_gateway_url(),
         plaid_environment=get_plaid_environment(),
+        twilio_environment=get_twilio_environment(),
     )
