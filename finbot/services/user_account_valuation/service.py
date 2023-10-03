@@ -3,6 +3,7 @@ import logging
 from finbot import model
 from finbot.core.db.session import Session
 from finbot.core.email_delivery import DeliverySettings as EmailDeliverySettings
+from finbot.core.environment import get_twilio_environment, is_twilio_configured
 from finbot.core.kv_store import DBKVStore
 from finbot.core.notifier import (
     CompositeNotifier,
@@ -13,6 +14,7 @@ from finbot.core.notifier import (
     ValuationNotification,
 )
 from finbot.core.serialization import pretty_dump
+from finbot.core.utils import unwrap_optional
 from finbot.model import repository
 from finbot.services.user_account_snapshot.service import UserAccountSnapshotService
 from finbot.services.user_account_valuation.schema import (
@@ -30,9 +32,9 @@ def _configure_notifier(
     db_session: Session, user_account: model.UserAccount
 ) -> Notifier:
     notifiers: list[Notifier] = []
-    if user_account.mobile_phone_number and user_account.settings.twilio_settings:
-        twilio_settings = TwilioSettings.parse_obj(
-            user_account.settings.twilio_settings
+    if user_account.mobile_phone_number and is_twilio_configured():
+        twilio_settings = TwilioSettings.from_env(
+            unwrap_optional(get_twilio_environment())
         )
         notifiers.append(
             TwilioNotifier(

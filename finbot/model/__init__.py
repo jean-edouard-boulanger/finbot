@@ -61,7 +61,6 @@ class UserAccountSettings(Base):
         Integer, ForeignKey(UserAccount.id, ondelete="CASCADE"), primary_key=True
     )
     valuation_ccy = Column(String(3), nullable=False)
-    twilio_settings = Column(JSONEncoded)
     created_at = Column(DateTimeTz, server_default=func.now(), nullable=False)
     updated_at = Column(DateTimeTz, onupdate=func.now())
 

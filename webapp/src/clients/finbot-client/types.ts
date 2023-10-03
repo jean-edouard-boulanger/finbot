@@ -118,32 +118,6 @@ export interface IsAccountConfiguredResponse {
   configured: boolean;
 }
 
-export interface GetAccountSettingsRequest extends UserAccountResource {}
-
-export interface UserAccountSettings {
-  valuation_ccy: string;
-  twilio_settings: TwilioSettings;
-}
-
-export interface GetAccountSettingsResponse {
-  settings: UserAccountSettings;
-}
-
-export interface TwilioSettings {
-  account_sid: string;
-  auth_token: string;
-  phone_number: string;
-}
-
-export interface UpdateTwilioAccountSettingsRequest
-  extends UserAccountResource {
-  twilio_settings: TwilioSettings | null;
-}
-
-export interface UpdateTwilioAccountSettingsResponse {
-  settings: UserAccountSettings;
-}
-
 export interface PlaidSettings {
   environment: string;
   client_id: string;

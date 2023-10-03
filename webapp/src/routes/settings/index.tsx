@@ -38,15 +38,6 @@ export const NavigationPanel: React.FC = () => {
       >
         Linked accounts
       </ListGroup.Item>
-      <ListGroup.Item
-        active={pathname.startsWith("/settings/twilio")}
-        onClick={() => {
-          push("/settings/twilio");
-        }}
-        action
-      >
-        Twilio integration
-      </ListGroup.Item>
       <ListGroup.Item>
         <strong>Administration</strong>
       </ListGroup.Item>

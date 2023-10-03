@@ -12,7 +12,7 @@ TEST_RECIPIENT_PHONE_NUMBER = "+33687654321"
 TEST_TWILIO_SETTINGS = TwilioSettings(
     account_sid="test_account_sid",
     auth_token="test_auth_token",
-    phone_number="+33612345678",
+    sender_name="+33612345678",
 )
 
 
@@ -66,17 +66,8 @@ def test_notify_valuation(
     notifier.notify_valuation(notification=valuation_notification)
     notifier._twilio_client.messages.create.assert_called_once_with(
         to=TEST_RECIPIENT_PHONE_NUMBER,
-        from_=TEST_TWILIO_SETTINGS.phone_number,
+        from_=TEST_TWILIO_SETTINGS.sender_name,
         body=expected_body,
-    )
-
-
-def test_notify_twilio_settings_updated(notifier: TwilioNotifier):
-    notifier.notify_twilio_settings_updated()
-    notifier._twilio_client.messages.create.assert_called_once_with(
-        to=TEST_RECIPIENT_PHONE_NUMBER,
-        from_=TEST_TWILIO_SETTINGS.phone_number,
-        body="☎️ Your Twilio integration settings have been successfully updated",
     )
 
 
