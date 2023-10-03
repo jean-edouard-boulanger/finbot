@@ -131,7 +131,7 @@ def is_plaid_configured() -> bool:
 
 
 def is_saxo_configured() -> bool:
-    return get_saxo_gateway_url() is not None
+    return bool(get_saxo_gateway_url())
 
 
 def is_production() -> bool:
