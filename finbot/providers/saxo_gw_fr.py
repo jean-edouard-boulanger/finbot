@@ -99,7 +99,7 @@ class Api(ProviderBase):
 
 def _make_asset(positions: saxo.NetPosition) -> Asset:
     asset_type = positions.SinglePosition.PositionBase.AssetType
-    if asset_type.lower() in ("etf",):
+    if asset_type.lower() in ("etf", "etn"):
         return Asset(
             name=positions.DisplayAndFormat.Description,
             type="equity",
