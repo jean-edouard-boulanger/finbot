@@ -18,6 +18,7 @@ from finbot.core.plaid import PlaidClient
 from finbot.core.utils import unwrap_optional
 from finbot.core.web_service import jwt_required, service_endpoint, validate
 from finbot.model import LinkedAccount, repository
+from finbot.providers.schema import CurrencyCode
 
 logger = logging.getLogger(__name__)
 
@@ -85,6 +86,7 @@ def link_new_account(
             finbot_client=FinbotwsrvClient.create(),
             provider_id=provider_id,
             credentials=credentials,
+            user_account_currency=CurrencyCode(user_account.settings.valuation_ccy),
         )
 
     if do_persist:
@@ -226,6 +228,9 @@ def update_linked_account_credentials(
     linked_account = repository.get_linked_account(
         db_session, user_account_id, linked_account_id
     )
+    user_account_settings = repository.get_user_account_settings(
+        db_session, user_account_id
+    )
 
     if linked_account.frozen:
         raise InvalidUserInput(
@@ -250,6 +255,7 @@ def update_linked_account_credentials(
             finbot_client=FinbotwsrvClient.create(),
             provider_id=linked_account.provider_id,
             credentials=credentials,
+            user_account_currency=CurrencyCode(user_account_settings.valuation_ccy),
         )
 
     if do_persist:

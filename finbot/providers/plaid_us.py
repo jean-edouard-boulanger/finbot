@@ -12,6 +12,7 @@ from finbot.providers.schema import (
     AssetsEntry,
     BalanceEntry,
     Balances,
+    CurrencyCode,
     Liabilities,
     LiabilitiesEntry,
     Liability,
@@ -24,18 +25,18 @@ class Credentials(BaseModel):
 
 
 class Api(ProviderBase):
-    def __init__(self, credentials: Credentials, **kwargs: Any) -> None:
-        super().__init__(**kwargs)
+    description = "Plaid, Open Banking (US)"
+    credentials_type = Credentials
+
+    def __init__(
+        self,
+        credentials: Credentials,
+        user_account_currency: CurrencyCode,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(user_account_currency=user_account_currency, **kwargs)
         self._credentials = credentials
         self._accounts: list[AccountData] | None = None
-
-    @staticmethod
-    def description() -> str:
-        return "Plaid, Open Banking (US)"
-
-    @staticmethod
-    def create(authentication_payload: dict[str, Any], **kwargs: Any) -> "Api":
-        return Api(Credentials.parse_obj(authentication_payload), **kwargs)
 
     @property
     def accounts(self) -> list[AccountData]:
@@ -67,10 +68,10 @@ class Api(ProviderBase):
                 AssetsEntry(
                     account=make_account(account),
                     assets=[
-                        Asset(
-                            name="Cash",
-                            type="currency",
-                            value=account.balance,
+                        Asset.cash(
+                            currency=account.currency,
+                            domestic=account.currency == self.user_account_currency,
+                            amount=account.balance,
                         )
                     ],
                 )

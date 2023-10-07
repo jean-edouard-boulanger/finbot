@@ -16,6 +16,7 @@ from finbot.core.web_service import service_endpoint, validate
 from finbot.providers import ProviderBase
 from finbot.providers.errors import AuthenticationFailure
 from finbot.providers.factory import get_provider
+from finbot.providers.schema import CurrencyCode
 
 FINBOT_ENV = environment.get()
 configure_logging(FINBOT_ENV.desired_log_level)
@@ -64,8 +65,11 @@ def get_financial_data_impl(
     provider_type: type[ProviderBase],
     authentication_payload: dict[str, Any],
     line_items: list[schema.LineItem],
+    user_account_currency: CurrencyCode,
 ) -> schema.GetFinancialDataResponse:
-    with provider_type.create(authentication_payload) as provider_api:
+    with provider_type.create(
+        authentication_payload, user_account_currency
+    ) as provider_api:
         provider_api.initialize()
         return schema.GetFinancialDataResponse(
             financial_data=[
@@ -88,7 +92,12 @@ def get_financial_data(
     body: schema.GetFinancialDataRequest,
 ) -> schema.GetFinancialDataResponse:
     provider_type = get_provider(body.provider_id)
-    return get_financial_data_impl(provider_type, body.credentials, body.items)
+    return get_financial_data_impl(
+        provider_type=provider_type,
+        authentication_payload=body.credentials,
+        line_items=body.items,
+        user_account_currency=body.user_account_currency,
+    )
 
 
 @app.route("/validate_credentials/", methods=["POST"])
@@ -98,7 +107,7 @@ def validate_credentials(
     body: schema.ValidateCredentialsRequest,
 ) -> schema.ValidateCredentialsResponse:
     provider_type = get_provider(body.provider_id)
-    with provider_type.create(body.credentials) as provider:
+    with provider_type.create(body.credentials, body.user_account_currency) as provider:
         try:
             provider.initialize()
             return schema.ValidateCredentialsResponse(valid=True)

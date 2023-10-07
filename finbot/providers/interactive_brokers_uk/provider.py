@@ -22,6 +22,7 @@ from finbot.providers.interactive_brokers_uk.intake import (
 from finbot.providers.schema import (
     Account,
     Asset,
+    AssetClass,
     Assets,
     AssetsEntry,
     BalanceEntry,
@@ -52,6 +53,9 @@ class Credentials(BaseModel):
 
 
 class Api(ProviderBase):
+    description = "Interactive Brokers (UK)"
+    credentials_type = Credentials
+
     def __init__(self, credentials: Credentials, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self._credentials = credentials
@@ -82,27 +86,22 @@ class Api(ProviderBase):
         return Account(
             id=account_info.account_id,
             name=account_info.alias or account_info.account_id,
-            iso_currency=account_info.currency,
+            iso_currency=CurrencyCode(account_info.currency),
             type="investment",
         )
 
     @cached_property
     def _conversion_rates(self) -> dict[tuple[CurrencyCode, CurrencyCode], float]:
         entries = unwrap_optional(self._statement.entries.conversion_rates).entries
-        return {(entry.from_ccy, entry.to_ccy): entry.rate for entry in entries}
+        return {
+            (CurrencyCode(entry.from_ccy), CurrencyCode(entry.to_ccy)): entry.rate
+            for entry in entries
+        }
 
     @cached_property
     def _securities(self) -> dict[str, SecurityInfo]:
         entries = unwrap_optional(self._statement.entries.securities_info).entries
         return {entry.full_security_id: entry for entry in entries}
-
-    @staticmethod
-    def description() -> str:
-        return "Interactive Brokers (UK)"
-
-    @staticmethod
-    def create(authentication_payload: dict[str, Any], **kwargs: Any) -> "Api":
-        return Api(Credentials.parse_obj(authentication_payload), **kwargs)
 
     def get_balances(self) -> Balances:
         assert self._statement.entries.mtm_performance_summary_in_base is not None
@@ -117,10 +116,11 @@ class Api(ProviderBase):
                     account=self._account,
                     balance=sum(
                         _make_asset(
-                            entry,
-                            conversion_rates,
-                            securities,
-                            self._account.iso_currency,
+                            entry=entry,
+                            conversion_rates=conversion_rates,
+                            securities=securities,
+                            account_currency=self._account.iso_currency,
+                            user_account_currency=self.user_account_currency,
                         ).value
                         for entry in portfolio_entries
                     ),
@@ -141,10 +141,11 @@ class Api(ProviderBase):
                     account=self._account,
                     assets=[
                         _make_asset(
-                            entry,
-                            conversion_rates,
-                            securities,
-                            self._account.iso_currency,
+                            entry=entry,
+                            conversion_rates=conversion_rates,
+                            securities=securities,
+                            account_currency=self._account.iso_currency,
+                            user_account_currency=self.user_account_currency,
                         )
                         for entry in portfolio_entries
                     ],
@@ -158,10 +159,11 @@ def _make_asset(
     conversion_rates: dict[tuple[CurrencyCode, CurrencyCode], float],
     securities: dict[str, SecurityInfo],
     account_currency: CurrencyCode,
+    user_account_currency: CurrencyCode,
 ) -> Asset:
     asset_category = entry.asset_category
     if asset_category == "STK":
-        stock_currency = securities[entry.full_security_id].currency
+        stock_currency = CurrencyCode(securities[entry.full_security_id].currency)
         conversion_rate = (
             1.0
             if stock_currency == account_currency
@@ -170,6 +172,7 @@ def _make_asset(
         return Asset(
             name=f"{entry.symbol} - {entry.description}",
             type="equity",
+            asset_class=AssetClass.Equities,
             value=entry.close_quantity * entry.close_price * conversion_rate,
             units=entry.close_quantity,
             provider_specific={
@@ -184,11 +187,11 @@ def _make_asset(
             },
         )
     elif asset_category == "CASH":
-        return Asset(
-            name=f"Cash ({entry.symbol})",
-            type="currency",
-            value=entry.close_quantity * entry.close_price,
-            units=entry.close_quantity,
+        currency = CurrencyCode(entry.symbol)
+        return Asset.cash(
+            currency=currency,
+            domestic=currency == user_account_currency,
+            amount=entry.close_quantity * entry.close_price,
             provider_specific={"Report date": entry.report_date.strftime("%Y-%b-%d")},
         )
     raise ValueError(f"unknown asset category: {asset_category}")

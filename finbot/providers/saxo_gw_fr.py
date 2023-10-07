@@ -9,10 +9,12 @@ from finbot.providers.errors import AuthenticationFailure
 from finbot.providers.schema import (
     Account,
     Asset,
+    AssetClass,
     Assets,
     AssetsEntry,
     BalanceEntry,
     Balances,
+    CurrencyCode,
 )
 
 
@@ -21,8 +23,16 @@ class Credentials(BaseModel):
 
 
 class Api(ProviderBase):
-    def __init__(self, credentials: Credentials, **kwargs: Any) -> None:
-        super().__init__(**kwargs)
+    description = "Saxo OpenAPI Gateway (FR)"
+    credentials_type = Credentials
+
+    def __init__(
+        self,
+        credentials: Credentials,
+        user_account_currency: CurrencyCode,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(user_account_currency=user_account_currency, **kwargs)
         self._credentials = credentials
         saxo_gateway_url = get_saxo_gateway_url()
         assert saxo_gateway_url, "Saxo provider is not properly configured"
@@ -31,14 +41,6 @@ class Api(ProviderBase):
             api_key=credentials.api_key.get_secret_value(),
         )
         self._accounts: list[saxo.Account] | None = None
-
-    @staticmethod
-    def description() -> str:
-        return "Saxo OpenAPI Gateway (FR)"
-
-    @staticmethod
-    def create(authentication_payload: dict[str, Any], **kwargs: Any) -> "Api":
-        return Api(Credentials.parse_obj(authentication_payload), **kwargs)
 
     def initialize(self) -> None:
         try:
@@ -52,7 +54,7 @@ class Api(ProviderBase):
             yield Account(
                 id=raw_account_data.AccountKey,
                 name=raw_account_data.DisplayName,
-                iso_currency=raw_account_data.Currency,
+                iso_currency=CurrencyCode(raw_account_data.Currency),
                 type="investment",
             ), raw_account_data
 
@@ -85,11 +87,12 @@ class Api(ProviderBase):
         if cash_available := self._client.get_account_balances(
             saxo_account
         ).CashAvailableForTrading:
+            currency = CurrencyCode(saxo_account.Currency)
             assets.append(
-                Asset(
-                    name=f"Cash ({saxo_account.Currency})",
-                    type="currency",
-                    value=cash_available,
+                Asset.cash(
+                    currency=currency,
+                    domestic=currency == self.user_account_currency,
+                    amount=cash_available,
                 )
             )
         for position in self._client.get_account_positions(saxo_account).Data:
@@ -103,6 +106,7 @@ def _make_asset(positions: saxo.NetPosition) -> Asset:
         return Asset(
             name=positions.DisplayAndFormat.Description,
             type="equity",
+            asset_class=AssetClass.Equities,
             value=positions.SinglePosition.PositionView.MarketValue,
             units=positions.SinglePosition.PositionBase.Amount,
             provider_specific={

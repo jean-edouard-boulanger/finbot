@@ -29,6 +29,7 @@ def iter_sub_account_item_valuation_history_entries(
             item_type=entry.item_type,
             name=entry.item_name,
             item_subtype=entry.item_subtype,
+            asset_class=entry.asset_class,
             units=entry.item_units,
             valuation=entry.value_snapshot_ccy,
             valuation_sub_account_ccy=entry.value_sub_account_ccy,

@@ -7,6 +7,7 @@ from finbot.core import schema as core_schema
 from finbot.core.environment import is_plaid_configured, is_saxo_configured
 from finbot.core.errors import InvalidUserInput
 from finbot.model import repository
+from finbot.providers.schema import CurrencyCode
 from finbot.services.user_account_valuation import ValuationRequest
 from finbot.tasks import user_account_valuation
 
@@ -57,9 +58,12 @@ def validate_credentials(
     finbot_client: FinbotwsrvClient,
     provider_id: str,
     credentials: core_schema.CredentialsPayloadType,
+    user_account_currency: CurrencyCode,
 ) -> None:
     result = finbot_client.validate_credentials(
-        provider_id=provider_id, credentials_data=credentials
+        provider_id=provider_id,
+        credentials_data=credentials,
+        user_account_currency=user_account_currency,
     )
     if not result.valid:
         raise InvalidUserInput(

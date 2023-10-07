@@ -30,6 +30,7 @@ class LinkedAccountSnapshotRequest:
     provider_id: str
     credentials_data: dict[Any, Any]
     line_items: list[finbotwsrv_schema.LineItem]
+    user_account_currency: providers_schema.CurrencyCode
 
 
 @dataclass
@@ -227,10 +228,14 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
     ) -> None:
         linked_account_id = linked_account_snapshot.request.linked_account_id
         sub_account_entry = self.sub_accounts[(linked_account_id, sub_account.id)]
+        asset_class: providers_schema.AssetClass | None = getattr(
+            item, "asset_class", None
+        )
         new_item = model.SubAccountItemSnapshotEntry(  # type: ignore
             item_type=self._get_item_type(item),
             name=item.name,
             item_subtype=item.type,
+            asset_class=asset_class.value if asset_class else None,
             units=getattr(item, "units", None),
             value_sub_account_ccy=item.value,
             value_snapshot_ccy=item.value
@@ -266,6 +271,7 @@ def dispatch_snapshot_entry(
             provider_id=snap_request.provider_id,
             credentials_data=snap_request.credentials_data,
             line_items=snap_request.line_items,
+            user_account_currency=snap_request.user_account_currency,
         )
 
         logging.info(
@@ -302,7 +308,8 @@ def get_credentials_data(
 
 
 def take_raw_snapshot(
-    user_account: model.UserAccount, linked_account_ids: Optional[list[int]]
+    user_account: model.UserAccount,
+    linked_account_ids: Optional[list[int]],
 ) -> list[LinkedAccountSnapshotResult]:
     with ThreadPoolExecutor(max_workers=4) as executor:
         logging.info("initializing accounts snapshot requests")
@@ -316,6 +323,9 @@ def take_raw_snapshot(
                     finbotwsrv_schema.LineItem.Assets,
                     finbotwsrv_schema.LineItem.Liabilities,
                 ],
+                user_account_currency=providers_schema.CurrencyCode(
+                    user_account.settings.valuation_ccy
+                ),
             )
             for linked_account in user_account.linked_accounts
             if not linked_account.deleted

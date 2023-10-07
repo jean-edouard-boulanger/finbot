@@ -1,9 +1,21 @@
-from typing import Any, TypeAlias
+import enum
+from typing import Any, NewType, TypeAlias
 
 from pydantic import BaseModel
 
-CurrencyCode: TypeAlias = str
+CurrencyCode = NewType("CurrencyCode", str)
 ProviderSpecificPayload: TypeAlias = dict[str, str | int | float | bool]
+
+
+class AssetClass(str, enum.Enum):
+    Equities = "Equities"
+    FixedIncome = "FixedIncome"
+    Currency = "Currency"
+    ForeignCurrency = "ForeignCurrency"
+    Cryptocurrency = "Cryptocurrency"
+    RealEstate = "RealEstate"
+    Commodities = "Commodities"
+    MultiAsset = "MultiAsset"
 
 
 class Account(BaseModel):
@@ -24,10 +36,29 @@ class Balances(BaseModel):
 
 class Asset(BaseModel):
     name: str
-    type: str
+    type: str  # deprecated
+    asset_class: AssetClass | None
     value: float
     units: float | None = None
     provider_specific: dict[str, Any] | None = None
+
+    @classmethod
+    def cash(
+        cls,
+        currency: CurrencyCode,
+        domestic: bool,
+        amount: float,
+        provider_specific: dict[str, Any] | None = None,
+    ) -> "Asset":
+        _validate_currency_code(currency)
+        return Asset(
+            name=currency.upper(),
+            type="currency",  # deprecated
+            asset_class=AssetClass.Currency if domestic else AssetClass.ForeignCurrency,
+            value=amount,
+            units=None,
+            provider_specific=provider_specific,
+        )
 
 
 class AssetsEntry(BaseModel):
@@ -56,3 +87,8 @@ class Liabilities(BaseModel):
 
 
 ItemType: TypeAlias = Asset | Liability
+
+
+def _validate_currency_code(currency: CurrencyCode) -> None:
+    if len(currency) != 3 or not all(c.isalnum() for c in currency):
+        raise ValueError(f"invalid currency code: {currency}")

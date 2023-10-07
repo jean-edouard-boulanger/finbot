@@ -4,7 +4,6 @@ from typing import Any, Generator, cast
 from playwright.sync_api import Locator
 from pydantic import BaseModel, SecretStr
 
-from finbot.core import schema as core_schema
 from finbot.core.utils import raise_
 from finbot.providers.errors import AuthenticationFailure
 from finbot.providers.playwright_base import (
@@ -19,6 +18,7 @@ from finbot.providers.schema import (
     AssetsEntry,
     BalanceEntry,
     Balances,
+    CurrencyCode,
 )
 
 BASE_URL = (
@@ -33,20 +33,18 @@ class Credentials(BaseModel):
 
 
 class Api(PlaywrightProviderBase):
-    def __init__(self, credentials: Credentials, **kwargs: Any) -> None:
-        super().__init__(**kwargs)
+    description = "Credit agricole (FR)"
+    credentials_type = Credentials
+
+    def __init__(
+        self,
+        credentials: Credentials,
+        user_account_currency: CurrencyCode,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(user_account_currency=user_account_currency, **kwargs)
         self._credentials = credentials
         self._account_data = None
-
-    @staticmethod
-    def description() -> str:
-        return "Credit agricole (FR)"
-
-    @staticmethod
-    def create(
-        authentication_payload: core_schema.CredentialsPayloadType, **kwargs: Any
-    ) -> "Api":
-        return Api(Credentials.parse_obj(authentication_payload), **kwargs)
 
     def _iter_accounts(self) -> Generator[BalanceEntry, None, None]:
         def handle_account(data: dict[str, Any]) -> BalanceEntry:
@@ -132,7 +130,14 @@ class Api(PlaywrightProviderBase):
             accounts=[
                 AssetsEntry(
                     account=entry.account,
-                    assets=[Asset(name="Cash", type="currency", value=entry.balance)],
+                    assets=[
+                        Asset.cash(
+                            currency=entry.account.iso_currency,
+                            domestic=self.user_account_currency
+                            == entry.account.iso_currency,
+                            amount=entry.balance,
+                        )
+                    ],
                 )
                 for entry in self._iter_accounts()
             ]

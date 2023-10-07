@@ -2,7 +2,6 @@ from typing import Any, Optional
 
 from pydantic import BaseModel, SecretStr
 
-from finbot.core import schema as core_schema
 from finbot.core.qonto_api import QontoApi, Unauthorized
 from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationFailure
@@ -13,6 +12,7 @@ from finbot.providers.schema import (
     AssetsEntry,
     BalanceEntry,
     Balances,
+    CurrencyCode,
 )
 
 AUTH_URL = "https://app.qonto.com/signin"
@@ -24,20 +24,18 @@ class Credentials(BaseModel):
 
 
 class Api(ProviderBase):
-    def __init__(self, credentials: Credentials, **kwargs: Any) -> None:
-        super().__init__(**kwargs)
+    description = "Qonto (US)"
+    credentials_type = Credentials
+
+    def __init__(
+        self,
+        credentials: Credentials,
+        user_account_currency: CurrencyCode,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(user_account_currency=user_account_currency, **kwargs)
         self._credentials = credentials
         self._accounts: Optional[Balances] = None
-
-    @staticmethod
-    def description() -> str:
-        return "Qonto (US)"
-
-    @staticmethod
-    def create(
-        authentication_payload: core_schema.CredentialsPayloadType, **kwargs: Any
-    ) -> "Api":
-        return Api(Credentials.parse_obj(authentication_payload), **kwargs)
 
     def initialize(self) -> None:
         api = QontoApi(
@@ -54,7 +52,7 @@ class Api(ProviderBase):
                     account=Account(
                         id=entry.slug,
                         name=entry.name,
-                        iso_currency=entry.currency,
+                        iso_currency=CurrencyCode(entry.currency),
                         type="cash",
                     ),
                     balance=entry.balance,
@@ -72,7 +70,14 @@ class Api(ProviderBase):
             accounts=[
                 AssetsEntry(
                     account=entry.account,
-                    assets=[Asset(name="Cash", type="currency", value=entry.balance)],
+                    assets=[
+                        Asset.cash(
+                            currency=entry.account.iso_currency,
+                            domestic=entry.account.iso_currency
+                            == self.user_account_currency,
+                            amount=entry.balance,
+                        )
+                    ],
                 )
                 for entry in self.get_balances().accounts
             ]

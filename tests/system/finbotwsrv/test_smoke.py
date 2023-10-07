@@ -26,8 +26,9 @@ def check_assets_financial_data(results: list[providers_schema.AssetsEntry]):
     assets = assets_entry.assets
     assert len(assets) == 1
     asset = assets[0]
-    assert asset.name == "Cash"
+    assert asset.name == "GBP"
     assert asset.type == "currency"
+    assert asset.asset_class == "ForeignCurrency"
     assert asset.value == 1000.0
 
 
@@ -46,6 +47,7 @@ def test_get_financial_data(api: FinbotwsrvClient):
             finbotwsrv_schema.LineItem.Assets,
             finbotwsrv_schema.LineItem.Balances,
         ],
+        user_account_currency=providers_schema.CurrencyCode("EUR"),
     )
     financial_data = response.financial_data
     assert len(financial_data) == 2
