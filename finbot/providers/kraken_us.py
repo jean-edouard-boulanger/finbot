@@ -4,17 +4,18 @@ import krakenex
 from pydantic import BaseModel, SecretStr
 
 from finbot.core import fx_market
-from finbot.core import schema as core_schema
 from finbot.core.errors import FinbotError
 from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationFailure
 from finbot.providers.schema import (
     Account,
     Asset,
+    AssetClass,
     Assets,
     AssetsEntry,
     BalanceEntry,
     Balances,
+    CurrencyCode,
 )
 
 OWNERSHIP_UNITS_THRESHOLD = 0.00001
@@ -29,14 +30,8 @@ def _format_error(errors: list[str]) -> str:
     return ", ".join(errors)
 
 
-def _is_currency(symbol: str) -> bool:
+def _is_cash(symbol: str) -> bool:
     return symbol.startswith("Z")
-
-
-def _classify_asset(symbol: str) -> str:
-    if _is_currency(symbol):
-        return "currency"
-    return "cryptocurrency"
 
 
 def _demangle_symbol(symbol: str) -> str:
@@ -46,27 +41,25 @@ def _demangle_symbol(symbol: str) -> str:
 
 
 class Api(ProviderBase):
-    def __init__(self, credentials: Credentials, **kwargs: Any) -> None:
-        super().__init__(**kwargs)
+    description = "Kraken (UK)"
+    credentials_type = Credentials
+
+    def __init__(
+        self,
+        credentials: Credentials,
+        user_account_currency: CurrencyCode,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(user_account_currency=user_account_currency, **kwargs)
         self._credentials = credentials
         self._api: Optional[krakenex.API] = None
         self._account_ccy = "EUR"
-
-    @staticmethod
-    def description() -> str:
-        return "Kraken (UK)"
-
-    @staticmethod
-    def create(
-        authentication_payload: core_schema.CredentialsPayloadType, **kwargs: Any
-    ) -> "Api":
-        return Api(Credentials.parse_obj(authentication_payload), **kwargs)
 
     def _account_description(self) -> Account:
         return Account(
             id="portfolio",
             name="Portfolio",
-            iso_currency=self._account_ccy,
+            iso_currency=CurrencyCode(self._account_ccy),
             type="investment",
         )
 
@@ -78,7 +71,7 @@ class Api(ProviderBase):
             units = float(units)
             if units > OWNERSHIP_UNITS_THRESHOLD:
                 demangled_symbol = _demangle_symbol(symbol)
-                if _is_currency(symbol):
+                if _is_cash(symbol):
                     rate = fx_market.get_rate(
                         fx_market.Xccy(demangled_symbol, self._account_ccy)
                     )
@@ -111,16 +104,35 @@ class Api(ProviderBase):
                 AssetsEntry(
                     account=self._account_description(),
                     assets=[
-                        Asset(
-                            name=_demangle_symbol(symbol),
-                            type=_classify_asset(symbol),
+                        _make_asset(
+                            symbol=symbol,
                             units=units,
                             value=value,
+                            user_account_currency=self.user_account_currency,
                         )
                         for symbol, units, value in self._iter_balances()
                     ],
                 )
             ]
+        )
+
+
+def _make_asset(
+    symbol: str, units: float, value: float, user_account_currency: CurrencyCode
+) -> Asset:
+    demangled_symbol = _demangle_symbol(symbol)
+    if _is_cash(symbol):
+        currency = CurrencyCode(demangled_symbol)
+        return Asset.cash(
+            currency=currency, domestic=currency == user_account_currency, amount=units
+        )
+    else:
+        return Asset(
+            name=demangled_symbol,
+            type="cryptocurrency",
+            asset_class=AssetClass.Cryptocurrency,
+            units=units,
+            value=value,
         )
 
 

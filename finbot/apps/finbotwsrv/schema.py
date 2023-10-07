@@ -49,6 +49,7 @@ LineItemResults: TypeAlias = (
 class ValidateCredentialsRequest(BaseModel):
     provider_id: str
     credentials: CredentialsPayloadType
+    user_account_currency: providers_schema.CurrencyCode
 
 
 class ValidateCredentialsResponse(BaseModel):
@@ -60,6 +61,7 @@ class GetFinancialDataRequest(BaseModel):
     provider_id: str
     credentials: CredentialsPayloadType
     items: list[LineItem]
+    user_account_currency: providers_schema.CurrencyCode
 
 
 class GetFinancialDataResponse(BaseModel):

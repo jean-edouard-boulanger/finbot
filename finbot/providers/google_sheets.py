@@ -15,17 +15,18 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from pydantic import BaseModel
 
-from finbot.core import schema as core_schema
 from finbot.core.errors import FinbotError
 from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationFailure
 from finbot.providers.schema import (
     Account,
     Asset,
+    AssetClass,
     Assets,
     AssetsEntry,
     BalanceEntry,
     Balances,
+    CurrencyCode,
 )
 
 
@@ -53,21 +54,19 @@ class Credentials(BaseModel):
 
 
 class Api(ProviderBase):
-    def __init__(self, credentials: Credentials, **kwargs: Any) -> None:
-        super().__init__(**kwargs)
+    description = "Google sheets"
+    credentials_type = Credentials
+
+    def __init__(
+        self,
+        credentials: Credentials,
+        user_account_currency: CurrencyCode,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(user_account_currency=user_account_currency, **kwargs)
         self._credentials = credentials
         self._api: Optional[gspread.Client] = None
         self._sheet: Optional[gspread.Spreadsheet] = None
-
-    @staticmethod
-    def description() -> str:
-        return "Google sheets"
-
-    @staticmethod
-    def create(
-        authentication_payload: core_schema.CredentialsPayloadType, **kwargs: Any
-    ) -> "Api":
-        return Api(Credentials.parse_obj(authentication_payload), **kwargs)
 
     def _iter_accounts(self) -> Generator[AssetsEntry, None, None]:
         assert self._sheet is not None
@@ -88,6 +87,7 @@ class Api(ProviderBase):
                     Asset(
                         name=holding["symbol"],
                         type=holding["type"],
+                        asset_class=_parse_asset_class(holding.get("asset_class")),
                         value=holding["value"],
                         provider_specific=_parse_provider_specific(
                             holding.get("custom")
@@ -197,6 +197,7 @@ HOLDING_SCHEMA = Schema(
         "account": {"type": str, "required": True},
         "symbol": {"type": str, "required": True},
         "type": {"type": str, "required": True},
+        "asset_class": {"type": optional(str), "required": False},
         "units": {"type": optional(float), "required": True},
         "value": {"type": float, "required": True},
         "custom": {"type": str, "required": False},
@@ -332,3 +333,11 @@ def _parse_provider_specific(data: str | None) -> dict[str, Any] | None:
         key, value = entry.split("=")
         provider_specific[key.strip()] = value.strip()
     return provider_specific
+
+
+def _parse_asset_class(data: str | None) -> AssetClass | None:
+    if not data:
+        return None
+    items = data.split("_")
+    raw_asset_class = "".join(item.capitalize() for item in items)
+    return AssetClass[raw_asset_class]

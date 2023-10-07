@@ -2,7 +2,6 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from finbot.core import schema as core_schema
 from finbot.providers.base import ProviderBase
 from finbot.providers.schema import (
     Account,
@@ -11,6 +10,7 @@ from finbot.providers.schema import (
     AssetsEntry,
     BalanceEntry,
     Balances,
+    CurrencyCode,
 )
 
 
@@ -20,23 +20,20 @@ class Credentials(BaseModel):
 
 DUMMY_BALANCE: float = 1000.0
 DUMMY_ACCOUNT = Account(
-    id="dummy", name="Dummy account", iso_currency="GBP", type="cash"
+    id="dummy", name="Dummy account", iso_currency=CurrencyCode("GBP"), type="cash"
 )
 
 
 class Api(ProviderBase):
-    def __init__(self, **kwargs: Any) -> None:
-        super().__init__(**kwargs)
+    description = "Dummy provider (UK)"
+    credentials_type = Credentials
 
-    @staticmethod
-    def description() -> str:
-        return "Dummy provider (UK)"
-
-    @staticmethod
-    def create(
-        authentication_payload: core_schema.CredentialsPayloadType, **kwargs: Any
-    ) -> "Api":
-        return Api(**kwargs)
+    def __init__(
+        self,
+        user_account_currency: CurrencyCode,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(user_account_currency=user_account_currency, **kwargs)
 
     def initialize(self) -> None:
         pass
@@ -51,7 +48,14 @@ class Api(ProviderBase):
             accounts=[
                 AssetsEntry(
                     account=DUMMY_ACCOUNT,
-                    assets=[Asset(name="Cash", type="currency", value=DUMMY_BALANCE)],
+                    assets=[
+                        Asset.cash(
+                            currency=DUMMY_ACCOUNT.iso_currency,
+                            domestic=self.user_account_currency
+                            == DUMMY_ACCOUNT.iso_currency,
+                            amount=DUMMY_BALANCE,
+                        )
+                    ],
                 )
             ]
         )

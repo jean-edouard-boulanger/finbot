@@ -4,7 +4,6 @@ from playwright.sync_api import Locator, Page
 from price_parser import Price  # type: ignore
 from pydantic import BaseModel, SecretStr
 
-from finbot.core import schema as core_schema
 from finbot.core.utils import raise_
 from finbot.providers.errors import AuthenticationFailure
 from finbot.providers.playwright_base import (
@@ -15,10 +14,12 @@ from finbot.providers.playwright_base import (
 from finbot.providers.schema import (
     Account,
     Asset,
+    AssetClass,
     Assets,
     AssetsEntry,
     BalanceEntry,
     Balances,
+    CurrencyCode,
 )
 
 AUTH_URL = "https://lwp.aegon.co.uk/targetplanUI/login"
@@ -44,7 +45,7 @@ class MainDashboardPage(object):
             account=Account(
                 id=footer_locator.inner_text().strip().split(" ")[-1],
                 name=body_locator.locator("h3").inner_text().strip(),
-                iso_currency="GBP",
+                iso_currency=CurrencyCode("GBP"),
                 type="investment",
             ),
             balance=cast(float, Price.fromstring(balance_str).amount_float),
@@ -58,20 +59,18 @@ class MainDashboardPage(object):
 
 
 class Api(PlaywrightProviderBase):
-    def __init__(self, credentials: Credentials, **kwargs: Any) -> None:
-        super().__init__(**kwargs)
+    description = "Aegon Targetplan (UK)"
+    credentials_type = Credentials
+
+    def __init__(
+        self,
+        credentials: Credentials,
+        user_account_currency: CurrencyCode,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(user_account_currency=user_account_currency, **kwargs)
         self._credentials = credentials
         self._accounts: list[BalanceEntry] | None = None
-
-    @staticmethod
-    def description() -> str:
-        return "Aegon Targetplan (UK)"
-
-    @staticmethod
-    def create(
-        authentication_payload: core_schema.CredentialsPayloadType, **kwargs: Any
-    ) -> "Api":
-        return Api(Credentials.parse_obj(authentication_payload), **kwargs)
 
     def initialize(self) -> None:
         page = self.page
@@ -102,6 +101,7 @@ class Api(PlaywrightProviderBase):
                         Asset(
                             name="Generic fund (unknown name)",
                             type="blended fund",
+                            asset_class=AssetClass.MultiAsset,
                             value=entry.balance,
                         )
                     ],

@@ -1,26 +1,36 @@
 import abc
 from typing import Any, Self
 
+from pydantic import BaseModel
+
 from finbot.core import schema as core_schema
 from finbot.providers.errors import RetiredProviderError
-from finbot.providers.schema import Assets, Balances, Liabilities
+from finbot.providers.schema import Assets, Balances, CurrencyCode, Liabilities
 
 
 class ProviderBase(object):
-    def __init__(self, **kwargs: Any):
-        pass
+    description: str
+    credentials_type: type[BaseModel]
 
-    @staticmethod
-    @abc.abstractmethod
+    def __init__(
+        self,
+        user_account_currency: CurrencyCode,
+        **kwargs: Any,
+    ):
+        self.user_account_currency = user_account_currency
+
+    @classmethod
     def create(
-        authentication_payload: core_schema.CredentialsPayloadType, **kwargs: Any
+        cls,
+        authentication_payload: core_schema.CredentialsPayloadType,
+        user_account_currency: CurrencyCode,
+        **kwargs: Any,
     ) -> "ProviderBase":
-        raise NotImplementedError("create")
-
-    @staticmethod
-    @abc.abstractmethod
-    def description() -> str:
-        raise NotImplementedError("description")
+        return cls(
+            credentials=cls.credentials_type.parse_obj(authentication_payload),
+            user_account_currency=user_account_currency,
+            **kwargs,
+        )
 
     def __enter__(self) -> Self:
         return self
@@ -51,16 +61,17 @@ class ProviderBase(object):
 
 
 class RetiredProvider(ProviderBase):
+    credentials_type = BaseModel
+    description = "Retired provider"
+
     def __init__(self, **kwargs: Any):
         super().__init__(**kwargs)
         raise RetiredProviderError()
 
     @staticmethod
-    @abc.abstractmethod
-    def create(authentication_payload: dict[str, Any], **kwargs: Any) -> "ProviderBase":
+    def create(
+        authentication_payload: core_schema.CredentialsPayloadType,
+        user_account_currency: CurrencyCode,
+        **kwargs: Any,
+    ) -> "ProviderBase":
         raise RetiredProviderError()
-
-    @staticmethod
-    @abc.abstractmethod
-    def description() -> str:
-        return "Retired provider"

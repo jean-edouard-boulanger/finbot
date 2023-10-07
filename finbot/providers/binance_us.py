@@ -5,17 +5,18 @@ from binance.exceptions import BinanceAPIException
 from pycoingecko import CoinGeckoAPI
 from pydantic import BaseModel, SecretStr
 
-from finbot.core import schema as core_schema
 from finbot.core.crypto_market import CoinGeckoWrapper
 from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationFailure
 from finbot.providers.schema import (
     Account,
     Asset,
+    AssetClass,
     Assets,
     AssetsEntry,
     BalanceEntry,
     Balances,
+    CurrencyCode,
 )
 
 OWNERSHIP_UNITS_THRESHOLD = 0.00001
@@ -28,22 +29,20 @@ class Credentials(BaseModel):
 
 
 class Api(ProviderBase):
-    def __init__(self, credentials: Credentials, **kwargs: Any) -> None:
-        super().__init__(**kwargs)
+    description = "Binance (US)"
+    credentials_type = Credentials
+
+    def __init__(
+        self,
+        credentials: Credentials,
+        user_account_currency: CurrencyCode,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(user_account_currency=user_account_currency, **kwargs)
         self._credentials = credentials
         self._account_ccy = "USD"
         self._spot_api = CoinGeckoWrapper(CoinGeckoAPI())
         self._api: Optional[Binance] = None
-
-    @staticmethod
-    def description() -> str:
-        return "Binance (US)"
-
-    @staticmethod
-    def create(
-        authentication_payload: core_schema.CredentialsPayloadType, **kwargs: Any
-    ) -> "Api":
-        return Api(Credentials.parse_obj(authentication_payload), **kwargs)
 
     def _get_account(self) -> dict[Any, Any]:
         assert self._api is not None
@@ -54,7 +53,7 @@ class Api(ProviderBase):
         return Account(
             id="portfolio",
             name="Portfolio",
-            iso_currency=self._account_ccy,
+            iso_currency=CurrencyCode(self._account_ccy),
             type="investment",
         )
 
@@ -93,7 +92,11 @@ class Api(ProviderBase):
                     account=self._account_description(),
                     assets=[
                         Asset(
-                            name=symbol, type="cryptocurrency", units=units, value=value
+                            name=symbol,
+                            type="cryptocurrency",
+                            asset_class=AssetClass.Cryptocurrency,
+                            units=units,
+                            value=value,
                         )
                         for symbol, units, value in self._iter_holdings()
                     ],
