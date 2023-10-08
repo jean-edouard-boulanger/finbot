@@ -1,3 +1,4 @@
+import enum
 from collections import defaultdict
 from typing import (
     Any,
@@ -24,6 +25,7 @@ from finbot.providers.schema import (
     AssetClass,
     Assets,
     AssetsEntry,
+    AssetType,
     BalanceEntry,
     Balances,
     CurrencyCode,
@@ -87,7 +89,8 @@ class Api(ProviderBase):
                     Asset(
                         name=holding["symbol"],
                         type=holding["type"],
-                        asset_class=_parse_asset_class(holding.get("asset_class")),
+                        asset_class=_parse_enum(AssetClass, holding.get("asset_class")),
+                        asset_type=_parse_enum(AssetType, holding.get("asset_type")),
                         value=holding["value"],
                         provider_specific=_parse_provider_specific(
                             holding.get("custom")
@@ -198,6 +201,7 @@ HOLDING_SCHEMA = Schema(
         "symbol": {"type": str, "required": True},
         "type": {"type": str, "required": True},
         "asset_class": {"type": optional(str), "required": False},
+        "asset_type": {"type": optional(str), "required": False},
         "units": {"type": optional(float), "required": True},
         "value": {"type": float, "required": True},
         "custom": {"type": str, "required": False},
@@ -335,9 +339,12 @@ def _parse_provider_specific(data: str | None) -> dict[str, Any] | None:
     return provider_specific
 
 
-def _parse_asset_class(data: str | None) -> AssetClass | None:
+EnumType = TypeVar("EnumType", bound=enum.Enum)
+
+
+def _parse_enum(enum_type: type[EnumType], data: str | None) -> EnumType | None:
     if not data:
         return None
     items = data.split("_")
     raw_asset_class = "".join(item.capitalize() for item in items)
-    return AssetClass[raw_asset_class]
+    return enum_type[raw_asset_class]

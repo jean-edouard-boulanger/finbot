@@ -24,6 +24,8 @@ class SubAccountItemDescription(BaseModel):
     name: str
     type: str
     sub_type: str
+    asset_class: str | None
+    asset_type: str | None
 
 
 class SubAccountItemNode(BaseModel):

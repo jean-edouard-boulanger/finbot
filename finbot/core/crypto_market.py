@@ -9,12 +9,15 @@ class Error(FinbotError):
     pass
 
 
-class CoinGeckoWrapper(object):
-    def __init__(self, coingecko_api: CoinGeckoAPI):
-        self._api = coingecko_api
-        self._symbols_to_id = {
+class CryptoMarket(object):
+    def __init__(self, impl: CoinGeckoAPI | None = None):
+        self._api = impl or CoinGeckoAPI()
+        self._symbols_to_id: dict[str, str] = {
             entry["symbol"]: entry["id"] for entry in self._api.get_coins_list()
         }
+
+    def _get_coin_id(self, symbol: str) -> str:
+        return self._symbols_to_id[symbol.lower()]
 
     @lru_cache(None)
     def get_spot_cached(self, source_crypto_ccy: str, target_ccy: str) -> float:
@@ -22,8 +25,8 @@ class CoinGeckoWrapper(object):
 
     def get_spot(self, source_crypto_ccy: str, target_ccy: str) -> float:
         target_ccy = target_ccy.lower()
-        coin_id = self._symbols_to_id[source_crypto_ccy.lower()]
+        coin_id = self._get_coin_id(source_crypto_ccy)
         result = self._api.get_price(coin_id, target_ccy)
         if coin_id not in result:
-            raise Error(f"no spot for {coin_id}")
+            raise Error(f"no spot for {source_crypto_ccy} ({coin_id})")
         return float(result[coin_id][target_ccy])

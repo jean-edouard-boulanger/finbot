@@ -51,7 +51,7 @@ class Api(ProviderBase):
                     assets=[
                         Asset.cash(
                             currency=DUMMY_ACCOUNT.iso_currency,
-                            domestic=self.user_account_currency
+                            is_domestic=self.user_account_currency
                             == DUMMY_ACCOUNT.iso_currency,
                             amount=DUMMY_BALANCE,
                         )

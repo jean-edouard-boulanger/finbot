@@ -70,7 +70,7 @@ class Api(ProviderBase):
                     assets=[
                         Asset.cash(
                             currency=account.currency,
-                            domestic=account.currency == self.user_account_currency,
+                            is_domestic=account.currency == self.user_account_currency,
                             amount=account.balance,
                         )
                     ],

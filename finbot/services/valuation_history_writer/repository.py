@@ -70,7 +70,8 @@ class ConsistencySnapshotEntry:
     item_name: str
     item_type: model.SubAccountItemType
     item_subtype: str
-    asset_class: str | None
+    item_asset_class: str | None
+    item_asset_type: str | None
     item_units: Decimal
     value_snapshot_ccy: Decimal
     value_sub_account_ccy: Decimal
@@ -167,6 +168,7 @@ class ReportRepository(object):
                    sais.item_type AS item_type,
                    sais.item_subtype AS item_subtype,
                    sais.asset_class AS item_asset_class,
+                   sais.asset_type AS item_asset_type,
                    sais.units AS item_units,
                    sais.value_snapshot_ccy AS value_snapshot_ccy,
                    sais.value_sub_account_ccy AS value_sub_account_ccy,

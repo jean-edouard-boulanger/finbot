@@ -81,6 +81,8 @@ def build_sub_account_item_node(
             name=sub_account_item_valuation.name,
             type=sub_account_item_valuation.item_type.name,
             sub_type=sub_account_item_valuation.item_subtype,
+            asset_class=sub_account_item_valuation.asset_class,
+            asset_type=sub_account_item_valuation.asset_type,
         ),
         valuation=holdings_schema.Valuation(
             currency=report_data.valuation_currency,

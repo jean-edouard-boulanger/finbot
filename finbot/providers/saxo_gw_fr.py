@@ -12,6 +12,7 @@ from finbot.providers.schema import (
     AssetClass,
     Assets,
     AssetsEntry,
+    AssetType,
     BalanceEntry,
     Balances,
     CurrencyCode,
@@ -91,7 +92,7 @@ class Api(ProviderBase):
             assets.append(
                 Asset.cash(
                     currency=currency,
-                    domestic=currency == self.user_account_currency,
+                    is_domestic=currency == self.user_account_currency,
                     amount=cash_available,
                 )
             )
@@ -107,12 +108,12 @@ def _make_asset(positions: saxo.NetPosition) -> Asset:
             name=positions.DisplayAndFormat.Description,
             type="equity",
             asset_class=AssetClass.Equities,
+            asset_type=AssetType[asset_type.upper()],
             value=positions.SinglePosition.PositionView.MarketValue,
             units=positions.SinglePosition.PositionBase.Amount,
             provider_specific={
                 "Symbol": positions.DisplayAndFormat.Symbol,
                 "Description": positions.DisplayAndFormat.Description,
-                "Equity type": positions.SinglePosition.PositionBase.AssetType,
                 "Listing exchange": positions.Exchange.Description,
                 "Current price": positions.SinglePosition.PositionView.CurrentPrice,
                 "P&L": positions.SinglePosition.PositionView.ProfitLossOnTrade,

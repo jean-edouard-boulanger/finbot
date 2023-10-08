@@ -25,6 +25,7 @@ from finbot.providers.schema import (
     AssetClass,
     Assets,
     AssetsEntry,
+    AssetType,
     BalanceEntry,
     Balances,
     CurrencyCode,
@@ -173,13 +174,13 @@ def _make_asset(
             name=f"{entry.symbol} - {entry.description}",
             type="equity",
             asset_class=AssetClass.Equities,
+            asset_type=AssetType.Stock,
             value=entry.close_quantity * entry.close_price * conversion_rate,
             units=entry.close_quantity,
             provider_specific={
                 "Symbol": entry.symbol,
                 "Description": entry.description,
                 entry.security_id_type: entry.security_id,
-                "Equity type": f"{entry.sub_category.capitalize()} stock",
                 "Stock currency": stock_currency,
                 "Listing exchange": entry.listing_exchange,
                 f"Close price ({stock_currency})": entry.close_price,
@@ -190,7 +191,7 @@ def _make_asset(
         currency = CurrencyCode(entry.symbol)
         return Asset.cash(
             currency=currency,
-            domestic=currency == user_account_currency,
+            is_domestic=currency == user_account_currency,
             amount=entry.close_quantity * entry.close_price,
             provider_specific={"Report date": entry.report_date.strftime("%Y-%b-%d")},
         )

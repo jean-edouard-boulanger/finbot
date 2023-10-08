@@ -21,6 +21,12 @@ def create_parser() -> ArgumentParser:
         type=str,
         help="Provider"
     )
+    parser.add_argument(
+        "--valuation-currency",
+        type=str,
+        default="EUR",
+        help="Valuation currency (only has an impact on the assets classification)"
+    )
     auth_group = parser.add_mutually_exclusive_group()
     auth_group.add_argument(
         "-a", "--auth-payload",
@@ -51,7 +57,7 @@ def main():
     settings = create_parser().parse_args()
     auth_payload = get_authentication_payload(settings)
     provider_type = providers_factory.get_provider(settings.provider)
-    with provider_type.create(auth_payload) as provider_api:
+    with provider_type.create(auth_payload, settings.valuation_currency) as provider_api:
         provider_api.initialize()
         print(pretty_dump({
             "balances": provider_api.get_balances(),
