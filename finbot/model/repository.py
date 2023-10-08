@@ -350,7 +350,8 @@ def get_historical_valuation_by_asset_type(
                ) as min_value
           from (
               select history_entry_id,
-                     item_subtype as asset_type,
+                     replace(coalesce(asset_type, 'unknown'), '_', ' ') 
+                     || ' (' || replace(coalesce(asset_class, 'unknown asset class'), '_', ' ') || ')' as asset_type,
                      sum(valuation) as valuation
                 from finbot_sub_accounts_items_valuation_history_entries fsaivhe
                 join finbot_user_accounts_history_entries fuahe
@@ -360,7 +361,9 @@ def get_historical_valuation_by_asset_type(
                where fuahe.available
              and not fla.deleted
                  and fuahe.user_account_id = :user_account_id {time_clause}
-            group by history_entry_id, item_subtype
+            group by history_entry_id, 
+                     replace(coalesce(asset_type, 'unknown'), '_', ' ') 
+                     || ' (' || replace(coalesce(asset_class, 'unknown asset class'), '_', ' ') || ')'
           ) agg_items
           join finbot_user_accounts_history_entries fuahe on agg_items.history_entry_id = fuahe.id
     """

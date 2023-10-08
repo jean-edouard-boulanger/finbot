@@ -247,13 +247,27 @@ class GetUserAccountValuationResponse(BaseModel):
     valuation: UserAccountValuation
 
 
+class GroupValuation(BaseModel):
+    name: str
+    value: float
+
+
 class ValuationByAssetType(BaseModel):
     valuation_ccy: str
-    by_asset_type: dict[str, float]
+    by_asset_type: list[GroupValuation]
 
 
 class GetUserAccountValuationByAssetTypeResponse(BaseModel):
     valuation: ValuationByAssetType
+
+
+class ValuationByAssetClass(BaseModel):
+    valuation_ccy: str
+    by_asset_class: list[GroupValuation]
+
+
+class GetUserAccountValuationByAssetClassResponse(BaseModel):
+    valuation: ValuationByAssetClass
 
 
 class HistoricalValuationParams(BaseModel):

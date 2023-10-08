@@ -312,13 +312,30 @@ export interface ValuationChange {
 export interface GetUserAccountValuationByAssetTypeRequest
   extends UserAccountResource {}
 
+export interface GetUserAccountValuationByAssetClassRequest
+  extends UserAccountResource {}
+
+export interface GroupValuation {
+  name: string;
+  value: number;
+}
+
 export interface UserAccountValuationByAssetType {
   valuation_ccy: string;
-  by_asset_type: Record<string, number>;
+  by_asset_type: Array<GroupValuation>;
 }
 
 export interface GetUserAccountValuationByAssetTypeResponse {
   valuation: UserAccountValuationByAssetType;
+}
+
+export interface UserAccountValuationByAssetClass {
+  valuation_ccy: string;
+  by_asset_class: Array<GroupValuation>;
+}
+
+export interface GetUserAccountValuationByAssetClassResponse {
+  valuation: UserAccountValuationByAssetClass;
 }
 
 export interface HoldingsReportValuation {

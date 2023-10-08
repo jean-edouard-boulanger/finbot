@@ -8,32 +8,32 @@ ProviderSpecificPayload: TypeAlias = dict[str, str | int | float | bool]
 
 
 class AssetClass(str, enum.Enum):
-    Equities = "Equities"
-    FixedIncome = "FixedIncome"
-    PrivateDebt = "PrivateDebt"
-    Currency = "Currency"
-    ForeignCurrency = "ForeignCurrency"
-    Crypto = "Crypto"
-    RealEstate = "RealEstate"
-    Commodities = "Commodities"
-    MultiAsset = "MultiAsset"
+    equities = "equities"
+    fixed_income = "fixed_income"
+    private_debt = "private_debt"
+    currency = "currency"
+    foreign_currency = "foreign_currency"
+    crypto = "crypto"
+    real_estate = "real_estate"
+    commodities = "commodities"
+    multi_asset = "multi_asset"
 
 
 class AssetType(str, enum.Enum):
-    Cash = "Cash"
-    Bond = "Bond"
-    Stock = "Stock"
-    Option = "Option"
-    Future = "Future"
+    cash = "cash"
+    bond = "bond"
+    stock = "stock"
+    option = "option"
+    future = "future"
     ETF = "ETF"
     ETN = "ETN"
-    GenericFund = "GenericFund"
-    Loan = "Loan"
-    PreciousMetal = "PreciousMetal"
-    Cryptocurrency = "Cryptocurrency"
-    UtilityToken = "UtilityToken"
-    SecurityToken = "SecurityToken"
-    StableCoin = "StableCoin"
+    generic_fund = "generic_fund"
+    loan = "loan"
+    precious_metal = "precious_metal"
+    crypto_currency = "crypto_currency"
+    utility_token = "utility_token"
+    security_token = "security_token"
+    stable_coin = "stable_coin"
 
 
 class Account(BaseModel):
@@ -73,10 +73,12 @@ class Asset(BaseModel):
         return Asset(
             name=currency.upper(),
             type="currency",  # deprecated
-            asset_class=AssetClass.Currency
-            if is_domestic
-            else AssetClass.ForeignCurrency,
-            asset_type=AssetType.Cash,
+            asset_class=(
+                AssetClass.currency
+                if is_domestic
+                else AssetClass.foreign_currency
+            ),
+            asset_type=AssetType.cash,
             value=amount,
             units=None,
             provider_specific=provider_specific,

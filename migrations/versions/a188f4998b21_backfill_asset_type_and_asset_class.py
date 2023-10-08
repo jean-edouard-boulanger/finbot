@@ -7,7 +7,6 @@ Create Date: 2023-10-08 08:07:19.278199
 """
 import logging
 from alembic import op
-import sqlalchemy as sa
 
 
 from sqlalchemy import text
@@ -25,12 +24,12 @@ depends_on = None
 
 
 GENERIC_UPDATES_MAPPING = [
-    {"item_subtype": "commodity", "asset_class": AssetClass.Commodities, "asset_type": AssetType.PreciousMetal},
-    {"item_subtype": "equity fund", "asset_class": AssetClass.Equities, "asset_type": AssetType.ETF},
-    {"item_subtype": "blended fund", "asset_class": AssetClass.MultiAsset, "asset_type": AssetType.GenericFund},
-    {"item_subtype": "cryptocurrency", "asset_class": AssetClass.Crypto, "asset_type": AssetType.Cryptocurrency},
-    {"item_subtype": "loan", "asset_class": AssetClass.PrivateDebt, "asset_type": AssetType.Loan},
-    {"item_subtype": "equity option", "asset_class": AssetClass.Equities, "asset_type": AssetType.Option},
+    {"item_subtype": "commodity", "asset_class": AssetClass.commodities, "asset_type": AssetType.precious_metal},
+    {"item_subtype": "equity fund", "asset_class": AssetClass.equities, "asset_type": AssetType.ETF},
+    {"item_subtype": "blended fund", "asset_class": AssetClass.multi_asset, "asset_type": AssetType.generic_fund},
+    {"item_subtype": "cryptocurrency", "asset_class": AssetClass.crypto, "asset_type": AssetType.crypto_currency},
+    {"item_subtype": "loan", "asset_class": AssetClass.private_debt, "asset_type": AssetType.loan},
+    {"item_subtype": "equity option", "asset_class": AssetClass.equities, "asset_type": AssetType.option},
 ]
 
 
@@ -50,14 +49,14 @@ def upgrade():
         conn.commit()
     conn.execute(text(f"""
         UPDATE finbot_sub_accounts_items_valuation_history_entries
-           SET asset_class = '{AssetClass.Equities.value}',
-               asset_type = '{AssetType.Stock.value}'
+           SET asset_class = '{AssetClass.equities.value}',
+               asset_type = '{AssetType.stock.value}'
          WHERE item_subtype = 'equity'
     """))
     conn.commit()
     conn.execute(text(f"""
         UPDATE finbot_sub_accounts_items_valuation_history_entries
-           SET asset_class = '{AssetClass.Equities.value}',
+           SET asset_class = '{AssetClass.equities.value}',
                asset_type = '{AssetType.ETF.value}'
          WHERE item_subtype = 'equity'
                AND name LIKE '%ETF%'
@@ -65,7 +64,7 @@ def upgrade():
     conn.commit()
     conn.execute(text(f"""
         UPDATE finbot_sub_accounts_items_valuation_history_entries
-           SET asset_class = '{AssetClass.Equities.value}',
+           SET asset_class = '{AssetClass.equities.value}',
                asset_type = '{AssetType.ETN.value}'
          WHERE item_subtype = 'equity'
                AND name LIKE '%ETN%'
@@ -73,24 +72,24 @@ def upgrade():
     conn.commit()
     conn.execute(text(f"""
         UPDATE finbot_sub_accounts_items_valuation_history_entries
-           SET asset_class = '{AssetClass.MultiAsset.value}',
-               asset_type = '{AssetType.GenericFund.value}'
+           SET asset_class = '{AssetClass.multi_asset.value}',
+               asset_type = '{AssetType.generic_fund.value}'
          WHERE item_subtype = 'currency'
            AND name = 'AVIVA ACTIF GARANTI'
     """))
     conn.commit()
     conn.execute(text(f"""
         UPDATE finbot_sub_accounts_items_valuation_history_entries
-           SET asset_class = '{AssetClass.Currency.value}',
-               asset_type = '{AssetType.Cash.value}'
+           SET asset_class = '{AssetClass.currency.value}',
+               asset_type = '{AssetType.cash.value}'
          WHERE item_subtype IN ('Currency', 'currency')
            AND valuation_sub_account_ccy = valuation
     """))
     conn.commit()
     conn.execute(text(f"""
         UPDATE finbot_sub_accounts_items_valuation_history_entries
-           SET asset_class = '{AssetClass.ForeignCurrency.value}',
-               asset_type = '{AssetType.Cash.value}'
+           SET asset_class = '{AssetClass.foreign_currency.value}',
+               asset_type = '{AssetType.cash.value}'
          WHERE item_subtype IN ('Currency', 'currency')
            AND valuation_sub_account_ccy != valuation
     """))
@@ -103,4 +102,9 @@ def upgrade():
     conn.commit()
 
 def downgrade():
-    pass
+    conn = op.get_bind()
+    conn.execute(text(f"""
+        UPDATE finbot_sub_accounts_items_valuation_history_entries
+           SET asset_class = null,
+               asset_type = null
+    """))

@@ -8,9 +8,9 @@ import { MoneyFormatterType } from "components/money";
 
 import { capitalize } from "utils/string";
 
-type AggregationMode = "account" | "asset type";
+type AggregationMode = "account" | "asset type" | "asset class";
 
-const AGGREGATION_MODES: Array<AggregationMode> = ["account", "asset type"];
+const AGGREGATION_MODES: Array<AggregationMode> = ["account", "asset type", "asset class"];
 
 const DEFAULT_AGGREGATION_MODE = AGGREGATION_MODES[0];
 
@@ -60,8 +60,21 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
           );
           setValuation({
             valuation_ccy: result.valuation_ccy,
-            labels: Object.keys(result.by_asset_type).map(capitalize),
-            values: Object.values(result.by_asset_type),
+            labels: result.by_asset_type.map(entry => entry.name),
+            values: result.by_asset_type.map(entry => entry.value),
+          });
+          break;
+        }
+        case "asset class": {
+          const result = await finbotClient!.getUserAccountValuationByAssetClass(
+            {
+              account_id: userAccountId,
+            }
+          );
+          setValuation({
+            valuation_ccy: result.valuation_ccy,
+            labels: result.by_asset_class.map(entry => entry.name),
+            values: result.by_asset_class.map(entry => entry.value),
           });
           break;
         }
