@@ -173,8 +173,8 @@ def _make_asset(
         return Asset(
             name=f"{entry.symbol} - {entry.description}",
             type="equity",
-            asset_class=AssetClass.Equities,
-            asset_type=AssetType.Stock,
+            asset_class=AssetClass.equities,
+            asset_type=AssetType.stock,
             value=entry.close_quantity * entry.close_price * conversion_rate,
             units=entry.close_quantity,
             provider_specific={

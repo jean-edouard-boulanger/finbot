@@ -343,4 +343,6 @@ EnumType = TypeVar("EnumType", bound=enum.Enum)
 
 
 def _parse_enum(enum_type: type[EnumType], data: str | None) -> EnumType | None:
+    if data is None:
+        return None
     return enum_type[data]
