@@ -60,7 +60,9 @@ def get_linked_accounts_valuation(
                         ),
                     ),
                 )
-                for entry in results
+                for entry in sorted(
+                    results, key=lambda entry: -1.0 * float(entry.valuation)
+                )
                 if not entry.linked_account.deleted
             ],
         )

@@ -107,7 +107,7 @@ def _make_asset(positions: saxo.NetPosition) -> Asset:
         return Asset(
             name=positions.DisplayAndFormat.Description,
             type="equity",
-            asset_class=AssetClass.Equities,
+            asset_class=AssetClass.equities,
             asset_type=AssetType[asset_type.upper()],
             value=positions.SinglePosition.PositionView.MarketValue,
             units=positions.SinglePosition.PositionBase.Amount,

@@ -47,8 +47,11 @@ import {
   SystemReport,
   GetSystemReportResponse,
   GetUserAccountValuationByAssetTypeRequest,
+  GetUserAccountValuationByAssetClassRequest,
   UserAccountValuationByAssetType,
+  UserAccountValuationByAssetClass,
   GetUserAccountValuationByAssetTypeResponse,
+  GetUserAccountValuationByAssetClassResponse,
   LinkedAccountsValuation,
   GetLinkedAccountsHistoricalValuationRequest,
   GetLinkedAccountsHistoricalValuationResponse,
@@ -269,6 +272,16 @@ export class FinbotClient {
       `/accounts/${account_id}/valuation/by/asset_type/`
     );
     return handleResponse<GetUserAccountValuationByAssetTypeResponse>(response)
+      .valuation;
+  }
+
+  async getUserAccountValuationByAssetClass({
+    account_id,
+  }: GetUserAccountValuationByAssetClassRequest): Promise<UserAccountValuationByAssetClass> {
+    const response = await this.axiosInstance.get(
+      `/accounts/${account_id}/valuation/by/asset_class/`
+    );
+    return handleResponse<GetUserAccountValuationByAssetClassResponse>(response)
       .valuation;
   }
 

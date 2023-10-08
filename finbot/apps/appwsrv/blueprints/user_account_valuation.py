@@ -15,7 +15,11 @@ from finbot.core import timeseries
 from finbot.core.errors import InvalidUserInput, MissingUserData
 from finbot.core.utils import now_utc
 from finbot.core.web_service import jwt_required, service_endpoint, validate
-from finbot.model import SubAccountItemValuationHistoryEntry, repository
+from finbot.model import (
+    SubAccountItemType,
+    SubAccountItemValuationHistoryEntry,
+    repository,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -96,10 +100,60 @@ def get_user_account_valuation_by_asset_type(
     valuation_by_asset_type: dict[str, float] = defaultdict(float)
     item: SubAccountItemValuationHistoryEntry
     for item in items:
-        valuation_by_asset_type[item.item_subtype] += float(item.valuation)
+        if item.item_type == SubAccountItemType.Asset:
+            group = (
+                f"{item.asset_type.replace('_', ' ').capitalize()}"
+                f" ({item.asset_class.replace('_', ' ')})"
+                if item.asset_type and item.asset_class
+                else "Unknown"
+            )
+            valuation_by_asset_type[group] += float(item.valuation)
     return appwsrv_schema.GetUserAccountValuationByAssetTypeResponse(
         valuation=appwsrv_schema.ValuationByAssetType(
-            valuation_ccy=valuation_ccy, by_asset_type=valuation_by_asset_type
+            valuation_ccy=valuation_ccy,
+            by_asset_type=[
+                appwsrv_schema.GroupValuation(name=group_name, value=value)
+                for (group_name, value) in sorted(
+                    valuation_by_asset_type.items(), key=lambda entry: -1.0 * entry[1]
+                )
+                if value > 0.0
+            ],
+        )
+    )
+
+
+@user_account_valuation_api.route("/by/asset_class/", methods=["GET"])
+@jwt_required()
+@service_endpoint()
+@validate()
+def get_user_account_valuation_by_asset_class(
+    user_account_id: int,
+) -> appwsrv_schema.GetUserAccountValuationByAssetClassResponse:
+    last_history_entry = repository.get_last_history_entry(db_session, user_account_id)
+    items = repository.find_items_valuation(db_session, last_history_entry.id)
+    valuation_ccy = repository.get_user_account_settings(
+        db_session, user_account_id
+    ).valuation_ccy
+    valuation_by_asset_type: dict[str, float] = defaultdict(float)
+    item: SubAccountItemValuationHistoryEntry
+    for item in items:
+        if item.item_type == SubAccountItemType.Asset:
+            group = (
+                item.asset_class.replace("_", " ").capitalize()
+                if item.asset_class
+                else "Unknown"
+            )
+            valuation_by_asset_type[group] += float(item.valuation)
+    return appwsrv_schema.GetUserAccountValuationByAssetClassResponse(
+        valuation=appwsrv_schema.ValuationByAssetClass(
+            valuation_ccy=valuation_ccy,
+            by_asset_class=[
+                appwsrv_schema.GroupValuation(name=group_name, value=value)
+                for (group_name, value) in sorted(
+                    valuation_by_asset_type.items(), key=lambda entry: -1.0 * entry[1]
+                )
+                if value > 0.0
+            ],
         )
     )
 

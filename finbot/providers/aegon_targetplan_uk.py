@@ -102,8 +102,8 @@ class Api(PlaywrightProviderBase):
                         Asset(
                             name="Generic fund (unknown name)",
                             type="blended fund",
-                            asset_class=AssetClass.MultiAsset,
-                            asset_type=AssetType.GenericFund,
+                            asset_class=AssetClass.multi_asset,
+                            asset_type=AssetType.generic_fund,
                             value=entry.balance,
                         )
                     ],

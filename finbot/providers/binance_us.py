@@ -94,8 +94,8 @@ class Api(ProviderBase):
                         Asset(
                             name=symbol,
                             type="cryptocurrency",
-                            asset_class=AssetClass.Crypto,
-                            asset_type=AssetType.Cryptocurrency,
+                            asset_class=AssetClass.crypto,
+                            asset_type=AssetType.crypto_currency,
                             units=units,
                             value=value,
                         )

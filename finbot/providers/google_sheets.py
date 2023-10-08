@@ -343,8 +343,6 @@ EnumType = TypeVar("EnumType", bound=enum.Enum)
 
 
 def _parse_enum(enum_type: type[EnumType], data: str | None) -> EnumType | None:
-    if not data:
+    if data is None:
         return None
-    items = data.split("_")
-    raw_asset_class = "".join(item.capitalize() for item in items)
-    return enum_type[raw_asset_class]
+    return enum_type[data]
