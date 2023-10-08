@@ -29,6 +29,7 @@ def check_assets_financial_data(results: list[providers_schema.AssetsEntry]):
     assert asset.name == "GBP"
     assert asset.type == "currency"
     assert asset.asset_class == "ForeignCurrency"
+    assert asset.asset_type == "Cash"
     assert asset.value == 1000.0
 
 

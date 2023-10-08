@@ -13,6 +13,7 @@ from finbot.providers.schema import (
     AssetClass,
     Assets,
     AssetsEntry,
+    AssetType,
     BalanceEntry,
     Balances,
     CurrencyCode,
@@ -124,13 +125,16 @@ def _make_asset(
     if _is_cash(symbol):
         currency = CurrencyCode(demangled_symbol)
         return Asset.cash(
-            currency=currency, domestic=currency == user_account_currency, amount=units
+            currency=currency,
+            is_domestic=currency == user_account_currency,
+            amount=units,
         )
     else:
         return Asset(
             name=demangled_symbol,
             type="cryptocurrency",
-            asset_class=AssetClass.Cryptocurrency,
+            asset_class=AssetClass.Crypto,
+            asset_type=AssetType.Cryptocurrency,
             units=units,
             value=value,
         )

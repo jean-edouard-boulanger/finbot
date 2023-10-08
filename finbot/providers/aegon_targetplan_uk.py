@@ -17,6 +17,7 @@ from finbot.providers.schema import (
     AssetClass,
     Assets,
     AssetsEntry,
+    AssetType,
     BalanceEntry,
     Balances,
     CurrencyCode,
@@ -46,7 +47,7 @@ class MainDashboardPage(object):
                 id=footer_locator.inner_text().strip().split(" ")[-1],
                 name=body_locator.locator("h3").inner_text().strip(),
                 iso_currency=CurrencyCode("GBP"),
-                type="investment",
+                type="pension",
             ),
             balance=cast(float, Price.fromstring(balance_str).amount_float),
         )
@@ -102,6 +103,7 @@ class Api(PlaywrightProviderBase):
                             name="Generic fund (unknown name)",
                             type="blended fund",
                             asset_class=AssetClass.MultiAsset,
+                            asset_type=AssetType.GenericFund,
                             value=entry.balance,
                         )
                     ],

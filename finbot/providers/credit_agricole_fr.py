@@ -133,7 +133,7 @@ class Api(PlaywrightProviderBase):
                     assets=[
                         Asset.cash(
                             currency=entry.account.iso_currency,
-                            domestic=self.user_account_currency
+                            is_domestic=self.user_account_currency
                             == entry.account.iso_currency,
                             amount=entry.balance,
                         )

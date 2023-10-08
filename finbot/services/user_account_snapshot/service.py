@@ -231,11 +231,15 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
         asset_class: providers_schema.AssetClass | None = getattr(
             item, "asset_class", None
         )
+        asset_type: providers_schema.AssetType | None = getattr(
+            item, "asset_type", None
+        )
         new_item = model.SubAccountItemSnapshotEntry(  # type: ignore
             item_type=self._get_item_type(item),
             name=item.name,
             item_subtype=item.type,
             asset_class=asset_class.value if asset_class else None,
+            asset_type=asset_type.value if asset_type else None,
             units=getattr(item, "units", None),
             value_sub_account_ccy=item.value,
             value_snapshot_ccy=item.value

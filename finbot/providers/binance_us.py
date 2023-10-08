@@ -2,10 +2,9 @@ from typing import Any, Iterator, Optional, Tuple
 
 from binance.client import Client as Binance
 from binance.exceptions import BinanceAPIException
-from pycoingecko import CoinGeckoAPI
 from pydantic import BaseModel, SecretStr
 
-from finbot.core.crypto_market import CoinGeckoWrapper
+from finbot.core.crypto_market import CryptoMarket
 from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationFailure
 from finbot.providers.schema import (
@@ -14,6 +13,7 @@ from finbot.providers.schema import (
     AssetClass,
     Assets,
     AssetsEntry,
+    AssetType,
     BalanceEntry,
     Balances,
     CurrencyCode,
@@ -41,7 +41,7 @@ class Api(ProviderBase):
         super().__init__(user_account_currency=user_account_currency, **kwargs)
         self._credentials = credentials
         self._account_ccy = "USD"
-        self._spot_api = CoinGeckoWrapper(CoinGeckoAPI())
+        self._crypto_market = CryptoMarket()
         self._api: Optional[Binance] = None
 
     def _get_account(self) -> dict[Any, Any]:
@@ -72,7 +72,7 @@ class Api(ProviderBase):
             units = float(entry["free"]) + float(entry["locked"])
             if units > OWNERSHIP_UNITS_THRESHOLD:
                 symbol = entry["asset"]
-                value = units * self._spot_api.get_spot_cached(
+                value = units * self._crypto_market.get_spot_cached(
                     symbol, self._account_ccy
                 )
                 yield symbol, units, value
@@ -94,7 +94,8 @@ class Api(ProviderBase):
                         Asset(
                             name=symbol,
                             type="cryptocurrency",
-                            asset_class=AssetClass.Cryptocurrency,
+                            asset_class=AssetClass.Crypto,
+                            asset_type=AssetType.Cryptocurrency,
                             units=units,
                             value=value,
                         )

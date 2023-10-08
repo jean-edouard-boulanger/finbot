@@ -12,10 +12,26 @@ class AssetClass(str, enum.Enum):
     FixedIncome = "FixedIncome"
     Currency = "Currency"
     ForeignCurrency = "ForeignCurrency"
-    Cryptocurrency = "Cryptocurrency"
+    Crypto = "Crypto"
     RealEstate = "RealEstate"
     Commodities = "Commodities"
     MultiAsset = "MultiAsset"
+
+
+class AssetType(str, enum.Enum):
+    Cash = "Cash"
+    Bond = "Bond"
+    Stock = "Stock"
+    Option = "Option"
+    Future = "Future"
+    ETF = "ETF"
+    ETN = "ETN"
+    GenericFund = "GenericFund"
+    PreciousMetal = "PreciousMetal"
+    Cryptocurrency = "Cryptocurrency"
+    UtilityToken = "UtilityToken"
+    SecurityToken = "SecurityToken"
+    StableCoin = "StableCoin"
 
 
 class Account(BaseModel):
@@ -38,6 +54,7 @@ class Asset(BaseModel):
     name: str
     type: str  # deprecated
     asset_class: AssetClass | None
+    asset_type: AssetType | None
     value: float
     units: float | None = None
     provider_specific: dict[str, Any] | None = None
@@ -46,7 +63,7 @@ class Asset(BaseModel):
     def cash(
         cls,
         currency: CurrencyCode,
-        domestic: bool,
+        is_domestic: bool,
         amount: float,
         provider_specific: dict[str, Any] | None = None,
     ) -> "Asset":
@@ -54,7 +71,10 @@ class Asset(BaseModel):
         return Asset(
             name=currency.upper(),
             type="currency",  # deprecated
-            asset_class=AssetClass.Currency if domestic else AssetClass.ForeignCurrency,
+            asset_class=AssetClass.Currency
+            if is_domestic
+            else AssetClass.ForeignCurrency,
+            asset_type=AssetType.Cash,
             value=amount,
             units=None,
             provider_specific=provider_specific,
