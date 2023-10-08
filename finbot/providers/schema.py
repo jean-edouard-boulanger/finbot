@@ -10,6 +10,7 @@ ProviderSpecificPayload: TypeAlias = dict[str, str | int | float | bool]
 class AssetClass(str, enum.Enum):
     Equities = "Equities"
     FixedIncome = "FixedIncome"
+    PrivateDebt = "PrivateDebt"
     Currency = "Currency"
     ForeignCurrency = "ForeignCurrency"
     Crypto = "Crypto"
@@ -27,6 +28,7 @@ class AssetType(str, enum.Enum):
     ETF = "ETF"
     ETN = "ETN"
     GenericFund = "GenericFund"
+    Loan = "Loan"
     PreciousMetal = "PreciousMetal"
     Cryptocurrency = "Cryptocurrency"
     UtilityToken = "UtilityToken"
