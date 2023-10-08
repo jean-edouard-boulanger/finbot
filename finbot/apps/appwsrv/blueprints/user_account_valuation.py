@@ -15,7 +15,11 @@ from finbot.core import timeseries
 from finbot.core.errors import InvalidUserInput, MissingUserData
 from finbot.core.utils import now_utc
 from finbot.core.web_service import jwt_required, service_endpoint, validate
-from finbot.model import SubAccountItemValuationHistoryEntry, repository, SubAccountItemType
+from finbot.model import (
+    SubAccountItemType,
+    SubAccountItemValuationHistoryEntry,
+    repository,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -134,7 +138,11 @@ def get_user_account_valuation_by_asset_class(
     item: SubAccountItemValuationHistoryEntry
     for item in items:
         if item.item_type == SubAccountItemType.Asset:
-            group = item.asset_class.replace("_", " ").capitalize() if item.asset_class else "Unknown"
+            group = (
+                item.asset_class.replace("_", " ").capitalize()
+                if item.asset_class
+                else "Unknown"
+            )
             valuation_by_asset_type[group] += float(item.valuation)
     return appwsrv_schema.GetUserAccountValuationByAssetClassResponse(
         valuation=appwsrv_schema.ValuationByAssetClass(

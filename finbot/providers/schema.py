@@ -74,9 +74,7 @@ class Asset(BaseModel):
             name=currency.upper(),
             type="currency",  # deprecated
             asset_class=(
-                AssetClass.currency
-                if is_domestic
-                else AssetClass.foreign_currency
+                AssetClass.currency if is_domestic else AssetClass.foreign_currency
             ),
             asset_type=AssetType.cash,
             value=amount,
