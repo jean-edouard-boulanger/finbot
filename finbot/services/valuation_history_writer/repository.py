@@ -3,7 +3,7 @@ import json
 from collections import defaultdict
 from datetime import date
 from decimal import Decimal
-from typing import Any, cast
+from typing import Any, TypeAlias, cast
 
 from sqlalchemy.sql import text
 
@@ -57,7 +57,7 @@ class SubAccountValuationAgg:
 
 
 @dataclasses.dataclass(frozen=True)
-class ConsistencySnapshotEntry:
+class ConsistencySnapshotEntryHeader:
     snapshot_id: int
     linked_account_snapshot_entry_id: int
     linked_account_id: int
@@ -65,17 +65,6 @@ class ConsistencySnapshotEntry:
     sub_account_ccy: str
     sub_account_description: str
     sub_account_type: str
-    sub_account_snapshot_entry_id: int
-    sub_account_item_snapshot_entry_id: int
-    item_name: str
-    item_type: model.SubAccountItemType
-    item_subtype: str
-    item_asset_class: str | None
-    item_asset_type: str | None
-    item_units: Decimal
-    value_snapshot_ccy: Decimal
-    value_sub_account_ccy: Decimal
-    item_provider_specific_data: dict[str, Any]
 
     @property
     def linked_account_valuation_descriptor(self) -> LinkedAccountValuationDescriptor:
@@ -95,6 +84,41 @@ class ConsistencySnapshotEntry:
 
 
 @dataclasses.dataclass(frozen=True)
+class ConsistencySnapshotItemEntry(ConsistencySnapshotEntryHeader):
+    item_name: str
+    item_type: model.SubAccountItemType
+    item_subtype: str
+    item_asset_class: str | None
+    item_asset_type: str | None
+    item_units: Decimal | None
+    value_snapshot_ccy: Decimal
+    value_sub_account_ccy: Decimal
+    item_provider_specific_data: dict[str, Any] | None
+
+    def get_value_snapshot_ccy(self) -> Decimal:
+        return self.value_snapshot_ccy
+
+    def get_value_sub_account_ccy(self) -> Decimal:
+        return self.value_sub_account_ccy
+
+
+@dataclasses.dataclass(frozen=True)
+class ConsistencySnapshotEmptySubAccountEntry(ConsistencySnapshotEntryHeader):
+    @staticmethod
+    def get_value_snapshot_ccy() -> Decimal:
+        return Decimal(0.0)
+
+    @staticmethod
+    def get_value_sub_account_ccy() -> Decimal:
+        return Decimal(0.0)
+
+
+ConsistencySnapshotEntry: TypeAlias = (
+    ConsistencySnapshotItemEntry | ConsistencySnapshotEmptySubAccountEntry
+)
+
+
+@dataclasses.dataclass(frozen=True)
 class ConsistentSnapshot:
     snapshot_data: list[ConsistencySnapshotEntry]
 
@@ -102,14 +126,16 @@ class ConsistentSnapshot:
         return len(self.snapshot_data)
 
     def get_user_account_valuation(self) -> Decimal:
-        return Decimal(sum(entry.value_snapshot_ccy for entry in self.snapshot_data))
+        return Decimal(
+            sum(entry.get_value_snapshot_ccy() for entry in self.snapshot_data)
+        )
 
     def get_user_account_liabilities(self) -> Decimal:
         return Decimal(
             sum(
-                entry.value_snapshot_ccy
+                entry.get_value_snapshot_ccy()
                 for entry in self.snapshot_data
-                if entry.value_snapshot_ccy < 0
+                if entry.get_value_snapshot_ccy() < 0
             )
         )
 
@@ -120,7 +146,7 @@ class ConsistentSnapshot:
         for entry in self.snapshot_data:
             result[
                 entry.linked_account_valuation_descriptor
-            ] += entry.value_snapshot_ccy
+            ] += entry.get_value_snapshot_ccy()
         return result
 
     def get_sub_accounts_valuation(
@@ -131,8 +157,8 @@ class ConsistentSnapshot:
         ] = defaultdict(SubAccountValuationAgg)
         for entry in self.snapshot_data:
             result[entry.sub_account_valuation_descriptor].agg(
-                value_sub_account_ccy=entry.value_sub_account_ccy,
-                value_snapshot_ccy=entry.value_snapshot_ccy,
+                value_sub_account_ccy=entry.get_value_sub_account_ccy(),
+                value_snapshot_ccy=entry.get_value_snapshot_ccy(),
             )
         return result
 
@@ -162,8 +188,6 @@ class ReportRepository(object):
                    sase.sub_account_ccy AS sub_account_ccy,
                    sase.sub_account_description AS sub_account_description,
                    sase.sub_account_type AS sub_account_type,
-                   sais.sub_account_snapshot_entry_id AS sub_account_snapshot_entry_id,
-                   sais.id AS sub_account_item_snapshot_entry_id,
                    sais.name AS item_name,
                    sais.item_type AS item_type,
                    sais.item_subtype AS item_subtype,
@@ -190,7 +214,7 @@ class ReportRepository(object):
                     JOIN finbot_user_accounts_snapshots uas
                     ON uas.user_account_id = la.user_account_id
                     WHERE uas.id = :snapshot_id
-                    AND NOT deleted
+                    AND NOT la.deleted
                 ) AS la ON la.id = las.linked_account_id
                 WHERE success
                 AND las.snapshot_id <= :snapshot_id
@@ -201,7 +225,7 @@ class ReportRepository(object):
              AND las.linked_account_id = slas.linked_account_id
             JOIN finbot_sub_accounts_snapshot_entries sase
               ON sase.linked_account_snapshot_entry_id = las.id
-            JOIN finbot_sub_accounts_items_snapshot_entries sais
+            LEFT JOIN finbot_sub_accounts_items_snapshot_entries sais
               ON sais.sub_account_snapshot_entry_id = sase.id
         """
         results = self._db_session.execute(text(query), {"snapshot_id": snapshot_id})
@@ -522,5 +546,18 @@ def _parse_consistent_snapshot_data_row(
     row_data["item_provider_specific_data"] = _parse_provider_specific_data(
         row_data["item_provider_specific_data"]
     )
+    item_type = row_data["item_type"]
+    if not item_type:
+        keep_fields = {
+            field.name
+            for field in dataclasses.fields(ConsistencySnapshotEmptySubAccountEntry)
+        }
+        return ConsistencySnapshotEmptySubAccountEntry(
+            **{
+                field: value
+                for (field, value) in row_data.items()
+                if field in keep_fields
+            }
+        )
     row_data["item_type"] = model.SubAccountItemType[row_data["item_type"]]
-    return ConsistencySnapshotEntry(**row_data)
+    return ConsistencySnapshotItemEntry(**row_data)

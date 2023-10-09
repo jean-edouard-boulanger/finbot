@@ -57,7 +57,14 @@ class Client:
         return data
 
 
-_CLIENT = Client(api_key=get_freecurrencyapi_key())
+_CLIENT = None
+
+
+def _get_shared_client() -> Client:
+    global _CLIENT
+    if _CLIENT is None:
+        _CLIENT = Client(api_key=get_freecurrencyapi_key())
+    return _CLIENT
 
 
 def get_rates(pairs: set[Xccy]) -> dict[Xccy, Optional[float]]:
@@ -66,7 +73,7 @@ def get_rates(pairs: set[Xccy]) -> dict[Xccy, Optional[float]]:
         if pair.foreign == pair.domestic:
             result[pair] = 1.0
         else:
-            rates = _CLIENT.get_rates_for_base(base_ccy=pair.foreign)
+            rates = _get_shared_client().get_rates_for_base(base_ccy=pair.foreign)
             rate = rates.get(pair.domestic)
             rate = 1.0 / rate if rate else None
             result[pair] = rate

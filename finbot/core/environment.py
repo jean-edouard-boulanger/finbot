@@ -1,6 +1,7 @@
 import logging
 import os
 from dataclasses import dataclass
+from functools import cache
 from typing import TypeVar, cast
 
 logger = logging.getLogger(__name__)
@@ -168,6 +169,7 @@ def get_rmq_url() -> str:
     return f"amqp://{rmq_user}:{rmq_password}@{rmq_hostname}:{rmq_port}"
 
 
+@cache
 def get() -> Environment:
     return Environment(
         secret_key=get_secret_key(),
