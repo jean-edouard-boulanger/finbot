@@ -4,12 +4,12 @@ from finbot.model import Base as ModelBase
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 
-from typing import Iterator
+from typing import Generator
 import pytest
 
 
 @pytest.fixture(scope="function")
-def db_session() -> Iterator[DBSession]:
+def db_session() -> Generator[DBSession, None, None]:
     engine = create_engine("sqlite://")
     ModelBase.metadata.create_all(engine)
     session = DBSession(sessionmaker(bind=engine)())

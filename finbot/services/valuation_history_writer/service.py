@@ -3,14 +3,11 @@ import logging
 from typing import Any, Generator, cast
 
 from finbot import model
-from finbot.core import environment
 from finbot.core import schema as core_schema
 from finbot.core.db.session import Session
 from finbot.core.serialization import pretty_dump, to_pydantic
 from finbot.core.utils import unwrap_optional
 from finbot.services.valuation_history_writer import repository, schema
-
-FINBOT_ENV = environment.get()
 
 
 def deserialize_provider_specific_data(raw_data: str | None) -> dict[str, Any] | None:
@@ -23,19 +20,20 @@ def iter_sub_account_item_valuation_history_entries(
     consistent_snapshot: repository.ConsistentSnapshot,
 ) -> Generator[model.SubAccountItemValuationHistoryEntry, None, None]:
     for entry in consistent_snapshot.snapshot_data:
-        yield model.SubAccountItemValuationHistoryEntry(
-            linked_account_id=entry.linked_account_id,
-            sub_account_id=entry.sub_account_id,
-            item_type=entry.item_type,
-            name=entry.item_name,
-            item_subtype=entry.item_subtype,
-            asset_class=entry.item_asset_class,
-            asset_type=entry.item_asset_type,
-            units=entry.item_units,
-            valuation=entry.value_snapshot_ccy,
-            valuation_sub_account_ccy=entry.value_sub_account_ccy,
-            provider_specific_data=entry.item_provider_specific_data,
-        )
+        if isinstance(entry, repository.ConsistencySnapshotItemEntry):
+            yield model.SubAccountItemValuationHistoryEntry(
+                linked_account_id=entry.linked_account_id,
+                sub_account_id=entry.sub_account_id,
+                item_type=entry.item_type,
+                name=entry.item_name,
+                item_subtype=entry.item_subtype,
+                asset_class=entry.item_asset_class,
+                asset_type=entry.item_asset_type,
+                units=entry.item_units,
+                valuation=entry.value_snapshot_ccy,
+                valuation_sub_account_ccy=entry.value_sub_account_ccy,
+                provider_specific_data=entry.item_provider_specific_data,
+            )
 
 
 def write_history_impl(
