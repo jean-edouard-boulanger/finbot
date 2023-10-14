@@ -1,9 +1,9 @@
 import enum
 import traceback
-from typing import Any, TypeAlias
+from typing import Annotated, Any, TypeAlias
 
 from pydantic import BaseModel as _BaseModel
-from pydantic import Extra
+from pydantic import Extra, Field
 
 from finbot.core.errors import ApplicationError, FinbotError
 from finbot.core.utils import fully_qualified_type_name
@@ -87,3 +87,6 @@ class HealthRequest(BaseModel):
 
 class HealthResponse(BaseModel):
     healthy: bool
+
+
+HexColour = Annotated[str, Field(regex=r"^#[A-F0-9]{6}$")]

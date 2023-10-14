@@ -6,7 +6,8 @@ from pydantic import Extra, Field, SecretStr
 from finbot.apps.appwsrv.reports.earnings import schema as earnings_schema
 from finbot.apps.appwsrv.reports.holdings import schema as holdings_schema
 from finbot.core import schema as core_schema
-from finbot.core.schema import BaseModel
+from finbot.core.schema import BaseModel, HexColour
+from finbot.providers import schema as providers_schema
 
 JsonSchemaType: TypeAlias = dict[str, Any]
 CredentialsSchemaType: TypeAlias = JsonSchemaType
@@ -384,3 +385,20 @@ class PlaidSettings(BaseModel):
 
 class GetPlaidSettingsResponse(BaseModel):
     settings: PlaidSettings | None
+
+
+class AssetClassFormattingRule(BaseModel):
+    asset_class: providers_schema.AssetClass
+    pretty_name: str
+    dominant_colour: HexColour
+
+
+class AssetTypeFormattingRule(BaseModel):
+    asset_type: providers_schema.AssetType
+    pretty_name: str
+    abbreviated_name: str
+
+
+class FormattingRules(BaseModel):
+    asset_classes: list[AssetClassFormattingRule]
+    asset_types: list[AssetTypeFormattingRule]

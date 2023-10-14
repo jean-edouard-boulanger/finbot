@@ -2,10 +2,10 @@ import logging
 
 from flask import Blueprint
 
-from finbot.apps.appwsrv import core as appwsrv_core
 from finbot.apps.appwsrv import schema as appwsrv_schema
 from finbot.apps.appwsrv import serializer
 from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
+from finbot.apps.appwsrv.core import providers as appwsrv_providers
 from finbot.apps.appwsrv.db import db_session
 from finbot.core.environment import get_plaid_environment
 from finbot.core.errors import InvalidOperation, InvalidUserInput
@@ -46,7 +46,7 @@ def get_providers() -> appwsrv_schema.GetProvidersResponse:
         providers=[
             serializer.serialize_provider(provider)
             for provider in db_session.query(Provider).all()
-            if appwsrv_core.is_provider_supported(provider)
+            if appwsrv_providers.is_provider_supported(provider)
         ]
     )
 

@@ -5,10 +5,11 @@ import uuid
 from flask import Blueprint
 from sqlalchemy.exc import IntegrityError
 
-from finbot.apps.appwsrv import core as appwsrv_core
 from finbot.apps.appwsrv import schema as appwsrv_schema
 from finbot.apps.appwsrv import serializer
 from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
+from finbot.apps.appwsrv.core import providers as appwsrv_providers
+from finbot.apps.appwsrv.core import valuation as appwsrv_valuation
 from finbot.apps.appwsrv.db import db_session
 from finbot.apps.finbotwsrv.client import FinbotwsrvClient
 from finbot.core import environment, secure
@@ -68,7 +69,7 @@ def link_new_account(
     provider_id = body.provider_id
     provider = repository.get_provider(db_session, provider_id)
 
-    is_plaid = provider.id == appwsrv_core.PLAID_PROVIDER_ID
+    is_plaid = provider.id == appwsrv_providers.PLAID_PROVIDER_ID
     if is_plaid and not is_plaid_configured():
         raise InvalidUserInput("user account is not setup for Plaid")
     credentials = body.credentials
@@ -82,7 +83,7 @@ def link_new_account(
             f"validating authentication details for "
             f"account_id={user_account_id} and provider_id={provider_id}"
         )
-        appwsrv_core.validate_credentials(
+        appwsrv_providers.validate_credentials(
             finbot_client=FinbotwsrvClient.create(),
             provider_id=provider_id,
             credentials=credentials,
@@ -118,7 +119,7 @@ def link_new_account(
             )
 
     if do_persist:
-        appwsrv_core.try_trigger_valuation(
+        appwsrv_valuation.try_trigger_valuation(
             user_account_id=user_account_id, linked_account_ids=[new_linked_account.id]
         )
 
@@ -136,7 +137,7 @@ def get_linked_account(
         db_session, user_account_id, linked_account_id
     )
     credentials = None
-    if appwsrv_core.is_plaid_linked_account(linked_account):
+    if appwsrv_providers.is_plaid_linked_account(linked_account):
         credentials = json.loads(
             secure.fernet_decrypt(
                 unwrap_optional(linked_account.encrypted_credentials).encode(),
@@ -177,7 +178,7 @@ def delete_linked_account(
         )
         linked_account.deleted = True
 
-    appwsrv_core.try_trigger_valuation(user_account_id=user_account_id)
+    appwsrv_valuation.try_trigger_valuation(user_account_id=user_account_id)
     return appwsrv_schema.DeleteLinkedAccountResponse()
 
 
@@ -237,7 +238,7 @@ def update_linked_account_credentials(
             f"Linked account '{linked_account.account_name}' is frozen and cannot be updated."
         )
 
-    is_plaid = appwsrv_core.is_plaid_linked_account(linked_account)
+    is_plaid = appwsrv_providers.is_plaid_linked_account(linked_account)
     if is_plaid and not is_plaid_configured():
         raise InvalidUserInput("user account is not setup for Plaid")
 
@@ -251,7 +252,7 @@ def update_linked_account_credentials(
         )
 
     if do_validate:
-        appwsrv_core.validate_credentials(
+        appwsrv_providers.validate_credentials(
             finbot_client=FinbotwsrvClient.create(),
             provider_id=linked_account.provider_id,
             credentials=credentials,
@@ -265,7 +266,7 @@ def update_linked_account_credentials(
             ).decode()
 
     if do_persist:
-        appwsrv_core.try_trigger_valuation(
+        appwsrv_valuation.try_trigger_valuation(
             user_account_id=user_account_id, linked_account_ids=[linked_account.id]
         )
 

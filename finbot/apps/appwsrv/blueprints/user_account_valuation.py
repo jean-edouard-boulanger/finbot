@@ -5,10 +5,10 @@ from typing import Optional, Union
 
 from flask import Blueprint
 
-from finbot.apps.appwsrv import core as appwsrv_core
 from finbot.apps.appwsrv import schema as appwsrv_schema
 from finbot.apps.appwsrv import serializer
 from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
+from finbot.apps.appwsrv.core import valuation as appwsrv_valuation
 from finbot.apps.appwsrv.db import db_session
 from finbot.core import schema as core_schema
 from finbot.core import timeseries
@@ -36,7 +36,7 @@ user_account_valuation_api = Blueprint(
 @service_endpoint()
 @validate()
 def trigger_user_account_valuation(user_account_id: int) -> None:
-    appwsrv_core.trigger_valuation(user_account_id)
+    appwsrv_valuation.trigger_valuation(user_account_id)
 
 
 @user_account_valuation_api.route("/", methods=["GET"])
@@ -112,7 +112,10 @@ def get_user_account_valuation_by_asset_type(
         valuation=appwsrv_schema.ValuationByAssetType(
             valuation_ccy=valuation_ccy,
             by_asset_type=[
-                appwsrv_schema.GroupValuation(name=group_name, value=value)
+                appwsrv_schema.GroupValuation(
+                    name=group_name,
+                    value=value,
+                )
                 for (group_name, value) in sorted(
                     valuation_by_asset_type.items(), key=lambda entry: -1.0 * entry[1]
                 )

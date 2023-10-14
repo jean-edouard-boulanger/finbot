@@ -5,6 +5,7 @@ import {
   HoldingsReport,
   HoldingsReportMetadataNode,
   HoldingsReportNode,
+  HoldingsReportItemIcon,
 } from "clients/finbot-client/types";
 
 import {
@@ -63,6 +64,29 @@ const GridMetadataRow = (
   );
 };
 
+interface ItemIconProps {
+  icon: HoldingsReportItemIcon;
+}
+
+const ItemIcon = (props: ItemIconProps) => {
+  return (
+    <span
+      style={{
+        display: "inline-block",
+        width: "2.35em",
+        textAlign: "center",
+        color: "white",
+        backgroundColor: props.icon.background_colour,
+        paddingTop: "0.2em",
+        paddingBottom: "0.2em",
+        marginRight: "0.5em",
+      }}
+    >
+      <strong>{props.icon.label}</strong>
+    </span>
+  );
+};
+
 const GridRow = (locale: string, moneyFormatter: MoneyFormatterType) => {
   return (props: TreeGridRowProps<HoldingsReportNode>) => {
     const node = props.data;
@@ -83,7 +107,10 @@ const GridRow = (locale: string, moneyFormatter: MoneyFormatterType) => {
       <tr style={{ height: metadata!.height, fontWeight }}>
         <td>
           <TreeGrid.Expander {...props} />
-          {metadata!.label}
+          {node.role == "item" && node.item.icon && (
+            <ItemIcon icon={node.item.icon} />
+          )}
+          {`${metadata!.label}`}
         </td>
         <td>
           <Money

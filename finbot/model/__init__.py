@@ -470,6 +470,14 @@ class SubAccountItemValuationHistoryEntry(Base):
         ),
     )
 
+    @property
+    def is_asset(self) -> bool:
+        return self.item_type == SubAccountItemType.Asset
+
+    @property
+    def is_liability(self) -> bool:
+        return self.item_type == SubAccountItemType.Liability
+
 
 class GenericKeyValueStore(Base):
     __tablename__ = "finbot_generic_key_value_store"
