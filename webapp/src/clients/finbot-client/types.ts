@@ -363,10 +363,19 @@ export type HoldingsReportMetadataNode = HoldingsReportNodeBase<"metadata"> & {
   value: any;
 };
 
+export interface HoldingsReportItemIcon {
+  background_colour: string;
+  label: string;
+  tooltip: string;
+}
+
 export interface HoldingsReportItem {
   name: string;
   type: string;
   sub_type: string;
+  asset_class?: string;
+  asset_type?: string;
+  icon?: HoldingsReportItemIcon;
 }
 
 export type HoldingsReportItemNode = HoldingsReportNodeBase<

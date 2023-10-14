@@ -2,6 +2,7 @@ from typing import Literal
 
 from finbot.core import schema as core_schema
 from finbot.core.schema import BaseModel
+from finbot.providers.schema import AssetClass, AssetType
 
 
 class Valuation(BaseModel):
@@ -20,12 +21,19 @@ class SubAccountItemMetadataNode(BaseModel):
     value: int | float | str | bool
 
 
+class SubAccountItemNodeIcon(BaseModel):
+    background_colour: core_schema.HexColour
+    label: str
+    tooltip: str
+
+
 class SubAccountItemDescription(BaseModel):
     name: str
     type: str
     sub_type: str
     asset_class: str | None
     asset_type: str | None
+    icon: SubAccountItemNodeIcon | None
 
 
 class SubAccountItemNode(BaseModel):
@@ -66,6 +74,21 @@ class UserAccountNode(BaseModel):
     role: Literal["user_account"] = "user_account"
     valuation: ValuationWithSparkline
     children: list[LinkedAccountNode]
+
+
+class AssetTypeFormattingRule(BaseModel):
+    asset_type: AssetType
+    abbreviated_name: str
+
+
+class AssetClassFormattingRule(BaseModel):
+    asset_class: AssetClass
+    background_colour_hex: str
+
+
+class FormattingRules(BaseModel):
+    asset_types: list[AssetTypeFormattingRule]
+    asset_classes: list[AssetClassFormattingRule]
 
 
 class ValuationTree(BaseModel):

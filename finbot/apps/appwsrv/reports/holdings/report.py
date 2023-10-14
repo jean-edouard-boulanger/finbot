@@ -4,10 +4,12 @@ from datetime import datetime, timedelta
 from typing import Any, TypeAlias
 
 from finbot import model
+from finbot.apps.appwsrv.core import formatting_rules
 from finbot.apps.appwsrv.reports.holdings import schema as holdings_schema
 from finbot.apps.appwsrv.serializer import serialize_valuation_change
 from finbot.core import timeseries, utils
 from finbot.core.db.session import Session
+from finbot.core.utils import unwrap_optional
 from finbot.model import repository
 
 LinkedAccountIdType: TypeAlias = int
@@ -19,6 +21,10 @@ def extract_provider_specific_data(
 ) -> list[tuple[str, Any]]:
     provider_specific_data = item.provider_specific_data or {}
     return list(provider_specific_data.items())
+
+
+def format_asset_type_or_class(raw_value: str) -> str:
+    return " ".join(raw_value.split("_")).capitalize()
 
 
 @dataclass
@@ -44,6 +50,8 @@ def build_sub_account_item_metadata_nodes(
     sub_account_valuation: model.SubAccountValuationHistoryEntry,
     sub_account_item_valuation: model.SubAccountItemValuationHistoryEntry,
 ) -> list[holdings_schema.SubAccountItemMetadataNode]:
+    is_asset = sub_account_item_valuation.is_asset
+    sub_account_ccy = sub_account_valuation.sub_account_ccy
     return [
         holdings_schema.SubAccountItemMetadataNode(label=label, value=value)
         for (label, value) in [
@@ -54,21 +62,60 @@ def build_sub_account_item_metadata_nodes(
                 else None,
             ),
             (
-                f"Value ({sub_account_valuation.sub_account_ccy})",
+                f"Value ({sub_account_ccy})"
+                if is_asset
+                else f"Liabilities ({sub_account_ccy})",
                 f"{sub_account_item_valuation.valuation_sub_account_ccy:.2f}",
             ),
             (
-                f"Unit value ({sub_account_valuation.sub_account_ccy})",
+                f"Unit value ({sub_account_ccy})",
                 f"{sub_account_item_valuation.valuation_sub_account_ccy / sub_account_item_valuation.units:.2f}"
                 if sub_account_item_valuation.units
                 else None,
             ),
-            ("Type", sub_account_item_valuation.item_subtype),
+            (
+                "Asset class",
+                format_asset_type_or_class(
+                    unwrap_optional(sub_account_item_valuation.asset_class)
+                )
+                if sub_account_item_valuation.asset_class
+                else None,
+            ),
+            (
+                "Asset type",
+                format_asset_type_or_class(sub_account_item_valuation.asset_type)
+                if sub_account_item_valuation.asset_type
+                else None,
+            ),
             ("Account currency", sub_account_valuation.sub_account_ccy),
         ]
         + extract_provider_specific_data(sub_account_item_valuation)
         if value is not None
     ]
+
+
+def build_sub_account_item_node_icon(
+    sub_account_item_valuation: model.SubAccountItemValuationHistoryEntry,
+) -> holdings_schema.SubAccountItemNodeIcon | None:
+    if sub_account_item_valuation.item_type != model.SubAccountItemType.Asset:
+        return None
+    asset_class_formatting_rule = (
+        formatting_rules.get_asset_class_formatting_rule_by_name(
+            unwrap_optional(sub_account_item_valuation.asset_class)
+        )
+    )
+    asset_type_formatting_rule = (
+        formatting_rules.get_asset_types_formatting_rule_by_name(
+            unwrap_optional(sub_account_item_valuation.asset_type)
+        )
+    )
+    if not asset_class_formatting_rule or not asset_type_formatting_rule:
+        return None
+    return holdings_schema.SubAccountItemNodeIcon(
+        background_colour=asset_class_formatting_rule.dominant_colour,
+        label=asset_type_formatting_rule.abbreviated_name,
+        tooltip=f"{asset_type_formatting_rule.pretty_name} ({asset_class_formatting_rule.pretty_name})",
+    )
 
 
 def build_sub_account_item_node(
@@ -83,6 +130,7 @@ def build_sub_account_item_node(
             sub_type=sub_account_item_valuation.item_subtype,
             asset_class=sub_account_item_valuation.asset_class,
             asset_type=sub_account_item_valuation.asset_type,
+            icon=build_sub_account_item_node_icon(sub_account_item_valuation),
         ),
         valuation=holdings_schema.Valuation(
             currency=report_data.valuation_currency,
@@ -194,7 +242,9 @@ def build_user_account_node(report_data: ReportData) -> holdings_schema.UserAcco
 
 
 def build_valuation_tree(data: ReportData) -> holdings_schema.ValuationTree:
-    return holdings_schema.ValuationTree(valuation_tree=build_user_account_node(data))
+    return holdings_schema.ValuationTree(
+        valuation_tree=build_user_account_node(data),
+    )
 
 
 def fetch_raw_report_data(
