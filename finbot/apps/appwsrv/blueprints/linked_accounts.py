@@ -1,5 +1,6 @@
 import json
 import logging
+import random
 import uuid
 
 from flask import Blueprint
@@ -10,13 +11,14 @@ from finbot.apps.appwsrv import serializer
 from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
 from finbot.apps.appwsrv.core import providers as appwsrv_providers
 from finbot.apps.appwsrv.core import valuation as appwsrv_valuation
+from finbot.apps.appwsrv.core.formatting_rules import ACCOUNTS_PALETTE
 from finbot.apps.appwsrv.db import db_session
 from finbot.apps.finbotwsrv.client import FinbotwsrvClient
 from finbot.core import environment, secure
 from finbot.core.environment import is_plaid_configured
 from finbot.core.errors import InvalidOperation, InvalidUserInput
 from finbot.core.plaid import PlaidClient
-from finbot.core.utils import unwrap_optional
+from finbot.core.utils import some
 from finbot.core.web_service import jwt_required, service_endpoint, validate
 from finbot.model import LinkedAccount, repository
 from finbot.providers.schema import CurrencyCode
@@ -105,6 +107,7 @@ def link_new_account(
         try:
             new_linked_account: LinkedAccount
             with db_session.persist(LinkedAccount()) as new_linked_account:
+                new_linked_account.account_colour = random.choice(ACCOUNTS_PALETTE)
                 new_linked_account.user_account_id = user_account.id
                 new_linked_account.provider_id = body.provider_id
                 new_linked_account.account_name = account_name
@@ -140,7 +143,7 @@ def get_linked_account(
     if appwsrv_providers.is_plaid_linked_account(linked_account):
         credentials = json.loads(
             secure.fernet_decrypt(
-                unwrap_optional(linked_account.encrypted_credentials).encode(),
+                some(linked_account.encrypted_credentials).encode(),
                 environment.get_secret_key().encode(),
             ).decode()
         )
@@ -246,7 +249,7 @@ def update_linked_account_credentials(
     if is_plaid:
         credentials = json.loads(
             secure.fernet_decrypt(
-                unwrap_optional(linked_account.encrypted_credentials).encode(),
+                some(linked_account.encrypted_credentials).encode(),
                 environment.get_secret_key().encode(),
             ).decode()
         )

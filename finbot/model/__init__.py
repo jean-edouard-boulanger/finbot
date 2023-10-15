@@ -106,6 +106,7 @@ class LinkedAccount(Base):
         String(64), ForeignKey(Provider.id, ondelete="CASCADE"), nullable=False
     )
     account_name = Column(String(256), nullable=False)
+    account_colour = Column(String(10), nullable=False)
     encrypted_credentials = Column(Text)
     deleted = Column(Boolean, nullable=False, default=False)
     frozen = Column(

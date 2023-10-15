@@ -6,7 +6,7 @@ from finbot import model
 from finbot.core import schema as core_schema
 from finbot.core.db.session import Session
 from finbot.core.serialization import pretty_dump, to_pydantic
-from finbot.core.utils import unwrap_optional
+from finbot.core.utils import some
 from finbot.services.valuation_history_writer import repository, schema
 
 
@@ -46,7 +46,7 @@ def write_history_impl(
         db_session.query(model.UserAccountSnapshot).filter_by(id=snapshot_id).one()
     )
 
-    valuation_date = unwrap_optional(snapshot.end_time)
+    valuation_date = some(snapshot.end_time)
 
     logging.info(f"snapshot is effective_at={valuation_date}")
     logging.info("fetching consistent snapshot")

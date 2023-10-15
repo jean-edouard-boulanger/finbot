@@ -7,7 +7,7 @@ from typing import Any, Generator, cast
 import pgpy
 from pydantic import BaseModel, SecretStr
 
-from finbot.core.utils import unwrap_optional
+from finbot.core.utils import some
 from finbot.providers.base import ProviderBase
 from finbot.providers.interactive_brokers_uk.flex_report_parser import (
     FlexStatement,
@@ -79,11 +79,11 @@ class Api(ProviderBase):
 
     @property
     def _statement(self) -> FlexStatement:
-        return unwrap_optional(self.__statement)
+        return some(self.__statement)
 
     @cached_property
     def _account(self) -> Account:
-        account_info = unwrap_optional(self._statement.entries.account_information)
+        account_info = some(self._statement.entries.account_information)
         return Account(
             id=account_info.account_id,
             name=account_info.alias or account_info.account_id,
@@ -93,7 +93,7 @@ class Api(ProviderBase):
 
     @cached_property
     def _conversion_rates(self) -> dict[tuple[CurrencyCode, CurrencyCode], float]:
-        entries = unwrap_optional(self._statement.entries.conversion_rates).entries
+        entries = some(self._statement.entries.conversion_rates).entries
         return {
             (CurrencyCode(entry.from_ccy), CurrencyCode(entry.to_ccy)): entry.rate
             for entry in entries
@@ -101,7 +101,7 @@ class Api(ProviderBase):
 
     @cached_property
     def _securities(self) -> dict[str, SecurityInfo]:
-        entries = unwrap_optional(self._statement.entries.securities_info).entries
+        entries = some(self._statement.entries.securities_info).entries
         return {entry.full_security_id: entry for entry in entries}
 
     def get_balances(self) -> Balances:

@@ -17,7 +17,7 @@ from finbot.core import secure, utils
 from finbot.core.db.session import Session
 from finbot.core.schema import ApplicationErrorData
 from finbot.core.serialization import serialize
-from finbot.core.utils import unwrap_optional
+from finbot.core.utils import some
 from finbot.providers import schema as providers_schema
 from finbot.services.user_account_snapshot import schema
 
@@ -395,7 +395,7 @@ def take_snapshot_impl(
         new_snapshot.xccy_rates_entries.extend(
             [
                 model.XccyRateSnapshotEntry(
-                    xccy_pair=str(xccy), rate=Decimal(unwrap_optional(rate))
+                    xccy_pair=str(xccy), rate=Decimal(some(rate))
                 )
                 for xccy, rate in xccy_rates.items()
             ]

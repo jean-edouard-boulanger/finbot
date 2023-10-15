@@ -9,7 +9,7 @@ from finbot.apps.appwsrv.reports.holdings import schema as holdings_schema
 from finbot.apps.appwsrv.serializer import serialize_valuation_change
 from finbot.core import timeseries, utils
 from finbot.core.db.session import Session
-from finbot.core.utils import unwrap_optional
+from finbot.core.utils import some
 from finbot.model import repository
 
 LinkedAccountIdType: TypeAlias = int
@@ -75,9 +75,7 @@ def build_sub_account_item_metadata_nodes(
             ),
             (
                 "Asset class",
-                format_asset_type_or_class(
-                    unwrap_optional(sub_account_item_valuation.asset_class)
-                )
+                format_asset_type_or_class(some(sub_account_item_valuation.asset_class))
                 if sub_account_item_valuation.asset_class
                 else None,
             ),
@@ -101,12 +99,12 @@ def build_sub_account_item_node_icon(
         return None
     asset_class_formatting_rule = (
         formatting_rules.get_asset_class_formatting_rule_by_name(
-            unwrap_optional(sub_account_item_valuation.asset_class)
+            some(sub_account_item_valuation.asset_class)
         )
     )
     asset_type_formatting_rule = (
-        formatting_rules.get_asset_types_formatting_rule_by_name(
-            unwrap_optional(sub_account_item_valuation.asset_type)
+        formatting_rules.get_asset_type_formatting_rule_by_name(
+            some(sub_account_item_valuation.asset_type)
         )
     )
     if not asset_class_formatting_rule or not asset_type_formatting_rule:

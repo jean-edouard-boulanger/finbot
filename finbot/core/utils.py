@@ -33,7 +33,7 @@ def fully_qualified_type_name(obj: Any) -> str:
 T = TypeVar("T")
 
 
-def unwrap_optional(val: Optional[T]) -> T:
+def some(val: Optional[T]) -> T:
     assert val is not None
     return val
 

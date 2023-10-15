@@ -250,6 +250,7 @@ class GetUserAccountValuationResponse(BaseModel):
 
 class GroupValuation(BaseModel):
     name: str
+    colour: HexColour
     value: float
 
 
@@ -316,6 +317,7 @@ class LinkedAccountValuationLinkedAccountDescription(BaseModel):
     id: int
     provider_id: str
     description: str
+    account_colour: HexColour
 
 
 class LinkedAccountValuationEntry(BaseModel):
@@ -399,6 +401,8 @@ class AssetTypeFormattingRule(BaseModel):
     abbreviated_name: str
 
 
-class FormattingRules(BaseModel):
-    asset_classes: list[AssetClassFormattingRule]
-    asset_types: list[AssetTypeFormattingRule]
+class AssetTypeClassFormattingRule(BaseModel):
+    asset_type: providers_schema.AssetType
+    asset_class: providers_schema.AssetClass
+    pretty_name: str
+    dominant_colour: HexColour
