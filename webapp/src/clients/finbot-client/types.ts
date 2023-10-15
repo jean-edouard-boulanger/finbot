@@ -206,6 +206,7 @@ export interface LinkedAccount {
   user_account_id: number;
   provider_id: string;
   account_name: string;
+  account_colour: string;
   description: string;
   deleted: boolean;
   frozen: boolean;
@@ -317,6 +318,7 @@ export interface GetUserAccountValuationByAssetClassRequest
 
 export interface GroupValuation {
   name: string;
+  colour: string;
   value: number;
 }
 

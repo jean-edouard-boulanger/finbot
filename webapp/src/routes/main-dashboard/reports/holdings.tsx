@@ -33,12 +33,12 @@ function getRowMetadata(node: HoldingsReportNode) {
   } else if (node.role === "sub_account") {
     return {
       label: node.sub_account.description,
-      height: "4em",
+      height: "3.5em",
     };
   } else if (node.role === "item") {
     return {
       label: node.item.name,
-      height: "4em",
+      height: "3em",
     };
   }
 }

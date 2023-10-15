@@ -14,7 +14,7 @@ from finbot.core.notifier import (
     ValuationNotification,
 )
 from finbot.core.serialization import pretty_dump
-from finbot.core.utils import unwrap_optional
+from finbot.core.utils import some
 from finbot.model import repository
 from finbot.services.user_account_snapshot.service import UserAccountSnapshotService
 from finbot.services.user_account_valuation.schema import (
@@ -33,9 +33,7 @@ def _configure_notifier(
 ) -> Notifier:
     notifiers: list[Notifier] = []
     if user_account.mobile_phone_number and is_twilio_configured():
-        twilio_settings = TwilioSettings.from_env(
-            unwrap_optional(get_twilio_environment())
-        )
+        twilio_settings = TwilioSettings.from_env(some(get_twilio_environment()))
         notifiers.append(
             TwilioNotifier(
                 twilio_settings=twilio_settings,

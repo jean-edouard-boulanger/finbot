@@ -1,5 +1,6 @@
 import logging
 from collections import OrderedDict, defaultdict
+from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from typing import Optional, Union
 
@@ -8,12 +9,13 @@ from flask import Blueprint
 from finbot.apps.appwsrv import schema as appwsrv_schema
 from finbot.apps.appwsrv import serializer
 from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
+from finbot.apps.appwsrv.core import formatting_rules
 from finbot.apps.appwsrv.core import valuation as appwsrv_valuation
 from finbot.apps.appwsrv.db import db_session
 from finbot.core import schema as core_schema
 from finbot.core import timeseries
 from finbot.core.errors import InvalidUserInput, MissingUserData
-from finbot.core.utils import now_utc
+from finbot.core.utils import now_utc, some
 from finbot.core.web_service import jwt_required, service_endpoint, validate
 from finbot.model import (
     SubAccountItemType,
@@ -22,6 +24,12 @@ from finbot.model import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class GroupValuationAgg:
+    colour: core_schema.HexColour
+    value: float = 0.0
 
 
 user_account_valuation_api = Blueprint(
@@ -97,29 +105,33 @@ def get_user_account_valuation_by_asset_type(
     valuation_ccy = repository.get_user_account_settings(
         db_session, user_account_id
     ).valuation_ccy
-    valuation_by_asset_type: dict[str, float] = defaultdict(float)
+    valuation: dict[str, GroupValuationAgg] = {}
     item: SubAccountItemValuationHistoryEntry
     for item in items:
         if item.item_type == SubAccountItemType.Asset:
-            group = (
-                f"{item.asset_type.replace('_', ' ').capitalize()}"
-                f" ({item.asset_class.replace('_', ' ')})"
-                if item.asset_type and item.asset_class
-                else "Unknown"
+            asset_type_class_fmt = (
+                formatting_rules.get_asset_type_class_formatting_rule_by_name(
+                    asset_type_name=some(item.asset_type),
+                    asset_class_name=some(item.asset_class),
+                )
             )
-            valuation_by_asset_type[group] += float(item.valuation)
+            valuation.setdefault(
+                asset_type_class_fmt.pretty_name,
+                GroupValuationAgg(colour=asset_type_class_fmt.dominant_colour),
+            ).value += float(item.valuation)
     return appwsrv_schema.GetUserAccountValuationByAssetTypeResponse(
         valuation=appwsrv_schema.ValuationByAssetType(
             valuation_ccy=valuation_ccy,
             by_asset_type=[
                 appwsrv_schema.GroupValuation(
                     name=group_name,
-                    value=value,
+                    value=group_valuation.value,
+                    colour=group_valuation.colour,
                 )
-                for (group_name, value) in sorted(
-                    valuation_by_asset_type.items(), key=lambda entry: -1.0 * entry[1]
+                for (group_name, group_valuation) in sorted(
+                    valuation.items(), key=lambda entry: -1.0 * entry[1].value
                 )
-                if value > 0.0
+                if group_valuation.value > 0.0
             ],
         )
     )
@@ -137,25 +149,30 @@ def get_user_account_valuation_by_asset_class(
     valuation_ccy = repository.get_user_account_settings(
         db_session, user_account_id
     ).valuation_ccy
-    valuation_by_asset_type: dict[str, float] = defaultdict(float)
+    valuation: dict[str, GroupValuationAgg] = {}
     item: SubAccountItemValuationHistoryEntry
     for item in items:
         if item.item_type == SubAccountItemType.Asset:
-            group = (
-                item.asset_class.replace("_", " ").capitalize()
-                if item.asset_class
-                else "Unknown"
+            asset_class_fmt = formatting_rules.get_asset_class_formatting_rule_by_name(
+                some(item.asset_class)
             )
-            valuation_by_asset_type[group] += float(item.valuation)
+            valuation.setdefault(
+                asset_class_fmt.pretty_name,
+                GroupValuationAgg(colour=asset_class_fmt.dominant_colour),
+            ).value += float(item.valuation)
     return appwsrv_schema.GetUserAccountValuationByAssetClassResponse(
         valuation=appwsrv_schema.ValuationByAssetClass(
             valuation_ccy=valuation_ccy,
             by_asset_class=[
-                appwsrv_schema.GroupValuation(name=group_name, value=value)
-                for (group_name, value) in sorted(
-                    valuation_by_asset_type.items(), key=lambda entry: -1.0 * entry[1]
+                appwsrv_schema.GroupValuation(
+                    name=group_name,
+                    value=group_valuation.value,
+                    colour=group_valuation.colour,
                 )
-                if value > 0.0
+                for (group_name, group_valuation) in sorted(
+                    valuation.items(), key=lambda entry: -1.0 * entry[1].value
+                )
+                if group_valuation.value > 0.0
             ],
         )
     )

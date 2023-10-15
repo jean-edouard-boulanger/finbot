@@ -20,6 +20,7 @@ interface ValuationData {
   valuation_ccy: string;
   labels: Array<string>;
   values: Array<number>;
+  colours?: Array<string>;
 }
 
 export interface WealthDistributionProps {
@@ -51,6 +52,9 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
               (entry) => entry.linked_account.description
             ),
             values: result.entries.map((entry) => entry.valuation.value),
+            colours: result.entries.map(
+              (entry) => entry.linked_account.account_colour
+            ),
           });
           break;
         }
@@ -64,6 +68,7 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
             valuation_ccy: result.valuation_ccy,
             labels: result.by_asset_type.map((entry) => entry.name),
             values: result.by_asset_type.map((entry) => entry.value),
+            colours: result.by_asset_type.map((entry) => entry.colour),
           });
           break;
         }
@@ -76,6 +81,7 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
             valuation_ccy: result.valuation_ccy,
             labels: result.by_asset_class.map((entry) => entry.name),
             values: result.by_asset_class.map((entry) => entry.value),
+            colours: result.by_asset_class.map((entry) => entry.colour),
           });
           break;
         }
@@ -159,6 +165,7 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
                 },
               ],
               labels: valuation.labels,
+              colors: valuation.colours,
             }}
             type="donut"
             series={valuation.values}

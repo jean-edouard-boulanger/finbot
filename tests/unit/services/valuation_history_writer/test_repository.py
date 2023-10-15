@@ -63,6 +63,7 @@ def sample_linked_accounts(
             user_account_id=sample_user_account.id,
             provider_id=sample_provider.id,
             account_name=f"Test account {i}",
+            account_colour="#787878",
             encrypted_credentials="",
         )
         for i in range(2)

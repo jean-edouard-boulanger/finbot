@@ -89,4 +89,4 @@ class HealthResponse(BaseModel):
     healthy: bool
 
 
-HexColour = Annotated[str, Field(regex=r"^#[A-F0-9]{6}$")]
+HexColour = Annotated[str, Field(regex=r"^#[A-Fa-f0-9]{6}$")]
