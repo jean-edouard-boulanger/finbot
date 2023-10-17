@@ -1,6 +1,5 @@
 import json
 import logging
-import random
 import uuid
 
 from flask import Blueprint
@@ -11,7 +10,6 @@ from finbot.apps.appwsrv import serializer
 from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
 from finbot.apps.appwsrv.core import providers as appwsrv_providers
 from finbot.apps.appwsrv.core import valuation as appwsrv_valuation
-from finbot.apps.appwsrv.core.formatting_rules import ACCOUNTS_PALETTE
 from finbot.apps.appwsrv.db import db_session
 from finbot.apps.finbotwsrv.client import FinbotwsrvClient
 from finbot.core import environment, secure
@@ -107,7 +105,7 @@ def link_new_account(
         try:
             new_linked_account: LinkedAccount
             with db_session.persist(LinkedAccount()) as new_linked_account:
-                new_linked_account.account_colour = random.choice(ACCOUNTS_PALETTE)
+                new_linked_account.account_colour = body.account_colour
                 new_linked_account.user_account_id = user_account.id
                 new_linked_account.provider_id = body.provider_id
                 new_linked_account.account_name = account_name
@@ -210,6 +208,8 @@ def update_linked_account_metadata(
                     f"A linked account with name '{account_name}' already exists"
                 )
             linked_account.account_name = account_name
+        if account_colour := body.account_colour:
+            linked_account.account_colour = account_colour
         if body.frozen is True:
             linked_account.frozen = True
     return appwsrv_schema.UpdateLinkedAccountMetadataResponse()

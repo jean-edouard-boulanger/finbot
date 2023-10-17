@@ -8,6 +8,7 @@ import { ToggleSecret } from "./toggle-secret";
 import { TreeGrid } from "./tree-grid";
 import { ValuationChange, RelativeValuationChange } from "./valuation-change";
 import { PasswordValidationCard } from "./password";
+import { ColourPicker } from "./colour-picker";
 
 export {
   LoadingButton,
@@ -22,4 +23,5 @@ export {
   ValuationChange,
   RelativeValuationChange,
   PasswordValidationCard,
+  ColourPicker,
 };

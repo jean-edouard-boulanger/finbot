@@ -1,3 +1,5 @@
+from functools import cache
+
 from finbot.apps.appwsrv.schema import (
     AssetClassFormattingRule,
     AssetTypeClassFormattingRule,
@@ -127,7 +129,7 @@ ASSET_TYPES_FORMATTING_RULES: dict[AssetType, AssetTypeFormattingRule] = {
     ),
 }
 
-
+ASSETS_VALUATION_COLOUR = "#07E4A2"
 ACCOUNTS_PALETTE: list[HexColour] = [
     "#ef233c",
     "#0A9396",
@@ -171,8 +173,10 @@ def get_asset_type_formatting_rule_by_name(
     return get_asset_type_formatting_rule(AssetType[asset_type_name])
 
 
+@cache
 def get_asset_type_class_formatting_rule(
-    asset_type: AssetType, asset_class: AssetClass
+    asset_type: AssetType,
+    asset_class: AssetClass,
 ) -> AssetTypeClassFormattingRule:
     asset_type_fmt = get_asset_type_formatting_rule(asset_type)
     asset_class_fmt = get_asset_class_formatting_rule(asset_class)
@@ -185,7 +189,8 @@ def get_asset_type_class_formatting_rule(
 
 
 def get_asset_type_class_formatting_rule_by_name(
-    asset_type_name: str, asset_class_name: str
+    asset_type_name: str,
+    asset_class_name: str,
 ) -> AssetTypeClassFormattingRule:
     return get_asset_type_class_formatting_rule(
         asset_type=AssetType[asset_type_name],

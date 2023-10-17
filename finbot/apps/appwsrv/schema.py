@@ -80,6 +80,7 @@ class LinkedAccount(BaseModel):
     id: int
     user_account_id: int
     account_name: str
+    account_colour: HexColour
     deleted: bool
     frozen: bool
     provider_id: str
@@ -111,6 +112,7 @@ class SystemReportResponse(BaseModel):
 
 class UpdateLinkedAccountMetadataRequest(BaseModel):
     account_name: str | None = None
+    account_colour: HexColour | None = None
     frozen: bool | None = None
 
 
@@ -127,6 +129,7 @@ class LinkAccountRequest(BaseModel):
     provider_id: str
     credentials: CredentialsPayloadType
     account_name: str
+    account_colour: HexColour
 
 
 class LinkAccountResponse(BaseModel):
@@ -286,6 +289,7 @@ class XAxisDescription(BaseModel):
 class SeriesDescription(BaseModel):
     name: str
     data: list[int | float | None]
+    colour: str
 
 
 class SeriesData(BaseModel):
@@ -406,3 +410,7 @@ class AssetTypeClassFormattingRule(BaseModel):
     asset_class: providers_schema.AssetClass
     pretty_name: str
     dominant_colour: HexColour
+
+
+class GetAccountsFormattingRulesResponse(BaseModel):
+    colour_palette: list[HexColour]

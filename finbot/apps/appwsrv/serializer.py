@@ -71,6 +71,7 @@ def serialize_linked_account(
         id=linked_account.id,
         user_account_id=linked_account.user_account_id,
         account_name=linked_account.account_name,
+        account_colour=linked_account.account_colour,
         deleted=linked_account.deleted,
         frozen=linked_account.frozen,
         provider_id=linked_account.provider.id,

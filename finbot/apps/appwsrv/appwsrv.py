@@ -8,6 +8,7 @@ from finbot.apps.appwsrv.blueprints import (
     admin_api,
     auth_api,
     base_api,
+    formatting_rules_api,
     linked_accounts_api,
     linked_accounts_valuation_api,
     providers_api,
@@ -44,3 +45,4 @@ app.register_blueprint(linked_accounts_api)
 app.register_blueprint(reports_api)
 app.register_blueprint(user_account_valuation_api)
 app.register_blueprint(linked_accounts_valuation_api)
+app.register_blueprint(formatting_rules_api)

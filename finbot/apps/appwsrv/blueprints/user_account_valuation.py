@@ -22,6 +22,7 @@ from finbot.model import (
     SubAccountItemValuationHistoryEntry,
     repository,
 )
+from finbot.providers.schema import AssetClass, AssetType
 
 logger = logging.getLogger(__name__)
 
@@ -222,6 +223,7 @@ def get_user_account_valuation_history(
                     appwsrv_schema.SeriesDescription(
                         name="Last",
                         data=[entry.last_value for entry in historical_valuation],
+                        colour=formatting_rules.ASSETS_VALUATION_COLOUR,
                     )
                 ],
             ),
@@ -262,13 +264,15 @@ def get_user_account_valuation_history_by_asset_type(
         if entry.valuation_period not in x_axis_layout:
             x_axis_layout[entry.valuation_period] = current_index
             current_index += 1
-    valuation_history_by_asset_type: dict[
-        str, list[Optional[repository.HistoricalValuationEntry]]
+    valuation_history_by_asset_type_class: dict[
+        tuple[AssetType, AssetClass],
+        list[Optional[repository.HistoricalValuationEntry]],
     ] = defaultdict(lambda: [None] * len(x_axis_layout))
     for entry in valuation_history:
         entry_index = x_axis_layout[entry.valuation_period]
-        valuation_history_by_asset_type[entry.asset_type][entry_index] = entry
-
+        valuation_history_by_asset_type_class[(entry.asset_type, entry.asset_class)][
+            entry_index
+        ] = entry
     return appwsrv_schema.GetUserAccountValuationHistoryByAssetTypeResponse(
         historical_valuation=appwsrv_schema.HistoricalValuation(
             valuation_ccy=settings.valuation_ccy,
@@ -284,13 +288,21 @@ def get_user_account_valuation_history_by_asset_type(
                 ),
                 series=[
                     appwsrv_schema.SeriesDescription(
-                        name=f"{asset_type.capitalize()} (Last)",
+                        name=formatting_rules.get_asset_type_class_formatting_rule(
+                            asset_type, asset_class
+                        ).pretty_name,
                         data=[
                             (entry.last_value if entry is not None else None)
                             for entry in entries
                         ],
+                        colour=formatting_rules.get_asset_type_class_formatting_rule(
+                            asset_type, asset_class
+                        ).dominant_colour,
                     )
-                    for asset_type, entries in valuation_history_by_asset_type.items()
+                    for (
+                        asset_type,
+                        asset_class,
+                    ), entries in valuation_history_by_asset_type_class.items()
                 ],
             ),
         )

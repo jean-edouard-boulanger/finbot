@@ -8,6 +8,7 @@ export interface SeriesXAxisData {
 export interface SeriesYAxisData {
   name: string;
   data: Array<number>;
+  colour: string;
 }
 
 export interface SeriesData {
@@ -224,6 +225,7 @@ export interface LinkAccountRequest
     ProviderResource {
   credentials: LinkedAccountCredentials | null;
   account_name: string;
+  account_colour: string;
 }
 
 export interface ValidateLinkedAccountCredentialsRequest
@@ -237,7 +239,8 @@ export interface GetLinkedAccountResponse {
 
 export interface UpdateLinkedAccountMetadata extends LinkedAccountResource {
   linked_account_id: number;
-  account_name?: string;
+  account_name?: string | null;
+  account_colour?: string | null;
   frozen?: boolean;
 }
 
@@ -466,3 +469,10 @@ export interface EmailDeliverySettings {
 export interface GetEmailDeliverySettingsResponse {
   settings: EmailDeliverySettings | null;
 }
+
+export interface AccountsFormattingRules {
+  colour_palette: Array<string>;
+}
+
+export interface GetAccountsFormattingRulesResponse
+  extends AccountsFormattingRules {}

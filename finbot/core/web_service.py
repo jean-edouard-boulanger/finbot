@@ -18,7 +18,7 @@ from finbot.core import environment
 from finbot.core import schema as core_schema
 from finbot.core.errors import FinbotError
 from finbot.core.schema import ApplicationErrorData, ApplicationErrorResponse
-from finbot.core.serialization import pretty_dump, serialize
+from finbot.core.serialization import serialize
 
 
 class RequestValidationError(FinbotError):
@@ -42,14 +42,8 @@ def service_endpoint() -> Callable[[Callable[P, RT]], Callable[P, FlaskResponse]
             response_data: RT | FlaskResponse | ApplicationErrorResponse,
         ) -> FlaskResponse:
             if isinstance(response_data, FlaskResponse):
-                if logging.getLogger().isEnabledFor(logging.DEBUG):
-                    logging.debug(
-                        f"response_dump={pretty_dump(response_data.get_json(silent=True))}"
-                    )
                 return response_data
             serialized_response = serialize(response_data)
-            if logging.getLogger().isEnabledFor(logging.DEBUG):
-                logging.debug(f"response_dump={pretty_dump(serialized_response)}")
             return cast(FlaskResponse, jsonify(serialized_response))
 
         @functools.wraps(func)
@@ -59,7 +53,7 @@ def service_endpoint() -> Callable[[Callable[P, RT]], Callable[P, FlaskResponse]
                     f"process {func.__name__} request route={request.full_path}"
                 )
                 response = func(*args, **kwargs)
-                logging.info("request processed successfully")
+                logging.debug("request processed successfully")
                 return prepare_response(response)
             except Exception as e:
                 logging.warning(
