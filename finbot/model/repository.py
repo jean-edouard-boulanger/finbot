@@ -24,6 +24,7 @@ from finbot.model import (
     UserAccountSettings,
     UserAccountValuationHistoryEntry,
 )
+from finbot.providers.schema import AssetClass, AssetType
 
 
 def get_user_account(session: Session, user_account_id: int) -> UserAccount:
@@ -302,7 +303,16 @@ def get_historical_valuation_by_linked_account(
 
 @dataclass
 class AssetTypeHistoricalValuationEntry(HistoricalValuationEntry):
-    asset_type: str
+    asset_type: AssetType
+    asset_class: AssetClass
+
+    @staticmethod
+    def parse_row(row: dict[str, Any]) -> "AssetTypeHistoricalValuationEntry":
+        raw_asset_type, raw_asset_class = row["asset_type_agg"].split(";")
+        del row["asset_type_agg"]
+        row["asset_type"] = AssetType[raw_asset_type]
+        row["asset_class"] = AssetClass[raw_asset_class]
+        return AssetTypeHistoricalValuationEntry(**row)
 
 
 def get_historical_valuation_by_asset_type(
@@ -323,35 +333,34 @@ def get_historical_valuation_by_asset_type(
         query_params["to_time"] = to_time
         time_clause += " and fuahe.effective_at <= :to_time "
     main_query = f"""
-        select distinct on (agg_items.asset_type, {sub_grouping})
+        select distinct on (agg_items.asset_type_agg, {sub_grouping})
                {sub_grouping} as valuation_period,
-               agg_items.asset_type,
+               agg_items.asset_type_agg,
                first_value(fuahe.effective_at) over (
-                   partition by agg_items.asset_type, {sub_grouping}
+                   partition by agg_items.asset_type_agg, {sub_grouping}
                    order by fuahe.effective_at
                 ) as period_start,
                first_value(fuahe.effective_at) over (
-                   partition by agg_items.asset_type, {sub_grouping}
+                   partition by agg_items.asset_type_agg, {sub_grouping}
                    order by fuahe.effective_at desc
                 ) as period_end,
                first_value(agg_items.valuation) over (
-                   partition by agg_items.asset_type, {sub_grouping}
+                   partition by agg_items.asset_type_agg, {sub_grouping}
                    order by fuahe.effective_at
                 ) as first_value,
                first_value(agg_items.valuation) over (
-                   partition by agg_items.asset_type, {sub_grouping}
+                   partition by agg_items.asset_type_agg, {sub_grouping}
                    order by fuahe.effective_at desc
                ) as last_value,
                min(agg_items.valuation) over (
-                   partition by agg_items.asset_type, {sub_grouping}
+                   partition by agg_items.asset_type_agg, {sub_grouping}
                ) as max_value,
                min(agg_items.valuation) over (
-                   partition by agg_items.asset_type, {sub_grouping}
+                   partition by agg_items.asset_type_agg, {sub_grouping}
                ) as min_value
           from (
-              select history_entry_id,
-                     replace(coalesce(asset_type, 'unknown'), '_', ' ')
-                     || ' (' || replace(coalesce(asset_class, 'unknown asset class'), '_', ' ') || ')' as asset_type,
+              select fsaivhe.history_entry_id,
+                     fsaivhe.asset_type || ';' || fsaivhe.asset_class as asset_type_agg,
                      sum(valuation) as valuation
                 from finbot_sub_accounts_items_valuation_history_entries fsaivhe
                 join finbot_user_accounts_history_entries fuahe
@@ -361,9 +370,8 @@ def get_historical_valuation_by_asset_type(
                where fuahe.available
              and not fla.deleted
                  and fuahe.user_account_id = :user_account_id {time_clause}
-            group by history_entry_id,
-                     replace(coalesce(asset_type, 'unknown'), '_', ' ')
-                     || ' (' || replace(coalesce(asset_class, 'unknown asset class'), '_', ' ') || ')'
+                 and fsaivhe.item_type = 'Asset'
+            group by history_entry_id, fsaivhe.asset_type || ';' || fsaivhe.asset_class
           ) agg_items
           join finbot_user_accounts_history_entries fuahe on agg_items.history_entry_id = fuahe.id
     """
@@ -375,10 +383,10 @@ def get_historical_valuation_by_asset_type(
                 else (q.last_value - q.first_value) / (q.first_value)
                end as rel_change
           from ({main_query}) q
-      order by q.period_start, q.asset_type
+      order by q.period_start, q.asset_type_agg
     """
     return [
-        AssetTypeHistoricalValuationEntry(**row_to_dict(row))
+        AssetTypeHistoricalValuationEntry.parse_row(row_to_dict(row))
         for row in session.execute(text(query), query_params)
     ]
 

@@ -1,6 +1,7 @@
 from finbot.apps.appwsrv.blueprints.admin import admin_api
 from finbot.apps.appwsrv.blueprints.auth import auth_api
 from finbot.apps.appwsrv.blueprints.base import base_api
+from finbot.apps.appwsrv.blueprints.formatting_rules import formatting_rules_api
 from finbot.apps.appwsrv.blueprints.linked_accounts import linked_accounts_api
 from finbot.apps.appwsrv.blueprints.linked_accounts_valuation import (
     linked_accounts_valuation_api,
@@ -22,4 +23,5 @@ __all__ = [
     "reports_api",
     "user_account_valuation_api",
     "linked_accounts_valuation_api",
+    "formatting_rules_api",
 ]

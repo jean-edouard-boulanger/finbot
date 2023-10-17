@@ -84,6 +84,11 @@ def get_linked_accounts_historical_valuation(
         raise InvalidUserInput("Start time parameter must be before end time parameter")
     frequency = query.frequency
     is_daily = frequency == core_schema.ValuationFrequency.Daily
+    linked_accounts = repository.find_linked_accounts(db_session, user_account_id)
+    linked_accounts_colours = {
+        linked_account.id: linked_account.account_colour
+        for linked_account in linked_accounts
+    }
     valuation_history = repository.get_historical_valuation_by_linked_account(
         session=db_session,
         user_account_id=user_account_id,
@@ -119,11 +124,12 @@ def get_linked_accounts_historical_valuation(
                 ),
                 series=[
                     appwsrv_schema.SeriesDescription(
-                        name=f"{account_name} (Last)",
+                        name=f"{account_name}",
                         data=[
                             (entry.last_value if entry is not None else None)
                             for entry in entries
                         ],
+                        colour=linked_accounts_colours[account_id],
                     )
                     for (
                         account_id,

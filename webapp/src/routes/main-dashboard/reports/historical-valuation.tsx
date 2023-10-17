@@ -352,6 +352,9 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
               stroke: {
                 width: 1,
               },
+              colors: historicalValuation.series_data.series.map(
+                (entry) => entry.colour
+              ),
             }}
             series={historicalValuation.series_data.series}
             type={

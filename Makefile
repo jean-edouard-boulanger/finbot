@@ -60,27 +60,8 @@ finbotdb-hydrate:
 	python3.11 tools/finbotdb hydrate \
 		--data-file ./tools/hydrate.json
 
-finbotdb-add-account:
-	tools/check-env.sh FINBOT_SECRET_PATH;
-	tools/check-env.sh FINBOT_ACCOUNT_PATH;
-	python3.11 tools/finbotdb add-account \
-		--secret ${FINBOT_SECRET_PATH} \
-		--account ${FINBOT_ACCOUNT_PATH}
-
-finbotdb-dump-account:
-	tools/check-env.sh FINBOT_SECRET_PATH;
-	tools/check-env.sh FINBOT_ACCOUNT_PATH;
-	python3.11 tools/finbotdb dump-account \
-		--secret ${FINBOT_SECRET_PATH} \
-		--account-id ${account_id}
-
 finbotdb-psql:
-	tools/check-env.sh FINBOT_DB_PASSWORD;
-	tools/check-env.sh FINBOT_DB_HOSTNAME;
-	tools/check-env.sh FINBOT_DB_USER;
-	tools/check-env.sh FINBOT_DB_DBNAME;
-	env PGPASSWORD=${FINBOT_DB_PASSWORD} \
-		psql -h ${FINBOT_DB_HOSTNAME} -U ${FINBOT_DB_USER} -d ${FINBOT_DB_DBNAME}
+	docker compose exec finbotdb psql -U finbot
 
 init-dev:
 	tools/init-dev.sh

@@ -61,6 +61,7 @@ import {
   GetEmailDeliverySettingsResponse,
   EmailDeliveryProvider,
   GetEmailDeliveryProvidersResponse,
+  GetAccountsFormattingRulesResponse,
 } from "./types";
 import { FINBOT_SERVER_ENDPOINT } from "utils/env-config";
 
@@ -184,7 +185,7 @@ export class FinbotClient {
   }
 
   async getPlaidSettings(): Promise<PlaidSettings | null> {
-    const response = await this.axiosInstance.get(`/admin/plaid/settings/`);
+    const response = await this.axiosInstance.get(`/providers/plaid/settings/`);
     return handleResponse<GetPlaidSettingsResponse>(response).settings;
   }
 
@@ -308,12 +309,14 @@ export class FinbotClient {
     account_id,
     linked_account_id,
     account_name,
+    account_colour,
     frozen,
   }: UpdateLinkedAccountMetadata): Promise<void> {
     const response = await this.axiosInstance.put(
       `/accounts/${account_id}/linked_accounts/${linked_account_id}/metadata/`,
       {
         account_name,
+        account_colour,
         frozen,
       }
     );
@@ -375,10 +378,11 @@ export class FinbotClient {
     provider_id,
     credentials,
     account_name,
+    account_colour,
   }: ValidateLinkedAccountCredentialsRequest): Promise<void> {
     const response = await this.axiosInstance.post(
       `/accounts/${account_id}/linked_accounts/?persist=0`,
-      { provider_id, credentials, account_name }
+      { provider_id, credentials, account_name, account_colour }
     );
     handleResponse<void>(response);
   }
@@ -388,10 +392,11 @@ export class FinbotClient {
     provider_id,
     credentials,
     account_name,
+    account_colour,
   }: LinkAccountRequest): Promise<void> {
     const response = await this.axiosInstance.post(
       `/accounts/${account_id}/linked_accounts/?validate=0`,
-      { provider_id, credentials, account_name }
+      { provider_id, credentials, account_name, account_colour }
     );
     handleResponse<void>(response);
   }
@@ -444,5 +449,12 @@ export class FinbotClient {
       `/admin/settings/email_delivery/`
     );
     return handleResponse<void>(response);
+  }
+
+  async getAccountsFormattingRules(): Promise<GetAccountsFormattingRulesResponse> {
+    const response = await this.axiosInstance.get(
+      `/formatting_rules/accounts/`
+    );
+    return handleResponse<GetAccountsFormattingRulesResponse>(response);
   }
 }
