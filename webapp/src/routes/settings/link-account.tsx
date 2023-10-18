@@ -86,7 +86,7 @@ const PlaidForm: React.FC<PlaidFormProps> = ({
       }}
       onEvent={(
         eventName: string,
-        metadata: { error_message?: string | null }
+        metadata: { error_message?: string | null },
       ) => {
         if (metadata.error_message) {
           toast.error(`Plaid error: ${metadata.error_message}`);
@@ -118,14 +118,14 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
   const [formattingRules, setFormattingRules] =
     useState<AccountsFormattingRules | null>(null);
   const [linkedAccount, setLinkedAccount] = useState<LinkedAccount | null>(
-    null
+    null,
   );
   const [providers, setProviders] = useState<Array<Provider>>([]);
   const [plaidSettings, setPlaidSettings] = useState<PlaidSettings | null>(
-    null
+    null,
   );
   const [selectedProvider, setSelectedProvider] = useState<Provider | null>(
-    null
+    null,
   );
   const [accountName, setAccountName] = useState<string | null>(null);
   const [accountColour, setAccountColour] = useState<string | null>(null);
@@ -141,7 +141,7 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
       setProviders(
         providersPayload.sort((p1, p2) => {
           return p1.description.localeCompare(p2.description);
-        })
+        }),
       );
       setPlaidSettings(await finbotClient!.getPlaidSettings());
       setFormattingRules(await finbotClient!.getAccountsFormattingRules());
@@ -221,7 +221,7 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
   };
 
   const requestUpdateCredentials = async (
-    credentials: LinkedAccountCredentials
+    credentials: LinkedAccountCredentials,
   ) => {
     setOperation("Validating credentials");
     const settings = {
@@ -250,7 +250,7 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
       toast.success(
         `Credentials for linked account '${
           linkedAccount!.account_name
-        }' updated`
+        }' updated`,
       );
     } catch (e) {
       toast.error(`Error updating credentials: ${e}`);
@@ -260,7 +260,7 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
 
   const requestLinkAccount = async (
     provider: Provider,
-    credentials: LinkedAccountCredentials
+    credentials: LinkedAccountCredentials,
   ) => {
     const link_settings = {
       provider_id: provider.id,
@@ -392,7 +392,7 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
                       } else {
                         requestLinkAccount(
                           { ...selectedProvider },
-                          credentials
+                          credentials,
                         );
                       }
                     }}

@@ -1,8 +1,9 @@
 from typing import Any, Optional
 
-from pydantic import BaseModel, SecretStr
+from pydantic.v1 import SecretStr
 
 from finbot.core.qonto_api import QontoApi, Unauthorized
+from finbot.core.schema import BaseModel
 from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationFailure
 from finbot.providers.schema import (

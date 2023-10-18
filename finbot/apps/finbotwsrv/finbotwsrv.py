@@ -3,16 +3,19 @@ import traceback
 from typing import Any
 
 from flask import Flask
+from spectree import Response as ResponseSpec
+from spectree import SpecTree
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
+from finbot._version import __version__
 from finbot.apps.finbotwsrv import schema
 from finbot.core import environment
 from finbot.core import schema as core_schema
 from finbot.core.db.session import Session
 from finbot.core.logging import configure_logging
 from finbot.core.schema import ApplicationErrorData
-from finbot.core.web_service import service_endpoint, validate
+from finbot.core.web_service import CustomJsonProvider, service_endpoint
 from finbot.providers import ProviderBase
 from finbot.providers.errors import AuthenticationFailure
 from finbot.providers.factory import get_provider
@@ -25,6 +28,15 @@ db_engine = create_engine(FINBOT_ENV.database_url)
 db_session = Session(scoped_session(sessionmaker(bind=db_engine)))
 
 app = Flask(__name__)
+app.json = CustomJsonProvider(app)  # type: ignore
+
+spec = SpecTree(
+    "flask",
+    annotations=True,
+    title="Finbot data capture service",
+    version=f"v{__version__}",
+    path="apidoc",
+)
 
 
 def balances_handler(provider_api: ProviderBase) -> schema.LineItemResults:
@@ -80,36 +92,39 @@ def get_financial_data_impl(
 
 @app.route("/healthy/", methods=["GET"])
 @service_endpoint()
-@validate()
+@spec.validate(resp=ResponseSpec(HTTP_200=core_schema.HealthResponse))
 def healthy() -> core_schema.HealthResponse:
     return core_schema.HealthResponse(healthy=True)
 
 
 @app.route("/financial_data/", methods=["POST"])
 @service_endpoint()
-@validate()
+@spec.validate(resp=ResponseSpec(HTTP_200=schema.GetFinancialDataResponse))
 def get_financial_data(
-    body: schema.GetFinancialDataRequest,
+    json: schema.GetFinancialDataRequest,
 ) -> schema.GetFinancialDataResponse:
-    provider_type = get_provider(body.provider_id)
+    provider_type = get_provider(json.provider_id)
     return get_financial_data_impl(
         provider_type=provider_type,
-        authentication_payload=body.credentials,
-        line_items=body.items,
-        user_account_currency=body.user_account_currency,
+        authentication_payload=json.credentials,
+        line_items=json.items,
+        user_account_currency=json.user_account_currency,
     )
 
 
 @app.route("/validate_credentials/", methods=["POST"])
 @service_endpoint()
-@validate()
+@spec.validate(resp=ResponseSpec(HTTP_200=schema.ValidateCredentialsResponse))
 def validate_credentials(
-    body: schema.ValidateCredentialsRequest,
+    json: schema.ValidateCredentialsRequest,
 ) -> schema.ValidateCredentialsResponse:
-    provider_type = get_provider(body.provider_id)
-    with provider_type.create(body.credentials, body.user_account_currency) as provider:
+    provider_type = get_provider(json.provider_id)
+    with provider_type.create(json.credentials, json.user_account_currency) as provider:
         try:
             provider.initialize()
             return schema.ValidateCredentialsResponse(valid=True)
         except AuthenticationFailure as e:
             return schema.ValidateCredentialsResponse(valid=False, error_message=str(e))
+
+
+spec.register(app)

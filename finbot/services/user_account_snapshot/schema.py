@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from finbot.core.schema import BaseModel
 
 
 class SnapshotResultsCount(BaseModel):

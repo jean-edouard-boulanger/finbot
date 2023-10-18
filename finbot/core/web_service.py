@@ -1,18 +1,18 @@
 import functools
-import json
 import logging
 import traceback
+import typing as t
 from typing import Any, Callable, Optional, ParamSpec, Self, TypeVar, cast
 
+import orjson
 import requests
 import requests.exceptions
 from flask import Response as FlaskResponse
 from flask import jsonify, request
+from flask.json.provider import DefaultJSONProvider
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required as _jwt_required
 from flask_jwt_extended.view_decorators import LocationType
-from flask_pydantic import validate as _validate
-from pydantic import BaseModel
 
 from finbot.core import environment
 from finbot.core import schema as core_schema
@@ -66,33 +66,6 @@ def service_endpoint() -> Callable[[Callable[P, RT]], Callable[P, FlaskResponse]
     return impl
 
 
-def validate(
-    body: type[BaseModel] | None = None,
-    query: type[BaseModel] | None = None,
-    on_success_status: int = 200,
-    exclude_none: bool = False,
-    response_many: bool = False,
-    request_body_many: bool = False,
-    response_by_alias: bool = False,
-    get_json_params: dict[str, Any] | None = None,
-    form: type[BaseModel] | None = None,
-) -> Callable[[Callable[P, RT]], Callable[P, FlaskResponse]]:
-    return cast(
-        Callable[[Callable[P, RT]], Callable[P, FlaskResponse]],
-        _validate(
-            body=body,
-            query=query,
-            on_success_status=on_success_status,
-            exclude_none=exclude_none,
-            response_many=response_many,
-            request_body_many=request_body_many,
-            response_by_alias=response_by_alias,
-            get_json_params=get_json_params,
-            form=form,
-        ),
-    )
-
-
 def jwt_required(
     optional: bool = False,
     fresh: bool = False,
@@ -142,7 +115,7 @@ class WebServiceClient(object):
             raise WebServiceClientError(
                 f"error while sending request to {resource}: {e}"
             )
-        response_payload = json.loads(response.content)
+        response_payload = orjson.loads(response.content)
         if "error" in response_payload:
             error = ApplicationErrorResponse.parse_obj(response_payload).error
             raise WebServiceApplicationError(
@@ -164,3 +137,14 @@ class WebServiceClient(object):
     @classmethod
     def create(cls) -> Self:
         return cls(environment.get_web_service_endpoint(cls.service_name))
+
+
+class CustomJsonProvider(DefaultJSONProvider):
+    def dumps(self, obj: t.Any, **kwargs: t.Any) -> str:
+        return orjson.dumps(
+            obj,
+            default=DefaultJSONProvider.default,
+        ).decode()
+
+    def loads(self, s: str | bytes, **kwargs: t.Any) -> t.Any:
+        return orjson.loads(s)

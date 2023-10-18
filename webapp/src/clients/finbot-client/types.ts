@@ -353,7 +353,7 @@ export interface HoldingsReportValuation {
 
 export interface HoldingsReportNodeBase<
   Role extends string,
-  ChildType = never
+  ChildType = never,
 > {
   role: Role;
   children?: Array<ChildType>;

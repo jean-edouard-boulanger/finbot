@@ -71,7 +71,7 @@ export const EmailDeliverySettingsPanel: React.FC<
           provider_id: provider!.provider_id,
           provider_settings: formData,
         },
-        validate
+        validate,
       );
       toast.success("Email delivery settings have been updated successfully");
     } catch (e) {

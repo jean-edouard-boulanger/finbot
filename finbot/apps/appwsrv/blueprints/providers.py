@@ -7,9 +7,10 @@ from finbot.apps.appwsrv import serializer
 from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
 from finbot.apps.appwsrv.core import providers as appwsrv_providers
 from finbot.apps.appwsrv.db import db_session
+from finbot.apps.appwsrv.spec import ResponseSpec, spec
 from finbot.core.environment import get_plaid_environment
 from finbot.core.errors import InvalidOperation, InvalidUserInput
-from finbot.core.web_service import jwt_required, service_endpoint, validate
+from finbot.core.web_service import jwt_required, service_endpoint
 from finbot.model import LinkedAccount, Provider, repository
 
 logger = logging.getLogger(__name__)
@@ -22,16 +23,18 @@ providers_api = Blueprint(
 @providers_api.route("/", methods=["PUT"])
 @jwt_required()
 @service_endpoint()
-@validate()
+@spec.validate(
+    resp=ResponseSpec(HTTP_200=appwsrv_schema.CreateOrUpdateProviderResponse)
+)
 def update_or_create_provider(
-    body: appwsrv_schema.CreateOrUpdateProviderRequest,
+    json: appwsrv_schema.CreateOrUpdateProviderRequest,
 ) -> appwsrv_schema.CreateOrUpdateProviderResponse:
-    existing_provider = repository.find_provider(db_session, body.id)
+    existing_provider = repository.find_provider(db_session, json.id)
     with db_session.persist(existing_provider or Provider()) as provider:
-        provider.id = body.id
-        provider.description = body.description
-        provider.website_url = body.website_url
-        provider.credentials_schema = body.credentials_schema
+        provider.id = json.id
+        provider.description = json.description
+        provider.website_url = json.website_url
+        provider.credentials_schema = json.credentials_schema
     return appwsrv_schema.CreateOrUpdateProviderResponse(
         provider=serializer.serialize_provider(provider)
     )
@@ -40,7 +43,7 @@ def update_or_create_provider(
 @providers_api.route("/", methods=["GET"])
 @jwt_required()
 @service_endpoint()
-@validate()
+@spec.validate(resp=ResponseSpec(HTTP_200=appwsrv_schema.GetProvidersResponse))
 def get_providers() -> appwsrv_schema.GetProvidersResponse:
     return appwsrv_schema.GetProvidersResponse(
         providers=[
@@ -54,7 +57,7 @@ def get_providers() -> appwsrv_schema.GetProvidersResponse:
 @providers_api.route("/<provider_id>/", methods=["GET"])
 @jwt_required()
 @service_endpoint()
-@validate()
+@spec.validate(resp=ResponseSpec(HTTP_200=appwsrv_schema.GetProviderResponse))
 def get_provider(provider_id: str) -> appwsrv_schema.GetProviderResponse:
     provider = repository.find_provider(db_session, provider_id)
     if not provider:
@@ -67,7 +70,7 @@ def get_provider(provider_id: str) -> appwsrv_schema.GetProviderResponse:
 @providers_api.route("/<provider_id>/", methods=["DELETE"])
 @jwt_required()
 @service_endpoint()
-@validate()
+@spec.validate(resp=ResponseSpec(HTTP_200=appwsrv_schema.DeleteProviderResponse))
 def delete_provider(provider_id: str) -> appwsrv_schema.DeleteProviderResponse:
     provider = repository.get_provider(db_session, provider_id)
     linked_accounts: list[LinkedAccount] = provider.linked_accounts
@@ -82,7 +85,7 @@ def delete_provider(provider_id: str) -> appwsrv_schema.DeleteProviderResponse:
 @providers_api.route("/plaid/settings/", methods=["GET"])
 @jwt_required()
 @service_endpoint()
-@validate()
+@spec.validate(resp=ResponseSpec(HTTP_200=appwsrv_schema.GetPlaidSettingsResponse))
 def get_plaid_settings() -> appwsrv_schema.GetPlaidSettingsResponse:
     plaid_env = get_plaid_environment()
     if not plaid_env:

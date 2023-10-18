@@ -30,7 +30,7 @@ export const AccountSecuritySettings: React.FC<
   const { userAccountId } = useContext(AuthContext);
   const [loading, setLoading] = useState<boolean>(false);
   const [passwordForm, setPasswordForm] = useState<PasswordForm>(
-    DEFAULT_PASSWORD_FORM
+    DEFAULT_PASSWORD_FORM,
   );
   const [passwordValidation, setPasswordValidation] =
     useState<PasswordValidationResult>(() => {

@@ -59,7 +59,7 @@ interface PersonalFormValidationResult {
 }
 
 const validatePersonalForm = (
-  form: RegistrationForm
+  form: RegistrationForm,
 ): PersonalFormValidationResult => {
   const fullNameValid = form.fullName.length >= 3;
   const emailValid = isEmailValid(form.email);
@@ -75,7 +75,7 @@ const validatePersonalForm = (
 export const SignupForm: React.FC<Record<string, never>> = () => {
   const { finbotClient } = useContext(ServicesContext);
   const [registrationForm, setRegistrationForm] = useState<RegistrationForm>(
-    DEFAULT_REGISTRATION_FORM
+    DEFAULT_REGISTRATION_FORM,
   );
   const [passwordValidation, setPasswordValidation] =
     useState<PasswordValidationResult>(() => {
@@ -121,7 +121,7 @@ export const SignupForm: React.FC<Record<string, never>> = () => {
       setLoading(false);
       setRegistered(true);
       toast.success(
-        `You have successfully signed up to finbot. You may now sign into your account`
+        `You have successfully signed up to finbot. You may now sign into your account`,
       );
     } catch (e) {
       setLoading(false);
@@ -240,7 +240,7 @@ export const SignupForm: React.FC<Record<string, never>> = () => {
                     setStep("password");
                   } else {
                     toast.error(
-                      `Email '${registrationForm.email}' is already used by another finbot account`
+                      `Email '${registrationForm.email}' is already used by another finbot account`,
                     );
                   }
                 }}

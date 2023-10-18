@@ -17,14 +17,17 @@ from finbot.apps.appwsrv.blueprints import (
     user_accounts_api,
 )
 from finbot.apps.appwsrv.db import db_session
+from finbot.apps.appwsrv.spec import spec
 from finbot.core import environment
 from finbot.core.logging import configure_logging
+from finbot.core.web_service import CustomJsonProvider
 
 FINBOT_ENV = environment.get()
 configure_logging(FINBOT_ENV.desired_log_level)
 
 
 app = Flask(__name__)
+app.json = CustomJsonProvider(app)  # type: ignore
 app.config["JWT_SECRET_KEY"] = FINBOT_ENV.jwt_secret_key
 
 CORS(app)
@@ -46,3 +49,5 @@ app.register_blueprint(reports_api)
 app.register_blueprint(user_account_valuation_api)
 app.register_blueprint(linked_accounts_valuation_api)
 app.register_blueprint(formatting_rules_api)
+
+spec.register(app)

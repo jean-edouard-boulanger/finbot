@@ -3,7 +3,7 @@ import React from "react";
 export type MoneyFormatterType = (
   amount: number,
   locale: string,
-  ccy: string
+  ccy: string,
 ) => string;
 
 export interface MoneyProps {
@@ -16,7 +16,7 @@ export interface MoneyProps {
 export const defaultMoneyFormatter: MoneyFormatterType = (
   amount,
   locale,
-  currency
+  currency,
 ) => {
   const localized = new Intl.NumberFormat(locale, {
     style: "currency",

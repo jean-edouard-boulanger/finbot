@@ -8,8 +8,9 @@ from finbot.apps.appwsrv import schema as appwsrv_schema
 from finbot.apps.appwsrv import serializer
 from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
 from finbot.apps.appwsrv.db import db_session
+from finbot.apps.appwsrv.spec import ResponseSpec, spec
 from finbot.core.errors import InvalidUserInput
-from finbot.core.web_service import jwt_required, service_endpoint, validate
+from finbot.core.web_service import jwt_required, service_endpoint
 from finbot.model import UserAccount, UserAccountSettings, repository
 
 logger = logging.getLogger(__name__)
@@ -23,20 +24,20 @@ user_accounts_api = Blueprint(
 
 @user_accounts_api.route("/", methods=["POST"])
 @service_endpoint()
-@validate()
+@spec.validate(resp=ResponseSpec(HTTP_200=appwsrv_schema.CreateUserAccountResponse))
 def create_user_account(
-    body: appwsrv_schema.CreateUserAccountRequest,
+    json: appwsrv_schema.CreateUserAccountRequest,
 ) -> appwsrv_schema.CreateUserAccountResponse:
     try:
         user_account: UserAccount
         with db_session.persist(UserAccount()) as user_account:
-            user_account.email = body.email
+            user_account.email = json.email
             user_account.password_hash = bcrypt.hashpw(
-                body.password.get_secret_value().encode(), bcrypt.gensalt()
+                json.password.get_secret_value().encode(), bcrypt.gensalt()
             )
-            user_account.full_name = body.full_name
+            user_account.full_name = json.full_name
             user_account.settings = UserAccountSettings(
-                valuation_ccy=body.settings.valuation_ccy
+                valuation_ccy=json.settings.valuation_ccy
             )
     except IntegrityError as e:
         logging.warning(f"failed to create user account: {e}")
@@ -52,8 +53,10 @@ def create_user_account(
 @user_accounts_api.route("/<int:user_account_id>/", methods=["GET"])
 @jwt_required()
 @service_endpoint()
-@validate()
-def get_user_account(user_account_id: int) -> appwsrv_schema.GetUserAccountResponse:
+@spec.validate(resp=ResponseSpec(HTTP_200=appwsrv_schema.GetUserAccountResponse))
+def get_user_account(
+    user_account_id: int,
+) -> appwsrv_schema.GetUserAccountResponse:
     user_account = repository.get_user_account(db_session, user_account_id)
     return appwsrv_schema.GetUserAccountResponse(
         user_account=serializer.serialize_user_account(user_account)
@@ -63,17 +66,20 @@ def get_user_account(user_account_id: int) -> appwsrv_schema.GetUserAccountRespo
 @user_accounts_api.route("/<int:user_account_id>/password/", methods=["PUT"])
 @jwt_required()
 @service_endpoint()
-@validate()
+@spec.validate(
+    resp=ResponseSpec(HTTP_200=appwsrv_schema.UpdateUserAccountPasswordResponse)
+)
 def update_user_account_password(
-    user_account_id: int, body: appwsrv_schema.UpdateUserAccountPasswordRequest
+    user_account_id: int,
+    json: appwsrv_schema.UpdateUserAccountPasswordRequest,
 ) -> appwsrv_schema.UpdateUserAccountPasswordResponse:
     account = repository.get_user_account(db_session, user_account_id)
-    old_password = body.old_password.get_secret_value()
+    old_password = json.old_password.get_secret_value()
     if not bcrypt.checkpw(old_password.encode(), account.password_hash):
         raise InvalidUserInput("The old password is incorrect")
     with db_session.persist(account):
         account.password_hash = bcrypt.hashpw(
-            body.new_password.get_secret_value().encode(), bcrypt.gensalt()
+            json.new_password.get_secret_value().encode(), bcrypt.gensalt()
         )
     return appwsrv_schema.UpdateUserAccountPasswordResponse()
 
@@ -81,15 +87,18 @@ def update_user_account_password(
 @user_accounts_api.route("/<int:user_account_id>/profile/", methods=["PUT"])
 @jwt_required()
 @service_endpoint()
-@validate()
+@spec.validate(
+    resp=ResponseSpec(HTTP_200=appwsrv_schema.UpdateUserAccountProfileResponse)
+)
 def update_user_account_profile(
-    user_account_id: int, body: appwsrv_schema.UpdateUserAccountProfileRequest
+    user_account_id: int,
+    json: appwsrv_schema.UpdateUserAccountProfileRequest,
 ) -> appwsrv_schema.UpdateUserAccountProfileResponse:
     user_account = repository.get_user_account(db_session, user_account_id)
     with db_session.persist(user_account):
-        user_account.email = body.email
-        user_account.full_name = body.full_name
-        user_account.mobile_phone_number = body.mobile_phone_number
+        user_account.email = json.email
+        user_account.full_name = json.full_name
+        user_account.mobile_phone_number = json.mobile_phone_number
     return appwsrv_schema.UpdateUserAccountProfileResponse(
         profile=serializer.serialize_user_account_profile(user_account)
     )
@@ -98,7 +107,9 @@ def update_user_account_profile(
 @user_accounts_api.route("/<int:user_account_id>/settings/", methods=["GET"])
 @jwt_required()
 @service_endpoint()
-@validate()
+@spec.validate(
+    resp=ResponseSpec(HTTP_200=appwsrv_schema.GetUserAccountSettingsResponse)
+)
 def get_user_account_settings(
     user_account_id: int,
 ) -> appwsrv_schema.GetUserAccountSettingsResponse:
@@ -111,7 +122,9 @@ def get_user_account_settings(
 @user_accounts_api.route("/<int:user_account_id>/is_configured/")
 @jwt_required()
 @service_endpoint()
-@validate()
+@spec.validate(
+    resp=ResponseSpec(HTTP_200=appwsrv_schema.IsUserAccountConfiguredResponse)
+)
 def is_user_account_configured(
     user_account_id: int,
 ) -> appwsrv_schema.IsUserAccountConfiguredResponse:
@@ -122,7 +135,7 @@ def is_user_account_configured(
 
 @user_accounts_api.route("/email_available/", methods=["GET"])
 @service_endpoint()
-@validate()
+@spec.validate(resp=ResponseSpec(HTTP_200=appwsrv_schema.IsEmailAvailableResponse))
 def is_email_available(
     query: appwsrv_schema.IsEmailAvailableRequestParams,
 ) -> appwsrv_schema.IsEmailAvailableResponse:

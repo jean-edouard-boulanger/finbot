@@ -14,9 +14,9 @@ from typing import (
 
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-from pydantic import BaseModel
 
 from finbot.core.errors import FinbotError
+from finbot.core.schema import BaseModel
 from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationFailure
 from finbot.providers.schema import (

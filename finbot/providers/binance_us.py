@@ -2,9 +2,10 @@ from typing import Any, Iterator, Optional, Tuple
 
 from binance.client import Client as Binance
 from binance.exceptions import BinanceAPIException
-from pydantic import BaseModel, SecretStr
+from pydantic.v1 import SecretStr
 
 from finbot.core.crypto_market import CryptoMarket
+from finbot.core.schema import BaseModel
 from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationFailure
 from finbot.providers.schema import (

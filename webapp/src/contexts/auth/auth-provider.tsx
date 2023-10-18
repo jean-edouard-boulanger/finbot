@@ -31,12 +31,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = (props) => {
               updateAuthState(null);
             }
             return error;
-          }
+          },
         );
     }
     if (newAuthState === null && responseInterceptorIdRef.current !== null) {
       axiosInstance.interceptors.response.eject(
-        responseInterceptorIdRef.current
+        responseInterceptorIdRef.current,
       );
       responseInterceptorIdRef.current = null;
     }

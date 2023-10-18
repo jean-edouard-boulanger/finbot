@@ -7,15 +7,11 @@ from finbot.apps.appwsrv import schema as appwsrv_schema
 from finbot.apps.appwsrv import serializer
 from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
 from finbot.apps.appwsrv.db import db_session
+from finbot.apps.appwsrv.spec import ResponseSpec, spec
 from finbot.core import email_delivery
 from finbot.core.email_delivery import Email, EmailService
 from finbot.core.kv_store import DBKVStore
-from finbot.core.web_service import (
-    get_user_account_id,
-    jwt_required,
-    service_endpoint,
-    validate,
-)
+from finbot.core.web_service import get_user_account_id, jwt_required, service_endpoint
 from finbot.model import repository
 
 admin_api = Blueprint(
@@ -27,7 +23,9 @@ kv_store = DBKVStore(db_session)
 @admin_api.route("/settings/email_delivery/providers/", methods=["GET"])
 @jwt_required()
 @service_endpoint()
-@validate()
+@spec.validate(
+    resp=ResponseSpec(HTTP_200=appwsrv_schema.GetEmailDeliveryProvidersResponse)
+)
 def get_email_delivery_providers() -> appwsrv_schema.GetEmailDeliveryProvidersResponse:
     return appwsrv_schema.GetEmailDeliveryProvidersResponse(
         providers=[
@@ -44,7 +42,9 @@ def get_email_delivery_providers() -> appwsrv_schema.GetEmailDeliveryProvidersRe
 @admin_api.route("/settings/email_delivery/", methods=["GET"])
 @jwt_required()
 @service_endpoint()
-@validate()
+@spec.validate(
+    resp=ResponseSpec(HTTP_200=appwsrv_schema.GetEmailDeliverySettingsResponse)
+)
 def get_email_delivery_settings() -> appwsrv_schema.GetEmailDeliverySettingsResponse:
     settings = kv_store.get_entity(email_delivery.DeliverySettings)
     return appwsrv_schema.GetEmailDeliverySettingsResponse(
@@ -55,16 +55,18 @@ def get_email_delivery_settings() -> appwsrv_schema.GetEmailDeliverySettingsResp
 @admin_api.route("/settings/email_delivery/", methods=["PUT"])
 @jwt_required()
 @service_endpoint()
-@validate()
+@spec.validate(
+    resp=ResponseSpec(HTTP_200=appwsrv_schema.SetEmailDeliverySettingsResponse)
+)
 def set_email_delivery_settings(
-    body: appwsrv_schema.EmailDeliverySettings,
+    json: appwsrv_schema.EmailDeliverySettings,
     query: appwsrv_schema.SetEmailDeliverySettingsParams,
 ) -> appwsrv_schema.SetEmailDeliverySettingsResponse:
     delivery_settings = email_delivery.DeliverySettings(
-        subject_prefix=body.subject_prefix,
-        sender_name=body.sender_name,
-        provider_id=body.provider_id,
-        provider_settings=body.provider_settings,
+        subject_prefix=json.subject_prefix,
+        sender_name=json.sender_name,
+        provider_id=json.provider_id,
+        provider_settings=json.provider_settings,
     )
     if query.do_validate:
         try:
@@ -94,7 +96,9 @@ def set_email_delivery_settings(
 @admin_api.route("/settings/email_delivery/", methods=["DELETE"])
 @jwt_required()
 @service_endpoint()
-@validate()
+@spec.validate(
+    resp=ResponseSpec(HTTP_200=appwsrv_schema.RemoveEmailDeliverySettingsResponse)
+)
 def remove_email_delivery_settings() -> (
     appwsrv_schema.RemoveEmailDeliverySettingsResponse
 ):

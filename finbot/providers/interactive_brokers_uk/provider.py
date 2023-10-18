@@ -5,8 +5,9 @@ from functools import cached_property
 from typing import Any, Generator, cast
 
 import pgpy
-from pydantic import BaseModel, SecretStr
+from pydantic.v1 import SecretStr
 
+from finbot.core.schema import BaseModel
 from finbot.core.utils import some
 from finbot.providers.base import ProviderBase
 from finbot.providers.interactive_brokers_uk.flex_report_parser import (

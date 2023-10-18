@@ -58,7 +58,7 @@ export interface RelativeValuationChangeProps {
 }
 
 export const RelativeValuationChange: React.FC<RelativeValuationChangeProps> = (
-  props
+  props,
 ) => {
   const { amount } = props;
   if (!amount || amount === 0.0) {

@@ -2,7 +2,8 @@ import logging
 from collections import OrderedDict, defaultdict
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
-from typing import Optional, Union
+from http import HTTPStatus
+from typing import Literal, Optional, Union
 
 from flask import Blueprint
 
@@ -13,11 +14,12 @@ from finbot.apps.appwsrv.core import formatting_rules
 from finbot.apps.appwsrv.core import valuation as appwsrv_valuation
 from finbot.apps.appwsrv.core.series import order_series_by_last_value
 from finbot.apps.appwsrv.db import db_session
+from finbot.apps.appwsrv.spec import ResponseSpec, spec
 from finbot.core import schema as core_schema
 from finbot.core import timeseries
 from finbot.core.errors import InvalidUserInput, MissingUserData
 from finbot.core.utils import now_utc, some
-from finbot.core.web_service import jwt_required, service_endpoint, validate
+from finbot.core.web_service import jwt_required, service_endpoint
 from finbot.model import (
     SubAccountItemType,
     SubAccountItemValuationHistoryEntry,
@@ -44,15 +46,24 @@ user_account_valuation_api = Blueprint(
 @user_account_valuation_api.route("/trigger/", methods=["POST"])
 @jwt_required()
 @service_endpoint()
-@validate()
-def trigger_user_account_valuation(user_account_id: int) -> None:
+@spec.validate(
+    resp=ResponseSpec(HTTP_202=appwsrv_schema.TriggerUserAccountValuationResponse)
+)
+def trigger_user_account_valuation(
+    user_account_id: int,
+) -> tuple[
+    appwsrv_schema.TriggerUserAccountValuationResponse, Literal[HTTPStatus.ACCEPTED]
+]:
     appwsrv_valuation.trigger_valuation(user_account_id)
+    return appwsrv_schema.TriggerUserAccountValuationResponse(), HTTPStatus.ACCEPTED
 
 
 @user_account_valuation_api.route("/", methods=["GET"])
 @jwt_required()
 @service_endpoint()
-@validate()
+@spec.validate(
+    resp=ResponseSpec(HTTP_200=appwsrv_schema.GetUserAccountValuationResponse)
+)
 def get_user_account_valuation(
     user_account_id: int,
 ) -> appwsrv_schema.GetUserAccountValuationResponse:
@@ -98,7 +109,11 @@ def get_user_account_valuation(
 @user_account_valuation_api.route("/by/asset_type/", methods=["GET"])
 @jwt_required()
 @service_endpoint()
-@validate()
+@spec.validate(
+    resp=ResponseSpec(
+        HTTP_200=appwsrv_schema.GetUserAccountValuationByAssetTypeResponse
+    )
+)
 def get_user_account_valuation_by_asset_type(
     user_account_id: int,
 ) -> appwsrv_schema.GetUserAccountValuationByAssetTypeResponse:
@@ -142,7 +157,11 @@ def get_user_account_valuation_by_asset_type(
 @user_account_valuation_api.route("/by/asset_class/", methods=["GET"])
 @jwt_required()
 @service_endpoint()
-@validate()
+@spec.validate(
+    resp=ResponseSpec(
+        HTTP_200=appwsrv_schema.GetUserAccountValuationByAssetClassResponse
+    )
+)
 def get_user_account_valuation_by_asset_class(
     user_account_id: int,
 ) -> appwsrv_schema.GetUserAccountValuationByAssetClassResponse:
@@ -183,9 +202,12 @@ def get_user_account_valuation_by_asset_class(
 @user_account_valuation_api.route("/history/", methods=["GET"])
 @jwt_required()
 @service_endpoint()
-@validate()
+@spec.validate(
+    resp=ResponseSpec(HTTP_200=appwsrv_schema.GetUserAccountValuationHistoryResponse)
+)
 def get_user_account_valuation_history(
-    user_account_id: int, query: appwsrv_schema.HistoricalValuationParams
+    user_account_id: int,
+    query: appwsrv_schema.HistoricalValuationParams,
 ) -> appwsrv_schema.GetUserAccountValuationHistoryResponse:
     settings = repository.get_user_account_settings(db_session, user_account_id)
     from_time = query.from_time
@@ -235,9 +257,14 @@ def get_user_account_valuation_history(
 @user_account_valuation_api.route("/history/by/asset_type/", methods=["GET"])
 @jwt_required()
 @service_endpoint()
-@validate()
+@spec.validate(
+    resp=ResponseSpec(
+        HTTP_200=appwsrv_schema.GetUserAccountValuationHistoryByAssetTypeResponse
+    )
+)
 def get_user_account_valuation_history_by_asset_type(
-    user_account_id: int, query: appwsrv_schema.HistoricalValuationParams
+    user_account_id: int,
+    query: appwsrv_schema.HistoricalValuationParams,
 ) -> appwsrv_schema.GetUserAccountValuationHistoryByAssetTypeResponse:
     settings = repository.get_user_account_settings(db_session, user_account_id)
     from_time = query.from_time
@@ -316,9 +343,14 @@ def get_user_account_valuation_history_by_asset_type(
 @user_account_valuation_api.route("/history/by/asset_class/", methods=["GET"])
 @jwt_required()
 @service_endpoint()
-@validate()
+@spec.validate(
+    resp=ResponseSpec(
+        HTTP_200=appwsrv_schema.GetUserAccountValuationHistoryByAssetClassResponse
+    )
+)
 def get_user_account_valuation_history_by_asset_class(
-    user_account_id: int, query: appwsrv_schema.HistoricalValuationParams
+    user_account_id: int,
+    query: appwsrv_schema.HistoricalValuationParams,
 ) -> appwsrv_schema.GetUserAccountValuationHistoryByAssetClassResponse:
     settings = repository.get_user_account_settings(db_session, user_account_id)
     from_time = query.from_time

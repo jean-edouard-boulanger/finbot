@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 import requests
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 
 class DisplayAndFormat(BaseModel):

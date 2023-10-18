@@ -4,8 +4,6 @@ import json
 from datetime import date, datetime
 from typing import Any, Optional, TypeVar, Union
 
-import pydantic
-
 from finbot.core.schema import BaseModel
 
 T = TypeVar("T")
@@ -19,7 +17,7 @@ def serialize(data: Any) -> Any:
             return str(key)
         return key
 
-    if isinstance(data, pydantic.BaseModel):
+    if isinstance(data, BaseModel):
         return serialize(data.dict())
     if dataclasses.is_dataclass(data):
         return serialize(dataclasses.asdict(data))
