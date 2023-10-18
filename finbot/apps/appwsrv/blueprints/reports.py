@@ -12,14 +12,10 @@ from finbot.apps.appwsrv.reports.earnings.report import (
 from finbot.apps.appwsrv.reports.holdings.report import (
     generate as generate_holdings_report,
 )
+from finbot.apps.appwsrv.spec import ResponseSpec, spec
 from finbot.core.errors import MissingUserData
 from finbot.core.utils import now_utc
-from finbot.core.web_service import (
-    get_user_account_id,
-    jwt_required,
-    service_endpoint,
-    validate,
-)
+from finbot.core.web_service import get_user_account_id, jwt_required, service_endpoint
 from finbot.model import repository
 
 logger = logging.getLogger(__name__)
@@ -33,7 +29,7 @@ reports_api = Blueprint(
 @reports_api.route("/holdings/", methods=["GET"])
 @jwt_required()
 @service_endpoint()
-@validate()
+@spec.validate(resp=ResponseSpec(HTTP_200=appwsrv_schema.GetHoldingsReportResponse))
 def get_holdings_report() -> appwsrv_schema.GetHoldingsReportResponse:
     history_entry = repository.get_last_history_entry(db_session, get_user_account_id())
     if not history_entry:
@@ -46,7 +42,7 @@ def get_holdings_report() -> appwsrv_schema.GetHoldingsReportResponse:
 @reports_api.route("/earnings/", methods=["GET"])
 @jwt_required()
 @service_endpoint()
-@validate()
+@spec.validate(resp=ResponseSpec(HTTP_200=appwsrv_schema.GetEarningsReportResponse))
 def get_earnings_report() -> appwsrv_schema.GetEarningsReportResponse:
     to_time = now_utc()
     return appwsrv_schema.GetEarningsReportResponse(

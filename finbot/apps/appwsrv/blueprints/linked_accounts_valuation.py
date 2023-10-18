@@ -10,10 +10,11 @@ from finbot.apps.appwsrv import serializer
 from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
 from finbot.apps.appwsrv.core.series import order_series_by_last_value
 from finbot.apps.appwsrv.db import db_session
+from finbot.apps.appwsrv.spec import ResponseSpec, spec
 from finbot.core import schema as core_schema
 from finbot.core.errors import InvalidUserInput
 from finbot.core.utils import some
-from finbot.core.web_service import jwt_required, service_endpoint, validate
+from finbot.core.web_service import jwt_required, service_endpoint
 from finbot.model import repository
 
 logger = logging.getLogger(__name__)
@@ -29,7 +30,9 @@ linked_accounts_valuation_api = Blueprint(
 @linked_accounts_valuation_api.route("/", methods=["GET"])
 @jwt_required()
 @service_endpoint()
-@validate()
+@spec.validate(
+    resp=ResponseSpec(HTTP_200=appwsrv_schema.GetLinkedAccountsValuationResponse)
+)
 def get_linked_accounts_valuation(
     user_account_id: int,
 ) -> appwsrv_schema.GetLinkedAccountsValuationResponse:
@@ -74,9 +77,12 @@ def get_linked_accounts_valuation(
 @linked_accounts_valuation_api.route("/history/", methods=["GET"])
 @jwt_required()
 @service_endpoint()
-@validate()
+@spec.validate(
+    resp=ResponseSpec(HTTP_200=appwsrv_schema.GetLinkedAccountsHistoricalValuation)
+)
 def get_linked_accounts_historical_valuation(
-    user_account_id: int, query: appwsrv_schema.HistoricalValuationParams
+    user_account_id: int,
+    query: appwsrv_schema.HistoricalValuationParams,
 ) -> appwsrv_schema.GetLinkedAccountsHistoricalValuation:
     settings = repository.get_user_account_settings(db_session, user_account_id)
     from_time = query.from_time

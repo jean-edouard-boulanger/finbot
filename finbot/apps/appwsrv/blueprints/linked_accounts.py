@@ -1,7 +1,7 @@
-import json
 import logging
 import uuid
 
+import orjson
 from flask import Blueprint
 from sqlalchemy.exc import IntegrityError
 
@@ -11,13 +11,14 @@ from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
 from finbot.apps.appwsrv.core import providers as appwsrv_providers
 from finbot.apps.appwsrv.core import valuation as appwsrv_valuation
 from finbot.apps.appwsrv.db import db_session
+from finbot.apps.appwsrv.spec import ResponseSpec, spec
 from finbot.apps.finbotwsrv.client import FinbotwsrvClient
 from finbot.core import environment, secure
 from finbot.core.environment import is_plaid_configured
 from finbot.core.errors import InvalidOperation, InvalidUserInput
 from finbot.core.plaid import PlaidClient
 from finbot.core.utils import some
-from finbot.core.web_service import jwt_required, service_endpoint, validate
+from finbot.core.web_service import jwt_required, service_endpoint
 from finbot.model import LinkedAccount, repository
 from finbot.providers.schema import CurrencyCode
 
@@ -33,7 +34,7 @@ linked_accounts_api = Blueprint(
 @linked_accounts_api.route("/", methods=["GET"])
 @jwt_required()
 @service_endpoint()
-@validate()
+@spec.validate(resp=ResponseSpec(HTTP_200=appwsrv_schema.GetLinkedAccountsResponse))
 def get_linked_accounts(
     user_account_id: int,
 ) -> appwsrv_schema.GetLinkedAccountsResponse:
@@ -54,10 +55,10 @@ def get_linked_accounts(
 @linked_accounts_api.route("/", methods=["POST"])
 @jwt_required()
 @service_endpoint()
-@validate()
+@spec.validate(resp=ResponseSpec(HTTP_200=appwsrv_schema.LinkAccountResponse))
 def link_new_account(
     user_account_id: int,
-    body: appwsrv_schema.LinkAccountRequest,
+    json: appwsrv_schema.LinkAccountRequest,
     query: appwsrv_schema.LinkAccountCommitParams,
 ) -> appwsrv_schema.LinkAccountResponse:
     do_validate = query.do_validate
@@ -66,13 +67,13 @@ def link_new_account(
 
     user_account = repository.get_user_account(db_session, user_account_id)
 
-    provider_id = body.provider_id
+    provider_id = json.provider_id
     provider = repository.get_provider(db_session, provider_id)
 
     is_plaid = provider.id == appwsrv_providers.PLAID_PROVIDER_ID
     if is_plaid and not is_plaid_configured():
         raise InvalidUserInput("user account is not setup for Plaid")
-    credentials = body.credentials
+    credentials = json.credentials
     if is_plaid:
         credentials = (
             PlaidClient().exchange_public_token(credentials["public_token"]).dict()
@@ -91,7 +92,7 @@ def link_new_account(
         )
 
     if do_persist:
-        account_name: str = body.account_name
+        account_name: str = json.account_name
         if repository.linked_account_exists(db_session, user_account_id, account_name):
             raise InvalidUserInput(
                 f"A linked account with name '{account_name}' already exists"
@@ -105,12 +106,12 @@ def link_new_account(
         try:
             new_linked_account: LinkedAccount
             with db_session.persist(LinkedAccount()) as new_linked_account:
-                new_linked_account.account_colour = body.account_colour
+                new_linked_account.account_colour = json.account_colour
                 new_linked_account.user_account_id = user_account.id
-                new_linked_account.provider_id = body.provider_id
+                new_linked_account.provider_id = json.provider_id
                 new_linked_account.account_name = account_name
                 new_linked_account.encrypted_credentials = secure.fernet_encrypt(
-                    json.dumps(credentials).encode(),
+                    orjson.dumps(credentials),
                     environment.get_secret_key().encode(),
                 ).decode()
         except IntegrityError:
@@ -130,16 +131,17 @@ def link_new_account(
 @linked_accounts_api.route("/<int:linked_account_id>/", methods=["GET"])
 @jwt_required()
 @service_endpoint()
-@validate()
+@spec.validate(resp=ResponseSpec(HTTP_200=appwsrv_schema.GetLinkedAccountResponse))
 def get_linked_account(
-    user_account_id: int, linked_account_id: int
+    user_account_id: int,
+    linked_account_id: int,
 ) -> appwsrv_schema.GetLinkedAccountResponse:
     linked_account = repository.get_linked_account(
         db_session, user_account_id, linked_account_id
     )
     credentials = None
     if appwsrv_providers.is_plaid_linked_account(linked_account):
-        credentials = json.loads(
+        credentials = orjson.loads(
             secure.fernet_decrypt(
                 some(linked_account.encrypted_credentials).encode(),
                 environment.get_secret_key().encode(),
@@ -165,9 +167,10 @@ def get_linked_account(
 @linked_accounts_api.route("/<int:linked_account_id>/", methods=["DELETE"])
 @jwt_required()
 @service_endpoint()
-@validate()
+@spec.validate(resp=ResponseSpec(HTTP_200=appwsrv_schema.DeleteLinkedAccountResponse))
 def delete_linked_account(
-    user_account_id: int, linked_account_id: int
+    user_account_id: int,
+    linked_account_id: int,
 ) -> appwsrv_schema.DeleteLinkedAccountResponse:
     linked_account = repository.get_linked_account(
         db_session, user_account_id, linked_account_id
@@ -186,11 +189,13 @@ def delete_linked_account(
 @linked_accounts_api.route("/<int:linked_account_id>/metadata/", methods=["PUT"])
 @jwt_required()
 @service_endpoint()
-@validate()
+@spec.validate(
+    resp=ResponseSpec(HTTP_200=appwsrv_schema.UpdateLinkedAccountMetadataResponse)
+)
 def update_linked_account_metadata(
     user_account_id: int,
     linked_account_id: int,
-    body: appwsrv_schema.UpdateLinkedAccountMetadataRequest,
+    json: appwsrv_schema.UpdateLinkedAccountMetadataRequest,
 ) -> appwsrv_schema.UpdateLinkedAccountMetadataResponse:
     linked_account = repository.get_linked_account(
         db_session, user_account_id, linked_account_id
@@ -200,7 +205,7 @@ def update_linked_account_metadata(
             f"Linked account '{linked_account.account_name}' is frozen and cannot be updated."
         )
     with db_session.persist(linked_account):
-        if account_name := body.account_name:
+        if account_name := json.account_name:
             if repository.linked_account_exists(
                 db_session, user_account_id, account_name
             ):
@@ -208,9 +213,9 @@ def update_linked_account_metadata(
                     f"A linked account with name '{account_name}' already exists"
                 )
             linked_account.account_name = account_name
-        if account_colour := body.account_colour:
+        if account_colour := json.account_colour:
             linked_account.account_colour = account_colour
-        if body.frozen is True:
+        if json.frozen is True:
             linked_account.frozen = True
     return appwsrv_schema.UpdateLinkedAccountMetadataResponse()
 
@@ -218,11 +223,13 @@ def update_linked_account_metadata(
 @linked_accounts_api.route("/<int:linked_account_id>/credentials/", methods=["PUT"])
 @jwt_required()
 @service_endpoint()
-@validate()
+@spec.validate(
+    resp=ResponseSpec(HTTP_200=appwsrv_schema.UpdateLinkedAccountCredentialsResponse)
+)
 def update_linked_account_credentials(
     user_account_id: int,
     linked_account_id: int,
-    body: appwsrv_schema.UpdateLinkedAccountCredentialsRequest,
+    json: appwsrv_schema.UpdateLinkedAccountCredentialsRequest,
     query: appwsrv_schema.LinkAccountCommitParams,
 ) -> appwsrv_schema.UpdateLinkedAccountCredentialsResponse:
     do_validate = query.do_validate
@@ -245,9 +252,9 @@ def update_linked_account_credentials(
     if is_plaid and not is_plaid_configured():
         raise InvalidUserInput("user account is not setup for Plaid")
 
-    credentials = body.credentials
+    credentials = json.credentials
     if is_plaid:
-        credentials = json.loads(
+        credentials = orjson.loads(
             secure.fernet_decrypt(
                 some(linked_account.encrypted_credentials).encode(),
                 environment.get_secret_key().encode(),
@@ -265,7 +272,8 @@ def update_linked_account_credentials(
     if do_persist:
         with db_session.persist(linked_account):
             linked_account.encrypted_credentials = secure.fernet_encrypt(
-                json.dumps(credentials).encode(), environment.get_secret_key().encode()
+                orjson.dumps(credentials),
+                environment.get_secret_key().encode(),
             ).decode()
 
     if do_persist:

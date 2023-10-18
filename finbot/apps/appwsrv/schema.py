@@ -233,6 +233,10 @@ class IsEmailAvailableResponse(BaseModel):
     available: bool
 
 
+class TriggerUserAccountValuationResponse(BaseModel):
+    pass
+
+
 class UserAccountValuationSparklineEntry(BaseModel):
     effective_at: datetime
     value: float | None
