@@ -20,7 +20,7 @@ playwright==1.39.0
 price-parser==0.3.4
 psycopg2==2.9.9
 pycoingecko==3.1.0
-pydantic==1.10.8
+pydantic==2.4.2
 python-binance==1.0.19
 pytz==2023.3
 requests==2.31.0

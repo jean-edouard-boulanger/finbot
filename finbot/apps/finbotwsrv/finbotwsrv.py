@@ -28,7 +28,7 @@ db_engine = create_engine(FINBOT_ENV.database_url)
 db_session = Session(scoped_session(sessionmaker(bind=db_engine)))
 
 app = Flask(__name__)
-app.json = CustomJsonProvider(app)
+app.json = CustomJsonProvider(app)  # type: ignore
 
 spec = SpecTree(
     "flask",

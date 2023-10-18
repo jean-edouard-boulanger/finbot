@@ -1,7 +1,7 @@
 import enum
 from typing import Any, NewType, TypeAlias
 
-from pydantic import BaseModel
+from finbot.core.schema import BaseModel
 
 CurrencyCode = NewType("CurrencyCode", str)
 ProviderSpecificPayload: TypeAlias = dict[str, str | int | float | bool]

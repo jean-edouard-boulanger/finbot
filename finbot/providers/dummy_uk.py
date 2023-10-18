@@ -1,7 +1,6 @@
 from typing import Any
 
-from pydantic import BaseModel
-
+from finbot.core.schema import BaseModel
 from finbot.providers.base import ProviderBase
 from finbot.providers.schema import (
     Account,

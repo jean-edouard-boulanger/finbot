@@ -27,7 +27,7 @@ configure_logging(FINBOT_ENV.desired_log_level)
 
 
 app = Flask(__name__)
-app.json = CustomJsonProvider(app)
+app.json = CustomJsonProvider(app)  # type: ignore
 app.config["JWT_SECRET_KEY"] = FINBOT_ENV.jwt_secret_key
 
 CORS(app)

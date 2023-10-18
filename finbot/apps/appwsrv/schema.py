@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from typing import Any, Literal, TypeAlias
 
-from pydantic import Extra, Field, SecretStr
+from pydantic.v1 import Extra, Field, SecretStr
 
 from finbot.apps.appwsrv.reports.earnings import schema as earnings_schema
 from finbot.apps.appwsrv.reports.holdings import schema as holdings_schema

@@ -1,9 +1,10 @@
 from typing import Any, Generator
 
-from pydantic import BaseModel, SecretStr
+from pydantic.v1 import SecretStr
 
 from finbot.core import saxo
 from finbot.core.environment import get_saxo_gateway_url
+from finbot.core.schema import BaseModel
 from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationFailure
 from finbot.providers.schema import (

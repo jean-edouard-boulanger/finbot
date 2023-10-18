@@ -1,12 +1,12 @@
 from textwrap import dedent
 from typing import Callable, Protocol
 
-from pydantic import BaseModel
 from twilio.rest import Client as TwilioClient
 
 from finbot import model
 from finbot.core import email_delivery
 from finbot.core.environment import TwilioEnvironment
+from finbot.core.schema import BaseModel
 
 
 class TwilioSettings(BaseModel):

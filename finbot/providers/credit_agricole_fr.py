@@ -2,8 +2,9 @@ import json
 from typing import Any, Generator, cast
 
 from playwright.sync_api import Locator
-from pydantic import BaseModel, SecretStr
+from pydantic.v1 import SecretStr
 
+from finbot.core.schema import BaseModel
 from finbot.core.utils import raise_
 from finbot.providers.errors import AuthenticationFailure
 from finbot.providers.playwright_base import (

@@ -1,8 +1,6 @@
 import abc
 from typing import Any, Self
 
-from pydantic import BaseModel
-
 from finbot.core import schema as core_schema
 from finbot.providers.errors import RetiredProviderError
 from finbot.providers.schema import Assets, Balances, CurrencyCode, Liabilities
@@ -10,7 +8,7 @@ from finbot.providers.schema import Assets, Balances, CurrencyCode, Liabilities
 
 class ProviderBase(object):
     description: str
-    credentials_type: type[BaseModel]
+    credentials_type: type[core_schema.BaseModel]
 
     def __init__(
         self,
@@ -61,7 +59,7 @@ class ProviderBase(object):
 
 
 class RetiredProvider(ProviderBase):
-    credentials_type = BaseModel
+    credentials_type = core_schema.BaseModel
     description = "Retired provider"
 
     def __init__(self, **kwargs: Any):

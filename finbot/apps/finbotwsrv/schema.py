@@ -1,9 +1,7 @@
 from enum import Enum
 from typing import Literal, TypeAlias
 
-from pydantic import BaseModel
-
-from finbot.core.schema import ApplicationErrorData, CredentialsPayloadType
+from finbot.core.schema import ApplicationErrorData, BaseModel, CredentialsPayloadType
 from finbot.providers import schema as providers_schema
 
 
