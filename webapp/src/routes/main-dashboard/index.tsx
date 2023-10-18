@@ -75,7 +75,7 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
                 Net Worth{" "}
                 {valuation !== null &&
                   `(${DateTime.fromISO(valuation.date).toLocaleString(
-                    DateTime.DATETIME_FULL
+                    DateTime.DATETIME_FULL,
                   )})`}
               </Card.Title>
               {valuation !== null && (
@@ -116,7 +116,7 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
                 <RelativeValuationChange
                   amount={getRelativeChange(
                     valuation.value - valuation.change.change_1day,
-                    valuation.value
+                    valuation.value,
                   )}
                 />
               )}

@@ -50,7 +50,7 @@ function getNodeValuation(node: HoldingsReportNode): number | undefined {
 }
 
 const GridMetadataRow = (
-  props: TreeGridRowProps<HoldingsReportMetadataNode>
+  props: TreeGridRowProps<HoldingsReportMetadataNode>,
 ) => {
   const { data, ...rest } = props;
   return (
@@ -163,7 +163,7 @@ export interface HoldingsReportPanelProps {
 }
 
 export const HoldingsReportPanel: React.FC<HoldingsReportPanelProps> = (
-  props
+  props,
 ) => {
   const { userAccountId, locale, moneyFormatter } = props;
 

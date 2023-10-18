@@ -77,7 +77,7 @@ export const UpdateLinkedAccountPanel: React.FC = () => {
   const { userAccountId } = useContext(AuthContext);
   const { linkedAccountId } = useParams<Record<string, string | undefined>>();
   const [linkedAccount, setLinkedAccount] = useState<LinkedAccount | null>(
-    null
+    null,
   );
   useEffect(() => {
     const fetch = async () => {
@@ -95,7 +95,7 @@ export const UpdateLinkedAccountPanel: React.FC = () => {
 type LinkedAccountStatus = "stable" | "unstable" | "frozen" | "unknown";
 
 const getLinkedAccountStatus = (
-  linkedAccount: LinkedAccount
+  linkedAccount: LinkedAccount,
 ): LinkedAccountStatus => {
   if (linkedAccount.frozen) {
     return "frozen";
@@ -104,7 +104,7 @@ const getLinkedAccountStatus = (
 };
 
 const getLinkedAccountLastError = (
-  linkedAccount: LinkedAccount
+  linkedAccount: LinkedAccount,
 ): FinbotErrorMetadata | null => {
   const errors = (linkedAccount.status ?? { errors: [] }).errors;
   if (errors === null || errors.length === 0) {
@@ -115,7 +115,7 @@ const getLinkedAccountLastError = (
 
 const activeAccountsFirst = (
   account1: LinkedAccount,
-  account2: LinkedAccount
+  account2: LinkedAccount,
 ): number => {
   return Number(account1.frozen) - Number(account2.frozen);
 };
@@ -150,7 +150,7 @@ export const LinkedAccountStatusPanel: React.FC = () => {
   const { userAccountId } = useContext(AuthContext);
   const { linkedAccountId } = useParams<Record<string, string | undefined>>();
   const [linkedAccount, setLinkedAccount] = useState<LinkedAccount | null>(
-    null
+    null,
   );
   const [showInternalDetails] = useState<boolean>(true);
   useEffect(() => {
@@ -303,7 +303,7 @@ export const AccountsPanel: React.FC<AccountsPanelProps> = () => {
       await refreshAccounts();
     } catch (e) {
       toast.error(
-        `Unable to unlink account '${linkedAccount.account_name}': ${e}`
+        `Unable to unlink account '${linkedAccount.account_name}': ${e}`,
       );
     }
   };
@@ -324,7 +324,7 @@ export const AccountsPanel: React.FC<AccountsPanelProps> = () => {
           {accounts.sort(activeAccountsFirst).map((linkedAccount) => {
             const linkedAccountStatus = getLinkedAccountStatus(linkedAccount);
             const lastSnapshotTime = asDateTime(
-              linkedAccount!.status?.last_snapshot_time
+              linkedAccount!.status?.last_snapshot_time,
             );
             return (
               <tr key={`account-${linkedAccount.id}`}>

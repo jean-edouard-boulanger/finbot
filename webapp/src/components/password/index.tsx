@@ -56,7 +56,7 @@ export interface PasswordValidationResult {
 }
 
 export const validatePassword = (
-  input: PasswordValidationInput
+  input: PasswordValidationInput,
 ): PasswordValidationResult => {
   let allValid = true;
   const rules: Array<PasswordValidationRuleResult> =

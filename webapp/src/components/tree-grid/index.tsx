@@ -24,14 +24,14 @@ export type SortBy<UserNodeType> = (node: UserNodeType) => number;
 function topologicalSort<UserNodeType extends TreeNode<UserNodeType>>(
   tree: UserNodeType,
   sortBy: SortBy<UserNodeType>,
-  expanded: boolean
+  expanded: boolean,
 ): Topology<UserNodeType> {
   let idAlloc = 0;
   function dfs(
     node: UserNodeType,
     res: Array<InternalTreeNode<UserNodeType>>,
     level: number,
-    order: number
+    order: number,
   ): void {
     res.push({
       id: idAlloc++,
@@ -57,7 +57,7 @@ function topologicalSort<UserNodeType extends TreeNode<UserNodeType>>(
 }
 
 function refreshTopology<UserNodeType extends TreeNode<UserNodeType>>(
-  topology: Topology<UserNodeType>
+  topology: Topology<UserNodeType>,
 ): void {
   let displayLimit: number | null = null;
   topology.forEach((node) => {
@@ -76,7 +76,7 @@ function refreshTopology<UserNodeType extends TreeNode<UserNodeType>>(
 }
 
 function getExpanderIcon<UserNodeType extends TreeNode<UserNodeType>>(
-  node: InternalTreeNode<UserNodeType>
+  node: InternalTreeNode<UserNodeType>,
 ) {
   if ((node.data.children ?? []).length === 0) {
     return () => null;
@@ -128,7 +128,7 @@ export type TreeGridRowProps<UserNodeType extends TreeNode<UserNodeType>> =
   };
 
 export function TreeGrid<UserNodeType extends TreeNode<UserNodeType>>(
-  props: TreeGridProps<UserNodeType>
+  props: TreeGridProps<UserNodeType>,
 ): JSX.Element {
   const { tree, sortBy = () => 0, expanded = false } = props;
   const Row = props.rowAs;

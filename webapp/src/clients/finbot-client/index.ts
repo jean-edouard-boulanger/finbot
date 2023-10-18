@@ -120,7 +120,7 @@ export class FinbotClient {
       `/accounts/email_available/`,
       {
         params,
-      }
+      },
     );
     return handleResponse<IsEmailAvailableResponse>(response).available;
   }
@@ -153,7 +153,7 @@ export class FinbotClient {
       {
         old_password,
         new_password,
-      }
+      },
     );
     return handleResponse<void>(response);
   }
@@ -170,7 +170,7 @@ export class FinbotClient {
         full_name,
         email,
         mobile_phone_number,
-      }
+      },
     );
     return handleResponse<UpdateAccountProfileResponse>(response).profile;
   }
@@ -179,7 +179,7 @@ export class FinbotClient {
     account_id,
   }: IsAccountConfiguredRequest): Promise<boolean> {
     const response = await this.axiosInstance.get(
-      `/accounts/${account_id}/is_configured/`
+      `/accounts/${account_id}/is_configured/`,
     );
     return handleResponse<IsAccountConfiguredResponse>(response).configured;
   }
@@ -193,7 +193,7 @@ export class FinbotClient {
     account_id,
   }: GetAccountValuationRequest): Promise<UserAccountValuation | null> {
     const response = await this.axiosInstance.get(
-      `/accounts/${account_id}/valuation/`
+      `/accounts/${account_id}/valuation/`,
     );
     return handleResponse<GetAccountValuationResponse>(response).valuation;
   }
@@ -211,7 +211,7 @@ export class FinbotClient {
     };
     const response = await this.axiosInstance.get(
       `/accounts/${account_id}/valuation/history/`,
-      { params }
+      { params },
     );
     return handleResponse<GetAccountHistoricalValuationResponse>(response)
       .historical_valuation;
@@ -230,7 +230,7 @@ export class FinbotClient {
     };
     const response = await this.axiosInstance.get(
       `/accounts/${account_id}/valuation/history/by/asset_type/`,
-      { params }
+      { params },
     );
     return handleResponse<GetAccountHistoricalValuationResponse>(response)
       .historical_valuation;
@@ -249,7 +249,7 @@ export class FinbotClient {
     };
     const response = await this.axiosInstance.get(
       `/accounts/${account_id}/valuation/history/by/asset_class/`,
-      { params }
+      { params },
     );
     return handleResponse<GetAccountHistoricalValuationResponse>(response)
       .historical_valuation;
@@ -259,7 +259,7 @@ export class FinbotClient {
     account_id,
   }: GetLinkedAccountsValuationRequest): Promise<LinkedAccountsValuation> {
     const response = await this.axiosInstance.get(
-      `/accounts/${account_id}/linked_accounts/valuation/`
+      `/accounts/${account_id}/linked_accounts/valuation/`,
     );
     return handleResponse<GetLinkedAccountsValuationResponse>(response)
       .valuation;
@@ -278,10 +278,10 @@ export class FinbotClient {
     };
     const response = await this.axiosInstance.get(
       `/accounts/${account_id}/linked_accounts/valuation/history/`,
-      { params }
+      { params },
     );
     return handleResponse<GetLinkedAccountsHistoricalValuationResponse>(
-      response
+      response,
     ).historical_valuation;
   }
 
@@ -289,7 +289,7 @@ export class FinbotClient {
     account_id,
   }: GetUserAccountValuationByAssetTypeRequest): Promise<UserAccountValuationByAssetType> {
     const response = await this.axiosInstance.get(
-      `/accounts/${account_id}/valuation/by/asset_type/`
+      `/accounts/${account_id}/valuation/by/asset_type/`,
     );
     return handleResponse<GetUserAccountValuationByAssetTypeResponse>(response)
       .valuation;
@@ -299,7 +299,7 @@ export class FinbotClient {
     account_id,
   }: GetUserAccountValuationByAssetClassRequest): Promise<UserAccountValuationByAssetClass> {
     const response = await this.axiosInstance.get(
-      `/accounts/${account_id}/valuation/by/asset_class/`
+      `/accounts/${account_id}/valuation/by/asset_class/`,
     );
     return handleResponse<GetUserAccountValuationByAssetClassResponse>(response)
       .valuation;
@@ -309,7 +309,7 @@ export class FinbotClient {
     account_id,
   }: GetLinkedAccountsRequest): Promise<Array<LinkedAccount>> {
     const response = await this.axiosInstance.get(
-      `/accounts/${account_id}/linked_accounts/`
+      `/accounts/${account_id}/linked_accounts/`,
     );
     return handleResponse<GetLinkedAccountsResponse>(response).linked_accounts;
   }
@@ -319,7 +319,7 @@ export class FinbotClient {
     linked_account_id,
   }: GetLinkedAccountRequest): Promise<LinkedAccount> {
     const response = await this.axiosInstance.get(
-      `/accounts/${account_id}/linked_accounts/${linked_account_id}/`
+      `/accounts/${account_id}/linked_accounts/${linked_account_id}/`,
     );
     return handleResponse<GetLinkedAccountResponse>(response).linked_account;
   }
@@ -337,7 +337,7 @@ export class FinbotClient {
         account_name,
         account_colour,
         frozen,
-      }
+      },
     );
     return handleResponse(response);
   }
@@ -355,7 +355,7 @@ export class FinbotClient {
       }&persist=${persist ?? 0}`,
       {
         credentials,
-      }
+      },
     );
     return handleResponse(response);
   }
@@ -365,7 +365,7 @@ export class FinbotClient {
     linked_account_id,
   }: DeleteLinkedAccountRequest): Promise<void> {
     const response = await this.axiosInstance.delete(
-      `/accounts/${account_id}/linked_accounts/${linked_account_id}/`
+      `/accounts/${account_id}/linked_accounts/${linked_account_id}/`,
     );
     handleResponse(response);
   }
@@ -382,7 +382,7 @@ export class FinbotClient {
 
   async deleteProvider({ provider_id }: DeleteProviderRequest): Promise<void> {
     const response = await this.axiosInstance.delete(
-      `/providers/${provider_id}/`
+      `/providers/${provider_id}/`,
     );
     handleResponse(response);
   }
@@ -401,7 +401,7 @@ export class FinbotClient {
   }: ValidateLinkedAccountCredentialsRequest): Promise<void> {
     const response = await this.axiosInstance.post(
       `/accounts/${account_id}/linked_accounts/?persist=0`,
-      { provider_id, credentials, account_name, account_colour }
+      { provider_id, credentials, account_name, account_colour },
     );
     handleResponse<void>(response);
   }
@@ -415,7 +415,7 @@ export class FinbotClient {
   }: LinkAccountRequest): Promise<void> {
     const response = await this.axiosInstance.post(
       `/accounts/${account_id}/linked_accounts/?validate=0`,
-      { provider_id, credentials, account_name, account_colour }
+      { provider_id, credentials, account_name, account_colour },
     );
     handleResponse<void>(response);
   }
@@ -437,7 +437,7 @@ export class FinbotClient {
 
   async getEmailDeliveryProviders(): Promise<Array<EmailDeliveryProvider>> {
     const response = await this.axiosInstance.get(
-      `/admin/settings/email_delivery/providers/`
+      `/admin/settings/email_delivery/providers/`,
     );
     return handleResponse<GetEmailDeliveryProvidersResponse>(response)
       .providers;
@@ -445,34 +445,34 @@ export class FinbotClient {
 
   async getEmailDeliverySettings(): Promise<EmailDeliverySettings | null> {
     const response = await this.axiosInstance.get(
-      `/admin/settings/email_delivery/`
+      `/admin/settings/email_delivery/`,
     );
     return handleResponse<GetEmailDeliverySettingsResponse>(response).settings;
   }
 
   async setEmailDeliverySettings(
     settings: EmailDeliverySettings,
-    validate?: boolean
+    validate?: boolean,
   ): Promise<void> {
     const params = { validate: validate ?? false };
     const response = await this.axiosInstance.put(
       `/admin/settings/email_delivery/`,
       settings,
-      { params }
+      { params },
     );
     return handleResponse<void>(response);
   }
 
   async disableEmailDelivery(): Promise<void> {
     const response = await this.axiosInstance.delete(
-      `/admin/settings/email_delivery/`
+      `/admin/settings/email_delivery/`,
     );
     return handleResponse<void>(response);
   }
 
   async getAccountsFormattingRules(): Promise<GetAccountsFormattingRulesResponse> {
     const response = await this.axiosInstance.get(
-      `/formatting_rules/accounts/`
+      `/formatting_rules/accounts/`,
     );
     return handleResponse<GetAccountsFormattingRulesResponse>(response);
   }

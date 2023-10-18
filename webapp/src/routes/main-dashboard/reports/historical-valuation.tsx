@@ -166,7 +166,7 @@ export interface HistoricalValuationProps {
 }
 
 export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
-  props
+  props,
 ) => {
   const { userAccountId, locale, moneyFormatter } = props;
   const { finbotClient } = useContext(ServicesContext);
@@ -188,23 +188,21 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
       };
       switch (selectedLevel.type) {
         case "account": {
-          const data = await finbotClient!.getAccountHistoricalValuation(
-            request
-          );
+          const data =
+            await finbotClient!.getAccountHistoricalValuation(request);
           setHistoricalValuation(data);
           break;
         }
         case "linked_account": {
-          const data = await finbotClient!.getLinkedAccountsHistoricalValuation(
-            request
-          );
+          const data =
+            await finbotClient!.getLinkedAccountsHistoricalValuation(request);
           setHistoricalValuation(data);
           break;
         }
         case "asset_type": {
           const data =
             await finbotClient!.getAccountHistoricalValuationByAssetType(
-              request
+              request,
             );
           setHistoricalValuation(data);
           break;
@@ -212,7 +210,7 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
         case "asset_class": {
           const data =
             await finbotClient!.getAccountHistoricalValuationByAssetClass(
-              request
+              request,
             );
           setHistoricalValuation(data);
           break;
@@ -352,7 +350,7 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
                     return moneyFormatter(
                       value,
                       locale,
-                      historicalValuation.valuation_ccy ?? ""
+                      historicalValuation.valuation_ccy ?? "",
                     );
                   },
                 },
@@ -365,7 +363,7 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
                 width: 1,
               },
               colors: historicalValuation.series_data.series.map(
-                (entry) => entry.colour
+                (entry) => entry.colour,
               ),
             }}
             series={historicalValuation.series_data.series}

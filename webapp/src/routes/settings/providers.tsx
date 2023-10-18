@@ -43,7 +43,7 @@ const PROVIDER_SCHEMA = Yup.object().shape({
     .required("Identifier is required")
     .matches(
       /^[a-z][a-zA-Z0-9_]+$/,
-      "Provider identifier must start with a letter, and only contain letters, numbers or the underscore '_' character"
+      "Provider identifier must start with a letter, and only contain letters, numbers or the underscore '_' character",
     )
     .min(4)
     .max(64),
@@ -69,7 +69,7 @@ interface ProviderDescription {
 }
 
 const makeProviderDescription = (
-  entry?: Partial<ProviderDescription>
+  entry?: Partial<ProviderDescription>,
 ): ProviderDescription => {
   return {
     id: entry?.id ?? "",
@@ -81,10 +81,10 @@ const makeProviderDescription = (
 export const EditProviderPanel: React.FC<Record<string, never>> = () => {
   const { finbotClient } = useContext(ServicesContext);
   const [selectedProviderId, setSelectedProviderId] = useState<string | null>(
-    null
+    null,
   );
   const [providerDescription, setProviderDescription] = useState(
-    makeProviderDescription()
+    makeProviderDescription(),
   );
   const [rawSchema, setRawSchema] = useState(() => {
     return JSON.stringify(DEFAULT_CREDENTIALS_SCHEMA, null, 2);
@@ -94,7 +94,7 @@ export const EditProviderPanel: React.FC<Record<string, never>> = () => {
 
   const handleSubmit = async (
     description: ProviderDescription,
-    { setSubmitting }: { setSubmitting: (submitting: boolean) => void }
+    { setSubmitting }: { setSubmitting: (submitting: boolean) => void },
   ) => {
     const editor = editorRef.current!.editor;
     let schema = null;
@@ -102,7 +102,7 @@ export const EditProviderPanel: React.FC<Record<string, never>> = () => {
       schema = JSON.parse(editor.getValue());
     } catch (e) {
       toast.error(
-        "Could not save provider: invalid credentials schema (invalid JSON syntax)"
+        "Could not save provider: invalid credentials schema (invalid JSON syntax)",
       );
       setSubmitting(false);
       return;

@@ -24,7 +24,7 @@ const PROFILE_SCHEMA = Yup.object().shape({
 });
 
 const makeProfile = (
-  profile?: Partial<UserAccountProfile> | Partial<UserAccount>
+  profile?: Partial<UserAccountProfile> | Partial<UserAccount>,
 ): UserAccountProfile => {
   return {
     email: profile?.email ?? "",
@@ -35,7 +35,7 @@ const makeProfile = (
 
 const makeUpdateRequest = (
   accountId: number,
-  profile?: Partial<UserAccountProfile>
+  profile?: Partial<UserAccountProfile>,
 ): UpdateAccountProfileRequest => {
   return {
     account_id: accountId,
@@ -60,11 +60,11 @@ export const ProfileSettings: React.FC<Record<string, never>> = () => {
 
   const handleSubmit = async (
     values: UserAccountProfile,
-    { setSubmitting }: { setSubmitting: (submitting: boolean) => void }
+    { setSubmitting }: { setSubmitting: (submitting: boolean) => void },
   ) => {
     try {
       const newProfile = await finbotClient!.updateAccountProfile(
-        makeUpdateRequest(userAccountId!, values)
+        makeUpdateRequest(userAccountId!, values),
       );
       setProfile(newProfile);
       toast.success("Profile updated");

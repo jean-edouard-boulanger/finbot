@@ -19,7 +19,7 @@ export interface EarningsReportPanelProps {
 }
 
 export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
-  props
+  props,
 ) => {
   const { userAccountId, locale, moneyFormatter } = props;
 

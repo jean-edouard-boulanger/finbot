@@ -3,7 +3,7 @@ import React from "react";
 import { Container } from "react-bootstrap";
 
 export const MainContainer: React.FC<React.HTMLAttributes<HTMLElement>> = (
-  props
+  props,
 ) => {
   return (
     <div className="main-wrapper">

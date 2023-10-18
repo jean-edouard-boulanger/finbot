@@ -30,12 +30,12 @@ export interface WealthDistributionProps {
 }
 
 export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
-  props
+  props,
 ) => {
   const { userAccountId, locale, moneyFormatter } = props;
   const { finbotClient } = useContext(ServicesContext);
   const [aggregationMode, setAggregationMode] = useState<AggregationMode>(
-    DEFAULT_AGGREGATION_MODE
+    DEFAULT_AGGREGATION_MODE,
   );
   const [valuation, setValuation] = useState<ValuationData | null>(null);
 
@@ -49,11 +49,11 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
           setValuation({
             valuation_ccy: result.valuation_ccy,
             labels: result.entries.map(
-              (entry) => entry.linked_account.description
+              (entry) => entry.linked_account.description,
             ),
             values: result.entries.map((entry) => entry.valuation.value),
             colours: result.entries.map(
-              (entry) => entry.linked_account.account_colour
+              (entry) => entry.linked_account.account_colour,
             ),
           });
           break;
@@ -62,7 +62,7 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
           const result = await finbotClient!.getUserAccountValuationByAssetType(
             {
               account_id: userAccountId,
-            }
+            },
           );
           setValuation({
             valuation_ccy: result.valuation_ccy,
@@ -140,7 +140,7 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
                     const amount_str = moneyFormatter(
                       value,
                       locale,
-                      valuation?.valuation_ccy
+                      valuation?.valuation_ccy,
                     );
                     return `<span class="text-white">${amount_str}</span>`;
                   },
