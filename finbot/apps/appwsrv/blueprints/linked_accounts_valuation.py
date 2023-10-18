@@ -8,6 +8,7 @@ from flask import Blueprint
 from finbot.apps.appwsrv import schema as appwsrv_schema
 from finbot.apps.appwsrv import serializer
 from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
+from finbot.apps.appwsrv.core.series import order_series_by_last_value
 from finbot.apps.appwsrv.db import db_session
 from finbot.core import schema as core_schema
 from finbot.core.errors import InvalidUserInput
@@ -122,20 +123,22 @@ def get_linked_accounts_historical_valuation(
                         for period in x_axis_layout.keys()
                     ],
                 ),
-                series=[
-                    appwsrv_schema.SeriesDescription(
-                        name=f"{account_name}",
-                        data=[
-                            (entry.last_value if entry is not None else None)
-                            for entry in entries
-                        ],
-                        colour=linked_accounts_colours[account_id],
-                    )
-                    for (
-                        account_id,
-                        account_name,
-                    ), entries in valuation_history_by_linked_account.items()
-                ],
+                series=order_series_by_last_value(
+                    [
+                        appwsrv_schema.SeriesDescription(
+                            name=f"{account_name}",
+                            data=[
+                                (entry.last_value if entry is not None else None)
+                                for entry in entries
+                            ],
+                            colour=linked_accounts_colours[account_id],
+                        )
+                        for (
+                            account_id,
+                            account_name,
+                        ), entries in valuation_history_by_linked_account.items()
+                    ]
+                ),
             ),
         )
     )

@@ -236,6 +236,25 @@ export class FinbotClient {
       .historical_valuation;
   }
 
+  async getAccountHistoricalValuationByAssetClass({
+    account_id,
+    from_time,
+    to_time,
+    frequency,
+  }: GetAccountHistoricalValuationRequest): Promise<HistoricalValuation> {
+    const params = {
+      from_time: from_time?.toISO(),
+      to_time: to_time?.toISO(),
+      frequency: frequency,
+    };
+    const response = await this.axiosInstance.get(
+      `/accounts/${account_id}/valuation/history/by/asset_class/`,
+      { params }
+    );
+    return handleResponse<GetAccountHistoricalValuationResponse>(response)
+      .historical_valuation;
+  }
+
   async getLinkedAccountsValuation({
     account_id,
   }: GetLinkedAccountsValuationRequest): Promise<LinkedAccountsValuation> {

@@ -11,6 +11,7 @@ from finbot.apps.appwsrv import serializer
 from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
 from finbot.apps.appwsrv.core import formatting_rules
 from finbot.apps.appwsrv.core import valuation as appwsrv_valuation
+from finbot.apps.appwsrv.core.series import order_series_by_last_value
 from finbot.apps.appwsrv.db import db_session
 from finbot.core import schema as core_schema
 from finbot.core import timeseries
@@ -249,9 +250,10 @@ def get_user_account_valuation_history_by_asset_type(
 
     valuation_history: list[
         repository.AssetTypeHistoricalValuationEntry
-    ] = repository.get_historical_valuation_by_asset_type(
+    ] = repository.get_historical_valuation_by(
         db_session,
         user_account_id,
+        by=repository.HistoricalValuationByAssetType,
         from_time=from_time,
         to_time=to_time,
         frequency=frequency,
@@ -286,24 +288,102 @@ def get_user_account_valuation_history_by_asset_type(
                         for period in x_axis_layout.keys()
                     ],
                 ),
-                series=[
-                    appwsrv_schema.SeriesDescription(
-                        name=formatting_rules.get_asset_type_class_formatting_rule(
-                            asset_type, asset_class
-                        ).pretty_name,
-                        data=[
-                            (entry.last_value if entry is not None else None)
-                            for entry in entries
-                        ],
-                        colour=formatting_rules.get_asset_type_class_formatting_rule(
-                            asset_type, asset_class
-                        ).dominant_colour,
-                    )
-                    for (
-                        asset_type,
-                        asset_class,
-                    ), entries in valuation_history_by_asset_type_class.items()
-                ],
+                series=order_series_by_last_value(
+                    [
+                        appwsrv_schema.SeriesDescription(
+                            name=formatting_rules.get_asset_type_class_formatting_rule(
+                                asset_type, asset_class
+                            ).pretty_name,
+                            data=[
+                                (entry.last_value if entry is not None else None)
+                                for entry in entries
+                            ],
+                            colour=formatting_rules.get_asset_type_class_formatting_rule(
+                                asset_type, asset_class
+                            ).dominant_colour,
+                        )
+                        for (
+                            asset_type,
+                            asset_class,
+                        ), entries in valuation_history_by_asset_type_class.items()
+                    ]
+                ),
+            ),
+        )
+    )
+
+
+@user_account_valuation_api.route("/history/by/asset_class/", methods=["GET"])
+@jwt_required()
+@service_endpoint()
+@validate()
+def get_user_account_valuation_history_by_asset_class(
+    user_account_id: int, query: appwsrv_schema.HistoricalValuationParams
+) -> appwsrv_schema.GetUserAccountValuationHistoryByAssetClassResponse:
+    settings = repository.get_user_account_settings(db_session, user_account_id)
+    from_time = query.from_time
+    to_time = query.to_time
+    if from_time and to_time and from_time >= to_time:
+        raise InvalidUserInput("Start time parameter must be before end time parameter")
+
+    frequency = query.frequency
+    is_daily = frequency == core_schema.ValuationFrequency.Daily
+
+    valuation_history: list[
+        repository.AssetClassHistoricalValuationEntry
+    ] = repository.get_historical_valuation_by(
+        db_session,
+        user_account_id,
+        by=repository.HistoricalValuationByAssetClass,
+        from_time=from_time,
+        to_time=to_time,
+        frequency=frequency,
+    )
+    if len(valuation_history) == 0:
+        raise MissingUserData("No valuation available for selected time range")
+    current_index = 0
+    x_axis_layout: dict[Union[date, str], int] = OrderedDict()
+    for entry in valuation_history:
+        if entry.valuation_period not in x_axis_layout:
+            x_axis_layout[entry.valuation_period] = current_index
+            current_index += 1
+    valuation_history_by_asset_class: dict[
+        AssetClass,
+        list[Optional[repository.HistoricalValuationEntry]],
+    ] = defaultdict(lambda: [None] * len(x_axis_layout))
+    for entry in valuation_history:
+        entry_index = x_axis_layout[entry.valuation_period]
+        valuation_history_by_asset_class[entry.asset_class][entry_index] = entry
+    return appwsrv_schema.GetUserAccountValuationHistoryByAssetClassResponse(
+        historical_valuation=appwsrv_schema.HistoricalValuation(
+            valuation_ccy=settings.valuation_ccy,
+            series_data=appwsrv_schema.SeriesData(
+                x_axis=appwsrv_schema.XAxisDescription(
+                    type="datetime" if is_daily else "category",
+                    categories=[
+                        datetime(year=period.year, month=period.month, day=period.day)
+                        if isinstance(period, date)
+                        else period
+                        for period in x_axis_layout.keys()
+                    ],
+                ),
+                series=order_series_by_last_value(
+                    [
+                        appwsrv_schema.SeriesDescription(
+                            name=formatting_rules.get_asset_class_formatting_rule(
+                                asset_class=asset_class
+                            ).pretty_name,
+                            data=[
+                                (entry.last_value if entry is not None else None)
+                                for entry in entries
+                            ],
+                            colour=formatting_rules.get_asset_class_formatting_rule(
+                                asset_class=asset_class
+                            ).dominant_colour,
+                        )
+                        for asset_class, entries in valuation_history_by_asset_class.items()
+                    ]
+                ),
             ),
         )
     )

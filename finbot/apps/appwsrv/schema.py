@@ -310,6 +310,10 @@ class GetUserAccountValuationHistoryByAssetTypeResponse(BaseModel):
     historical_valuation: HistoricalValuation
 
 
+class GetUserAccountValuationHistoryByAssetClassResponse(BaseModel):
+    historical_valuation: HistoricalValuation
+
+
 class LinkedAccountValuation(BaseModel):
     date: datetime
     currency: str
