@@ -2,7 +2,17 @@
 import json
 from dataclasses import dataclass
 from datetime import date, datetime
-from typing import Any, Literal, Optional, Protocol, Type, TypedDict, Union, cast
+from typing import (
+    Any,
+    Literal,
+    Optional,
+    Protocol,
+    Type,
+    TypedDict,
+    Union,
+    cast,
+    overload,
+)
 
 from sqlalchemy import desc
 from sqlalchemy.orm import joinedload
@@ -306,22 +316,67 @@ class AssetTypeHistoricalValuationEntry(HistoricalValuationEntry):
     asset_type: AssetType
     asset_class: AssetClass
 
+
+class HistoricalValuationByAssetType(object):
+    agg_criterion = "fsaivhe.asset_type || ';' || fsaivhe.asset_class"
+
     @staticmethod
-    def parse_row(row: dict[str, Any]) -> "AssetTypeHistoricalValuationEntry":
-        raw_asset_type, raw_asset_class = row["asset_type_agg"].split(";")
-        del row["asset_type_agg"]
+    def parse_row(row: dict[str, Any]) -> AssetTypeHistoricalValuationEntry:
+        raw_asset_type, raw_asset_class = row["agg_criterion"].split(";")
+        del row["agg_criterion"]
         row["asset_type"] = AssetType[raw_asset_type]
         row["asset_class"] = AssetClass[raw_asset_class]
         return AssetTypeHistoricalValuationEntry(**row)
 
 
-def get_historical_valuation_by_asset_type(
+@dataclass
+class AssetClassHistoricalValuationEntry(HistoricalValuationEntry):
+    asset_class: AssetClass
+
+
+class HistoricalValuationByAssetClass(object):
+    agg_criterion = "fsaivhe.asset_class"
+
+    @staticmethod
+    def parse_row(row: dict[str, Any]) -> AssetClassHistoricalValuationEntry:
+        raw_asset_class = row["agg_criterion"]
+        del row["agg_criterion"]
+        row["asset_class"] = AssetClass[raw_asset_class]
+        return AssetClassHistoricalValuationEntry(**row)
+
+
+@overload
+def get_historical_valuation_by(
     session: Session,
     user_account_id: int,
+    by: type[HistoricalValuationByAssetType],
     from_time: Optional[datetime] = None,
     to_time: Optional[datetime] = None,
     frequency: Optional[ValuationFrequency] = None,
 ) -> list[AssetTypeHistoricalValuationEntry]:
+    ...
+
+
+@overload
+def get_historical_valuation_by(
+    session: Session,
+    user_account_id: int,
+    by: type[HistoricalValuationByAssetClass],
+    from_time: Optional[datetime] = None,
+    to_time: Optional[datetime] = None,
+    frequency: Optional[ValuationFrequency] = None,
+) -> list[AssetClassHistoricalValuationEntry]:
+    ...
+
+
+def get_historical_valuation_by(
+    session: Session,
+    user_account_id: int,
+    by: type[HistoricalValuationByAssetType] | type[HistoricalValuationByAssetClass],
+    from_time: Optional[datetime] = None,
+    to_time: Optional[datetime] = None,
+    frequency: Optional[ValuationFrequency] = None,
+) -> list[AssetTypeHistoricalValuationEntry] | list[AssetClassHistoricalValuationEntry]:
     frequency = frequency or ValuationFrequency.Daily
     sub_grouping = _get_valuation_grouping_from_frequency(frequency).sql_grouping
     query_params: dict[str, Any] = {"user_account_id": user_account_id}
@@ -333,34 +388,34 @@ def get_historical_valuation_by_asset_type(
         query_params["to_time"] = to_time
         time_clause += " and fuahe.effective_at <= :to_time "
     main_query = f"""
-        select distinct on (agg_items.asset_type_agg, {sub_grouping})
+        select distinct on (agg_items.agg_criterion, {sub_grouping})
                {sub_grouping} as valuation_period,
-               agg_items.asset_type_agg,
+               agg_items.agg_criterion,
                first_value(fuahe.effective_at) over (
-                   partition by agg_items.asset_type_agg, {sub_grouping}
+                   partition by agg_items.agg_criterion, {sub_grouping}
                    order by fuahe.effective_at
                 ) as period_start,
                first_value(fuahe.effective_at) over (
-                   partition by agg_items.asset_type_agg, {sub_grouping}
+                   partition by agg_items.agg_criterion, {sub_grouping}
                    order by fuahe.effective_at desc
                 ) as period_end,
                first_value(agg_items.valuation) over (
-                   partition by agg_items.asset_type_agg, {sub_grouping}
+                   partition by agg_items.agg_criterion, {sub_grouping}
                    order by fuahe.effective_at
                 ) as first_value,
                first_value(agg_items.valuation) over (
-                   partition by agg_items.asset_type_agg, {sub_grouping}
+                   partition by agg_items.agg_criterion, {sub_grouping}
                    order by fuahe.effective_at desc
                ) as last_value,
                min(agg_items.valuation) over (
-                   partition by agg_items.asset_type_agg, {sub_grouping}
+                   partition by agg_items.agg_criterion, {sub_grouping}
                ) as max_value,
                min(agg_items.valuation) over (
-                   partition by agg_items.asset_type_agg, {sub_grouping}
+                   partition by agg_items.agg_criterion, {sub_grouping}
                ) as min_value
           from (
               select fsaivhe.history_entry_id,
-                     fsaivhe.asset_type || ';' || fsaivhe.asset_class as asset_type_agg,
+                     {by.agg_criterion} as agg_criterion,
                      sum(valuation) as valuation
                 from finbot_sub_accounts_items_valuation_history_entries fsaivhe
                 join finbot_user_accounts_history_entries fuahe
@@ -371,7 +426,7 @@ def get_historical_valuation_by_asset_type(
              and not fla.deleted
                  and fuahe.user_account_id = :user_account_id {time_clause}
                  and fsaivhe.item_type = 'Asset'
-            group by history_entry_id, fsaivhe.asset_type || ';' || fsaivhe.asset_class
+            group by history_entry_id, {by.agg_criterion}
           ) agg_items
           join finbot_user_accounts_history_entries fuahe on agg_items.history_entry_id = fuahe.id
     """
@@ -383,10 +438,10 @@ def get_historical_valuation_by_asset_type(
                 else (q.last_value - q.first_value) / (q.first_value)
                end as rel_change
           from ({main_query}) q
-      order by q.period_start, q.asset_type_agg
+      order by q.period_start, q.agg_criterion
     """
-    return [
-        AssetTypeHistoricalValuationEntry.parse_row(row_to_dict(row))
+    return [  # type: ignore
+        by.parse_row(row_to_dict(row))
         for row in session.execute(text(query), query_params)
     ]
 

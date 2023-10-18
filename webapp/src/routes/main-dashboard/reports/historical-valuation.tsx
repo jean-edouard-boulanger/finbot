@@ -15,7 +15,7 @@ interface TimeRangeChoiceType {
   makeRange(now: DateTime): TimeRange;
 }
 
-type LevelType = "account" | "linked_account" | "asset_type";
+type LevelType = "account" | "linked_account" | "asset_type" | "asset_class";
 
 interface LevelChoiceProp {
   type: LevelType;
@@ -34,6 +34,10 @@ const LEVELS: Array<LevelChoiceProp> = [
   {
     type: "asset_type",
     label: "BY ASSET TYPE",
+  },
+  {
+    type: "asset_class",
+    label: "BY ASSET CLASS",
   },
 ];
 
@@ -200,6 +204,14 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
         case "asset_type": {
           const data =
             await finbotClient!.getAccountHistoricalValuationByAssetType(
+              request
+            );
+          setHistoricalValuation(data);
+          break;
+        }
+        case "asset_class": {
+          const data =
+            await finbotClient!.getAccountHistoricalValuationByAssetClass(
               request
             );
           setHistoricalValuation(data);

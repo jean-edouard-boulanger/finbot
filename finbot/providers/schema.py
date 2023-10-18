@@ -55,8 +55,8 @@ class Balances(BaseModel):
 class Asset(BaseModel):
     name: str
     type: str  # deprecated
-    asset_class: AssetClass | None
-    asset_type: AssetType | None
+    asset_class: AssetClass
+    asset_type: AssetType
     value: float
     units: float | None = None
     provider_specific: dict[str, Any] | None = None

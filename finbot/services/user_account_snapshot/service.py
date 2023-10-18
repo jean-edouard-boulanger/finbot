@@ -19,6 +19,7 @@ from finbot.core.schema import ApplicationErrorData
 from finbot.core.serialization import serialize
 from finbot.core.utils import some
 from finbot.providers import schema as providers_schema
+from finbot.services.user_account_snapshot import errors as snapshot_errors
 from finbot.services.user_account_snapshot import schema
 
 FINBOT_ENV = environment.get()
@@ -228,19 +229,28 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
     ) -> None:
         linked_account_id = linked_account_snapshot.request.linked_account_id
         sub_account_entry = self.sub_accounts[(linked_account_id, sub_account.id)]
-        asset_class: providers_schema.AssetClass | None = getattr(
-            item, "asset_class", None
+        item_type = self._get_item_type(item)
+        asset_class = (
+            item.asset_class if isinstance(item, providers_schema.Asset) else None
         )
-        asset_type: providers_schema.AssetType | None = getattr(
-            item, "asset_type", None
+        asset_type = (
+            item.asset_type if isinstance(item, providers_schema.Asset) else None
         )
+        if item_type == model.SubAccountItemType.Asset and None in (
+            asset_class,
+            asset_type,
+        ):
+            raise snapshot_errors.InconsistentSnapshotData(
+                f"item '{item.name}' in linked_account.id={linked_account_id} and sub_account.id={sub_account.id} is"
+                f" tagged as an asset but does not specify an asset_class ({asset_class}) or asset_type ({asset_type})"
+            )
         new_item = model.SubAccountItemSnapshotEntry(  # type: ignore
-            item_type=self._get_item_type(item),
+            item_type=item_type,
             name=item.name,
             item_subtype=item.type,
             asset_class=asset_class.value if asset_class else None,
             asset_type=asset_type.value if asset_type else None,
-            units=getattr(item, "units", None),
+            units=item.units if isinstance(item, providers_schema.Asset) else None,
             value_sub_account_ccy=item.value,
             value_snapshot_ccy=item.value
             * self.xccy_rates_getter(
