@@ -38,26 +38,26 @@ docker-build-all: docker-build-dev docker-build-prod
 trigger-valuation:
 	tools/check-env.sh accounts;
 	docker-compose exec schedsrv \
-		./tools/run -- python3.11 finbot/apps/schedsrv/schedsrv.py \
+		./tools/run -- python3.12 finbot/apps/schedsrv/schedsrv.py \
 			--mode one_shot \
 			--accounts ${accounts}
 
 run-system-tests:
 	docker-compose run --rm operator env FINBOT_WAIT_DEPS=appwsrv,finbotwsrv ./tools/finbot-wait;
-	docker-compose run --rm operator python3.11 -m pytest tests/system/
+	docker-compose run --rm operator python3.12 -m pytest tests/system/
 
 finbotdb-build:
-	python3.11 tools/finbotdb build
+	python3.12 tools/finbotdb build
 
 finbotdb-destroy:
-	python3.11 tools/finbotdb destroy
+	python3.12 tools/finbotdb destroy
 
 finbotdb-rebuild:
-	python3.11 tools/finbotdb destroy && \
-	python3.11 tools/finbotdb build
+	python3.12 tools/finbotdb destroy && \
+	python3.12 tools/finbotdb build
 
 finbotdb-hydrate:
-	python3.11 tools/finbotdb hydrate \
+	python3.12 tools/finbotdb hydrate \
 		--data-file ./tools/hydrate.json
 
 finbotdb-psql:
@@ -67,7 +67,7 @@ init-dev:
 	tools/init-dev.sh
 
 py-unit-tests:
-	python3.11 -m pytest tests/unit
+	python3.12 -m pytest tests/unit
 
 prettier-ts:
 	cd webapp && npm run prettier
@@ -84,29 +84,29 @@ eslint:
 banned-keywords-check-ts:
 	tools/banned-keywords.py --source-dirs webapp/src
 
-flake8:
-	flake8 --exclude migrations/,venv/,webapp/ --max-line-length 120
+ruff:
+	python3.12 -m ruff .
 
 version-bump-check:
 	tools/versioning check-version-bump
 
 black-check:
-	black --check $(BLACK_SETTINGS)
+	python3.12 -m black --check $(BLACK_SETTINGS)
 
 black:
-	black $(BLACK_SETTINGS)
+	python3.12 -m black $(BLACK_SETTINGS)
 
 isort-check:
-	isort --check $(ISORT_SETTINGS)
+	python3.12 -m isort --check $(ISORT_SETTINGS)
 
 isort:
-	isort $(ISORT_SETTINGS)
+	python3.12 -m isort $(ISORT_SETTINGS)
 
 mypy:
-	mypy --strict finbot/
+	python3.12 -m mypy --strict finbot/
 
 unit-tests-py:
-	python3.11 -m pytest -vv tests/unit
+	python3.12 -m pytest -vv tests/unit
 
 unit-tests: unit-tests-py
 
@@ -117,7 +117,7 @@ lint-sh:
 	grep -rl '^#!/.*bash' --exclude-dir=webapp --exclude-dir='./.*' . |\
  		xargs shellcheck -e SC1090 -e SC1091 -e SC2002 -S style
 
-lint-py: mypy flake8 black-check isort-check banned-keywords-check-py unit-tests-py
+lint-py: mypy ruff black-check isort-check banned-keywords-check-py unit-tests-py
 lint-ts: eslint tsc-build-check prettier-check-ts banned-keywords-check-ts
 lint-all: lint-py lint-ts lint-sh
 

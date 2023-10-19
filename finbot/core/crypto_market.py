@@ -1,4 +1,4 @@
-from functools import lru_cache
+from functools import cache
 
 from pycoingecko import CoinGeckoAPI
 
@@ -19,7 +19,7 @@ class CryptoMarket(object):
     def _get_coin_id(self, symbol: str) -> str:
         return self._symbols_to_id[symbol.lower()]
 
-    @lru_cache(None)
+    @cache
     def get_spot_cached(self, source_crypto_ccy: str, target_ccy: str) -> float:
         return self.get_spot(source_crypto_ccy, target_ccy)
 

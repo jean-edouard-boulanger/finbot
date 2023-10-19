@@ -66,6 +66,9 @@ class RetiredProvider(ProviderBase):
         super().__init__(**kwargs)
         raise RetiredProviderError()
 
+    def initialize(self) -> None:
+        pass
+
     @staticmethod
     def create(
         authentication_payload: core_schema.CredentialsPayloadType,
