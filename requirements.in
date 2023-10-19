@@ -23,7 +23,7 @@ psycopg2==2.9.9
 pycoingecko==3.1.0
 pydantic==2.4.2
 python-binance==1.0.19
-pytz==2023.3
+pytz==2023.3.post1
 requests==2.31.0
 schedule==1.2.1
 sqlalchemy==2.0.22
