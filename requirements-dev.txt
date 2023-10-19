@@ -304,7 +304,7 @@ tzlocal==4.2
     # via dateparser
 ujson==5.7.0
     # via python-binance
-urllib3==1.26.14
+urllib3==1.26.18
     # via
     #   plaid-python
     #   requests
