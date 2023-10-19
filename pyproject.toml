@@ -1,0 +1,9 @@
+[tool.ruff]
+select = ["E", "F", "Q"]
+exclude = [
+    'migrations/',
+    'venv/',
+    'webapp/'
+]
+line-length = 120
+target-version = "py312"

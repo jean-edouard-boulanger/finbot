@@ -60,8 +60,8 @@ jobs:
         uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.11
+          python-version: 3.12
       - name: Install Python dependencies
-        run: python3.11 -m pip install -r requirements-dev.txt
+        run: python3.12 -m pip install -r requirements-dev.txt
       - name: Check banned keywords
         run: make banned-keywords-check-ts

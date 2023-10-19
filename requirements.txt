@@ -4,8 +4,9 @@
 #
 #    pip-compile --output-file=requirements.txt requirements.in
 #
-aiohttp==3.8.4
+aiohttp==3.9.0b0
     # via
+    #   -r requirements.in
     #   aiohttp-retry
     #   python-binance
     #   twilio
@@ -19,9 +20,7 @@ amqp==5.1.1
     # via kombu
 annotated-types==0.6.0
     # via pydantic
-async-timeout==4.0.2
-    # via aiohttp
-attrs==22.2.0
+attrs==23.1.0
     # via
     #   aiohttp
     #   jsonschema
@@ -31,23 +30,21 @@ bcrypt==4.0.1
     # via -r requirements.in
 billiard==4.1.0
     # via celery
-blinker==1.6.2
+blinker==1.6.3
     # via flask
-cachetools==5.3.0
+cachetools==5.3.1
     # via google-auth
 celery==5.3.4
     # via -r requirements.in
-certifi==2022.12.7
+certifi==2023.7.22
     # via requests
 cffi==1.16.0
     # via
     #   -r requirements.in
     #   cryptography
-charset-normalizer==3.0.1
-    # via
-    #   aiohttp
-    #   requests
-click==8.1.3
+charset-normalizer==3.3.0
+    # via requests
+click==8.1.7
     # via
     #   celery
     #   click-didyoumean
@@ -58,13 +55,13 @@ click-didyoumean==0.3.0
     # via celery
 click-plugins==1.1.1
     # via celery
-click-repl==0.2.0
+click-repl==0.3.0
     # via celery
 cryptography==41.0.4
     # via
     #   -r requirements.in
     #   pgpy
-dateparser==1.1.7
+dateparser==1.1.8
     # via python-binance
 flask==3.0.0
     # via
@@ -75,15 +72,15 @@ flask-cors==4.0.0
     # via -r requirements.in
 flask-jwt-extended==4.5.3
     # via -r requirements.in
-frozenlist==1.3.3
+frozenlist==1.4.0
     # via
     #   aiohttp
     #   aiosignal
-google-auth==2.16.2
+google-auth==2.23.3
     # via
     #   google-auth-oauthlib
     #   gspread
-google-auth-oauthlib==1.0.0
+google-auth-oauthlib==1.1.0
     # via gspread
 greenlet==3.0.0
     # via
@@ -93,7 +90,7 @@ gspread==5.11.3
     # via -r requirements.in
 gunicorn==21.2.0
     # via -r requirements.in
-httplib2==0.21.0
+httplib2==0.22.0
     # via oauth2client
 idna==3.4
     # via
@@ -113,7 +110,7 @@ krakenex==2.1.0
     # via -r requirements.in
 mako==1.2.4
     # via alembic
-markupsafe==2.1.2
+markupsafe==2.1.3
     # via
     #   jinja2
     #   mako
@@ -142,17 +139,17 @@ playwright==1.39.0
     # via -r requirements.in
 price-parser==0.3.4
     # via -r requirements.in
-prompt-toolkit==3.0.38
+prompt-toolkit==3.0.39
     # via click-repl
 psycopg2==2.9.9
     # via -r requirements.in
-pyasn1==0.4.8
+pyasn1==0.5.0
     # via
     #   oauth2client
     #   pgpy
     #   pyasn1-modules
     #   rsa
-pyasn1-modules==0.2.8
+pyasn1-modules==0.3.0
     # via
     #   google-auth
     #   oauth2client
@@ -160,7 +157,7 @@ pycoingecko==3.1.0
     # via -r requirements.in
 pycparser==2.21
     # via cffi
-pycryptodome==3.17
+pycryptodome==3.19.0
     # via python-binance
 pydantic==2.4.2
     # via
@@ -170,11 +167,11 @@ pydantic-core==2.10.1
     # via pydantic
 pyee==11.0.1
     # via playwright
-pyjwt==2.6.0
+pyjwt==2.8.0
     # via
     #   flask-jwt-extended
     #   twilio
-pyparsing==3.0.9
+pyparsing==3.1.1
     # via httplib2
 python-binance==1.0.19
     # via -r requirements.in
@@ -187,13 +184,11 @@ pytz==2023.3
     # via
     #   -r requirements.in
     #   dateparser
-pytz-deprecation-shim==0.1.0.post0
-    # via tzlocal
 referencing==0.30.2
     # via
     #   jsonschema
     #   jsonschema-specifications
-regex==2022.10.31
+regex==2023.10.3
     # via dateparser
 requests==2.31.0
     # via
@@ -217,8 +212,6 @@ schedule==1.2.1
     # via -r requirements.in
 six==1.16.0
     # via
-    #   click-repl
-    #   google-auth
     #   oauth2client
     #   python-binance
     #   python-dateutil
@@ -237,15 +230,13 @@ typing-extensions==4.8.0
     #   pydantic-core
     #   pyee
     #   sqlalchemy
-tzdata==2022.7
-    # via
-    #   celery
-    #   pytz-deprecation-shim
-tzlocal==4.2
+tzdata==2023.3
+    # via celery
+tzlocal==5.1
     # via dateparser
-ujson==5.7.0
+ujson==5.8.0
     # via python-binance
-urllib3==1.26.14
+urllib3==2.0.7
     # via
     #   plaid-python
     #   requests
@@ -254,13 +245,13 @@ vine==5.0.0
     #   amqp
     #   celery
     #   kombu
-wcwidth==0.2.6
+wcwidth==0.2.8
     # via prompt-toolkit
-websockets==10.4
+websockets==11.0.3
     # via python-binance
 werkzeug==3.0.0
     # via
     #   flask
     #   flask-jwt-extended
-yarl==1.8.2
+yarl==1.9.2
     # via aiohttp
