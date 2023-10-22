@@ -26,9 +26,10 @@ from finbot.providers.schema import (
 
 AUTH_URL = "https://lwp.aegon.co.uk/targetplanUI/login"
 BALANCES_URL = "https://lwp.aegon.co.uk/targetplanUI/investments"
+SchemaNamespace = "AegonProvider"
 
 
-class Credentials(BaseModel):
+class AegonTargetplanCredentials(BaseModel):
     username: str
     password: SecretStr
 
@@ -62,11 +63,11 @@ class MainDashboardPage(object):
 
 class Api(PlaywrightProviderBase):
     description = "Aegon Targetplan (UK)"
-    credentials_type = Credentials
+    credentials_type = AegonTargetplanCredentials
 
     def __init__(
         self,
-        credentials: Credentials,
+        credentials: AegonTargetplanCredentials,
         user_account_currency: CurrencyCode,
         **kwargs: Any,
     ) -> None:

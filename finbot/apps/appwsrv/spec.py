@@ -1,15 +1,5 @@
-from typing import TypeAlias
-
-from spectree import Response, SpecTree
-
-from finbot._version import __version__
+from finbot.core.spec_tree import SpecTree
 
 spec = SpecTree(
-    "flask",
-    title="Finbot application service",
-    annotations=True,
-    version=f"v{__version__}",
-    path="apidoc",
+    title="Finbot application service", description="API documentation for appwsrv"
 )
-
-ResponseSpec: TypeAlias = Response

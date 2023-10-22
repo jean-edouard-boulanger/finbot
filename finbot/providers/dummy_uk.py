@@ -21,6 +21,7 @@ DUMMY_BALANCE: float = 1000.0
 DUMMY_ACCOUNT = Account(
     id="dummy", name="Dummy account", iso_currency=CurrencyCode("GBP"), type="cash"
 )
+SchemaNamespace = "DummyProvider"
 
 
 class Api(ProviderBase):

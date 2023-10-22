@@ -3,18 +3,16 @@ import traceback
 from typing import Any
 
 from flask import Flask
-from spectree import Response as ResponseSpec
-from spectree import SpecTree
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-from finbot._version import __version__
 from finbot.apps.finbotwsrv import schema
 from finbot.core import environment
 from finbot.core import schema as core_schema
 from finbot.core.db.session import Session
 from finbot.core.logging import configure_logging
 from finbot.core.schema import ApplicationErrorData
+from finbot.core.spec_tree import ResponseSpec, SpecTree
 from finbot.core.web_service import CustomJsonProvider, service_endpoint
 from finbot.providers import ProviderBase
 from finbot.providers.errors import AuthenticationFailure
@@ -31,11 +29,8 @@ app = Flask(__name__)
 app.json = CustomJsonProvider(app)  # type: ignore
 
 spec = SpecTree(
-    "flask",
-    annotations=True,
-    title="Finbot data capture service",
-    version=f"v{__version__}",
-    path="apidoc",
+    title="Financial data capture service",
+    description="API documentation for finbotwsrv",
 )
 
 

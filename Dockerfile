@@ -45,14 +45,18 @@ FROM runtime-playwright AS runtime-dev
 
 RUN apt-get update && \
     apt-get install -y \
+      default-jre \
       git \
       make \
       inotify-tools \
       libpq-dev \
+      nodejs \
+      npm \
       postgresql-client && \
     apt-get clean
 
 COPY requirements-dev.txt .
 
 RUN python3.12 -m pip install --no-cache-dir -r requirements-dev.txt && \
-    python3.12 -m pip install --no-cache-dir pip-tools
+    python3.12 -m pip install --no-cache-dir pip-tools && \
+    npm install @openapitools/openapi-generator-cli -g

@@ -5,6 +5,7 @@ from finbot.core.schema import BaseModel
 
 CurrencyCode = NewType("CurrencyCode", str)
 ProviderSpecificPayload: TypeAlias = dict[str, str | int | float | bool]
+SchemaNamespace = "Providers"
 
 
 class AssetClass(str, enum.Enum):

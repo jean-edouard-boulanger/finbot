@@ -31,6 +31,8 @@ from finbot.providers.schema import (
     CurrencyCode,
 )
 
+SchemaNamespace = "GoogleSheetsProvider"
+
 
 class Error(FinbotError):
     def __init__(self, error_message: str):

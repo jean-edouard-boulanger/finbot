@@ -12,6 +12,7 @@ from finbot.providers import schema as providers_schema
 JsonSchemaType: TypeAlias = dict[str, Any]
 CredentialsSchemaType: TypeAlias = JsonSchemaType
 CredentialsPayloadType: TypeAlias = dict[str, Any]
+SchemaNamespace = "App"
 
 
 class UnsetField(BaseModel):

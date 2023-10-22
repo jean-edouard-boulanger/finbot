@@ -17,6 +17,7 @@ configure_logging(FINBOT_ENV.desired_log_level)
 db_engine = create_engine(FINBOT_ENV.database_url)
 db_session = Session(scoped_session(sessionmaker(bind=db_engine)))
 
+
 def create_parser() -> ArgumentParser:
     parser = ArgumentParser(description="Dump linked account metadata")
     parser.add_argument("--id", type=int, required=True, help="Linked account id")
@@ -41,7 +42,7 @@ def main():
         "deleted": linked_account.deleted,
         "frozen": linked_account.frozen,
         "created_at": linked_account.created_at.isoformat(),
-        "updated_at": linked_account.updated_at.isoformat()
+        "updated_at": linked_account.updated_at.isoformat() if linked_account.updated_at else None
     }, indent=2))
 
 

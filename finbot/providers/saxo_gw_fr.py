@@ -19,6 +19,8 @@ from finbot.providers.schema import (
     CurrencyCode,
 )
 
+SchemaNamespace = "SaxoProvider"
+
 
 class Credentials(BaseModel):
     api_key: SecretStr
@@ -42,7 +44,7 @@ class Api(ProviderBase):
             settings=saxo.SaxoGatewaySettings(gateway_url=saxo_gateway_url),
             api_key=credentials.api_key.get_secret_value(),
         )
-        self._accounts: list[saxo.Account] | None = None
+        self._accounts: list[saxo.SaxoAccount] | None = None
 
     def initialize(self) -> None:
         try:
@@ -50,7 +52,7 @@ class Api(ProviderBase):
         except Exception as e:
             raise AuthenticationFailure(str(e))
 
-    def iter_accounts(self) -> Generator[tuple[Account, saxo.Account], None, None]:
+    def iter_accounts(self) -> Generator[tuple[Account, saxo.SaxoAccount], None, None]:
         assert self._accounts is not None
         for raw_account_data in self._accounts:
             yield Account(
@@ -84,7 +86,7 @@ class Api(ProviderBase):
             ]
         )
 
-    def _get_account_assets(self, saxo_account: saxo.Account) -> list[Asset]:
+    def _get_account_assets(self, saxo_account: saxo.SaxoAccount) -> list[Asset]:
         assets: list[Asset] = []
         if cash_available := self._client.get_account_balances(
             saxo_account

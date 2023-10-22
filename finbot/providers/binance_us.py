@@ -22,6 +22,7 @@ from finbot.providers.schema import (
 
 OWNERSHIP_UNITS_THRESHOLD = 0.00001
 RECV_WINDOW = 60 * 1000
+SchemaNamespace = "BinanceProvider"
 
 
 class Credentials(BaseModel):

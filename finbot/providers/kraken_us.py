@@ -21,6 +21,7 @@ from finbot.providers.schema import (
 )
 
 OWNERSHIP_UNITS_THRESHOLD = 0.00001
+SchemaNamespace = "KrakenProvider"
 
 
 class Credentials(BaseModel):

@@ -10,3 +10,4 @@ declare global {
 
 export const FINBOT_SERVER_ENDPOINT =
   window.__finbot_env.FINBOT_SERVER_ENDPOINT;
+export const APP_SERVICE_ENDPOINT = FINBOT_SERVER_ENDPOINT;

@@ -25,6 +25,7 @@ from finbot.providers.schema import (
 BASE_URL = (
     "https://www.credit-agricole.fr/{region}/particulier/acceder-a-mes-comptes.html"
 )
+SchemaNamespace = "CreditAgricoleProvider"
 
 
 class Credentials(BaseModel):

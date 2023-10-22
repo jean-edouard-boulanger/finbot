@@ -1,34 +1,41 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useLocation, NavLink } from "react-router-dom";
 
 import AuthContext from "contexts/auth/auth-context";
 import { useInterval } from "utils/use-interval";
+import { useApi, SystemReport, SystemApi } from "clients";
 
 import Navbar from "react-bootstrap/Navbar";
 import Nav from "react-bootstrap/Nav";
 import { Badge } from "react-bootstrap";
-import { ServicesContext } from "contexts";
-import { SystemReport } from "clients/finbot-client/types";
 
 const SystemStatusBadge: React.FC<Record<string, never>> = () => {
-  const { finbotClient } = useContext(ServicesContext);
+  const systemApi = useApi(SystemApi);
   const [backendReachable, setBackendReachable] = useState(true);
   const [report, setReport] = useState<SystemReport | null>(null);
 
-  useInterval(async () => {
+  const updateReport = async () => {
     try {
-      setReport(await finbotClient!.getSystemReport());
+      setReport((await systemApi.getSystemReport()).systemReport);
       setBackendReachable(true);
     } catch (e) {
       setBackendReachable(false);
       setReport(null);
     }
+  };
+
+  useEffect(() => {
+    updateReport();
+  }, [systemApi]);
+
+  useInterval(async () => {
+    updateReport();
   }, 10000);
 
   return (
     <>
       {backendReachable && report?.runtime === "development" && (
-        <Badge variant={"danger"}>DEV build v{report!.finbot_version}</Badge>
+        <Badge variant={"danger"}>DEV build v{report!.finbotVersion}</Badge>
       )}
       {!backendReachable && (
         <Badge variant={"danger"}>BACKEND UNREACHABLE</Badge>
