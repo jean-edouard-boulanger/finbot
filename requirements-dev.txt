@@ -90,7 +90,7 @@ greenlet==3.0.0
     # via
     #   playwright
     #   sqlalchemy
-gspread==5.11.3
+gspread==5.12.0
     # via -r requirements.in
 gunicorn==21.2.0
     # via -r requirements.in
