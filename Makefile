@@ -114,8 +114,14 @@ banned-keywords-check-py:
 	tools/banned-keywords.py --source-dirs finbot
 
 lint-sh:
-	grep -rl '^#!/.*bash' --exclude-dir=webapp --exclude-dir='./.*' . |\
+	grep -rl '^#!/.*bash' --exclude-dir=webapp --exclude-dir='./.*' --exclude-dir='venv' . |\
  		xargs shellcheck -e SC1090 -e SC1091 -e SC2002 -S style
+
+lint-schema:
+	docker-compose run --rm operator ./tools/lint-schema.py
+
+generate-ts-client:
+	docker-compose run --rm operator ./tools/generate-ts-client
 
 lint-py: mypy ruff black-check isort-check banned-keywords-check-py unit-tests-py
 lint-ts: eslint tsc-build-check prettier-check-ts banned-keywords-check-ts

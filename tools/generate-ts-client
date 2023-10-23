@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -e
+workdir=$(mktemp -d)
+
+mkdir -p "${workdir}/schema"
+./tools/export-openapi-schema.py -s appwsrv > "${workdir}/schema/appwsrv.openapi.json"
+
+openapi-generator-cli generate \
+  -i "${workdir}/schema/appwsrv.openapi.json" \
+  -g typescript-fetch \
+  --additional-properties=withSeparateModelsAndApi=true,useSingleRequestParameter=true,withInterfaces=true,supportsES6=true \
+  -o "${workdir}/output/"
+
+finbot_root_dir=$(git rev-parse --show-toplevel)
+app_client_dir="${finbot_root_dir}/webapp/src/clients/app-client"
+mkdir -p "${app_client_dir}"
+rm -rf "${app_client_dir:?}"/*
+mv "${workdir}/output/index.ts" "${app_client_dir}"
+mv "${workdir}/output/runtime.ts" "${app_client_dir}"
+mv "${workdir}/output/apis/" "${app_client_dir}"
+mv "${workdir}/output/models/" "${app_client_dir}"

@@ -1,12 +1,14 @@
 import React, { useContext, useEffect, useState } from "react";
 
-import { ServicesContext, AuthContext } from "contexts";
-import { LoadingButton } from "components/loading-button";
 import {
-  UpdateAccountProfileRequest,
-  UserAccount,
+  useApi,
+  UserAccountsApi,
   UserAccountProfile,
-} from "clients/finbot-client/types";
+  UserAccount,
+  UpdateUserAccountProfileRequest,
+} from "clients";
+import { AuthContext } from "contexts";
+import { LoadingButton } from "components/loading-button";
 
 import { Formik, Form as MetaForm, Field, ErrorMessage } from "formik";
 import { Row, Col, Form } from "react-bootstrap";
@@ -15,9 +17,9 @@ import { toast } from "react-toastify";
 import * as Yup from "yup";
 
 const PROFILE_SCHEMA = Yup.object().shape({
-  full_name: Yup.string().required().min(3).max(128).label("Full name"),
+  fullName: Yup.string().required().min(3).max(128).label("Full name"),
   email: Yup.string().required().max(128).email().label("Email"),
-  mobile_phone_number: Yup.string()
+  mobilePhoneNumber: Yup.string()
     .max(64)
     .nullable()
     .label("Mobile phone number"),
@@ -28,45 +30,45 @@ const makeProfile = (
 ): UserAccountProfile => {
   return {
     email: profile?.email ?? "",
-    full_name: profile?.full_name ?? "",
-    mobile_phone_number: profile?.mobile_phone_number ?? null,
+    fullName: profile?.fullName ?? "",
+    mobilePhoneNumber: profile?.mobilePhoneNumber,
   };
 };
 
 const makeUpdateRequest = (
-  accountId: number,
+  userAccountId: number,
   profile?: Partial<UserAccountProfile>,
-): UpdateAccountProfileRequest => {
+): UpdateUserAccountProfileRequest => {
   return {
-    account_id: accountId,
-    ...makeProfile(profile),
+    userAccountId: userAccountId,
+    appUpdateUserAccountProfileRequest: makeProfile(profile),
   };
 };
 
 export const ProfileSettings: React.FC<Record<string, never>> = () => {
-  const { finbotClient } = useContext(ServicesContext);
   const { userAccountId } = useContext(AuthContext);
+  const userAccountsApi = useApi(UserAccountsApi);
   const [profile, setProfile] = useState<UserAccountProfile | null>(null);
 
   useEffect(() => {
     const fetch = async () => {
-      const userAccount = await finbotClient!.getUserAccount({
-        account_id: userAccountId!,
+      const result = await userAccountsApi.getUserAccount({
+        userAccountId: userAccountId!,
       });
-      setProfile(makeProfile(userAccount));
+      setProfile(makeProfile(result.userAccount));
     };
     fetch();
-  }, [finbotClient, userAccountId]);
+  }, [userAccountsApi, userAccountId]);
 
   const handleSubmit = async (
     values: UserAccountProfile,
     { setSubmitting }: { setSubmitting: (submitting: boolean) => void },
   ) => {
     try {
-      const newProfile = await finbotClient!.updateAccountProfile(
+      const result = await userAccountsApi.updateUserAccountProfile(
         makeUpdateRequest(userAccountId!, values),
       );
-      setProfile(newProfile);
+      setProfile(result.profile);
       toast.success("Profile updated");
     } catch (e) {
       toast.error(`Failed to update profile: ${e}`);
@@ -94,14 +96,10 @@ export const ProfileSettings: React.FC<Record<string, never>> = () => {
               <MetaForm>
                 <Form.Group>
                   <Form.Label>Full name</Form.Label>
-                  <Field
-                    type="text"
-                    name="full_name"
-                    className="form-control"
-                  />
+                  <Field type="text" name="fullName" className="form-control" />
                   <ErrorMessage
                     className="text-danger"
-                    name="full_name"
+                    name="fullName"
                     component="div"
                   />
                 </Form.Group>
@@ -118,12 +116,12 @@ export const ProfileSettings: React.FC<Record<string, never>> = () => {
                   <Form.Label>Mobile phone number</Form.Label>
                   <Field
                     type="text"
-                    name="mobile_phone_number"
+                    name="mobilePhoneNumber"
                     className="form-control"
                   />
                   <ErrorMessage
                     className="text-danger"
-                    name="mobile_phone_number"
+                    name="mobilePhoneNumber"
                     component="div"
                   />
                 </Form.Group>

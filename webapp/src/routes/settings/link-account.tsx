@@ -1,15 +1,18 @@
 import React, { useEffect, useState, useContext, useRef } from "react";
 import { Navigate } from "react-router-dom";
 
-import { AuthContext, ServicesContext } from "contexts";
-import { LoadingButton, ColourPicker } from "components";
 import {
-  LinkedAccount,
-  LinkedAccountCredentials,
-  PlaidSettings,
+  useApi,
   Provider,
-  AccountsFormattingRules,
-} from "clients/finbot-client/types";
+  LinkedAccount,
+  LinkedAccountsApi,
+  FinancialDataProvidersApi,
+  FormattingRulesApi,
+  PlaidSettings,
+  AppGetAccountsFormattingRulesResponse,
+} from "clients";
+import { AuthContext } from "contexts";
+import { LoadingButton, ColourPicker } from "components";
 
 import { default as DataDrivenForm, ISubmitEvent } from "react-jsonschema-form";
 import { toast } from "react-toastify";
@@ -20,6 +23,9 @@ import { PlaidLink } from "react-plaid-link";
 const NO_PROVIDER_SELECTED = "NO_PROVIDER_SELECTED";
 const PLAID_PROVIDER_ID = "plaid_us";
 const FALLBACK_COLOUR = "#FFFFFF";
+
+type FormattingRules = AppGetAccountsFormattingRulesResponse;
+type LinkedAccountCredentials = object;
 
 interface DataDrivenAccountFormProps {
   operation: string | null;
@@ -93,7 +99,7 @@ const PlaidForm: React.FC<PlaidFormProps> = ({
         }
       }}
       token={updateMode ? linkToken! : undefined}
-      publicKey={settings.public_key}
+      publicKey={settings.publicKey}
       env={settings.environment}
       countryCodes={["GB", "US", "CA", "IE", "FR", "ES", "NL"]}
       product={updateMode ? [] : ["transactions", "identity"]}
@@ -107,16 +113,25 @@ const isPlaidSelected = (provider?: Provider | null) => {
   return provider && provider.id === PLAID_PROVIDER_ID;
 };
 
+const getPlaidLinkToken = (credentials: object): string | null => {
+  if ("link_token" in credentials) {
+    return credentials.link_token as string;
+  }
+  return null;
+};
+
 export interface LinkAccountProps {
   linkedAccount?: LinkedAccount | null;
 }
 
 export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
   const { userAccountId } = useContext(AuthContext);
-  const { finbotClient } = useContext(ServicesContext);
+  const linkedAccountsApi = useApi(LinkedAccountsApi);
+  const providersApi = useApi(FinancialDataProvidersApi);
+  const formattingRulesApi = useApi(FormattingRulesApi);
 
   const [formattingRules, setFormattingRules] =
-    useState<AccountsFormattingRules | null>(null);
+    useState<FormattingRules | null>(null);
   const [linkedAccount, setLinkedAccount] = useState<LinkedAccount | null>(
     null,
   );
@@ -137,35 +152,39 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
 
   useEffect(() => {
     const fetch = async () => {
-      const providersPayload = await finbotClient!.getProviders();
+      const result = await providersApi.getFinancialDataProviders();
       setProviders(
-        providersPayload.sort((p1, p2) => {
+        result.providers.sort((p1, p2) => {
           return p1.description.localeCompare(p2.description);
         }),
       );
-      setPlaidSettings(await finbotClient!.getPlaidSettings());
-      setFormattingRules(await finbotClient!.getAccountsFormattingRules());
+      setPlaidSettings(
+        (await providersApi.getPlaidSettings()).settings ?? null,
+      );
+      setFormattingRules(
+        await formattingRulesApi!.getAccountsFormattingRules(),
+      );
     };
     fetch();
-  }, [finbotClient]);
+  }, [providersApi, formattingRulesApi]);
 
   useEffect(() => {
     if (props.linkedAccount) {
       const existingLinkedAccount = { ...props.linkedAccount };
       providers.forEach((provider) => {
-        if (existingLinkedAccount.provider_id === provider.id) {
+        if (existingLinkedAccount.providerId === provider.id) {
           setSelectedProvider(provider);
         }
       });
       setLinkedAccount(existingLinkedAccount);
-      updateAccountName(existingLinkedAccount.account_name);
-      updateAccountColour(existingLinkedAccount.account_colour);
+      updateAccountName(existingLinkedAccount.accountName);
+      updateAccountColour(existingLinkedAccount.accountColour);
     }
   }, [providers, props.linkedAccount]);
 
   useEffect(() => {
     if (formattingRules && accountColour === null) {
-      const palette = formattingRules.colour_palette;
+      const palette = formattingRules.colourPalette;
       updateAccountColour(palette[Math.floor(Math.random() * palette.length)]);
     }
   }, [formattingRules, accountColour]);
@@ -197,21 +216,23 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
       const updatedProps: Partial<LinkedAccount> = {};
       if (
         accountNameRef.current &&
-        accountNameRef.current !== linkedAccount!.account_name
+        accountNameRef.current !== linkedAccount!.accountName
       ) {
-        updatedProps.account_name = accountNameRef.current;
+        updatedProps.accountName = accountNameRef.current;
       }
       if (
         accountColourRef.current &&
-        accountColourRef.current !== linkedAccount!.account_colour
+        accountColourRef.current !== linkedAccount!.accountColour
       ) {
-        updatedProps.account_colour = accountColourRef.current;
+        updatedProps.accountColour = accountColourRef.current;
       }
-      await finbotClient!.updateLinkedAccountMetadata({
-        account_id: userAccountId!,
-        linked_account_id: linkedAccount!.id,
-        account_name: updatedProps.account_name,
-        account_colour: updatedProps.account_colour,
+      await linkedAccountsApi.updateLinkedAccountMetadata({
+        userAccountId: userAccountId!,
+        linkedAccountId: linkedAccount!.id,
+        appUpdateLinkedAccountMetadataRequest: {
+          accountName: updatedProps.accountName,
+          accountColour: updatedProps.accountColour,
+        },
       });
       setLinkedAccount({ ...linkedAccount!, ...updatedProps });
       toast.success(`Linked account updated`);
@@ -224,16 +245,15 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
     credentials: LinkedAccountCredentials,
   ) => {
     setOperation("Validating credentials");
-    const settings = {
-      account_id: userAccountId!,
-      linked_account_id: linkedAccount!.id,
-      credentials: credentials,
-    };
     try {
-      await finbotClient!.updateLinkedAccountCredentials({
-        ...settings,
+      await linkedAccountsApi.updateLinkedAccountCredentials({
+        userAccountId: userAccountId!,
+        linkedAccountId: linkedAccount!.id,
         validate: true,
         persist: false,
+        appUpdateLinkedAccountCredentialsRequest: {
+          credentials: credentials,
+        },
       });
     } catch (e) {
       toast.error(`Error validating credentials: ${e}`);
@@ -242,14 +262,18 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
     }
     setOperation("Updating credentials");
     try {
-      await finbotClient!.updateLinkedAccountCredentials({
-        ...settings,
+      await linkedAccountsApi.updateLinkedAccountCredentials({
+        userAccountId: userAccountId!,
+        linkedAccountId: linkedAccount!.id,
         validate: false,
         persist: true,
+        appUpdateLinkedAccountCredentialsRequest: {
+          credentials: credentials,
+        },
       });
       toast.success(
         `Credentials for linked account '${
-          linkedAccount!.account_name
+          linkedAccount!.accountName
         }' updated`,
       );
     } catch (e) {
@@ -262,17 +286,19 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
     provider: Provider,
     credentials: LinkedAccountCredentials,
   ) => {
-    const link_settings = {
-      provider_id: provider.id,
-      account_name: accountNameRef.current ?? "",
-      account_colour: accountColourRef.current ?? FALLBACK_COLOUR,
-      credentials,
+    const linkRequest = {
+      providerId: provider.id,
+      credentials: credentials,
+      accountName: accountNameRef.current ?? "",
+      accountColour: accountColourRef.current ?? FALLBACK_COLOUR,
     };
     setOperation("Validating credentials");
     try {
-      await finbotClient!.validateLinkedAccountCredentials({
-        account_id: userAccountId!,
-        ...link_settings,
+      await linkedAccountsApi.linkNewAccount({
+        userAccountId: userAccountId!,
+        validate: true,
+        persist: false,
+        appLinkAccountRequest: linkRequest,
       });
     } catch (e) {
       toast.error(`Error validating credentials: ${e}`);
@@ -281,9 +307,11 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
     }
     setOperation("Linking account");
     try {
-      await finbotClient!.linkAccount({
-        account_id: userAccountId!,
-        ...link_settings,
+      await linkedAccountsApi.linkNewAccount({
+        userAccountId: userAccountId!,
+        validate: false,
+        persist: true,
+        appLinkAccountRequest: linkRequest,
       });
     } catch (e) {
       toast.error(`Error updating credentials: ${e}`);
@@ -344,7 +372,7 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
                 <Col>
                   <InputGroup>
                     <ColourPicker
-                      presetsColours={formattingRules?.colour_palette}
+                      presetsColours={formattingRules?.colourPalette}
                       colour={accountColour ?? FALLBACK_COLOUR}
                       onChange={(newColour) => updateAccountColour(newColour)}
                     />
@@ -357,8 +385,8 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
                       }}
                     />
                     {updateMode &&
-                      (accountName !== linkedAccount!.account_name ||
-                        accountColour !== linkedAccount!.account_colour) && (
+                      (accountName !== linkedAccount!.accountName ||
+                        accountColour !== linkedAccount!.accountColour) && (
                         <Button
                           variant={"primary"}
                           onClick={onUpdateExistingAccountMetadata}
@@ -384,7 +412,7 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
                 !isPlaidSelected(selectedProvider) && (
                   <DataDrivenAccountForm
                     operation={operation}
-                    schema={selectedProvider.credentials_schema}
+                    schema={selectedProvider.credentialsSchema}
                     updateMode={updateMode}
                     onSubmit={(credentials: LinkedAccountCredentials) => {
                       if (updateMode) {
@@ -404,7 +432,7 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
                   settings={plaidSettings!}
                   linkToken={
                     updateMode
-                      ? (linkedAccount!.credentials!.link_token as string)
+                      ? getPlaidLinkToken(linkedAccount!.credentials!)
                       : null
                   }
                   onSubmit={(credentials) => {

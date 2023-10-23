@@ -10,9 +10,10 @@ from finbot.apps.appwsrv import serializer
 from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
 from finbot.apps.appwsrv.core.series import order_series_by_last_value
 from finbot.apps.appwsrv.db import db_session
-from finbot.apps.appwsrv.spec import ResponseSpec, spec
+from finbot.apps.appwsrv.spec import spec
 from finbot.core import schema as core_schema
 from finbot.core.errors import InvalidUserInput
+from finbot.core.spec_tree import JWT_REQUIRED, ResponseSpec
 from finbot.core.utils import some
 from finbot.core.web_service import jwt_required, service_endpoint
 from finbot.model import repository
@@ -27,15 +28,24 @@ linked_accounts_valuation_api = Blueprint(
 )
 
 
+ENDPOINTS_TAGS = ["Linked accounts (valuation)"]
+
+
 @linked_accounts_valuation_api.route("/", methods=["GET"])
 @jwt_required()
 @service_endpoint()
 @spec.validate(
-    resp=ResponseSpec(HTTP_200=appwsrv_schema.GetLinkedAccountsValuationResponse)
+    resp=ResponseSpec(
+        HTTP_200=appwsrv_schema.GetLinkedAccountsValuationResponse,
+    ),
+    operation_id="get_linked_accounts_valuation",
+    security=JWT_REQUIRED,
+    tags=ENDPOINTS_TAGS,
 )
 def get_linked_accounts_valuation(
     user_account_id: int,
 ) -> appwsrv_schema.GetLinkedAccountsValuationResponse:
+    """Get linked accounts valuation"""
     history_entry = repository.get_last_history_entry(db_session, user_account_id)
     valuation_ccy = repository.get_user_account_settings(
         db_session, user_account_id
@@ -78,12 +88,18 @@ def get_linked_accounts_valuation(
 @jwt_required()
 @service_endpoint()
 @spec.validate(
-    resp=ResponseSpec(HTTP_200=appwsrv_schema.GetLinkedAccountsHistoricalValuation)
+    resp=ResponseSpec(
+        HTTP_200=appwsrv_schema.GetLinkedAccountsHistoricalValuation,
+    ),
+    operation_id="get_linked_accounts_historical_valuation",
+    security=JWT_REQUIRED,
+    tags=ENDPOINTS_TAGS,
 )
 def get_linked_accounts_historical_valuation(
     user_account_id: int,
     query: appwsrv_schema.HistoricalValuationParams,
 ) -> appwsrv_schema.GetLinkedAccountsHistoricalValuation:
+    """Get linked accounts historical valuation"""
     settings = repository.get_user_account_settings(db_session, user_account_id)
     from_time = query.from_time
     to_time = query.to_time

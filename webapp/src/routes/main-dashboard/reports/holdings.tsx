@@ -1,12 +1,17 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
-import { ServicesContext } from "contexts";
 import {
-  HoldingsReport,
-  HoldingsReportMetadataNode,
-  HoldingsReportNode,
-  HoldingsReportItemIcon,
-} from "clients/finbot-client/types";
+  useApi,
+  UserAccountsReportsApi,
+  ValuationTree,
+  UserAccountNode,
+  LinkedAccountNode,
+  SubAccountNode,
+  SubAccountItemNode,
+  SubAccountItemMetadataNode,
+  SubAccountItemNodeIcon,
+  Valuation,
+} from "clients";
 
 import {
   TreeGrid,
@@ -19,6 +24,13 @@ import { TreeGridRowProps } from "components/tree-grid";
 import { MoneyFormatterType } from "components/money";
 import { Alert } from "react-bootstrap";
 
+type HoldingsReportNode =
+  | UserAccountNode
+  | LinkedAccountNode
+  | SubAccountNode
+  | SubAccountItemNode
+  | SubAccountItemMetadataNode;
+
 function getRowMetadata(node: HoldingsReportNode) {
   if (node.role === "user_account") {
     return {
@@ -27,12 +39,12 @@ function getRowMetadata(node: HoldingsReportNode) {
     };
   } else if (node.role === "linked_account") {
     return {
-      label: node.linked_account.description,
+      label: node.linkedAccount.description,
       height: "4em",
     };
   } else if (node.role === "sub_account") {
     return {
-      label: node.sub_account.description,
+      label: node.subAccount.description,
       height: "3.5em",
     };
   } else if (node.role === "item") {
@@ -43,29 +55,31 @@ function getRowMetadata(node: HoldingsReportNode) {
   }
 }
 
-function getNodeValuation(node: HoldingsReportNode): number | undefined {
-  if (node.role !== "metadata") {
-    return node.valuation.value;
+function getNodeValuation(node: HoldingsReportNode): Valuation | undefined {
+  if ("valuation" in node) {
+    return node.valuation;
   }
 }
 
 const GridMetadataRow = (
-  props: TreeGridRowProps<HoldingsReportMetadataNode>,
+  props: TreeGridRowProps<SubAccountItemMetadataNode>,
 ) => {
   const { data, ...rest } = props;
   return (
     <tr>
       <td colSpan={8}>
-        <TreeGrid.Expander {...rest} />
-        <strong>{`${data.label}: `}</strong>
-        {data.value}
+        <>
+          <TreeGrid.Expander {...rest} />
+          <strong>{`${data.label}: `}</strong>
+          {data.value}
+        </>
       </td>
     </tr>
   );
 };
 
 interface ItemIconProps {
-  icon: HoldingsReportItemIcon;
+  icon: SubAccountItemNodeIcon;
 }
 
 const ItemIcon = (props: ItemIconProps) => {
@@ -76,7 +90,7 @@ const ItemIcon = (props: ItemIconProps) => {
         width: "2.35em",
         textAlign: "center",
         color: "white",
-        backgroundColor: props.icon.background_colour,
+        backgroundColor: props.icon.backgroundColour,
         paddingTop: "0.2em",
         paddingBottom: "0.2em",
         marginRight: "0.5em",
@@ -93,14 +107,14 @@ const GridRow = (locale: string, moneyFormatter: MoneyFormatterType) => {
     const metadata = getRowMetadata(node);
 
     if (node.role === "metadata") {
-      const metadataNode: HoldingsReportMetadataNode = node;
-      const newProps = { ...props, data: metadataNode };
+      const newProps = { ...props, data: node };
       return <GridMetadataRow {...newProps} />;
     }
 
-    const valuation = node.valuation;
+    const valuation = getNodeValuation(node)!;
     const change = valuation.change;
-    const sparkline = valuation.sparkline;
+    const sparkline =
+      "sparkline" in valuation ? valuation.sparkline : undefined;
     const fontWeight = node.role === "user_account" ? "bold" : undefined;
 
     return (
@@ -120,21 +134,21 @@ const GridRow = (locale: string, moneyFormatter: MoneyFormatterType) => {
             moneyFormatter={moneyFormatter}
           />
         </td>
-        <td>{sparkline !== undefined && <SparkLine series={sparkline} />}</td>
         <td>
-          {change ? <ValuationChange amount={change.change_1day} /> : "-"}
+          {sparkline !== undefined && <SparkLine series={sparkline as any} />}
+        </td>
+        <td>{change ? <ValuationChange amount={change.change1day} /> : "-"}</td>
+        <td>
+          {change ? <ValuationChange amount={change.change1week} /> : "-"}
         </td>
         <td>
-          {change ? <ValuationChange amount={change.change_1week} /> : "-"}
+          {change ? <ValuationChange amount={change.change1month} /> : "-"}
         </td>
         <td>
-          {change ? <ValuationChange amount={change.change_1month} /> : "-"}
+          {change ? <ValuationChange amount={change.change1year} /> : "-"}
         </td>
         <td>
-          {change ? <ValuationChange amount={change.change_1year} /> : "-"}
-        </td>
-        <td>
-          {change ? <ValuationChange amount={change.change_2years} /> : "-"}
+          {change ? <ValuationChange amount={change.change2years} /> : "-"}
         </td>
       </tr>
     );
@@ -167,24 +181,25 @@ export const HoldingsReportPanel: React.FC<HoldingsReportPanelProps> = (
 ) => {
   const { userAccountId, locale, moneyFormatter } = props;
 
-  const { finbotClient } = useContext(ServicesContext);
+  const userAccountsReportsApi = useApi(UserAccountsReportsApi);
   const [loading, setLoading] = useState(false);
-  const [report, setReport] = useState<HoldingsReport | null>(null);
+  const [report, setReport] = useState<ValuationTree | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetch = async () => {
       try {
         setLoading(true);
-        const report = await finbotClient!.getHoldingsReport();
-        setReport(report);
+        const result =
+          await userAccountsReportsApi.getUserAccountHoldingsReport();
+        setReport(result.report);
       } catch (e) {
         setError(`${e}`);
       }
       setLoading(false);
     };
     fetch();
-  }, [finbotClient, userAccountId]);
+  }, [userAccountsReportsApi, userAccountId]);
 
   if (error !== null) {
     return (
@@ -213,8 +228,8 @@ export const HoldingsReportPanel: React.FC<HoldingsReportPanelProps> = (
     <TreeGrid
       rowAs={GridRow(locale, moneyFormatter)}
       headerAs={Header}
-      tree={report!.valuation_tree as HoldingsReportNode}
-      sortBy={(node) => getNodeValuation(node) ?? Number.MIN_VALUE}
+      tree={report.valuationTree as HoldingsReportNode}
+      sortBy={(node) => getNodeValuation(node)?.value ?? Number.MIN_VALUE}
     />
   );
 };

@@ -1,7 +1,7 @@
 import React, { useContext, useState } from "react";
 import { Link } from "react-router-dom";
 
-import { Credentials } from "clients/finbot-client/types";
+import { AppLoginRequest } from "clients";
 import { AuthContext } from "contexts";
 
 import { toast } from "react-toastify";
@@ -47,7 +47,7 @@ export const LoginForm: React.FC<LoginFormProps> = () => {
   const { login } = useContext(AuthContext);
   const [loading] = useState(false);
 
-  const handleLogin = async (event: ISubmitEvent<Credentials>) => {
+  const handleLogin = async (event: ISubmitEvent<AppLoginRequest>) => {
     try {
       await login!(event.formData);
     } catch (e) {
