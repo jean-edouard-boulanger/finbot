@@ -2,8 +2,10 @@ import functools
 import logging
 import traceback
 import typing as t
+from http import HTTPStatus
 from typing import Any, Callable, Optional, ParamSpec, Self, TypeVar, cast
 
+import flask
 import orjson
 import requests
 import requests.exceptions
@@ -59,7 +61,14 @@ def service_endpoint() -> Callable[[Callable[P, RT]], Callable[P, FlaskResponse]
                 logging.warning(
                     "error while processing request:" f" {e}\n{traceback.format_exc()}"
                 )
-                return prepare_response(ApplicationErrorResponse.from_exception(e))
+                return cast(
+                    FlaskResponse,
+                    flask.current_app.response_class(
+                        ApplicationErrorResponse.from_exception(e).json(),
+                        status=HTTPStatus.INTERNAL_SERVER_ERROR,
+                        content_type="application/json",
+                    ),
+                )
 
         return handler
 

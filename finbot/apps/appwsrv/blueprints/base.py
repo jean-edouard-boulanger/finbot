@@ -8,8 +8,8 @@ from finbot.core import schema as core_schema
 from finbot.core.spec_tree import ResponseSpec
 from finbot.core.web_service import service_endpoint
 
-API_URL_PREFIX = "/api/v1/"
-base_api = Blueprint(name="api", import_name=__name__, url_prefix=API_URL_PREFIX)
+API_URL_PREFIX = "/api/v1"
+base_api = Blueprint(name="api", import_name=__name__, url_prefix=f"{API_URL_PREFIX}/")
 
 
 ENDPOINTS_TAGS = ["System"]

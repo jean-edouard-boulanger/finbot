@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useContext } from "react";
-
-import { ServicesContext } from "contexts";
+import React, { useState, useEffect } from "react";
+import { useApi, FinancialDataProvidersApi } from "clients";
 
 import Select from "react-select";
 
@@ -31,13 +30,15 @@ export const ProviderSelector: React.FC<ProviderSelectorProps> & {
   New: SelectItem;
 } = (props) => {
   const { onChange = () => {}, onNew = null, defaultValue = null } = props;
+  const financialDataProvidersApi = useApi(FinancialDataProvidersApi);
 
-  const { finbotClient } = useContext(ServicesContext);
   const [options, setOptions] = useState<Array<SelectItem>>([]);
 
   useEffect(() => {
     const fetch = async () => {
-      const providers = await finbotClient!.getProviders();
+      const results =
+        await financialDataProvidersApi.getFinancialDataProviders();
+      const providers = results.providers;
       const allowNew = onNew !== null;
       const newOption = allowNew ? [ProviderSelector.New] : [];
       const otherOptions = providers.map((provider) => {
@@ -49,7 +50,7 @@ export const ProviderSelector: React.FC<ProviderSelectorProps> & {
       setOptions([...newOption, ...otherOptions]);
     };
     fetch();
-  }, [finbotClient, onNew]);
+  }, [financialDataProvidersApi, onNew]);
 
   return (
     <Select

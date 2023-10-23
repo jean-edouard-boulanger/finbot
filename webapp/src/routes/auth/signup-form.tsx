@@ -1,8 +1,7 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 
-import { ServicesContext } from "contexts";
-
+import { useApi, UserAccountsApi } from "clients";
 import { isEmailValid } from "utils/email";
 
 import { toast } from "react-toastify";
@@ -73,7 +72,7 @@ const validatePersonalForm = (
 };
 
 export const SignupForm: React.FC<Record<string, never>> = () => {
-  const { finbotClient } = useContext(ServicesContext);
+  const userAccountsApi = useApi(UserAccountsApi);
   const [registrationForm, setRegistrationForm] = useState<RegistrationForm>(
     DEFAULT_REGISTRATION_FORM,
   );
@@ -112,11 +111,15 @@ export const SignupForm: React.FC<Record<string, never>> = () => {
   const handleSignup = async (form: RegistrationForm) => {
     try {
       setLoading(true);
-      await finbotClient!.registerAccount({
-        email: form.email,
-        full_name: form.fullName,
-        password: form.password,
-        valuation_ccy: form.valuationCurrency,
+      await userAccountsApi.createUserAccount({
+        appCreateUserAccountRequest: {
+          email: form.email,
+          fullName: form.fullName,
+          password: form.password,
+          settings: {
+            valuationCcy: form.valuationCurrency,
+          },
+        },
       });
       setLoading(false);
       setRegistered(true);
@@ -235,7 +238,11 @@ export const SignupForm: React.FC<Record<string, never>> = () => {
                 disabled={!personalFormValidation.valid}
                 onClick={async () => {
                   if (
-                    await finbotClient!.isEmailAvailable(registrationForm.email)
+                    (
+                      await userAccountsApi.isEmailAvailable({
+                        email: registrationForm.email,
+                      })
+                    ).available
                   ) {
                     setStep("password");
                   } else {

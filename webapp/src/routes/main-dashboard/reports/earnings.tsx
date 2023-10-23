@@ -1,7 +1,7 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
-import { ServicesContext } from "contexts/services/services-context";
-import { EarningsReport } from "clients/finbot-client/types";
+import { useApi, UserAccountsReportsApi, EarningsReport } from "clients";
+
 import {
   StackedBarLoader,
   Money,
@@ -22,8 +22,7 @@ export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
   props,
 ) => {
   const { userAccountId, locale, moneyFormatter } = props;
-
-  const { finbotClient } = useContext(ServicesContext);
+  const userAccountsReportsApi = useApi(UserAccountsReportsApi);
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState<EarningsReport | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +31,9 @@ export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
     const fetch = async () => {
       try {
         setLoading(true);
-        const report = await finbotClient!.getEarningsReport();
+        const report = (
+          await userAccountsReportsApi.getUserAccountEarningsReport()
+        ).report;
         setReport(report);
       } catch (e) {
         setError(`${e}`);
@@ -40,7 +41,7 @@ export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
       setLoading(false);
     };
     fetch();
-  }, [finbotClient, userAccountId]);
+  }, [userAccountsReportsApi, userAccountId]);
 
   if (error !== null) {
     return (
@@ -85,11 +86,11 @@ export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
           return (
             <tr key={`entry-${index}`}>
               <td>
-                <strong>{entry.aggregation.as_str}</strong>
+                <strong>{entry.aggregation.asStr}</strong>
               </td>
               <td>
                 <Money
-                  amount={entry.metrics.first_value}
+                  amount={entry.metrics.firstValue}
                   locale={locale}
                   ccy={currency}
                   moneyFormatter={moneyFormatter}
@@ -97,7 +98,7 @@ export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
               </td>
               <td>
                 <Money
-                  amount={entry.metrics.last_value}
+                  amount={entry.metrics.lastValue}
                   locale={locale}
                   ccy={currency}
                   moneyFormatter={moneyFormatter}
@@ -105,7 +106,7 @@ export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
               </td>
               <td>
                 <Money
-                  amount={entry.metrics.min_value}
+                  amount={entry.metrics.minValue}
                   locale={locale}
                   ccy={currency}
                   moneyFormatter={moneyFormatter}
@@ -113,7 +114,7 @@ export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
               </td>
               <td>
                 <Money
-                  amount={entry.metrics.max_value}
+                  amount={entry.metrics.maxValue}
                   locale={locale}
                   ccy={currency}
                   moneyFormatter={moneyFormatter}
@@ -121,12 +122,12 @@ export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
               </td>
               <td>
                 <strong>
-                  <ValuationChange amount={entry.metrics.abs_change} />
+                  <ValuationChange amount={entry.metrics.absChange} />
                 </strong>
               </td>
               <td>
                 <strong>
-                  <RelativeValuationChange amount={entry.metrics.rel_change} />
+                  <RelativeValuationChange amount={entry.metrics.relChange} />
                 </strong>
               </td>
             </tr>
@@ -137,7 +138,7 @@ export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
         <tr
           style={{ fontWeight: "bold" }}
           className={
-            report!.rollup.abs_change >= 0 ? "table-success" : "table-danger"
+            report!.rollup.absChange >= 0 ? "table-success" : "table-danger"
           }
         >
           <td>
@@ -146,7 +147,7 @@ export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
           <td>
             <strong>
               <Money
-                amount={report!.rollup.first_value}
+                amount={report!.rollup.firstValue}
                 locale={locale}
                 ccy={currency}
                 moneyFormatter={moneyFormatter}
@@ -156,7 +157,7 @@ export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
           <td>
             <strong>
               <Money
-                amount={report!.rollup.last_value}
+                amount={report!.rollup.lastValue}
                 locale={locale}
                 ccy={currency}
                 moneyFormatter={moneyFormatter}
@@ -165,7 +166,7 @@ export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
           </td>
           <td>
             <Money
-              amount={report!.rollup.min_value}
+              amount={report!.rollup.minValue}
               locale={locale}
               ccy={currency}
               moneyFormatter={moneyFormatter}
@@ -173,7 +174,7 @@ export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
           </td>
           <td>
             <Money
-              amount={report!.rollup.max_value}
+              amount={report!.rollup.maxValue}
               locale={locale}
               ccy={currency}
               moneyFormatter={moneyFormatter}
@@ -181,12 +182,12 @@ export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
           </td>
           <td>
             <strong>
-              <ValuationChange amount={report!.rollup.abs_change} />
+              <ValuationChange amount={report!.rollup.absChange} />
             </strong>
           </td>
           <td>
             <strong>
-              <RelativeValuationChange amount={report!.rollup.rel_change} />
+              <RelativeValuationChange amount={report!.rollup.relChange} />
             </strong>
           </td>
         </tr>

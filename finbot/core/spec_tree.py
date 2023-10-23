@@ -1,18 +1,19 @@
 import inspect
-from typing import TypeAlias
+from typing import Any, TypeAlias
 
+from pydantic.v1 import BaseModel
 from spectree import Response
 from spectree import SpecTree as _SpecTree
-from spectree.config import SecurityScheme
+from spectree.config import SecurityScheme  # type: ignore
 from spectree.models import SecureType, SecuritySchemeData
 
 from finbot._version import __version__
 
 SECURITY_SCHEME_NAME = "bearerAuth"
-JWT_REQUIRED = {SECURITY_SCHEME_NAME: []}
+JWT_REQUIRED: dict[str, list[str]] = {SECURITY_SCHEME_NAME: []}
 
 
-def get_model_key(model) -> str:
+def get_model_key(model: type[BaseModel]) -> str:
     model_name_prefix = None
     model_module = inspect.getmodule(model)
     if model_module and (namespace := getattr(model_module, "SchemaNamespace", None)):
@@ -33,7 +34,7 @@ DEFAULT_SPEC_TREE_CONFIG = dict(
     security_schemes=[
         SecurityScheme(
             name=SECURITY_SCHEME_NAME,
-            data=SecuritySchemeData(
+            data=SecuritySchemeData(  # type: ignore
                 type=SecureType.HTTP,
                 scheme="bearer",
                 bearerFormat="JWT",
@@ -45,7 +46,7 @@ DEFAULT_SPEC_TREE_CONFIG = dict(
 ResponseSpec: TypeAlias = Response
 
 
-def SpecTree(title: str, **spec_tree_kwargs):
+def SpecTree(title: str, **spec_tree_kwargs: Any) -> _SpecTree:
     return _SpecTree(
         "flask", title=title, **{**DEFAULT_SPEC_TREE_CONFIG, **spec_tree_kwargs}
     )

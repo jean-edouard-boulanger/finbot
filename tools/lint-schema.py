@@ -45,7 +45,7 @@ def main():
             for part in module_file_rel_path.parts
             if part != "__init__.py"
         )
-        module_name = f".".join((finbot_root_package_name,) + parts)
+        module_name = ".".join((finbot_root_package_name,) + parts)
         for schema_type in iter_module_schemas(module_name):
             schema_module = inspect.getmodule(schema_type)
             if Path(schema_module.__file__) == module_file_path:

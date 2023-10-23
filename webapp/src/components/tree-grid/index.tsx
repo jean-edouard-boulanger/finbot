@@ -2,9 +2,15 @@ import React, { useState, useEffect } from "react";
 import { Table } from "react-bootstrap";
 import { FaCaretDown, FaCaretRight } from "react-icons/fa";
 
-interface TreeNode<NodeType> {
-  children?: Array<NodeType>;
+interface TreeNodeWithChildren<NodeType> {
+  children: Array<NodeType>;
 }
+
+interface TreeNodeWithoutChildren {}
+
+type TreeNode<NodeType> =
+  | TreeNodeWithChildren<NodeType>
+  | TreeNodeWithoutChildren;
 
 interface InternalTreeNode<UserNodeType> {
   id: number;
@@ -20,6 +26,13 @@ type Topology<UserNodeType extends TreeNode<UserNodeType>> = Array<
 >;
 
 export type SortBy<UserNodeType> = (node: UserNodeType) => number;
+
+function getChildren<NodeType>(node: TreeNode<NodeType>): Array<NodeType> {
+  if ("children" in node) {
+    return node.children;
+  }
+  return [];
+}
 
 function topologicalSort<UserNodeType extends TreeNode<UserNodeType>>(
   tree: UserNodeType,
@@ -42,7 +55,7 @@ function topologicalSort<UserNodeType extends TreeNode<UserNodeType>>(
       data: node,
     });
     let cOrder = 0;
-    [...(node.children ?? [])]
+    [...getChildren(node)]
       .sort((c1, c2) => {
         return sortBy(c2) - sortBy(c1);
       })
@@ -78,7 +91,7 @@ function refreshTopology<UserNodeType extends TreeNode<UserNodeType>>(
 function getExpanderIcon<UserNodeType extends TreeNode<UserNodeType>>(
   node: InternalTreeNode<UserNodeType>,
 ) {
-  if ((node.data.children ?? []).length === 0) {
+  if (getChildren(node.data).length === 0) {
     return () => null;
   }
   if (node.expanded) {
@@ -166,7 +179,7 @@ export function TreeGrid<UserNodeType extends TreeNode<UserNodeType>>(
               __expander: {
                 Icon: getExpanderIcon(n),
                 level: n.level,
-                leaf: (n.data.children ?? []).length === 0,
+                leaf: getChildren(n.data).length === 0,
                 cb: () => {
                   onNodeExpandClick(n);
                 },

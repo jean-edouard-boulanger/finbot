@@ -1,14 +1,24 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 
-import { ServicesContext } from "contexts";
+import {
+  useApi,
+  UserAccountsValuationApi,
+  LinkedAccountsValuationApi,
+  ValuationFrequency,
+  HistoricalValuation,
+} from "clients";
 
 import { Card, Dropdown, DropdownButton } from "react-bootstrap";
 import Chart from "react-apexcharts";
 import { MoneyFormatterType } from "components/money";
 
 import { DateTime } from "luxon";
-import { HistoricalValuation, TimeRange } from "clients/finbot-client/types";
 import { lastItem } from "utils/array";
+
+interface TimeRange {
+  from_time?: DateTime;
+  to_time?: DateTime;
+}
 
 interface TimeRangeChoiceType {
   label: string;
@@ -169,7 +179,8 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
   props,
 ) => {
   const { userAccountId, locale, moneyFormatter } = props;
-  const { finbotClient } = useContext(ServicesContext);
+  const userAccountsValuationApi = useApi(UserAccountsValuationApi);
+  const linkedAccountsValuationApi = useApi(LinkedAccountsValuationApi);
   const [now] = useState<DateTime>(DateTime.now());
   const [selectedLevel, setSelectedLevel] = useState(DEFAULT_LEVEL);
   const [selectedFrequency, setSelectedFrequency] = useState(DEFAULT_FREQUENCY);
@@ -182,44 +193,50 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
     const fetchValuation = async () => {
       const range = selectedTimeRange.makeRange(now);
       const request = {
-        account_id: userAccountId,
-        ...range,
-        frequency: selectedFrequency,
+        userAccountId: userAccountId,
+        fromTime: range.from_time?.toJSDate(),
+        toTime: range.to_time?.toJSDate(),
+        frequency: selectedFrequency as ValuationFrequency,
       };
       switch (selectedLevel.type) {
         case "account": {
           const data =
-            await finbotClient!.getAccountHistoricalValuation(request);
-          setHistoricalValuation(data);
+            await userAccountsValuationApi.getUserAccountHistoricalValuation(
+              request,
+            );
+          setHistoricalValuation(data.historicalValuation);
           break;
         }
         case "linked_account": {
           const data =
-            await finbotClient!.getLinkedAccountsHistoricalValuation(request);
-          setHistoricalValuation(data);
+            await linkedAccountsValuationApi.getLinkedAccountsHistoricalValuation(
+              request,
+            );
+          setHistoricalValuation(data.historicalValuation);
           break;
         }
         case "asset_type": {
           const data =
-            await finbotClient!.getAccountHistoricalValuationByAssetType(
+            await userAccountsValuationApi.getUserAccountHistoricalValuationByAssetType(
               request,
             );
-          setHistoricalValuation(data);
+          setHistoricalValuation(data.historicalValuation);
           break;
         }
         case "asset_class": {
           const data =
-            await finbotClient!.getAccountHistoricalValuationByAssetClass(
+            await userAccountsValuationApi.getUserAccountHistoricalValuationByAssetClass(
               request,
             );
-          setHistoricalValuation(data);
+          setHistoricalValuation(data.historicalValuation);
           break;
         }
       }
     };
     fetchValuation();
   }, [
-    finbotClient,
+    userAccountsValuationApi,
+    linkedAccountsValuationApi,
     userAccountId,
     now,
     selectedLevel,
@@ -324,9 +341,11 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
                 enabled: false,
               },
               xaxis: {
-                type: historicalValuation.series_data.x_axis.type,
+                type: historicalValuation.seriesData.xAxis.type as
+                  | "category"
+                  | "datetime",
                 tickAmount: 6,
-                categories: historicalValuation.series_data.x_axis.categories,
+                categories: historicalValuation.seriesData.xAxis.categories,
                 tooltip: {
                   enabled: false,
                 },
@@ -350,7 +369,7 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
                     return moneyFormatter(
                       value,
                       locale,
-                      historicalValuation.valuation_ccy ?? "",
+                      historicalValuation?.valuationCcy ?? "",
                     );
                   },
                 },
@@ -362,13 +381,13 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
               stroke: {
                 width: 1,
               },
-              colors: historicalValuation.series_data.series.map(
+              colors: historicalValuation.seriesData.series.map(
                 (entry) => entry.colour,
               ),
             }}
-            series={historicalValuation.series_data.series}
+            series={historicalValuation.seriesData.series as Array<any>}
             type={
-              historicalValuation.series_data.x_axis.type === "datetime"
+              historicalValuation.seriesData.xAxis.type === "datetime"
                 ? "area"
                 : "bar"
             }

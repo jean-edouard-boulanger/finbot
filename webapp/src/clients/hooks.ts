@@ -1,10 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect, useContext } from "react";
 
 import { Constructible, makeApi } from "./factory";
+import { AuthContext } from "contexts";
 
 export function useApi<ApiT extends Constructible>(
   apiType: ApiT,
 ): InstanceType<ApiT> {
-  const [client] = useState(() => makeApi(apiType));
-  return client;
+  const { accessToken } = useContext(AuthContext);
+  const [api, setApi] = useState(() =>
+    makeApi(apiType, accessToken ?? undefined),
+  );
+  useEffect(() => {
+    setApi(makeApi(apiType, accessToken ?? undefined));
+  }, [accessToken]);
+  return api;
 }
