@@ -1,6 +1,6 @@
 from flask import Blueprint
 
-from finbot._version import __version__
+from finbot._version import __api_version__, __version__
 from finbot.apps.appwsrv import schema as appwsrv_schema
 from finbot.apps.appwsrv.spec import spec
 from finbot.core import environment
@@ -42,6 +42,8 @@ def get_system_report() -> appwsrv_schema.SystemReportResponse:
     """Get system report"""
     return appwsrv_schema.SystemReportResponse(
         system_report=appwsrv_schema.SystemReport(
-            finbot_version=__version__, runtime=environment.get_finbot_runtime()
+            finbot_version=__version__,
+            finbot_api_version=__api_version__,
+            runtime=environment.get_finbot_runtime(),
         )
     )

@@ -94,6 +94,7 @@ class LinkedAccount(BaseModel):
 
 class SystemReport(BaseModel):
     finbot_version: str
+    finbot_api_version: str
     runtime: str
 
 
