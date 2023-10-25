@@ -301,7 +301,7 @@ wcwidth==0.2.8
     # via prompt-toolkit
 websockets==11.0.3
     # via python-binance
-werkzeug==3.0.0
+werkzeug==3.0.1
     # via
     #   flask
     #   flask-jwt-extended
