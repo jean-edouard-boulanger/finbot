@@ -23,4 +23,3 @@ envs/secrets*.env
 venv/
 .intake_data/
 envs/*-overrides.env
-openapitools.json

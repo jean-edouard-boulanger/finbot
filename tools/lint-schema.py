@@ -64,6 +64,8 @@ def main():
             print(
                 f"ERROR: schema type '{model_key}' is defined in multiple modules: {module_names}"
             )
+    if schema_valid:
+        print("Schema is valid")
     return 0 if schema_valid else 1
 
 
