@@ -11,7 +11,7 @@
     "@types/react-jsonschema-form": "^1.7.8",
     "@types/react-router-dom": "^5.3.3",
     "@types/react-select": "^5.0.1",
-    "@types/react-color": "^3.0.7",
+    "@types/react-color": "^3.0.10",
     "ace-builds": "^1.22.0",
     "apexcharts": "^3.44.0",
     "axios": "^1.4.0",
