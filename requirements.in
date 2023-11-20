@@ -16,7 +16,7 @@ krakenex==2.1.0
 oauth2client==4.1.3
 orjson==3.9.9
 pika==1.3.2
-plaid-python==16.0.0
+plaid-python==18.0.0
 playwright==1.39.0
 price-parser==0.3.4
 psycopg2==2.9.9
