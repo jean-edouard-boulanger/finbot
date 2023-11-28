@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements-dev.txt requirements-dev.in
 #
-aiohttp==3.9.0b0
+aiohttp==3.9.0
     # via
     #   -r requirements.in
     #   aiohttp-retry
