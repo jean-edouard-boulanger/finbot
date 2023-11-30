@@ -2,7 +2,7 @@ from typing import Any, Generator
 
 from pydantic.v1 import SecretStr
 
-from finbot.core import saxo
+from finbot.core import fx_market, saxo
 from finbot.core.environment import get_saxo_gateway_url
 from finbot.core.schema import BaseModel
 from finbot.providers.base import ProviderBase
@@ -100,26 +100,45 @@ class Api(ProviderBase):
                 )
             )
         for position in self._client.get_account_positions(saxo_account).Data:
-            assets.append(_make_asset(position))
+            assets.append(_make_asset(saxo_account, position))
         return assets
 
 
-def _make_asset(positions: saxo.NetPosition) -> Asset:
-    asset_type = positions.SinglePosition.PositionBase.AssetType
+def _get_value_in_account_currency(
+    saxo_account: saxo.SaxoAccount,
+    position: saxo.NetPosition,
+) -> float:
+    value = position.SinglePosition.PositionView.MarketValue
+    rate = fx_market.get_rate(
+        pair=fx_market.Xccy(
+            domestic=position.DisplayAndFormat.Currency,
+            foreign=saxo_account.Currency,
+        )
+    )
+    assert isinstance(rate, float)
+    return rate * value
+
+
+def _make_asset(
+    saxo_account: saxo.SaxoAccount,
+    position: saxo.NetPosition,
+) -> Asset:
+    asset_type = position.SinglePosition.PositionBase.AssetType
     if asset_type.lower() in ("etf", "etn"):
         return Asset(
-            name=positions.DisplayAndFormat.Description,
+            name=position.DisplayAndFormat.Description,
             type="equity",
             asset_class=AssetClass.equities,
             asset_type=AssetType[asset_type.upper()],
-            value=positions.SinglePosition.PositionView.MarketValue,
-            units=positions.SinglePosition.PositionBase.Amount,
+            value=_get_value_in_account_currency(saxo_account, position),
+            units=position.SinglePosition.PositionBase.Amount,
             provider_specific={
-                "Symbol": positions.DisplayAndFormat.Symbol,
-                "Description": positions.DisplayAndFormat.Description,
-                "Listing exchange": positions.Exchange.Description,
-                "Current price": positions.SinglePosition.PositionView.CurrentPrice,
-                "P&L": positions.SinglePosition.PositionView.ProfitLossOnTrade,
+                "Asset currency": position.DisplayAndFormat.Currency,
+                "Symbol": position.DisplayAndFormat.Symbol,
+                "Description": position.DisplayAndFormat.Description,
+                "Listing exchange": position.Exchange.Description,
+                "Current price": position.SinglePosition.PositionView.CurrentPrice,
+                "P&L": position.SinglePosition.PositionView.ProfitLossOnTrade,
             },
         )
     raise ValueError(f"unknown asset type: {asset_type}")
