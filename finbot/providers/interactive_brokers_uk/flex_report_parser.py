@@ -103,6 +103,7 @@ class FlexStatement:
 class FlexReport:
     query_name: str
     statements: list[FlexStatement]
+    messages: list[str]
 
 
 def _make_full_security_id(
@@ -223,12 +224,17 @@ def _parse_flex_report(report_root: Element) -> FlexReport:
     try:
         assert report_root is not None
         assert report_root.tag == "FlexQueryResponse"
-        flex_statements_node: Element = list(report_root)[0]
+        flex_statements_node = report_root.find("FlexStatements")
+        assert isinstance(flex_statements_node, Element)
         return FlexReport(
             query_name=report_root.attrib["queryName"],
             statements=[
                 _parse_flex_statement(flex_statement_node)
                 for flex_statement_node in list(flex_statements_node)
+            ],
+            messages=[
+                str(message_node.text)
+                for message_node in list(report_root.findall("Message"))
             ],
         )
     except Exception as e:
