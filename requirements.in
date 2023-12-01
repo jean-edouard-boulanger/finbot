@@ -27,4 +27,4 @@ pytz==2023.3
 requests==2.31.0
 schedule==1.2.1
 sqlalchemy==2.0.22
-twilio==8.9.1
+twilio==8.10.3
