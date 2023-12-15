@@ -124,11 +124,15 @@ def _make_asset(
     position: saxo.NetPosition,
 ) -> Asset:
     asset_type = position.SinglePosition.PositionBase.AssetType
-    if asset_type.lower() in ("etf", "etn"):
+    if asset_type.lower() in ("etf", "etn", "etc"):
         return Asset(
             name=position.DisplayAndFormat.Description,
             type="equity",
-            asset_class=AssetClass.equities,
+            asset_class=(
+                AssetClass.commodities
+                if asset_type.lower() == "etc"
+                else AssetClass.equities
+            ),
             asset_type=AssetType[asset_type.upper()],
             value=_get_value_in_account_currency(saxo_account, position),
             units=position.SinglePosition.PositionBase.Amount,

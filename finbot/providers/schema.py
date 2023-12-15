@@ -28,6 +28,7 @@ class AssetType(str, enum.Enum):
     future = "future"
     ETF = "ETF"
     ETN = "ETN"
+    ETC = "ETC"
     generic_fund = "generic_fund"
     loan = "loan"
     precious_metal = "precious_metal"
