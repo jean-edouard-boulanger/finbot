@@ -92,6 +92,11 @@ ASSET_TYPES_FORMATTING_RULES: dict[AssetType, AssetTypeFormattingRule] = {
         pretty_name="ETN",
         abbreviated_name="ETN",
     ),
+    AssetType.ETC: AssetTypeFormattingRule(
+        asset_type=AssetType.ETC,
+        pretty_name="ETC",
+        abbreviated_name="ETC",
+    ),
     AssetType.generic_fund: AssetTypeFormattingRule(
         asset_type=AssetType.generic_fund,
         pretty_name="Generic fund",
