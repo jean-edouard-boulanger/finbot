@@ -17,7 +17,9 @@ from finbot.model import LinkedAccount, Provider, repository
 logger = logging.getLogger(__name__)
 
 providers_api = Blueprint(
-    name="providers_api", import_name=__name__, url_prefix=f"{API_URL_PREFIX}/providers"
+    name="providers_api",
+    import_name=__name__,
+    url_prefix=f"{API_URL_PREFIX}/providers",
 )
 
 ENDPOINTS_TAGS = ["Financial data providers"]
@@ -45,7 +47,7 @@ def update_or_create_provider(
         provider.website_url = json.website_url
         provider.credentials_schema = json.credentials_schema
     return appwsrv_schema.CreateOrUpdateProviderResponse(
-        provider=serializer.serialize_provider(provider)
+        provider=serializer.serialize_provider(provider),
     )
 
 
@@ -88,7 +90,7 @@ def get_provider(provider_id: str) -> appwsrv_schema.GetProviderResponse:
     if not provider:
         raise InvalidUserInput(f"Provider with id '${provider_id}' does not exist")
     return appwsrv_schema.GetProviderResponse(
-        provider=serializer.serialize_provider(provider)
+        provider=serializer.serialize_provider(provider),
     )
 
 

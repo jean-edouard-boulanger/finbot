@@ -23,7 +23,9 @@ logger = logging.getLogger(__name__)
 
 
 reports_api = Blueprint(
-    name="reports_api", import_name=__name__, url_prefix=f"{API_URL_PREFIX}/reports"
+    name="reports_api",
+    import_name=__name__,
+    url_prefix=f"{API_URL_PREFIX}/reports",
 )
 
 

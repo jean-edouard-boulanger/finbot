@@ -27,9 +27,18 @@ SCHEMA_EXPORTERS = {
 def create_argument_parser():
     parser = ArgumentParser("Export OpenAPI schema")
     parser.add_argument(
-        "-s", "--service", type=str, choices=["appwsrv", "finbotwsrv"], required=True
+        "-s",
+        "--service",
+        type=str,
+        choices=["appwsrv", "finbotwsrv"],
+        required=True,
     )
-    parser.add_argument("-o", "--output-file-path", type=Path, default=None)
+    parser.add_argument(
+        "-o",
+        "--output-file-path",
+        type=Path,
+        default=None,
+    )
     return parser
 
 

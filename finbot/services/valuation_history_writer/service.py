@@ -36,15 +36,11 @@ def iter_sub_account_item_valuation_history_entries(
             )
 
 
-def write_history_impl(
-    snapshot_id: int, db_session: Session
-) -> schema.WriteHistoryResponse:
+def write_history_impl(snapshot_id: int, db_session: Session) -> schema.WriteHistoryResponse:
     repo = repository.ReportRepository(db_session)
 
     logging.info("fetching snapshot_id={} metadata".format(snapshot_id))
-    snapshot: model.UserAccountSnapshot = (
-        db_session.query(model.UserAccountSnapshot).filter_by(id=snapshot_id).one()
-    )
+    snapshot: model.UserAccountSnapshot = db_session.query(model.UserAccountSnapshot).filter_by(id=snapshot_id).one()
 
     valuation_date = some(snapshot.end_time)
 
@@ -67,11 +63,9 @@ def write_history_impl(
 
     user_account_valuation = consistent_snapshot.get_user_account_valuation()
     with db_session.persist(history_entry):
-        history_entry.user_account_valuation_history_entry = (
-            model.UserAccountValuationHistoryEntry(
-                valuation=consistent_snapshot.get_user_account_valuation(),
-                total_liabilities=consistent_snapshot.get_user_account_liabilities(),
-            )
+        history_entry.user_account_valuation_history_entry = model.UserAccountValuationHistoryEntry(
+            valuation=consistent_snapshot.get_user_account_valuation(),
+            total_liabilities=consistent_snapshot.get_user_account_liabilities(),
         )
 
     linked_accounts_valuation = consistent_snapshot.get_linked_accounts_valuation()
@@ -124,38 +118,26 @@ def write_history_impl(
     logging.info("reference history entry ids")
     logging.debug(pretty_dump(reference_history_entry_ids))
 
-    user_account_valuation_change = repo.get_user_account_valuation_change(
-        reference_history_entry_ids
-    )
+    user_account_valuation_change = repo.get_user_account_valuation_change(reference_history_entry_ids)
 
     logging.info("fetched user account valuation change")
     logging.debug(pretty_dump(user_account_valuation_change))
 
     with db_session.persist(history_entry):
-        history_entry.user_account_valuation_history_entry.valuation_change = (
-            user_account_valuation_change
-        )
+        history_entry.user_account_valuation_history_entry.valuation_change = user_account_valuation_change
 
-    linked_accounts_valuation_change = repo.get_linked_accounts_valuation_change(
-        reference_history_entry_ids
-    )
+    linked_accounts_valuation_change = repo.get_linked_accounts_valuation_change(reference_history_entry_ids)
 
     logging.info("fetched linked accounts valuation change")
     logging.debug(pretty_dump(linked_accounts_valuation_change))
 
     with db_session.persist(history_entry):
-        for (
-            linked_accounts_valuation_history_entry
-        ) in history_entry.linked_accounts_valuation_history_entries:
+        for linked_accounts_valuation_history_entry in history_entry.linked_accounts_valuation_history_entries:
             linked_accounts_valuation_history_entry.valuation_change = linked_accounts_valuation_change[
-                repository.LinkedAccountKey(
-                    linked_account_id=linked_accounts_valuation_history_entry.linked_account_id
-                )
+                repository.LinkedAccountKey(linked_account_id=linked_accounts_valuation_history_entry.linked_account_id)
             ]
 
-    sub_accounts_valuation_change = repo.get_sub_accounts_valuation_change(
-        reference_history_entry_ids
-    )
+    sub_accounts_valuation_change = repo.get_sub_accounts_valuation_change(reference_history_entry_ids)
 
     logging.info("fetched sub accounts valuation change")
     logging.debug(pretty_dump(sub_accounts_valuation_change))
@@ -169,17 +151,13 @@ def write_history_impl(
                 )
             ]
 
-    sub_accounts_items_valuation_change = repo.get_sub_accounts_items_valuation_change(
-        reference_history_entry_ids
-    )
+    sub_accounts_items_valuation_change = repo.get_sub_accounts_items_valuation_change(reference_history_entry_ids)
 
     logging.info("fetched sub accounts items valuation change")
     logging.debug(pretty_dump(sub_accounts_items_valuation_change))
 
     with db_session.persist(history_entry):
-        for (
-            sub_accounts_items_valuation_history_entry
-        ) in history_entry.sub_accounts_items_valuation_history_entries:
+        for sub_accounts_items_valuation_history_entry in history_entry.sub_accounts_items_valuation_history_entries:
             sub_accounts_items_valuation_history_entry.valuation_change = sub_accounts_items_valuation_change[
                 repository.SubAccountItemKey(
                     linked_account_id=sub_accounts_items_valuation_history_entry.linked_account_id,
@@ -200,9 +178,7 @@ def write_history_impl(
             valuation_date=valuation_date,
             valuation_currency=history_entry.valuation_ccy,
             user_account_valuation=float(user_account_valuation),
-            valuation_change=to_pydantic(
-                core_schema.ValuationChange, user_account_valuation_change
-            ),
+            valuation_change=to_pydantic(core_schema.ValuationChange, user_account_valuation_change),
         )
     )
 

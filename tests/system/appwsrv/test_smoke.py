@@ -1,5 +1,6 @@
-from finbot.apps.appwsrv.client import AppwsrvClient
 import pytest
+
+from finbot.apps.appwsrv.client import AppwsrvClient
 
 
 @pytest.fixture

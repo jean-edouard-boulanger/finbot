@@ -1,9 +1,9 @@
-from finbot.core.db.session import Session as DBSession
-from finbot.core.kv_store import DBKVStore, KVEntity
-
 from typing import Any
 
 import pytest
+
+from finbot.core.db.session import Session as DBSession
+from finbot.core.kv_store import DBKVStore, KVEntity
 
 
 class TestEntity(KVEntity):

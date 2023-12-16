@@ -45,7 +45,9 @@ class AsyncResponse(Generic[ResponseType]):
 
     def get(self, timeout: TimeoutType | None = None) -> ResponseType:
         return self._response_type.parse_obj(
-            self._async_result.get(timeout=self._get_timeout_seconds(timeout))
+            self._async_result.get(
+                timeout=self._get_timeout_seconds(timeout),
+            ),
         )
 
 
@@ -77,6 +79,7 @@ class Client(Generic[RequestType, ResponseType]):
     ) -> AsyncResponse[ResponseType]:
         celery_kwargs = celery_kwargs or {}
         async_result = self._task_func.apply_async(
-            args=(request.dict(),), **celery_kwargs
+            args=(request.dict(),),
+            **celery_kwargs,
         )
         return AsyncResponse[ResponseType](self._response_type, async_result)

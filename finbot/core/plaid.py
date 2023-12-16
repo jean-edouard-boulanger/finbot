@@ -20,9 +20,7 @@ from finbot.core.environment import PlaidEnvironment, get_plaid_environment
 from finbot.core.errors import FinbotError
 from finbot.providers.schema import CurrencyCode
 
-ALL_COUNTRY_CODES = [
-    CountryCode(raw_code) for raw_code in ("GB", "US", "CA", "IE", "FR", "ES", "NL")
-]
+ALL_COUNTRY_CODES = [CountryCode(raw_code) for raw_code in ("GB", "US", "CA", "IE", "FR", "ES", "NL")]
 FINBOT_PLAID_CLIENT_NAME = "Finbot"
 
 
@@ -92,32 +90,29 @@ class PlaidClient(object):
         assert isinstance(settings, PlaidSettings), "missing plaid configuration"
         self._settings: PlaidSettings = settings
         self._impl = plaid_api.PlaidApi(
-            api_client=plaid.ApiClient(configuration=self._settings.to_plaid())
+            api_client=plaid.ApiClient(
+                configuration=self._settings.to_plaid(),
+            ),
         )
 
     def exchange_public_token(self, public_token: str) -> AccessToken:
         try:
-            response: ItemPublicTokenExchangeResponse = (
-                self._impl.item_public_token_exchange(
-                    item_public_token_exchange_request=ItemPublicTokenExchangeRequest(
-                        public_token=public_token
-                    )
-                )
+            response: ItemPublicTokenExchangeResponse = self._impl.item_public_token_exchange(
+                item_public_token_exchange_request=ItemPublicTokenExchangeRequest(public_token=public_token)
             )
             return AccessToken(
-                access_token=response.access_token, item_id=response.item_id
+                access_token=response.access_token,
+                item_id=response.item_id,
             )
         except plaid.ApiException as e:
-            raise PlaidClientError(
-                f"failure while exchanging public Plaid token: {e}"
-            ) from e
+            raise PlaidClientError(f"failure while exchanging public Plaid token: {e}") from e
 
     def create_link_token(self, access_token: str) -> LinkToken:
         try:
             response: LinkTokenCreateResponse = self._impl.link_token_create(
                 link_token_create_request=LinkTokenCreateRequest(
                     user=LinkTokenCreateRequestUser(
-                        client_user_id=self._settings.client_id
+                        client_user_id=self._settings.client_id,
                     ),
                     client_name=FINBOT_PLAID_CLIENT_NAME,
                     country_codes=ALL_COUNTRY_CODES,
@@ -127,9 +122,7 @@ class PlaidClient(object):
             )
             return LinkToken(link_token=response.link_token)
         except plaid.ApiException as e:
-            raise PlaidClientError(
-                f"failure while creating Plaid link token: {e}"
-            ) from e
+            raise PlaidClientError(f"failure while creating Plaid link token: {e}") from e
 
     def get_accounts_data(self, access_token: str) -> list[AccountData]:
         try:

@@ -1,5 +1,5 @@
 [tool.ruff]
-select = ["E", "F", "Q"]
+select = ["E", "F", "Q", "I"]
 exclude = [
     'migrations/',
     'venv/',
@@ -7,3 +7,7 @@ exclude = [
 ]
 line-length = 120
 target-version = "py312"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"

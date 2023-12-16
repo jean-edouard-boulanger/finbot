@@ -37,9 +37,16 @@ from finbot.model import (
 from finbot.providers.schema import AssetClass, AssetType
 
 
-def get_user_account(session: Session, user_account_id: int) -> UserAccount:
+def get_user_account(
+    session: Session,
+    user_account_id: int,
+) -> UserAccount:
     account: Optional[UserAccount] = (
-        session.query(UserAccount).filter_by(id=user_account_id).first()
+        session.query(UserAccount)
+        .filter_by(
+            id=user_account_id,
+        )
+        .first()
     )
     if not account:
         raise InvalidUserInput(f"user account '{user_account_id}' not found")
@@ -51,11 +58,14 @@ def find_user_account_by_email(session: Session, email: str) -> Optional[UserAcc
 
 
 def get_user_account_settings(
-    session: Session, user_account_id: int
+    session: Session,
+    user_account_id: int,
 ) -> UserAccountSettings:
     settings: Optional[UserAccountSettings] = (
         session.query(UserAccountSettings)
-        .filter_by(user_account_id=user_account_id)
+        .filter_by(
+            user_account_id=user_account_id,
+        )
         .first()
     )
     if not settings:
@@ -63,11 +73,17 @@ def get_user_account_settings(
     return settings
 
 
-def find_provider(session: Session, provider_id: str) -> Optional[Provider]:
+def find_provider(
+    session: Session,
+    provider_id: str,
+) -> Optional[Provider]:
     return session.query(Provider).filter_by(id=provider_id).first()
 
 
-def get_provider(session: Session, provider_id: str) -> Provider:
+def get_provider(
+    session: Session,
+    provider_id: str,
+) -> Provider:
     provider = find_provider(session, provider_id)
     if not provider:
         raise InvalidUserInput(f"provider '{provider_id}' not found")
@@ -75,7 +91,9 @@ def get_provider(session: Session, provider_id: str) -> Provider:
 
 
 def linked_account_exists(
-    session: Session, user_account_id: int, account_name: str
+    session: Session,
+    user_account_id: int,
+    account_name: str,
 ) -> bool:
     return (
         session.query(LinkedAccount)
@@ -85,7 +103,10 @@ def linked_account_exists(
     ) > 0
 
 
-def find_linked_accounts(session: Session, user_account_id: int) -> list[LinkedAccount]:
+def find_linked_accounts(
+    session: Session,
+    user_account_id: int,
+) -> list[LinkedAccount]:
     results: list[LinkedAccount] = (
         session.query(LinkedAccount)
         .filter_by(user_account_id=user_account_id)
@@ -97,7 +118,8 @@ def find_linked_accounts(session: Session, user_account_id: int) -> list[LinkedA
 
 
 def get_last_history_entry(
-    session: Session, user_account_id: int
+    session: Session,
+    user_account_id: int,
 ) -> UserAccountHistoryEntry:
     entry: Optional[UserAccountHistoryEntry] = (
         session.query(UserAccountHistoryEntry)
@@ -137,24 +159,19 @@ class DailyValuationGrouping(ValuationGrouping):
 class WeeklyValuationGrouping(ValuationGrouping):
     datatype = "category"
     sql_grouping = (
-        "'W' || extract(week from fuahe.effective_at)::text "
-        "|| ' ' || extract(year from fuahe.effective_at)::text"
+        "'W' || extract(week from fuahe.effective_at)::text " "|| ' ' || extract(year from fuahe.effective_at)::text"
     )
 
 
 class MonthlyValuationGrouping(ValuationGrouping):
     datatype = "category"
-    sql_grouping = (
-        "to_char(fuahe.effective_at, 'Mon') "
-        "|| ' ' || extract(year from fuahe.effective_at)::text"
-    )
+    sql_grouping = "to_char(fuahe.effective_at, 'Mon') " "|| ' ' || extract(year from fuahe.effective_at)::text"
 
 
 class QuarterlyValuationGrouping(ValuationGrouping):
     datatype = "category"
     sql_grouping = (
-        "'Q' || extract(quarter from fuahe.effective_at) "
-        "|| ' ' || extract(year from fuahe.effective_at)::text"
+        "'Q' || extract(quarter from fuahe.effective_at) " "|| ' ' || extract(year from fuahe.effective_at)::text"
     )
 
 
@@ -231,10 +248,7 @@ def get_user_account_historical_valuation(
           from ({main_query}) q
       order by q.period_start
     """
-    return [
-        HistoricalValuationEntry(**row_to_dict(row))
-        for row in session.execute(text(query), query_params)
-    ]
+    return [HistoricalValuationEntry(**row_to_dict(row)) for row in session.execute(text(query), query_params)]
 
 
 @dataclass
@@ -306,8 +320,7 @@ def get_historical_valuation_by_linked_account(
       order by q.period_start, q.linked_account_id
     """
     return [
-        LinkedAccountHistoricalValuationEntry(**row_to_dict(row))
-        for row in session.execute(text(query), query_params)
+        LinkedAccountHistoricalValuationEntry(**row_to_dict(row)) for row in session.execute(text(query), query_params)
     ]
 
 
@@ -441,13 +454,13 @@ def get_historical_valuation_by(
       order by q.period_start, q.agg_criterion
     """
     return [  # type: ignore
-        by.parse_row(row_to_dict(row))
-        for row in session.execute(text(query), query_params)
+        by.parse_row(row_to_dict(row)) for row in session.execute(text(query), query_params)
     ]
 
 
 def find_snapshot_linked_account_errors(
-    session: Session, snapshot_id: int
+    session: Session,
+    snapshot_id: int,
 ) -> list[LinkedAccountSnapshotEntry]:
     return cast(
         list[LinkedAccountSnapshotEntry],
@@ -471,10 +484,7 @@ def get_linked_accounts_statuses(
 ) -> dict[int, LinkedAccountStatus]:
     linked_account_ids_filter = None
     if linked_account_ids:
-        assert all(
-            isinstance(linked_account_id, int)
-            for linked_account_id in linked_account_ids
-        )
+        assert all(isinstance(linked_account_id, int) for linked_account_id in linked_account_ids)
         linked_account_ids_filter = f"linked_account_id IN ({', '.join(str(entry) for entry in linked_account_ids)})"
     query = f"""
         select linked_account_id,
@@ -521,22 +531,22 @@ def get_linked_account_status(
 
 
 def get_user_account_valuation(
-    session: Session, history_entry_id: int
+    session: Session,
+    history_entry_id: int,
 ) -> UserAccountValuationHistoryEntry:
     entry: UserAccountValuationHistoryEntry = (
         session.query(UserAccountValuationHistoryEntry)
         .filter_by(history_entry_id=history_entry_id)
         .options(joinedload(UserAccountValuationHistoryEntry.valuation_change))
-        .options(
-            joinedload(UserAccountValuationHistoryEntry.account_valuation_history_entry)
-        )
+        .options(joinedload(UserAccountValuationHistoryEntry.account_valuation_history_entry))
         .one()
     )
     return entry
 
 
 def find_linked_accounts_valuation(
-    session: Session, history_entry_id: int
+    session: Session,
+    history_entry_id: int,
 ) -> list[LinkedAccountValuationHistoryEntry]:
     entries: list[LinkedAccountValuationHistoryEntry] = (
         session.query(LinkedAccountValuationHistoryEntry)
@@ -550,10 +560,12 @@ def find_linked_accounts_valuation(
 
 
 def find_sub_accounts_valuation(
-    session: Session, history_entry_id: int, linked_account_id: Optional[int] = None
+    session: Session,
+    history_entry_id: int,
+    linked_account_id: Optional[int] = None,
 ) -> list[SubAccountValuationHistoryEntry]:
     query = session.query(SubAccountValuationHistoryEntry).filter_by(
-        history_entry_id=history_entry_id
+        history_entry_id=history_entry_id,
     )
     if linked_account_id is not None:
         query = query.filter_by(linked_account_id=linked_account_id)
@@ -568,25 +580,29 @@ def find_items_valuation(
     sub_account_id: Optional[str] = None,
 ) -> list[SubAccountItemValuationHistoryEntry]:
     query = session.query(SubAccountItemValuationHistoryEntry).filter_by(
-        history_entry_id=history_entry_id
+        history_entry_id=history_entry_id,
     )
     if linked_account_id is not None:
         query = query.filter_by(linked_account_id=linked_account_id)
     if sub_account_id is not None:
         query = query.filter_by(sub_account_id=sub_account_id)
-    query = query.options(
-        joinedload(SubAccountItemValuationHistoryEntry.valuation_change)
-    )
+    query = query.options(joinedload(SubAccountItemValuationHistoryEntry.valuation_change))
     return query.all()
 
 
 def get_linked_account(
-    session: Session, user_account_id: int, linked_account_id: int
+    session: Session,
+    user_account_id: int,
+    linked_account_id: int,
 ) -> LinkedAccount:
     linked_account: Optional[LinkedAccount] = (
         session.query(LinkedAccount)
-        .filter_by(id=linked_account_id)
-        .filter_by(user_account_id=user_account_id)
+        .filter_by(
+            id=linked_account_id,
+        )
+        .filter_by(
+            user_account_id=user_account_id,
+        )
         .first()
     )
     if not linked_account:

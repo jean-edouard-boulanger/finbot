@@ -51,16 +51,12 @@ def service_endpoint() -> Callable[[Callable[P, RT]], Callable[P, FlaskResponse]
         @functools.wraps(func)
         def handler(*args: P.args, **kwargs: P.kwargs) -> FlaskResponse:
             try:
-                logging.info(
-                    f"process {func.__name__} request route={request.full_path}"
-                )
+                logging.info(f"process {func.__name__} request route={request.full_path}")
                 response = func(*args, **kwargs)
                 logging.debug("request processed successfully")
                 return prepare_response(response)
             except Exception as e:
-                logging.warning(
-                    "error while processing request:" f" {e}\n{traceback.format_exc()}"
-                )
+                logging.warning("error while processing request:" f" {e}\n{traceback.format_exc()}")
                 return cast(
                     FlaskResponse,
                     flask.current_app.response_class(
@@ -113,17 +109,13 @@ class WebServiceClient(object):
     def send_request(self, verb: str, route: str, payload: Optional[Any] = None) -> Any:
         resource = f"{self._endpoint}/{route}"
         if not hasattr(requests, verb.lower()):
-            raise WebServiceClientError(
-                f"unexpected verb: {verb} (while calling {resource})"
-            )
+            raise WebServiceClientError(f"unexpected verb: {verb} (while calling {resource})")
         dispatcher = getattr(requests, verb.lower())
         try:
             response = dispatcher(resource, json=serialize(payload))
             response.raise_for_status()
         except requests.exceptions.RequestException as e:
-            raise WebServiceClientError(
-                f"error while sending request to {resource}: {e}"
-            )
+            raise WebServiceClientError(f"error while sending request to {resource}: {e}")
         response_payload = orjson.loads(response.content)
         if "error" in response_payload:
             error = ApplicationErrorResponse.parse_obj(response_payload).error

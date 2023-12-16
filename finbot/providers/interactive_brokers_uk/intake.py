@@ -50,22 +50,20 @@ def _find_latest_report_file(available_reports: list[Path]) -> Path | None:
 
 
 def _load_latest_report_from_local(
-    report_file_pattern: str, intake_method: LocalIntakeMethod
+    report_file_pattern: str,
+    intake_method: LocalIntakeMethod,
 ) -> Optional[bytes]:
     local_intake_dir = intake_method.local_intake_dir.expanduser().absolute()
     if not local_intake_dir.is_dir():
-        raise RuntimeError(
-            f"Local intake directory '{local_intake_dir}' does not exist or is not a directory"
-        )
-    if report_file := _find_latest_report_file(
-        list(local_intake_dir.glob(report_file_pattern))
-    ):
+        raise RuntimeError(f"Local intake directory '{local_intake_dir}' does not exist or is not a directory")
+    if report_file := _find_latest_report_file(list(local_intake_dir.glob(report_file_pattern))):
         return report_file.read_bytes()
     return None
 
 
 def _load_latest_report_from_ftp(
-    report_file_pattern: str, intake_method: FtpIntakeMethod
+    report_file_pattern: str,
+    intake_method: FtpIntakeMethod,
 ) -> Optional[bytes]:
     ftp = FTP(
         host=intake_method.ftp_host,
@@ -75,11 +73,7 @@ def _load_latest_report_from_ftp(
     with ftp:
         ftp.cwd(intake_method.directory)
         report_file = _find_latest_report_file(
-            [
-                Path(file_name)
-                for file_name in ftp.nlst()
-                if fnmatch.fnmatch(file_name, report_file_pattern)
-            ]
+            [Path(file_name) for file_name in ftp.nlst() if fnmatch.fnmatch(file_name, report_file_pattern)]
         )
         if report_file:
             logging.debug(f"will download report file {report_file}")

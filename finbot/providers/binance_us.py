@@ -74,17 +74,18 @@ class Api(ProviderBase):
             units = float(entry["free"]) + float(entry["locked"])
             if units > OWNERSHIP_UNITS_THRESHOLD:
                 symbol = entry["asset"]
-                value = units * self._crypto_market.get_spot_cached(
-                    symbol, self._account_ccy
-                )
+                value = units * self._crypto_market.get_spot_cached(symbol, self._account_ccy)
                 yield symbol, units, value
 
     def get_balances(self) -> Balances:
         balance = sum(value for (_, _, value) in self._iter_holdings())
         return Balances(
             accounts=[
-                BalanceEntry(account=self._account_description(), balance=balance)
-            ]
+                BalanceEntry(
+                    account=self._account_description(),
+                    balance=balance,
+                )
+            ],
         )
 
     def get_assets(self) -> Assets:

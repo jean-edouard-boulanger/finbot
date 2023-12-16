@@ -15,7 +15,9 @@ from finbot.core.web_service import service_endpoint
 from finbot.model import repository
 
 auth_api = Blueprint(
-    name="auth_api", import_name=__name__, url_prefix=f"{API_URL_PREFIX}/auth"
+    name="auth_api",
+    import_name=__name__,
+    url_prefix=f"{API_URL_PREFIX}/auth",
 )
 
 
@@ -44,10 +46,12 @@ def auth_login(json: appwsrv_schema.LoginRequest) -> appwsrv_schema.LoginRespons
     return appwsrv_schema.LoginResponse(
         auth=appwsrv_schema.AuthenticationPayload(
             access_token=create_access_token(
-                identity=account.id, expires_delta=timedelta(days=1)
+                identity=account.id,
+                expires_delta=timedelta(days=1),
             ),
             refresh_token=create_refresh_token(
-                identity=account.id, expires_delta=timedelta(days=1)
+                identity=account.id,
+                expires_delta=timedelta(days=1),
             ),
         ),
         account=serializer.serialize_user_account(account),

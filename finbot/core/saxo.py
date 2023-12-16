@@ -77,7 +77,8 @@ class SaxoGatewayClient:
     def reachable(self) -> bool:
         try:
             response = self._session.get(
-                f"{self._settings.gateway_url}/status", timeout=1.0
+                f"{self._settings.gateway_url}/status",
+                timeout=1.0,
             )
             response.raise_for_status()
             return True

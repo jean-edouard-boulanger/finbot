@@ -47,7 +47,8 @@ def liabilities_handler(provider_api: ProviderBase) -> schema.LineItemResults:
 
 
 def item_handler(
-    item_type: schema.LineItem, provider_api: ProviderBase
+    item_type: schema.LineItem,
+    provider_api: ProviderBase,
 ) -> schema.LineItemResults:
     handler = {
         schema.LineItem.Balances: balances_handler,
@@ -60,11 +61,10 @@ def item_handler(
         logging.debug(f"handling '{item_type}' line item")
         return handler(provider_api)
     except Exception as e:
-        logging.warning(
-            f"error while handling '{item_type}': {e}\n{traceback.format_exc()}"
-        )
+        logging.warning(f"error while handling '{item_type}': {e}\n{traceback.format_exc()}")
         return schema.LineItemError(
-            line_item=item_type, error=ApplicationErrorData.from_exception(e)
+            line_item=item_type,
+            error=ApplicationErrorData.from_exception(e),
         )
 
 
@@ -74,14 +74,10 @@ def get_financial_data_impl(
     line_items: list[schema.LineItem],
     user_account_currency: CurrencyCode,
 ) -> schema.GetFinancialDataResponse:
-    with provider_type.create(
-        authentication_payload, user_account_currency
-    ) as provider_api:
+    with provider_type.create(authentication_payload, user_account_currency) as provider_api:
         provider_api.initialize()
         return schema.GetFinancialDataResponse(
-            financial_data=[
-                item_handler(line_item, provider_api) for line_item in set(line_items)
-            ]
+            financial_data=[item_handler(line_item, provider_api) for line_item in set(line_items)]
         )
 
 

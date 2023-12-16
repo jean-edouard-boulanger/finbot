@@ -1,11 +1,11 @@
+from typing import Generator
+
+import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
 from finbot.core.db.session import Session as DBSession
 from finbot.model import Base as ModelBase
-
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
-
-from typing import Generator
-import pytest
 
 
 @pytest.fixture(scope="function")

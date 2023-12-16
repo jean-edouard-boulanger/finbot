@@ -94,9 +94,7 @@ class Api(ProviderBase):
                         asset_class=AssetClass[holding["asset_class"]],
                         asset_type=AssetType[holding["asset_type"]],
                         value=holding["value"],
-                        provider_specific=_parse_provider_specific(
-                            holding.get("custom")
-                        ),
+                        provider_specific=_parse_provider_specific(holding.get("custom")),
                     )
                     for holding in holdings_table
                     if holding["account"] == entry["identifier"]
@@ -108,7 +106,8 @@ class Api(ProviderBase):
             scope = ["https://www.googleapis.com/auth/spreadsheets"]
             self._api = gspread.authorize(
                 ServiceAccountCredentials.from_json_keyfile_dict(
-                    self._credentials.google_api_credentials, scope
+                    keyfile_dict=self._credentials.google_api_credentials,
+                    scopes=scope,
                 )
             )
             self._sheet = self._api.open_by_key(self._credentials.sheet_key)
@@ -136,9 +135,7 @@ class AttributeDef(TypedDict):
 
 
 class Schema(object):
-    def __init__(
-        self, type_identifier: str, attributes: dict[str, AttributeDef]
-    ) -> None:
+    def __init__(self, type_identifier: str, attributes: dict[str, AttributeDef]) -> None:
         self.type_identifier = type_identifier
         self.attributes = attributes
 
@@ -153,11 +150,7 @@ class Schema(object):
 
     @property
     def required_attributes(self) -> set[str]:
-        return {
-            attribute
-            for (attribute, entry) in self.attributes.items()
-            if entry.get("required", False)
-        }
+        return {attribute for (attribute, entry) in self.attributes.items() if entry.get("required", False)}
 
 
 class ValidationError(RuntimeError):
@@ -270,9 +263,7 @@ class LocalSheet(object):
         return all_cells[0]
 
 
-def _extract_generic_table(
-    sheet: LocalSheet, marker_cell: Cell, schema: Schema
-) -> list[dict[Any, Any]]:
+def _extract_generic_table(sheet: LocalSheet, marker_cell: Cell, schema: Schema) -> list[dict[Any, Any]]:
     header_start_cell = sheet.get_cell(marker_cell.row + 1, marker_cell.col)
     header = {}
     for cell in sheet.iter_row(from_cell=header_start_cell):
@@ -281,8 +272,7 @@ def _extract_generic_table(
     missing_attributes = schema.required_attributes.difference(set(header.keys()))
     if len(missing_attributes) > 0:
         raise Error(
-            f"missing attribute(s) '{','.join(missing_attributes)}'"
-            f" in header for '{schema.type_identifier}'"
+            f"missing attribute(s) '{','.join(missing_attributes)}'" f" in header for '{schema.type_identifier}'"
         )
 
     records = []
@@ -295,9 +285,7 @@ def _extract_generic_table(
         for attr, data_col in header.items():
             raw_value = sheet.get_cell(current_row, data_col).val
             if raw_value is None and schema.is_required(attr):
-                raise Error(
-                    f"cell for required attribute '{schema.type_identifier}.{attr}' is empty"
-                )
+                raise Error(f"cell for required attribute '{schema.type_identifier}.{attr}' is empty")
             converter = schema.get_type(attr)
             try:
                 current_record[attr] = converter(raw_value)
@@ -311,13 +299,9 @@ def _extract_generic_table(
                     f"unable to convert value '{raw_value}' to type '{converter.__name__}' "
                     f"for attribute '{schema.type_identifier}.{attr}' ({e})"
                 )
-        missing_attributes = schema.required_attributes.difference(
-            set(current_record.keys())
-        )
+        missing_attributes = schema.required_attributes.difference(set(current_record.keys()))
         if len(missing_attributes) > 0:
-            raise Error(
-                f"record is missing required attribute(s) '{', '.join(missing_attributes)}'"
-            )
+            raise Error(f"record is missing required attribute(s) '{', '.join(missing_attributes)}'")
         records.append(current_record)
     return records
 

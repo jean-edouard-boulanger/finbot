@@ -30,11 +30,15 @@ class ValuationNotification(BaseModel):
 
 
 class Notifier(Protocol):
-    def notify_valuation(self, notification: ValuationNotification) -> None:
+    def notify_valuation(
+        self,
+        notification: ValuationNotification,
+    ) -> None:
         ...
 
     def notify_linked_accounts_snapshot_errors(
-        self, error_entries: list[model.LinkedAccountSnapshotEntry]
+        self,
+        error_entries: list[model.LinkedAccountSnapshotEntry],
     ) -> None:
         ...
 
@@ -53,7 +57,8 @@ class EmailNotifier(Notifier):
         pass
 
     def notify_linked_accounts_snapshot_errors(
-        self, error_entries: list[model.LinkedAccountSnapshotEntry]
+        self,
+        error_entries: list[model.LinkedAccountSnapshotEntry],
     ) -> None:
         self._service.send_email(
             email=email_delivery.Email(
@@ -85,10 +90,12 @@ class TwilioNotifier(Notifier):
         self._recipient_phone_number = recipient_phone_number
         self._twilio_client = twilio_client_factory(self._settings)
 
-    def notify_valuation(self, notification: ValuationNotification) -> None:
+    def notify_valuation(
+        self,
+        notification: ValuationNotification,
+    ) -> None:
         message_body = (
-            f"💰 Finbot valuation: {notification.user_account_valuation:,.1f}"
-            f" {notification.valuation_currency}\n"
+            f"💰 Finbot valuation: {notification.user_account_valuation:,.1f}" f" {notification.valuation_currency}\n"
         )
         if notification.change_1day is not None:
             message_body += (
@@ -102,7 +109,8 @@ class TwilioNotifier(Notifier):
         )
 
     def notify_linked_accounts_snapshot_errors(
-        self, error_entries: list[model.LinkedAccountSnapshotEntry]
+        self,
+        error_entries: list[model.LinkedAccountSnapshotEntry],
     ) -> None:
         pass
 
@@ -116,7 +124,8 @@ class CompositeNotifier(Notifier):
             notifier.notify_valuation(notification)
 
     def notify_linked_accounts_snapshot_errors(
-        self, error_entries: list[model.LinkedAccountSnapshotEntry]
+        self,
+        error_entries: list[model.LinkedAccountSnapshotEntry],
     ) -> None:
         for notifier in self._notifiers:
             notifier.notify_linked_accounts_snapshot_errors(error_entries)

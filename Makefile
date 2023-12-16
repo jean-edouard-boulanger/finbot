@@ -1,6 +1,4 @@
 export FINBOT_EDIT_CMD ?= code --wait
-export BLACK_SETTINGS = --exclude 'migrations/|webapp/|venv/' .
-export ISORT_SETTINGS = --profile black finbot/ tools/
 export PYTHONPATH := ${PWD}:${PYTHONPATH}
 
 alembic-gen:
@@ -84,23 +82,26 @@ eslint:
 banned-keywords-check-ts:
 	tools/banned-keywords.py --source-dirs webapp/src
 
-ruff:
-	python3.12 -m ruff .
+flakes-check:
+	python3.12 -m ruff --ignore I
+
+flakes:
+	python3.12 -m ruff --ignore I --fix
 
 version-bump-check:
 	tools/versioning check-version-bump
 
 black-check:
-	python3.12 -m black --check $(BLACK_SETTINGS)
+	python3.12 -m ruff format --check
 
 black:
-	python3.12 -m black $(BLACK_SETTINGS)
+	python3.12 -m ruff format
 
 isort-check:
-	python3.12 -m isort --check $(ISORT_SETTINGS)
+	python3.12 -m ruff check --select I
 
 isort:
-	python3.12 -m isort $(ISORT_SETTINGS)
+	python3.12 -m ruff check --select I --fix
 
 mypy:
 	python3.12 -m mypy --strict finbot/
@@ -123,7 +124,7 @@ lint-schema:
 generate-ts-client:
 	docker-compose run --rm operator ./tools/generate-ts-client
 
-lint-py: mypy ruff black-check isort-check banned-keywords-check-py unit-tests-py
+lint-py: mypy flakes-check black-check isort-check banned-keywords-check-py unit-tests-py
 lint-ts: eslint tsc-build-check prettier-check-ts banned-keywords-check-ts
 lint-all: lint-py lint-ts lint-sh
 

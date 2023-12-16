@@ -130,8 +130,7 @@ def register_provider(provider_type: Type[EmailProvider]) -> Type[EmailProvider]
         raise ProviderAlreadyRegistered(provider_id)
     if "settings_schema" not in provider_type.schema:
         raise InvalidProviderMetadata(
-            f"email provider '{provider_type.provider_id}'"
-            f" is missing 'settings_schema' property"
+            f"email provider '{provider_type.provider_id}'" f" is missing 'settings_schema' property"
         )
     EMAIL_PROVIDERS[provider_id] = provider_type
     return provider_type
@@ -156,7 +155,9 @@ class EmailService(object):
         self._provider = get_provider(self._delivery_settings)
 
     def _create_email_message(
-        self, email: Email, delivery_settings: DeliverySettings
+        self,
+        email: Email,
+        delivery_settings: DeliverySettings,
     ) -> EmailMessage:
         msg = EmailMessage()
         msg["Subject"] = f"{delivery_settings.subject_prefix} {email.subject}"
@@ -175,9 +176,10 @@ class EmailService(object):
 
     def send_email(self, email: Email) -> None:
         self._provider.send_email(
-            self._create_email_message(
-                email=email, delivery_settings=self._delivery_settings
-            )
+            message=self._create_email_message(
+                email=email,
+                delivery_settings=self._delivery_settings,
+            ),
         )
 
 
@@ -223,7 +225,8 @@ class SMTPServerAuthLogin(SMTPServerAuthStrategy):
     @staticmethod
     def deserialize(auth_payload: dict[str, Any]) -> "SMTPServerAuthLogin":
         return SMTPServerAuthLogin(
-            username=auth_payload["username"], password=auth_payload["password"]
+            username=auth_payload["username"],
+            password=auth_payload["password"],
         )
 
 
@@ -236,12 +239,12 @@ class SMTPServerNoAuth(SMTPServerAuthStrategy):
         return SMTPServerNoAuth()
 
 
-def get_smtp_server_auth_strategy(
-    auth_method: str, auth_payload: dict[Any, Any]
-) -> SMTPServerAuthStrategy:
-    return {"none": SMTPServerNoAuth, "login": SMTPServerAuthLogin}[  # type: ignore
-        auth_method.lower()
-    ].deserialize(auth_payload)
+def get_smtp_server_auth_strategy(auth_method: str, auth_payload: dict[Any, Any]) -> SMTPServerAuthStrategy:
+    methods: dict[str, type[SMTPServerAuthStrategy]] = {
+        "none": SMTPServerNoAuth,
+        "login": SMTPServerAuthLogin,
+    }
+    return methods[auth_method.lower()].deserialize(auth_payload)
 
 
 @dataclass
@@ -258,7 +261,8 @@ class SMTPSenderSettings:
             server_port=data["server_port"],
             use_ssl_tls=data["use_ssl_tls"],
             auth_strategy=get_smtp_server_auth_strategy(
-                data.get("auth_method", "none"), data
+                auth_method=data.get("auth_method", "none"),
+                auth_payload=data,
             ),
         )
 
@@ -269,9 +273,7 @@ class SMTPSender(object):
 
     def send_email(self, message: EmailMessage) -> None:
         client: smtplib.SMTP
-        with smtp_client(
-            self._settings.smtp_server, self._settings.server_port
-        ) as client:
+        with smtp_client(self._settings.smtp_server, self._settings.server_port) as client:
             client.ehlo()
             if self._settings.use_ssl_tls:
                 client.starttls()
@@ -350,9 +352,7 @@ class CustomSMTPServerEmailProvider(EmailProvider):
 
     def __init__(self, settings: DeliverySettings):
         self._settings = settings
-        self._impl = SMTPSender(
-            SMTPSenderSettings.deserialize(settings.provider_settings)
-        )
+        self._impl = SMTPSender(SMTPSenderSettings.deserialize(settings.provider_settings))
 
     def send_email(self, message: EmailMessage) -> None:
         self._impl.send_email(message)

@@ -1,8 +1,8 @@
-from finbot.providers.schema import AssetClass, AssetType
 from finbot.apps.appwsrv.core.formatting_rules import (
     ASSET_CLASSES_FORMATTING_RULES,
     ASSET_TYPES_FORMATTING_RULES,
 )
+from finbot.providers.schema import AssetClass, AssetType
 
 
 def test_all_asset_types_have_a_matching_rule():

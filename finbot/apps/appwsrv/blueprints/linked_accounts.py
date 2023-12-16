@@ -95,14 +95,11 @@ def link_new_account(
         raise InvalidUserInput("user account is not setup for Plaid")
     credentials = json.credentials
     if is_plaid:
-        credentials = (
-            PlaidClient().exchange_public_token(credentials["public_token"]).dict()
-        )
+        credentials = PlaidClient().exchange_public_token(credentials["public_token"]).dict()
 
     if do_validate:
         logging.info(
-            f"validating authentication details for "
-            f"account_id={user_account_id} and provider_id={provider_id}"
+            f"validating authentication details for " f"account_id={user_account_id} and provider_id={provider_id}"
         )
         appwsrv_providers.validate_credentials(
             finbot_client=FinbotwsrvClient.create(),
@@ -114,14 +111,9 @@ def link_new_account(
     if do_persist:
         account_name: str = json.account_name
         if repository.linked_account_exists(db_session, user_account_id, account_name):
-            raise InvalidUserInput(
-                f"A linked account with name '{account_name}' already exists"
-            )
+            raise InvalidUserInput(f"A linked account with name '{account_name}' already exists")
 
-        logging.info(
-            f"Linking external account (provider_id={provider.id})"
-            f" to user account_id={user_account.id}"
-        )
+        logging.info(f"Linking external account (provider_id={provider.id})" f" to user account_id={user_account.id}")
 
         try:
             new_linked_account: LinkedAccount
@@ -136,8 +128,7 @@ def link_new_account(
                 ).decode()
         except IntegrityError:
             raise InvalidOperation(
-                f"Provider '{provider.description}' was already linked "
-                f"as '{account_name}' in this account"
+                f"Provider '{provider.description}' was already linked " f"as '{account_name}' in this account"
             )
 
     if do_persist:
@@ -165,7 +156,9 @@ def get_linked_account(
 ) -> appwsrv_schema.GetLinkedAccountResponse:
     """Get linked account"""
     linked_account = repository.get_linked_account(
-        db_session, user_account_id, linked_account_id
+        session=db_session,
+        user_account_id=user_account_id,
+        linked_account_id=linked_account_id,
     )
     credentials = None
     if appwsrv_providers.is_plaid_linked_account(linked_account):
@@ -177,11 +170,15 @@ def get_linked_account(
         )
         credentials = {
             "link_token": PlaidClient()
-            .create_link_token(credentials["access_token"])
-            .link_token
+            .create_link_token(
+                access_token=credentials["access_token"],
+            )
+            .link_token,
         }
     linked_account_status = repository.get_linked_account_status(
-        db_session, user_account_id, linked_account_id
+        session=db_session,
+        user_account_id=user_account_id,
+        linked_account_id=linked_account_id,
     )
     return appwsrv_schema.GetLinkedAccountResponse(
         linked_account=serializer.serialize_linked_account(
@@ -209,13 +206,13 @@ def delete_linked_account(
 ) -> appwsrv_schema.DeleteLinkedAccountResponse:
     """Delete linked account"""
     linked_account = repository.get_linked_account(
-        db_session, user_account_id, linked_account_id
+        session=db_session,
+        user_account_id=user_account_id,
+        linked_account_id=linked_account_id,
     )
 
     with db_session.persist(linked_account):
-        linked_account.account_name = (
-            f"DELETED {uuid.uuid4()} / {linked_account.account_name}"
-        )
+        linked_account.account_name = f"DELETED {uuid.uuid4()} / {linked_account.account_name}"
         linked_account.deleted = True
 
     appwsrv_valuation.try_trigger_valuation(user_account_id=user_account_id)
@@ -240,20 +237,20 @@ def update_linked_account_metadata(
 ) -> appwsrv_schema.UpdateLinkedAccountMetadataResponse:
     """Update linked account metadata"""
     linked_account = repository.get_linked_account(
-        db_session, user_account_id, linked_account_id
+        session=db_session,
+        user_account_id=user_account_id,
+        linked_account_id=linked_account_id,
     )
     if linked_account.frozen:
-        raise InvalidUserInput(
-            f"Linked account '{linked_account.account_name}' is frozen and cannot be updated."
-        )
+        raise InvalidUserInput(f"Linked account '{linked_account.account_name}' is frozen and cannot be updated.")
     with db_session.persist(linked_account):
         if account_name := json.account_name:
             if repository.linked_account_exists(
-                db_session, user_account_id, account_name
+                session=db_session,
+                user_account_id=user_account_id,
+                account_name=account_name,
             ):
-                raise InvalidUserInput(
-                    f"A linked account with name '{account_name}' already exists"
-                )
+                raise InvalidUserInput(f"A linked account with name '{account_name}' already exists")
             linked_account.account_name = account_name
         if account_colour := json.account_colour:
             linked_account.account_colour = account_colour
@@ -285,16 +282,17 @@ def update_linked_account_credentials(
 
     linked_account_id = linked_account_id
     linked_account = repository.get_linked_account(
-        db_session, user_account_id, linked_account_id
+        session=db_session,
+        user_account_id=user_account_id,
+        linked_account_id=linked_account_id,
     )
     user_account_settings = repository.get_user_account_settings(
-        db_session, user_account_id
+        session=db_session,
+        user_account_id=user_account_id,
     )
 
     if linked_account.frozen:
-        raise InvalidUserInput(
-            f"Linked account '{linked_account.account_name}' is frozen and cannot be updated."
-        )
+        raise InvalidUserInput(f"Linked account '{linked_account.account_name}' is frozen and cannot be updated.")
 
     is_plaid = appwsrv_providers.is_plaid_linked_account(linked_account)
     if is_plaid and not is_plaid_configured():
@@ -326,7 +324,8 @@ def update_linked_account_credentials(
 
     if do_persist:
         appwsrv_valuation.try_trigger_valuation(
-            user_account_id=user_account_id, linked_account_ids=[linked_account.id]
+            user_account_id=user_account_id,
+            linked_account_ids=[linked_account.id],
         )
 
     return appwsrv_schema.UpdateLinkedAccountCredentialsResponse()

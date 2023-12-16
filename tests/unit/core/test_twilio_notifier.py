@@ -1,11 +1,10 @@
-from unittest.mock import MagicMock
 from typing import TypeAlias
+from unittest.mock import MagicMock
 
 import pytest
 from twilio.rest import Client as TwilioClient
 
 from finbot.core.notifier import TwilioNotifier, TwilioSettings, ValuationNotification
-
 
 TwilioClientMock: TypeAlias = TwilioClient | MagicMock
 TEST_RECIPIENT_PHONE_NUMBER = "+33687654321"

@@ -56,7 +56,7 @@ class MainDashboardPage(object):
 
     def get_accounts(self) -> list[BalanceEntry]:
         account_locators = ConditionGuard(
-            Condition(lambda: self.page.locator(".card-product-1").all())
+            Condition(lambda: self.page.locator(".card-product-1").all()),
         ).wait()
         return [self._extract_account(locator) for locator in account_locators]
 
@@ -86,7 +86,7 @@ class Api(PlaywrightProviderBase):
             Condition(
                 lambda: self.get_element_or_none("#error-container-wrapper"),
                 when_fulfilled=lambda el: raise_(
-                    AuthenticationFailure(el.inner_text().strip())
+                    AuthenticationFailure(el.inner_text().strip()),
                 ),
             ),
         ).wait_any()

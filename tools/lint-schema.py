@@ -40,11 +40,7 @@ def main():
     model_keys_schemas: dict[str, list[SchemaEntry]] = defaultdict(list)
     for module_file_path in finbot_root_package_dir.rglob("*.py"):
         module_file_rel_path = module_file_path.relative_to(finbot_root_package_dir)
-        parts = tuple(
-            part.replace(".py", "")
-            for part in module_file_rel_path.parts
-            if part != "__init__.py"
-        )
+        parts = tuple(part.replace(".py", "") for part in module_file_rel_path.parts if part != "__init__.py")
         module_name = ".".join((finbot_root_package_name,) + parts)
         for schema_type in iter_module_schemas(module_name):
             schema_module = inspect.getmodule(schema_type)
@@ -61,9 +57,7 @@ def main():
         if len(entries) > 1:
             schema_valid = False
             module_names = ", ".join(entry.module_name for entry in entries)
-            print(
-                f"ERROR: schema type '{model_key}' is defined in multiple modules: {module_names}"
-            )
+            print(f"ERROR: schema type '{model_key}' is defined in multiple modules: {module_names}")
     if schema_valid:
         print("Schema is valid")
     return 0 if schema_valid else 1

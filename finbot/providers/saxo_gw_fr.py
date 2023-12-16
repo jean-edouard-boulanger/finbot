@@ -55,12 +55,15 @@ class Api(ProviderBase):
     def iter_accounts(self) -> Generator[tuple[Account, saxo.SaxoAccount], None, None]:
         assert self._accounts is not None
         for raw_account_data in self._accounts:
-            yield Account(
-                id=raw_account_data.AccountKey,
-                name=raw_account_data.DisplayName,
-                iso_currency=CurrencyCode(raw_account_data.Currency),
-                type="investment",
-            ), raw_account_data
+            yield (
+                Account(
+                    id=raw_account_data.AccountKey,
+                    name=raw_account_data.DisplayName,
+                    iso_currency=CurrencyCode(raw_account_data.Currency),
+                    type="investment",
+                ),
+                raw_account_data,
+            )
 
     def get_balances(self) -> Balances:
         return Balances(
@@ -68,7 +71,7 @@ class Api(ProviderBase):
                 BalanceEntry(
                     account=account,
                     balance=self._client.get_account_balances(
-                        saxo_account=saxo_account
+                        saxo_account=saxo_account,
                     ).TotalValue,
                 )
                 for (account, saxo_account) in self.iter_accounts()
@@ -88,9 +91,7 @@ class Api(ProviderBase):
 
     def _get_account_assets(self, saxo_account: saxo.SaxoAccount) -> list[Asset]:
         assets: list[Asset] = []
-        if cash_available := self._client.get_account_balances(
-            saxo_account
-        ).CashAvailableForTrading:
+        if cash_available := self._client.get_account_balances(saxo_account).CashAvailableForTrading:
             currency = CurrencyCode(saxo_account.Currency)
             assets.append(
                 Asset.cash(
@@ -128,11 +129,7 @@ def _make_asset(
         return Asset(
             name=position.DisplayAndFormat.Description,
             type="equity",
-            asset_class=(
-                AssetClass.commodities
-                if asset_type.lower() == "etc"
-                else AssetClass.equities
-            ),
+            asset_class=(AssetClass.commodities if asset_type.lower() == "etc" else AssetClass.equities),
             asset_type=AssetType[asset_type.upper()],
             value=_get_value_in_account_currency(saxo_account, position),
             units=position.SinglePosition.PositionBase.Amount,

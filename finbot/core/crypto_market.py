@@ -12,9 +12,7 @@ class Error(FinbotError):
 class CryptoMarket(object):
     def __init__(self, impl: CoinGeckoAPI | None = None):
         self._api = impl or CoinGeckoAPI()
-        self._symbols_to_id: dict[str, str] = {
-            entry["symbol"]: entry["id"] for entry in self._api.get_coins_list()
-        }
+        self._symbols_to_id: dict[str, str] = {entry["symbol"]: entry["id"] for entry in self._api.get_coins_list()}
 
     def _get_coin_id(self, symbol: str) -> str:
         return self._symbols_to_id[symbol.lower()]
