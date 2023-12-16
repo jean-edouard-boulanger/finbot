@@ -36,7 +36,8 @@ class BrowserLauncher(object):
     def __enter__(self) -> "BrowserLauncher":
         window_size = (1920, 1080)
         self._browser = self._playwright.chromium.launch(
-            headless=False, args=_get_default_chrome_options(window_size)
+            headless=False,
+            args=_get_default_chrome_options(window_size),
         )
         return self
 

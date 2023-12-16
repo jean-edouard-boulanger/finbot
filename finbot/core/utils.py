@@ -9,9 +9,7 @@ def now_utc() -> datetime:
     return datetime.now(timezone("UTC"))
 
 
-def swallow_exc(
-    *exc_types: Type[BaseException], default: Optional[Any] = None
-) -> Callable[..., Any]:
+def swallow_exc(*exc_types: Type[BaseException], default: Optional[Any] = None) -> Callable[..., Any]:
     def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         @functools.wraps(func)
         def impl(*args: Any, **kwargs: Any) -> Any:

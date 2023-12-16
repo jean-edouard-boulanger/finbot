@@ -46,9 +46,13 @@ def get_linked_accounts_valuation(
     user_account_id: int,
 ) -> appwsrv_schema.GetLinkedAccountsValuationResponse:
     """Get linked accounts valuation"""
-    history_entry = repository.get_last_history_entry(db_session, user_account_id)
+    history_entry = repository.get_last_history_entry(
+        session=db_session,
+        user_account_id=user_account_id,
+    )
     valuation_ccy = repository.get_user_account_settings(
-        db_session, user_account_id
+        session=db_session,
+        user_account_id=user_account_id,
     ).valuation_ccy
     results = repository.find_linked_accounts_valuation(db_session, history_entry.id)
     return appwsrv_schema.GetLinkedAccountsValuationResponse(
@@ -70,14 +74,10 @@ def get_linked_accounts_valuation(
                         ),
                         currency=history_entry.valuation_ccy,
                         value=float(entry.valuation),
-                        change=serializer.serialize_valuation_change(
-                            entry.valuation_change
-                        ),
+                        change=serializer.serialize_valuation_change(entry.valuation_change),
                     ),
                 )
-                for entry in sorted(
-                    results, key=lambda entry: -1.0 * float(entry.valuation)
-                )
+                for entry in sorted(results, key=lambda entry: -1.0 * float(entry.valuation))
                 if not entry.linked_account.deleted
             ],
         )
@@ -108,10 +108,7 @@ def get_linked_accounts_historical_valuation(
     frequency = query.frequency
     is_daily = frequency == core_schema.ValuationFrequency.Daily
     linked_accounts = repository.find_linked_accounts(db_session, user_account_id)
-    linked_accounts_colours = {
-        linked_account.id: linked_account.account_colour
-        for linked_account in linked_accounts
-    }
+    linked_accounts_colours = {linked_account.id: linked_account.account_colour for linked_account in linked_accounts}
     valuation_history = repository.get_historical_valuation_by_linked_account(
         session=db_session,
         user_account_id=user_account_id,
@@ -149,10 +146,7 @@ def get_linked_accounts_historical_valuation(
                     [
                         appwsrv_schema.SeriesDescription(
                             name=f"{account_name}",
-                            data=[
-                                (entry.last_value if entry is not None else None)
-                                for entry in entries
-                            ],
+                            data=[(entry.last_value if entry is not None else None) for entry in entries],
                             colour=linked_accounts_colours[account_id],
                         )
                         for (

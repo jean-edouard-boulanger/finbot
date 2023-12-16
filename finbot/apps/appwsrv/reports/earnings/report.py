@@ -18,18 +18,8 @@ def _get_aggregated_metrics(
         first_value=first_value,
         last_date=entries[-1].effective_at,
         last_value=last_value,
-        min_value=float(
-            min(
-                entry.user_account_valuation_history_entry.valuation
-                for entry in entries
-            )
-        ),
-        max_value=float(
-            max(
-                entry.user_account_valuation_history_entry.valuation
-                for entry in entries
-            )
-        ),
+        min_value=float(min(entry.user_account_valuation_history_entry.valuation for entry in entries)),
+        max_value=float(max(entry.user_account_valuation_history_entry.valuation for entry in entries)),
         abs_change=abs_change,
         rel_change=rel_change,
     )

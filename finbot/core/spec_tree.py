@@ -47,9 +47,7 @@ ResponseSpec: TypeAlias = Response
 
 
 def SpecTree(title: str, **spec_tree_kwargs: Any) -> _SpecTree:
-    return _SpecTree(
-        "flask", title=title, **{**DEFAULT_SPEC_TREE_CONFIG, **spec_tree_kwargs}
-    )
+    return _SpecTree("flask", title=title, **{**DEFAULT_SPEC_TREE_CONFIG, **spec_tree_kwargs})
 
 
 __all__ = [

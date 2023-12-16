@@ -52,10 +52,7 @@ class ApplicationErrorData(BaseModel):
                 exception_type=fully_qualified_type_name(e),
                 trace=traceback.format_exc(),
             )
-        generic_user_message = (
-            "Internal error while processing request "
-            "(please contact your system administrator)"
-        )
+        generic_user_message = "Internal error while processing request " "(please contact your system administrator)"
         if isinstance(e, FinbotError):
             return ApplicationErrorData(
                 user_message=generic_user_message,

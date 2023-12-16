@@ -16,7 +16,9 @@ from finbot.core.web_service import get_user_account_id, jwt_required, service_e
 from finbot.model import repository
 
 admin_api = Blueprint(
-    name="admin_api", import_name=__name__, url_prefix=f"{API_URL_PREFIX}/admin"
+    name="admin_api",
+    import_name=__name__,
+    url_prefix=f"{API_URL_PREFIX}/admin",
 )
 kv_store = DBKVStore(db_session)
 
@@ -92,7 +94,8 @@ def set_email_delivery_settings(
         try:
             service = EmailService(delivery_settings)
             user_account = repository.get_user_account(
-                db_session, get_user_account_id()
+                session=db_session,
+                user_account_id=get_user_account_id(),
             )
             service.send_email(
                 Email(
@@ -124,8 +127,6 @@ def set_email_delivery_settings(
     security=JWT_REQUIRED,
     tags=ENDPOINTS_TAGS,
 )
-def remove_email_delivery_settings() -> (
-    appwsrv_schema.RemoveEmailDeliverySettingsResponse
-):
+def remove_email_delivery_settings() -> appwsrv_schema.RemoveEmailDeliverySettingsResponse:
     kv_store.delete_entity(email_delivery.DeliverySettings)
     return appwsrv_schema.RemoveEmailDeliverySettingsResponse()

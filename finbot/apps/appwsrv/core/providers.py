@@ -37,6 +37,4 @@ def validate_credentials(
         user_account_currency=user_account_currency,
     )
     if not result.valid:
-        raise InvalidUserInput(
-            f"Unable to validate provided credentials ({result.error_message})"
-        )
+        raise InvalidUserInput(f"Unable to validate provided credentials ({result.error_message})")

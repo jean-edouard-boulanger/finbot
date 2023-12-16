@@ -58,9 +58,7 @@ class DBKVStore(KVStore):
         self._session = session
 
     def __query(self, key: str) -> Query[GenericKeyValueStore]:
-        query: Query[GenericKeyValueStore] = self._session.query(
-            GenericKeyValueStore
-        ).filter_by(key=key)
+        query: Query[GenericKeyValueStore] = self._session.query(GenericKeyValueStore).filter_by(key=key)
         return query
 
     def __getitem__(self, key: str) -> Any:

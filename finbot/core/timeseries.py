@@ -39,9 +39,7 @@ def _find_next_close_item(
     return None
 
 
-def create_schedule(
-    from_time: datetime, to_time: datetime, frequency: ScheduleFrequency
-) -> list[datetime]:
+def create_schedule(from_time: datetime, to_time: datetime, frequency: ScheduleFrequency) -> list[datetime]:
     schedule = []
     current_time = from_time
     interval = _frequency_to_time_interval(frequency)
@@ -64,8 +62,6 @@ def schedulify(
         if next_closest is not None and schedule_time >= time_getter(next_closest):
             last_closest = next_closest
         if next_closest is None or schedule_time >= time_getter(next_closest):
-            next_closest = _find_next_close_item(
-                items_iterator, schedule_time, time_getter
-            )
+            next_closest = _find_next_close_item(items_iterator, schedule_time, time_getter)
         results.append((schedule_time, last_closest))
     return results

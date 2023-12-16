@@ -44,11 +44,7 @@ def serialize_user_account_settings(
 def serialize_linked_account_status(
     linked_account_status: repository.LinkedAccountStatus | None,
 ) -> appwsrv_schema.LinkedAccountStatus | None:
-    return (
-        appwsrv_schema.LinkedAccountStatus.parse_obj(linked_account_status)
-        if linked_account_status
-        else None
-    )
+    return appwsrv_schema.LinkedAccountStatus.parse_obj(linked_account_status) if linked_account_status else None
 
 
 def serialize_provider(provider: model.Provider) -> appwsrv_schema.Provider:

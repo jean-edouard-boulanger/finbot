@@ -28,9 +28,7 @@ from finbot.services.valuation_history_writer.service import (
 logger = logging.getLogger(__name__)
 
 
-def _configure_notifier(
-    db_session: Session, user_account: model.UserAccount
-) -> Notifier:
+def _configure_notifier(db_session: Session, user_account: model.UserAccount) -> Notifier:
     notifiers: list[Notifier] = []
     if user_account.mobile_phone_number and is_twilio_configured():
         twilio_settings = TwilioSettings.from_env(some(get_twilio_environment()))
@@ -65,15 +63,10 @@ class UserAccountValuationService(object):
 
     def process_valuation(self, request: ValuationRequest) -> ValuationResponse:
         user_account_id = request.user_account_id
-        logger.info(
-            f"starting workflow for user_id={user_account_id} "
-            f"linked_accounts={request.linked_accounts}"
-        )
+        logger.info(f"starting workflow for user_id={user_account_id} " f"linked_accounts={request.linked_accounts}")
 
         user_account = repository.get_user_account(self._db_session, user_account_id)
-        notifier = _configure_notifier(
-            db_session=self._db_session, user_account=user_account
-        )
+        notifier = _configure_notifier(db_session=self._db_session, user_account=user_account)
 
         logger.info("taking snapshot")
         snapshot_metadata = self._user_account_snapshot_service.take_snapshot(
@@ -87,15 +80,12 @@ class UserAccountValuationService(object):
         logger.info(f"raw snapshot created with id={snapshot_id}")
 
         logger.info("taking history report")
-        history_metadata = self._valuation_history_writer_service.write_history(
-            snapshot_id=snapshot_id
-        )
+        history_metadata = self._valuation_history_writer_service.write_history(snapshot_id=snapshot_id)
 
         history_report = history_metadata.report
 
         logger.info(
-            f"history report written with id={history_report.history_entry_id}"
-            f" {pretty_dump(history_metadata)}"
+            f"history report written with id={history_report.history_entry_id}" f" {pretty_dump(history_metadata)}"
         )
         logger.info(f"valuation workflow done for user_id={user_account_id}")
 
@@ -118,9 +108,7 @@ class UserAccountValuationService(object):
             if failed_snapshot_entries:
                 notifier.notify_linked_accounts_snapshot_errors(failed_snapshot_entries)
         except Exception as e:
-            logger.warning(
-                "failed to send linked accounts snapshot errors notification: %s", e
-            )
+            logger.warning("failed to send linked accounts snapshot errors notification: %s", e)
 
         return ValuationResponse(
             history_entry_id=history_report.history_entry_id,

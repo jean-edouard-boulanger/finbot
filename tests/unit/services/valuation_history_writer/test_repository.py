@@ -1,27 +1,28 @@
-import pytest
 from datetime import timedelta
 from decimal import Decimal
 
-from finbot.core.utils import now_utc
+import pytest
+
 from finbot.core.db.session import Session as DBSession
-from finbot.providers.schema import AssetType, AssetClass
-from finbot.services.valuation_history_writer.repository import (
-    ReportRepository,
-    ConsistencySnapshotItemEntry,
-    ConsistentSnapshot,
-    ConsistencySnapshotEmptySubAccountEntry,
-)
+from finbot.core.utils import now_utc
 from finbot.model import (
-    UserAccount,
-    UserAccountSettings,
     LinkedAccount,
-    UserAccountSnapshot,
+    LinkedAccountSnapshotEntry,
     Provider,
     SnapshotStatus,
-    LinkedAccountSnapshotEntry,
-    SubAccountSnapshotEntry,
     SubAccountItemSnapshotEntry,
     SubAccountItemType,
+    SubAccountSnapshotEntry,
+    UserAccount,
+    UserAccountSettings,
+    UserAccountSnapshot,
+)
+from finbot.providers.schema import AssetClass, AssetType
+from finbot.services.valuation_history_writer.repository import (
+    ConsistencySnapshotEmptySubAccountEntry,
+    ConsistencySnapshotItemEntry,
+    ConsistentSnapshot,
+    ReportRepository,
 )
 
 
@@ -213,9 +214,7 @@ def test_get_consistent_snapshot_data(
     sample_last_snapshot: UserAccountSnapshot,
 ):
     repository = ReportRepository(db_session)
-    consistent_snapshot_data = repository.get_consistent_snapshot_data(
-        snapshot_id=sample_last_snapshot.id
-    )
+    consistent_snapshot_data = repository.get_consistent_snapshot_data(snapshot_id=sample_last_snapshot.id)
     assert consistent_snapshot_data == ConsistentSnapshot(
         snapshot_data=[
             ConsistencySnapshotItemEntry(

@@ -1,6 +1,7 @@
-from unittest.mock import patch
-import pytest
 import os
+from unittest.mock import patch
+
+import pytest
 
 from finbot.core import environment
 
@@ -12,12 +13,7 @@ def test_get_environment_value():
 
 def test_get_environment_value_or_returns_default():
     with patch.dict(os.environ, {}, clear=True):
-        assert (
-            environment.get_environment_value_or(
-                "SOME_MISSING_KEY", "SOME_DEFAULT_VALUE"
-            )
-            == "SOME_DEFAULT_VALUE"
-        )
+        assert environment.get_environment_value_or("SOME_MISSING_KEY", "SOME_DEFAULT_VALUE") == "SOME_DEFAULT_VALUE"
 
 
 def test_get_environment_value_or_returns_none_by_default():

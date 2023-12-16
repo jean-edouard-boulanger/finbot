@@ -1,7 +1,8 @@
-from finbot.apps.finbotwsrv.client import FinbotwsrvClient
-from finbot.apps.finbotwsrv import schema as finbotwsrv_schema
-from finbot.providers import schema as providers_schema
 import pytest
+
+from finbot.apps.finbotwsrv import schema as finbotwsrv_schema
+from finbot.apps.finbotwsrv.client import FinbotwsrvClient
+from finbot.providers import schema as providers_schema
 
 
 @pytest.fixture

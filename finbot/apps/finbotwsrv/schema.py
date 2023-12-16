@@ -41,9 +41,7 @@ class LiabilitiesResults(BaseModel):
     results: list[providers_schema.LiabilitiesEntry]
 
 
-LineItemResults: TypeAlias = (
-    BalancesResults | AssetsResults | LiabilitiesResults | LineItemError
-)
+LineItemResults: TypeAlias = BalancesResults | AssetsResults | LiabilitiesResults | LineItemError
 
 
 class ValidateCredentialsRequest(BaseModel):

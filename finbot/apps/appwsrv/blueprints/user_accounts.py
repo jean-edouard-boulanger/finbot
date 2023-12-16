@@ -42,22 +42,14 @@ def create_user_account(
         user_account: UserAccount
         with db_session.persist(UserAccount()) as user_account:
             user_account.email = json.email
-            user_account.password_hash = bcrypt.hashpw(
-                json.password.get_secret_value().encode(), bcrypt.gensalt()
-            )
+            user_account.password_hash = bcrypt.hashpw(json.password.get_secret_value().encode(), bcrypt.gensalt())
             user_account.full_name = json.full_name
-            user_account.settings = UserAccountSettings(
-                valuation_ccy=json.settings.valuation_ccy
-            )
+            user_account.settings = UserAccountSettings(valuation_ccy=json.settings.valuation_ccy)
     except IntegrityError as e:
         logging.warning(f"failed to create user account: {e}")
-        raise InvalidUserInput(
-            f"User account with email '{user_account.email}' already exists"
-        )
+        raise InvalidUserInput(f"User account with email '{user_account.email}' already exists")
 
-    return appwsrv_schema.CreateUserAccountResponse(
-        user_account=serializer.serialize_user_account(user_account)
-    )
+    return appwsrv_schema.CreateUserAccountResponse(user_account=serializer.serialize_user_account(user_account))
 
 
 @user_accounts_api.route("/<int:user_account_id>/", methods=["GET"])
@@ -75,9 +67,7 @@ def get_user_account(
     user_account_id: int,
 ) -> appwsrv_schema.GetUserAccountResponse:
     user_account = repository.get_user_account(db_session, user_account_id)
-    return appwsrv_schema.GetUserAccountResponse(
-        user_account=serializer.serialize_user_account(user_account)
-    )
+    return appwsrv_schema.GetUserAccountResponse(user_account=serializer.serialize_user_account(user_account))
 
 
 @user_accounts_api.route("/<int:user_account_id>/password/", methods=["PUT"])
@@ -100,9 +90,7 @@ def update_user_account_password(
     if not bcrypt.checkpw(old_password.encode(), account.password_hash):
         raise InvalidUserInput("The old password is incorrect")
     with db_session.persist(account):
-        account.password_hash = bcrypt.hashpw(
-            json.new_password.get_secret_value().encode(), bcrypt.gensalt()
-        )
+        account.password_hash = bcrypt.hashpw(json.new_password.get_secret_value().encode(), bcrypt.gensalt())
     return appwsrv_schema.UpdateUserAccountPasswordResponse()
 
 
@@ -146,9 +134,7 @@ def get_user_account_settings(
     user_account_id: int,
 ) -> appwsrv_schema.GetUserAccountSettingsResponse:
     settings = repository.get_user_account_settings(db_session, user_account_id)
-    return appwsrv_schema.GetUserAccountSettingsResponse(
-        settings=serializer.serialize_user_account_settings(settings)
-    )
+    return appwsrv_schema.GetUserAccountSettingsResponse(settings=serializer.serialize_user_account_settings(settings))
 
 
 @user_accounts_api.route("/<int:user_account_id>/is_configured/")

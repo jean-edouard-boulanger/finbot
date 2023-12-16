@@ -66,8 +66,7 @@ def parse_valuation_requests(
             request = ValuationRequest(
                 user_account_id=int(account_id_str),
                 linked_accounts=[
-                    int(linked_account_id_str)
-                    for linked_account_id_str in linked_accounts_str.split(",")
+                    int(linked_account_id_str) for linked_account_id_str in linked_accounts_str.split(",")
                 ],
             )
         else:
@@ -77,11 +76,20 @@ def parse_valuation_requests(
 
 
 def create_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="valuation and reporting scheduler")
-    parser.add_argument(
-        "--mode", choices={"server", "one_shot"}, type=str, default="server"
+    parser = argparse.ArgumentParser(
+        description="valuation and reporting scheduler",
     )
-    parser.add_argument("--accounts", type=parse_valuation_requests, default=None)
+    parser.add_argument(
+        "--mode",
+        choices={"server", "one_shot"},
+        type=str,
+        default="server",
+    )
+    parser.add_argument(
+        "--accounts",
+        type=parse_valuation_requests,
+        default=None,
+    )
     return parser
 
 
@@ -113,9 +121,7 @@ class Scheduler(Worker):
         self._scheduler = schedule.Scheduler()
         self._stop_event = threading.Event()
         for schedule_entry in VALUATION_SCHEDULE:
-            self._scheduler.every().day.at(
-                schedule_entry.time_str, tz=schedule_entry.tz
-            ).do(
+            self._scheduler.every().day.at(schedule_entry.time_str, tz=schedule_entry.tz).do(
                 self._dispatch_valuation,
                 notify_valuation=schedule_entry.notify_valuation,
             )
@@ -125,12 +131,11 @@ class Scheduler(Worker):
         user_account: UserAccount
         for user_account in iter_user_accounts():
             user_account_id = user_account.id
-            logging.info(
-                f"[scheduler thread] dispatching valuation for user_account_id={user_account_id}"
-            )
+            logging.info(f"[scheduler thread] dispatching valuation for user_account_id={user_account_id}")
             user_account_valuation_client.run_async(
                 request=ValuationRequest(
-                    user_account_id=user_account_id, notify_valuation=notify_valuation
+                    user_account_id=user_account_id,
+                    notify_valuation=notify_valuation,
                 )
             )
 
@@ -138,8 +143,7 @@ class Scheduler(Worker):
         logging.info("[scheduler thread] starting")
         if not environment.is_production():
             logging.warning(
-                f"[scheduler thread] not scheduling jobs in the"
-                f" '{environment.get_finbot_runtime()}' environment"
+                f"[scheduler thread] not scheduling jobs in the" f" '{environment.get_finbot_runtime()}' environment"
             )
             while not self._stop_event.is_set():
                 time.sleep(1.0)

@@ -51,9 +51,7 @@ class Client:
         )
         response.raise_for_status()
         data = cast(dict[CurrencyType, float], response.json()["data"])
-        self._cache[base_ccy] = self._CacheEntry(
-            expiry=datetime.now() + self._cache_ttl, data=data
-        )
+        self._cache[base_ccy] = self._CacheEntry(expiry=datetime.now() + self._cache_ttl, data=data)
         return data
 
 

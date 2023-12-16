@@ -28,10 +28,8 @@ ENDPOINTS_TAGS = ["Formatting rules"]
     security=JWT_REQUIRED,
     tags=ENDPOINTS_TAGS,
 )
-def get_accounts_formatting_rules() -> (
-    appwsrv_schema.GetAccountsFormattingRulesResponse
-):
+def get_accounts_formatting_rules() -> appwsrv_schema.GetAccountsFormattingRulesResponse:
     """Get accounts formatting rules"""
     return appwsrv_schema.GetAccountsFormattingRulesResponse(
-        colour_palette=ACCOUNTS_PALETTE
+        colour_palette=ACCOUNTS_PALETTE,
     )
