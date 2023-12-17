@@ -107,11 +107,11 @@ export class ResponseInterceptor {
     this.handle = null;
   }
 
-  public subscribe(handler: ResponseHandler) {
+  public subscribe(handler: ResponseHandler): void {
     this.handle = GlobalResponseListener.getInstance().subscribe(handler);
   }
 
-  public unsubscribe() {
+  public unsubscribe(): void {
     if (this.handle) {
       GlobalResponseListener.getInstance().unsubscribe(this.handle);
     }
