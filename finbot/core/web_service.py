@@ -15,6 +15,7 @@ from flask.json.provider import DefaultJSONProvider
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required as _jwt_required
 from flask_jwt_extended.view_decorators import LocationType
+from werkzeug.exceptions import HTTPException
 
 from finbot.core import environment
 from finbot.core import schema as core_schema
@@ -55,6 +56,8 @@ def service_endpoint() -> Callable[[Callable[P, RT]], Callable[P, FlaskResponse]
                 response = func(*args, **kwargs)
                 logging.debug("request processed successfully")
                 return prepare_response(response)
+            except HTTPException:
+                raise
             except Exception as e:
                 logging.warning("error while processing request:" f" {e}\n{traceback.format_exc()}")
                 return cast(

@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext } from "react";
 
 import { Constructible, makeApi } from "./factory";
+import { ResponseInterceptor } from "./factory";
 import { AuthContext } from "contexts";
 
 export function useApi<ApiT extends Constructible>(
@@ -14,4 +15,11 @@ export function useApi<ApiT extends Constructible>(
     setApi(makeApi(apiType, accessToken ?? undefined));
   }, [accessToken]);
   return api;
+}
+
+export function useResponseInterceptor(): [ResponseInterceptor] {
+  const [interceptor] = useState(() => {
+    return new ResponseInterceptor();
+  });
+  return [interceptor];
 }
