@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from "react";
 
-import { makeApi, AuthenticationApi, AppLoginRequest } from "clients";
+import {
+  makeApi,
+  AuthenticationApi,
+  AppLoginRequest,
+  useResponseInterceptor,
+} from "clients";
 
 import AuthContext from "./auth-context";
 import { AuthState } from "./auth-state";
@@ -16,6 +21,7 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = (props) => {
   const [authState, _setAuthState] = useState<AuthState | null>(null);
+  const [responseInterceptor] = useResponseInterceptor();
 
   const updateAuthState = (newAuthState: AuthState | null) => {
     if (newAuthState !== null) {
@@ -25,6 +31,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = (props) => {
     }
     _setAuthState(newAuthState);
   };
+
+  useEffect(() => {
+    responseInterceptor.subscribe((response) => {
+      if (response.status === 401) {
+        logout();
+      }
+    });
+    return () => {
+      responseInterceptor.unsubscribe();
+    };
+  }, [responseInterceptor]);
 
   useEffect(() => {
     updateAuthState(loadAuthStateFromLocalStorage());
