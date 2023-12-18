@@ -131,6 +131,8 @@ class Scheduler(Worker):
         user_account: UserAccount
         for user_account in iter_user_accounts():
             user_account_id = user_account.id
+            if not user_account.settings.schedule_valuation:
+                continue
             logging.info(f"[scheduler thread] dispatching valuation for user_account_id={user_account_id}")
             user_account_valuation_client.run_async(
                 request=ValuationRequest(
