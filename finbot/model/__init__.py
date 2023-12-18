@@ -55,6 +55,7 @@ class UserAccountSettings(Base):
     __tablename__ = "finbot_user_accounts_settings"
     user_account_id = Column(Integer, ForeignKey(UserAccount.id, ondelete="CASCADE"), primary_key=True)
     valuation_ccy = Column(String(3), nullable=False)
+    schedule_valuation = Column(Boolean, nullable=False, server_default=expression.true(), default=True)
     created_at = Column(DateTimeTz, server_default=func.now(), nullable=False)
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
