@@ -246,13 +246,15 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
 
   return (
     <Card style={{ height: "22rem" }}>
-      <Card.Header className="d-flex">
-        Historical Valuation
+      <Card.Header className="d-flex justify-content-between align-items-center">
+        <span style={{ fontWeight: 450 }}>Historical Valuation</span>
         <div>
           <DropdownButton
-            variant={""}
             size={"xs" as any}
             title={selectedLevel.label}
+            className={"d-inline-block"}
+            style={{ marginRight: "0.4em" }}
+            variant="secondary"
           >
             {LEVELS.map((level) => {
               return (
@@ -268,12 +270,12 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
               );
             })}
           </DropdownButton>
-        </div>
-        <div>
           <DropdownButton
-            variant={""}
             size={"xs" as any}
-            title={selectedFrequency}
+            title={selectedFrequency.toUpperCase()}
+            className={"d-inline-block"}
+            style={{ marginRight: "0.4em" }}
+            variant="secondary"
           >
             {FREQUENCIES.map((freq) => {
               return (
@@ -289,12 +291,11 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
               );
             })}
           </DropdownButton>
-        </div>
-        <div>
           <DropdownButton
-            variant={""}
             size={"xs" as any}
             title={selectedTimeRange.label}
+            className={"d-inline-block"}
+            variant="secondary"
           >
             {TIME_RANGES.map((range) => {
               return (

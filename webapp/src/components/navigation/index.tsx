@@ -35,11 +35,9 @@ const SystemStatusBadge: React.FC<Record<string, never>> = () => {
   return (
     <>
       {backendReachable && report?.runtime === "development" && (
-        <Badge variant={"danger"}>DEV build v{report!.finbotVersion}</Badge>
+        <Badge bg={"danger"}>DEV build v{report!.finbotVersion}</Badge>
       )}
-      {!backendReachable && (
-        <Badge variant={"danger"}>BACKEND UNREACHABLE</Badge>
-      )}
+      {!backendReachable && <Badge bg={"danger"}>BACKEND UNREACHABLE</Badge>}
     </>
   );
 };

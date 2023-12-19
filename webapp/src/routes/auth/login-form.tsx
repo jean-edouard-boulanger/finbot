@@ -1,104 +1,112 @@
 import React, { useContext, useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-import { AppLoginRequest } from "clients";
 import { AuthContext } from "contexts";
 
-import { toast } from "react-toastify";
 import { LoadingButton } from "components";
-import { Row, Col, Button } from "react-bootstrap";
+import { Credentials } from "contexts/auth";
+import { Row, Col, Button, Card, Form, Alert } from "react-bootstrap";
+import { Formik, Form as MetaForm, Field, ErrorMessage } from "formik";
 
-import {
-  default as DataDrivenForm,
-  UiSchema,
-  ISubmitEvent,
-} from "react-jsonschema-form";
-import { JSONSchema6 } from "json-schema";
-
-const LOGIN_DATA_SCHEMA: JSONSchema6 = {
-  type: "object",
-  required: ["password", "email"],
-  properties: {
-    email: {
-      type: "string",
-      title: "E-Mail",
-      format: "email",
-    },
-    password: {
-      type: "string",
-      title: "Password",
-    },
-  },
-};
-
-const LOGIN_UI_SCHEMA: UiSchema = {
-  email: {
-    "ui:emptyValue": "",
-    "ui:autofocus": true,
-  },
-  password: {
-    "ui:widget": "password",
-  },
-};
+import * as Yup from "yup";
 
 export interface LoginFormProps {}
 
-export const LoginForm: React.FC<LoginFormProps> = () => {
-  const { login } = useContext(AuthContext);
-  const [loading] = useState(false);
+const CREDENTIALS_SCHEMA = Yup.object().shape({
+  email: Yup.string().required().label("Email"),
+  password: Yup.string().required().label("Password"),
+});
 
-  const handleLogin = async (event: ISubmitEvent<AppLoginRequest>) => {
+export const LoginForm: React.FC<LoginFormProps> = () => {
+  const navigate = useNavigate();
+  const { login } = useContext(AuthContext);
+  const [loginError, setLoginError] = useState<string | null>(null);
+
+  const handleSubmit = async (
+    values: Credentials,
+    { setSubmitting }: { setSubmitting: (submitting: boolean) => void },
+  ) => {
     try {
-      await login!(event.formData);
+      await login!(values);
     } catch (e) {
-      toast.error(`${e}`);
-      throw e;
+      setLoginError(`${e}`);
     }
+    setSubmitting(false);
   };
 
   return (
-    <>
-      <Row>
-        <Col md={12}>
+    <Row className={"justify-content-center mt-5"}>
+      <Col md={5}>
+        {loginError && (
           <Row>
             <Col>
-              <div className={"page-header"}>
-                <h1>
-                  Sign in <small>to my finbot account</small>
-                </h1>
-              </div>
+              <Alert variant={"danger"}>Invalid email or password</Alert>
             </Col>
           </Row>
-        </Col>
-      </Row>
-      <Row>
-        <Col md={6}>
-          <Row>
-            <Col>
-              <DataDrivenForm
-                schema={LOGIN_DATA_SCHEMA}
-                uiSchema={LOGIN_UI_SCHEMA}
-                onSubmit={handleLogin}
-                showErrorList={false}
-              >
-                <div>
-                  <LoadingButton
-                    variant={"dark"}
-                    type="submit"
-                    loading={loading}
-                  >
-                    Sign In
-                  </LoadingButton>{" "}
-                  <Link to={"/signup"}>
-                    <Button variant={"dark"}>Sign up</Button>
-                  </Link>
-                </div>
-              </DataDrivenForm>
-            </Col>
-          </Row>
-        </Col>
-      </Row>
-    </>
+        )}
+        <Row>
+          <Col>
+            <Card>
+              <Card.Header>Sign-in</Card.Header>
+              <Card.Body>
+                <Formik
+                  initialValues={{ email: "", password: "" }}
+                  validationSchema={CREDENTIALS_SCHEMA}
+                  onSubmit={handleSubmit}
+                >
+                  {({ isSubmitting, submitForm }) => (
+                    <MetaForm>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Email address</Form.Label>
+                        <Field
+                          type="text"
+                          name="email"
+                          className="form-control"
+                        />
+                        <ErrorMessage
+                          className="text-danger"
+                          name="email"
+                          component="div"
+                        />
+                      </Form.Group>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Password</Form.Label>
+                        <Field
+                          type="password"
+                          name="password"
+                          className="form-control"
+                        />
+                        <ErrorMessage
+                          className="text-danger"
+                          name="password"
+                          component="div"
+                        />
+                      </Form.Group>
+                      <LoadingButton
+                        variant="primary"
+                        loading={isSubmitting}
+                        onClick={() => {
+                          setLoginError(null);
+                          submitForm();
+                        }}
+                      >
+                        Sign-in
+                      </LoadingButton>
+                      <Button
+                        variant={"link"}
+                        onClick={() => navigate("/signup")}
+                      >
+                        Register
+                      </Button>
+                    </MetaForm>
+                  )}
+                </Formik>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </Col>
+    </Row>
   );
 };
 

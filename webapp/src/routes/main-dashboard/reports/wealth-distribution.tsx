@@ -99,27 +99,31 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
 
   return (
     <Card style={{ height: "22rem" }}>
-      <Card.Header className={"d-flex justify-content-between"}>
-        Asset diversification
-        <DropdownButton
-          variant={""}
-          size={"xs" as any}
-          title={`By ${aggregationMode}`}
-        >
-          {AGGREGATION_MODES.map((mode) => {
-            return (
-              <Dropdown.Item
-                active={mode === aggregationMode}
-                key={mode}
-                onClick={() => {
-                  setAggregationMode(mode);
-                }}
-              >
-                BY {mode.toUpperCase()}
-              </Dropdown.Item>
-            );
-          })}
-        </DropdownButton>
+      <Card.Header
+        className={"d-flex justify-content-between align-items-center"}
+      >
+        <span style={{ fontWeight: 450 }}>Asset diversification</span>
+        <div>
+          <DropdownButton
+            variant={"secondary"}
+            size={"xs" as any}
+            title={`BY ${aggregationMode.toUpperCase()}`}
+          >
+            {AGGREGATION_MODES.map((mode) => {
+              return (
+                <Dropdown.Item
+                  active={mode === aggregationMode}
+                  key={mode}
+                  onClick={() => {
+                    setAggregationMode(mode);
+                  }}
+                >
+                  BY {mode.toUpperCase()}
+                </Dropdown.Item>
+              );
+            })}
+          </DropdownButton>
+        </div>
       </Card.Header>
       <Card.Body>
         {valuation !== null && (
