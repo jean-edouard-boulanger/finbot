@@ -17,7 +17,7 @@ import {
   HistoricalValuationPanel,
   WealthDistributionPanel,
 } from "./reports";
-import { Row, Col, Card, Tabs, Tab } from "react-bootstrap";
+import { Row, Col, Card, Nav } from "react-bootstrap";
 
 import { DateTime } from "luxon";
 
@@ -150,16 +150,21 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
         <Col>
           <Card>
             <Card.Header>
-              <Tabs
-                id={"reports-nav"}
-                activeKey={selectedReport}
+              <Nav
+                id="reports-nav"
+                variant="tabs"
+                defaultActiveKey={selectedReport}
                 onSelect={(reportSelection) =>
                   setSelectedReport(reportSelection ?? DEFAULT_REPORT)
                 }
               >
-                <Tab eventKey={REPORTS.HOLDINGS} title={"Holdings"} />
-                <Tab eventKey={REPORTS.EARNINGS} title={"Earnings"} />
-              </Tabs>
+                <Nav.Item>
+                  <Nav.Link eventKey={REPORTS.HOLDINGS}>Holdings</Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                  <Nav.Link eventKey={REPORTS.EARNINGS}>Earnings</Nav.Link>
+                </Nav.Item>
+              </Nav>
             </Card.Header>
             <Card.Body>
               {selectedReport === REPORTS.HOLDINGS && (
