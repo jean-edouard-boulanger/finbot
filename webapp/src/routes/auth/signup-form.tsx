@@ -152,7 +152,7 @@ export const SignupForm: React.FC<Record<string, never>> = () => {
           <Row className={"mb-2"}>
             <Col>
               <h4>
-                <Badge variant={"primary"}>1</Badge> Personal information
+                <Badge bg={"primary"}>1</Badge> Personal information
               </h4>
             </Col>
           </Row>
@@ -168,11 +168,9 @@ export const SignupForm: React.FC<Record<string, never>> = () => {
                     type={"text"}
                   />
                   {personalFormValidation.fullNameValid && (
-                    <InputGroup.Append>
-                      <InputGroup.Text>
-                        <FaCheckCircle />
-                      </InputGroup.Text>
-                    </InputGroup.Append>
+                    <InputGroup.Text>
+                      <FaCheckCircle />
+                    </InputGroup.Text>
                   )}
                 </InputGroup>
               </Form.Group>
@@ -190,11 +188,9 @@ export const SignupForm: React.FC<Record<string, never>> = () => {
                     type={"email"}
                   />
                   {personalFormValidation.emailValid && (
-                    <InputGroup.Append>
-                      <InputGroup.Text>
-                        <FaCheckCircle />
-                      </InputGroup.Text>
-                    </InputGroup.Append>
+                    <InputGroup.Text>
+                      <FaCheckCircle />
+                    </InputGroup.Text>
                   )}
                 </InputGroup>
               </Form.Group>
@@ -265,7 +261,7 @@ export const SignupForm: React.FC<Record<string, never>> = () => {
               <Row className={"mb-2"}>
                 <Col>
                   <h4>
-                    <Badge variant={"primary"}>2</Badge> Password
+                    <Badge bg={"primary"}>2</Badge> Password
                   </h4>
                 </Col>
               </Row>
