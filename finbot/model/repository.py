@@ -158,26 +158,22 @@ class DailyValuationGrouping(ValuationGrouping):
 
 class WeeklyValuationGrouping(ValuationGrouping):
     datatype = "category"
-    sql_grouping = (
-        "'W' || extract(week from fuahe.effective_at)::text " "|| ' ' || extract(year from fuahe.effective_at)::text"
-    )
+    sql_grouping = "'W' || to_char(fuahe.effective_at, 'IW IYYY')"
 
 
 class MonthlyValuationGrouping(ValuationGrouping):
     datatype = "category"
-    sql_grouping = "to_char(fuahe.effective_at, 'Mon') " "|| ' ' || extract(year from fuahe.effective_at)::text"
+    sql_grouping = "to_char(fuahe.effective_at, 'Month IYYY')"
 
 
 class QuarterlyValuationGrouping(ValuationGrouping):
     datatype = "category"
-    sql_grouping = (
-        "'Q' || extract(quarter from fuahe.effective_at) " "|| ' ' || extract(year from fuahe.effective_at)::text"
-    )
+    sql_grouping = "'Q' || to_char(fuahe.effective_at, 'Q IYYY')"
 
 
 class YearlyValuationGrouping(ValuationGrouping):
     datatype = "category"
-    sql_grouping = "extract(year from fuahe.effective_at)::text"
+    sql_grouping = "to_char(fuahe.effective_at, 'IYYY')"
 
 
 def _get_valuation_grouping_from_frequency(
