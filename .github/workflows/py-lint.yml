@@ -14,77 +14,18 @@ on:
       - "requirements*.txt"
 
 jobs:
-  flake8-check:
+  py-lint-check:
+    strategy:
+      matrix:
+        check: ['flakes-check', 'black-check', 'mypy', 'isort-check', 'banned-keywords-check-py']
     runs-on: ubuntu-latest
     steps:
       - name: Check out finbot source
         uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.11
-      - name: flake8 lint
-        uses: py-actions/flake8@v1
-        with:
-          ignore: "W503"
-          max-line-length: "120"
-          path: "finbot/"
-  black-check:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out finbot source
-        uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        with:
-          python-version: 3.11
+          python-version: 3.12
       - name: Install Python dependencies
-        run: python3.11 -m pip install -r requirements-dev.txt
-      - name: black lint
-        run: make black-check
-  mypy-check:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out finbot source
-        uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        with:
-          python-version: 3.11
-      - name: Install Python dependencies
-        run: python3.11 -m pip install -r requirements-dev.txt
-      - name: mypy lint
-        run: make mypy
-  isort-check:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out finbot source
-        uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        with:
-          python-version: 3.11
-      - name: Install Python dependencies
-        run: python3.11 -m pip install -r requirements-dev.txt
-      - name: isort lint
-        run: make isort-check
-  banned-keywords-check:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out finbot source
-        uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        with:
-          python-version: 3.11
-      - name: Install Python dependencies
-        run: python3.11 -m pip install -r requirements-dev.txt
-      - name: Check banned keywords
-        run: make banned-keywords-check-py
-  unit-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out finbot source
-        uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        with:
-          python-version: 3.11
-      - name: Install Python dependencies
-        run: python3.11 -m pip install -r requirements-dev.txt
-      - name: Run unit tests
-        run: make unit-tests-py
+        run: python3.12 -m pip install -r requirements-dev.txt
+      - name: Lint (${{ matrix.check }})
+        run: make ${{ matrix.check }}

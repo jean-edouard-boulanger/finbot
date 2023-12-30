@@ -46,7 +46,7 @@ class NetPositionsResponse(BaseModel):
     Data: list[NetPosition]
 
 
-class Account(BaseModel):
+class SaxoAccount(BaseModel):
     AccountKey: str
     ClientKey: str
     Currency: str
@@ -54,7 +54,7 @@ class Account(BaseModel):
 
 
 class AccountsResponse(BaseModel):
-    Data: list[Account]
+    Data: list[SaxoAccount]
 
 
 class AccountBalancesResponse(BaseModel):
@@ -77,7 +77,8 @@ class SaxoGatewayClient:
     def reachable(self) -> bool:
         try:
             response = self._session.get(
-                f"{self._settings.gateway_url}/status", timeout=1.0
+                f"{self._settings.gateway_url}/status",
+                timeout=1.0,
             )
             response.raise_for_status()
             return True
@@ -117,7 +118,7 @@ class SaxoGatewayClient:
 
     def get_account_positions(
         self,
-        saxo_account: Account,
+        saxo_account: SaxoAccount,
     ) -> NetPositionsResponse:
         net_positions_payload = self.openapi_get(
             "port/v1/netpositions/",
@@ -131,7 +132,7 @@ class SaxoGatewayClient:
 
     def get_account_balances(
         self,
-        saxo_account: Account,
+        saxo_account: SaxoAccount,
     ) -> AccountBalancesResponse:
         account_balances_response_payload = self.openapi_get(
             "port/v1/balances/",

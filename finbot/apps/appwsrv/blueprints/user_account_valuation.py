@@ -14,10 +14,11 @@ from finbot.apps.appwsrv.core import formatting_rules
 from finbot.apps.appwsrv.core import valuation as appwsrv_valuation
 from finbot.apps.appwsrv.core.series import order_series_by_last_value
 from finbot.apps.appwsrv.db import db_session
-from finbot.apps.appwsrv.spec import ResponseSpec, spec
+from finbot.apps.appwsrv.spec import spec
 from finbot.core import schema as core_schema
 from finbot.core import timeseries
 from finbot.core.errors import InvalidUserInput, MissingUserData
+from finbot.core.spec_tree import JWT_REQUIRED, ResponseSpec
 from finbot.core.utils import now_utc, some
 from finbot.core.web_service import jwt_required, service_endpoint
 from finbot.model import (
@@ -43,17 +44,24 @@ user_account_valuation_api = Blueprint(
 )
 
 
+ENDPOINTS_TAGS = ["User accounts (valuation)"]
+
+
 @user_account_valuation_api.route("/trigger/", methods=["POST"])
 @jwt_required()
 @service_endpoint()
 @spec.validate(
-    resp=ResponseSpec(HTTP_202=appwsrv_schema.TriggerUserAccountValuationResponse)
+    resp=ResponseSpec(
+        HTTP_202=appwsrv_schema.TriggerUserAccountValuationResponse,
+    ),
+    operation_id="trigger_user_account_valuation",
+    security=JWT_REQUIRED,
+    tags=ENDPOINTS_TAGS,
 )
 def trigger_user_account_valuation(
     user_account_id: int,
-) -> tuple[
-    appwsrv_schema.TriggerUserAccountValuationResponse, Literal[HTTPStatus.ACCEPTED]
-]:
+) -> tuple[appwsrv_schema.TriggerUserAccountValuationResponse, Literal[HTTPStatus.ACCEPTED]]:
+    """Trigger user account valuation"""
     appwsrv_valuation.trigger_valuation(user_account_id)
     return appwsrv_schema.TriggerUserAccountValuationResponse(), HTTPStatus.ACCEPTED
 
@@ -62,11 +70,17 @@ def trigger_user_account_valuation(
 @jwt_required()
 @service_endpoint()
 @spec.validate(
-    resp=ResponseSpec(HTTP_200=appwsrv_schema.GetUserAccountValuationResponse)
+    resp=ResponseSpec(
+        HTTP_200=appwsrv_schema.GetUserAccountValuationResponse,
+    ),
+    operation_id="get_user_account_valuation",
+    security=JWT_REQUIRED,
+    tags=ENDPOINTS_TAGS,
 )
 def get_user_account_valuation(
     user_account_id: int,
 ) -> appwsrv_schema.GetUserAccountValuationResponse:
+    """Get user account valuation"""
     to_time = now_utc()
     from_time = to_time - timedelta(days=30)
     last_valuation = repository.get_last_history_entry(db_session, user_account_id)
@@ -88,9 +102,7 @@ def get_user_account_valuation(
             currency=last_valuation.valuation_ccy,
             value=float(user_account_valuation.valuation),
             total_liabilities=float(user_account_valuation.total_liabilities),
-            change=serializer.serialize_valuation_change(
-                user_account_valuation.valuation_change
-            ),
+            change=serializer.serialize_valuation_change(user_account_valuation.valuation_change),
             sparkline=[
                 appwsrv_schema.UserAccountValuationSparklineEntry(
                     effective_at=valuation_time,
@@ -111,26 +123,26 @@ def get_user_account_valuation(
 @service_endpoint()
 @spec.validate(
     resp=ResponseSpec(
-        HTTP_200=appwsrv_schema.GetUserAccountValuationByAssetTypeResponse
-    )
+        HTTP_200=appwsrv_schema.GetUserAccountValuationByAssetTypeResponse,
+    ),
+    operation_id="get_user_account_valuation_by_asset_type",
+    security=JWT_REQUIRED,
+    tags=ENDPOINTS_TAGS,
 )
 def get_user_account_valuation_by_asset_type(
     user_account_id: int,
 ) -> appwsrv_schema.GetUserAccountValuationByAssetTypeResponse:
+    """Get user account valuation by asset type"""
     last_history_entry = repository.get_last_history_entry(db_session, user_account_id)
     items = repository.find_items_valuation(db_session, last_history_entry.id)
-    valuation_ccy = repository.get_user_account_settings(
-        db_session, user_account_id
-    ).valuation_ccy
+    valuation_ccy = repository.get_user_account_settings(db_session, user_account_id).valuation_ccy
     valuation: dict[str, GroupValuationAgg] = {}
     item: SubAccountItemValuationHistoryEntry
     for item in items:
         if item.item_type == SubAccountItemType.Asset:
-            asset_type_class_fmt = (
-                formatting_rules.get_asset_type_class_formatting_rule_by_name(
-                    asset_type_name=some(item.asset_type),
-                    asset_class_name=some(item.asset_class),
-                )
+            asset_type_class_fmt = formatting_rules.get_asset_type_class_formatting_rule_by_name(
+                asset_type_name=some(item.asset_type),
+                asset_class_name=some(item.asset_class),
             )
             valuation.setdefault(
                 asset_type_class_fmt.pretty_name,
@@ -145,9 +157,7 @@ def get_user_account_valuation_by_asset_type(
                     value=group_valuation.value,
                     colour=group_valuation.colour,
                 )
-                for (group_name, group_valuation) in sorted(
-                    valuation.items(), key=lambda entry: -1.0 * entry[1].value
-                )
+                for (group_name, group_valuation) in sorted(valuation.items(), key=lambda entry: -1.0 * entry[1].value)
                 if group_valuation.value > 0.0
             ],
         )
@@ -159,24 +169,24 @@ def get_user_account_valuation_by_asset_type(
 @service_endpoint()
 @spec.validate(
     resp=ResponseSpec(
-        HTTP_200=appwsrv_schema.GetUserAccountValuationByAssetClassResponse
-    )
+        HTTP_200=appwsrv_schema.GetUserAccountValuationByAssetClassResponse,
+    ),
+    operation_id="get_user_account_valuation_by_asset_class",
+    security=JWT_REQUIRED,
+    tags=ENDPOINTS_TAGS,
 )
 def get_user_account_valuation_by_asset_class(
     user_account_id: int,
 ) -> appwsrv_schema.GetUserAccountValuationByAssetClassResponse:
+    """Get user account valuation by asset class"""
     last_history_entry = repository.get_last_history_entry(db_session, user_account_id)
     items = repository.find_items_valuation(db_session, last_history_entry.id)
-    valuation_ccy = repository.get_user_account_settings(
-        db_session, user_account_id
-    ).valuation_ccy
+    valuation_ccy = repository.get_user_account_settings(db_session, user_account_id).valuation_ccy
     valuation: dict[str, GroupValuationAgg] = {}
     item: SubAccountItemValuationHistoryEntry
     for item in items:
         if item.item_type == SubAccountItemType.Asset:
-            asset_class_fmt = formatting_rules.get_asset_class_formatting_rule_by_name(
-                some(item.asset_class)
-            )
+            asset_class_fmt = formatting_rules.get_asset_class_formatting_rule_by_name(some(item.asset_class))
             valuation.setdefault(
                 asset_class_fmt.pretty_name,
                 GroupValuationAgg(colour=asset_class_fmt.dominant_colour),
@@ -190,9 +200,7 @@ def get_user_account_valuation_by_asset_class(
                     value=group_valuation.value,
                     colour=group_valuation.colour,
                 )
-                for (group_name, group_valuation) in sorted(
-                    valuation.items(), key=lambda entry: -1.0 * entry[1].value
-                )
+                for (group_name, group_valuation) in sorted(valuation.items(), key=lambda entry: -1.0 * entry[1].value)
                 if group_valuation.value > 0.0
             ],
         )
@@ -203,12 +211,18 @@ def get_user_account_valuation_by_asset_class(
 @jwt_required()
 @service_endpoint()
 @spec.validate(
-    resp=ResponseSpec(HTTP_200=appwsrv_schema.GetUserAccountValuationHistoryResponse)
+    resp=ResponseSpec(
+        HTTP_200=appwsrv_schema.GetUserAccountValuationHistoryResponse,
+    ),
+    operation_id="get_user_account_historical_valuation",
+    security=JWT_REQUIRED,
+    tags=ENDPOINTS_TAGS,
 )
-def get_user_account_valuation_history(
+def get_user_account_historical_valuation(
     user_account_id: int,
     query: appwsrv_schema.HistoricalValuationParams,
 ) -> appwsrv_schema.GetUserAccountValuationHistoryResponse:
+    """Get user account valuation historical valuation"""
     settings = repository.get_user_account_settings(db_session, user_account_id)
     from_time = query.from_time
     to_time = query.to_time
@@ -218,9 +232,7 @@ def get_user_account_valuation_history(
     frequency = query.frequency
     is_daily = frequency == core_schema.ValuationFrequency.Daily
 
-    historical_valuation: list[
-        repository.HistoricalValuationEntry
-    ] = repository.get_user_account_historical_valuation(
+    historical_valuation: list[repository.HistoricalValuationEntry] = repository.get_user_account_historical_valuation(
         db_session,
         user_account_id,
         from_time=from_time,
@@ -238,8 +250,7 @@ def get_user_account_valuation_history(
                 x_axis=appwsrv_schema.XAxisDescription(
                     type="datetime" if is_daily else "category",
                     categories=[
-                        entry.period_end if is_daily else entry.valuation_period
-                        for entry in historical_valuation
+                        entry.period_end if is_daily else entry.valuation_period for entry in historical_valuation
                     ],
                 ),
                 series=[
@@ -259,13 +270,17 @@ def get_user_account_valuation_history(
 @service_endpoint()
 @spec.validate(
     resp=ResponseSpec(
-        HTTP_200=appwsrv_schema.GetUserAccountValuationHistoryByAssetTypeResponse
-    )
+        HTTP_200=appwsrv_schema.GetUserAccountValuationHistoryByAssetTypeResponse,
+    ),
+    operation_id="get_user_account_historical_valuation_by_asset_type",
+    security=JWT_REQUIRED,
+    tags=ENDPOINTS_TAGS,
 )
-def get_user_account_valuation_history_by_asset_type(
+def get_user_account_historical_valuation_by_asset_type(
     user_account_id: int,
     query: appwsrv_schema.HistoricalValuationParams,
 ) -> appwsrv_schema.GetUserAccountValuationHistoryByAssetTypeResponse:
+    """Get user account valuation historical valuation by asset type"""
     settings = repository.get_user_account_settings(db_session, user_account_id)
     from_time = query.from_time
     to_time = query.to_time
@@ -275,9 +290,7 @@ def get_user_account_valuation_history_by_asset_type(
     frequency = query.frequency
     is_daily = frequency == core_schema.ValuationFrequency.Daily
 
-    valuation_history: list[
-        repository.AssetTypeHistoricalValuationEntry
-    ] = repository.get_historical_valuation_by(
+    valuation_history: list[repository.AssetTypeHistoricalValuationEntry] = repository.get_historical_valuation_by(
         db_session,
         user_account_id,
         by=repository.HistoricalValuationByAssetType,
@@ -299,9 +312,7 @@ def get_user_account_valuation_history_by_asset_type(
     ] = defaultdict(lambda: [None] * len(x_axis_layout))
     for entry in valuation_history:
         entry_index = x_axis_layout[entry.valuation_period]
-        valuation_history_by_asset_type_class[(entry.asset_type, entry.asset_class)][
-            entry_index
-        ] = entry
+        valuation_history_by_asset_type_class[(entry.asset_type, entry.asset_class)][entry_index] = entry
     return appwsrv_schema.GetUserAccountValuationHistoryByAssetTypeResponse(
         historical_valuation=appwsrv_schema.HistoricalValuation(
             valuation_ccy=settings.valuation_ccy,
@@ -321,10 +332,7 @@ def get_user_account_valuation_history_by_asset_type(
                             name=formatting_rules.get_asset_type_class_formatting_rule(
                                 asset_type, asset_class
                             ).pretty_name,
-                            data=[
-                                (entry.last_value if entry is not None else None)
-                                for entry in entries
-                            ],
+                            data=[(entry.last_value if entry is not None else None) for entry in entries],
                             colour=formatting_rules.get_asset_type_class_formatting_rule(
                                 asset_type, asset_class
                             ).dominant_colour,
@@ -345,13 +353,17 @@ def get_user_account_valuation_history_by_asset_type(
 @service_endpoint()
 @spec.validate(
     resp=ResponseSpec(
-        HTTP_200=appwsrv_schema.GetUserAccountValuationHistoryByAssetClassResponse
-    )
+        HTTP_200=appwsrv_schema.GetUserAccountValuationHistoryByAssetClassResponse,
+    ),
+    operation_id="get_user_account_historical_valuation_by_asset_class",
+    security=JWT_REQUIRED,
+    tags=ENDPOINTS_TAGS,
 )
-def get_user_account_valuation_history_by_asset_class(
+def get_user_account_historical_valuation_by_asset_class(
     user_account_id: int,
     query: appwsrv_schema.HistoricalValuationParams,
 ) -> appwsrv_schema.GetUserAccountValuationHistoryByAssetClassResponse:
+    """Get user account valuation historical valuation by asset class"""
     settings = repository.get_user_account_settings(db_session, user_account_id)
     from_time = query.from_time
     to_time = query.to_time
@@ -361,9 +373,7 @@ def get_user_account_valuation_history_by_asset_class(
     frequency = query.frequency
     is_daily = frequency == core_schema.ValuationFrequency.Daily
 
-    valuation_history: list[
-        repository.AssetClassHistoricalValuationEntry
-    ] = repository.get_historical_valuation_by(
+    valuation_history: list[repository.AssetClassHistoricalValuationEntry] = repository.get_historical_valuation_by(
         db_session,
         user_account_id,
         by=repository.HistoricalValuationByAssetClass,
@@ -402,13 +412,8 @@ def get_user_account_valuation_history_by_asset_class(
                 series=order_series_by_last_value(
                     [
                         appwsrv_schema.SeriesDescription(
-                            name=formatting_rules.get_asset_class_formatting_rule(
-                                asset_class=asset_class
-                            ).pretty_name,
-                            data=[
-                                (entry.last_value if entry is not None else None)
-                                for entry in entries
-                            ],
+                            name=formatting_rules.get_asset_class_formatting_rule(asset_class=asset_class).pretty_name,
+                            data=[(entry.last_value if entry is not None else None) for entry in entries],
                             colour=formatting_rules.get_asset_class_formatting_rule(
                                 asset_class=asset_class
                             ).dominant_colour,

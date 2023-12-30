@@ -12,8 +12,9 @@ from finbot.apps.appwsrv.reports.earnings.report import (
 from finbot.apps.appwsrv.reports.holdings.report import (
     generate as generate_holdings_report,
 )
-from finbot.apps.appwsrv.spec import ResponseSpec, spec
+from finbot.apps.appwsrv.spec import spec
 from finbot.core.errors import MissingUserData
+from finbot.core.spec_tree import JWT_REQUIRED, ResponseSpec
 from finbot.core.utils import now_utc
 from finbot.core.web_service import get_user_account_id, jwt_required, service_endpoint
 from finbot.model import repository
@@ -22,15 +23,28 @@ logger = logging.getLogger(__name__)
 
 
 reports_api = Blueprint(
-    name="reports_api", import_name=__name__, url_prefix=f"{API_URL_PREFIX}/reports"
+    name="reports_api",
+    import_name=__name__,
+    url_prefix=f"{API_URL_PREFIX}/reports",
 )
+
+
+ENDPOINTS_TAGS = ["User accounts (reports)"]
 
 
 @reports_api.route("/holdings/", methods=["GET"])
 @jwt_required()
 @service_endpoint()
-@spec.validate(resp=ResponseSpec(HTTP_200=appwsrv_schema.GetHoldingsReportResponse))
+@spec.validate(
+    resp=ResponseSpec(
+        HTTP_200=appwsrv_schema.GetHoldingsReportResponse,
+    ),
+    operation_id="get_user_account_holdings_report",
+    security=JWT_REQUIRED,
+    tags=ENDPOINTS_TAGS,
+)
 def get_holdings_report() -> appwsrv_schema.GetHoldingsReportResponse:
+    """Get holdings report"""
     history_entry = repository.get_last_history_entry(db_session, get_user_account_id())
     if not history_entry:
         raise MissingUserData("No valuation available for selected time range")
@@ -42,8 +56,16 @@ def get_holdings_report() -> appwsrv_schema.GetHoldingsReportResponse:
 @reports_api.route("/earnings/", methods=["GET"])
 @jwt_required()
 @service_endpoint()
-@spec.validate(resp=ResponseSpec(HTTP_200=appwsrv_schema.GetEarningsReportResponse))
+@spec.validate(
+    resp=ResponseSpec(
+        HTTP_200=appwsrv_schema.GetEarningsReportResponse,
+    ),
+    operation_id="get_user_account_earnings_report",
+    security=JWT_REQUIRED,
+    tags=ENDPOINTS_TAGS,
+)
 def get_earnings_report() -> appwsrv_schema.GetEarningsReportResponse:
+    """Get earnings report"""
     to_time = now_utc()
     return appwsrv_schema.GetEarningsReportResponse(
         report=generate_earnings_report(

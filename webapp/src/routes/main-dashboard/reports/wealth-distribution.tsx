@@ -1,7 +1,10 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 
-import { ServicesContext } from "contexts";
-
+import {
+  useApi,
+  UserAccountsValuationApi,
+  LinkedAccountsValuationApi,
+} from "clients";
 import { Card, Dropdown, DropdownButton } from "react-bootstrap";
 import Chart from "react-apexcharts";
 import { MoneyFormatterType } from "components/money";
@@ -33,86 +36,94 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
   props,
 ) => {
   const { userAccountId, locale, moneyFormatter } = props;
-  const { finbotClient } = useContext(ServicesContext);
   const [aggregationMode, setAggregationMode] = useState<AggregationMode>(
     DEFAULT_AGGREGATION_MODE,
   );
   const [valuation, setValuation] = useState<ValuationData | null>(null);
+  const userAccountsValuationApi = useApi(UserAccountsValuationApi);
+  const linkedAccountsValuationApi = useApi(LinkedAccountsValuationApi);
 
   useEffect(() => {
     const fetch = async () => {
       switch (aggregationMode) {
         case "account": {
-          const result = await finbotClient!.getLinkedAccountsValuation({
-            account_id: userAccountId,
-          });
+          const result = (
+            await linkedAccountsValuationApi.getLinkedAccountsValuation({
+              userAccountId,
+            })
+          ).valuation;
           setValuation({
-            valuation_ccy: result.valuation_ccy,
+            valuation_ccy: result.valuationCcy,
             labels: result.entries.map(
-              (entry) => entry.linked_account.description,
+              (entry) => entry.linkedAccount.description,
             ),
             values: result.entries.map((entry) => entry.valuation.value),
             colours: result.entries.map(
-              (entry) => entry.linked_account.account_colour,
+              (entry) => entry.linkedAccount.accountColour,
             ),
           });
           break;
         }
         case "asset type": {
-          const result = await finbotClient!.getUserAccountValuationByAssetType(
-            {
-              account_id: userAccountId,
-            },
-          );
+          const result = (
+            await userAccountsValuationApi.getUserAccountValuationByAssetType({
+              userAccountId,
+            })
+          ).valuation;
           setValuation({
-            valuation_ccy: result.valuation_ccy,
-            labels: result.by_asset_type.map((entry) => entry.name),
-            values: result.by_asset_type.map((entry) => entry.value),
-            colours: result.by_asset_type.map((entry) => entry.colour),
+            valuation_ccy: result.valuationCcy,
+            labels: result.byAssetType.map((entry) => entry.name),
+            values: result.byAssetType.map((entry) => entry.value),
+            colours: result.byAssetType.map((entry) => entry.colour),
           });
           break;
         }
         case "asset class": {
-          const result =
-            await finbotClient!.getUserAccountValuationByAssetClass({
-              account_id: userAccountId,
-            });
+          const result = (
+            await userAccountsValuationApi!.getUserAccountValuationByAssetClass(
+              { userAccountId },
+            )
+          ).valuation;
           setValuation({
-            valuation_ccy: result.valuation_ccy,
-            labels: result.by_asset_class.map((entry) => entry.name),
-            values: result.by_asset_class.map((entry) => entry.value),
-            colours: result.by_asset_class.map((entry) => entry.colour),
+            valuation_ccy: result.valuationCcy,
+            labels: result.byAssetClass.map((entry) => entry.name),
+            values: result.byAssetClass.map((entry) => entry.value),
+            colours: result.byAssetClass.map((entry) => entry.colour),
           });
           break;
         }
       }
     };
     fetch();
-  }, [finbotClient, userAccountId, aggregationMode]);
+  }, [userAccountsValuationApi, userAccountId, aggregationMode]);
 
   return (
     <Card style={{ height: "22rem" }}>
-      <Card.Header className={"d-flex justify-content-between"}>
-        Asset diversification
-        <DropdownButton
-          variant={""}
-          size={"xs" as any}
-          title={`By ${aggregationMode}`}
-        >
-          {AGGREGATION_MODES.map((mode) => {
-            return (
-              <Dropdown.Item
-                active={mode === aggregationMode}
-                key={mode}
-                onClick={() => {
-                  setAggregationMode(mode);
-                }}
-              >
-                BY {mode.toUpperCase()}
-              </Dropdown.Item>
-            );
-          })}
-        </DropdownButton>
+      <Card.Header
+        className={"d-flex justify-content-between align-items-center"}
+      >
+        <span style={{ fontWeight: 450 }}>Asset diversification</span>
+        <div>
+          <DropdownButton
+            variant={"secondary"}
+            size={"xs" as any}
+            title={`BY ${aggregationMode.toUpperCase()}`}
+          >
+            {AGGREGATION_MODES.map((mode) => {
+              return (
+                <Dropdown.Item
+                  active={mode === aggregationMode}
+                  key={mode}
+                  onClick={() => {
+                    setAggregationMode(mode);
+                  }}
+                >
+                  BY {mode.toUpperCase()}
+                </Dropdown.Item>
+              );
+            })}
+          </DropdownButton>
+        </div>
       </Card.Header>
       <Card.Body>
         {valuation !== null && (

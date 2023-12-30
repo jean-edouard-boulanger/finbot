@@ -11,9 +11,8 @@ from sqlalchemy.orm import joinedload
 from finbot import model
 from finbot.apps.finbotwsrv import schema as finbotwsrv_schema
 from finbot.apps.finbotwsrv.client import FinbotwsrvClient
-from finbot.core import environment, fx_market
+from finbot.core import environment, fx_market, secure, utils
 from finbot.core import schema as core_schema
-from finbot.core import secure, utils
 from finbot.core.db.session import Session
 from finbot.core.schema import ApplicationErrorData
 from finbot.core.serialization import serialize
@@ -72,7 +71,8 @@ class SnapshotTreeVisitor(Protocol):
 
 
 def visit_snapshot_tree(
-    raw_snapshot: list[LinkedAccountSnapshotResult], visitor: SnapshotTreeVisitor
+    raw_snapshot: list[LinkedAccountSnapshotResult],
+    visitor: SnapshotTreeVisitor,
 ) -> None:
     def visit_balances_first(data: finbotwsrv_schema.LineItemResults) -> int:
         if data.line_item == finbotwsrv_schema.LineItem.Balances:
@@ -149,8 +149,9 @@ class XccyCollector(SnapshotTreeVisitor):
         if sub_account.iso_currency != self.target_ccy:
             self.xccys.add(
                 fx_market.Xccy(
-                    domestic=sub_account.iso_currency, foreign=self.target_ccy
-                )
+                    domestic=sub_account.iso_currency,
+                    foreign=self.target_ccy,
+                ),
             )
 
 
@@ -176,9 +177,7 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
         self.snapshot = snapshot
         self.xccy_rates_getter = xccy_rates_getter
         self.target_ccy = target_ccy
-        self.linked_accounts: dict[
-            int, model.LinkedAccountSnapshotEntry
-        ] = {}  # linked_account_id -> account
+        self.linked_accounts: dict[int, model.LinkedAccountSnapshotEntry] = {}  # linked_account_id -> account
         self.sub_accounts: dict[
             tuple[int, str], model.SubAccountSnapshotEntry
         ] = {}  # link_account_id, sub_account_id -> sub_account
@@ -193,7 +192,7 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
         linked_account_id = linked_account_snapshot.request.linked_account_id
         assert linked_account_id not in self.linked_accounts
         linked_account_entry = model.LinkedAccountSnapshotEntry(
-            linked_account_id=linked_account_id
+            linked_account_id=linked_account_id,
         )
         linked_account_entry.success = not bool(errors)
         self.results_count.total += 1
@@ -230,12 +229,8 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
         linked_account_id = linked_account_snapshot.request.linked_account_id
         sub_account_entry = self.sub_accounts[(linked_account_id, sub_account.id)]
         item_type = self._get_item_type(item)
-        asset_class = (
-            item.asset_class if isinstance(item, providers_schema.Asset) else None
-        )
-        asset_type = (
-            item.asset_type if isinstance(item, providers_schema.Asset) else None
-        )
+        asset_class = item.asset_class if isinstance(item, providers_schema.Asset) else None
+        asset_type = item.asset_type if isinstance(item, providers_schema.Asset) else None
         if item_type == model.SubAccountItemType.Asset and None in (
             asset_class,
             asset_type,
@@ -255,8 +250,9 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
             value_snapshot_ccy=item.value
             * self.xccy_rates_getter(
                 fx_market.Xccy(
-                    domestic=sub_account.iso_currency, foreign=self.target_ccy
-                )
+                    domestic=sub_account.iso_currency,
+                    foreign=self.target_ccy,
+                ),
             ),
             provider_specific_data=item.provider_specific,
         )
@@ -301,9 +297,7 @@ def dispatch_snapshot_entry(
             f" error: {e}"
             f" trace:\n{traceback.format_exc()}"
         )
-        return LinkedAccountSnapshotResult(
-            snap_request, ApplicationErrorData.from_exception(e)
-        )
+        return LinkedAccountSnapshotResult(snap_request, ApplicationErrorData.from_exception(e))
 
 
 def get_credentials_data(
@@ -337,9 +331,7 @@ def take_raw_snapshot(
                     finbotwsrv_schema.LineItem.Assets,
                     finbotwsrv_schema.LineItem.Liabilities,
                 ],
-                user_account_currency=providers_schema.CurrencyCode(
-                    user_account.settings.valuation_ccy
-                ),
+                user_account_currency=providers_schema.CurrencyCode(user_account.settings.valuation_ccy),
             )
             for linked_account in user_account.linked_accounts
             if not linked_account.deleted
@@ -356,9 +348,7 @@ def take_raw_snapshot(
 def validate_fx_rates(rates: dict[fx_market.Xccy, Optional[float]]) -> None:
     missing_rates = [str(pair) for (pair, rate) in rates.items() if rate is None]
     if missing_rates:
-        raise RuntimeError(
-            f"rate is missing for the following FX pair(s): {', '.join(missing_rates)}"
-        )
+        raise RuntimeError(f"rate is missing for the following FX pair(s): {', '.join(missing_rates)}")
 
 
 def take_snapshot_impl(
@@ -379,8 +369,7 @@ def take_snapshot_impl(
     )
 
     logging.info(
-        f"starting snapshot for user account "
-        f"linked to {len(user_account.linked_accounts)} external accounts"
+        f"starting snapshot for user account " f"linked to {len(user_account.linked_accounts)} external accounts"
     )
 
     requested_ccy = user_account.settings.valuation_ccy
@@ -393,7 +382,8 @@ def take_snapshot_impl(
         new_snapshot.start_time = utils.now_utc()
 
     raw_snapshot = take_raw_snapshot(
-        user_account=user_account, linked_account_ids=linked_account_ids
+        user_account=user_account,
+        linked_account_ids=linked_account_ids,
     )
     xccy_collector = XccyCollector(requested_ccy)
     visit_snapshot_tree(raw_snapshot, xccy_collector)
@@ -405,7 +395,8 @@ def take_snapshot_impl(
         new_snapshot.xccy_rates_entries.extend(
             [
                 model.XccyRateSnapshotEntry(
-                    xccy_pair=str(xccy), rate=Decimal(some(rate))
+                    xccy_pair=str(xccy),
+                    rate=Decimal(some(rate)),
                 )
                 for xccy, rate in xccy_rates.items()
             ]

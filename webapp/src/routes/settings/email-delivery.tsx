@@ -1,45 +1,62 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
-import { ServicesContext } from "contexts";
-import { EmailDeliveryProvider } from "clients/finbot-client/types";
+import { useApi, AdministrationApi, EmailProviderMetadata } from "clients";
 
 import Select from "react-select";
-import { default as DataDrivenForm } from "react-jsonschema-form";
+import { default as DataDrivenForm, UiSchema } from "react-jsonschema-form";
 import { Row, Col, Form } from "react-bootstrap";
 import { LoadingButton } from "components";
 import { toast } from "react-toastify";
 
-const makeProvidersSelectValue = (provider: EmailDeliveryProvider) => {
+const getProviderUiSchema = (provider: EmailProviderMetadata): UiSchema => {
+  if ("ui_schema" in provider.settingsSchema) {
+    return provider.settingsSchema.ui_schema as UiSchema;
+  }
+  return {};
+};
+
+const getProviderSchema = (provider: EmailProviderMetadata): any => {
+  if ("settings_schema" in provider.settingsSchema) {
+    return provider.settingsSchema.settings_schema as any;
+  }
+  return {};
+};
+
+const makeProvidersSelectValue = (provider: EmailProviderMetadata) => {
   return {
     label: provider.description,
-    value: provider.provider_id,
+    value: provider.providerId,
   };
 };
 
 export const EmailDeliverySettingsPanel: React.FC<
   Record<string, never>
 > = () => {
-  const { finbotClient } = useContext(ServicesContext);
+  const administrationApi = useApi(AdministrationApi);
   const [loading, setLoading] = useState<boolean>(false);
   const [enableDelivery, setEnableDelivery] = useState<boolean>(false);
   const [senderName, setSenderName] = useState<string>("Finbot Admin");
   const [subjectPrefix, setSubjectPrefix] = useState<string>("[FINBOT]");
-  const [providers, setProviders] = useState<Array<EmailDeliveryProvider>>([]);
-  const [provider, setProvider] = useState<EmailDeliveryProvider | null>(null);
+  const [providers, setProviders] = useState<Array<EmailProviderMetadata>>([]);
+  const [provider, setProvider] = useState<EmailProviderMetadata | null>(null);
   const [providerSettings, setProviderSettings] = useState<any | null>(null);
 
   useEffect(() => {
     const fetch = async () => {
-      const providersData = await finbotClient!.getEmailDeliveryProviders();
+      const providersData = (
+        await administrationApi.getEmailDeliveryProviders()
+      ).providers;
       setProviders(providersData);
-      const currentSettings = await finbotClient!.getEmailDeliverySettings();
-      if (currentSettings !== null) {
+      const currentSettings = (
+        await administrationApi.getEmailDeliverySettings()
+      ).settings;
+      if (currentSettings) {
         const provider = providersData.filter((provider) => {
-          return provider.provider_id === currentSettings.provider_id;
+          return provider.providerId === currentSettings.providerId;
         })[0];
         setEnableDelivery(true);
         setProvider(provider);
-        setProviderSettings(currentSettings.provider_settings);
+        setProviderSettings(currentSettings.providerSettings);
       } else {
         setEnableDelivery(false);
         setProvider(null);
@@ -47,11 +64,11 @@ export const EmailDeliverySettingsPanel: React.FC<
       }
     };
     fetch();
-  }, [finbotClient]);
+  }, [administrationApi]);
 
   const setProviderById = (providerId?: string | null): void => {
     for (const entry of providers) {
-      if (entry.provider_id === providerId) {
+      if (entry.providerId === providerId) {
         setProvider(entry);
         return;
       }
@@ -64,15 +81,15 @@ export const EmailDeliverySettingsPanel: React.FC<
       setLoading(true);
       setProviderSettings(formData);
       const validate = true;
-      await finbotClient!.setEmailDeliverySettings(
-        {
-          sender_name: senderName,
-          subject_prefix: subjectPrefix,
-          provider_id: provider!.provider_id,
-          provider_settings: formData,
-        },
+      await administrationApi.setEmailDeliverySettings({
         validate,
-      );
+        appEmailDeliverySettings: {
+          senderName,
+          subjectPrefix,
+          providerId: provider!.providerId,
+          providerSettings: formData,
+        },
+      });
       toast.success("Email delivery settings have been updated successfully");
     } catch (e) {
       toast.error(`${e}`);
@@ -83,7 +100,7 @@ export const EmailDeliverySettingsPanel: React.FC<
   const handleSaveDisableEmailDelivery = async () => {
     try {
       setLoading(true);
-      await finbotClient!.disableEmailDelivery();
+      await administrationApi.removeEmailDeliverySettings();
       toast.success("Email delivery has been disabled");
     } catch (e) {
       toast.error(`${e}`);
@@ -175,8 +192,8 @@ export const EmailDeliverySettingsPanel: React.FC<
                 handleSaveWithProviderSettings(formData);
               }}
               disabled={!enableDelivery}
-              uiSchema={provider.settings_schema.ui_schema ?? {}}
-              schema={provider.settings_schema.settings_schema}
+              uiSchema={getProviderUiSchema(provider)}
+              schema={getProviderSchema(provider)}
             >
               <LoadingButton
                 style={{

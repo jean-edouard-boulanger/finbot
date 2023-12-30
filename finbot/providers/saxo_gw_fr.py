@@ -2,7 +2,7 @@ from typing import Any, Generator
 
 from pydantic.v1 import SecretStr
 
-from finbot.core import saxo
+from finbot.core import fx_market, saxo
 from finbot.core.environment import get_saxo_gateway_url
 from finbot.core.schema import BaseModel
 from finbot.providers.base import ProviderBase
@@ -18,6 +18,8 @@ from finbot.providers.schema import (
     Balances,
     CurrencyCode,
 )
+
+SchemaNamespace = "SaxoProvider"
 
 
 class Credentials(BaseModel):
@@ -42,7 +44,7 @@ class Api(ProviderBase):
             settings=saxo.SaxoGatewaySettings(gateway_url=saxo_gateway_url),
             api_key=credentials.api_key.get_secret_value(),
         )
-        self._accounts: list[saxo.Account] | None = None
+        self._accounts: list[saxo.SaxoAccount] | None = None
 
     def initialize(self) -> None:
         try:
@@ -50,15 +52,18 @@ class Api(ProviderBase):
         except Exception as e:
             raise AuthenticationFailure(str(e))
 
-    def iter_accounts(self) -> Generator[tuple[Account, saxo.Account], None, None]:
+    def iter_accounts(self) -> Generator[tuple[Account, saxo.SaxoAccount], None, None]:
         assert self._accounts is not None
         for raw_account_data in self._accounts:
-            yield Account(
-                id=raw_account_data.AccountKey,
-                name=raw_account_data.DisplayName,
-                iso_currency=CurrencyCode(raw_account_data.Currency),
-                type="investment",
-            ), raw_account_data
+            yield (
+                Account(
+                    id=raw_account_data.AccountKey,
+                    name=raw_account_data.DisplayName,
+                    iso_currency=CurrencyCode(raw_account_data.Currency),
+                    type="investment",
+                ),
+                raw_account_data,
+            )
 
     def get_balances(self) -> Balances:
         return Balances(
@@ -66,7 +71,7 @@ class Api(ProviderBase):
                 BalanceEntry(
                     account=account,
                     balance=self._client.get_account_balances(
-                        saxo_account=saxo_account
+                        saxo_account=saxo_account,
                     ).TotalValue,
                 )
                 for (account, saxo_account) in self.iter_accounts()
@@ -84,11 +89,9 @@ class Api(ProviderBase):
             ]
         )
 
-    def _get_account_assets(self, saxo_account: saxo.Account) -> list[Asset]:
+    def _get_account_assets(self, saxo_account: saxo.SaxoAccount) -> list[Asset]:
         assets: list[Asset] = []
-        if cash_available := self._client.get_account_balances(
-            saxo_account
-        ).CashAvailableForTrading:
+        if cash_available := self._client.get_account_balances(saxo_account).CashAvailableForTrading:
             currency = CurrencyCode(saxo_account.Currency)
             assets.append(
                 Asset.cash(
@@ -98,26 +101,45 @@ class Api(ProviderBase):
                 )
             )
         for position in self._client.get_account_positions(saxo_account).Data:
-            assets.append(_make_asset(position))
+            assets.append(_make_asset(saxo_account, position))
         return assets
 
 
-def _make_asset(positions: saxo.NetPosition) -> Asset:
-    asset_type = positions.SinglePosition.PositionBase.AssetType
-    if asset_type.lower() in ("etf", "etn"):
+def _get_value_in_account_currency(
+    saxo_account: saxo.SaxoAccount,
+    position: saxo.NetPosition,
+) -> float:
+    value = position.SinglePosition.PositionView.MarketValue
+    rate = fx_market.get_rate(
+        pair=fx_market.Xccy(
+            domestic=position.DisplayAndFormat.Currency,
+            foreign=saxo_account.Currency,
+        )
+    )
+    assert isinstance(rate, float)
+    return rate * value
+
+
+def _make_asset(
+    saxo_account: saxo.SaxoAccount,
+    position: saxo.NetPosition,
+) -> Asset:
+    asset_type = position.SinglePosition.PositionBase.AssetType
+    if asset_type.lower() in ("etf", "etn", "etc"):
         return Asset(
-            name=positions.DisplayAndFormat.Description,
+            name=position.DisplayAndFormat.Description,
             type="equity",
-            asset_class=AssetClass.equities,
+            asset_class=(AssetClass.commodities if asset_type.lower() == "etc" else AssetClass.equities),
             asset_type=AssetType[asset_type.upper()],
-            value=positions.SinglePosition.PositionView.MarketValue,
-            units=positions.SinglePosition.PositionBase.Amount,
+            value=_get_value_in_account_currency(saxo_account, position),
+            units=position.SinglePosition.PositionBase.Amount,
             provider_specific={
-                "Symbol": positions.DisplayAndFormat.Symbol,
-                "Description": positions.DisplayAndFormat.Description,
-                "Listing exchange": positions.Exchange.Description,
-                "Current price": positions.SinglePosition.PositionView.CurrentPrice,
-                "P&L": positions.SinglePosition.PositionView.ProfitLossOnTrade,
+                "Asset currency": position.DisplayAndFormat.Currency,
+                "Symbol": position.DisplayAndFormat.Symbol,
+                "Description": position.DisplayAndFormat.Description,
+                "Listing exchange": position.Exchange.Description,
+                "Current price": position.SinglePosition.PositionView.CurrentPrice,
+                "P&L": position.SinglePosition.PositionView.ProfitLossOnTrade,
             },
         )
     raise ValueError(f"unknown asset type: {asset_type}")

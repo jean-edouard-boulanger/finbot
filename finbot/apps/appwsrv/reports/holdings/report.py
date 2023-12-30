@@ -34,12 +34,8 @@ class ReportData:
     linked_accounts_valuation: list[model.LinkedAccountValuationHistoryEntry]
     sparkline_schedule: list[datetime]
     user_account_historical_valuation: list[repository.HistoricalValuationEntry]
-    historical_valuation_by_linked_account: dict[
-        LinkedAccountIdType, list[repository.HistoricalValuationEntry]
-    ]
-    mapped_sub_accounts: dict[
-        LinkedAccountIdType, list[model.SubAccountValuationHistoryEntry]
-    ]
+    historical_valuation_by_linked_account: dict[LinkedAccountIdType, list[repository.HistoricalValuationEntry]]
+    mapped_sub_accounts: dict[LinkedAccountIdType, list[model.SubAccountValuationHistoryEntry]]
     mapped_items: dict[
         tuple[LinkedAccountIdType, SubAccountIdType],
         list[model.SubAccountItemValuationHistoryEntry],
@@ -57,14 +53,10 @@ def build_sub_account_item_metadata_nodes(
         for (label, value) in [
             (
                 "Units",
-                f"{sub_account_item_valuation.units:.2f}"
-                if sub_account_item_valuation.units
-                else None,
+                f"{sub_account_item_valuation.units:.2f}" if sub_account_item_valuation.units else None,
             ),
             (
-                f"Value ({sub_account_ccy})"
-                if is_asset
-                else f"Liabilities ({sub_account_ccy})",
+                f"Value ({sub_account_ccy})" if is_asset else f"Liabilities ({sub_account_ccy})",
                 f"{sub_account_item_valuation.valuation_sub_account_ccy:.2f}",
             ),
             (
@@ -97,15 +89,11 @@ def build_sub_account_item_node_icon(
 ) -> holdings_schema.SubAccountItemNodeIcon | None:
     if sub_account_item_valuation.item_type != model.SubAccountItemType.Asset:
         return None
-    asset_class_formatting_rule = (
-        formatting_rules.get_asset_class_formatting_rule_by_name(
-            some(sub_account_item_valuation.asset_class)
-        )
+    asset_class_formatting_rule = formatting_rules.get_asset_class_formatting_rule_by_name(
+        some(sub_account_item_valuation.asset_class)
     )
-    asset_type_formatting_rule = (
-        formatting_rules.get_asset_type_formatting_rule_by_name(
-            some(sub_account_item_valuation.asset_type)
-        )
+    asset_type_formatting_rule = formatting_rules.get_asset_type_formatting_rule_by_name(
+        some(sub_account_item_valuation.asset_type)
     )
     if not asset_class_formatting_rule or not asset_type_formatting_rule:
         return None
@@ -133,9 +121,7 @@ def build_sub_account_item_node(
         valuation=holdings_schema.Valuation(
             currency=report_data.valuation_currency,
             value=float(sub_account_item_valuation.valuation),
-            change=serialize_valuation_change(
-                sub_account_item_valuation.valuation_change
-            ),
+            change=serialize_valuation_change(sub_account_item_valuation.valuation_change),
         ),
         children=build_sub_account_item_metadata_nodes(
             sub_account_valuation=sub_account_valuation,
@@ -187,9 +173,7 @@ def build_linked_account_node(
         valuation=holdings_schema.ValuationWithSparkline(
             currency=report_data.valuation_currency,
             value=float(linked_account_valuation.valuation),
-            change=serialize_valuation_change(
-                linked_account_valuation.valuation_change
-            ),
+            change=serialize_valuation_change(linked_account_valuation.valuation_change),
             sparkline=[
                 las_v.last_value if las_v is not None else None
                 for valuation_time, las_v in timeseries.schedulify(
@@ -219,9 +203,7 @@ def build_user_account_node(report_data: ReportData) -> holdings_schema.UserAcco
         valuation=holdings_schema.ValuationWithSparkline(
             currency=report_data.valuation_currency,
             value=float(report_data.user_account_valuation.valuation),
-            change=serialize_valuation_change(
-                report_data.user_account_valuation.valuation_change
-            ),
+            change=serialize_valuation_change(report_data.user_account_valuation.valuation_change),
             sparkline=[
                 uas_v.last_value if uas_v is not None else None
                 for valuation_time, uas_v in timeseries.schedulify(
@@ -246,45 +228,32 @@ def build_valuation_tree(data: ReportData) -> holdings_schema.ValuationTree:
 
 
 def fetch_raw_report_data(
-    session: Session, history_entry: model.UserAccountHistoryEntry
+    session: Session,
+    history_entry: model.UserAccountHistoryEntry,
 ) -> ReportData:
     to_time = utils.now_utc()
     from_time = to_time - timedelta(days=30)
-    user_account_valuation = repository.get_user_account_valuation(
-        session=session, history_entry_id=history_entry.id
+    user_account_valuation = repository.get_user_account_valuation(session=session, history_entry_id=history_entry.id)
+    sub_accounts_valuation = repository.find_sub_accounts_valuation(session, history_entry.id)
+    linked_accounts_historical_valuation = repository.get_historical_valuation_by_linked_account(
+        session=session,
+        user_account_id=history_entry.user_account_id,
+        from_time=from_time,
+        to_time=to_time,
     )
-    sub_accounts_valuation = repository.find_sub_accounts_valuation(
-        session, history_entry.id
-    )
-    linked_accounts_historical_valuation = (
-        repository.get_historical_valuation_by_linked_account(
-            session=session,
-            user_account_id=history_entry.user_account_id,
-            from_time=from_time,
-            to_time=to_time,
-        )
-    )
-    historical_valuation_by_linked_account: dict[
-        int, list[repository.HistoricalValuationEntry]
-    ] = defaultdict(list)
+    historical_valuation_by_linked_account: dict[int, list[repository.HistoricalValuationEntry]] = defaultdict(list)
     for entry in linked_accounts_historical_valuation:
         historical_valuation_by_linked_account[entry.linked_account_id].append(entry)
-    mapped_sub_accounts: dict[
-        int, list[model.SubAccountValuationHistoryEntry]
-    ] = defaultdict(list)
+    mapped_sub_accounts: dict[int, list[model.SubAccountValuationHistoryEntry]] = defaultdict(list)
     for sub_account in sub_accounts_valuation:
         mapped_sub_accounts[sub_account.linked_account_id].append(sub_account)
     items_valuation = repository.find_items_valuation(session, history_entry.id)
-    mapped_items: dict[
-        tuple[int, str], list[model.SubAccountItemValuationHistoryEntry]
-    ] = defaultdict(list)
+    mapped_items: dict[tuple[int, str], list[model.SubAccountItemValuationHistoryEntry]] = defaultdict(list)
     for item in items_valuation:
         mapped_items[(item.linked_account_id, item.sub_account_id)].append(item)
 
     return ReportData(
-        valuation_currency=(
-            user_account_valuation.account_valuation_history_entry.valuation_ccy
-        ),
+        valuation_currency=(user_account_valuation.account_valuation_history_entry.valuation_ccy),
         sparkline_schedule=timeseries.create_schedule(
             from_time=from_time,
             to_time=to_time,
@@ -307,7 +276,8 @@ def fetch_raw_report_data(
 
 
 def generate(
-    session: Session, history_entry: model.UserAccountHistoryEntry
+    session: Session,
+    history_entry: model.UserAccountHistoryEntry,
 ) -> holdings_schema.ValuationTree:
     report_data = fetch_raw_report_data(session, history_entry)
     return build_valuation_tree(report_data)

@@ -1,7 +1,11 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 
-import { Credentials } from "clients/finbot-client/types";
-import { ServicesContext } from "contexts";
+import {
+  makeApi,
+  AuthenticationApi,
+  AppLoginRequest,
+  useResponseInterceptor,
+} from "clients";
 
 import AuthContext from "./auth-context";
 import { AuthState } from "./auth-state";
@@ -16,41 +20,28 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = (props) => {
-  const { finbotClient } = useContext(ServicesContext);
   const [authState, _setAuthState] = useState<AuthState | null>(null);
-  const responseInterceptorIdRef = useRef<number | null>(null);
+  const [responseInterceptor] = useResponseInterceptor();
 
   const updateAuthState = (newAuthState: AuthState | null) => {
-    const axiosInstance = finbotClient!.axiosInstance;
-    if (newAuthState !== null && responseInterceptorIdRef.current === null) {
-      responseInterceptorIdRef.current =
-        axiosInstance.interceptors.response.use(
-          (value) => value,
-          (error) => {
-            if (error.response.status === 401) {
-              updateAuthState(null);
-            }
-            return error;
-          },
-        );
-    }
-    if (newAuthState === null && responseInterceptorIdRef.current !== null) {
-      axiosInstance.interceptors.response.eject(
-        responseInterceptorIdRef.current,
-      );
-      responseInterceptorIdRef.current = null;
-    }
     if (newAuthState !== null) {
       saveAuthStateInLocalStorage(newAuthState);
-      axiosInstance.defaults.headers.common[
-        "Authorization"
-      ] = `Bearer ${newAuthState.accessToken}`;
     } else {
       clearAuthStateFromLocalStorage();
-      delete axiosInstance.defaults.headers.common["Authorization"];
     }
     _setAuthState(newAuthState);
   };
+
+  useEffect(() => {
+    responseInterceptor.subscribe((response) => {
+      if (response.status === 401) {
+        logout();
+      }
+    });
+    return () => {
+      responseInterceptor.unsubscribe();
+    };
+  }, [responseInterceptor]);
 
   useEffect(() => {
     updateAuthState(loadAuthStateFromLocalStorage());
@@ -60,13 +51,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = (props) => {
     updateAuthState(null);
   }
 
-  async function login(credentials: Credentials) {
-    const { email, password } = credentials;
-    const authResponse = await finbotClient!.logInAccount({ email, password });
+  async function login(credentials: AppLoginRequest) {
+    const api = makeApi(AuthenticationApi);
+    const response = await api.authenticateUser({
+      appLoginRequest: credentials,
+    });
     const authState: AuthState = {
-      accessToken: authResponse.auth.access_token,
-      refreshToken: authResponse.auth.refresh_token,
-      userAccountId: authResponse.account.id,
+      accessToken: response.auth.accessToken,
+      refreshToken: response.auth.refreshToken,
+      userAccountId: response.account.id,
     };
     updateAuthState(authState);
   }
@@ -75,6 +68,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = (props) => {
     <AuthContext.Provider
       value={{
         userAccountId: authState?.userAccountId ?? null,
+        accessToken: authState?.accessToken ?? null,
+        refreshToken: authState?.refreshToken ?? null,
         login,
         logout,
       }}

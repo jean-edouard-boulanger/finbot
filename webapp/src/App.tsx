@@ -1,7 +1,7 @@
 import React, { useContext } from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
 
-import { AuthProvider, AuthContext, ServicesProvider } from "contexts";
+import { AuthProvider, AuthContext } from "contexts";
 
 import { ToastContainer, Slide } from "react-toastify";
 import { MainContainer, Navigation } from "components";
@@ -87,19 +87,17 @@ interface AppProps {}
 
 const App: React.FC<AppProps> = () => {
   return (
-    <ServicesProvider>
-      <AuthProvider>
-        <ToastContainer
-          autoClose={7000}
-          transition={Slide}
-          position="bottom-right"
-        />
-        <Navigation />
-        <MainContainer>
-          <AppRouter />
-        </MainContainer>
-      </AuthProvider>
-    </ServicesProvider>
+    <AuthProvider>
+      <ToastContainer
+        autoClose={7000}
+        transition={Slide}
+        position="bottom-right"
+      />
+      <Navigation />
+      <MainContainer>
+        <AppRouter />
+      </MainContainer>
+    </AuthProvider>
   );
 };
 

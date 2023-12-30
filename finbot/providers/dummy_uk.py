@@ -18,9 +18,8 @@ class Credentials(BaseModel):
 
 
 DUMMY_BALANCE: float = 1000.0
-DUMMY_ACCOUNT = Account(
-    id="dummy", name="Dummy account", iso_currency=CurrencyCode("GBP"), type="cash"
-)
+DUMMY_ACCOUNT = Account(id="dummy", name="Dummy account", iso_currency=CurrencyCode("GBP"), type="cash")
+SchemaNamespace = "DummyProvider"
 
 
 class Api(ProviderBase):
@@ -39,7 +38,12 @@ class Api(ProviderBase):
 
     def get_balances(self) -> Balances:
         return Balances(
-            accounts=[BalanceEntry(account=DUMMY_ACCOUNT, balance=DUMMY_BALANCE)]
+            accounts=[
+                BalanceEntry(
+                    account=DUMMY_ACCOUNT,
+                    balance=DUMMY_BALANCE,
+                )
+            ]
         )
 
     def get_assets(self) -> Assets:
@@ -50,8 +54,7 @@ class Api(ProviderBase):
                     assets=[
                         Asset.cash(
                             currency=DUMMY_ACCOUNT.iso_currency,
-                            is_domestic=self.user_account_currency
-                            == DUMMY_ACCOUNT.iso_currency,
+                            is_domestic=self.user_account_currency == DUMMY_ACCOUNT.iso_currency,
                             amount=DUMMY_BALANCE,
                         )
                     ],

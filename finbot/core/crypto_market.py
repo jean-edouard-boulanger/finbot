@@ -1,4 +1,4 @@
-from functools import lru_cache
+from functools import cache
 
 from pycoingecko import CoinGeckoAPI
 
@@ -12,14 +12,12 @@ class Error(FinbotError):
 class CryptoMarket(object):
     def __init__(self, impl: CoinGeckoAPI | None = None):
         self._api = impl or CoinGeckoAPI()
-        self._symbols_to_id: dict[str, str] = {
-            entry["symbol"]: entry["id"] for entry in self._api.get_coins_list()
-        }
+        self._symbols_to_id: dict[str, str] = {entry["symbol"]: entry["id"] for entry in self._api.get_coins_list()}
 
     def _get_coin_id(self, symbol: str) -> str:
         return self._symbols_to_id[symbol.lower()]
 
-    @lru_cache(None)
+    @cache
     def get_spot_cached(self, source_crypto_ccy: str, target_ccy: str) -> float:
         return self.get_spot(source_crypto_ccy, target_ccy)
 

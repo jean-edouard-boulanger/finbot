@@ -22,9 +22,8 @@ from finbot.providers.schema import (
     CurrencyCode,
 )
 
-BASE_URL = (
-    "https://www.credit-agricole.fr/{region}/particulier/acceder-a-mes-comptes.html"
-)
+BASE_URL = "https://www.credit-agricole.fr/{region}/particulier/acceder-a-mes-comptes.html"
+SchemaNamespace = "CreditAgricoleProvider"
 
 
 class Credentials(BaseModel):
@@ -73,7 +72,7 @@ class Api(PlaywrightProviderBase):
             Condition(
                 lambda: self.get_element_or_none("div.AemBug-content"),
                 when_fulfilled=lambda element: raise_(
-                    AuthenticationFailure(element.inner_text().strip())
+                    AuthenticationFailure(element.inner_text().strip()),
                 ),
             ),
         ).wait_any()
@@ -83,7 +82,7 @@ class Api(PlaywrightProviderBase):
         page.fill("#Login-account", self._credentials.account_number)
         page.click("xpath=//button[@login-submit-btn]")
         keypad_locator: Locator = ConditionGuard(
-            Condition(lambda: self.get_element_or_none("#clavier_num"))
+            Condition(lambda: self.get_element_or_none("#clavier_num")),
         ).wait()
 
         # 2. Type password and validate
@@ -101,7 +100,7 @@ class Api(PlaywrightProviderBase):
             Condition(
                 lambda: self.get_element_or_none("#erreur-keypad"),
                 when_fulfilled=lambda el: raise_(
-                    AuthenticationFailure(el.inner_text().strip())
+                    AuthenticationFailure(el.inner_text().strip()),
                 ),
             ),
         ).wait_any()
@@ -110,18 +109,21 @@ class Api(PlaywrightProviderBase):
 
         account_data_str = cast(
             str,
-            page.locator("xpath=//div[@data-ng-controller]").get_attribute(
-                "data-ng-init"
-            ),
+            page.locator("xpath=//div[@data-ng-controller]").get_attribute("data-ng-init"),
         )[
-            len("syntheseController.init(") : -1  # noqa
+            len(
+                "syntheseController.init("
+            ) : -1  # noqa
         ]
         self._account_data = json.loads("[" + account_data_str + "]")[0]
 
     def get_balances(self) -> Balances:
         return Balances(
             accounts=[
-                BalanceEntry(account=entry.account, balance=entry.balance)
+                BalanceEntry(
+                    account=entry.account,
+                    balance=entry.balance,
+                )
                 for entry in self._iter_accounts()
             ]
         )
@@ -134,8 +136,7 @@ class Api(PlaywrightProviderBase):
                     assets=[
                         Asset.cash(
                             currency=entry.account.iso_currency,
-                            is_domestic=self.user_account_currency
-                            == entry.account.iso_currency,
+                            is_domestic=self.user_account_currency == entry.account.iso_currency,
                             amount=entry.balance,
                         )
                     ],

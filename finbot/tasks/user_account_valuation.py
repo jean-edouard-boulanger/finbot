@@ -26,6 +26,4 @@ def user_account_valuation_task(
     return service.process_valuation(request).dict()
 
 
-client = Client[ValuationRequest, ValuationResponse](
-    user_account_valuation_task, ValuationRequest, ValuationResponse
-)
+client = Client[ValuationRequest, ValuationResponse](user_account_valuation_task, ValuationRequest, ValuationResponse)

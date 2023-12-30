@@ -1,7 +1,8 @@
-from finbot.apps.finbotwsrv.client import FinbotwsrvClient
-from finbot.apps.finbotwsrv import schema as finbotwsrv_schema
-from finbot.providers import schema as providers_schema
 import pytest
+
+from finbot.apps.finbotwsrv import schema as finbotwsrv_schema
+from finbot.apps.finbotwsrv.client import FinbotwsrvClient
+from finbot.providers import schema as providers_schema
 
 
 @pytest.fixture
@@ -60,4 +61,4 @@ def test_get_financial_data(api: FinbotwsrvClient):
             assert entry.line_item == finbotwsrv_schema.LineItem.Balances
             check_balances_financial_data(entry.results)
         else:
-            assert False, f"Unexpected entry: {entry}"
+            raise AssertionError(f"Unexpected entry: {entry}")

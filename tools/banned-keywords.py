@@ -22,17 +22,14 @@ class Rule:
 RULES: list[Rule] = [
     Rule(
         match_files=["*.py"],
-        banned_pattern=re.compile(
-            r"import(.+)\s+Dict|(\s+|typing\.)Dict\[|(\s+|typing\.)List\["
-        ),
+        banned_pattern=re.compile(r"import(.+)\s+Dict|(\s+|typing\.)Dict\[|(\s+|typing\.)List\["),
         message="As of python3.9, dict and list type hints may be used installed of Dict and List",
     ),
     Rule(
         match_files=["*.py"],
         ignore_files=["finbot/core/web_service.py"],
         banned_pattern=re.compile(r"jsonify\("),
-        message="Finbot web services should not call Flask jsonify"
-        " (this is automatically done upstream)",
+        message="Finbot web services should not call Flask jsonify" " (this is automatically done upstream)",
     ),
     Rule(
         match_files=JS_ALIKE,
@@ -86,9 +83,9 @@ def file_matches_any_pattern(file_path: Path, patterns: Optional[list[str]]) -> 
 
 
 def should_match_file_against_rule(file_path: Path, rule: Rule) -> bool:
-    return file_matches_any_pattern(
-        file_path, rule.match_files
-    ) and not file_matches_any_pattern(file_path, rule.ignore_files)
+    return file_matches_any_pattern(file_path, rule.match_files) and not file_matches_any_pattern(
+        file_path, rule.ignore_files
+    )
 
 
 def handle_source_file(file_path: Path) -> list[Error]:
@@ -112,9 +109,7 @@ def handle_source_dir(source_dir: Path) -> list[Error]:
 
 def create_arguments_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--source-dirs", nargs="+", action="extend", required=True, default=[]
-    )
+    parser.add_argument("--source-dirs", nargs="+", action="extend", required=True, default=[])
     return parser
 
 
@@ -141,12 +136,7 @@ def display_error_message(error: Error):
         print("error: " + error.error_message)
         print(f"{error.line_number} | {error.line.rstrip()}")
         spacing = len(f"{error.line_number} | ") + error.start_column
-        print(
-            (" " * spacing)
-            + "^"
-            + ("~" * (error.end_column - error.start_column - 2))
-            + "+"
-        )
+        print((" " * spacing) + "^" + ("~" * (error.end_column - error.start_column - 2)) + "+")
         print()
 
 

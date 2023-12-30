@@ -5,6 +5,7 @@ from finbot.core.schema import BaseModel
 
 CurrencyCode = NewType("CurrencyCode", str)
 ProviderSpecificPayload: TypeAlias = dict[str, str | int | float | bool]
+SchemaNamespace = "Providers"
 
 
 class AssetClass(str, enum.Enum):
@@ -27,6 +28,7 @@ class AssetType(str, enum.Enum):
     future = "future"
     ETF = "ETF"
     ETN = "ETN"
+    ETC = "ETC"
     generic_fund = "generic_fund"
     loan = "loan"
     precious_metal = "precious_metal"
@@ -73,9 +75,7 @@ class Asset(BaseModel):
         return Asset(
             name=currency.upper(),
             type="currency",  # deprecated
-            asset_class=(
-                AssetClass.currency if is_domestic else AssetClass.foreign_currency
-            ),
+            asset_class=(AssetClass.currency if is_domestic else AssetClass.foreign_currency),
             asset_type=AssetType.cash,
             value=amount,
             units=None,

@@ -51,9 +51,7 @@ class QontoApi(object):
             errors = payload["errors"]
             if len(errors) == 1 and errors[0]["code"] == "unauthorized":
                 raise Unauthorized()
-            raise QontoError(
-                "Errors: " + ", ".join(error["detail"] for error in errors)
-            )
+            raise QontoError("Errors: " + ", ".join(error["detail"] for error in errors))
         return cast(JSON, payload)
 
     def list_organizations(self) -> list[Organization]:

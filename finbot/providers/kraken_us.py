@@ -21,6 +21,7 @@ from finbot.providers.schema import (
 )
 
 OWNERSHIP_UNITS_THRESHOLD = 0.00001
+SchemaNamespace = "KrakenProvider"
 
 
 class Credentials(BaseModel):
@@ -74,13 +75,9 @@ class Api(ProviderBase):
             if units > OWNERSHIP_UNITS_THRESHOLD:
                 demangled_symbol = _demangle_symbol(symbol)
                 if _is_cash(symbol):
-                    rate = fx_market.get_rate(
-                        fx_market.Xccy(demangled_symbol, self._account_ccy)
-                    )
+                    rate = fx_market.get_rate(fx_market.Xccy(demangled_symbol, self._account_ccy))
                 else:
-                    rate = price_fetcher.get_last_price(
-                        demangled_symbol, self._account_ccy
-                    )
+                    rate = price_fetcher.get_last_price(demangled_symbol, self._account_ccy)
                 yield symbol, units, units * rate
 
     def initialize(self) -> None:
@@ -94,11 +91,7 @@ class Api(ProviderBase):
 
     def get_balances(self) -> Balances:
         balance = sum(value for (_, _, value) in self._iter_balances())
-        return Balances(
-            accounts=[
-                BalanceEntry(account=self._account_description(), balance=balance)
-            ]
-        )
+        return Balances(accounts=[BalanceEntry(account=self._account_description(), balance=balance)])
 
     def get_assets(self) -> Assets:
         return Assets(
@@ -120,7 +113,10 @@ class Api(ProviderBase):
 
 
 def _make_asset(
-    symbol: str, units: float, value: float, user_account_currency: CurrencyCode
+    symbol: str,
+    units: float,
+    value: float,
+    user_account_currency: CurrencyCode,
 ) -> Asset:
     demangled_symbol = _demangle_symbol(symbol)
     if _is_cash(symbol):
@@ -145,10 +141,17 @@ class KrakenPriceFetcher(object):
     class Error(FinbotError):
         pass
 
-    def __init__(self, kraken_api: krakenex.API):
+    def __init__(
+        self,
+        kraken_api: krakenex.API,
+    ):
         self.api = kraken_api
 
-    def get_last_price(self, source_crypto_asset: str, target_ccy: str) -> float:
+    def get_last_price(
+        self,
+        source_crypto_asset: str,
+        target_ccy: str,
+    ) -> float:
         if source_crypto_asset == target_ccy:
             return 1.0
         pair_str = f"{source_crypto_asset}/{target_ccy}"
@@ -156,7 +159,5 @@ class KrakenPriceFetcher(object):
         args = "Ticker", {"pair": pair}
         results = self.api.query_public(*args)
         if results["error"]:
-            raise KrakenPriceFetcher.Error(
-                f"{pair_str} " + _format_error(results["error"])
-            )
+            raise KrakenPriceFetcher.Error(f"{pair_str} " + _format_error(results["error"]))
         return float(results["result"][list(results["result"].keys())[0]]["c"][0])

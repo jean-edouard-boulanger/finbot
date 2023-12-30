@@ -4,6 +4,8 @@ from typing import Literal, TypeAlias
 from finbot.core.schema import ApplicationErrorData, BaseModel, CredentialsPayloadType
 from finbot.providers import schema as providers_schema
 
+SchemaNamespace = "Finbot"
+
 
 class LineItem(str, Enum):
     Balances = "Balances"
@@ -39,9 +41,7 @@ class LiabilitiesResults(BaseModel):
     results: list[providers_schema.LiabilitiesEntry]
 
 
-LineItemResults: TypeAlias = (
-    BalancesResults | AssetsResults | LiabilitiesResults | LineItemError
-)
+LineItemResults: TypeAlias = BalancesResults | AssetsResults | LiabilitiesResults | LineItemError
 
 
 class ValidateCredentialsRequest(BaseModel):

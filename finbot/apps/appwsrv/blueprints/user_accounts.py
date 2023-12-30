@@ -8,8 +8,9 @@ from finbot.apps.appwsrv import schema as appwsrv_schema
 from finbot.apps.appwsrv import serializer
 from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
 from finbot.apps.appwsrv.db import db_session
-from finbot.apps.appwsrv.spec import ResponseSpec, spec
+from finbot.apps.appwsrv.spec import spec
 from finbot.core.errors import InvalidUserInput
+from finbot.core.spec_tree import JWT_REQUIRED, ResponseSpec
 from finbot.core.web_service import jwt_required, service_endpoint
 from finbot.model import UserAccount, UserAccountSettings, repository
 
@@ -22,9 +23,18 @@ user_accounts_api = Blueprint(
 )
 
 
+ENDPOINTS_TAGS = ["User accounts"]
+
+
 @user_accounts_api.route("/", methods=["POST"])
 @service_endpoint()
-@spec.validate(resp=ResponseSpec(HTTP_200=appwsrv_schema.CreateUserAccountResponse))
+@spec.validate(
+    resp=ResponseSpec(
+        HTTP_200=appwsrv_schema.CreateUserAccountResponse,
+    ),
+    operation_id="create_user_account",
+    tags=ENDPOINTS_TAGS,
+)
 def create_user_account(
     json: appwsrv_schema.CreateUserAccountRequest,
 ) -> appwsrv_schema.CreateUserAccountResponse:
@@ -32,42 +42,44 @@ def create_user_account(
         user_account: UserAccount
         with db_session.persist(UserAccount()) as user_account:
             user_account.email = json.email
-            user_account.password_hash = bcrypt.hashpw(
-                json.password.get_secret_value().encode(), bcrypt.gensalt()
-            )
+            user_account.password_hash = bcrypt.hashpw(json.password.get_secret_value().encode(), bcrypt.gensalt())
             user_account.full_name = json.full_name
-            user_account.settings = UserAccountSettings(
-                valuation_ccy=json.settings.valuation_ccy
-            )
+            user_account.settings = UserAccountSettings(valuation_ccy=json.settings.valuation_ccy)
     except IntegrityError as e:
         logging.warning(f"failed to create user account: {e}")
-        raise InvalidUserInput(
-            f"User account with email '{user_account.email}' already exists"
-        )
+        raise InvalidUserInput(f"User account with email '{user_account.email}' already exists")
 
-    return appwsrv_schema.CreateUserAccountResponse(
-        user_account=serializer.serialize_user_account(user_account)
-    )
+    return appwsrv_schema.CreateUserAccountResponse(user_account=serializer.serialize_user_account(user_account))
 
 
 @user_accounts_api.route("/<int:user_account_id>/", methods=["GET"])
 @jwt_required()
 @service_endpoint()
-@spec.validate(resp=ResponseSpec(HTTP_200=appwsrv_schema.GetUserAccountResponse))
+@spec.validate(
+    resp=ResponseSpec(
+        HTTP_200=appwsrv_schema.GetUserAccountResponse,
+    ),
+    operation_id="get_user_account",
+    security=JWT_REQUIRED,
+    tags=ENDPOINTS_TAGS,
+)
 def get_user_account(
     user_account_id: int,
 ) -> appwsrv_schema.GetUserAccountResponse:
     user_account = repository.get_user_account(db_session, user_account_id)
-    return appwsrv_schema.GetUserAccountResponse(
-        user_account=serializer.serialize_user_account(user_account)
-    )
+    return appwsrv_schema.GetUserAccountResponse(user_account=serializer.serialize_user_account(user_account))
 
 
 @user_accounts_api.route("/<int:user_account_id>/password/", methods=["PUT"])
 @jwt_required()
 @service_endpoint()
 @spec.validate(
-    resp=ResponseSpec(HTTP_200=appwsrv_schema.UpdateUserAccountPasswordResponse)
+    resp=ResponseSpec(
+        HTTP_200=appwsrv_schema.UpdateUserAccountPasswordResponse,
+    ),
+    operation_id="update_user_account_password",
+    security=JWT_REQUIRED,
+    tags=ENDPOINTS_TAGS,
 )
 def update_user_account_password(
     user_account_id: int,
@@ -78,9 +90,7 @@ def update_user_account_password(
     if not bcrypt.checkpw(old_password.encode(), account.password_hash):
         raise InvalidUserInput("The old password is incorrect")
     with db_session.persist(account):
-        account.password_hash = bcrypt.hashpw(
-            json.new_password.get_secret_value().encode(), bcrypt.gensalt()
-        )
+        account.password_hash = bcrypt.hashpw(json.new_password.get_secret_value().encode(), bcrypt.gensalt())
     return appwsrv_schema.UpdateUserAccountPasswordResponse()
 
 
@@ -88,7 +98,12 @@ def update_user_account_password(
 @jwt_required()
 @service_endpoint()
 @spec.validate(
-    resp=ResponseSpec(HTTP_200=appwsrv_schema.UpdateUserAccountProfileResponse)
+    resp=ResponseSpec(
+        HTTP_200=appwsrv_schema.UpdateUserAccountProfileResponse,
+    ),
+    operation_id="update_user_account_profile",
+    security=JWT_REQUIRED,
+    tags=ENDPOINTS_TAGS,
 )
 def update_user_account_profile(
     user_account_id: int,
@@ -108,22 +123,30 @@ def update_user_account_profile(
 @jwt_required()
 @service_endpoint()
 @spec.validate(
-    resp=ResponseSpec(HTTP_200=appwsrv_schema.GetUserAccountSettingsResponse)
+    resp=ResponseSpec(
+        HTTP_200=appwsrv_schema.GetUserAccountSettingsResponse,
+    ),
+    operation_id="get_user_account_settings",
+    security=JWT_REQUIRED,
+    tags=ENDPOINTS_TAGS,
 )
 def get_user_account_settings(
     user_account_id: int,
 ) -> appwsrv_schema.GetUserAccountSettingsResponse:
     settings = repository.get_user_account_settings(db_session, user_account_id)
-    return appwsrv_schema.GetUserAccountSettingsResponse(
-        settings=serializer.serialize_user_account_settings(settings)
-    )
+    return appwsrv_schema.GetUserAccountSettingsResponse(settings=serializer.serialize_user_account_settings(settings))
 
 
 @user_accounts_api.route("/<int:user_account_id>/is_configured/")
 @jwt_required()
 @service_endpoint()
 @spec.validate(
-    resp=ResponseSpec(HTTP_200=appwsrv_schema.IsUserAccountConfiguredResponse)
+    resp=ResponseSpec(
+        HTTP_200=appwsrv_schema.IsUserAccountConfiguredResponse,
+    ),
+    operation_id="is_user_account_configured",
+    security=JWT_REQUIRED,
+    tags=ENDPOINTS_TAGS,
 )
 def is_user_account_configured(
     user_account_id: int,
@@ -135,7 +158,14 @@ def is_user_account_configured(
 
 @user_accounts_api.route("/email_available/", methods=["GET"])
 @service_endpoint()
-@spec.validate(resp=ResponseSpec(HTTP_200=appwsrv_schema.IsEmailAvailableResponse))
+@spec.validate(
+    resp=ResponseSpec(
+        HTTP_200=appwsrv_schema.IsEmailAvailableResponse,
+    ),
+    operation_id="is_email_available",
+    security=JWT_REQUIRED,
+    tags=ENDPOINTS_TAGS,
+)
 def is_email_available(
     query: appwsrv_schema.IsEmailAvailableRequestParams,
 ) -> appwsrv_schema.IsEmailAvailableResponse:

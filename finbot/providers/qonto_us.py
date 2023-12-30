@@ -17,6 +17,7 @@ from finbot.providers.schema import (
 )
 
 AUTH_URL = "https://app.qonto.com/signin"
+SchemaNamespace = "QontoProvider"
 
 
 class Credentials(BaseModel):
@@ -74,8 +75,7 @@ class Api(ProviderBase):
                     assets=[
                         Asset.cash(
                             currency=entry.account.iso_currency,
-                            is_domestic=entry.account.iso_currency
-                            == self.user_account_currency,
+                            is_domestic=entry.account.iso_currency == self.user_account_currency,
                             amount=entry.balance,
                         )
                     ],

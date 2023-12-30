@@ -22,11 +22,9 @@ export const ToggleSecret: React.FC<
   return (
     <InputGroup>
       <As type={displayed ? "text" : "password"} {...rest} />
-      <InputGroup.Append>
-        <Button onClick={onToggle}>
-          <ControlIcon />
-        </Button>
-      </InputGroup.Append>
+      <Button onClick={onToggle}>
+        <ControlIcon />
+      </Button>
     </InputGroup>
   );
 };

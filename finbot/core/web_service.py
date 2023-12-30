@@ -2,8 +2,10 @@ import functools
 import logging
 import traceback
 import typing as t
+from http import HTTPStatus
 from typing import Any, Callable, Optional, ParamSpec, Self, TypeVar, cast
 
+import flask
 import orjson
 import requests
 import requests.exceptions
@@ -13,6 +15,7 @@ from flask.json.provider import DefaultJSONProvider
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required as _jwt_required
 from flask_jwt_extended.view_decorators import LocationType
+from werkzeug.exceptions import HTTPException
 
 from finbot.core import environment
 from finbot.core import schema as core_schema
@@ -49,17 +52,22 @@ def service_endpoint() -> Callable[[Callable[P, RT]], Callable[P, FlaskResponse]
         @functools.wraps(func)
         def handler(*args: P.args, **kwargs: P.kwargs) -> FlaskResponse:
             try:
-                logging.info(
-                    f"process {func.__name__} request route={request.full_path}"
-                )
+                logging.info(f"process {func.__name__} request route={request.full_path}")
                 response = func(*args, **kwargs)
                 logging.debug("request processed successfully")
                 return prepare_response(response)
+            except HTTPException:
+                raise
             except Exception as e:
-                logging.warning(
-                    "error while processing request:" f" {e}\n{traceback.format_exc()}"
+                logging.warning("error while processing request:" f" {e}\n{traceback.format_exc()}")
+                return cast(
+                    FlaskResponse,
+                    flask.current_app.response_class(
+                        ApplicationErrorResponse.from_exception(e).json(),
+                        status=HTTPStatus.INTERNAL_SERVER_ERROR,
+                        content_type="application/json",
+                    ),
                 )
-                return prepare_response(ApplicationErrorResponse.from_exception(e))
 
         return handler
 
@@ -104,17 +112,13 @@ class WebServiceClient(object):
     def send_request(self, verb: str, route: str, payload: Optional[Any] = None) -> Any:
         resource = f"{self._endpoint}/{route}"
         if not hasattr(requests, verb.lower()):
-            raise WebServiceClientError(
-                f"unexpected verb: {verb} (while calling {resource})"
-            )
+            raise WebServiceClientError(f"unexpected verb: {verb} (while calling {resource})")
         dispatcher = getattr(requests, verb.lower())
         try:
             response = dispatcher(resource, json=serialize(payload))
             response.raise_for_status()
         except requests.exceptions.RequestException as e:
-            raise WebServiceClientError(
-                f"error while sending request to {resource}: {e}"
-            )
+            raise WebServiceClientError(f"error while sending request to {resource}: {e}")
         response_payload = orjson.loads(response.content)
         if "error" in response_payload:
             error = ApplicationErrorResponse.parse_obj(response_payload).error

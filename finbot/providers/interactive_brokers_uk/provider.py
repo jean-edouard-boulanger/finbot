@@ -70,7 +70,8 @@ class Api(ProviderBase):
         if self._credentials.pgp_key:
             with self._credentials.pgp_key.unlocked_pgp_key() as pgp_key:
                 report_payload = _attempt_decrypt_flex_report_payload(
-                    raw_report_payload, pgp_key
+                    payload=raw_report_payload,
+                    pgp_key=pgp_key,
                 )
         else:
             report_payload = raw_report_payload.decode()
@@ -95,10 +96,7 @@ class Api(ProviderBase):
     @cached_property
     def _conversion_rates(self) -> dict[tuple[CurrencyCode, CurrencyCode], float]:
         entries = some(self._statement.entries.conversion_rates).entries
-        return {
-            (CurrencyCode(entry.from_ccy), CurrencyCode(entry.to_ccy)): entry.rate
-            for entry in entries
-        }
+        return {(CurrencyCode(entry.from_ccy), CurrencyCode(entry.to_ccy)): entry.rate for entry in entries}
 
     @cached_property
     def _securities(self) -> dict[str, SecurityInfo]:
@@ -109,9 +107,7 @@ class Api(ProviderBase):
         assert self._statement.entries.mtm_performance_summary_in_base is not None
         conversion_rates = self._conversion_rates
         securities = self._securities
-        portfolio_entries = (
-            self._statement.entries.mtm_performance_summary_in_base.entries
-        )
+        portfolio_entries = self._statement.entries.mtm_performance_summary_in_base.entries
         return Balances(
             accounts=[
                 BalanceEntry(
@@ -134,9 +130,7 @@ class Api(ProviderBase):
         assert self._statement.entries.mtm_performance_summary_in_base is not None
         conversion_rates = self._conversion_rates
         securities = self._securities
-        portfolio_entries = (
-            self._statement.entries.mtm_performance_summary_in_base.entries
-        )
+        portfolio_entries = self._statement.entries.mtm_performance_summary_in_base.entries
         return Assets(
             accounts=[
                 AssetsEntry(
@@ -167,9 +161,7 @@ def _make_asset(
     if asset_category == "STK":
         stock_currency = CurrencyCode(securities[entry.full_security_id].currency)
         conversion_rate = (
-            1.0
-            if stock_currency == account_currency
-            else conversion_rates[(stock_currency, account_currency)]
+            1.0 if stock_currency == account_currency else conversion_rates[(stock_currency, account_currency)]
         )
         return Asset(
             name=f"{entry.symbol} - {entry.description}",

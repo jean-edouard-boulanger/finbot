@@ -1,9 +1,13 @@
 import React, { useState, useEffect, useContext } from "react";
 import { Navigate } from "react-router-dom";
 
-import { AuthContext, ServicesContext } from "contexts";
-
-import { UserAccountValuation } from "clients/finbot-client/types";
+import { AuthContext } from "contexts";
+import {
+  useApi,
+  UserAccountsValuationApi,
+  UserAccountValuation,
+  UserAccountsApi,
+} from "clients";
 
 import { Money, RelativeValuationChange, BarLoader } from "components";
 import { defaultMoneyFormatter } from "components/money";
@@ -13,7 +17,7 @@ import {
   HistoricalValuationPanel,
   WealthDistributionPanel,
 } from "./reports";
-import { Row, Col, Card, Tabs, Tab } from "react-bootstrap";
+import { Row, Col, Card, Nav } from "react-bootstrap";
 
 import { DateTime } from "luxon";
 
@@ -30,21 +34,22 @@ const DEFAULT_REPORT = REPORTS.HOLDINGS;
 
 export const MainDashboard: React.FC<Record<string, never>> = () => {
   const { userAccountId } = useContext(AuthContext);
-  const { finbotClient } = useContext(ServicesContext);
   const locale = "en-GB";
+  const userAccountValuationApi = useApi(UserAccountsValuationApi);
+  const userAccountsApi = useApi(UserAccountsApi);
   const [configured, setConfigured] = useState<boolean | null>(null);
   const [valuation, setValuation] = useState<UserAccountValuation | null>(null);
   const [selectedReport, setSelectedReport] = useState<string>(DEFAULT_REPORT);
 
   useEffect(() => {
     const fetch = async () => {
-      const configured = await finbotClient!.isAccountConfigured({
-        account_id: userAccountId!,
+      const result = await userAccountsApi.isUserAccountConfigured({
+        userAccountId: userAccountId!,
       });
-      setConfigured(configured);
+      setConfigured(result.configured);
     };
     fetch();
-  }, [finbotClient]);
+  }, [userAccountsApi]);
 
   useEffect(() => {
     if (!configured) {
@@ -52,14 +57,14 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
     }
     const fetch = async () => {
       {
-        const result = await finbotClient!.getAccountValuation({
-          account_id: userAccountId!,
+        const result = await userAccountValuationApi.getUserAccountValuation({
+          userAccountId: userAccountId!,
         });
-        setValuation(result);
+        setValuation(result.valuation);
       }
     };
     fetch();
-  }, [finbotClient, configured, userAccountId]);
+  }, [userAccountValuationApi, configured, userAccountId]);
 
   if (configured === false) {
     return <Navigate to={"/welcome"} />;
@@ -74,7 +79,7 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
               <Card.Title>
                 Net Worth{" "}
                 {valuation !== null &&
-                  `(${DateTime.fromISO(valuation.date).toLocaleString(
+                  `(${DateTime.fromJSDate(valuation.date).toLocaleString(
                     DateTime.DATETIME_FULL,
                   )})`}
               </Card.Title>
@@ -98,7 +103,7 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
               <Card.Title>Liabilities</Card.Title>
               {valuation !== null && (
                 <Money
-                  amount={valuation.total_liabilities}
+                  amount={valuation.totalLiabilities}
                   locale={locale}
                   ccy={valuation.currency}
                   moneyFormatter={defaultMoneyFormatter}
@@ -112,10 +117,10 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
           <Card>
             <Card.Body>
               <Card.Title>24h Change</Card.Title>
-              {valuation?.change?.change_1day && (
+              {valuation?.change?.change1day && (
                 <RelativeValuationChange
                   amount={getRelativeChange(
-                    valuation.value - valuation.change.change_1day,
+                    valuation.value - valuation.change.change1day,
                     valuation.value,
                   )}
                 />
@@ -145,16 +150,21 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
         <Col>
           <Card>
             <Card.Header>
-              <Tabs
-                id={"reports-nav"}
-                activeKey={selectedReport}
+              <Nav
+                id="reports-nav"
+                variant="tabs"
+                defaultActiveKey={selectedReport}
                 onSelect={(reportSelection) =>
                   setSelectedReport(reportSelection ?? DEFAULT_REPORT)
                 }
               >
-                <Tab eventKey={REPORTS.HOLDINGS} title={"Holdings"} />
-                <Tab eventKey={REPORTS.EARNINGS} title={"Earnings"} />
-              </Tabs>
+                <Nav.Item>
+                  <Nav.Link eventKey={REPORTS.HOLDINGS}>Holdings</Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                  <Nav.Link eventKey={REPORTS.EARNINGS}>Earnings</Nav.Link>
+                </Nav.Item>
+              </Nav>
             </Card.Header>
             <Card.Body>
               {selectedReport === REPORTS.HOLDINGS && (

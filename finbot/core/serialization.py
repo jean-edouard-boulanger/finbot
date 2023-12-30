@@ -41,7 +41,7 @@ def pretty_dump(data: Any, **json_override_kwarg: Any) -> str:
         return f"<not serializable {type(unhandled_data)} {unhandled_data}>"
 
     json_kwargs = {"indent": 4, "default": fallback, **json_override_kwarg}
-    return json.dumps(serialize(data), **json_kwargs)  # type: ignore
+    return json.dumps(serialize(data), **json_kwargs)
 
 
 PydanticType = TypeVar("PydanticType", bound=BaseModel)

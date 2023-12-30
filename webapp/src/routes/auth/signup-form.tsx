@@ -1,8 +1,7 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 
-import { ServicesContext } from "contexts";
-
+import { useApi, UserAccountsApi } from "clients";
 import { isEmailValid } from "utils/email";
 
 import { toast } from "react-toastify";
@@ -73,7 +72,7 @@ const validatePersonalForm = (
 };
 
 export const SignupForm: React.FC<Record<string, never>> = () => {
-  const { finbotClient } = useContext(ServicesContext);
+  const userAccountsApi = useApi(UserAccountsApi);
   const [registrationForm, setRegistrationForm] = useState<RegistrationForm>(
     DEFAULT_REGISTRATION_FORM,
   );
@@ -112,11 +111,15 @@ export const SignupForm: React.FC<Record<string, never>> = () => {
   const handleSignup = async (form: RegistrationForm) => {
     try {
       setLoading(true);
-      await finbotClient!.registerAccount({
-        email: form.email,
-        full_name: form.fullName,
-        password: form.password,
-        valuation_ccy: form.valuationCurrency,
+      await userAccountsApi.createUserAccount({
+        appCreateUserAccountRequest: {
+          email: form.email,
+          fullName: form.fullName,
+          password: form.password,
+          settings: {
+            valuationCcy: form.valuationCurrency,
+          },
+        },
       });
       setLoading(false);
       setRegistered(true);
@@ -149,7 +152,7 @@ export const SignupForm: React.FC<Record<string, never>> = () => {
           <Row className={"mb-2"}>
             <Col>
               <h4>
-                <Badge variant={"primary"}>1</Badge> Personal information
+                <Badge bg={"primary"}>1</Badge> Personal information
               </h4>
             </Col>
           </Row>
@@ -165,11 +168,9 @@ export const SignupForm: React.FC<Record<string, never>> = () => {
                     type={"text"}
                   />
                   {personalFormValidation.fullNameValid && (
-                    <InputGroup.Append>
-                      <InputGroup.Text>
-                        <FaCheckCircle />
-                      </InputGroup.Text>
-                    </InputGroup.Append>
+                    <InputGroup.Text>
+                      <FaCheckCircle />
+                    </InputGroup.Text>
                   )}
                 </InputGroup>
               </Form.Group>
@@ -187,11 +188,9 @@ export const SignupForm: React.FC<Record<string, never>> = () => {
                     type={"email"}
                   />
                   {personalFormValidation.emailValid && (
-                    <InputGroup.Append>
-                      <InputGroup.Text>
-                        <FaCheckCircle />
-                      </InputGroup.Text>
-                    </InputGroup.Append>
+                    <InputGroup.Text>
+                      <FaCheckCircle />
+                    </InputGroup.Text>
                   )}
                 </InputGroup>
               </Form.Group>
@@ -235,7 +234,11 @@ export const SignupForm: React.FC<Record<string, never>> = () => {
                 disabled={!personalFormValidation.valid}
                 onClick={async () => {
                   if (
-                    await finbotClient!.isEmailAvailable(registrationForm.email)
+                    (
+                      await userAccountsApi.isEmailAvailable({
+                        email: registrationForm.email,
+                      })
+                    ).available
                   ) {
                     setStep("password");
                   } else {
@@ -258,7 +261,7 @@ export const SignupForm: React.FC<Record<string, never>> = () => {
               <Row className={"mb-2"}>
                 <Col>
                   <h4>
-                    <Badge variant={"primary"}>2</Badge> Password
+                    <Badge bg={"primary"}>2</Badge> Password
                   </h4>
                 </Col>
               </Row>

@@ -11,12 +11,13 @@ from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
 from finbot.apps.appwsrv.core import providers as appwsrv_providers
 from finbot.apps.appwsrv.core import valuation as appwsrv_valuation
 from finbot.apps.appwsrv.db import db_session
-from finbot.apps.appwsrv.spec import ResponseSpec, spec
+from finbot.apps.appwsrv.spec import spec
 from finbot.apps.finbotwsrv.client import FinbotwsrvClient
 from finbot.core import environment, secure
 from finbot.core.environment import is_plaid_configured
 from finbot.core.errors import InvalidOperation, InvalidUserInput
 from finbot.core.plaid import PlaidClient
+from finbot.core.spec_tree import JWT_REQUIRED, ResponseSpec
 from finbot.core.utils import some
 from finbot.core.web_service import jwt_required, service_endpoint
 from finbot.model import LinkedAccount, repository
@@ -31,13 +32,24 @@ linked_accounts_api = Blueprint(
 )
 
 
+ENDPOINTS_TAGS = ["Linked accounts"]
+
+
 @linked_accounts_api.route("/", methods=["GET"])
 @jwt_required()
 @service_endpoint()
-@spec.validate(resp=ResponseSpec(HTTP_200=appwsrv_schema.GetLinkedAccountsResponse))
+@spec.validate(
+    resp=ResponseSpec(
+        HTTP_200=appwsrv_schema.GetLinkedAccountsResponse,
+    ),
+    operation_id="get_user_account_linked_accounts",
+    security=JWT_REQUIRED,
+    tags=ENDPOINTS_TAGS,
+)
 def get_linked_accounts(
     user_account_id: int,
 ) -> appwsrv_schema.GetLinkedAccountsResponse:
+    """Get linked accounts"""
     linked_accounts = repository.find_linked_accounts(db_session, user_account_id)
     statuses = repository.get_linked_accounts_statuses(db_session, user_account_id)
     return appwsrv_schema.GetLinkedAccountsResponse(
@@ -55,12 +67,20 @@ def get_linked_accounts(
 @linked_accounts_api.route("/", methods=["POST"])
 @jwt_required()
 @service_endpoint()
-@spec.validate(resp=ResponseSpec(HTTP_200=appwsrv_schema.LinkAccountResponse))
+@spec.validate(
+    resp=ResponseSpec(
+        HTTP_200=appwsrv_schema.LinkAccountResponse,
+    ),
+    operation_id="link_new_account",
+    security=JWT_REQUIRED,
+    tags=ENDPOINTS_TAGS,
+)
 def link_new_account(
     user_account_id: int,
     json: appwsrv_schema.LinkAccountRequest,
     query: appwsrv_schema.LinkAccountCommitParams,
 ) -> appwsrv_schema.LinkAccountResponse:
+    """Link new account"""
     do_validate = query.do_validate
     do_persist = query.do_persist
     logging.info(f"validate={do_validate} persist={do_persist}")
@@ -75,14 +95,11 @@ def link_new_account(
         raise InvalidUserInput("user account is not setup for Plaid")
     credentials = json.credentials
     if is_plaid:
-        credentials = (
-            PlaidClient().exchange_public_token(credentials["public_token"]).dict()
-        )
+        credentials = PlaidClient().exchange_public_token(credentials["public_token"]).dict()
 
     if do_validate:
         logging.info(
-            f"validating authentication details for "
-            f"account_id={user_account_id} and provider_id={provider_id}"
+            f"validating authentication details for " f"account_id={user_account_id} and provider_id={provider_id}"
         )
         appwsrv_providers.validate_credentials(
             finbot_client=FinbotwsrvClient.create(),
@@ -94,14 +111,9 @@ def link_new_account(
     if do_persist:
         account_name: str = json.account_name
         if repository.linked_account_exists(db_session, user_account_id, account_name):
-            raise InvalidUserInput(
-                f"A linked account with name '{account_name}' already exists"
-            )
+            raise InvalidUserInput(f"A linked account with name '{account_name}' already exists")
 
-        logging.info(
-            f"Linking external account (provider_id={provider.id})"
-            f" to user account_id={user_account.id}"
-        )
+        logging.info(f"Linking external account (provider_id={provider.id})" f" to user account_id={user_account.id}")
 
         try:
             new_linked_account: LinkedAccount
@@ -116,8 +128,7 @@ def link_new_account(
                 ).decode()
         except IntegrityError:
             raise InvalidOperation(
-                f"Provider '{provider.description}' was already linked "
-                f"as '{account_name}' in this account"
+                f"Provider '{provider.description}' was already linked " f"as '{account_name}' in this account"
             )
 
     if do_persist:
@@ -131,13 +142,23 @@ def link_new_account(
 @linked_accounts_api.route("/<int:linked_account_id>/", methods=["GET"])
 @jwt_required()
 @service_endpoint()
-@spec.validate(resp=ResponseSpec(HTTP_200=appwsrv_schema.GetLinkedAccountResponse))
+@spec.validate(
+    resp=ResponseSpec(
+        HTTP_200=appwsrv_schema.GetLinkedAccountResponse,
+    ),
+    operation_id="get_linked_account",
+    security=JWT_REQUIRED,
+    tags=ENDPOINTS_TAGS,
+)
 def get_linked_account(
     user_account_id: int,
     linked_account_id: int,
 ) -> appwsrv_schema.GetLinkedAccountResponse:
+    """Get linked account"""
     linked_account = repository.get_linked_account(
-        db_session, user_account_id, linked_account_id
+        session=db_session,
+        user_account_id=user_account_id,
+        linked_account_id=linked_account_id,
     )
     credentials = None
     if appwsrv_providers.is_plaid_linked_account(linked_account):
@@ -149,11 +170,15 @@ def get_linked_account(
         )
         credentials = {
             "link_token": PlaidClient()
-            .create_link_token(credentials["access_token"])
-            .link_token
+            .create_link_token(
+                access_token=credentials["access_token"],
+            )
+            .link_token,
         }
     linked_account_status = repository.get_linked_account_status(
-        db_session, user_account_id, linked_account_id
+        session=db_session,
+        user_account_id=user_account_id,
+        linked_account_id=linked_account_id,
     )
     return appwsrv_schema.GetLinkedAccountResponse(
         linked_account=serializer.serialize_linked_account(
@@ -167,19 +192,27 @@ def get_linked_account(
 @linked_accounts_api.route("/<int:linked_account_id>/", methods=["DELETE"])
 @jwt_required()
 @service_endpoint()
-@spec.validate(resp=ResponseSpec(HTTP_200=appwsrv_schema.DeleteLinkedAccountResponse))
+@spec.validate(
+    resp=ResponseSpec(
+        HTTP_200=appwsrv_schema.DeleteLinkedAccountResponse,
+    ),
+    operation_id="delete_linked_account",
+    security=JWT_REQUIRED,
+    tags=ENDPOINTS_TAGS,
+)
 def delete_linked_account(
     user_account_id: int,
     linked_account_id: int,
 ) -> appwsrv_schema.DeleteLinkedAccountResponse:
+    """Delete linked account"""
     linked_account = repository.get_linked_account(
-        db_session, user_account_id, linked_account_id
+        session=db_session,
+        user_account_id=user_account_id,
+        linked_account_id=linked_account_id,
     )
 
     with db_session.persist(linked_account):
-        linked_account.account_name = (
-            f"DELETED {uuid.uuid4()} / {linked_account.account_name}"
-        )
+        linked_account.account_name = f"DELETED {uuid.uuid4()} / {linked_account.account_name}"
         linked_account.deleted = True
 
     appwsrv_valuation.try_trigger_valuation(user_account_id=user_account_id)
@@ -190,28 +223,34 @@ def delete_linked_account(
 @jwt_required()
 @service_endpoint()
 @spec.validate(
-    resp=ResponseSpec(HTTP_200=appwsrv_schema.UpdateLinkedAccountMetadataResponse)
+    resp=ResponseSpec(
+        HTTP_200=appwsrv_schema.UpdateLinkedAccountMetadataResponse,
+    ),
+    operation_id="update_linked_account_metadata",
+    security=JWT_REQUIRED,
+    tags=ENDPOINTS_TAGS,
 )
 def update_linked_account_metadata(
     user_account_id: int,
     linked_account_id: int,
     json: appwsrv_schema.UpdateLinkedAccountMetadataRequest,
 ) -> appwsrv_schema.UpdateLinkedAccountMetadataResponse:
+    """Update linked account metadata"""
     linked_account = repository.get_linked_account(
-        db_session, user_account_id, linked_account_id
+        session=db_session,
+        user_account_id=user_account_id,
+        linked_account_id=linked_account_id,
     )
     if linked_account.frozen:
-        raise InvalidUserInput(
-            f"Linked account '{linked_account.account_name}' is frozen and cannot be updated."
-        )
+        raise InvalidUserInput(f"Linked account '{linked_account.account_name}' is frozen and cannot be updated.")
     with db_session.persist(linked_account):
         if account_name := json.account_name:
             if repository.linked_account_exists(
-                db_session, user_account_id, account_name
+                session=db_session,
+                user_account_id=user_account_id,
+                account_name=account_name,
             ):
-                raise InvalidUserInput(
-                    f"A linked account with name '{account_name}' already exists"
-                )
+                raise InvalidUserInput(f"A linked account with name '{account_name}' already exists")
             linked_account.account_name = account_name
         if account_colour := json.account_colour:
             linked_account.account_colour = account_colour
@@ -224,7 +263,12 @@ def update_linked_account_metadata(
 @jwt_required()
 @service_endpoint()
 @spec.validate(
-    resp=ResponseSpec(HTTP_200=appwsrv_schema.UpdateLinkedAccountCredentialsResponse)
+    resp=ResponseSpec(
+        HTTP_200=appwsrv_schema.UpdateLinkedAccountCredentialsResponse,
+    ),
+    operation_id="update_linked_account_credentials",
+    security=JWT_REQUIRED,
+    tags=ENDPOINTS_TAGS,
 )
 def update_linked_account_credentials(
     user_account_id: int,
@@ -232,21 +276,23 @@ def update_linked_account_credentials(
     json: appwsrv_schema.UpdateLinkedAccountCredentialsRequest,
     query: appwsrv_schema.LinkAccountCommitParams,
 ) -> appwsrv_schema.UpdateLinkedAccountCredentialsResponse:
+    """Update linked account credentials"""
     do_validate = query.do_validate
     do_persist = query.do_persist
 
     linked_account_id = linked_account_id
     linked_account = repository.get_linked_account(
-        db_session, user_account_id, linked_account_id
+        session=db_session,
+        user_account_id=user_account_id,
+        linked_account_id=linked_account_id,
     )
     user_account_settings = repository.get_user_account_settings(
-        db_session, user_account_id
+        session=db_session,
+        user_account_id=user_account_id,
     )
 
     if linked_account.frozen:
-        raise InvalidUserInput(
-            f"Linked account '{linked_account.account_name}' is frozen and cannot be updated."
-        )
+        raise InvalidUserInput(f"Linked account '{linked_account.account_name}' is frozen and cannot be updated.")
 
     is_plaid = appwsrv_providers.is_plaid_linked_account(linked_account)
     if is_plaid and not is_plaid_configured():
@@ -278,7 +324,8 @@ def update_linked_account_credentials(
 
     if do_persist:
         appwsrv_valuation.try_trigger_valuation(
-            user_account_id=user_account_id, linked_account_ids=[linked_account.id]
+            user_account_id=user_account_id,
+            linked_account_ids=[linked_account.id],
         )
 
     return appwsrv_schema.UpdateLinkedAccountCredentialsResponse()

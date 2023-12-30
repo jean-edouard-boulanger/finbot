@@ -1,0 +1,61 @@
+name: Lint (OpenAPI schema)
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "**.py"
+  pull_request:
+    branches:
+      - master
+    paths:
+      - "**.py"
+
+jobs:
+  openapi-schema-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out finbot source
+        uses: actions/checkout@v4
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.12
+      - name: Install Python dependencies
+        run: python3.12 -m pip install -r requirements-dev.txt
+      - name: Install openapi-generator-cli
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y default-jre nodejs npm
+          npm install @openapitools/openapi-generator-cli -g
+          cd webapp && npm i
+      - name: Install webapp dev dependencies
+        run: |
+          cd webapp
+          npm i --only=dev
+      - name: Load finbot env
+        uses: falti/dotenv-action@v1.0.4
+        with:
+          export-variables: true
+          path: envs/dev.env
+          keys-case: bypass
+      - name: Load finbot env (dummy secrets)
+        uses: falti/dotenv-action@v1.0.4
+        with:
+          export-variables: true
+          path: envs/secrets.env.tpl
+          keys-case: bypass
+      - name: Lint Python schema (Pydantic types)
+        run: env PYTHONPATH=${PWD}:${PYTHONPATH} ./tools/lint-schema.py
+      - name: Check generated Typescript client
+        run: |
+          env PYTHONPATH=${PWD}:${PYTHONPATH} ./tools/generate-ts-client
+          make prettier-ts
+      - name: Find Typescript clients changes
+        id: find-ts-clients-changes
+        uses: tj-actions/verify-changed-files@v16
+      - name: Error if any Typescript clients changes
+        if: steps.find-ts-clients-changes.outputs.files_changed == 'true'
+        run: |
+          echo 'Following Typescript clients are out of date: ${{ steps.find-ts-clients-changes.outputs.changed_files }}'
+          echo 'Please re-generate Typescript clients using `make generate-ts-client`'
+          exit 1

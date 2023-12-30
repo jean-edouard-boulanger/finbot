@@ -19,6 +19,8 @@ from finbot.providers.schema import (
     Liability,
 )
 
+SchemaNamespace = "PlaidProvider"
+
 
 class Credentials(BaseModel):
     item_id: str

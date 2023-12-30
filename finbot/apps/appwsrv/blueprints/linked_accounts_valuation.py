@@ -10,9 +10,10 @@ from finbot.apps.appwsrv import serializer
 from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
 from finbot.apps.appwsrv.core.series import order_series_by_last_value
 from finbot.apps.appwsrv.db import db_session
-from finbot.apps.appwsrv.spec import ResponseSpec, spec
+from finbot.apps.appwsrv.spec import spec
 from finbot.core import schema as core_schema
 from finbot.core.errors import InvalidUserInput
+from finbot.core.spec_tree import JWT_REQUIRED, ResponseSpec
 from finbot.core.utils import some
 from finbot.core.web_service import jwt_required, service_endpoint
 from finbot.model import repository
@@ -27,18 +28,31 @@ linked_accounts_valuation_api = Blueprint(
 )
 
 
+ENDPOINTS_TAGS = ["Linked accounts (valuation)"]
+
+
 @linked_accounts_valuation_api.route("/", methods=["GET"])
 @jwt_required()
 @service_endpoint()
 @spec.validate(
-    resp=ResponseSpec(HTTP_200=appwsrv_schema.GetLinkedAccountsValuationResponse)
+    resp=ResponseSpec(
+        HTTP_200=appwsrv_schema.GetLinkedAccountsValuationResponse,
+    ),
+    operation_id="get_linked_accounts_valuation",
+    security=JWT_REQUIRED,
+    tags=ENDPOINTS_TAGS,
 )
 def get_linked_accounts_valuation(
     user_account_id: int,
 ) -> appwsrv_schema.GetLinkedAccountsValuationResponse:
-    history_entry = repository.get_last_history_entry(db_session, user_account_id)
+    """Get linked accounts valuation"""
+    history_entry = repository.get_last_history_entry(
+        session=db_session,
+        user_account_id=user_account_id,
+    )
     valuation_ccy = repository.get_user_account_settings(
-        db_session, user_account_id
+        session=db_session,
+        user_account_id=user_account_id,
     ).valuation_ccy
     results = repository.find_linked_accounts_valuation(db_session, history_entry.id)
     return appwsrv_schema.GetLinkedAccountsValuationResponse(
@@ -60,14 +74,10 @@ def get_linked_accounts_valuation(
                         ),
                         currency=history_entry.valuation_ccy,
                         value=float(entry.valuation),
-                        change=serializer.serialize_valuation_change(
-                            entry.valuation_change
-                        ),
+                        change=serializer.serialize_valuation_change(entry.valuation_change),
                     ),
                 )
-                for entry in sorted(
-                    results, key=lambda entry: -1.0 * float(entry.valuation)
-                )
+                for entry in sorted(results, key=lambda entry: -1.0 * float(entry.valuation))
                 if not entry.linked_account.deleted
             ],
         )
@@ -78,12 +88,18 @@ def get_linked_accounts_valuation(
 @jwt_required()
 @service_endpoint()
 @spec.validate(
-    resp=ResponseSpec(HTTP_200=appwsrv_schema.GetLinkedAccountsHistoricalValuation)
+    resp=ResponseSpec(
+        HTTP_200=appwsrv_schema.GetLinkedAccountsHistoricalValuation,
+    ),
+    operation_id="get_linked_accounts_historical_valuation",
+    security=JWT_REQUIRED,
+    tags=ENDPOINTS_TAGS,
 )
 def get_linked_accounts_historical_valuation(
     user_account_id: int,
     query: appwsrv_schema.HistoricalValuationParams,
 ) -> appwsrv_schema.GetLinkedAccountsHistoricalValuation:
+    """Get linked accounts historical valuation"""
     settings = repository.get_user_account_settings(db_session, user_account_id)
     from_time = query.from_time
     to_time = query.to_time
@@ -92,10 +108,7 @@ def get_linked_accounts_historical_valuation(
     frequency = query.frequency
     is_daily = frequency == core_schema.ValuationFrequency.Daily
     linked_accounts = repository.find_linked_accounts(db_session, user_account_id)
-    linked_accounts_colours = {
-        linked_account.id: linked_account.account_colour
-        for linked_account in linked_accounts
-    }
+    linked_accounts_colours = {linked_account.id: linked_account.account_colour for linked_account in linked_accounts}
     valuation_history = repository.get_historical_valuation_by_linked_account(
         session=db_session,
         user_account_id=user_account_id,
@@ -133,10 +146,7 @@ def get_linked_accounts_historical_valuation(
                     [
                         appwsrv_schema.SeriesDescription(
                             name=f"{account_name}",
-                            data=[
-                                (entry.last_value if entry is not None else None)
-                                for entry in entries
-                            ],
+                            data=[(entry.last_value if entry is not None else None) for entry in entries],
                             colour=linked_accounts_colours[account_id],
                         )
                         for (

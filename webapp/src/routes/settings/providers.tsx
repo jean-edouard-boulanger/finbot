@@ -1,9 +1,9 @@
-import React, { useContext, useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 import AceEditor from "react-ace";
+import { useApi, FinancialDataProvidersApi } from "clients";
 import { default as DataDrivenForm } from "react-jsonschema-form";
 import { Alert, Row, Col, Button, Tabs, Tab, Form } from "react-bootstrap";
-import { ServicesContext } from "contexts";
 import { LoadingButton } from "components";
 import { Formik, Form as MetaForm, Field, ErrorMessage } from "formik";
 import { ProviderSelector } from "./components";
@@ -50,7 +50,7 @@ const PROVIDER_SCHEMA = Yup.object().shape({
   description: Yup.string()
     .required("Description is required")
     .max(256, "Description should be at most 64 characters"),
-  website_url: Yup.string().required("Website is required").max(256),
+  websiteUrl: Yup.string().required("Website is required").max(256),
 });
 
 const useSchema = (rawSchema: string): [any | null, string | null] => {
@@ -65,7 +65,7 @@ const useSchema = (rawSchema: string): [any | null, string | null] => {
 interface ProviderDescription {
   id: string;
   description: string;
-  website_url: string;
+  websiteUrl: string;
 }
 
 const makeProviderDescription = (
@@ -74,12 +74,12 @@ const makeProviderDescription = (
   return {
     id: entry?.id ?? "",
     description: entry?.description ?? "",
-    website_url: entry?.website_url ?? "",
+    websiteUrl: entry?.websiteUrl ?? "",
   };
 };
 
 export const EditProviderPanel: React.FC<Record<string, never>> = () => {
-  const { finbotClient } = useContext(ServicesContext);
+  const financialDataProvidersApi = useApi(FinancialDataProvidersApi);
   const [selectedProviderId, setSelectedProviderId] = useState<string | null>(
     null,
   );
@@ -109,10 +109,14 @@ export const EditProviderPanel: React.FC<Record<string, never>> = () => {
     }
 
     try {
-      const provider = await finbotClient!.saveProvider({
-        ...description,
-        credentials_schema: schema,
-      });
+      const result =
+        await financialDataProvidersApi.updateOrCreateFinancialDataProvider({
+          appCreateOrUpdateProviderRequest: {
+            ...description,
+            credentialsSchema: schema,
+          },
+        });
+      const provider = result.provider;
       setSubmitting(false);
       setSelectedProviderId(provider.id);
       toast.success(`Provider '${provider.id}' has been saved`);
@@ -125,8 +129,8 @@ export const EditProviderPanel: React.FC<Record<string, never>> = () => {
   const handleDelete = async (providerId: string | null) => {
     try {
       if (providerId !== null) {
-        await finbotClient!.deleteProvider({
-          provider_id: providerId,
+        await financialDataProvidersApi.deleteFinancialDataProvider({
+          providerId,
         });
         setSelectedProviderId(null);
         toast.success(`Provider '${providerId}' has been deleted`);
@@ -146,14 +150,15 @@ export const EditProviderPanel: React.FC<Record<string, never>> = () => {
       return;
     }
     const fetch = async () => {
-      const provider = await finbotClient!.getProvider({
-        provider_id: selectedProviderId,
+      const result = await financialDataProvidersApi.getFinancialDataProvider({
+        providerId: selectedProviderId,
       });
+      const provider = result.provider;
       resetProviderDescription(provider);
-      setRawSchema(JSON.stringify(provider.credentials_schema, null, 2));
+      setRawSchema(JSON.stringify(provider.credentialsSchema, null, 2));
     };
     fetch();
-  }, [finbotClient, selectedProviderId]);
+  }, [financialDataProvidersApi, selectedProviderId]);
 
   const isNew = selectedProviderId === null;
 
@@ -227,12 +232,12 @@ export const EditProviderPanel: React.FC<Record<string, never>> = () => {
                   <Form.Label>Website</Form.Label>
                   <Field
                     type="text"
-                    name="website_url"
+                    name="websiteUrl"
                     className="form-control"
                   />
                   <ErrorMessage
                     className="text-danger"
-                    name="website_url"
+                    name="websiteUrl"
                     component="div"
                   />
                 </Form.Group>

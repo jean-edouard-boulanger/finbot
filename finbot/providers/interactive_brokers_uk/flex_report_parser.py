@@ -85,9 +85,7 @@ class FlexStatementEntries:
     conversion_rates: ConversionRates | None = None
 
 
-FlexStatementEntryType = (
-    AccountInformation | MTMPerformanceSummaryInBase | SecuritiesInfo | ConversionRates
-)
+FlexStatementEntryType = AccountInformation | MTMPerformanceSummaryInBase | SecuritiesInfo | ConversionRates
 
 
 @dataclass(frozen=True)
@@ -103,6 +101,7 @@ class FlexStatement:
 class FlexReport:
     query_name: str
     statements: list[FlexStatement]
+    messages: list[str]
 
 
 def _make_full_security_id(
@@ -165,9 +164,7 @@ def _parse_security_info(node: Element) -> SecurityInfo:
 
 
 def _parse_securities_info(node: Element) -> SecuritiesInfo:
-    return SecuritiesInfo(
-        entries=[_parse_security_info(security_node) for security_node in list(node)]
-    )
+    return SecuritiesInfo(entries=[_parse_security_info(security_node) for security_node in list(node)])
 
 
 def _parse_conversion_rate(node: Element) -> ConversionRate:
@@ -179,9 +176,7 @@ def _parse_conversion_rate(node: Element) -> ConversionRate:
 
 
 def _parse_conversion_rates(node: Element) -> ConversionRates:
-    return ConversionRates(
-        entries=[_parse_conversion_rate(rate_node) for rate_node in list(node)]
-    )
+    return ConversionRates(entries=[_parse_conversion_rate(rate_node) for rate_node in list(node)])
 
 
 def _parse_flex_statement_entries(nodes: list[Element]) -> FlexStatementEntries:
@@ -194,9 +189,7 @@ def _parse_flex_statement_entries(nodes: list[Element]) -> FlexStatementEntries:
         if node_type == "AccountInformation":
             account_information = _parse_account_information(node)
         elif node_type == "MTMPerformanceSummaryInBase":
-            mtm_performance_summary_in_base = _parse_mtm_performance_summary_in_base(
-                node
-            )
+            mtm_performance_summary_in_base = _parse_mtm_performance_summary_in_base(node)
         elif node_type == "SecuritiesInfo":
             securities_info = _parse_securities_info(node)
         elif node_type == "ConversionRates":
@@ -223,13 +216,14 @@ def _parse_flex_report(report_root: Element) -> FlexReport:
     try:
         assert report_root is not None
         assert report_root.tag == "FlexQueryResponse"
-        flex_statements_node: Element = list(report_root)[0]
+        flex_statements_node = report_root.find("FlexStatements")
+        assert isinstance(flex_statements_node, Element)
         return FlexReport(
             query_name=report_root.attrib["queryName"],
             statements=[
-                _parse_flex_statement(flex_statement_node)
-                for flex_statement_node in list(flex_statements_node)
+                _parse_flex_statement(flex_statement_node) for flex_statement_node in list(flex_statements_node)
             ],
+            messages=[str(message_node.text) for message_node in list(report_root.findall("Message"))],
         )
     except Exception as e:
         raise FlexReportParserError(f"while extracting Flex report content: {e}") from e

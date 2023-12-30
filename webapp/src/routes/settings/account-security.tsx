@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 
-import { ServicesContext, AuthContext } from "contexts";
+import { AuthContext } from "contexts";
+import { useApi, UserAccountsApi } from "clients";
 
 import { LoadingButton, PasswordValidationCard } from "components";
 import {
@@ -26,7 +27,6 @@ export interface AccountSecuritySettingsProps {}
 export const AccountSecuritySettings: React.FC<
   AccountSecuritySettingsProps
 > = () => {
-  const { finbotClient } = useContext(ServicesContext);
   const { userAccountId } = useContext(AuthContext);
   const [loading, setLoading] = useState<boolean>(false);
   const [passwordForm, setPasswordForm] = useState<PasswordForm>(
@@ -36,6 +36,7 @@ export const AccountSecuritySettings: React.FC<
     useState<PasswordValidationResult>(() => {
       return validatePassword(passwordForm);
     });
+  const userAccountsApi = useApi(UserAccountsApi);
 
   useEffect(() => {
     setPasswordValidation(validatePassword(passwordForm));
@@ -52,10 +53,12 @@ export const AccountSecuritySettings: React.FC<
   const handleFormSubmit = async (form: PasswordForm) => {
     try {
       setLoading(true);
-      await finbotClient!.updateUserAccountPassword({
-        account_id: userAccountId!,
-        old_password: form.oldPassword,
-        new_password: form.password,
+      await userAccountsApi.updateUserAccountPassword({
+        userAccountId: userAccountId!,
+        appUpdateUserAccountPasswordRequest: {
+          oldPassword: form.oldPassword,
+          newPassword: form.password,
+        },
       });
       toast.success("Password updated successfully");
       setPasswordForm(DEFAULT_PASSWORD_FORM);
