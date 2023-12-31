@@ -4,7 +4,7 @@ import krakenex
 from pydantic.v1 import SecretStr
 
 from finbot.core import fx_market
-from finbot.core.crypto_market import CRYPTOCURRENCY_CODE_PREFIX, cryptocurrency_code, is_cryptocurrency_code
+from finbot.core.crypto_market import CRYPTOCURRENCY_CODE_PREFIX, cryptocurrency_code
 from finbot.core.errors import FinbotError
 from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.providers.base import ProviderBase

@@ -33,13 +33,13 @@ class CryptoMarket(object):
         return float(result[coin_id][target_ccy])
 
 
-def is_cryptocurrency_code(symbol: str) -> bool:
+def is_cryptocurrency_code(symbol: str | None) -> bool:
     """Checks whether a symbol is a cryptocurrency code (i.e. currency code prefixed with `Z`)
     Examples:
         - ZBTC: True
         - EUR: False
     """
-    return len(symbol) > 3 and symbol.startswith(CRYPTOCURRENCY_CODE_PREFIX)
+    return symbol is not None and len(symbol) > 3 and symbol.startswith(CRYPTOCURRENCY_CODE_PREFIX)
 
 
 def cryptocurrency_code(symbol: str) -> CurrencyCode:

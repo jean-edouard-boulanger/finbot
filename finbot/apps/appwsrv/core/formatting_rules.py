@@ -149,6 +149,7 @@ ACCOUNTS_PALETTE: list[HexColour] = [
 ]
 
 
+UNKNOWN_CURRENCY_COLOR = "#393939"
 CURRENCIES_COLORS = {
     "IRR": "#AAB29A",
     "GNF": "#AFCBD9",
@@ -306,10 +307,12 @@ CURRENCIES_COLORS = {
 }
 
 
-def get_currency_color(currency_code: str) -> HexColour | None:
+def get_currency_color(currency_code: str | None) -> HexColour:
+    if not currency_code:
+        return UNKNOWN_CURRENCY_COLOR
     if is_cryptocurrency_code(currency_code):
         return get_asset_class_formatting_rule(AssetClass.crypto).dominant_colour
-    return CURRENCIES_COLORS.get(currency_code)
+    return CURRENCIES_COLORS.get(currency_code, UNKNOWN_CURRENCY_COLOR)
 
 
 def get_asset_classes_formatting_rules() -> dict[AssetClass, AssetClassFormattingRule]:
