@@ -302,7 +302,7 @@ CURRENCIES_COLORS = {
     "ZAR": "#DB8A5D",
     "ANG": "#CFAE83",
     "MVR": "#EDBB8A",
-    "MDL": "#DED2C4"
+    "MDL": "#DED2C4",
 }
 
 

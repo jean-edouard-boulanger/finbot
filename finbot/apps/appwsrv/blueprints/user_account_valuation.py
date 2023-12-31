@@ -178,7 +178,7 @@ def get_user_account_valuation_by_asset_type(
 )
 def get_user_account_valuation_by_currency_exposure(
     user_account_id: int,
-):
+) -> appwsrv_schema.GetUserAccountValuationByCurrencyExposureResponse:
     """Get user account valuation by currency exposure"""
     last_history_entry = repository.get_last_history_entry(db_session, user_account_id)
     items = repository.find_items_valuation(db_session, last_history_entry.id)
