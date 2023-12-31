@@ -9,12 +9,13 @@ import { Card, Dropdown, DropdownButton } from "react-bootstrap";
 import Chart from "react-apexcharts";
 import { MoneyFormatterType } from "components/money";
 
-type AggregationMode = "account" | "asset type" | "asset class";
+type AggregationMode = "account" | "asset type" | "asset class" | "currency exposure";
 
 const AGGREGATION_MODES: Array<AggregationMode> = [
   "account",
   "asset type",
   "asset class",
+  "currency exposure"
 ];
 
 const DEFAULT_AGGREGATION_MODE = AGGREGATION_MODES[0];

@@ -23,50 +23,50 @@ import {
 /**
  * 
  * @export
- * @interface ValuationByAssetClass
+ * @interface ValuationByCurrencyExposure
  */
-export interface ValuationByAssetClass {
+export interface ValuationByCurrencyExposure {
     /**
      * 
      * @type {string}
-     * @memberof ValuationByAssetClass
+     * @memberof ValuationByCurrencyExposure
      */
     valuationCcy: string;
     /**
      * 
      * @type {Array<GroupValuation>}
-     * @memberof ValuationByAssetClass
+     * @memberof ValuationByCurrencyExposure
      */
-    byAssetClass: Array<GroupValuation>;
+    byCurrencyExposure: Array<GroupValuation>;
 }
 
 /**
- * Check if a given object implements the ValuationByAssetClass interface.
+ * Check if a given object implements the ValuationByCurrencyExposure interface.
  */
-export function instanceOfValuationByAssetClass(value: object): boolean {
+export function instanceOfValuationByCurrencyExposure(value: object): boolean {
     let isInstance = true;
     isInstance = isInstance && "valuationCcy" in value;
-    isInstance = isInstance && "byAssetClass" in value;
+    isInstance = isInstance && "byCurrencyExposure" in value;
 
     return isInstance;
 }
 
-export function ValuationByAssetClassFromJSON(json: any): ValuationByAssetClass {
-    return ValuationByAssetClassFromJSONTyped(json, false);
+export function ValuationByCurrencyExposureFromJSON(json: any): ValuationByCurrencyExposure {
+    return ValuationByCurrencyExposureFromJSONTyped(json, false);
 }
 
-export function ValuationByAssetClassFromJSONTyped(json: any, ignoreDiscriminator: boolean): ValuationByAssetClass {
+export function ValuationByCurrencyExposureFromJSONTyped(json: any, ignoreDiscriminator: boolean): ValuationByCurrencyExposure {
     if ((json === undefined) || (json === null)) {
         return json;
     }
     return {
         
         'valuationCcy': json['valuation_ccy'],
-        'byAssetClass': ((json['by_asset_class'] as Array<any>).map(GroupValuationFromJSON)),
+        'byCurrencyExposure': ((json['by_currency_exposure'] as Array<any>).map(GroupValuationFromJSON)),
     };
 }
 
-export function ValuationByAssetClassToJSON(value?: ValuationByAssetClass | null): any {
+export function ValuationByCurrencyExposureToJSON(value?: ValuationByCurrencyExposure | null): any {
     if (value === undefined) {
         return undefined;
     }
@@ -76,7 +76,7 @@ export function ValuationByAssetClassToJSON(value?: ValuationByAssetClass | null
     return {
         
         'valuation_ccy': value.valuationCcy,
-        'by_asset_class': ((value.byAssetClass as Array<any>).map(GroupValuationToJSON)),
+        'by_currency_exposure': ((value.byCurrencyExposure as Array<any>).map(GroupValuationToJSON)),
     };
 }
 
