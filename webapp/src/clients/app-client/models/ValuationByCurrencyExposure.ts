@@ -23,55 +23,57 @@ import {
 /**
  *
  * @export
- * @interface ValuationByAssetType
+ * @interface ValuationByCurrencyExposure
  */
-export interface ValuationByAssetType {
+export interface ValuationByCurrencyExposure {
   /**
    *
    * @type {string}
-   * @memberof ValuationByAssetType
+   * @memberof ValuationByCurrencyExposure
    */
   valuationCcy: string;
   /**
    *
    * @type {Array<GroupValuation>}
-   * @memberof ValuationByAssetType
+   * @memberof ValuationByCurrencyExposure
    */
-  byAssetType: Array<GroupValuation>;
+  byCurrencyExposure: Array<GroupValuation>;
 }
 
 /**
- * Check if a given object implements the ValuationByAssetType interface.
+ * Check if a given object implements the ValuationByCurrencyExposure interface.
  */
-export function instanceOfValuationByAssetType(value: object): boolean {
+export function instanceOfValuationByCurrencyExposure(value: object): boolean {
   let isInstance = true;
   isInstance = isInstance && "valuationCcy" in value;
-  isInstance = isInstance && "byAssetType" in value;
+  isInstance = isInstance && "byCurrencyExposure" in value;
 
   return isInstance;
 }
 
-export function ValuationByAssetTypeFromJSON(json: any): ValuationByAssetType {
-  return ValuationByAssetTypeFromJSONTyped(json, false);
+export function ValuationByCurrencyExposureFromJSON(
+  json: any,
+): ValuationByCurrencyExposure {
+  return ValuationByCurrencyExposureFromJSONTyped(json, false);
 }
 
-export function ValuationByAssetTypeFromJSONTyped(
+export function ValuationByCurrencyExposureFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
-): ValuationByAssetType {
+): ValuationByCurrencyExposure {
   if (json === undefined || json === null) {
     return json;
   }
   return {
     valuationCcy: json["valuation_ccy"],
-    byAssetType: (json["by_asset_type"] as Array<any>).map(
+    byCurrencyExposure: (json["by_currency_exposure"] as Array<any>).map(
       GroupValuationFromJSON,
     ),
   };
 }
 
-export function ValuationByAssetTypeToJSON(
-  value?: ValuationByAssetType | null,
+export function ValuationByCurrencyExposureToJSON(
+  value?: ValuationByCurrencyExposure | null,
 ): any {
   if (value === undefined) {
     return undefined;
@@ -81,6 +83,8 @@ export function ValuationByAssetTypeToJSON(
   }
   return {
     valuation_ccy: value.valuationCcy,
-    by_asset_type: (value.byAssetType as Array<any>).map(GroupValuationToJSON),
+    by_currency_exposure: (value.byCurrencyExposure as Array<any>).map(
+      GroupValuationToJSON,
+    ),
   };
 }

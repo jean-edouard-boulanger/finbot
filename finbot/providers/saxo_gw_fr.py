@@ -4,7 +4,7 @@ from pydantic.v1 import SecretStr
 
 from finbot.core import fx_market, saxo
 from finbot.core.environment import get_saxo_gateway_url
-from finbot.core.schema import BaseModel
+from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationFailure
 from finbot.providers.schema import (
@@ -16,7 +16,6 @@ from finbot.providers.schema import (
     AssetType,
     BalanceEntry,
     Balances,
-    CurrencyCode,
 )
 
 SchemaNamespace = "SaxoProvider"
@@ -133,6 +132,7 @@ def _make_asset(
             asset_type=AssetType[asset_type.upper()],
             value=_get_value_in_account_currency(saxo_account, position),
             units=position.SinglePosition.PositionBase.Amount,
+            underlying_ccy=CurrencyCode(position.DisplayAndFormat.Currency.upper()),
             provider_specific={
                 "Asset currency": position.DisplayAndFormat.Currency,
                 "Symbol": position.DisplayAndFormat.Symbol,

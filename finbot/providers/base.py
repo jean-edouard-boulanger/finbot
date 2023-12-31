@@ -3,7 +3,7 @@ from typing import Any, Self
 
 from finbot.core import schema as core_schema
 from finbot.providers.errors import RetiredProviderError
-from finbot.providers.schema import Assets, Balances, CurrencyCode, Liabilities
+from finbot.providers.schema import Assets, Balances, Liabilities
 
 
 class ProviderBase(object):
@@ -12,7 +12,7 @@ class ProviderBase(object):
 
     def __init__(
         self,
-        user_account_currency: CurrencyCode,
+        user_account_currency: core_schema.CurrencyCode,
         **kwargs: Any,
     ):
         self.user_account_currency = user_account_currency
@@ -21,7 +21,7 @@ class ProviderBase(object):
     def create(
         cls,
         authentication_payload: core_schema.CredentialsPayloadType,
-        user_account_currency: CurrencyCode,
+        user_account_currency: core_schema.CurrencyCode,
         **kwargs: Any,
     ) -> "ProviderBase":
         return cls(
@@ -72,7 +72,7 @@ class RetiredProvider(ProviderBase):
     @staticmethod
     def create(
         authentication_payload: core_schema.CredentialsPayloadType,
-        user_account_currency: CurrencyCode,
+        user_account_currency: core_schema.CurrencyCode,
         **kwargs: Any,
     ) -> "ProviderBase":
         raise RetiredProviderError()

@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Literal, TypeAlias
 
-from finbot.core.schema import ApplicationErrorData, BaseModel, CredentialsPayloadType
+from finbot.core.schema import ApplicationErrorData, BaseModel, CredentialsPayloadType, CurrencyCode
 from finbot.providers import schema as providers_schema
 
 SchemaNamespace = "Finbot"
@@ -47,7 +47,7 @@ LineItemResults: TypeAlias = BalancesResults | AssetsResults | LiabilitiesResult
 class ValidateCredentialsRequest(BaseModel):
     provider_id: str
     credentials: CredentialsPayloadType
-    user_account_currency: providers_schema.CurrencyCode
+    user_account_currency: CurrencyCode
 
 
 class ValidateCredentialsResponse(BaseModel):
@@ -59,7 +59,7 @@ class GetFinancialDataRequest(BaseModel):
     provider_id: str
     credentials: CredentialsPayloadType
     items: list[LineItem]
-    user_account_currency: providers_schema.CurrencyCode
+    user_account_currency: CurrencyCode
 
 
 class GetFinancialDataResponse(BaseModel):

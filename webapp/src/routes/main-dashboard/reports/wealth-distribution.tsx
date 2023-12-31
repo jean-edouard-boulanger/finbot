@@ -9,12 +9,17 @@ import { Card, Dropdown, DropdownButton } from "react-bootstrap";
 import Chart from "react-apexcharts";
 import { MoneyFormatterType } from "components/money";
 
-type AggregationMode = "account" | "asset type" | "asset class";
+type AggregationMode =
+  | "account"
+  | "asset type"
+  | "asset class"
+  | "currency exposure";
 
 const AGGREGATION_MODES: Array<AggregationMode> = [
   "account",
   "asset type",
   "asset class",
+  "currency exposure",
 ];
 
 const DEFAULT_AGGREGATION_MODE = AGGREGATION_MODES[0];
@@ -89,6 +94,20 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
             labels: result.byAssetClass.map((entry) => entry.name),
             values: result.byAssetClass.map((entry) => entry.value),
             colours: result.byAssetClass.map((entry) => entry.colour),
+          });
+          break;
+        }
+        case "currency exposure": {
+          const result = (
+            await userAccountsValuationApi!.getUserAccountValuationByCurrencyExposure(
+              { userAccountId },
+            )
+          ).valuation;
+          setValuation({
+            valuation_ccy: result.valuationCcy,
+            labels: result.byCurrencyExposure.map((entry) => entry.name),
+            values: result.byCurrencyExposure.map((entry) => entry.value),
+            colours: result.byCurrencyExposure.map((entry) => entry.colour),
           });
           break;
         }

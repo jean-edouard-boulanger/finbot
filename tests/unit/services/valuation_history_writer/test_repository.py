@@ -107,6 +107,7 @@ def sample_previous_snapshot(
                                 value_sub_account_ccy=1000.0,
                                 value_snapshot_ccy=1000.0,
                                 provider_specific_data={},
+                                underlying_ccy="EUR",
                             )
                         ],
                     ),
@@ -137,6 +138,7 @@ def sample_previous_snapshot(
                                 asset_type=AssetType.cash.value,
                                 value_sub_account_ccy=500.0,
                                 value_snapshot_ccy=474.0,
+                                underlying_ccy="EUR",
                             ),
                             SubAccountItemSnapshotEntry(
                                 item_type=SubAccountItemType.Asset,
@@ -146,6 +148,7 @@ def sample_previous_snapshot(
                                 asset_type=AssetType.ETF.value,
                                 value_sub_account_ccy=1500.0,
                                 value_snapshot_ccy=1422.0,
+                                underlying_ccy="USD",
                             ),
                         ],
                     )
@@ -188,6 +191,7 @@ def sample_last_snapshot(
                                 units=100.0,
                                 value_sub_account_ccy=1000.0,
                                 value_snapshot_ccy=1000.0,
+                                underlying_ccy="EUR",
                             ),
                         ],
                     ),
@@ -234,6 +238,7 @@ def test_get_consistent_snapshot_data(
                 value_snapshot_ccy=Decimal(474.0),
                 value_sub_account_ccy=Decimal(500.0),
                 item_provider_specific_data=None,
+                item_underlying_ccy="EUR",
             ),
             ConsistencySnapshotItemEntry(
                 snapshot_id=1,
@@ -252,6 +257,7 @@ def test_get_consistent_snapshot_data(
                 value_snapshot_ccy=Decimal(1422.0),
                 value_sub_account_ccy=Decimal(1500.0),
                 item_provider_specific_data=None,
+                item_underlying_ccy="USD",
             ),
             ConsistencySnapshotItemEntry(
                 snapshot_id=2,
@@ -270,6 +276,7 @@ def test_get_consistent_snapshot_data(
                 value_snapshot_ccy=Decimal(1000.0),
                 value_sub_account_ccy=Decimal(1000.0),
                 item_provider_specific_data=None,
+                item_underlying_ccy="EUR",
             ),
             ConsistencySnapshotEmptySubAccountEntry(
                 snapshot_id=2,

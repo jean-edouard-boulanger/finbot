@@ -4,8 +4,9 @@ import krakenex
 from pydantic.v1 import SecretStr
 
 from finbot.core import fx_market
+from finbot.core.crypto_market import CRYPTOCURRENCY_CODE_PREFIX, cryptocurrency_code
 from finbot.core.errors import FinbotError
-from finbot.core.schema import BaseModel
+from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationFailure
 from finbot.providers.schema import (
@@ -17,10 +18,11 @@ from finbot.providers.schema import (
     AssetType,
     BalanceEntry,
     Balances,
-    CurrencyCode,
 )
 
 OWNERSHIP_UNITS_THRESHOLD = 0.00001
+CASH_SYMBOL_PREFIX = "Z"
+
 SchemaNamespace = "KrakenProvider"
 
 
@@ -34,11 +36,11 @@ def _format_error(errors: list[str]) -> str:
 
 
 def _is_cash(symbol: str) -> bool:
-    return symbol.startswith("Z")
+    return symbol.startswith(CASH_SYMBOL_PREFIX)
 
 
 def _demangle_symbol(symbol: str) -> str:
-    if symbol[0] in {"Z", "X"} and len(symbol) == 4:
+    if symbol[0] in {CASH_SYMBOL_PREFIX, CRYPTOCURRENCY_CODE_PREFIX} and len(symbol) == 4:
         return symbol[1:]
     return symbol
 
@@ -56,7 +58,7 @@ class Api(ProviderBase):
         super().__init__(user_account_currency=user_account_currency, **kwargs)
         self._credentials = credentials
         self._api: Optional[krakenex.API] = None
-        self._account_ccy = "EUR"
+        self._account_ccy = CurrencyCode("EUR")
 
     def _account_description(self) -> Account:
         return Account(
@@ -129,11 +131,12 @@ def _make_asset(
     else:
         return Asset(
             name=demangled_symbol,
-            type="cryptocurrency",
+            type="cryptocurrency",  # deprecated
             asset_class=AssetClass.crypto,
             asset_type=AssetType.crypto_currency,
             units=units,
             value=value,
+            underlying_ccy=cryptocurrency_code(demangled_symbol),
         )
 
 

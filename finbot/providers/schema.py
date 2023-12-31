@@ -1,9 +1,8 @@
 import enum
-from typing import Any, NewType, TypeAlias
+from typing import Any, TypeAlias
 
-from finbot.core.schema import BaseModel
+from finbot.core.schema import BaseModel, CurrencyCode
 
-CurrencyCode = NewType("CurrencyCode", str)
 ProviderSpecificPayload: TypeAlias = dict[str, str | int | float | bool]
 SchemaNamespace = "Providers"
 
@@ -61,6 +60,7 @@ class Asset(BaseModel):
     asset_type: AssetType
     value: float
     units: float | None = None
+    underlying_ccy: CurrencyCode | None = None
     provider_specific: dict[str, Any] | None = None
 
     @classmethod
@@ -79,6 +79,7 @@ class Asset(BaseModel):
             asset_type=AssetType.cash,
             value=amount,
             units=None,
+            underlying_ccy=CurrencyCode(currency.upper()),
             provider_specific=provider_specific,
         )
 

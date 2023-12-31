@@ -281,6 +281,15 @@ class GetUserAccountValuationByAssetClassResponse(BaseModel):
     valuation: ValuationByAssetClass
 
 
+class ValuationByCurrencyExposure(BaseModel):
+    valuation_ccy: str
+    by_currency_exposure: list[GroupValuation]
+
+
+class GetUserAccountValuationByCurrencyExposureResponse(BaseModel):
+    valuation: ValuationByCurrencyExposure
+
+
 class HistoricalValuationParams(BaseModel):
     from_time: datetime | None = None
     to_time: datetime | None = None

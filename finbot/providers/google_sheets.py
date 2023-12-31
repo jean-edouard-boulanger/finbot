@@ -16,7 +16,7 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
 from finbot.core.errors import FinbotError
-from finbot.core.schema import BaseModel
+from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationFailure
 from finbot.providers.schema import (
@@ -28,7 +28,6 @@ from finbot.providers.schema import (
     AssetType,
     BalanceEntry,
     Balances,
-    CurrencyCode,
 )
 
 SchemaNamespace = "GoogleSheetsProvider"
@@ -72,6 +71,19 @@ class Api(ProviderBase):
         self._api: Optional[gspread.Client] = None
         self._sheet: Optional[gspread.Spreadsheet] = None
 
+    @staticmethod
+    def _make_asset(holding: dict[str, Any]) -> Asset:
+        underlying_ccy = holding.get("underlying_ccy")
+        return Asset(
+            name=holding["symbol"],
+            type=holding["type"],
+            asset_class=AssetClass[holding["asset_class"]],
+            asset_type=AssetType[holding["asset_type"]],
+            value=holding["value"],
+            provider_specific=_parse_provider_specific(holding.get("custom")),
+            underlying_ccy=underlying_ccy.upper() if underlying_ccy else None,
+        )
+
     def _iter_accounts(self) -> Generator[AssetsEntry, None, None]:
         assert self._sheet is not None
         sheet = LocalSheet(self._sheet.sheet1.get_all_values())
@@ -88,16 +100,7 @@ class Api(ProviderBase):
                     type=entry["type"],
                 ),
                 assets=[
-                    Asset(
-                        name=holding["symbol"],
-                        type=holding["type"],
-                        asset_class=AssetClass[holding["asset_class"]],
-                        asset_type=AssetType[holding["asset_type"]],
-                        value=holding["value"],
-                        provider_specific=_parse_provider_specific(holding.get("custom")),
-                    )
-                    for holding in holdings_table
-                    if holding["account"] == entry["identifier"]
+                    self._make_asset(holding) for holding in holdings_table if holding["account"] == entry["identifier"]
                 ],
             )
 
@@ -199,6 +202,7 @@ HOLDING_SCHEMA = Schema(
         "asset_type": {"type": str, "required": True},
         "units": {"type": optional(float), "required": True},
         "value": {"type": float, "required": True},
+        "underlying_ccy": {"type": str, "required": False},
         "custom": {"type": str, "required": False},
     },
 )
