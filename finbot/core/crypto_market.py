@@ -34,12 +34,12 @@ class CryptoMarket(object):
 
 
 def is_cryptocurrency_code(symbol: str) -> bool:
-    """Checks whether a symbol is a cryptocurrency code (i.e. 4 characters and prefixed with `Z`)
+    """Checks whether a symbol is a cryptocurrency code (i.e. currency code prefixed with `Z`)
     Examples:
         - ZBTC: True
         - EUR: False
     """
-    return len(symbol) == 4 and symbol.startswith(CRYPTOCURRENCY_CODE_PREFIX)
+    return len(symbol) > 3 and symbol.startswith(CRYPTOCURRENCY_CODE_PREFIX)
 
 
 def cryptocurrency_code(symbol: str) -> CurrencyCode:

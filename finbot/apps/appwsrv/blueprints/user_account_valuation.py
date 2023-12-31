@@ -17,6 +17,7 @@ from finbot.apps.appwsrv.db import db_session
 from finbot.apps.appwsrv.spec import spec
 from finbot.core import schema as core_schema
 from finbot.core import timeseries
+from finbot.core.crypto_market import is_cryptocurrency_code
 from finbot.core.errors import InvalidUserInput, MissingUserData
 from finbot.core.spec_tree import JWT_REQUIRED, ResponseSpec
 from finbot.core.utils import now_utc, some
@@ -185,11 +186,16 @@ def get_user_account_valuation_by_currency_exposure(
     valuation: dict[str, GroupValuationAgg] = {}
     for item in items:
         if item.item_type == SubAccountItemType.Asset:
-            currency_color = formatting_rules.get_currency_color(item.underlying_ccy) or "#393939"
+            underlying_ccy = item.underlying_ccy or "Unknown"
+            pretty_currency_name = underlying_ccy
+            if is_cryptocurrency_code(underlying_ccy):
+                pretty_currency_name = f"{underlying_ccy[1:]} (crypto)"
+            currency_color = formatting_rules.get_currency_color(underlying_ccy) or "#393939"
             valuation.setdefault(
-                item.underlying_ccy,
+                pretty_currency_name,
                 GroupValuationAgg(colour=currency_color),
             ).value += float(item.valuation)
+    print(valuation)
     return appwsrv_schema.GetUserAccountValuationByCurrencyExposureResponse(
         valuation=appwsrv_schema.ValuationByCurrencyExposure(
             valuation_ccy=valuation_ccy,

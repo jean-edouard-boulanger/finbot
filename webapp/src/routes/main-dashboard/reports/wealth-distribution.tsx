@@ -93,6 +93,20 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
           });
           break;
         }
+        case "currency exposure": {
+          const result = (
+            await userAccountsValuationApi!.getUserAccountValuationByCurrencyExposure(
+              { userAccountId },
+            )
+          ).valuation;
+          setValuation({
+            valuation_ccy: result.valuationCcy,
+            labels: result.byCurrencyExposure.map((entry) => entry.name),
+            values: result.byCurrencyExposure.map((entry) => entry.value),
+            colours: result.byCurrencyExposure.map((entry) => entry.colour),
+          });
+          break;
+        }
       }
     };
     fetch();
