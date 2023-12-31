@@ -1,6 +1,6 @@
 from typing import Any
 
-from finbot.core.schema import BaseModel
+from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.providers.base import ProviderBase
 from finbot.providers.schema import (
     Account,
@@ -9,7 +9,6 @@ from finbot.providers.schema import (
     AssetsEntry,
     BalanceEntry,
     Balances,
-    CurrencyCode,
 )
 
 

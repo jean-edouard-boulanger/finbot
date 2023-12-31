@@ -30,7 +30,7 @@ class LinkedAccountSnapshotRequest:
     provider_id: str
     credentials_data: dict[Any, Any]
     line_items: list[finbotwsrv_schema.LineItem]
-    user_account_currency: providers_schema.CurrencyCode
+    user_account_currency: core_schema.CurrencyCode
 
 
 @dataclass
@@ -254,6 +254,7 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
                     foreign=self.target_ccy,
                 ),
             ),
+            underlying_ccy=item.underlying_ccy if isinstance(item, providers_schema.Asset) else None,
             provider_specific_data=item.provider_specific,
         )
         sub_account_entry.items_entries.append(new_item)  # type: ignore
@@ -315,9 +316,20 @@ def get_credentials_data(
     )
 
 
+def is_linked_account_included_in_snapshot(
+    linked_account: model.LinkedAccount,
+    linked_account_ids: list[int] | None,
+) -> bool:
+    if linked_account.deleted or linked_account.frozen:
+        return False
+    if linked_account_ids and linked_account.id not in linked_account_ids:
+        return False
+    return True
+
+
 def take_raw_snapshot(
     user_account: model.UserAccount,
-    linked_account_ids: Optional[list[int]],
+    linked_account_ids: list[int] | None,
 ) -> list[LinkedAccountSnapshotResult]:
     with ThreadPoolExecutor(max_workers=4) as executor:
         logging.info("initializing accounts snapshot requests")
@@ -331,12 +343,10 @@ def take_raw_snapshot(
                     finbotwsrv_schema.LineItem.Assets,
                     finbotwsrv_schema.LineItem.Liabilities,
                 ],
-                user_account_currency=providers_schema.CurrencyCode(user_account.settings.valuation_ccy),
+                user_account_currency=core_schema.CurrencyCode(user_account.settings.valuation_ccy),
             )
             for linked_account in user_account.linked_accounts
-            if not linked_account.deleted
-            and not linked_account.frozen
-            and (not linked_account_ids or linked_account.id in linked_account_ids)
+            if is_linked_account_included_in_snapshot(linked_account, linked_account_ids)
         ]
 
         logging.info(f"starting snapshot with {len(requests)} request(s)")

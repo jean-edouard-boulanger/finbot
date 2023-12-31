@@ -4,8 +4,8 @@ from binance.client import Client as Binance
 from binance.exceptions import BinanceAPIException
 from pydantic.v1 import SecretStr
 
-from finbot.core.crypto_market import CryptoMarket
-from finbot.core.schema import BaseModel
+from finbot.core.crypto_market import CryptoMarket, cryptocurrency_code
+from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationFailure
 from finbot.providers.schema import (
@@ -17,7 +17,6 @@ from finbot.providers.schema import (
     AssetType,
     BalanceEntry,
     Balances,
-    CurrencyCode,
 )
 
 OWNERSHIP_UNITS_THRESHOLD = 0.00001
@@ -101,6 +100,7 @@ class Api(ProviderBase):
                             asset_type=AssetType.crypto_currency,
                             units=units,
                             value=value,
+                            underlying_ccy=cryptocurrency_code(symbol),
                         )
                         for symbol, units, value in self._iter_holdings()
                     ],

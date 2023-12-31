@@ -7,7 +7,7 @@ from typing import Any, Generator, cast
 import pgpy
 from pydantic.v1 import SecretStr
 
-from finbot.core.schema import BaseModel
+from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.core.utils import some
 from finbot.providers.base import ProviderBase
 from finbot.providers.interactive_brokers_uk.flex_report_parser import (
@@ -29,7 +29,6 @@ from finbot.providers.schema import (
     AssetType,
     BalanceEntry,
     Balances,
-    CurrencyCode,
 )
 
 
@@ -159,7 +158,7 @@ def _make_asset(
 ) -> Asset:
     asset_category = entry.asset_category
     if asset_category == "STK":
-        stock_currency = CurrencyCode(securities[entry.full_security_id].currency)
+        stock_currency = CurrencyCode(securities[entry.full_security_id].currency.upper())
         conversion_rate = (
             1.0 if stock_currency == account_currency else conversion_rates[(stock_currency, account_currency)]
         )
@@ -170,6 +169,7 @@ def _make_asset(
             asset_type=AssetType.stock,
             value=entry.close_quantity * entry.close_price * conversion_rate,
             units=entry.close_quantity,
+            underlying_ccy=stock_currency,
             provider_specific={
                 "Symbol": entry.symbol,
                 "Description": entry.description,

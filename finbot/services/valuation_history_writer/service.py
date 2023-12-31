@@ -32,11 +32,15 @@ def iter_sub_account_item_valuation_history_entries(
                 units=entry.item_units,
                 valuation=entry.value_snapshot_ccy,
                 valuation_sub_account_ccy=entry.value_sub_account_ccy,
+                underlying_ccy=entry.item_underlying_ccy,
                 provider_specific_data=entry.item_provider_specific_data,
             )
 
 
-def write_history_impl(snapshot_id: int, db_session: Session) -> schema.WriteHistoryResponse:
+def write_history_impl(
+    snapshot_id: int,
+    db_session: Session,
+) -> schema.WriteHistoryResponse:
     repo = repository.ReportRepository(db_session)
 
     logging.info("fetching snapshot_id={} metadata".format(snapshot_id))

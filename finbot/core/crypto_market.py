@@ -3,6 +3,9 @@ from functools import cache
 from pycoingecko import CoinGeckoAPI
 
 from finbot.core.errors import FinbotError
+from finbot.core.schema import CurrencyCode
+
+CRYPTOCURRENCY_CODE_PREFIX = "Z"
 
 
 class Error(FinbotError):
@@ -28,3 +31,20 @@ class CryptoMarket(object):
         if coin_id not in result:
             raise Error(f"no spot for {source_crypto_ccy} ({coin_id})")
         return float(result[coin_id][target_ccy])
+
+
+def is_cryptocurrency_code(symbol: str) -> bool:
+    """Checks whether a symbol is a cryptocurrency code (i.e. 4 characters and prefixed with `Z`)
+    Examples:
+        - ZBTC: True
+        - EUR: False
+    """
+    return len(symbol) == 4 and symbol.startswith(CRYPTOCURRENCY_CODE_PREFIX)
+
+
+def cryptocurrency_code(symbol: str) -> CurrencyCode:
+    """Converts an arbitrary symbol to a cryptocurrency code (i.e. BTC -> ZBTC)"""
+    symbol = symbol.upper()
+    if is_cryptocurrency_code(symbol):
+        return CurrencyCode(symbol)
+    return CurrencyCode(f"{CRYPTOCURRENCY_CODE_PREFIX}{symbol.upper()}")

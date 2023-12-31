@@ -3,7 +3,7 @@ from typing import Any, Optional
 from pydantic.v1 import SecretStr
 
 from finbot.core.qonto_api import QontoApi, Unauthorized
-from finbot.core.schema import BaseModel
+from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationFailure
 from finbot.providers.schema import (
@@ -13,7 +13,6 @@ from finbot.providers.schema import (
     AssetsEntry,
     BalanceEntry,
     Balances,
-    CurrencyCode,
 )
 
 AUTH_URL = "https://app.qonto.com/signin"

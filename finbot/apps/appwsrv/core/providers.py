@@ -5,7 +5,7 @@ from finbot.apps.finbotwsrv.client import FinbotwsrvClient
 from finbot.core import schema as core_schema
 from finbot.core.environment import is_plaid_configured, is_saxo_configured
 from finbot.core.errors import InvalidUserInput
-from finbot.providers.schema import CurrencyCode
+from finbot.core.schema import CurrencyCode
 
 logger = logging.getLogger(__name__)
 

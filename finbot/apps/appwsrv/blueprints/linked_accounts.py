@@ -17,11 +17,11 @@ from finbot.core import environment, secure
 from finbot.core.environment import is_plaid_configured
 from finbot.core.errors import InvalidOperation, InvalidUserInput
 from finbot.core.plaid import PlaidClient
+from finbot.core.schema import CurrencyCode
 from finbot.core.spec_tree import JWT_REQUIRED, ResponseSpec
 from finbot.core.utils import some
 from finbot.core.web_service import jwt_required, service_endpoint
 from finbot.model import LinkedAccount, repository
-from finbot.providers.schema import CurrencyCode
 
 logger = logging.getLogger(__name__)
 

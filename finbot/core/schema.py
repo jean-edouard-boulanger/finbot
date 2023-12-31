@@ -1,6 +1,6 @@
 import enum
 import traceback
-from typing import Annotated, Any, TypeAlias
+from typing import Annotated, Any, NewType, TypeAlias
 
 from pydantic.v1 import BaseModel as _BaseModel
 from pydantic.v1 import Extra, Field
@@ -12,6 +12,9 @@ from finbot.core.utils import fully_qualified_type_name
 class BaseModel(_BaseModel):
     class Config:
         extra = Extra.forbid
+
+
+CurrencyCode = NewType("CurrencyCode", str)
 
 
 class ValuationFrequency(str, enum.Enum):

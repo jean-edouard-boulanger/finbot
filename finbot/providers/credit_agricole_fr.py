@@ -4,7 +4,7 @@ from typing import Any, Generator, cast
 from playwright.sync_api import Locator
 from pydantic.v1 import SecretStr
 
-from finbot.core.schema import BaseModel
+from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.core.utils import raise_
 from finbot.providers.errors import AuthenticationFailure
 from finbot.providers.playwright_base import (
@@ -19,7 +19,6 @@ from finbot.providers.schema import (
     AssetsEntry,
     BalanceEntry,
     Balances,
-    CurrencyCode,
 )
 
 BASE_URL = "https://www.credit-agricole.fr/{region}/particulier/acceder-a-mes-comptes.html"

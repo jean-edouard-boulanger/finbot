@@ -164,6 +164,48 @@ def get_user_account_valuation_by_asset_type(
     )
 
 
+@user_account_valuation_api.route("/by/currency_exposure/", methods=["GET"])
+@jwt_required()
+@service_endpoint()
+@spec.validate(
+    resp=ResponseSpec(
+        HTTP_200=appwsrv_schema.GetUserAccountValuationByCurrencyExposureResponse,
+    ),
+    operation_id="get_user_account_valuation_by_currency_exposure",
+    security=JWT_REQUIRED,
+    tags=ENDPOINTS_TAGS,
+)
+def get_user_account_valuation_by_currency_exposure(
+    user_account_id: int,
+):
+    """Get user account valuation by currency exposure"""
+    last_history_entry = repository.get_last_history_entry(db_session, user_account_id)
+    items = repository.find_items_valuation(db_session, last_history_entry.id)
+    valuation_ccy = repository.get_user_account_settings(db_session, user_account_id).valuation_ccy
+    valuation: dict[str, GroupValuationAgg] = {}
+    for item in items:
+        if item.item_type == SubAccountItemType.Asset:
+            currency_color = formatting_rules.get_currency_color(item.underlying_ccy) or "#393939"
+            valuation.setdefault(
+                item.underlying_ccy,
+                GroupValuationAgg(colour=currency_color),
+            ).value += float(item.valuation)
+    return appwsrv_schema.GetUserAccountValuationByCurrencyExposureResponse(
+        valuation=appwsrv_schema.ValuationByCurrencyExposure(
+            valuation_ccy=valuation_ccy,
+            by_currency_exposure=[
+                appwsrv_schema.GroupValuation(
+                    name=group_name,
+                    value=group_valuation.value,
+                    colour=group_valuation.colour,
+                )
+                for (group_name, group_valuation) in sorted(valuation.items(), key=lambda entry: -1.0 * entry[1].value)
+                if group_valuation.value > 0.0
+            ],
+        )
+    )
+
+
 @user_account_valuation_api.route("/by/asset_class/", methods=["GET"])
 @jwt_required()
 @service_endpoint()

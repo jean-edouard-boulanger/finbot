@@ -11,13 +11,12 @@ from finbot.core import environment
 from finbot.core import schema as core_schema
 from finbot.core.db.session import Session
 from finbot.core.logging import configure_logging
-from finbot.core.schema import ApplicationErrorData
+from finbot.core.schema import ApplicationErrorData, CurrencyCode
 from finbot.core.spec_tree import ResponseSpec, SpecTree
 from finbot.core.web_service import CustomJsonProvider, service_endpoint
 from finbot.providers import ProviderBase
 from finbot.providers.errors import AuthenticationFailure
 from finbot.providers.factory import get_provider
-from finbot.providers.schema import CurrencyCode
 
 FINBOT_ENV = environment.get()
 configure_logging(FINBOT_ENV.desired_log_level)

@@ -18,7 +18,7 @@ from plaid.model.link_token_create_response import LinkTokenCreateResponse
 
 from finbot.core.environment import PlaidEnvironment, get_plaid_environment
 from finbot.core.errors import FinbotError
-from finbot.providers.schema import CurrencyCode
+from finbot.core.schema import CurrencyCode
 
 ALL_COUNTRY_CODES = [CountryCode(raw_code) for raw_code in ("GB", "US", "CA", "IE", "FR", "ES", "NL")]
 FINBOT_PLAID_CLIENT_NAME = "Finbot"

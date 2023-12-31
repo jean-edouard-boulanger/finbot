@@ -4,7 +4,7 @@ from playwright.sync_api import Locator, Page
 from price_parser import Price  # type: ignore
 from pydantic.v1 import SecretStr
 
-from finbot.core.schema import BaseModel
+from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.core.utils import raise_
 from finbot.providers.errors import AuthenticationFailure
 from finbot.providers.playwright_base import (
@@ -21,7 +21,6 @@ from finbot.providers.schema import (
     AssetType,
     BalanceEntry,
     Balances,
-    CurrencyCode,
 )
 
 AUTH_URL = "https://lwp.aegon.co.uk/targetplanUI/login"
@@ -106,6 +105,7 @@ class Api(PlaywrightProviderBase):
                             type="blended fund",
                             asset_class=AssetClass.multi_asset,
                             asset_type=AssetType.generic_fund,
+                            underlying_ccy=entry.account.iso_currency,
                             value=entry.balance,
                         )
                     ],

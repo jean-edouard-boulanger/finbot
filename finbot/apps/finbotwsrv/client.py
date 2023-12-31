@@ -1,7 +1,6 @@
 from finbot.apps.finbotwsrv import schema
-from finbot.core.schema import CredentialsPayloadType
+from finbot.core.schema import CredentialsPayloadType, CurrencyCode
 from finbot.core.web_service import WebServiceClient
-from finbot.providers.schema import CurrencyCode
 
 
 class FinbotwsrvClient(WebServiceClient):
