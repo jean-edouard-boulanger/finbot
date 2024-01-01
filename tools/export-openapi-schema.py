@@ -39,7 +39,7 @@ def create_argument_parser():
         "--show-api-version",
         action="store_true",
         default=False,
-        help="Show API version and exists"
+        help="Show API version and exists",
     )
     parser.add_argument(
         "-o",
