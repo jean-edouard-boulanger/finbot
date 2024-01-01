@@ -124,6 +124,9 @@ lint-schema:
 generate-ts-client:
 	docker-compose run --rm operator ./tools/generate-ts-client
 
+bash:
+	docker-compose run --rm operator bash
+
 lint-py: mypy flakes-check black-check isort-check banned-keywords-check-py unit-tests-py
 lint-ts: eslint tsc-build-check prettier-check-ts banned-keywords-check-ts
 lint-all: lint-py lint-ts lint-sh

@@ -284,12 +284,20 @@ def dispatch_snapshot_entry(
             line_items=snap_request.line_items,
             user_account_currency=snap_request.user_account_currency,
         )
+        if error := account_snapshot.error:
+            logging.warning(
+                f"error while taking snapshot for linked_account_id={snap_request.linked_account_id}'"
+                f" provider_id={snap_request.provider_id} error_code={error.error_code}"
+                f" exception_type={error.exception_type} user_message: {error.user_message}"
+                f" debug_message: {error.debug_message}"
+                f" trace:\n{error.trace}"
+            )
+            return LinkedAccountSnapshotResult(snap_request, account_snapshot.error)
 
         logging.info(
             f"snapshot complete for for linked_account_id={snap_request.linked_account_id}'"
             f" provider_id={snap_request.provider_id}"
         )
-
         return LinkedAccountSnapshotResult(snap_request, account_snapshot)
     except Exception as e:
         logging.warning(

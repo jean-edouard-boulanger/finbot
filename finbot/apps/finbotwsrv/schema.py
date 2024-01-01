@@ -64,3 +64,4 @@ class GetFinancialDataRequest(BaseModel):
 
 class GetFinancialDataResponse(BaseModel):
     financial_data: list[LineItemResults]
+    error: ApplicationErrorData | None = None
