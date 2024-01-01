@@ -3,7 +3,9 @@ set -e
 workdir=$(mktemp -d)
 
 mkdir -p "${workdir}/schema"
-./tools/export-openapi-schema.py -s appwsrv > "${workdir}/schema/appwsrv.openapi.json"
+service_name=appwsrv
+api_version=$(./tools/export-openapi-schema.py -s "${service_name}" --show-api-version)
+./tools/export-openapi-schema.py -s "${service_name}" > "${workdir}/schema/appwsrv.openapi.json"
 
 openapi-generator-cli generate \
   -i "${workdir}/schema/appwsrv.openapi.json" \
@@ -19,3 +21,6 @@ mv "${workdir}/output/index.ts" "${app_client_dir}"
 mv "${workdir}/output/runtime.ts" "${app_client_dir}"
 mv "${workdir}/output/apis/" "${app_client_dir}"
 mv "${workdir}/output/models/" "${app_client_dir}"
+
+find "${app_client_dir}" -name '*.ts' -print0 | xargs -0 sed -i '/The version of the OpenAPI document/d'
+echo "/* The version of the OpenAPI document: v${api_version} */" >> "${app_client_dir}/index.ts"

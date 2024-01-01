@@ -3,6 +3,8 @@ import json
 from argparse import ArgumentParser
 from pathlib import Path
 
+from finbot._version import __api_version__
+
 
 def export_appwsrv_openapi_schema():
     from finbot.apps.appwsrv import appwsrv
@@ -34,6 +36,12 @@ def create_argument_parser():
         required=True,
     )
     parser.add_argument(
+        "--show-api-version",
+        action="store_true",
+        default=False,
+        help="Show API version and exists"
+    )
+    parser.add_argument(
         "-o",
         "--output-file-path",
         type=Path,
@@ -44,6 +52,9 @@ def create_argument_parser():
 
 def main():
     settings = create_argument_parser().parse_args()
+    if settings.show_api_version:
+        print(__api_version__)
+        return
     schema = json.dumps(SCHEMA_EXPORTERS[settings.service](), indent=4)
     if settings.output_file_path:
         settings.output_file_path.expanduser().absolute().write_text(schema)
