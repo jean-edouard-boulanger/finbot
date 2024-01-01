@@ -1,24 +1,15 @@
-import enum
 from collections import defaultdict
-from typing import (
-    Any,
-    Callable,
-    Generator,
-    Iterator,
-    Optional,
-    Type,
-    TypedDict,
-    TypeVar,
-    Union,
-)
+from dataclasses import dataclass
+from typing import Any, Generator, Literal, TypedDict, TypeVar, cast
 
 import gspread
+from gspread.utils import rowcol_to_a1
 from oauth2client.service_account import ServiceAccountCredentials
+from pydantic.v1 import ValidationError as PydanticValidationError
 
-from finbot.core.errors import FinbotError
 from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.providers.base import ProviderBase
-from finbot.providers.errors import AuthenticationFailure
+from finbot.providers.errors import AuthenticationFailure, ProviderError
 from finbot.providers.schema import (
     Account,
     Asset,
@@ -33,7 +24,16 @@ from finbot.providers.schema import (
 SchemaNamespace = "GoogleSheetsProvider"
 
 
-class Error(FinbotError):
+ACCOUNTS_TABLE_MARKER = "ACCOUNTS"
+HOLDINGS_TABLE_MARKER = "HOLDINGS"
+
+
+class Error(ProviderError):
+    def __init__(self, error_message: str):
+        super().__init__(error_message, "PGS1")
+
+
+class InvalidSheetData(Error):
     def __init__(self, error_message: str):
         super().__init__(error_message)
 
@@ -56,6 +56,32 @@ class Credentials(BaseModel):
     google_api_credentials: GoogleApiCredentials
 
 
+TableSchemaT = TypeVar("TableSchemaT", bound=BaseModel)
+
+
+class AccountsTableSchema(BaseModel):
+    identifier: str
+    description: str
+    currency: str
+    type: Literal["cash", "credit", "investment"]
+
+
+class HoldingsTableSchema(BaseModel):
+    account: str
+    symbol: str
+    type: str | None
+    asset_class: AssetClass
+    asset_type: AssetType
+    units: float | None
+    value: float
+    underlying_ccy: str | None
+    custom: str | None
+
+    @property
+    def provider_specific(self) -> dict[str, Any] | None:
+        return _parse_provider_specific(self.custom)
+
+
 class Api(ProviderBase):
     description = "Google sheets"
     credentials_type = Credentials
@@ -68,49 +94,47 @@ class Api(ProviderBase):
     ) -> None:
         super().__init__(user_account_currency=user_account_currency, **kwargs)
         self._credentials = credentials
-        self._api: Optional[gspread.Client] = None
-        self._sheet: Optional[gspread.Spreadsheet] = None
+        self._api: gspread.Client | None = None
+        self._sheet: gspread.Spreadsheet | None = None
 
     @staticmethod
-    def _make_asset(holding: dict[str, Any]) -> Asset:
-        underlying_ccy = holding.get("underlying_ccy")
+    def _make_asset(holding: HoldingsTableSchema) -> Asset:
         return Asset(
-            name=holding["symbol"],
-            type=holding["type"],
-            asset_class=AssetClass[holding["asset_class"]],
-            asset_type=AssetType[holding["asset_type"]],
-            value=holding["value"],
-            provider_specific=_parse_provider_specific(holding.get("custom")),
-            underlying_ccy=underlying_ccy.upper() if underlying_ccy else None,
+            name=holding.symbol,
+            type=holding.type or f"{holding.asset_class.value} {holding.asset_type.value}",
+            asset_class=holding.asset_class,
+            asset_type=holding.asset_type,
+            value=holding.value,
+            provider_specific=holding.provider_specific,
+            underlying_ccy=CurrencyCode(holding.underlying_ccy.upper()) if holding.underlying_ccy else None,
         )
 
     def _iter_accounts(self) -> Generator[AssetsEntry, None, None]:
         assert self._sheet is not None
         sheet = LocalSheet(self._sheet.sheet1.get_all_values())
 
-        accounts_table = _get_table(sheet, ACCOUNT_SCHEMA)
-        holdings_table = _get_table(sheet, HOLDING_SCHEMA)
+        accounts_table = _get_table(sheet, ACCOUNTS_TABLE_MARKER, AccountsTableSchema)
+        holdings_table = _get_table(sheet, HOLDINGS_TABLE_MARKER, HoldingsTableSchema)
 
-        for entry in accounts_table:
+        for account in accounts_table:
             yield AssetsEntry(
                 account=Account(
-                    id=entry["identifier"],
-                    name=entry["description"],
-                    iso_currency=entry["currency"],
-                    type=entry["type"],
+                    id=account.identifier,
+                    name=account.description,
+                    iso_currency=CurrencyCode(account.currency.upper()),
+                    type=account.type,
                 ),
                 assets=[
-                    self._make_asset(holding) for holding in holdings_table if holding["account"] == entry["identifier"]
+                    self._make_asset(holding) for holding in holdings_table if holding.account == account.identifier
                 ],
             )
 
     def initialize(self) -> None:
         try:
-            scope = ["https://www.googleapis.com/auth/spreadsheets"]
             self._api = gspread.authorize(
                 ServiceAccountCredentials.from_json_keyfile_dict(
                     keyfile_dict=self._credentials.google_api_credentials,
-                    scopes=scope,
+                    scopes=["https://www.googleapis.com/auth/spreadsheets"],
                 )
             )
             self._sheet = self._api.open_by_key(self._credentials.sheet_key)
@@ -132,96 +156,24 @@ class Api(ProviderBase):
         return Assets(accounts=list(self._iter_accounts()))
 
 
-class AttributeDef(TypedDict):
-    type: Union[Callable[[Optional[str]], Any], Type[Any]]
-    required: bool
+@dataclass(frozen=True)
+class Cell(object):
+    row: int
+    col: int
+    val: str | None
 
-
-class Schema(object):
-    def __init__(self, type_identifier: str, attributes: dict[str, AttributeDef]) -> None:
-        self.type_identifier = type_identifier
-        self.attributes = attributes
-
-    def get_type(self, attr: str) -> Callable[[Optional[str]], Any]:
-        return self.attributes[attr]["type"]
-
-    def has_attribute(self, attr: str) -> bool:
-        return attr in self.attributes
-
-    def is_required(self, attr: str) -> bool:
-        return attr in self.required_attributes
+    def __post_init__(self) -> None:
+        assert self.row >= 0 and self.col >= 0, f"invalid cell coordinates: ({self.row}, self.col)"
 
     @property
-    def required_attributes(self) -> set[str]:
-        return {attribute for (attribute, entry) in self.attributes.items() if entry.get("required", False)}
-
-
-class ValidationError(RuntimeError):
-    pass
-
-
-def union(*values: str) -> Callable[[Optional[str]], Optional[str]]:
-    def impl(value: Optional[str]) -> Optional[str]:
-        if value not in values:
-            raise ValidationError(f"should be either {', '.join(values)}")
-        return value
-
-    return impl
-
-
-T = TypeVar("T")
-
-
-def optional(t: type[T]) -> Callable[[Optional[str]], Optional[T]]:
-    def impl(value: Optional[str]) -> Optional[T]:
-        if value is None or value.lower() in ("", "null", "none", "n/a"):
-            return None
-        return t(value)  # type: ignore
-
-    return impl
-
-
-ACCOUNT_SCHEMA = Schema(
-    type_identifier="ACCOUNTS",
-    attributes={
-        "identifier": {"type": str, "required": True},
-        "description": {"type": str, "required": True},
-        "currency": {"type": str, "required": True},
-        "type": {"type": union("cash", "credit", "investment"), "required": True},
-    },
-)
-
-
-HOLDING_SCHEMA = Schema(
-    type_identifier="HOLDINGS",
-    attributes={
-        "account": {"type": str, "required": True},
-        "symbol": {"type": str, "required": True},
-        "type": {"type": str, "required": True},
-        "asset_class": {"type": str, "required": True},
-        "asset_type": {"type": str, "required": True},
-        "units": {"type": optional(float), "required": True},
-        "value": {"type": float, "required": True},
-        "underlying_ccy": {"type": str, "required": False},
-        "custom": {"type": str, "required": False},
-    },
-)
-
-
-class Cell(object):
-    def __init__(self, row: int, col: int, val: Optional[str]):
-        self.row = row
-        self.col = col
-        self.val = val
-
-    def __str__(self) -> str:
-        return f"Cell(row={self.row+1}, col={self.col+1}, val={self.val})"
+    def pretty_loc(self) -> str:
+        return cast(str, rowcol_to_a1(self.row + 1, self.col + 1))
 
 
 class LocalSheet(object):
     def __init__(self, grid: list[list[str]]) -> None:
         self.grid = grid
-        self.index: defaultdict[Optional[str], list[Cell]] = defaultdict(list)
+        self.index: defaultdict[str | None, list[Cell]] = defaultdict(list)
         for cell in self._iter_cells():
             self.index[cell.val].append(cell)
 
@@ -233,17 +185,17 @@ class LocalSheet(object):
     def cols(self) -> int:
         return len(self.grid[0])
 
-    def _iter_cells(self) -> Iterator[Cell]:
+    def _iter_cells(self) -> Generator[Cell, None, None]:
         for row, cols in enumerate(self.grid):
             for col, val in enumerate(cols):
                 yield Cell(row, col, val)
 
-    def iter_row(self, from_cell: Cell) -> Iterator[Cell]:
+    def iter_row_cells(self, from_cell: Cell) -> Generator[Cell, None, None]:
         row = self.grid[from_cell.row]
         for col in range(from_cell.col, len(row)):
             yield Cell(from_cell.row, col, row[col])
 
-    def iter_col(self, from_cell: Cell) -> Iterator[Cell]:
+    def iter_col_cells(self, from_cell: Cell) -> Generator[Cell, None, None]:
         for row in range(from_cell.row, len(self.grid)):
             yield Cell(row, from_cell.col, self.grid[row][from_cell.col])
 
@@ -260,62 +212,61 @@ class LocalSheet(object):
     def find_all(self, val: str) -> list[Cell]:
         return self.index[val]
 
-    def find(self, val: str) -> Optional[Cell]:
-        all_cells = self.find_all(val)
-        if len(all_cells) < 1:
-            return None
-        return all_cells[0]
 
-
-def _extract_generic_table(sheet: LocalSheet, marker_cell: Cell, schema: Schema) -> list[dict[Any, Any]]:
+def _extract_generic_table(
+    sheet: LocalSheet,
+    marker_cell: Cell,
+    schema: type[TableSchemaT],
+) -> list[TableSchemaT]:
     header_start_cell = sheet.get_cell(marker_cell.row + 1, marker_cell.col)
     header = {}
-    for cell in sheet.iter_row(from_cell=header_start_cell):
-        if cell.val and schema.has_attribute(cell.val):
+    for cell in sheet.iter_row_cells(from_cell=header_start_cell):
+        if cell.val and cell.val in schema.__fields__:
             header[cell.val] = cell.col
-    missing_attributes = schema.required_attributes.difference(set(header.keys()))
-    if len(missing_attributes) > 0:
-        raise Error(
-            f"missing attribute(s) '{','.join(missing_attributes)}'" f" in header for '{schema.type_identifier}'"
-        )
-
-    records = []
+    records: list[TableSchemaT] = []
     data_start_cell = sheet.get_cell(header_start_cell.row + 1, marker_cell.col)
-    for cell in sheet.iter_col(from_cell=data_start_cell):
+    for cell in sheet.iter_col_cells(from_cell=data_start_cell):
         if not cell.val:
             break
-        current_record: dict[str, Any] = {}
         current_row = cell.row
-        for attr, data_col in header.items():
-            raw_value = sheet.get_cell(current_row, data_col).val
-            if raw_value is None and schema.is_required(attr):
-                raise Error(f"cell for required attribute '{schema.type_identifier}.{attr}' is empty")
-            converter = schema.get_type(attr)
-            try:
-                current_record[attr] = converter(raw_value)
-            except ValueError:
-                raise Error(
-                    f"unable to convert value '{raw_value}' to type '{converter.__name__}' "
-                    f"for attribute '{schema.type_identifier}.{attr}'"
-                )
-            except ValidationError as e:
-                raise Error(
-                    f"unable to convert value '{raw_value}' to type '{converter.__name__}' "
-                    f"for attribute '{schema.type_identifier}.{attr}' ({e})"
-                )
-        missing_attributes = schema.required_attributes.difference(set(current_record.keys()))
-        if len(missing_attributes) > 0:
-            raise Error(f"record is missing required attribute(s) '{', '.join(missing_attributes)}'")
-        records.append(current_record)
+        record_payload = {attr: sheet.get_cell(current_row, data_col_idx).val for attr, data_col_idx in header.items()}
+        try:
+            record = schema(**record_payload)
+        except PydanticValidationError as e:
+            pretty_validation_error = _format_record_validation_error(e)
+            pretty_row = ";".join(cell.val or "" for cell in sheet.iter_row_cells(cell))
+            pretty_entry = ", ".join(f"{key}='{val}'" for (key, val) in record_payload.items())
+            raise InvalidSheetData(
+                f"Invalid '{marker_cell.val}' table entry ({pretty_entry}) at row {current_row + 1} ({pretty_row}):"
+                f" {pretty_validation_error}"
+            ) from e
+        records.append(record)
     return records
 
 
-def _get_table(sheet: LocalSheet, schema: Schema) -> list[dict[Any, Any]]:
-    marker = schema.type_identifier
-    marker_cell = sheet.find(marker)
-    if not marker_cell:
-        raise Error(f"unable to find '{marker}' cell")
-    return _extract_generic_table(sheet, marker_cell, schema)
+def _format_record_validation_error(e: PydanticValidationError) -> str:
+    pretty_errors = []
+    for error in e.errors():
+        pretty_loc = ", ".join(f"'{entry}'" for entry in error["loc"])
+        pretty_errors.append(f"{pretty_loc} {error["msg"]}")
+    return ", ".join(pretty_errors)
+
+
+def _get_table(
+    sheet: LocalSheet,
+    table_marker: str,
+    schema: type[TableSchemaT],
+) -> list[TableSchemaT]:
+    marker_cells = sheet.find_all(table_marker)
+    if not marker_cells:
+        raise InvalidSheetData(f"Unable to find cell with text '{table_marker}' in the sheet")
+    if len(marker_cells) > 1:
+        pretty_cells = ", ".join(cell.pretty_loc for cell in marker_cells)
+        raise InvalidSheetData(
+            f"Found multiple cells ({pretty_cells}) with text '{table_marker}' in the sheet."
+            f" Only one table of type '{table_marker}' was expected."
+        )
+    return _extract_generic_table(sheet, marker_cells[0], schema)
 
 
 def _parse_provider_specific(data: str | None) -> dict[str, Any] | None:
@@ -327,6 +278,3 @@ def _parse_provider_specific(data: str | None) -> dict[str, Any] | None:
         key, value = entry.split("=")
         provider_specific[key.strip()] = value.strip()
     return provider_specific
-
-
-EnumType = TypeVar("EnumType", bound=enum.Enum)
