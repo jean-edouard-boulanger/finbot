@@ -1,5 +1,6 @@
+import json
 from dataclasses import dataclass
-from typing import Literal, Optional
+from typing import Literal, Optional, Self
 
 import plaid
 from plaid.api import plaid_api
@@ -25,7 +26,28 @@ FINBOT_PLAID_CLIENT_NAME = "Finbot"
 
 
 class PlaidClientError(FinbotError):
-    pass
+    def __init__(
+        self,
+        error_message: str,
+        error_type: str | None,
+        error_code: str | None,
+        request_id: str | None,
+    ):
+        super().__init__(error_message)
+        self.error_type = error_type
+        self.error_code = error_code
+        self.request_id = request_id
+
+    @classmethod
+    def from_api_exception(cls, e: plaid.ApiException) -> Self:
+        body = json.loads(e.body) if e.body else {}
+        display_message = body.get("display_message")
+        return cls(
+            error_message=display_message or body.get("error_message", str(e)),
+            error_type=body.get("error_type"),
+            error_code=body.get("error_code"),
+            request_id=body.get("request_id"),
+        )
 
 
 @dataclass(frozen=True)
@@ -105,7 +127,7 @@ class PlaidClient(object):
                 item_id=response.item_id,
             )
         except plaid.ApiException as e:
-            raise PlaidClientError(f"failure while exchanging public Plaid token: {e}") from e
+            raise PlaidClientError.from_api_exception(e)
 
     def create_link_token(self, access_token: str) -> LinkToken:
         try:
@@ -122,7 +144,7 @@ class PlaidClient(object):
             )
             return LinkToken(link_token=response.link_token)
         except plaid.ApiException as e:
-            raise PlaidClientError(f"failure while creating Plaid link token: {e}") from e
+            raise PlaidClientError.from_api_exception(e)
 
     def get_accounts_data(self, access_token: str) -> list[AccountData]:
         try:
@@ -139,4 +161,4 @@ class PlaidClient(object):
                 for account_data in response.accounts
             ]
         except plaid.ApiException as e:
-            raise PlaidClientError(f"failure while getting Plaid accounts: {e}") from e
+            raise PlaidClientError.from_api_exception(e)

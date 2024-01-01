@@ -93,13 +93,19 @@ def healthy() -> core_schema.HealthResponse:
 def get_financial_data(
     json: schema.GetFinancialDataRequest,
 ) -> schema.GetFinancialDataResponse:
-    provider_type = get_provider(json.provider_id)
-    return get_financial_data_impl(
-        provider_type=provider_type,
-        authentication_payload=json.credentials,
-        line_items=json.items,
-        user_account_currency=json.user_account_currency,
-    )
+    try:
+        provider_type = get_provider(json.provider_id)
+        return get_financial_data_impl(
+            provider_type=provider_type,
+            authentication_payload=json.credentials,
+            line_items=json.items,
+            user_account_currency=json.user_account_currency,
+        )
+    except Exception as e:
+        return schema.GetFinancialDataResponse(
+            financial_data=[],
+            error=ApplicationErrorData.from_exception(e),
+        )
 
 
 @app.route("/validate_credentials/", methods=["POST"])

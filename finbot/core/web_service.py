@@ -119,14 +119,7 @@ class WebServiceClient(object):
             response.raise_for_status()
         except requests.exceptions.RequestException as e:
             raise WebServiceClientError(f"error while sending request to {resource}: {e}")
-        response_payload = orjson.loads(response.content)
-        if "error" in response_payload:
-            error = ApplicationErrorResponse.parse_obj(response_payload).error
-            raise WebServiceApplicationError(
-                f"received error response while calling {resource}: {error.user_message}",
-                error=error,
-            )
-        return response_payload
+        return orjson.loads(response.content)
 
     def get(self, route: str) -> Any:
         return self.send_request("get", route)
