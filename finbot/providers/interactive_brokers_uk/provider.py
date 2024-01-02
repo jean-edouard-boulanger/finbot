@@ -1,7 +1,6 @@
 import base64
 import logging
 from contextlib import contextmanager
-from functools import cached_property
 from typing import Any, Generator, cast
 
 import pgpy
@@ -9,26 +8,22 @@ from pydantic.v1 import SecretStr
 
 from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.core.utils import some
+from finbot.providers import schema as providers_schema
 from finbot.providers.base import ProviderBase
-from finbot.providers.interactive_brokers_uk.flex_report_parser import (
+from finbot.providers.interactive_brokers_uk.flex_report.parser import (
+    parse_flex_report_payload,
+)
+from finbot.providers.interactive_brokers_uk.flex_report.schema import (
+    AccountInformation,
+    FlexReport,
     FlexStatement,
+    FlexStatementEntries,
     MTMPerformanceSummaryUnderlying,
     SecurityInfo,
-    parse_flex_report_payload,
 )
 from finbot.providers.interactive_brokers_uk.intake import (
     IntakeMethod,
     load_latest_report_payload,
-)
-from finbot.providers.schema import (
-    Account,
-    Asset,
-    AssetClass,
-    Assets,
-    AssetsEntry,
-    AssetType,
-    BalanceEntry,
-    Balances,
 )
 
 
@@ -60,11 +55,12 @@ class Api(ProviderBase):
     def __init__(self, credentials: Credentials, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self._credentials = credentials
-        self.__statement: FlexStatement | None = None
+        self.__report: FlexReportWrapper | None = None
 
     def initialize(self) -> None:
         raw_report_payload = load_latest_report_payload(
-            self._credentials.report_file_pattern, self._credentials.intake_method
+            self._credentials.report_file_pattern,
+            self._credentials.intake_method,
         )
         if self._credentials.pgp_key:
             with self._credentials.pgp_key.unlocked_pgp_key() as pgp_key:
@@ -74,79 +70,91 @@ class Api(ProviderBase):
                 )
         else:
             report_payload = raw_report_payload.decode()
-        report = parse_flex_report_payload(report_payload)
-        assert len(report.statements) == 1
-        self.__statement = report.statements[0]
+        self.__report = FlexReportWrapper(parse_flex_report_payload(report_payload))
 
-    @property
-    def _statement(self) -> FlexStatement:
-        return some(self.__statement)
+    def get_balances(self) -> providers_schema.Balances:
+        return providers_schema.Balances(
+            accounts=[
+                statement.get_balance(self.user_account_currency) for statement in some(self.__report).statements
+            ],
+        )
 
-    @cached_property
-    def _account(self) -> Account:
-        account_info = some(self._statement.entries.account_information)
-        return Account(
-            id=account_info.account_id,
-            name=account_info.alias or account_info.account_id,
-            iso_currency=CurrencyCode(account_info.currency),
+    def get_assets(self) -> providers_schema.Assets:
+        return providers_schema.Assets(
+            accounts=[statement.get_assets(self.user_account_currency) for statement in some(self.__report).statements],
+        )
+
+
+class FlexStatementWrapper:
+    def __init__(self, statement: FlexStatement):
+        self.statement = statement
+        self.conversion_rates = _make_conversion_rates_mapping(statement)
+        self.securities = _make_securities_mapping(statement)
+        self.account = providers_schema.Account(
+            id=self.account_id,
+            name=self.account_name,
+            iso_currency=self.account_currency,
             type="investment",
         )
 
-    @cached_property
-    def _conversion_rates(self) -> dict[tuple[CurrencyCode, CurrencyCode], float]:
-        entries = some(self._statement.entries.conversion_rates).entries
-        return {(CurrencyCode(entry.from_ccy), CurrencyCode(entry.to_ccy)): entry.rate for entry in entries}
+    @property
+    def account_id(self) -> str:
+        return self.statement.account_id
 
-    @cached_property
-    def _securities(self) -> dict[str, SecurityInfo]:
-        entries = some(self._statement.entries.securities_info).entries
-        return {entry.full_security_id: entry for entry in entries}
+    @property
+    def entries(self) -> FlexStatementEntries:
+        return self.statement.entries
 
-    def get_balances(self) -> Balances:
-        assert self._statement.entries.mtm_performance_summary_in_base is not None
-        conversion_rates = self._conversion_rates
-        securities = self._securities
-        portfolio_entries = self._statement.entries.mtm_performance_summary_in_base.entries
-        return Balances(
-            accounts=[
-                BalanceEntry(
-                    account=self._account,
-                    balance=sum(
-                        _make_asset(
-                            entry=entry,
-                            conversion_rates=conversion_rates,
-                            securities=securities,
-                            account_currency=self._account.iso_currency,
-                            user_account_currency=self.user_account_currency,
-                        ).value
-                        for entry in portfolio_entries
-                    ),
-                )
-            ]
+    @property
+    def account_currency(self) -> CurrencyCode:
+        return CurrencyCode(self.account_information.currency)
+
+    @property
+    def account_information(self) -> AccountInformation:
+        return some(self.entries.account_information)
+
+    @property
+    def account_name(self) -> str:
+        if self.account_information.alias:
+            return f"{self.account_information.alias} ({self.account_id})"
+        return self.account_id
+
+    def get_balance(self, user_account_currency: CurrencyCode) -> providers_schema.BalanceEntry:
+        assert self.entries.mtm_performance_summary_in_base is not None
+        return providers_schema.BalanceEntry(
+            account=self.account,
+            balance=sum(
+                _make_asset(
+                    entry=entry,
+                    conversion_rates=self.conversion_rates,
+                    securities=self.securities,
+                    account_currency=self.account.iso_currency,
+                    user_account_currency=user_account_currency,
+                ).value
+                for entry in some(self.entries.mtm_performance_summary_in_base).entries
+            ),
         )
 
-    def get_assets(self) -> Assets:
-        assert self._statement.entries.mtm_performance_summary_in_base is not None
-        conversion_rates = self._conversion_rates
-        securities = self._securities
-        portfolio_entries = self._statement.entries.mtm_performance_summary_in_base.entries
-        return Assets(
-            accounts=[
-                AssetsEntry(
-                    account=self._account,
-                    assets=[
-                        _make_asset(
-                            entry=entry,
-                            conversion_rates=conversion_rates,
-                            securities=securities,
-                            account_currency=self._account.iso_currency,
-                            user_account_currency=self.user_account_currency,
-                        )
-                        for entry in portfolio_entries
-                    ],
+    def get_assets(self, user_account_currency: CurrencyCode) -> providers_schema.AssetsEntry:
+        return providers_schema.AssetsEntry(
+            account=self.account,
+            assets=[
+                _make_asset(
+                    entry=entry,
+                    conversion_rates=self.conversion_rates,
+                    securities=self.securities,
+                    account_currency=self.account_currency,
+                    user_account_currency=user_account_currency,
                 )
-            ]
+                for entry in some(self.entries.mtm_performance_summary_in_base).entries
+            ],
         )
+
+
+class FlexReportWrapper:
+    def __init__(self, report: FlexReport):
+        self.report = report
+        self.statements = [FlexStatementWrapper(entry) for entry in report.statements]
 
 
 def _make_asset(
@@ -155,18 +163,18 @@ def _make_asset(
     securities: dict[str, SecurityInfo],
     account_currency: CurrencyCode,
     user_account_currency: CurrencyCode,
-) -> Asset:
+) -> providers_schema.Asset:
     asset_category = entry.asset_category
     if asset_category == "STK":
         stock_currency = CurrencyCode(securities[entry.full_security_id].currency.upper())
         conversion_rate = (
             1.0 if stock_currency == account_currency else conversion_rates[(stock_currency, account_currency)]
         )
-        return Asset(
+        return providers_schema.Asset(
             name=f"{entry.symbol} - {entry.description}",
             type="equity",
-            asset_class=AssetClass.equities,
-            asset_type=AssetType.stock,
+            asset_class=providers_schema.AssetClass.equities,
+            asset_type=providers_schema.AssetType.stock,
             value=entry.close_quantity * entry.close_price * conversion_rate,
             units=entry.close_quantity,
             underlying_ccy=stock_currency,
@@ -182,13 +190,23 @@ def _make_asset(
         )
     elif asset_category == "CASH":
         currency = CurrencyCode(entry.symbol)
-        return Asset.cash(
+        return providers_schema.Asset.cash(
             currency=currency,
             is_domestic=currency == user_account_currency,
             amount=entry.close_quantity * entry.close_price,
             provider_specific={"Report date": entry.report_date.strftime("%Y-%b-%d")},
         )
     raise ValueError(f"unknown asset category: {asset_category}")
+
+
+def _make_conversion_rates_mapping(statement: FlexStatement) -> dict[tuple[CurrencyCode, CurrencyCode], float]:
+    entries = some(statement.entries.conversion_rates).entries
+    return {(CurrencyCode(entry.from_ccy), CurrencyCode(entry.to_ccy)): entry.rate for entry in entries}
+
+
+def _make_securities_mapping(statement: FlexStatement) -> dict[str, SecurityInfo]:
+    entries = some(statement.entries.securities_info).entries
+    return {entry.full_security_id: entry for entry in entries}
 
 
 def _attempt_decrypt_flex_report_payload(payload: bytes, pgp_key: pgpy.PGPKey) -> str:

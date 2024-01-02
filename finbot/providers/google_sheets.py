@@ -8,8 +8,9 @@ from oauth2client.service_account import ServiceAccountCredentials
 from pydantic.v1 import ValidationError as PydanticValidationError
 
 from finbot.core.schema import BaseModel, CurrencyCode
+from finbot.core.utils import some
 from finbot.providers.base import ProviderBase
-from finbot.providers.errors import AuthenticationFailure, ProviderError
+from finbot.providers.errors import AuthenticationError, UserConfigurationError
 from finbot.providers.schema import (
     Account,
     Asset,
@@ -28,14 +29,8 @@ ACCOUNTS_TABLE_MARKER = "ACCOUNTS"
 HOLDINGS_TABLE_MARKER = "HOLDINGS"
 
 
-class Error(ProviderError):
-    def __init__(self, error_message: str):
-        super().__init__(error_message, "PGS1")
-
-
-class InvalidSheetData(Error):
-    def __init__(self, error_message: str):
-        super().__init__(error_message)
+class InvalidSheetData(UserConfigurationError):
+    pass
 
 
 class GoogleApiCredentials(TypedDict):
@@ -139,7 +134,7 @@ class Api(ProviderBase):
             )
             self._sheet = self._api.open_by_key(self._credentials.sheet_key)
         except Exception as e:
-            raise AuthenticationFailure(str(e)) from e
+            raise AuthenticationError(str(e)) from e
 
     def get_balances(self) -> Balances:
         return Balances(
@@ -220,9 +215,17 @@ def _extract_generic_table(
 ) -> list[TableSchemaT]:
     header_start_cell = sheet.get_cell(marker_cell.row + 1, marker_cell.col)
     header = {}
+    table_type = some(marker_cell.val)
     for cell in sheet.iter_row_cells(from_cell=header_start_cell):
-        if cell.val and cell.val in schema.__fields__:
-            header[cell.val] = cell.col
+        if attribute := cell.val:
+            if attribute in schema.__fields__:
+                header[attribute] = cell.col
+            else:
+                pretty_row = _format_row(sheet, header_start_cell)
+                raise InvalidSheetData(
+                    f"Invalid '{table_type}' table header at row {header_start_cell.row + 1} ({pretty_row}):"
+                    f" unknown attribute '{attribute}'. Table schema: {_format_table_schema(schema)}."
+                )
     records: list[TableSchemaT] = []
     data_start_cell = sheet.get_cell(header_start_cell.row + 1, marker_cell.col)
     for cell in sheet.iter_col_cells(from_cell=data_start_cell):
@@ -234,14 +237,25 @@ def _extract_generic_table(
             record = schema(**record_payload)
         except PydanticValidationError as e:
             pretty_validation_error = _format_record_validation_error(e)
-            pretty_row = ";".join(cell.val or "" for cell in sheet.iter_row_cells(cell))
+            pretty_row = _format_row(sheet, cell)
             pretty_entry = ", ".join(f"{key}='{val}'" for (key, val) in record_payload.items())
             raise InvalidSheetData(
-                f"Invalid '{marker_cell.val}' table entry ({pretty_entry}) at row {current_row + 1} ({pretty_row}):"
-                f" {pretty_validation_error}"
+                f"Invalid '{table_type}' table entry ({pretty_entry}) at row {current_row + 1} ({pretty_row}):"
+                f" {pretty_validation_error}. Table schema: {_format_table_schema(schema)}."
             ) from e
         records.append(record)
     return records
+
+
+def _format_row(sheet: LocalSheet, ref_cell: Cell) -> str:
+    return ";".join(cell.val or "" for cell in sheet.iter_row_cells(ref_cell))
+
+
+def _format_table_schema(table_schema: TableSchemaT | type[TableSchemaT]) -> str:
+    items: list[str] = []
+    for field_name, field in table_schema.__fields__.items():
+        items.append(f"{field_name}:{field.annotation}")
+    return ", ".join(items)
 
 
 def _format_record_validation_error(e: PydanticValidationError) -> str:

@@ -15,7 +15,7 @@ from finbot.core.schema import ApplicationErrorData, CurrencyCode
 from finbot.core.spec_tree import ResponseSpec, SpecTree
 from finbot.core.web_service import CustomJsonProvider, service_endpoint
 from finbot.providers import ProviderBase
-from finbot.providers.errors import AuthenticationFailure
+from finbot.providers.errors import AuthenticationError
 from finbot.providers.factory import get_provider
 
 FINBOT_ENV = environment.get()
@@ -119,7 +119,7 @@ def validate_credentials(
         try:
             provider.initialize()
             return schema.ValidateCredentialsResponse(valid=True)
-        except AuthenticationFailure as e:
+        except AuthenticationError as e:
             return schema.ValidateCredentialsResponse(valid=False, error_message=str(e))
 
 

@@ -6,7 +6,7 @@ class ProviderError(ApplicationError):
         super().__init__(error_message, error_code)
 
 
-class AuthenticationFailure(ProviderError):
+class AuthenticationError(ProviderError):
     def __init__(self, error_message: str):
         super().__init__(error_message, "P001")
 
@@ -19,3 +19,8 @@ class RetiredProviderError(ProviderError):
 class UnknownProvider(ProviderError):
     def __init__(self, provider_id: str) -> None:
         super().__init__(f"Unknown provider '{provider_id}'", "P003")
+
+
+class UserConfigurationError(ProviderError):
+    def __init__(self, error_message: str) -> None:
+        super().__init__(error_message, "P004")

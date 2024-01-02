@@ -6,7 +6,7 @@ from pydantic.v1 import SecretStr
 
 from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.core.utils import raise_
-from finbot.providers.errors import AuthenticationFailure
+from finbot.providers.errors import AuthenticationError
 from finbot.providers.playwright_base import (
     Condition,
     ConditionGuard,
@@ -85,7 +85,7 @@ class Api(PlaywrightProviderBase):
             Condition(
                 lambda: self.get_element_or_none("#error-container-wrapper"),
                 when_fulfilled=lambda el: raise_(
-                    AuthenticationFailure(el.inner_text().strip()),
+                    AuthenticationError(el.inner_text().strip()),
                 ),
             ),
         ).wait_any()
