@@ -6,7 +6,7 @@ from finbot.core import fx_market, saxo
 from finbot.core.environment import get_saxo_gateway_url
 from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.providers.base import ProviderBase
-from finbot.providers.errors import AuthenticationFailure
+from finbot.providers.errors import AuthenticationError
 from finbot.providers.schema import (
     Account,
     Asset,
@@ -49,7 +49,7 @@ class Api(ProviderBase):
         try:
             self._accounts = self._client.get_accounts().Data
         except Exception as e:
-            raise AuthenticationFailure(str(e))
+            raise AuthenticationError(str(e))
 
     def iter_accounts(self) -> Generator[tuple[Account, saxo.SaxoAccount], None, None]:
         assert self._accounts is not None

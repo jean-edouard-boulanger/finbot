@@ -8,7 +8,7 @@ from finbot.core.crypto_market import CRYPTOCURRENCY_CODE_PREFIX, cryptocurrency
 from finbot.core.errors import FinbotError
 from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.providers.base import ProviderBase
-from finbot.providers.errors import AuthenticationFailure
+from finbot.providers.errors import AuthenticationError
 from finbot.providers.schema import (
     Account,
     Asset,
@@ -89,7 +89,7 @@ class Api(ProviderBase):
         )
         results = self._api.query_private("Balance")
         if results["error"]:
-            raise AuthenticationFailure(_format_error(results["error"]))
+            raise AuthenticationError(_format_error(results["error"]))
 
     def get_balances(self) -> Balances:
         balance = sum(value for (_, _, value) in self._iter_balances())

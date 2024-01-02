@@ -10,7 +10,7 @@ from pydantic.v1 import ValidationError as PydanticValidationError
 from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.core.utils import some
 from finbot.providers.base import ProviderBase
-from finbot.providers.errors import AuthenticationFailure, ProviderError
+from finbot.providers.errors import AuthenticationError, ProviderError
 from finbot.providers.schema import (
     Account,
     Asset,
@@ -140,7 +140,7 @@ class Api(ProviderBase):
             )
             self._sheet = self._api.open_by_key(self._credentials.sheet_key)
         except Exception as e:
-            raise AuthenticationFailure(str(e)) from e
+            raise AuthenticationError(str(e)) from e
 
     def get_balances(self) -> Balances:
         return Balances(

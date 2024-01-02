@@ -5,7 +5,7 @@ from pydantic.v1 import SecretStr
 from finbot.core.plaid import AccountData, PlaidClient, PlaidClientError
 from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.providers.base import ProviderBase
-from finbot.providers.errors import AuthenticationFailure
+from finbot.providers.errors import AuthenticationError
 from finbot.providers.schema import (
     Account,
     Asset,
@@ -51,7 +51,7 @@ class Api(ProviderBase):
                 access_token=self._credentials.access_token.get_secret_value()
             )
         except PlaidClientError as e:
-            raise AuthenticationFailure(str(e))
+            raise AuthenticationError(str(e))
 
     def get_balances(self) -> Balances:
         return Balances(

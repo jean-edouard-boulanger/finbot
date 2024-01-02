@@ -6,7 +6,7 @@ class ProviderError(ApplicationError):
         super().__init__(error_message, error_code)
 
 
-class AuthenticationFailure(ProviderError):
+class AuthenticationError(ProviderError):
     def __init__(self, error_message: str):
         super().__init__(error_message, "P001")
 
