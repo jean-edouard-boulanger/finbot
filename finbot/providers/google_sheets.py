@@ -10,7 +10,7 @@ from pydantic.v1 import ValidationError as PydanticValidationError
 from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.core.utils import some
 from finbot.providers.base import ProviderBase
-from finbot.providers.errors import AuthenticationError, ProviderError
+from finbot.providers.errors import AuthenticationError, UserConfigurationError
 from finbot.providers.schema import (
     Account,
     Asset,
@@ -29,14 +29,8 @@ ACCOUNTS_TABLE_MARKER = "ACCOUNTS"
 HOLDINGS_TABLE_MARKER = "HOLDINGS"
 
 
-class Error(ProviderError):
-    def __init__(self, error_message: str):
-        super().__init__(error_message, "PGS1")
-
-
-class InvalidSheetData(Error):
-    def __init__(self, error_message: str):
-        super().__init__(error_message)
+class InvalidSheetData(UserConfigurationError):
+    pass
 
 
 class GoogleApiCredentials(TypedDict):
