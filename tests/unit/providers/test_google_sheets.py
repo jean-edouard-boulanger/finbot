@@ -10,6 +10,7 @@ from finbot.providers.google_sheets import (
     Cell,
     InvalidSheetData,
     LocalSheet,
+    TableEntry,
 )
 
 
@@ -108,17 +109,23 @@ class TestHelpers:
             marker_cell=sample_sheet.find_all(ACCOUNTS_TABLE_MARKER)[0],
             schema=AccountsTableSchema,
         ) == [
-            AccountsTableSchema(
-                identifier="Precious metals",
-                description="Precious metals",
-                currency="EUR",
-                type="investment",
+            TableEntry(
+                row=3,
+                record=AccountsTableSchema(
+                    identifier="Precious metals",
+                    description="Precious metals",
+                    currency="EUR",
+                    type="investment",
+                ),
             ),
-            AccountsTableSchema(
-                identifier="Cash",
-                description="Cash",
-                currency="EUR",
-                type="cash",
+            TableEntry(
+                row=4,
+                record=AccountsTableSchema(
+                    identifier="Cash",
+                    description="Cash",
+                    currency="EUR",
+                    type="cash",
+                ),
             ),
         ]
 
