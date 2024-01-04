@@ -10,6 +10,7 @@ from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.core.utils import some
 from finbot.providers import schema as providers_schema
 from finbot.providers.base import ProviderBase
+from finbot.providers.errors import UnsupportedFinancialInstrument
 from finbot.providers.interactive_brokers_uk.flex_report.parser import (
     parse_flex_report_payload,
 )
@@ -196,7 +197,7 @@ def _make_asset(
             amount=entry.close_quantity * entry.close_price,
             provider_specific={"Report date": entry.report_date.strftime("%Y-%b-%d")},
         )
-    raise ValueError(f"unknown asset category: {asset_category}")
+    raise UnsupportedFinancialInstrument(asset_category, entry.symbol)
 
 
 def _make_conversion_rates_mapping(statement: FlexStatement) -> dict[tuple[CurrencyCode, CurrencyCode], float]:

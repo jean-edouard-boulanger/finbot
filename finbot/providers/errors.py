@@ -24,3 +24,8 @@ class UnknownProvider(ProviderError):
 class UserConfigurationError(ProviderError):
     def __init__(self, error_message: str) -> None:
         super().__init__(error_message, "P004")
+
+
+class UnsupportedFinancialInstrument(ProviderError):
+    def __init__(self, asset_type: str, asset_description: str) -> None:
+        super().__init__(f"Unsupported asset type '{asset_type}': {asset_description}", "P005")

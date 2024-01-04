@@ -1,6 +1,6 @@
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Any, Generator, Literal, TypedDict, TypeVar, cast
+from typing import Any, Generator, Generic, Literal, TypedDict, TypeVar, cast
 
 import gspread
 from gspread.utils import rowcol_to_a1
@@ -109,9 +109,20 @@ class Api(ProviderBase):
         sheet = LocalSheet(self._sheet.sheet1.get_all_values())
 
         accounts_table = _get_table(sheet, ACCOUNTS_TABLE_MARKER, AccountsTableSchema)
-        holdings_table = _get_table(sheet, HOLDINGS_TABLE_MARKER, HoldingsTableSchema)
+        accounts_ids = {entry.record.identifier for entry in accounts_table}
 
-        for account in accounts_table:
+        holdings_table = _get_table(sheet, HOLDINGS_TABLE_MARKER, HoldingsTableSchema)
+        for holding_entry in holdings_table:
+            holding = holding_entry.record
+            if holding.account not in accounts_ids:
+                raise UserConfigurationError(
+                    f"Holdings '{holding.symbol}' defined at row {holding_entry.row + 1}"
+                    f" references account '{holding.account}'"
+                    f" which is not defined in the '{ACCOUNTS_TABLE_MARKER}' table."
+                )
+
+        for account_entry in accounts_table:
+            account = account_entry.record
             yield AssetsEntry(
                 account=Account(
                     id=account.identifier,
@@ -120,7 +131,9 @@ class Api(ProviderBase):
                     type=account.type,
                 ),
                 assets=[
-                    self._make_asset(holding) for holding in holdings_table if holding.account == account.identifier
+                    self._make_asset(holding_entry.record)
+                    for holding_entry in holdings_table
+                    if holding_entry.record.account == account.identifier
                 ],
             )
 
@@ -208,11 +221,17 @@ class LocalSheet(object):
         return self.index[val]
 
 
+@dataclass
+class TableEntry(Generic[TableSchemaT]):
+    row: int
+    record: TableSchemaT
+
+
 def _extract_generic_table(
     sheet: LocalSheet,
     marker_cell: Cell,
     schema: type[TableSchemaT],
-) -> list[TableSchemaT]:
+) -> list[TableEntry[TableSchemaT]]:
     header_start_cell = sheet.get_cell(marker_cell.row + 1, marker_cell.col)
     header = {}
     table_type = some(marker_cell.val)
@@ -226,7 +245,7 @@ def _extract_generic_table(
                     f"Invalid '{table_type}' table header at row {header_start_cell.row + 1} ({pretty_row}):"
                     f" unknown attribute '{attribute}'. Table schema: {_format_table_schema(schema)}."
                 )
-    records: list[TableSchemaT] = []
+    records: list[TableEntry[TableSchemaT]] = []
     data_start_cell = sheet.get_cell(header_start_cell.row + 1, marker_cell.col)
     for cell in sheet.iter_col_cells(from_cell=data_start_cell):
         if not cell.val:
@@ -243,8 +262,30 @@ def _extract_generic_table(
                 f"Invalid '{table_type}' table entry ({pretty_entry}) at row {current_row + 1} ({pretty_row}):"
                 f" {pretty_validation_error}. Table schema: {_format_table_schema(schema)}."
             ) from e
-        records.append(record)
+        records.append(
+            TableEntry(
+                row=current_row,
+                record=record,
+            )
+        )
     return records
+
+
+def _get_table(
+    sheet: LocalSheet,
+    table_marker: str,
+    schema: type[TableSchemaT],
+) -> list[TableEntry[TableSchemaT]]:
+    marker_cells = sheet.find_all(table_marker)
+    if not marker_cells:
+        raise InvalidSheetData(f"Unable to find cell with text '{table_marker}' in the sheet")
+    if len(marker_cells) > 1:
+        pretty_cells = ", ".join(cell.pretty_loc for cell in marker_cells)
+        raise InvalidSheetData(
+            f"Found multiple cells ({pretty_cells}) with text '{table_marker}' in the sheet."
+            f" Only one table of type '{table_marker}' was expected."
+        )
+    return _extract_generic_table(sheet, marker_cells[0], schema)
 
 
 def _format_row(sheet: LocalSheet, ref_cell: Cell) -> str:
@@ -264,23 +305,6 @@ def _format_record_validation_error(e: PydanticValidationError) -> str:
         pretty_loc = ", ".join(f"'{entry}'" for entry in error["loc"])
         pretty_errors.append(f"{pretty_loc} {error["msg"]}")
     return ", ".join(pretty_errors)
-
-
-def _get_table(
-    sheet: LocalSheet,
-    table_marker: str,
-    schema: type[TableSchemaT],
-) -> list[TableSchemaT]:
-    marker_cells = sheet.find_all(table_marker)
-    if not marker_cells:
-        raise InvalidSheetData(f"Unable to find cell with text '{table_marker}' in the sheet")
-    if len(marker_cells) > 1:
-        pretty_cells = ", ".join(cell.pretty_loc for cell in marker_cells)
-        raise InvalidSheetData(
-            f"Found multiple cells ({pretty_cells}) with text '{table_marker}' in the sheet."
-            f" Only one table of type '{table_marker}' was expected."
-        )
-    return _extract_generic_table(sheet, marker_cells[0], schema)
 
 
 def _parse_provider_specific(data: str | None) -> dict[str, Any] | None:

@@ -6,7 +6,7 @@ from finbot.core import fx_market, saxo
 from finbot.core.environment import get_saxo_gateway_url
 from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.providers.base import ProviderBase
-from finbot.providers.errors import AuthenticationError
+from finbot.providers.errors import AuthenticationError, UnsupportedFinancialInstrument
 from finbot.providers.schema import (
     Account,
     Asset,
@@ -142,4 +142,4 @@ def _make_asset(
                 "P&L": position.SinglePosition.PositionView.ProfitLossOnTrade,
             },
         )
-    raise ValueError(f"unknown asset type: {asset_type}")
+    raise UnsupportedFinancialInstrument(asset_type, position.DisplayAndFormat.Symbol)
