@@ -4,8 +4,8 @@ from contextlib import contextmanager
 from typing import Any, Generator, cast
 
 import pgpy
-from pydantic.v1 import SecretStr
 
+from finbot.core.pydantic_ import SecretStr
 from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.core.utils import some
 from finbot.providers import schema as providers_schema

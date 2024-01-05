@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Optional, Pattern
 
 JS_ALIKE = ["*.tsx", "*.ts", "*.js", "*.jsx"]
+PY_ALIKE = ["*.py", "*.pyi"]
 
 
 @dataclass
@@ -21,15 +22,15 @@ class Rule:
 
 RULES: list[Rule] = [
     Rule(
-        match_files=["*.py"],
+        match_files=PY_ALIKE,
         banned_pattern=re.compile(r"import(.+)\s+Dict|(\s+|typing\.)Dict\[|(\s+|typing\.)List\["),
-        message="As of python3.9, dict and list type hints may be used installed of Dict and List",
+        message="As of python3.9, dict and list type hints may be used instead of Dict and List",
     ),
     Rule(
-        match_files=["*.py"],
+        match_files=PY_ALIKE,
         ignore_files=["finbot/core/web_service.py"],
         banned_pattern=re.compile(r"jsonify\("),
-        message="Finbot web services should not call Flask jsonify" " (this is automatically done upstream)",
+        message="Finbot web services should not call Flask jsonify (this is automatically done upstream)",
     ),
     Rule(
         match_files=JS_ALIKE,
@@ -37,9 +38,15 @@ RULES: list[Rule] = [
         message="Please remove calls to console.log",
     ),
     Rule(
-        match_files=JS_ALIKE,
+        match_files=JS_ALIKE + PY_ALIKE,
         banned_pattern=re.compile(r"FIXME"),
         message="All FIXMEs need to be addressed in the same PR",
+    ),
+    Rule(
+        match_files=PY_ALIKE,
+        ignore_files=["finbot/core/pydantic_.py"],
+        banned_pattern=re.compile("from pydantic.v1 import"),
+        message="Please import pydantic symbols from `finbot.core.pydantic_`",
     ),
 ]
 

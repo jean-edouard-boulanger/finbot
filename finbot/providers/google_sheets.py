@@ -5,8 +5,8 @@ from typing import Any, Generator, Generic, Literal, TypedDict, TypeVar, cast
 import gspread
 from gspread.utils import rowcol_to_a1
 from oauth2client.service_account import ServiceAccountCredentials
-from pydantic.v1 import ValidationError as PydanticValidationError
 
+from finbot.core.pydantic_ import ValidationError as PydanticValidationError
 from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.core.utils import some
 from finbot.providers.base import ProviderBase

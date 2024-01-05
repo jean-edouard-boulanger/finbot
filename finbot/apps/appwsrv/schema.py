@@ -1,11 +1,10 @@
 from datetime import date, datetime
 from typing import Any, Literal, TypeAlias
 
-from pydantic.v1 import Extra, Field, SecretStr
-
 from finbot.apps.appwsrv.reports.earnings import schema as earnings_schema
 from finbot.apps.appwsrv.reports.holdings import schema as holdings_schema
 from finbot.core import schema as core_schema
+from finbot.core.pydantic_ import Extra, Field, SecretStr
 from finbot.core.schema import BaseModel, HexColour
 from finbot.providers import schema as providers_schema
 

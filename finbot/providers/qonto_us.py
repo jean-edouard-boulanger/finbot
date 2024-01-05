@@ -1,7 +1,6 @@
 from typing import Any, Optional
 
-from pydantic.v1 import SecretStr
-
+from finbot.core.pydantic_ import SecretStr
 from finbot.core.qonto_api import QontoApi, Unauthorized
 from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.providers.base import ProviderBase

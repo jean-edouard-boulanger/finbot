@@ -7,7 +7,7 @@ from ftplib import FTP
 from pathlib import Path
 from typing import Annotated, Literal, Optional
 
-from pydantic.v1 import BaseModel, Field
+from finbot.core.pydantic_ import BaseModel, Field
 
 
 class LocalIntakeMethod(BaseModel):

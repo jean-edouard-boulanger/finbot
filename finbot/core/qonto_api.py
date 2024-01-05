@@ -1,9 +1,9 @@
 from typing import cast
 
 import requests
-from pydantic.v1 import BaseModel
 
 from finbot.core.errors import FinbotError
+from finbot.core.pydantic_ import BaseModel
 from finbot.core.typing_extensions import JSON
 
 
