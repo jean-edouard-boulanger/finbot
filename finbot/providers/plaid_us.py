@@ -1,8 +1,7 @@
 from typing import Any
 
-from pydantic.v1 import SecretStr
-
 from finbot.core.plaid import AccountData, PlaidClient, PlaidClientError
+from finbot.core.pydantic_ import SecretStr
 from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationError

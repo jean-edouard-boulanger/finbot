@@ -3,4 +3,4 @@
 export * from "./runtime";
 export * from "./apis/index";
 export * from "./models/index";
-/* The version of the OpenAPI document: v0.0.5 */
+/* The version of the OpenAPI document: v0.0.6 */

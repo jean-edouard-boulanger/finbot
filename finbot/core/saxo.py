@@ -2,7 +2,8 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 import requests
-from pydantic.v1 import BaseModel
+
+from finbot.core.pydantic_ import BaseModel
 
 
 class DisplayAndFormat(BaseModel):

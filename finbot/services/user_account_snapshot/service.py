@@ -254,7 +254,7 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
                     foreign=self.target_ccy,
                 ),
             ),
-            underlying_ccy=item.underlying_ccy if isinstance(item, providers_schema.Asset) else None,
+            currency=item.currency if isinstance(item, providers_schema.Asset) else None,
             provider_specific_data=item.provider_specific,
         )
         sub_account_entry.items_entries.append(new_item)  # type: ignore

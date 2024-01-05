@@ -5,8 +5,8 @@ from typing import Any, Generator, Generic, Literal, TypedDict, TypeVar, cast
 import gspread
 from gspread.utils import rowcol_to_a1
 from oauth2client.service_account import ServiceAccountCredentials
-from pydantic.v1 import ValidationError as PydanticValidationError
 
+from finbot.core.pydantic_ import ValidationError as PydanticValidationError
 from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.core.utils import some
 from finbot.providers.base import ProviderBase
@@ -69,7 +69,7 @@ class HoldingsTableSchema(BaseModel):
     asset_type: AssetType
     units: float | None
     value: float
-    underlying_ccy: str | None
+    currency: str | None
     custom: str | None
 
     @property
@@ -101,7 +101,7 @@ class Api(ProviderBase):
             asset_type=holding.asset_type,
             value=holding.value,
             provider_specific=holding.provider_specific,
-            underlying_ccy=CurrencyCode(holding.underlying_ccy.upper()) if holding.underlying_ccy else None,
+            currency=CurrencyCode(holding.currency.upper()) if holding.currency else None,
         )
 
     def _iter_accounts(self) -> Generator[AssetsEntry, None, None]:

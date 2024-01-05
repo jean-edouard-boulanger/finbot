@@ -7,9 +7,8 @@ from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 
-from pydantic.v1 import BaseModel
-
 import finbot
+from finbot.core.pydantic_ import BaseModel
 from finbot.core.spec_tree import get_model_key
 
 

@@ -4,8 +4,8 @@ from contextlib import contextmanager
 from typing import Any, Generator, cast
 
 import pgpy
-from pydantic.v1 import SecretStr
 
+from finbot.core.pydantic_ import SecretStr
 from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.core.utils import some
 from finbot.providers import schema as providers_schema
@@ -178,7 +178,7 @@ def _make_asset(
             asset_type=providers_schema.AssetType.stock,
             value=entry.close_quantity * entry.close_price * conversion_rate,
             units=entry.close_quantity,
-            underlying_ccy=stock_currency,
+            currency=stock_currency,
             provider_specific={
                 "Symbol": entry.symbol,
                 "Description": entry.description,

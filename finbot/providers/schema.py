@@ -1,9 +1,10 @@
 import enum
-from typing import Any, TypeAlias
+from typing import TypeAlias
 
+from finbot.core.pydantic_ import Field
 from finbot.core.schema import BaseModel, CurrencyCode
 
-ProviderSpecificPayload: TypeAlias = dict[str, str | int | float | bool]
+ProviderSpecificPayloadType: TypeAlias = dict[str, str | int | float | bool]
 SchemaNamespace = "Providers"
 
 
@@ -38,15 +39,15 @@ class AssetType(str, enum.Enum):
 
 
 class Account(BaseModel):
-    id: str
-    name: str
-    iso_currency: CurrencyCode
-    type: str
+    id: str = Field(description="Account identifier (unique across all accounts in this linked account)")
+    name: str = Field(description="Account name/description")
+    iso_currency: CurrencyCode = Field(description="Account currency")
+    type: str = Field(description="Account type (depository, investment, etc.)")  # TODO: constrain this with an enum
 
 
 class BalanceEntry(BaseModel):
     account: Account
-    balance: float
+    balance: float = Field(description="Account balance (in the account currency)")
 
 
 class Balances(BaseModel):
@@ -54,14 +55,17 @@ class Balances(BaseModel):
 
 
 class Asset(BaseModel):
-    name: str
+    name: str = Field(description="Asset name/description")
     type: str  # deprecated
-    asset_class: AssetClass
-    asset_type: AssetType
-    value: float
-    units: float | None = None
-    underlying_ccy: CurrencyCode | None = None
-    provider_specific: dict[str, Any] | None = None
+    asset_class: AssetClass = Field(description="Asset class")
+    asset_type: AssetType = Field(description="Asset type")
+    value: float = Field(description="Asset value (in the holding account currency)")
+    units: float | None = Field(default=None, description="Number of asset units held in the account")
+    currency: CurrencyCode | None = Field(default=None, description="Asset currency")
+    provider_specific: ProviderSpecificPayloadType | None = Field(
+        default=None,
+        description="Arbitrary data (key/value pair) specific to the provider/asset",
+    )
 
     @classmethod
     def cash(
@@ -69,7 +73,7 @@ class Asset(BaseModel):
         currency: CurrencyCode,
         is_domestic: bool,
         amount: float,
-        provider_specific: dict[str, Any] | None = None,
+        provider_specific: ProviderSpecificPayloadType | None = None,
     ) -> "Asset":
         _validate_currency_code(currency)
         return Asset(
@@ -79,14 +83,14 @@ class Asset(BaseModel):
             asset_type=AssetType.cash,
             value=amount,
             units=None,
-            underlying_ccy=CurrencyCode(currency.upper()),
+            currency=CurrencyCode(currency.upper()),
             provider_specific=provider_specific,
         )
 
 
 class AssetsEntry(BaseModel):
-    account: Account
-    assets: list[Asset]
+    account: Account = Field(description="Account holding the assets")
+    assets: list[Asset] = Field(description="Assets held in the account")
 
 
 class Assets(BaseModel):
@@ -94,15 +98,18 @@ class Assets(BaseModel):
 
 
 class Liability(BaseModel):
-    name: str
-    type: str
-    value: float
-    provider_specific: ProviderSpecificPayload | None = None
+    name: str = Field(description="Liability name/description")
+    type: str = Field(description="Liability type (credit, loan, etc.)")  # TODO: constrain this with an enum
+    value: float = Field(description="Liability amount (in the holding account currency)")
+    provider_specific: ProviderSpecificPayloadType | None = Field(
+        default=None,
+        description="Arbitrary data (key/value pair) specific to the provider/asset",
+    )
 
 
 class LiabilitiesEntry(BaseModel):
-    account: Account
-    liabilities: list[Liability]
+    account: Account = Field(description="Account holding the liabilities")
+    liabilities: list[Liability] = Field(description="Liabilities held in the account")
 
 
 class Liabilities(BaseModel):

@@ -2,8 +2,8 @@ from typing import Any, cast
 
 from playwright.sync_api import Locator, Page
 from price_parser import Price  # type: ignore
-from pydantic.v1 import SecretStr
 
+from finbot.core.pydantic_ import SecretStr
 from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.core.utils import raise_
 from finbot.providers.errors import AuthenticationError
@@ -105,7 +105,7 @@ class Api(PlaywrightProviderBase):
                             type="blended fund",
                             asset_class=AssetClass.multi_asset,
                             asset_type=AssetType.generic_fund,
-                            underlying_ccy=entry.account.iso_currency,
+                            currency=entry.account.iso_currency,
                             value=entry.balance,
                         )
                     ],

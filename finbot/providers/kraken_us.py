@@ -1,11 +1,11 @@
 from typing import Any, Iterator, Optional, Tuple
 
 import krakenex
-from pydantic.v1 import SecretStr
 
 from finbot.core import fx_market
 from finbot.core.crypto_market import CRYPTOCURRENCY_CODE_PREFIX, cryptocurrency_code
 from finbot.core.errors import FinbotError
+from finbot.core.pydantic_ import SecretStr
 from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationError
@@ -136,7 +136,7 @@ def _make_asset(
             asset_type=AssetType.crypto_currency,
             units=units,
             value=value,
-            underlying_ccy=cryptocurrency_code(demangled_symbol),
+            currency=cryptocurrency_code(demangled_symbol),
         )
 
 

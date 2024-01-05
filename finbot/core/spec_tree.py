@@ -1,13 +1,13 @@
 import inspect
 from typing import Any, TypeAlias
 
-from pydantic.v1 import BaseModel
 from spectree import Response
 from spectree import SpecTree as _SpecTree
 from spectree.config import SecurityScheme  # type: ignore
 from spectree.models import SecureType, SecuritySchemeData
 
 from finbot._version import __api_version__
+from finbot.core.pydantic_ import BaseModel
 
 SECURITY_SCHEME_NAME = "bearerAuth"
 JWT_REQUIRED: dict[str, list[str]] = {SECURITY_SCHEME_NAME: []}

@@ -2,10 +2,9 @@ import enum
 import traceback
 from typing import Annotated, Any, NewType, TypeAlias
 
-from pydantic.v1 import BaseModel as _BaseModel
-from pydantic.v1 import Extra, Field
-
 from finbot.core.errors import ApplicationError, FinbotError
+from finbot.core.pydantic_ import BaseModel as _BaseModel
+from finbot.core.pydantic_ import Extra, Field
 from finbot.core.utils import fully_qualified_type_name
 
 

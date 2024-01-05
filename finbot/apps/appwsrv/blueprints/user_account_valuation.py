@@ -186,12 +186,12 @@ def get_user_account_valuation_by_currency_exposure(
     valuation: dict[str, GroupValuationAgg] = {}
     for item in items:
         if item.item_type == SubAccountItemType.Asset:
-            underlying_ccy = item.underlying_ccy
-            pretty_currency_name = underlying_ccy or "Unknown"
-            if is_cryptocurrency_code(underlying_ccy):
-                assert isinstance(underlying_ccy, str)
-                pretty_currency_name = f"{underlying_ccy[1:]} (crypto)"
-            currency_color = formatting_rules.get_currency_color(underlying_ccy)
+            currency = item.currency
+            pretty_currency_name = currency or "Unknown"
+            if is_cryptocurrency_code(currency):
+                assert isinstance(currency, str)
+                pretty_currency_name = f"{currency[1:]} (crypto)"
+            currency_color = formatting_rules.get_currency_color(currency)
             valuation.setdefault(
                 pretty_currency_name,
                 GroupValuationAgg(colour=currency_color),
