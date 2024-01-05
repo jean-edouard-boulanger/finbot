@@ -178,7 +178,7 @@ def _make_asset(
             asset_type=providers_schema.AssetType.stock,
             value=entry.close_quantity * entry.close_price * conversion_rate,
             units=entry.close_quantity,
-            underlying_ccy=stock_currency,
+            currency=stock_currency,
             provider_specific={
                 "Symbol": entry.symbol,
                 "Description": entry.description,

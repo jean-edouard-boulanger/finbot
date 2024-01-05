@@ -105,7 +105,7 @@ class Api(PlaywrightProviderBase):
                             type="blended fund",
                             asset_class=AssetClass.multi_asset,
                             asset_type=AssetType.generic_fund,
-                            underlying_ccy=entry.account.iso_currency,
+                            currency=entry.account.iso_currency,
                             value=entry.balance,
                         )
                     ],

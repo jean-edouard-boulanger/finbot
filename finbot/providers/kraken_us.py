@@ -136,7 +136,7 @@ def _make_asset(
             asset_type=AssetType.crypto_currency,
             units=units,
             value=value,
-            underlying_ccy=cryptocurrency_code(demangled_symbol),
+            currency=cryptocurrency_code(demangled_symbol),
         )
 
 

@@ -132,7 +132,7 @@ def _make_asset(
             asset_type=AssetType[asset_type.upper()],
             value=_get_value_in_account_currency(saxo_account, position),
             units=position.SinglePosition.PositionBase.Amount,
-            underlying_ccy=CurrencyCode(position.DisplayAndFormat.Currency.upper()),
+            currency=CurrencyCode(position.DisplayAndFormat.Currency.upper()),
             provider_specific={
                 "Asset currency": position.DisplayAndFormat.Currency,
                 "Symbol": position.DisplayAndFormat.Symbol,

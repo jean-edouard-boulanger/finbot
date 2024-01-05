@@ -60,7 +60,7 @@ class Asset(BaseModel):
     asset_type: AssetType
     value: float
     units: float | None = None
-    underlying_ccy: CurrencyCode | None = None
+    currency: CurrencyCode | None = None
     provider_specific: dict[str, Any] | None = None
 
     @classmethod
@@ -79,7 +79,7 @@ class Asset(BaseModel):
             asset_type=AssetType.cash,
             value=amount,
             units=None,
-            underlying_ccy=CurrencyCode(currency.upper()),
+            currency=CurrencyCode(currency.upper()),
             provider_specific=provider_specific,
         )
 
