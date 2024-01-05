@@ -18,8 +18,6 @@ from finbot.providers.schema import (
     Assets,
     AssetsEntry,
     AssetType,
-    BalanceEntry,
-    Balances,
 )
 
 SchemaNamespace = "GoogleSheetsProvider"
@@ -52,6 +50,12 @@ class Credentials(BaseModel):
 
 
 TableSchemaT = TypeVar("TableSchemaT", bound=BaseModel)
+
+
+@dataclass
+class AccountAssets:
+    account: Account
+    assets: list[Asset]
 
 
 class AccountsTableSchema(BaseModel):
@@ -104,7 +108,7 @@ class Api(ProviderBase):
             currency=CurrencyCode(holding.currency.upper()) if holding.currency else None,
         )
 
-    def _iter_accounts(self) -> Generator[AssetsEntry, None, None]:
+    def _iter_accounts(self) -> Generator[AccountAssets, None, None]:
         assert self._sheet is not None
         sheet = LocalSheet(self._sheet.sheet1.get_all_values())
 
@@ -123,7 +127,7 @@ class Api(ProviderBase):
 
         for account_entry in accounts_table:
             account = account_entry.record
-            yield AssetsEntry(
+            yield AccountAssets(
                 account=Account(
                     id=account.identifier,
                     name=account.description,
@@ -149,19 +153,19 @@ class Api(ProviderBase):
         except Exception as e:
             raise AuthenticationError(str(e)) from e
 
-    def get_balances(self) -> Balances:
-        return Balances(
+    def get_accounts(self) -> list[Account]:
+        return [entry.account for entry in self._iter_accounts()]
+
+    def get_assets(self) -> Assets:
+        return Assets(
             accounts=[
-                BalanceEntry(
-                    account=entry.account,
-                    balance=sum(asset.value_in_account_ccy for asset in entry.assets),
+                AssetsEntry(
+                    account_id=entry.account.id,
+                    items=entry.assets,
                 )
                 for entry in self._iter_accounts()
             ]
         )
-
-    def get_assets(self) -> Assets:
-        return Assets(accounts=list(self._iter_accounts()))
 
 
 @dataclass(frozen=True)

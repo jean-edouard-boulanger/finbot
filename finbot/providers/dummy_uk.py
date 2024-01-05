@@ -7,8 +7,6 @@ from finbot.providers.schema import (
     Asset,
     Assets,
     AssetsEntry,
-    BalanceEntry,
-    Balances,
 )
 
 
@@ -35,22 +33,15 @@ class Api(ProviderBase):
     def initialize(self) -> None:
         pass
 
-    def get_balances(self) -> Balances:
-        return Balances(
-            accounts=[
-                BalanceEntry(
-                    account=DUMMY_ACCOUNT,
-                    balance=DUMMY_BALANCE,
-                )
-            ]
-        )
+    def get_accounts(self) -> list[Account]:
+        return [DUMMY_ACCOUNT]
 
     def get_assets(self) -> Assets:
         return Assets(
             accounts=[
                 AssetsEntry(
-                    account=DUMMY_ACCOUNT,
-                    assets=[
+                    account_id=DUMMY_ACCOUNT.id,
+                    items=[
                         Asset.cash(
                             currency=DUMMY_ACCOUNT.iso_currency,
                             is_domestic=self.user_account_currency == DUMMY_ACCOUNT.iso_currency,

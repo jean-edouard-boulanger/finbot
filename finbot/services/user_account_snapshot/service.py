@@ -24,6 +24,9 @@ from finbot.services.user_account_snapshot import schema
 FINBOT_ENV = environment.get()
 
 
+logger = logging.getLogger(__name__)
+
+
 @dataclass
 class LinkedAccountSnapshotRequest:
     linked_account_id: int
@@ -48,91 +51,94 @@ class SnapshotErrorEntry:
 class SnapshotTreeVisitor(Protocol):
     def visit_linked_account(
         self,
-        linked_account_snapshot: LinkedAccountSnapshotResult,
+        linked_account_id: int,
         errors: list[SnapshotErrorEntry],
     ) -> None:
         return
 
     def visit_sub_account(
         self,
-        linked_account_snapshot: LinkedAccountSnapshotResult,
+        linked_account_id: int,
         sub_account: providers_schema.Account,
-        balance: float,
     ) -> None:
         return
 
     def visit_sub_account_item(
         self,
-        linked_account_snapshot: LinkedAccountSnapshotResult,
+        linked_account_id: int,
         sub_account: providers_schema.Account,
         item: providers_schema.Asset | providers_schema.Liability,
     ) -> None:
         return
 
 
+class LinkedAccountSnapshotWrapper:
+    def __init__(
+        self,
+        snapshot: LinkedAccountSnapshotResult,
+    ) -> None:
+        self.snapshot = snapshot
+        self.snapshot_data = snapshot.snapshot_data
+        self.linked_account_id = snapshot.request.linked_account_id
+
+    def iter_errors(
+        self,
+    ) -> Generator[SnapshotErrorEntry, None, None]:
+        if isinstance(self.snapshot_data, ApplicationErrorData):
+            yield SnapshotErrorEntry(scope="linked_account", error=self.snapshot_data)
+            return
+        for entry in self.snapshot_data.financial_data:
+            if isinstance(entry, finbotwsrv_schema.LineItemError):
+                yield SnapshotErrorEntry(
+                    scope=f"linked_account.{entry.line_item.name}",
+                    error=entry.error,
+                )
+
+    def iter_sub_accounts(
+        self,
+    ) -> Generator[providers_schema.Account, None, None]:
+        if isinstance(self.snapshot_data, ApplicationErrorData):
+            return
+        for snapshot_entry in self.snapshot_data.financial_data:
+            if isinstance(snapshot_entry, finbotwsrv_schema.AccountsResults):
+                yield from iter(snapshot_entry.results)
+
+    def iter_sub_accounts_items_entries(
+        self,
+    ) -> Generator[providers_schema.AssetsEntry | providers_schema.LiabilitiesEntry, None, None]:
+        if isinstance(self.snapshot_data, ApplicationErrorData):
+            return
+        for snapshot_entry in self.snapshot_data.financial_data:
+            if isinstance(snapshot_entry, (finbotwsrv_schema.AssetsResults, finbotwsrv_schema.LiabilitiesResults)):
+                for result_entry in snapshot_entry.results:
+                    yield result_entry
+
+
 def visit_snapshot_tree(
     raw_snapshot: list[LinkedAccountSnapshotResult],
     visitor: SnapshotTreeVisitor,
 ) -> None:
-    def visit_balances_first(data: finbotwsrv_schema.LineItemResults) -> int:
-        if data.line_item == finbotwsrv_schema.LineItem.Balances:
-            return 0
-        return 1
-
-    def iter_errors(
-        snapshot: LinkedAccountSnapshotResult,
-    ) -> Generator[SnapshotErrorEntry, None, None]:
-        snapshot_data = snapshot.snapshot_data
-        if isinstance(snapshot_data, ApplicationErrorData):
-            yield SnapshotErrorEntry(scope="linked_account", error=snapshot_data)
-            return
-        for snapshot_data_entry in snapshot_data.financial_data:
-            if isinstance(snapshot_data_entry, finbotwsrv_schema.LineItemError):
-                yield SnapshotErrorEntry(
-                    scope=f"linked_account.{snapshot_data_entry.line_item.name}",
-                    error=snapshot_data_entry.error,
-                )
-
     for linked_account_snapshot in raw_snapshot:
-        linked_account_errors = list(iter_errors(linked_account_snapshot))
-        visitor.visit_linked_account(linked_account_snapshot, linked_account_errors)
+        snapshot_wrapper = LinkedAccountSnapshotWrapper(linked_account_snapshot)
+        linked_account_errors = list(snapshot_wrapper.iter_errors())
+        visitor.visit_linked_account(linked_account_id=snapshot_wrapper.linked_account_id, errors=linked_account_errors)
         if linked_account_errors:
             continue
-        assert isinstance(
-            linked_account_snapshot.snapshot_data,
-            finbotwsrv_schema.GetFinancialDataResponse,
-        )
-        financial_data = linked_account_snapshot.snapshot_data.financial_data
-        for entry in sorted(financial_data, key=visit_balances_first):
-            assert isinstance(
-                entry,
-                (
-                    finbotwsrv_schema.BalancesResults,
-                    finbotwsrv_schema.AssetsResults,
-                    finbotwsrv_schema.LiabilitiesResults,
-                ),
+        mapped_sub_accounts: dict[str, providers_schema.Account] = {}
+        for sub_account in snapshot_wrapper.iter_sub_accounts():
+            mapped_sub_accounts[sub_account.id] = sub_account
+            visitor.visit_sub_account(
+                linked_account_id=snapshot_wrapper.linked_account_id,
+                sub_account=sub_account,
             )
-            for result in entry.results:
-                if isinstance(result, providers_schema.BalanceEntry):
-                    visitor.visit_sub_account(
-                        linked_account_snapshot=linked_account_snapshot,
-                        sub_account=result.account,
-                        balance=result.balance,
-                    )
-                elif isinstance(result, providers_schema.AssetsEntry):
-                    for asset in result.assets:
-                        visitor.visit_sub_account_item(
-                            linked_account_snapshot=linked_account_snapshot,
-                            sub_account=result.account,
-                            item=asset,
-                        )
-                elif isinstance(result, providers_schema.LiabilitiesEntry):
-                    for liability in result.liabilities:
-                        visitor.visit_sub_account_item(
-                            linked_account_snapshot=linked_account_snapshot,
-                            sub_account=result.account,
-                            item=liability,
-                        )
+        for entries in snapshot_wrapper.iter_sub_accounts_items_entries():
+            sub_account = mapped_sub_accounts[entries.account_id]
+            for item in entries.items:
+                visitor.visit_sub_account_item(
+                    linked_account_id=snapshot_wrapper.linked_account_id,
+                    sub_account=sub_account,
+                    item=item,
+                )
 
 
 class XccyCollector(SnapshotTreeVisitor):
@@ -142,9 +148,8 @@ class XccyCollector(SnapshotTreeVisitor):
 
     def visit_sub_account(
         self,
-        linked_account_snapshot: LinkedAccountSnapshotResult,
+        linked_account_id: int,
         sub_account: providers_schema.Account,
-        balance: float,
     ) -> None:
         if sub_account.iso_currency != self.target_ccy:
             self.xccys.add(
@@ -185,11 +190,10 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
 
     def visit_linked_account(
         self,
-        linked_account_snapshot: LinkedAccountSnapshotResult,
+        linked_account_id: int,
         errors: list[SnapshotErrorEntry],
     ) -> None:
         snapshot = self.snapshot
-        linked_account_id = linked_account_snapshot.request.linked_account_id
         assert linked_account_id not in self.linked_accounts
         linked_account_entry = model.LinkedAccountSnapshotEntry(
             linked_account_id=linked_account_id,
@@ -204,11 +208,9 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
 
     def visit_sub_account(
         self,
-        linked_account_snapshot: LinkedAccountSnapshotResult,
+        linked_account_id: int,
         sub_account: providers_schema.Account,
-        balance: float,
     ) -> None:
-        linked_account_id = linked_account_snapshot.request.linked_account_id
         linked_account = self.linked_accounts[linked_account_id]
         assert (linked_account_id, sub_account.id) not in self.sub_accounts
         sub_account_entry = model.SubAccountSnapshotEntry(
@@ -222,11 +224,10 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
 
     def visit_sub_account_item(
         self,
-        linked_account_snapshot: LinkedAccountSnapshotResult,
+        linked_account_id: int,
         sub_account: providers_schema.Account,
         item: providers_schema.Asset | providers_schema.Liability,
     ) -> None:
-        linked_account_id = linked_account_snapshot.request.linked_account_id
         sub_account_entry = self.sub_accounts[(linked_account_id, sub_account.id)]
         item_type = self._get_item_type(item)
         asset_class = item.asset_class if isinstance(item, providers_schema.Asset) else None
@@ -272,7 +273,7 @@ def dispatch_snapshot_entry(
     snap_request: LinkedAccountSnapshotRequest,
 ) -> LinkedAccountSnapshotResult:
     try:
-        logging.info(
+        logger.info(
             f"starting snapshot for linked_account_id={snap_request.linked_account_id}'"
             f" provider_id={snap_request.provider_id}"
         )
@@ -285,7 +286,7 @@ def dispatch_snapshot_entry(
             user_account_currency=snap_request.user_account_currency,
         )
         if error := account_snapshot.error:
-            logging.warning(
+            logger.warning(
                 f"error while taking snapshot for linked_account_id={snap_request.linked_account_id}'"
                 f" provider_id={snap_request.provider_id} error_code={error.error_code}"
                 f" exception_type={error.exception_type} user_message: {error.user_message}"
@@ -294,13 +295,13 @@ def dispatch_snapshot_entry(
             )
             return LinkedAccountSnapshotResult(snap_request, account_snapshot.error)
 
-        logging.info(
+        logger.info(
             f"snapshot complete for for linked_account_id={snap_request.linked_account_id}'"
             f" provider_id={snap_request.provider_id}"
         )
         return LinkedAccountSnapshotResult(snap_request, account_snapshot)
     except Exception as e:
-        logging.warning(
+        logger.warning(
             f"fatal error while taking snapshot for linked_account_id={snap_request.linked_account_id}"
             f" provider_id={snap_request.provider_id}"
             f" error: {e}"
@@ -340,14 +341,14 @@ def take_raw_snapshot(
     linked_account_ids: list[int] | None,
 ) -> list[LinkedAccountSnapshotResult]:
     with ThreadPoolExecutor(max_workers=4) as executor:
-        logging.info("initializing accounts snapshot requests")
+        logger.info("initializing accounts snapshot requests")
         requests = [
             LinkedAccountSnapshotRequest(
                 linked_account_id=linked_account.id,
                 provider_id=linked_account.provider_id,
                 credentials_data=get_credentials_data(linked_account),
                 line_items=[
-                    finbotwsrv_schema.LineItem.Balances,
+                    finbotwsrv_schema.LineItem.Accounts,
                     finbotwsrv_schema.LineItem.Assets,
                     finbotwsrv_schema.LineItem.Liabilities,
                 ],
@@ -357,9 +358,9 @@ def take_raw_snapshot(
             if is_linked_account_included_in_snapshot(linked_account, linked_account_ids)
         ]
 
-        logging.info(f"starting snapshot with {len(requests)} request(s)")
+        logger.info(f"starting snapshot with {len(requests)} request(s)")
         snapshot_entries = executor.map(dispatch_snapshot_entry, requests)
-        logging.info("complete snapshot taken")
+        logger.info("complete snapshot taken")
         return list(snapshot_entries)
 
 
@@ -372,7 +373,7 @@ def validate_fx_rates(rates: dict[fx_market.Xccy, Optional[float]]) -> None:
 def take_snapshot_impl(
     user_account_id: int, linked_account_ids: Optional[list[int]], db_session: Session
 ) -> schema.SnapshotSummary:
-    logging.info(
+    logger.info(
         f"fetching user information for"
         f" user_account_id={user_account_id}"
         f" linked_account_ids={linked_account_ids}"
@@ -386,12 +387,12 @@ def take_snapshot_impl(
         .first()
     )
 
-    logging.info(
+    logger.info(
         f"starting snapshot for user account " f"linked to {len(user_account.linked_accounts)} external accounts"
     )
 
     requested_ccy = user_account.settings.valuation_ccy
-    logging.info(f"requested valuation currency is {requested_ccy}")
+    logger.info(f"requested valuation currency is {requested_ccy}")
 
     with db_session.persist(model.UserAccountSnapshot()) as new_snapshot:
         new_snapshot.status = model.SnapshotStatus.Processing
@@ -407,7 +408,7 @@ def take_snapshot_impl(
     visit_snapshot_tree(raw_snapshot, xccy_collector)
     xccy_rates = fx_market.get_rates(xccy_collector.xccys)
 
-    logging.debug("adding cross currency rates to snapshot")
+    logger.debug("adding cross currency rates to snapshot")
 
     with db_session.persist(new_snapshot):
         new_snapshot.xccy_rates_entries.extend(
@@ -420,7 +421,7 @@ def take_snapshot_impl(
             ]
         )
 
-    logging.debug("building final snapshot")
+    logger.debug("building final snapshot")
 
     snapshot_builder = SnapshotBuilderVisitor(
         new_snapshot, CachedXccyRatesGetter(xccy_rates), new_snapshot.requested_ccy
@@ -446,10 +447,21 @@ class UserAccountSnapshotService(object):
     def take_snapshot(
         self, user_account_id: int, linked_account_ids: list[int] | None = None
     ) -> schema.TakeSnapshotResponse:
-        return schema.TakeSnapshotResponse(
-            snapshot=take_snapshot_impl(
-                user_account_id=user_account_id,
-                linked_account_ids=linked_account_ids,
-                db_session=self._db_session,
+        try:
+            return schema.TakeSnapshotResponse(
+                snapshot=take_snapshot_impl(
+                    user_account_id=user_account_id,
+                    linked_account_ids=linked_account_ids,
+                    db_session=self._db_session,
+                )
             )
-        )
+        except Exception as e:
+            logger.error(
+                "fatal error while taking snapshot for"
+                " user_account_id=%s, linked_account_ids=%s, error: %s trace:\n%s",
+                user_account_id,
+                linked_account_ids,
+                e,
+                traceback.format_exc(),
+            )
+            raise

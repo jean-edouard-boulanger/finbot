@@ -1,8 +1,10 @@
+from dataclasses import dataclass
 from typing import Any, Optional
 
 from finbot.core.pydantic_ import SecretStr
 from finbot.core.qonto_api import QontoApi, Unauthorized
 from finbot.core.schema import BaseModel, CurrencyCode
+from finbot.core.utils import some
 from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationError
 from finbot.providers.schema import (
@@ -10,8 +12,6 @@ from finbot.providers.schema import (
     Asset,
     Assets,
     AssetsEntry,
-    BalanceEntry,
-    Balances,
 )
 
 AUTH_URL = "https://app.qonto.com/signin"
@@ -21,6 +21,12 @@ SchemaNamespace = "QontoProvider"
 class Credentials(BaseModel):
     identifier: str
     secret_key: SecretStr
+
+
+@dataclass(frozen=True)
+class AccountValue:
+    account: Account
+    account_value: float
 
 
 class Api(ProviderBase):
@@ -35,7 +41,7 @@ class Api(ProviderBase):
     ) -> None:
         super().__init__(user_account_currency=user_account_currency, **kwargs)
         self._credentials = credentials
-        self._accounts: Optional[Balances] = None
+        self._accounts: Optional[list[AccountValue]] = None
 
     def initialize(self) -> None:
         api = QontoApi(
@@ -46,38 +52,35 @@ class Api(ProviderBase):
             organization = api.list_organizations()[0]
         except Unauthorized as e:
             raise AuthenticationError(str(e))
-        self._accounts = Balances(
-            accounts=[
-                BalanceEntry(
-                    account=Account(
-                        id=entry.slug,
-                        name=entry.name,
-                        iso_currency=CurrencyCode(entry.currency),
-                        type="cash",
-                    ),
-                    balance=entry.balance,
-                )
-                for entry in organization.bank_accounts
-            ]
-        )
+        self._accounts = [
+            AccountValue(
+                account=Account(
+                    id=entry.slug,
+                    name=entry.name,
+                    iso_currency=CurrencyCode(entry.currency),
+                    type="cash",
+                ),
+                account_value=entry.balance,
+            )
+            for entry in organization.bank_accounts
+        ]
 
-    def get_balances(self) -> Balances:
-        assert self._accounts
-        return self._accounts
+    def get_accounts(self) -> list[Account]:
+        return [entry.account for entry in some(self._accounts)]
 
     def get_assets(self) -> Assets:
         return Assets(
             accounts=[
                 AssetsEntry(
-                    account=entry.account,
-                    assets=[
+                    account_id=entry.account.id,
+                    items=[
                         Asset.cash(
                             currency=entry.account.iso_currency,
                             is_domestic=entry.account.iso_currency == self.user_account_currency,
-                            amount=entry.balance,
+                            amount=entry.account_value,
                         )
                     ],
                 )
-                for entry in self.get_balances().accounts
+                for entry in some(self._accounts)
             ]
         )

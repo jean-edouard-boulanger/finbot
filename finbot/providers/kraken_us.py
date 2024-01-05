@@ -16,8 +16,6 @@ from finbot.providers.schema import (
     Assets,
     AssetsEntry,
     AssetType,
-    BalanceEntry,
-    Balances,
 )
 
 OWNERSHIP_UNITS_THRESHOLD = 0.00001
@@ -91,16 +89,15 @@ class Api(ProviderBase):
         if results["error"]:
             raise AuthenticationError(_format_error(results["error"]))
 
-    def get_balances(self) -> Balances:
-        balance = sum(value for (_, _, value) in self._iter_balances())
-        return Balances(accounts=[BalanceEntry(account=self._account_description(), balance=balance)])
+    def get_accounts(self) -> list[Account]:
+        return [self._account_description()]
 
     def get_assets(self) -> Assets:
         return Assets(
             accounts=[
                 AssetsEntry(
-                    account=self._account_description(),
-                    assets=[
+                    account_id=self._account_description().id,
+                    items=[
                         _make_asset(
                             symbol=symbol,
                             units=units,

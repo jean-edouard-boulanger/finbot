@@ -29,3 +29,8 @@ class UserConfigurationError(ProviderError):
 class UnsupportedFinancialInstrument(ProviderError):
     def __init__(self, asset_type: str, asset_description: str) -> None:
         super().__init__(f"Unsupported asset type '{asset_type}': {asset_description}", "P005")
+
+
+class UnsupportedAccountType(ProviderError):
+    def __init__(self, account_type: str, account_name: str) -> None:
+        super().__init__(f"Unsupported account type '{account_type}': {account_name}", "P006")

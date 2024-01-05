@@ -45,15 +45,6 @@ class Account(BaseModel):
     type: str = Field(description="Account type (depository, investment, etc.)")  # TODO: constrain this with an enum
 
 
-class BalanceEntry(BaseModel):
-    account: Account
-    balance: float = Field(description="Account balance (in the account currency)")
-
-
-class Balances(BaseModel):
-    accounts: list[BalanceEntry]
-
-
 class Asset(BaseModel):
     name: str = Field(description="Asset name/description")
     type: str  # deprecated
@@ -89,8 +80,8 @@ class Asset(BaseModel):
 
 
 class AssetsEntry(BaseModel):
-    account: Account = Field(description="Account holding the assets")
-    assets: list[Asset] = Field(description="Assets held in the account")
+    account_id: str = Field(description="Identifier of the account holding the assets")
+    items: list[Asset] = Field(description="Assets held in the account")
 
 
 class Assets(BaseModel):
@@ -108,8 +99,8 @@ class Liability(BaseModel):
 
 
 class LiabilitiesEntry(BaseModel):
-    account: Account = Field(description="Account holding the liabilities")
-    liabilities: list[Liability] = Field(description="Liabilities held in the account")
+    account_id: str = Field(description="Identifier of the account holding the liabilities")
+    items: list[Liability] = Field(description="Liabilities held in the account")
 
 
 class Liabilities(BaseModel):

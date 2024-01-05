@@ -3,7 +3,7 @@ from typing import Any, Self
 
 from finbot.core import schema as core_schema
 from finbot.providers.errors import RetiredProviderError
-from finbot.providers.schema import Assets, Balances, Liabilities
+from finbot.providers.schema import Account, Assets, Liabilities
 
 
 class ProviderBase(object):
@@ -45,9 +45,10 @@ class ProviderBase(object):
         """
         pass
 
-    def get_balances(self) -> Balances:
-        """Retrieve all accounts and respective balances associated with this linked account"""
-        return Balances(accounts=[])
+    @abc.abstractmethod
+    def get_accounts(self) -> list[Account]:
+        """Retrieve all accounts associated with this linked account"""
+        pass
 
     def get_assets(self) -> Assets:
         """Retrieve all accounts and respective assets associated with this linked account"""
@@ -68,6 +69,9 @@ class RetiredProvider(ProviderBase):
 
     def initialize(self) -> None:
         pass
+
+    def get_accounts(self) -> list[Account]:
+        return []
 
     @staticmethod
     def create(

@@ -33,8 +33,8 @@ spec = SpecTree(
 )
 
 
-def balances_handler(provider_api: ProviderBase) -> schema.LineItemResults:
-    return schema.BalancesResults(results=provider_api.get_balances().accounts)
+def accounts_handler(provider_api: ProviderBase) -> schema.LineItemResults:
+    return schema.AccountsResults(results=provider_api.get_accounts())
 
 
 def assets_handler(provider_api: ProviderBase) -> schema.LineItemResults:
@@ -50,7 +50,7 @@ def item_handler(
     provider_api: ProviderBase,
 ) -> schema.LineItemResults:
     handler = {
-        schema.LineItem.Balances: balances_handler,
+        schema.LineItem.Accounts: accounts_handler,
         schema.LineItem.Assets: assets_handler,
         schema.LineItem.Liabilities: liabilities_handler,
     }.get(item_type)

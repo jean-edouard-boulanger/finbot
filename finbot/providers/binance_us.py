@@ -15,8 +15,6 @@ from finbot.providers.schema import (
     Assets,
     AssetsEntry,
     AssetType,
-    BalanceEntry,
-    Balances,
 )
 
 OWNERSHIP_UNITS_THRESHOLD = 0.00001
@@ -68,6 +66,9 @@ class Api(ProviderBase):
         except BinanceAPIException as e:
             raise AuthenticationError(str(e))
 
+    def get_accounts(self) -> list[Account]:
+        return [self._account_description()]
+
     def _iter_holdings(self) -> Iterator[Tuple[str, float, float]]:
         for entry in self._get_account()["balances"]:
             units = float(entry["free"]) + float(entry["locked"])
@@ -76,23 +77,12 @@ class Api(ProviderBase):
                 value = units * self._crypto_market.get_spot_cached(symbol, self._account_ccy)
                 yield symbol, units, value
 
-    def get_balances(self) -> Balances:
-        balance = sum(value for (_, _, value) in self._iter_holdings())
-        return Balances(
-            accounts=[
-                BalanceEntry(
-                    account=self._account_description(),
-                    balance=balance,
-                )
-            ],
-        )
-
     def get_assets(self) -> Assets:
         return Assets(
             accounts=[
                 AssetsEntry(
-                    account=self._account_description(),
-                    assets=[
+                    account_id=self._account_description().id,
+                    items=[
                         Asset(
                             name=symbol,
                             type="cryptocurrency",

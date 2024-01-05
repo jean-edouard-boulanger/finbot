@@ -26,6 +26,7 @@ from finbot.providers.interactive_brokers_uk.intake import (
     IntakeMethod,
     load_latest_report_payload,
 )
+from finbot.providers.schema import Account
 
 
 class PGPKey(BaseModel):
@@ -73,12 +74,8 @@ class Api(ProviderBase):
             report_payload = raw_report_payload.decode()
         self.__report = FlexReportWrapper(parse_flex_report_payload(report_payload))
 
-    def get_balances(self) -> providers_schema.Balances:
-        return providers_schema.Balances(
-            accounts=[
-                statement.get_balance(self.user_account_currency) for statement in some(self.__report).statements
-            ],
-        )
+    def get_accounts(self) -> list[Account]:
+        return [statement.account for statement in some(self.__report).statements]
 
     def get_assets(self) -> providers_schema.Assets:
         return providers_schema.Assets(
@@ -120,26 +117,10 @@ class FlexStatementWrapper:
             return f"{self.account_information.alias} ({self.account_id})"
         return self.account_id
 
-    def get_balance(self, user_account_currency: CurrencyCode) -> providers_schema.BalanceEntry:
-        assert self.entries.mtm_performance_summary_in_base is not None
-        return providers_schema.BalanceEntry(
-            account=self.account,
-            balance=sum(
-                _make_asset(
-                    entry=entry,
-                    conversion_rates=self.conversion_rates,
-                    securities=self.securities,
-                    account_currency=self.account.iso_currency,
-                    user_account_currency=user_account_currency,
-                ).value_in_account_ccy
-                for entry in some(self.entries.mtm_performance_summary_in_base).entries
-            ),
-        )
-
     def get_assets(self, user_account_currency: CurrencyCode) -> providers_schema.AssetsEntry:
         return providers_schema.AssetsEntry(
-            account=self.account,
-            assets=[
+            account_id=self.account.id,
+            items=[
                 _make_asset(
                     entry=entry,
                     conversion_rates=self.conversion_rates,

@@ -4,6 +4,7 @@ from finbot.core import fx_market, saxo
 from finbot.core.environment import get_saxo_gateway_url
 from finbot.core.pydantic_ import SecretStr
 from finbot.core.schema import BaseModel, CurrencyCode
+from finbot.core.utils import some
 from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationError, UnsupportedFinancialInstrument
 from finbot.providers.schema import (
@@ -13,8 +14,6 @@ from finbot.providers.schema import (
     Assets,
     AssetsEntry,
     AssetType,
-    BalanceEntry,
-    Balances,
 )
 
 SchemaNamespace = "SaxoProvider"
@@ -50,40 +49,17 @@ class Api(ProviderBase):
         except Exception as e:
             raise AuthenticationError(str(e))
 
-    def iter_accounts(self) -> Generator[tuple[Account, saxo.SaxoAccount], None, None]:
-        assert self._accounts is not None
-        for raw_account_data in self._accounts:
-            yield (
-                Account(
-                    id=raw_account_data.AccountKey,
-                    name=raw_account_data.DisplayName,
-                    iso_currency=CurrencyCode(raw_account_data.Currency),
-                    type="investment",
-                ),
-                raw_account_data,
-            )
-
-    def get_balances(self) -> Balances:
-        return Balances(
-            accounts=[
-                BalanceEntry(
-                    account=account,
-                    balance=self._client.get_account_balances(
-                        saxo_account=saxo_account,
-                    ).TotalValue,
-                )
-                for (account, saxo_account) in self.iter_accounts()
-            ]
-        )
+    def get_accounts(self) -> list[Account]:
+        return [account for (account, _) in self._iter_accounts()]
 
     def get_assets(self) -> Assets:
         return Assets(
             accounts=[
                 AssetsEntry(
-                    account=account,
-                    assets=self._get_account_assets(saxo_account=saxo_account),
+                    account_id=account.id,
+                    items=self._get_account_assets(saxo_account=saxo_account),
                 )
-                for (account, saxo_account) in self.iter_accounts()
+                for (account, saxo_account) in self._iter_accounts()
             ]
         )
 
@@ -101,6 +77,18 @@ class Api(ProviderBase):
         for position in self._client.get_account_positions(saxo_account).Data:
             assets.append(_make_asset(saxo_account, position))
         return assets
+
+    def _iter_accounts(self) -> Generator[tuple[Account, saxo.SaxoAccount], None, None]:
+        for raw_account_data in some(self._accounts):
+            yield (
+                Account(
+                    id=raw_account_data.AccountKey,
+                    name=raw_account_data.DisplayName,
+                    iso_currency=CurrencyCode(raw_account_data.Currency),
+                    type="investment",
+                ),
+                raw_account_data,
+            )
 
 
 def _get_value_in_account_currency(
