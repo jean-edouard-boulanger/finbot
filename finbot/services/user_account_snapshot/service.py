@@ -246,8 +246,8 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
             asset_class=asset_class.value if asset_class else None,
             asset_type=asset_type.value if asset_type else None,
             units=item.units if isinstance(item, providers_schema.Asset) else None,
-            value_sub_account_ccy=item.value,
-            value_snapshot_ccy=item.value
+            value_sub_account_ccy=item.value_in_account_ccy,
+            value_snapshot_ccy=item.value_in_account_ccy
             * self.xccy_rates_getter(
                 fx_market.Xccy(
                     domestic=sub_account.iso_currency,

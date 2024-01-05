@@ -68,7 +68,7 @@ class HoldingsTableSchema(BaseModel):
     asset_class: AssetClass
     asset_type: AssetType
     units: float | None
-    value: float
+    value_in_account_ccy: float
     currency: str | None
     custom: str | None
 
@@ -99,7 +99,7 @@ class Api(ProviderBase):
             type=holding.type or f"{holding.asset_class.value} {holding.asset_type.value}",
             asset_class=holding.asset_class,
             asset_type=holding.asset_type,
-            value=holding.value,
+            value_in_account_ccy=holding.value_in_account_ccy,
             provider_specific=holding.provider_specific,
             currency=CurrencyCode(holding.currency.upper()) if holding.currency else None,
         )
@@ -154,7 +154,7 @@ class Api(ProviderBase):
             accounts=[
                 BalanceEntry(
                     account=entry.account,
-                    balance=sum(asset.value for asset in entry.assets),
+                    balance=sum(asset.value_in_account_ccy for asset in entry.assets),
                 )
                 for entry in self._iter_accounts()
             ]

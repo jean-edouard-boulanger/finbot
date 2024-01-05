@@ -129,7 +129,7 @@ def _make_asset(
             type="equity",
             asset_class=(AssetClass.commodities if asset_type.lower() == "etc" else AssetClass.equities),
             asset_type=AssetType[asset_type.upper()],
-            value=_get_value_in_account_currency(saxo_account, position),
+            value_in_account_ccy=_get_value_in_account_currency(saxo_account, position),
             units=position.SinglePosition.PositionBase.Amount,
             currency=CurrencyCode(position.DisplayAndFormat.Currency.upper()),
             provider_specific={

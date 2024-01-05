@@ -106,7 +106,7 @@ class Api(PlaywrightProviderBase):
                             asset_class=AssetClass.multi_asset,
                             asset_type=AssetType.generic_fund,
                             currency=entry.account.iso_currency,
-                            value=entry.balance,
+                            value_in_account_ccy=entry.balance,
                         )
                     ],
                 )

@@ -131,7 +131,7 @@ class FlexStatementWrapper:
                     securities=self.securities,
                     account_currency=self.account.iso_currency,
                     user_account_currency=user_account_currency,
-                ).value
+                ).value_in_account_ccy
                 for entry in some(self.entries.mtm_performance_summary_in_base).entries
             ),
         )
@@ -176,7 +176,7 @@ def _make_asset(
             type="equity",
             asset_class=providers_schema.AssetClass.equities,
             asset_type=providers_schema.AssetType.stock,
-            value=entry.close_quantity * entry.close_price * conversion_rate,
+            value_in_account_ccy=entry.close_quantity * entry.close_price * conversion_rate,
             units=entry.close_quantity,
             currency=stock_currency,
             provider_specific={

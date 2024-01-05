@@ -99,7 +99,7 @@ class Api(ProviderBase):
                             asset_class=AssetClass.crypto,
                             asset_type=AssetType.crypto_currency,
                             units=units,
-                            value=value,
+                            value_in_account_ccy=value,
                             currency=cryptocurrency_code(symbol),
                         )
                         for symbol, units, value in self._iter_holdings()

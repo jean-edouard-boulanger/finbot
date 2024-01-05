@@ -90,7 +90,7 @@ class Api(ProviderBase):
                         Liability(
                             name="credit",
                             type="credit",
-                            value=(-1.0 * account.balance),
+                            value_in_account_ccy=(-1.0 * account.balance),
                         )
                     ],
                 )

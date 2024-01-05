@@ -104,7 +104,7 @@ class Api(ProviderBase):
                         _make_asset(
                             symbol=symbol,
                             units=units,
-                            value=value,
+                            value_in_account_ccy=value,
                             user_account_currency=self.user_account_currency,
                         )
                         for symbol, units, value in self._iter_balances()
@@ -117,7 +117,7 @@ class Api(ProviderBase):
 def _make_asset(
     symbol: str,
     units: float,
-    value: float,
+    value_in_account_ccy: float,
     user_account_currency: CurrencyCode,
 ) -> Asset:
     demangled_symbol = _demangle_symbol(symbol)
@@ -135,7 +135,7 @@ def _make_asset(
             asset_class=AssetClass.crypto,
             asset_type=AssetType.crypto_currency,
             units=units,
-            value=value,
+            value_in_account_ccy=value_in_account_ccy,
             currency=cryptocurrency_code(demangled_symbol),
         )
 

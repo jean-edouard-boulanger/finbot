@@ -59,7 +59,7 @@ class Asset(BaseModel):
     type: str  # deprecated
     asset_class: AssetClass = Field(description="Asset class")
     asset_type: AssetType = Field(description="Asset type")
-    value: float = Field(description="Asset value (in the holding account currency)")
+    value_in_account_ccy: float = Field(description="Asset value in the holding account currency")
     units: float | None = Field(default=None, description="Number of asset units held in the account")
     currency: CurrencyCode | None = Field(default=None, description="Asset currency")
     provider_specific: ProviderSpecificPayloadType | None = Field(
@@ -81,7 +81,7 @@ class Asset(BaseModel):
             type="currency",  # deprecated
             asset_class=(AssetClass.currency if is_domestic else AssetClass.foreign_currency),
             asset_type=AssetType.cash,
-            value=amount,
+            value_in_account_ccy=amount,
             units=None,
             currency=CurrencyCode(currency.upper()),
             provider_specific=provider_specific,
@@ -100,7 +100,7 @@ class Assets(BaseModel):
 class Liability(BaseModel):
     name: str = Field(description="Liability name/description")
     type: str = Field(description="Liability type (credit, loan, etc.)")  # TODO: constrain this with an enum
-    value: float = Field(description="Liability amount (in the holding account currency)")
+    value_in_account_ccy: float = Field(description="Liability amount in the holding account currency")
     provider_specific: ProviderSpecificPayloadType | None = Field(
         default=None,
         description="Arbitrary data (key/value pair) specific to the provider/asset",
