@@ -18,7 +18,6 @@ from finbot.core.schema import ApplicationErrorData
 from finbot.core.serialization import serialize
 from finbot.core.utils import some
 from finbot.providers import schema as providers_schema
-from finbot.services.user_account_snapshot import errors as snapshot_errors
 from finbot.services.user_account_snapshot import schema
 
 logger = logging.getLogger(__name__)
@@ -156,22 +155,8 @@ class XccyCollector(SnapshotTreeVisitor):
         sub_account: providers_schema.Account,
         item: providers_schema.Asset | providers_schema.Liability,
     ) -> None:
-        if item.value_in_item_ccy is not None and item.value_in_account_ccy is not None:
-            raise snapshot_errors.InconsistentSnapshotData(
-                f"item '{item.name}' in linked_account.id={linked_account_id} and sub_account.id={sub_account.id}"
-                f" has its value expressed both in item currency (item.value_in_item_ccy={item.value_in_item_ccy})"
-                f" and account currency (item.value_in_account_ccy={item.value_in_account_ccy}),"
-                f" which is not allowed."
-            )
         if item.value_in_item_ccy is not None:
-            if item.currency is None:
-                pretty_item_type = type(item).__name__.lower()
-                raise snapshot_errors.InconsistentSnapshotData(
-                    f"item '{item.name}' in linked_account.id={linked_account_id} and sub_account.id={sub_account.id}"
-                    f" has its value ({item.value_in_item_ccy}) expressed in the {pretty_item_type} currency"
-                    f" but does not specify a currency (item.currency={item.currency})."
-                )
-            self._collect(item.currency, sub_account.iso_currency)
+            self._collect(some(item.currency), sub_account.iso_currency)
 
     def _collect(self, domestic: core_schema.CurrencyCode, foreign: core_schema.CurrencyCode) -> None:
         if domestic != foreign:
@@ -260,14 +245,6 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
         item_type = self._get_item_type(item)
         asset_class = item.asset_class if isinstance(item, providers_schema.Asset) else None
         asset_type = item.asset_type if isinstance(item, providers_schema.Asset) else None
-        if item_type == model.SubAccountItemType.Asset and None in (
-            asset_class,
-            asset_type,
-        ):
-            raise snapshot_errors.InconsistentSnapshotData(
-                f"item '{item.name}' in linked_account.id={linked_account_id} and sub_account.id={sub_account.id} is"
-                f" tagged as an asset but does not specify an asset_class ({asset_class}) or asset_type ({asset_type})"
-            )
         new_item = model.SubAccountItemSnapshotEntry(  # type: ignore
             item_type=item_type,
             name=item.name,
