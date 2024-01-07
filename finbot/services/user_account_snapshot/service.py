@@ -295,7 +295,6 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
             )
         else:
             assert item.value_in_item_ccy is None
-            assert item.currency is None
         value_snapshot_ccy = value_sub_account_ccy * self.xccy_rates_getter(
             fx_market.Xccy(sub_account.iso_currency, self.target_ccy)
         )
