@@ -1,11 +1,14 @@
 import enum
+import re
 import traceback
-from typing import Annotated, Any, NewType, TypeAlias
+from typing import Annotated, Any, Callable, Generator, Pattern, Self, TypeAlias
 
 from finbot.core.errors import ApplicationError, FinbotError
 from finbot.core.pydantic_ import BaseModel as _BaseModel
 from finbot.core.pydantic_ import Extra, Field
 from finbot.core.utils import fully_qualified_type_name
+
+CRYPTOCURRENCY_CODE_PREFIX = "X:"
 
 
 class BaseModel(_BaseModel):
@@ -13,7 +16,41 @@ class BaseModel(_BaseModel):
         extra = Extra.forbid
 
 
-CurrencyCode = NewType("CurrencyCode", str)
+class RegexValidatedStr(str):
+    validation_regex: Pattern[str]
+    examples: list[str]
+    pre_formatters: list[Callable[[str], str]] | None = None
+
+    @classmethod
+    def __get_validators__(cls) -> Generator[Callable[[Any], str], None, None]:
+        yield cls.validate
+
+    @classmethod
+    def __modify_schema__(cls, field_schema: dict[str, Any]) -> None:
+        field_schema.update(
+            pattern=cls.validation_regex.pattern,
+            examples=cls.examples,
+        )
+
+    @classmethod
+    def validate(cls, v: Any) -> Self:
+        if not isinstance(v, str):
+            raise TypeError("string required")
+        for formatter in cls.pre_formatters or []:
+            v = formatter(v)
+        if not cls.validation_regex.match(v):
+            raise ValueError("invalid format")
+        return cls(f"{v}")
+
+
+class CurrencyCode(RegexValidatedStr):
+    validation_regex = re.compile("^[A-Z]{3}$")
+    examples = ["EUR", "USD", "GBP"]
+    pre_formatters = [str.upper]
+
+    @property
+    def raw_code(self) -> str:
+        return self
 
 
 class ValuationFrequency(str, enum.Enum):

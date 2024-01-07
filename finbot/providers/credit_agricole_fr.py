@@ -1,4 +1,5 @@
 import json
+from dataclasses import dataclass
 from typing import Any, Generator, cast
 
 from playwright.sync_api import Locator
@@ -17,8 +18,6 @@ from finbot.providers.schema import (
     Asset,
     Assets,
     AssetsEntry,
-    BalanceEntry,
-    Balances,
 )
 
 BASE_URL = "https://www.credit-agricole.fr/{region}/particulier/acceder-a-mes-comptes.html"
@@ -29,6 +28,12 @@ class Credentials(BaseModel):
     region: str
     account_number: str
     password: SecretStr
+
+
+@dataclass(frozen=True)
+class AccountValue:
+    account: Account
+    account_value: float
 
 
 class Api(PlaywrightProviderBase):
@@ -45,16 +50,16 @@ class Api(PlaywrightProviderBase):
         self._credentials = credentials
         self._account_data = None
 
-    def _iter_accounts(self) -> Generator[BalanceEntry, None, None]:
-        def handle_account(data: dict[str, Any]) -> BalanceEntry:
-            return BalanceEntry(
+    def _iter_accounts(self) -> Generator[AccountValue, None, None]:
+        def handle_account(data: dict[str, Any]) -> AccountValue:
+            return AccountValue(
                 account=Account(
                     id=data["numeroCompte"].strip(),
                     name=data["libelleUsuelProduit"].strip(),
                     iso_currency=data["idDevise"].strip(),
                     type="cash",
                 ),
-                balance=data["solde"],
+                account_value=float(data["solde"]),
             )
 
         assert self._account_data is not None
@@ -116,27 +121,19 @@ class Api(PlaywrightProviderBase):
         ]
         self._account_data = json.loads("[" + account_data_str + "]")[0]
 
-    def get_balances(self) -> Balances:
-        return Balances(
-            accounts=[
-                BalanceEntry(
-                    account=entry.account,
-                    balance=entry.balance,
-                )
-                for entry in self._iter_accounts()
-            ]
-        )
+    def get_accounts(self) -> list[Account]:
+        return [entry.account for entry in self._iter_accounts()]
 
     def get_assets(self) -> Assets:
         return Assets(
             accounts=[
                 AssetsEntry(
-                    account=entry.account,
-                    assets=[
+                    account_id=entry.account.id,
+                    items=[
                         Asset.cash(
                             currency=entry.account.iso_currency,
                             is_domestic=self.user_account_currency == entry.account.iso_currency,
-                            amount=entry.balance,
+                            amount=entry.account_value,
                         )
                     ],
                 )

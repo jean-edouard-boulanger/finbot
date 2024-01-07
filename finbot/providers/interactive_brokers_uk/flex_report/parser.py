@@ -5,6 +5,7 @@ from xml.etree.ElementTree import ParseError as XMLParseError
 from xml.etree.ElementTree import fromstring as parse_xml_payload
 from xml.etree.ElementTree import parse as parse_xml_file
 
+from finbot.core.schema import CurrencyCode
 from finbot.providers.interactive_brokers_uk.flex_report import schema
 
 
@@ -48,13 +49,13 @@ def _parse_account_information(node: Element) -> schema.AccountInformation:
     return schema.AccountInformation(
         account_id=node.attrib["accountId"],
         alias=node.attrib["acctAlias"],
-        currency=node.attrib["currency"],
+        currency=CurrencyCode.validate(node.attrib["currency"]),
     )
 
 
 def _parse_security_info(node: Element) -> schema.SecurityInfo:
     return schema.SecurityInfo(
-        currency=node.attrib["currency"],
+        currency=CurrencyCode.validate(node.attrib["currency"]),
         asset_category=node.attrib["assetCategory"],
         sub_category=node.attrib["subCategory"],
         symbol=node.attrib["symbol"],

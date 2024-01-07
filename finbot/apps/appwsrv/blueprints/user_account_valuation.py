@@ -17,7 +17,6 @@ from finbot.apps.appwsrv.db import db_session
 from finbot.apps.appwsrv.spec import spec
 from finbot.core import schema as core_schema
 from finbot.core import timeseries
-from finbot.core.crypto_market import is_cryptocurrency_code
 from finbot.core.errors import InvalidUserInput, MissingUserData
 from finbot.core.spec_tree import JWT_REQUIRED, ResponseSpec
 from finbot.core.utils import now_utc, some
@@ -188,9 +187,6 @@ def get_user_account_valuation_by_currency_exposure(
         if item.item_type == SubAccountItemType.Asset:
             currency = item.currency
             pretty_currency_name = currency or "Unknown"
-            if is_cryptocurrency_code(currency):
-                assert isinstance(currency, str)
-                pretty_currency_name = f"{currency[1:]} (crypto)"
             currency_color = formatting_rules.get_currency_color(currency)
             valuation.setdefault(
                 pretty_currency_name,

@@ -1,9 +1,7 @@
-from typing import Any, Iterator, Optional, Tuple
+from typing import Any, Generator
 
 import krakenex
 
-from finbot.core import fx_market
-from finbot.core.crypto_market import CRYPTOCURRENCY_CODE_PREFIX, cryptocurrency_code
 from finbot.core.errors import FinbotError
 from finbot.core.pydantic_ import SecretStr
 from finbot.core.schema import BaseModel, CurrencyCode
@@ -16,12 +14,11 @@ from finbot.providers.schema import (
     Assets,
     AssetsEntry,
     AssetType,
-    BalanceEntry,
-    Balances,
 )
 
 OWNERSHIP_UNITS_THRESHOLD = 0.00001
-CASH_SYMBOL_PREFIX = "Z"
+KRAKEN_CASH_SYMBOL_PREFIX = "Z"
+KRAKEN_CRYPTOCURRENCY_SYMBOL_PREFIX = "X"
 
 SchemaNamespace = "KrakenProvider"
 
@@ -36,11 +33,11 @@ def _format_error(errors: list[str]) -> str:
 
 
 def _is_cash(symbol: str) -> bool:
-    return symbol.startswith(CASH_SYMBOL_PREFIX)
+    return symbol.startswith(KRAKEN_CASH_SYMBOL_PREFIX)
 
 
 def _demangle_symbol(symbol: str) -> str:
-    if symbol[0] in {CASH_SYMBOL_PREFIX, CRYPTOCURRENCY_CODE_PREFIX} and len(symbol) == 4:
+    if symbol[0] in {KRAKEN_CASH_SYMBOL_PREFIX, KRAKEN_CRYPTOCURRENCY_SYMBOL_PREFIX} and len(symbol) > 3:
         return symbol[1:]
     return symbol
 
@@ -57,7 +54,7 @@ class Api(ProviderBase):
     ) -> None:
         super().__init__(user_account_currency=user_account_currency, **kwargs)
         self._credentials = credentials
-        self._api: Optional[krakenex.API] = None
+        self._api: krakenex.API | None = None
         self._account_ccy = CurrencyCode("EUR")
 
     def _account_description(self) -> Account:
@@ -68,7 +65,7 @@ class Api(ProviderBase):
             type="investment",
         )
 
-    def _iter_balances(self) -> Iterator[Tuple[str, float, float]]:
+    def _iter_assets(self) -> Generator[Asset, None, None]:
         price_fetcher = KrakenPriceFetcher(self._api)
         assert self._api is not None
         results = self._api.query_private("Balance")["result"]
@@ -77,10 +74,22 @@ class Api(ProviderBase):
             if units > OWNERSHIP_UNITS_THRESHOLD:
                 demangled_symbol = _demangle_symbol(symbol)
                 if _is_cash(symbol):
-                    rate = fx_market.get_rate(fx_market.Xccy(demangled_symbol, self._account_ccy))
+                    currency_code = CurrencyCode.validate(demangled_symbol)
+                    yield Asset.cash(
+                        currency=currency_code,
+                        is_domestic=currency_code == self.user_account_currency,
+                        amount=units,
+                    )
                 else:
                     rate = price_fetcher.get_last_price(demangled_symbol, self._account_ccy)
-                yield symbol, units, units * rate
+                    yield Asset(
+                        name=demangled_symbol,
+                        type="cryptocurrency",  # deprecated
+                        asset_class=AssetClass.crypto,
+                        asset_type=AssetType.crypto_currency,
+                        units=units,
+                        value_in_account_ccy=units * rate,
+                    )
 
     def initialize(self) -> None:
         self._api = krakenex.API(
@@ -91,52 +100,17 @@ class Api(ProviderBase):
         if results["error"]:
             raise AuthenticationError(_format_error(results["error"]))
 
-    def get_balances(self) -> Balances:
-        balance = sum(value for (_, _, value) in self._iter_balances())
-        return Balances(accounts=[BalanceEntry(account=self._account_description(), balance=balance)])
+    def get_accounts(self) -> list[Account]:
+        return [self._account_description()]
 
     def get_assets(self) -> Assets:
         return Assets(
             accounts=[
                 AssetsEntry(
-                    account=self._account_description(),
-                    assets=[
-                        _make_asset(
-                            symbol=symbol,
-                            units=units,
-                            value=value,
-                            user_account_currency=self.user_account_currency,
-                        )
-                        for symbol, units, value in self._iter_balances()
-                    ],
+                    account_id=self._account_description().id,
+                    items=list(self._iter_assets()),
                 )
             ]
-        )
-
-
-def _make_asset(
-    symbol: str,
-    units: float,
-    value: float,
-    user_account_currency: CurrencyCode,
-) -> Asset:
-    demangled_symbol = _demangle_symbol(symbol)
-    if _is_cash(symbol):
-        currency = CurrencyCode(demangled_symbol)
-        return Asset.cash(
-            currency=currency,
-            is_domestic=currency == user_account_currency,
-            amount=units,
-        )
-    else:
-        return Asset(
-            name=demangled_symbol,
-            type="cryptocurrency",  # deprecated
-            asset_class=AssetClass.crypto,
-            asset_type=AssetType.crypto_currency,
-            units=units,
-            value=value,
-            currency=cryptocurrency_code(demangled_symbol),
         )
 
 

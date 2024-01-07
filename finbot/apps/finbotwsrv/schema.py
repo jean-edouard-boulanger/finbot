@@ -8,7 +8,7 @@ SchemaNamespace = "Finbot"
 
 
 class LineItem(str, Enum):
-    Balances = "Balances"
+    Accounts = "Accounts"
     Assets = "Assets"
     Liabilities = "Liabilities"
 
@@ -26,9 +26,9 @@ class LineItemError(BaseModel):
     error: ApplicationErrorData
 
 
-class BalancesResults(BaseModel):
-    line_item: Literal[LineItem.Balances] = LineItem.Balances
-    results: list[providers_schema.BalanceEntry]
+class AccountsResults(BaseModel):
+    line_item: Literal[LineItem.Accounts] = LineItem.Accounts
+    results: list[providers_schema.Account]
 
 
 class AssetsResults(BaseModel):
@@ -41,7 +41,7 @@ class LiabilitiesResults(BaseModel):
     results: list[providers_schema.LiabilitiesEntry]
 
 
-LineItemResults: TypeAlias = BalancesResults | AssetsResults | LiabilitiesResults | LineItemError
+LineItemResults: TypeAlias = AccountsResults | AssetsResults | LiabilitiesResults | LineItemError
 
 
 class ValidateCredentialsRequest(BaseModel):

@@ -1,5 +1,5 @@
 import enum
-from typing import TypeAlias
+from typing import Self, TypeAlias
 
 from finbot.core.pydantic_ import Field
 from finbot.core.schema import BaseModel, CurrencyCode
@@ -45,21 +45,21 @@ class Account(BaseModel):
     type: str = Field(description="Account type (depository, investment, etc.)")  # TODO: constrain this with an enum
 
 
-class BalanceEntry(BaseModel):
-    account: Account
-    balance: float = Field(description="Account balance (in the account currency)")
-
-
-class Balances(BaseModel):
-    accounts: list[BalanceEntry]
-
-
 class Asset(BaseModel):
     name: str = Field(description="Asset name/description")
     type: str  # deprecated
     asset_class: AssetClass = Field(description="Asset class")
     asset_type: AssetType = Field(description="Asset type")
-    value: float = Field(description="Asset value (in the holding account currency)")
+    value_in_account_ccy: float | None = Field(
+        default=None,
+        description="Asset value expressed in the holding account currency"
+        " (mutually exclusive with `value_in_item_ccy`)",
+    )
+    value_in_item_ccy: float | None = Field(
+        default=None,
+        description="Asset value expressed in the specified asset currency"
+        " (mutually exclusive with `value_in_account_ccy`)",
+    )
     units: float | None = Field(default=None, description="Number of asset units held in the account")
     currency: CurrencyCode | None = Field(default=None, description="Asset currency")
     provider_specific: ProviderSpecificPayloadType | None = Field(
@@ -74,23 +74,22 @@ class Asset(BaseModel):
         is_domestic: bool,
         amount: float,
         provider_specific: ProviderSpecificPayloadType | None = None,
-    ) -> "Asset":
-        _validate_currency_code(currency)
-        return Asset(
-            name=currency.upper(),
+    ) -> Self:
+        return cls(
+            name=f"{currency}",
             type="currency",  # deprecated
             asset_class=(AssetClass.currency if is_domestic else AssetClass.foreign_currency),
             asset_type=AssetType.cash,
-            value=amount,
+            value_in_item_ccy=amount,
             units=None,
-            currency=CurrencyCode(currency.upper()),
+            currency=currency,
             provider_specific=provider_specific,
         )
 
 
 class AssetsEntry(BaseModel):
-    account: Account = Field(description="Account holding the assets")
-    assets: list[Asset] = Field(description="Assets held in the account")
+    account_id: str = Field(description="Identifier of the account holding the assets")
+    items: list[Asset] = Field(description="Assets held in the account")
 
 
 class Assets(BaseModel):
@@ -100,7 +99,17 @@ class Assets(BaseModel):
 class Liability(BaseModel):
     name: str = Field(description="Liability name/description")
     type: str = Field(description="Liability type (credit, loan, etc.)")  # TODO: constrain this with an enum
-    value: float = Field(description="Liability amount (in the holding account currency)")
+    value_in_account_ccy: float | None = Field(
+        default=None,
+        description="Liability amount expressed in the holding account currency"
+        " (mutually exclusive with `value_in_item_ccy`)",
+    )
+    value_in_item_ccy: float | None = Field(
+        default=None,
+        description="Liability amount expressed in the specified liability currency"
+        " (mutually exclusive with `value_in_account_ccy`)",
+    )
+    currency: CurrencyCode | None = Field(default=None, description="Liability currency")
     provider_specific: ProviderSpecificPayloadType | None = Field(
         default=None,
         description="Arbitrary data (key/value pair) specific to the provider/asset",
@@ -108,8 +117,8 @@ class Liability(BaseModel):
 
 
 class LiabilitiesEntry(BaseModel):
-    account: Account = Field(description="Account holding the liabilities")
-    liabilities: list[Liability] = Field(description="Liabilities held in the account")
+    account_id: str = Field(description="Identifier of the account holding the liabilities")
+    items: list[Liability] = Field(description="Liabilities held in the account")
 
 
 class Liabilities(BaseModel):
@@ -119,6 +128,17 @@ class Liabilities(BaseModel):
 ItemType: TypeAlias = Asset | Liability
 
 
-def _validate_currency_code(currency: CurrencyCode) -> None:
-    if len(currency) != 3 or not all(c.isalnum() for c in currency):
-        raise ValueError(f"invalid currency code: {currency}")
+def _validate_value_and_currency(
+    value_in_account_ccy: float | None,
+    value_in_native_ccy: float | None,
+    currency: CurrencyCode | None,
+) -> None:
+    if (value_in_native_ccy is not None and value_in_account_ccy is not None) or (
+        value_in_native_ccy is None or value_in_account_ccy is None
+    ):
+        raise ValueError(
+            f"Either `value_in_account_ccy` (={value_in_account_ccy})"
+            f" or `value_in_native_ccy` (={value_in_native_ccy}) must be set"
+        )
+    if value_in_native_ccy is not None and currency is None:
+        raise ValueError("`currency` must be set when `value_in_native_ccy` is set")

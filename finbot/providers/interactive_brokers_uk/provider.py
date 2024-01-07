@@ -26,6 +26,7 @@ from finbot.providers.interactive_brokers_uk.intake import (
     IntakeMethod,
     load_latest_report_payload,
 )
+from finbot.providers.schema import Account
 
 
 class PGPKey(BaseModel):
@@ -73,12 +74,8 @@ class Api(ProviderBase):
             report_payload = raw_report_payload.decode()
         self.__report = FlexReportWrapper(parse_flex_report_payload(report_payload))
 
-    def get_balances(self) -> providers_schema.Balances:
-        return providers_schema.Balances(
-            accounts=[
-                statement.get_balance(self.user_account_currency) for statement in some(self.__report).statements
-            ],
-        )
+    def get_accounts(self) -> list[Account]:
+        return [statement.account for statement in some(self.__report).statements]
 
     def get_assets(self) -> providers_schema.Assets:
         return providers_schema.Assets(
@@ -89,12 +86,11 @@ class Api(ProviderBase):
 class FlexStatementWrapper:
     def __init__(self, statement: FlexStatement):
         self.statement = statement
-        self.conversion_rates = _make_conversion_rates_mapping(statement)
         self.securities = _make_securities_mapping(statement)
         self.account = providers_schema.Account(
             id=self.account_id,
             name=self.account_name,
-            iso_currency=self.account_currency,
+            iso_currency=self.account_information.currency,
             type="investment",
         )
 
@@ -108,7 +104,7 @@ class FlexStatementWrapper:
 
     @property
     def account_currency(self) -> CurrencyCode:
-        return CurrencyCode(self.account_information.currency)
+        return self.account_information.currency
 
     @property
     def account_information(self) -> AccountInformation:
@@ -120,31 +116,13 @@ class FlexStatementWrapper:
             return f"{self.account_information.alias} ({self.account_id})"
         return self.account_id
 
-    def get_balance(self, user_account_currency: CurrencyCode) -> providers_schema.BalanceEntry:
-        assert self.entries.mtm_performance_summary_in_base is not None
-        return providers_schema.BalanceEntry(
-            account=self.account,
-            balance=sum(
-                _make_asset(
-                    entry=entry,
-                    conversion_rates=self.conversion_rates,
-                    securities=self.securities,
-                    account_currency=self.account.iso_currency,
-                    user_account_currency=user_account_currency,
-                ).value
-                for entry in some(self.entries.mtm_performance_summary_in_base).entries
-            ),
-        )
-
     def get_assets(self, user_account_currency: CurrencyCode) -> providers_schema.AssetsEntry:
         return providers_schema.AssetsEntry(
-            account=self.account,
-            assets=[
+            account_id=self.account.id,
+            items=[
                 _make_asset(
                     entry=entry,
-                    conversion_rates=self.conversion_rates,
                     securities=self.securities,
-                    account_currency=self.account_currency,
                     user_account_currency=user_account_currency,
                 )
                 for entry in some(self.entries.mtm_performance_summary_in_base).entries
@@ -160,23 +138,18 @@ class FlexReportWrapper:
 
 def _make_asset(
     entry: MTMPerformanceSummaryUnderlying,
-    conversion_rates: dict[tuple[CurrencyCode, CurrencyCode], float],
     securities: dict[str, SecurityInfo],
-    account_currency: CurrencyCode,
     user_account_currency: CurrencyCode,
 ) -> providers_schema.Asset:
     asset_category = entry.asset_category
     if asset_category == "STK":
         stock_currency = CurrencyCode(securities[entry.full_security_id].currency.upper())
-        conversion_rate = (
-            1.0 if stock_currency == account_currency else conversion_rates[(stock_currency, account_currency)]
-        )
         return providers_schema.Asset(
             name=f"{entry.symbol} - {entry.description}",
             type="equity",
             asset_class=providers_schema.AssetClass.equities,
             asset_type=providers_schema.AssetType.stock,
-            value=entry.close_quantity * entry.close_price * conversion_rate,
+            value_in_item_ccy=entry.close_quantity * entry.close_price,
             units=entry.close_quantity,
             currency=stock_currency,
             provider_specific={
@@ -194,15 +167,10 @@ def _make_asset(
         return providers_schema.Asset.cash(
             currency=currency,
             is_domestic=currency == user_account_currency,
-            amount=entry.close_quantity * entry.close_price,
+            amount=entry.close_quantity,
             provider_specific={"Report date": entry.report_date.strftime("%Y-%b-%d")},
         )
     raise UnsupportedFinancialInstrument(asset_category, entry.symbol)
-
-
-def _make_conversion_rates_mapping(statement: FlexStatement) -> dict[tuple[CurrencyCode, CurrencyCode], float]:
-    entries = some(statement.entries.conversion_rates).entries
-    return {(CurrencyCode(entry.from_ccy), CurrencyCode(entry.to_ccy)): entry.rate for entry in entries}
 
 
 def _make_securities_mapping(statement: FlexStatement) -> dict[str, SecurityInfo]:

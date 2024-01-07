@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Any, cast
 
 from playwright.sync_api import Locator, Page
@@ -5,7 +6,7 @@ from price_parser import Price  # type: ignore
 
 from finbot.core.pydantic_ import SecretStr
 from finbot.core.schema import BaseModel, CurrencyCode
-from finbot.core.utils import raise_
+from finbot.core.utils import raise_, some
 from finbot.providers.errors import AuthenticationError
 from finbot.providers.playwright_base import (
     Condition,
@@ -19,8 +20,6 @@ from finbot.providers.schema import (
     Assets,
     AssetsEntry,
     AssetType,
-    BalanceEntry,
-    Balances,
 )
 
 AUTH_URL = "https://lwp.aegon.co.uk/targetplanUI/login"
@@ -33,27 +32,33 @@ class AegonTargetplanCredentials(BaseModel):
     password: SecretStr
 
 
+@dataclass(frozen=True)
+class AccountValue:
+    account: Account
+    account_value: float
+
+
 class MainDashboardPage(object):
     def __init__(self, page: Page):
         self.page = page
         assert "targetplanUI/investments" in self.page.url
 
     @staticmethod
-    def _extract_account(account_locator: Locator) -> BalanceEntry:
+    def _extract_account(account_locator: Locator) -> AccountValue:
         body_locator = account_locator.locator(".card-body")
         footer_locator = account_locator.locator(".card-footer")
         balance_str = body_locator.locator("span.currency-hero").inner_text().strip()
-        return BalanceEntry(
+        return AccountValue(
             account=Account(
                 id=footer_locator.inner_text().strip().split(" ")[-1],
                 name=body_locator.locator("h3").inner_text().strip(),
                 iso_currency=CurrencyCode("GBP"),
                 type="pension",
             ),
-            balance=cast(float, Price.fromstring(balance_str).amount_float),
+            account_value=cast(float, Price.fromstring(balance_str).amount_float),
         )
 
-    def get_accounts(self) -> list[BalanceEntry]:
+    def get_accounts(self) -> list[AccountValue]:
         account_locators = ConditionGuard(
             Condition(lambda: self.page.locator(".card-product-1").all()),
         ).wait()
@@ -72,7 +77,7 @@ class Api(PlaywrightProviderBase):
     ) -> None:
         super().__init__(user_account_currency=user_account_currency, **kwargs)
         self._credentials = credentials
-        self._accounts: list[BalanceEntry] | None = None
+        self._accounts: list[AccountValue] | None = None
 
     def initialize(self) -> None:
         page = self.page
@@ -91,25 +96,25 @@ class Api(PlaywrightProviderBase):
         ).wait_any()
         self._accounts = MainDashboardPage(page).get_accounts()
 
-    def get_balances(self) -> Balances:
-        return Balances(accounts=cast(list[BalanceEntry], self._accounts))
+    def get_accounts(self) -> list[Account]:
+        return [entry.account for entry in some(self._accounts)]
 
     def get_assets(self) -> Assets:
         return Assets(
             accounts=[
                 AssetsEntry(
-                    account=entry.account,
-                    assets=[
+                    account_id=entry.account.id,
+                    items=[
                         Asset(
                             name="Generic fund (unknown name)",
                             type="blended fund",
                             asset_class=AssetClass.multi_asset,
                             asset_type=AssetType.generic_fund,
                             currency=entry.account.iso_currency,
-                            value=entry.balance,
+                            value_in_account_ccy=entry.account_value,
                         )
                     ],
                 )
-                for entry in cast(list[BalanceEntry], self._accounts)
+                for entry in some(self._accounts)
             ]
         )
