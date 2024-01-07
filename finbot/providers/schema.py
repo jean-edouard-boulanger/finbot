@@ -1,7 +1,7 @@
 import enum
-from typing import Self, TypeAlias
+from typing import Self, TypeAlias, Type, Any
 
-from finbot.core.pydantic_ import Field
+from finbot.core.pydantic_ import Field, root_validator
 from finbot.core.schema import BaseModel, CurrencyCode
 
 ProviderSpecificPayloadType: TypeAlias = dict[str, str | int | float | bool]
@@ -67,6 +67,15 @@ class Asset(BaseModel):
         description="Arbitrary data (key/value pair) specific to the provider/asset",
     )
 
+    @root_validator
+    def validate_value_and_currency(cls, values) -> Self:
+        _validate_value_and_currency(
+            value_in_account_ccy=values.get("value_in_account_ccy"),
+            value_in_item_ccy=values.get("value_in_item_ccy"),
+            currency=values.get("currency"),
+        )
+        return values
+
     @classmethod
     def cash(
         cls,
@@ -115,6 +124,15 @@ class Liability(BaseModel):
         description="Arbitrary data (key/value pair) specific to the provider/asset",
     )
 
+    @root_validator
+    def validate_value_and_currency(cls, values) -> Self:
+        _validate_value_and_currency(
+            value_in_account_ccy=values.get("value_in_account_ccy"),
+            value_in_item_ccy=values.get("value_in_item_ccy"),
+            currency=values.get("currency"),
+        )
+        return values
+
 
 class LiabilitiesEntry(BaseModel):
     account_id: str = Field(description="Identifier of the account holding the liabilities")
@@ -130,15 +148,15 @@ ItemType: TypeAlias = Asset | Liability
 
 def _validate_value_and_currency(
     value_in_account_ccy: float | None,
-    value_in_native_ccy: float | None,
+    value_in_item_ccy: float | None,
     currency: CurrencyCode | None,
 ) -> None:
-    if (value_in_native_ccy is not None and value_in_account_ccy is not None) or (
-        value_in_native_ccy is None or value_in_account_ccy is None
+    if (value_in_item_ccy is not None and value_in_account_ccy is not None) or (
+        value_in_item_ccy is None and value_in_account_ccy is None
     ):
         raise ValueError(
             f"Either `value_in_account_ccy` (={value_in_account_ccy})"
-            f" or `value_in_native_ccy` (={value_in_native_ccy}) must be set"
+            f" or `value_in_unit_ccy` (={value_in_item_ccy}) must be set"
         )
-    if value_in_native_ccy is not None and currency is None:
-        raise ValueError("`currency` must be set when `value_in_native_ccy` is set")
+    if value_in_item_ccy is not None and currency is None:
+        raise ValueError(f"`currency` must be set when `value_in_unit_ccy` (={value_in_item_ccy}) is set")
