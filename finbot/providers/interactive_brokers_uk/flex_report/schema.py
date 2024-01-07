@@ -1,6 +1,6 @@
 from datetime import date
 
-from finbot.core.schema import BaseModel
+from finbot.core.schema import BaseModel, CurrencyCode
 
 
 class MTMPerformanceSummaryUnderlying(BaseModel):
@@ -28,7 +28,7 @@ class MTMPerformanceSummaryInBase(BaseModel):
 
 
 class SecurityInfo(BaseModel):
-    currency: str
+    currency: CurrencyCode
     asset_category: str
     sub_category: str
     symbol: str
@@ -59,7 +59,7 @@ class ConversionRates(BaseModel):
 class AccountInformation(BaseModel):
     account_id: str
     alias: str
-    currency: str
+    currency: CurrencyCode
 
 
 class FlexStatementEntries(BaseModel):

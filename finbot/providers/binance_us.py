@@ -1,9 +1,9 @@
-from typing import Any, Iterator, Optional, Tuple
+from typing import Any, Generator
 
 from binance.client import Client as Binance
 from binance.exceptions import BinanceAPIException
 
-from finbot.core.crypto_market import CryptoMarket, cryptocurrency_code
+from finbot.core.crypto_market import CryptoMarket
 from finbot.core.pydantic_ import SecretStr
 from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.providers.base import ProviderBase
@@ -41,7 +41,7 @@ class Api(ProviderBase):
         self._credentials = credentials
         self._account_ccy = "USD"
         self._crypto_market = CryptoMarket()
-        self._api: Optional[Binance] = None
+        self._api: Binance | None = None
 
     def _get_account(self) -> dict[Any, Any]:
         assert self._api is not None
@@ -69,31 +69,27 @@ class Api(ProviderBase):
     def get_accounts(self) -> list[Account]:
         return [self._account_description()]
 
-    def _iter_holdings(self) -> Iterator[Tuple[str, float, float]]:
-        for entry in self._get_account()["balances"]:
-            units = float(entry["free"]) + float(entry["locked"])
-            if units > OWNERSHIP_UNITS_THRESHOLD:
-                symbol = entry["asset"]
-                value = units * self._crypto_market.get_spot_cached(symbol, self._account_ccy)
-                yield symbol, units, value
-
     def get_assets(self) -> Assets:
         return Assets(
             accounts=[
                 AssetsEntry(
                     account_id=self._account_description().id,
-                    items=[
-                        Asset(
-                            name=symbol,
-                            type="cryptocurrency",
-                            asset_class=AssetClass.crypto,
-                            asset_type=AssetType.crypto_currency,
-                            units=units,
-                            value_in_account_ccy=value,
-                            currency=cryptocurrency_code(symbol),
-                        )
-                        for symbol, units, value in self._iter_holdings()
-                    ],
+                    items=list(self._iter_assets()),
                 )
             ]
         )
+
+    def _iter_assets(self) -> Generator[Asset, None, None]:
+        for entry in self._get_account()["balances"]:
+            units = float(entry["free"]) + float(entry["locked"])
+            if units > OWNERSHIP_UNITS_THRESHOLD:
+                symbol = entry["asset"]
+                value = units * self._crypto_market.get_spot_cached(symbol, self._account_ccy)
+                yield Asset(
+                    name=symbol,
+                    type="cryptocurrency",
+                    asset_class=AssetClass.crypto,
+                    asset_type=AssetType.crypto_currency,
+                    units=units,
+                    value_in_account_ccy=value,
+                )

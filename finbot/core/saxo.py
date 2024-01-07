@@ -4,10 +4,11 @@ from typing import Any, Literal
 import requests
 
 from finbot.core.pydantic_ import BaseModel
+from finbot.core.schema import CurrencyCode
 
 
 class DisplayAndFormat(BaseModel):
-    Currency: str
+    Currency: CurrencyCode
     Description: str
     Symbol: str
 
@@ -50,7 +51,7 @@ class NetPositionsResponse(BaseModel):
 class SaxoAccount(BaseModel):
     AccountKey: str
     ClientKey: str
-    Currency: str
+    Currency: CurrencyCode
     DisplayName: str
 
 

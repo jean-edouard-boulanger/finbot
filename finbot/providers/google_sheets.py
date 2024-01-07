@@ -72,8 +72,9 @@ class HoldingsTableSchema(BaseModel):
     asset_class: AssetClass
     asset_type: AssetType
     units: float | None
-    value_in_account_ccy: float
-    currency: str | None
+    value_in_account_ccy: float | None
+    value_in_asset_ccy: float | None
+    currency: CurrencyCode | None
     custom: str | None
 
     @property

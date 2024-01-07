@@ -4,7 +4,7 @@ import traceback
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Any, Generator, Optional, Protocol, cast
+from typing import Any, Generator, Optional, Protocol, TypedDict, cast
 
 from sqlalchemy.orm import joinedload
 
@@ -20,9 +20,6 @@ from finbot.core.utils import some
 from finbot.providers import schema as providers_schema
 from finbot.services.user_account_snapshot import errors as snapshot_errors
 from finbot.services.user_account_snapshot import schema
-
-FINBOT_ENV = environment.get()
-
 
 logger = logging.getLogger(__name__)
 
@@ -142,7 +139,7 @@ def visit_snapshot_tree(
 
 
 class XccyCollector(SnapshotTreeVisitor):
-    def __init__(self, target_ccy: str) -> None:
+    def __init__(self, target_ccy: core_schema.CurrencyCode) -> None:
         self.target_ccy = target_ccy
         self.xccys: set[fx_market.Xccy] = set()
 
@@ -151,11 +148,37 @@ class XccyCollector(SnapshotTreeVisitor):
         linked_account_id: int,
         sub_account: providers_schema.Account,
     ) -> None:
-        if sub_account.iso_currency != self.target_ccy:
+        self._collect(sub_account.iso_currency, self.target_ccy)
+
+    def visit_sub_account_item(
+        self,
+        linked_account_id: int,
+        sub_account: providers_schema.Account,
+        item: providers_schema.Asset | providers_schema.Liability,
+    ) -> None:
+        if item.value_in_item_ccy is not None and item.value_in_account_ccy is not None:
+            raise snapshot_errors.InconsistentSnapshotData(
+                f"item '{item.name}' in linked_account.id={linked_account_id} and sub_account.id={sub_account.id}"
+                f" has its value expressed both in item currency (item.value_in_item_ccy={item.value_in_item_ccy})"
+                f" and account currency (item.value_in_account_ccy={item.value_in_account_ccy}),"
+                f" which is not allowed."
+            )
+        if item.value_in_item_ccy is not None:
+            if item.currency is None:
+                pretty_item_type = type(item).__name__.lower()
+                raise snapshot_errors.InconsistentSnapshotData(
+                    f"item '{item.name}' in linked_account.id={linked_account_id} and sub_account.id={sub_account.id}"
+                    f" has its value ({item.value_in_item_ccy}) expressed in the {pretty_item_type} currency"
+                    f" but does not specify a currency (item.currency={item.currency})."
+                )
+            self._collect(item.currency, sub_account.iso_currency)
+
+    def _collect(self, domestic: core_schema.CurrencyCode, foreign: core_schema.CurrencyCode) -> None:
+        if domestic != foreign:
             self.xccys.add(
                 fx_market.Xccy(
-                    domestic=sub_account.iso_currency,
-                    foreign=self.target_ccy,
+                    domestic=domestic,
+                    foreign=foreign,
                 ),
             )
 
@@ -170,6 +193,11 @@ class CachedXccyRatesGetter(object):
         if xccy.foreign == xccy.domestic:
             return 1.0
         return self.xccy_rates[xccy]
+
+
+class ItemValuationFields(TypedDict):
+    value_sub_account_ccy: float
+    value_snapshot_ccy: float
 
 
 class SnapshotBuilderVisitor(SnapshotTreeVisitor):
@@ -247,18 +275,34 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
             asset_class=asset_class.value if asset_class else None,
             asset_type=asset_type.value if asset_type else None,
             units=item.units if isinstance(item, providers_schema.Asset) else None,
-            value_sub_account_ccy=item.value_in_account_ccy,
-            value_snapshot_ccy=item.value_in_account_ccy
-            * self.xccy_rates_getter(
-                fx_market.Xccy(
-                    domestic=sub_account.iso_currency,
-                    foreign=self.target_ccy,
-                ),
-            ),
             currency=item.currency if isinstance(item, providers_schema.Asset) else None,
             provider_specific_data=item.provider_specific,
+            **self._get_item_valuation(sub_account, item),
         )
         sub_account_entry.items_entries.append(new_item)  # type: ignore
+
+    def _get_item_valuation(
+        self,
+        sub_account: providers_schema.Account,
+        item: providers_schema.Asset | providers_schema.Liability,
+    ) -> ItemValuationFields:
+        value_sub_account_ccy = item.value_in_account_ccy
+        if value_sub_account_ccy is None:
+            assert item.value_in_item_ccy is not None
+            assert item.currency is not None
+            value_sub_account_ccy = item.value_in_item_ccy * self.xccy_rates_getter(
+                fx_market.Xccy(item.currency, sub_account.iso_currency)
+            )
+        else:
+            assert item.value_in_item_ccy is None
+            assert item.currency is None
+        value_snapshot_ccy = value_sub_account_ccy * self.xccy_rates_getter(
+            fx_market.Xccy(sub_account.iso_currency, self.target_ccy)
+        )
+        return dict(
+            value_sub_account_ccy=value_sub_account_ccy,
+            value_snapshot_ccy=value_snapshot_ccy,
+        )
 
     @staticmethod
     def _get_item_type(item: providers_schema.ItemType) -> model.SubAccountItemType:
@@ -319,7 +363,7 @@ def get_credentials_data(
         json.loads(
             secure.fernet_decrypt(
                 linked_account.encrypted_credentials.encode(),
-                FINBOT_ENV.secret_key.encode(),
+                environment.get_secret_key().encode(),
             ).decode()
         ),
     )

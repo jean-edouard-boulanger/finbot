@@ -5,7 +5,6 @@ from finbot.apps.appwsrv.schema import (
     AssetTypeClassFormattingRule,
     AssetTypeFormattingRule,
 )
-from finbot.core.crypto_market import is_cryptocurrency_code
 from finbot.core.schema import HexColour
 from finbot.providers.schema import AssetClass, AssetType
 
@@ -150,6 +149,7 @@ ACCOUNTS_PALETTE: list[HexColour] = [
 
 
 UNKNOWN_CURRENCY_COLOR = "#393939"
+CRYPTOCURRENCY_COLOR = ASSET_CLASSES_FORMATTING_RULES[AssetClass.crypto].dominant_colour
 CURRENCIES_COLORS = {
     "AED": "#C05D6D",
     "AFN": "#C96E56",
@@ -310,8 +310,6 @@ CURRENCIES_COLORS = {
 def get_currency_color(currency_code: str | None) -> HexColour:
     if not currency_code:
         return UNKNOWN_CURRENCY_COLOR
-    if is_cryptocurrency_code(currency_code):
-        return get_asset_class_formatting_rule(AssetClass.crypto).dominant_colour
     return CURRENCIES_COLORS.get(currency_code, UNKNOWN_CURRENCY_COLOR)
 
 

@@ -75,7 +75,7 @@ class Api(ProviderBase):
                 )
             )
         for position in self._client.get_account_positions(saxo_account).Data:
-            assets.append(_make_asset(saxo_account, position))
+            assets.append(_make_asset(position))
         return assets
 
     def _iter_accounts(self) -> Generator[tuple[Account, saxo.SaxoAccount], None, None]:
@@ -107,7 +107,6 @@ def _get_value_in_account_currency(
 
 
 def _make_asset(
-    saxo_account: saxo.SaxoAccount,
     position: saxo.NetPosition,
 ) -> Asset:
     asset_type = position.SinglePosition.PositionBase.AssetType
@@ -117,9 +116,9 @@ def _make_asset(
             type="equity",
             asset_class=(AssetClass.commodities if asset_type.lower() == "etc" else AssetClass.equities),
             asset_type=AssetType[asset_type.upper()],
-            value_in_account_ccy=_get_value_in_account_currency(saxo_account, position),
+            value_in_item_ccy=position.SinglePosition.PositionView.MarketValue,
             units=position.SinglePosition.PositionBase.Amount,
-            currency=CurrencyCode(position.DisplayAndFormat.Currency.upper()),
+            currency=position.DisplayAndFormat.Currency,
             provider_specific={
                 "Asset currency": position.DisplayAndFormat.Currency,
                 "Symbol": position.DisplayAndFormat.Symbol,
