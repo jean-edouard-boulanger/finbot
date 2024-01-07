@@ -73,7 +73,7 @@ class HoldingsTableSchema(BaseModel):
     asset_type: AssetType
     units: float | None
     value_in_account_ccy: float | None
-    value_in_asset_ccy: float | None
+    value_in_item_ccy: float | None
     currency: CurrencyCode | None
     custom: str | None
 
@@ -105,8 +105,9 @@ class Api(ProviderBase):
             asset_class=holding.asset_class,
             asset_type=holding.asset_type,
             value_in_account_ccy=holding.value_in_account_ccy,
+            value_in_item_ccy=holding.value_in_item_ccy,
             provider_specific=holding.provider_specific,
-            currency=CurrencyCode(holding.currency.upper()) if holding.currency else None,
+            currency=holding.currency,
         )
 
     def _iter_accounts(self) -> Generator[AccountAssets, None, None]:
