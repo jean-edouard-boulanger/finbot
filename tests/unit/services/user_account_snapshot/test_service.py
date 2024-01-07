@@ -7,7 +7,6 @@ from finbot.core import fx_market
 from finbot.core import schema as core_schema
 from finbot.providers import schema as providers_schema
 from finbot.services.user_account_snapshot import service
-from finbot.services.user_account_snapshot.errors import InconsistentSnapshotData
 
 TEST_USER_ACCOUNT_CCY = core_schema.CurrencyCode.validate("EUR")
 ALL_LINE_ITEMS = [

@@ -1,7 +1,7 @@
 import pytest
 
-from finbot.providers import schema
 from finbot.core.schema import CurrencyCode
+from finbot.providers import schema
 
 
 def test_asset_init_fails_when_both_value_in_account_ccy_and_value_in_item_ccy_are_specified():

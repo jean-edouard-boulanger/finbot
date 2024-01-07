@@ -18,7 +18,6 @@ from finbot.core.schema import ApplicationErrorData
 from finbot.core.serialization import serialize
 from finbot.core.utils import some
 from finbot.providers import schema as providers_schema
-from finbot.services.user_account_snapshot import errors as snapshot_errors
 from finbot.services.user_account_snapshot import schema
 
 logger = logging.getLogger(__name__)
@@ -157,7 +156,7 @@ class XccyCollector(SnapshotTreeVisitor):
         item: providers_schema.Asset | providers_schema.Liability,
     ) -> None:
         if item.value_in_item_ccy is not None:
-            self._collect(item.currency, sub_account.iso_currency)
+            self._collect(some(item.currency), sub_account.iso_currency)
 
     def _collect(self, domestic: core_schema.CurrencyCode, foreign: core_schema.CurrencyCode) -> None:
         if domestic != foreign:

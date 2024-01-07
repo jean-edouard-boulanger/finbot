@@ -1,5 +1,5 @@
 import enum
-from typing import Self, TypeAlias, Type, Any
+from typing import Any, Self, TypeAlias
 
 from finbot.core.pydantic_ import Field, root_validator
 from finbot.core.schema import BaseModel, CurrencyCode
@@ -68,7 +68,7 @@ class Asset(BaseModel):
     )
 
     @root_validator
-    def validate_value_and_currency(cls, values) -> Self:
+    def validate_value_and_currency(cls, values: Any) -> Any:
         _validate_value_and_currency(
             value_in_account_ccy=values.get("value_in_account_ccy"),
             value_in_item_ccy=values.get("value_in_item_ccy"),
@@ -125,7 +125,7 @@ class Liability(BaseModel):
     )
 
     @root_validator
-    def validate_value_and_currency(cls, values) -> Self:
+    def validate_value_and_currency(cls, values: Any) -> Any:
         _validate_value_and_currency(
             value_in_account_ccy=values.get("value_in_account_ccy"),
             value_in_item_ccy=values.get("value_in_item_ccy"),
