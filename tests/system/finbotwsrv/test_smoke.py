@@ -23,22 +23,21 @@ def check_account(account: providers_schema.Account):
 def check_assets_financial_data(results: list[providers_schema.AssetsEntry]):
     assert len(results) == 1
     assets_entry = results[0]
-    check_account(assets_entry.account)
-    assets = assets_entry.assets
+    assert assets_entry.account_id == "dummy"
+    assets = assets_entry.items
     assert len(assets) == 1
     asset = assets[0]
     assert asset.name == "GBP"
     assert asset.type == "currency"
     assert asset.asset_class == "foreign_currency"
     assert asset.asset_type == "cash"
-    assert asset.value == 1000.0
+    assert asset.value_in_item_ccy == 1000.0
+    assert asset.value_in_account_ccy is None
 
 
-def check_balances_financial_data(results: list[providers_schema.BalanceEntry]):
+def check_accounts_financial_data(results: list[providers_schema.Account]):
     assert len(results) == 1
-    balances_entry = results[0]
-    check_account(balances_entry.account)
-    assert balances_entry.balance == 1000.0
+    check_account(results[0])
 
 
 def test_get_financial_data(api: FinbotwsrvClient):
@@ -47,7 +46,7 @@ def test_get_financial_data(api: FinbotwsrvClient):
         credentials_data={},
         line_items=[
             finbotwsrv_schema.LineItem.Assets,
-            finbotwsrv_schema.LineItem.Balances,
+            finbotwsrv_schema.LineItem.Accounts,
         ],
         user_account_currency=providers_schema.CurrencyCode("EUR"),
     )
@@ -57,8 +56,8 @@ def test_get_financial_data(api: FinbotwsrvClient):
         if isinstance(entry, finbotwsrv_schema.AssetsResults):
             assert entry.line_item == finbotwsrv_schema.LineItem.Assets
             check_assets_financial_data(entry.results)
-        elif isinstance(entry, finbotwsrv_schema.BalancesResults):
-            assert entry.line_item == finbotwsrv_schema.LineItem.Balances
-            check_balances_financial_data(entry.results)
+        elif isinstance(entry, finbotwsrv_schema.AccountsResults):
+            assert entry.line_item == finbotwsrv_schema.LineItem.Accounts
+            check_accounts_financial_data(entry.results)
         else:
             raise AssertionError(f"Unexpected entry: {entry}")
