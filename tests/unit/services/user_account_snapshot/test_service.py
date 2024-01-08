@@ -129,6 +129,14 @@ def valid_snapshot_data() -> list[service.LinkedAccountSnapshotResult]:
                                         units=1.0,
                                         currency=core_schema.CurrencyCode.validate("EUR"),
                                     ),
+                                    providers_schema.Asset(
+                                        name="JYc1",
+                                        type="currency future",
+                                        asset_class=providers_schema.AssetClass.currency,
+                                        asset_type=providers_schema.AssetType.future,
+                                        value_in_account_ccy=1000.0,
+                                        currency=core_schema.CurrencyCode.validate("JPY"),
+                                    ),
                                 ],
                             )
                         ]
@@ -181,7 +189,7 @@ def test_visit_snapshot_tree(valid_snapshot_data: list[service.LinkedAccountSnap
             ),
         ]
     )
-    assert visitor_mock.visit_sub_account_item.call_count == 6
+    assert visitor_mock.visit_sub_account_item.call_count == 7
     visitor_mock.visit_sub_account_item.assert_has_calls(
         [
             call(
@@ -276,6 +284,23 @@ def test_visit_snapshot_tree(valid_snapshot_data: list[service.LinkedAccountSnap
                     currency=core_schema.CurrencyCode.validate("EUR"),
                 ),
             ),
+            call(
+                linked_account_id=2,
+                sub_account=providers_schema.Account(
+                    id="acc-3",
+                    name="Test account 3",
+                    iso_currency=core_schema.CurrencyCode.validate("USD"),
+                    type="brokerage",
+                ),
+                item=providers_schema.Asset(
+                    name="JYc1",
+                    type="currency future",
+                    asset_class=providers_schema.AssetClass.currency,
+                    asset_type=providers_schema.AssetType.future,
+                    value_in_account_ccy=1000.0,
+                    currency=core_schema.CurrencyCode.validate("JPY"),
+                ),
+            ),
         ]
     )
 
@@ -291,4 +316,5 @@ class TestXccyCollector:
             fx_market.Xccy("USD", TEST_USER_ACCOUNT_CCY),
             fx_market.Xccy("GBP", "USD"),
             fx_market.Xccy("EUR", "USD"),
+            fx_market.Xccy("USD", "JPY"),
         }

@@ -157,6 +157,8 @@ class XccyCollector(SnapshotTreeVisitor):
     ) -> None:
         if item.value_in_item_ccy is not None:
             self._collect(some(item.currency), sub_account.iso_currency)
+        elif item.currency is not None:
+            self._collect(sub_account.iso_currency, item.currency)
 
     def _collect(self, domestic: core_schema.CurrencyCode, foreign: core_schema.CurrencyCode) -> None:
         if domestic != foreign:
@@ -181,6 +183,7 @@ class CachedXccyRatesGetter(object):
 
 
 class ItemValuationFields(TypedDict):
+    value_item_ccy: float | None
     value_sub_account_ccy: float
     value_snapshot_ccy: float
 
@@ -263,21 +266,27 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
         sub_account: providers_schema.Account,
         item: providers_schema.Asset | providers_schema.Liability,
     ) -> ItemValuationFields:
+        value_item_ccy = item.value_in_item_ccy
         value_sub_account_ccy = item.value_in_account_ccy
         if value_sub_account_ccy is None:
-            assert item.value_in_item_ccy is not None
+            assert value_item_ccy is not None
             assert item.currency is not None
-            value_sub_account_ccy = item.value_in_item_ccy * self.xccy_rates_getter(
+            value_sub_account_ccy = value_item_ccy * self.xccy_rates_getter(
                 fx_market.Xccy(item.currency, sub_account.iso_currency)
             )
         else:
-            assert item.value_in_item_ccy is None
+            assert value_item_ccy is None
+        if value_item_ccy is None and item.currency is not None:
+            value_item_ccy = value_sub_account_ccy * self.xccy_rates_getter(
+                fx_market.Xccy(sub_account.iso_currency, item.currency)
+            )
         value_snapshot_ccy = value_sub_account_ccy * self.xccy_rates_getter(
             fx_market.Xccy(sub_account.iso_currency, self.target_ccy)
         )
-        return dict(
+        return ItemValuationFields(
             value_sub_account_ccy=value_sub_account_ccy,
             value_snapshot_ccy=value_snapshot_ccy,
+            value_item_ccy=value_item_ccy,
         )
 
     @staticmethod

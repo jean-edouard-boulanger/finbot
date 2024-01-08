@@ -94,6 +94,7 @@ class ConsistencySnapshotItemEntry(ConsistencySnapshotEntryHeader):
     item_units: Decimal | None
     value_snapshot_ccy: Decimal
     value_sub_account_ccy: Decimal
+    value_item_ccy: Decimal
     item_provider_specific_data: dict[str, Any] | None
     item_currency: str | None
 
@@ -186,6 +187,7 @@ class ReportRepository(object):
                    sais.units AS item_units,
                    sais.value_snapshot_ccy AS value_snapshot_ccy,
                    sais.value_sub_account_ccy AS value_sub_account_ccy,
+                   sais.value_item_ccy AS value_item_ccy,
                    sais.currency AS item_currency,
                    sais.provider_specific_data AS item_provider_specific_data
             FROM (
