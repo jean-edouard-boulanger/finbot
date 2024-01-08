@@ -17,7 +17,8 @@ def test_healthy(api: FinbotwsrvClient):
 def check_account(account: providers_schema.Account):
     assert account.id == "dummy"
     assert account.iso_currency == "GBP"
-    assert account.type == "cash"
+    assert account.type == "depository"
+    assert account.sub_type == "checking"
 
 
 def check_assets_financial_data(results: list[providers_schema.AssetsEntry]):

@@ -17,7 +17,11 @@ class Credentials(BaseModel):
 
 DUMMY_BALANCE: float = 1000.0
 DUMMY_ACCOUNT = Account(
-    id="dummy", name="Dummy account", iso_currency=CurrencyCode("GBP"), type=AccountType.depository, sub_type="checking"
+    id="dummy",
+    name="Dummy account",
+    iso_currency=CurrencyCode("GBP"),
+    type=AccountType.depository,
+    sub_type="checking",
 )
 SchemaNamespace = "DummyProvider"
 
