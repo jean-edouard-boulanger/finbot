@@ -8,14 +8,7 @@ from finbot.core.pydantic_ import SecretStr
 from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationError
-from finbot.providers.schema import (
-    Account,
-    Asset,
-    AssetClass,
-    Assets,
-    AssetsEntry,
-    AssetType,
-)
+from finbot.providers.schema import Account, AccountType, Asset, AssetClass, Assets, AssetsEntry, AssetType
 
 OWNERSHIP_UNITS_THRESHOLD = 0.00001
 RECV_WINDOW = 60 * 1000
@@ -53,7 +46,7 @@ class Api(ProviderBase):
             id="portfolio",
             name="Portfolio",
             iso_currency=self._account_ccy,
-            type="investment",
+            type=AccountType.investment,
         )
 
     def initialize(self) -> None:

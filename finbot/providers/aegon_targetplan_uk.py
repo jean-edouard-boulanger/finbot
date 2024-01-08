@@ -15,6 +15,7 @@ from finbot.providers.playwright_base import (
 )
 from finbot.providers.schema import (
     Account,
+    AccountType,
     Asset,
     AssetClass,
     Assets,
@@ -53,7 +54,7 @@ class MainDashboardPage(object):
                 id=footer_locator.inner_text().strip().split(" ")[-1],
                 name=body_locator.locator("h3").inner_text().strip(),
                 iso_currency=CurrencyCode("GBP"),
-                type="pension",
+                type=AccountType.investment,
             ),
             account_value=cast(float, Price.fromstring(balance_str).amount_float),
         )

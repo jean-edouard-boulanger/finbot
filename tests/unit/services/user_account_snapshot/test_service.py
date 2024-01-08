@@ -35,13 +35,13 @@ def valid_snapshot_data() -> list[service.LinkedAccountSnapshotResult]:
                                 id="acc-1",
                                 name="Test account 1",
                                 iso_currency=TEST_USER_ACCOUNT_CCY,
-                                type="depository",
+                                type=providers_schema.AccountType.depository,
                             ),
                             providers_schema.Account(
                                 id="acc-2",
                                 name="Test account 2 (credit)",
                                 iso_currency=TEST_USER_ACCOUNT_CCY,
-                                type="credit",
+                                type=providers_schema.AccountType.credit,
                             ),
                         ]
                     ),
@@ -68,6 +68,7 @@ def valid_snapshot_data() -> list[service.LinkedAccountSnapshotResult]:
                                         name="Credit card",
                                         type="credit",
                                         value_in_account_ccy=1000.0,
+                                        currency="EUR",
                                     )
                                 ],
                             )
@@ -92,7 +93,7 @@ def valid_snapshot_data() -> list[service.LinkedAccountSnapshotResult]:
                                 id="acc-3",
                                 name="Test account 3",
                                 iso_currency=core_schema.CurrencyCode.validate("USD"),
-                                type="brokerage",
+                                type=providers_schema.AccountType.investment,
                             )
                         ]
                     ),
@@ -166,7 +167,7 @@ def test_visit_snapshot_tree(valid_snapshot_data: list[service.LinkedAccountSnap
                     id="acc-1",
                     name="Test account 1",
                     iso_currency=TEST_USER_ACCOUNT_CCY,
-                    type="depository",
+                    type=providers_schema.AccountType.depository,
                 ),
             ),
             call(
@@ -175,7 +176,7 @@ def test_visit_snapshot_tree(valid_snapshot_data: list[service.LinkedAccountSnap
                     id="acc-2",
                     name="Test account 2 (credit)",
                     iso_currency=TEST_USER_ACCOUNT_CCY,
-                    type="credit",
+                    type=providers_schema.AccountType.credit,
                 ),
             ),
             call(
@@ -184,7 +185,7 @@ def test_visit_snapshot_tree(valid_snapshot_data: list[service.LinkedAccountSnap
                     id="acc-3",
                     name="Test account 3",
                     iso_currency=core_schema.CurrencyCode.validate("USD"),
-                    type="brokerage",
+                    type=providers_schema.AccountType.investment,
                 ),
             ),
         ]
@@ -198,7 +199,7 @@ def test_visit_snapshot_tree(valid_snapshot_data: list[service.LinkedAccountSnap
                     id="acc-1",
                     name="Test account 1",
                     iso_currency=TEST_USER_ACCOUNT_CCY,
-                    type="depository",
+                    type=providers_schema.AccountType.depository,
                 ),
                 item=providers_schema.Asset.cash(
                     currency=TEST_USER_ACCOUNT_CCY,
@@ -212,12 +213,13 @@ def test_visit_snapshot_tree(valid_snapshot_data: list[service.LinkedAccountSnap
                     id="acc-2",
                     name="Test account 2 (credit)",
                     iso_currency=TEST_USER_ACCOUNT_CCY,
-                    type="credit",
+                    type=providers_schema.AccountType.credit,
                 ),
                 item=providers_schema.Liability(
                     name="Credit card",
                     type="credit",
                     value_in_account_ccy=1000.0,
+                    currency="EUR",
                 ),
             ),
             call(
@@ -226,7 +228,7 @@ def test_visit_snapshot_tree(valid_snapshot_data: list[service.LinkedAccountSnap
                     id="acc-3",
                     name="Test account 3",
                     iso_currency=core_schema.CurrencyCode.validate("USD"),
-                    type="brokerage",
+                    type=providers_schema.AccountType.investment,
                 ),
                 item=providers_schema.Asset.cash(
                     currency=core_schema.CurrencyCode.validate("USD"),
@@ -240,7 +242,7 @@ def test_visit_snapshot_tree(valid_snapshot_data: list[service.LinkedAccountSnap
                     id="acc-3",
                     name="Test account 3",
                     iso_currency=core_schema.CurrencyCode.validate("USD"),
-                    type="brokerage",
+                    type=providers_schema.AccountType.investment,
                 ),
                 item=providers_schema.Asset.cash(
                     currency=core_schema.CurrencyCode.validate("GBP"),
@@ -254,7 +256,7 @@ def test_visit_snapshot_tree(valid_snapshot_data: list[service.LinkedAccountSnap
                     id="acc-3",
                     name="Test account 3",
                     iso_currency=core_schema.CurrencyCode.validate("USD"),
-                    type="brokerage",
+                    type=providers_schema.AccountType.investment,
                 ),
                 item=providers_schema.Asset(
                     name="AAPL",
@@ -272,7 +274,7 @@ def test_visit_snapshot_tree(valid_snapshot_data: list[service.LinkedAccountSnap
                     id="acc-3",
                     name="Test account 3",
                     iso_currency=core_schema.CurrencyCode.validate("USD"),
-                    type="brokerage",
+                    type=providers_schema.AccountType.investment,
                 ),
                 item=providers_schema.Asset(
                     name="LVMH",
@@ -290,7 +292,7 @@ def test_visit_snapshot_tree(valid_snapshot_data: list[service.LinkedAccountSnap
                     id="acc-3",
                     name="Test account 3",
                     iso_currency=core_schema.CurrencyCode.validate("USD"),
-                    type="brokerage",
+                    type=providers_schema.AccountType.investment,
                 ),
                 item=providers_schema.Asset(
                     name="JYc1",

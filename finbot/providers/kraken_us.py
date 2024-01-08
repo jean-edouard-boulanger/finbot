@@ -9,6 +9,7 @@ from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationError
 from finbot.providers.schema import (
     Account,
+    AccountType,
     Asset,
     AssetClass,
     Assets,
@@ -62,7 +63,7 @@ class Api(ProviderBase):
             id="portfolio",
             name="Portfolio",
             iso_currency=CurrencyCode(self._account_ccy),
-            type="investment",
+            type=AccountType.investment,
         )
 
     def _iter_assets(self) -> Generator[Asset, None, None]:

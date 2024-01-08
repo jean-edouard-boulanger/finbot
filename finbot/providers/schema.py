@@ -38,11 +38,19 @@ class AssetType(str, enum.Enum):
     stable_coin = "stable_coin"
 
 
+class AccountType(str, enum.Enum):
+    depository = "depository"
+    credit = "credit"
+    loan = "loan"
+    investment = "investment"
+    other = "other"
+
+
 class Account(BaseModel):
     id: str = Field(description="Account identifier (unique across all accounts in this linked account)")
     name: str = Field(description="Account name/description")
     iso_currency: CurrencyCode = Field(description="Account currency")
-    type: str = Field(description="Account type (depository, investment, etc.)")  # TODO: constrain this with an enum
+    type: AccountType = Field(description="Account type")
 
 
 class Asset(BaseModel):

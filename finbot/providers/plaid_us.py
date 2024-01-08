@@ -9,6 +9,7 @@ from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationError, UnsupportedAccountType
 from finbot.providers.schema import (
     Account,
+    AccountType,
     Asset,
     Assets,
     AssetsEntry,
@@ -94,7 +95,7 @@ def _make_account(account_data: PlaidAccountData) -> Account:
         id=account_data.name,
         name=account_data.name,
         iso_currency=account_data.currency,
-        type=account_data.account_type,
+        type=AccountType[account_data.account_type],
     )
 
 

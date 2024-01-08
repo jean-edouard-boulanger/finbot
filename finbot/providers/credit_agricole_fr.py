@@ -15,6 +15,7 @@ from finbot.providers.playwright_base import (
 )
 from finbot.providers.schema import (
     Account,
+    AccountType,
     Asset,
     Assets,
     AssetsEntry,
@@ -57,7 +58,7 @@ class Api(PlaywrightProviderBase):
                     id=data["numeroCompte"].strip(),
                     name=data["libelleUsuelProduit"].strip(),
                     iso_currency=data["idDevise"].strip(),
-                    type="cash",
+                    type=AccountType.depository,
                 ),
                 account_value=float(data["solde"]),
             )

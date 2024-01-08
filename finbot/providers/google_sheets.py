@@ -1,6 +1,6 @@
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Any, Generator, Generic, Literal, TypedDict, TypeVar, cast
+from typing import Any, Generator, Generic, TypedDict, TypeVar, cast
 
 import gspread
 from gspread.utils import rowcol_to_a1
@@ -13,6 +13,7 @@ from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationError, UserConfigurationError
 from finbot.providers.schema import (
     Account,
+    AccountType,
     Asset,
     AssetClass,
     Assets,
@@ -62,7 +63,7 @@ class AccountsTableSchema(BaseModel):
     identifier: str
     description: str
     currency: str
-    type: Literal["cash", "credit", "investment"]
+    type: AccountType
 
 
 class HoldingsTableSchema(BaseModel):
