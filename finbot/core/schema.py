@@ -1,7 +1,7 @@
 import enum
 import re
 import traceback
-from typing import Annotated, Any, Callable, Generator, Pattern, Self, TypeAlias
+from typing import Annotated, Any, Callable, Generator, Pattern, Self, TypeAlias, TypeVar
 
 from finbot.core.errors import ApplicationError, FinbotError
 from finbot.core.pydantic_ import BaseModel as _BaseModel
@@ -14,6 +14,9 @@ CRYPTOCURRENCY_CODE_PREFIX = "X:"
 class BaseModel(_BaseModel):
     class Config:
         extra = Extra.forbid
+
+
+BaseModelT = TypeVar("BaseModelT", bound=BaseModel)
 
 
 class RegexValidatedStr(str):
