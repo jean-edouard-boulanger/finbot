@@ -234,6 +234,7 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
             sub_account_ccy=sub_account.iso_currency,
             sub_account_description=sub_account.name,
             sub_account_type=sub_account.type.value,
+            sub_account_sub_type=sub_account.sub_type,
         )
         linked_account.sub_accounts_entries.append(sub_account_entry)  # type: ignore
         self.sub_accounts[(linked_account_id, sub_account.id)] = sub_account_entry

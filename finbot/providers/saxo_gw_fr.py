@@ -87,6 +87,7 @@ class Api(ProviderBase):
                     name=raw_account_data.DisplayName,
                     iso_currency=CurrencyCode(raw_account_data.Currency),
                     type=AccountType.investment,
+                    sub_type="brokerage",
                 ),
                 raw_account_data,
             )

@@ -55,6 +55,7 @@ class MainDashboardPage(object):
                 name=body_locator.locator("h3").inner_text().strip(),
                 iso_currency=CurrencyCode("GBP"),
                 type=AccountType.investment,
+                sub_type="pension",
             ),
             account_value=cast(float, Price.fromstring(balance_str).amount_float),
         )

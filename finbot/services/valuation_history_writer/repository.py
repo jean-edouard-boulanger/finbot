@@ -44,6 +44,7 @@ class SubAccountValuationDescriptor:
     sub_account_ccy: str
     sub_account_description: str
     sub_account_type: str
+    sub_account_sub_type: str | None
 
 
 @dataclasses.dataclass
@@ -65,6 +66,7 @@ class ConsistencySnapshotEntryHeader:
     sub_account_ccy: str
     sub_account_description: str
     sub_account_type: str
+    sub_account_sub_type: str | None
 
     @property
     def linked_account_valuation_descriptor(self) -> LinkedAccountValuationDescriptor:
@@ -81,6 +83,7 @@ class ConsistencySnapshotEntryHeader:
             sub_account_ccy=self.sub_account_ccy,
             sub_account_description=self.sub_account_description,
             sub_account_type=self.sub_account_type,
+            sub_account_sub_type=self.sub_account_sub_type,
         )
 
 
@@ -179,6 +182,7 @@ class ReportRepository(object):
                    sase.sub_account_ccy AS sub_account_ccy,
                    sase.sub_account_description AS sub_account_description,
                    sase.sub_account_type AS sub_account_type,
+                   sase.sub_account_sub_type as sub_account_sub_type,
                    sais.name AS item_name,
                    sais.item_type AS item_type,
                    sais.item_subtype AS item_subtype,

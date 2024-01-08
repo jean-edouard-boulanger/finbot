@@ -96,6 +96,7 @@ def _make_account(account_data: PlaidAccountData) -> Account:
         name=account_data.name,
         iso_currency=account_data.currency,
         type=AccountType[account_data.account_type],
+        sub_type=account_data.sub_type,
     )
 
 

@@ -79,6 +79,7 @@ class PlaidSettings:
 class AccountData(BaseModel):
     name: str
     account_type: str
+    sub_type: str
     balance: float
     currency: CurrencyCode
 
@@ -154,6 +155,7 @@ class PlaidClient(object):
                 AccountData(
                     name=account_data.name,
                     account_type=account_data.type.value,
+                    sub_type=account_data.subtype.value,
                     balance=account_data.balances.current,
                     currency=account_data.balances.iso_currency_code,
                 )

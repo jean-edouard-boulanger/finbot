@@ -100,6 +100,7 @@ def write_history_impl(
                     sub_account_ccy=descriptor.sub_account_ccy,
                     sub_account_description=descriptor.sub_account_description,
                     sub_account_type=descriptor.sub_account_type,
+                    sub_account_sub_type=descriptor.sub_account_sub_type,
                     valuation=valuation.value_snapshot_ccy,
                     valuation_sub_account_ccy=valuation.value_sub_account_ccy,
                 )

@@ -92,6 +92,7 @@ class FlexStatementWrapper:
             name=self.account_name,
             iso_currency=self.account_information.currency,
             type=AccountType.investment,
+            sub_type="brokerage",
         )
 
     @property

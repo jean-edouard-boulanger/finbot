@@ -64,6 +64,7 @@ class Api(ProviderBase):
             name="Portfolio",
             iso_currency=CurrencyCode(self._account_ccy),
             type=AccountType.investment,
+            sub_type="crypto exchange",
         )
 
     def _iter_assets(self) -> Generator[Asset, None, None]:

@@ -8,6 +8,89 @@ ProviderSpecificPayloadType: TypeAlias = dict[str, str | int | float | bool]
 SchemaNamespace = "Providers"
 
 
+DEPOSITORY_ACCOUNT_SUB_TYPES = (
+    "checking",
+    "savings",
+    "hsa",
+    "cd",
+    "money market",
+    "paypal",
+    "prepaid",
+    "cash management",
+    "ebt",
+    "other",
+)
+
+CREDIT_ACCOUNT_SUB_TYPES = ("credit card", "paypal", "other")
+
+LOAN_ACCOUNT_SUB_TYPES = (
+    "auto",
+    "business",
+    "commercial",
+    "construction",
+    "consumer",
+    "home equity",
+    "loan",
+    "mortgage",
+    "overdraft",
+    "line of credit",
+    "student",
+    "other",
+)
+
+INVESTMENT_ACCOUNT_SUB_TYPES = (
+    "529",
+    "401a",
+    "401k",
+    "403B",
+    "457b",
+    "brokerage",
+    "cash isa",
+    "crypto exchange",
+    "education savings account",
+    "fixed annuity",
+    "gic",
+    "health reimbursement arrangement",
+    "hsa",
+    "ira",
+    "isa",
+    "keogh",
+    "lif",
+    "life insurance",
+    "lira",
+    "lrif",
+    "lrsp",
+    "mutual fund",
+    "non-custodial wallet",
+    "non-taxable brokerage account",
+    "other",
+    "other annuity",
+    "other insurance",
+    "pension",
+    "prif",
+    "profit sharing plan",
+    "qshr",
+    "rdsp",
+    "resp",
+    "retirement",
+    "rlif",
+    "roth",
+    "roth 401k",
+    "rrif",
+    "rrsp",
+    "sarsep",
+    "sep ira",
+    "simple ira",
+    "sipp",
+    "stock plan",
+    "tfsa",
+    "trust",
+    "ugma",
+    "utma",
+    "variable annuity",
+)
+
+
 class AssetClass(str, enum.Enum):
     equities = "equities"
     fixed_income = "fixed_income"
@@ -51,11 +134,26 @@ class Account(BaseModel):
     name: str = Field(description="Account name/description")
     iso_currency: CurrencyCode = Field(description="Account currency")
     type: AccountType = Field(description="Account type")
+    sub_type: str | None = Field(description="Account sub-type")
+
+    @root_validator
+    def validate_sub_type(cls, values: Any) -> Any:
+        allowed_sub_types = {
+            AccountType.depository: DEPOSITORY_ACCOUNT_SUB_TYPES,
+            AccountType.credit: CREDIT_ACCOUNT_SUB_TYPES,
+            AccountType.investment: INVESTMENT_ACCOUNT_SUB_TYPES,
+            AccountType.loan: LOAN_ACCOUNT_SUB_TYPES,
+            AccountType.other: (None,),
+        }
+        account_type, account_sub_type = values.get("type"), values.get("sub_type")
+        if account_type is not None and account_sub_type not in allowed_sub_types[account_type]:
+            raise ValueError(f"'{account_sub_type}' is not a valid '{account_type.value}' account sub-type")
+        return values
 
 
 class Asset(BaseModel):
     name: str = Field(description="Asset name/description")
-    type: str  # deprecated
+    type: str = Field(default_factory=str)  # deprecated
     asset_class: AssetClass = Field(description="Asset class")
     asset_type: AssetType = Field(description="Asset type")
     value_in_account_ccy: float | None = Field(

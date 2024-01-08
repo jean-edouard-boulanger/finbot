@@ -47,6 +47,7 @@ class QontoApi(object):
     def _handle_response(response: requests.Response) -> JSON:
         response.raise_for_status()
         payload = response.json()
+        print(payload)
         if "errors" in payload:
             errors = payload["errors"]
             if len(errors) == 1 and errors[0]["code"] == "unauthorized":

@@ -64,6 +64,7 @@ class AccountsTableSchema(BaseModel):
     description: str
     currency: str
     type: AccountType
+    sub_type: str | None
 
 
 class HoldingsTableSchema(BaseModel):
@@ -136,6 +137,7 @@ class Api(ProviderBase):
                     name=account.description,
                     iso_currency=CurrencyCode(account.currency.upper()),
                     type=account.type,
+                    sub_type=account.sub_type,
                 ),
                 assets=[
                     self._make_asset(holding_entry.record)

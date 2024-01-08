@@ -60,6 +60,7 @@ class Api(ProviderBase):
                     name=entry.name,
                     iso_currency=CurrencyCode(entry.currency),
                     type=AccountType.depository,
+                    sub_type="checking",
                 ),
                 account_value=entry.balance,
             )

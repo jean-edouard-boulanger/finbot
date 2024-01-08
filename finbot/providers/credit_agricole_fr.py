@@ -7,7 +7,7 @@ from playwright.sync_api import Locator
 from finbot.core.pydantic_ import SecretStr
 from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.core.utils import raise_
-from finbot.providers.errors import AuthenticationError
+from finbot.providers.errors import AuthenticationError, UnsupportedAccountType
 from finbot.providers.playwright_base import (
     Condition,
     ConditionGuard,
@@ -53,12 +53,14 @@ class Api(PlaywrightProviderBase):
 
     def _iter_accounts(self) -> Generator[AccountValue, None, None]:
         def handle_account(data: dict[str, Any]) -> AccountValue:
+            account_type, account_sub_type = _parse_account_type_and_subtype(data)
             return AccountValue(
                 account=Account(
                     id=data["numeroCompte"].strip(),
-                    name=data["libelleUsuelProduit"].strip(),
+                    name=data["libelleProduit"].strip(),
                     iso_currency=data["idDevise"].strip(),
-                    type=AccountType.depository,
+                    type=account_type,
+                    sub_type=account_sub_type,
                 ),
                 account_value=float(data["solde"]),
             )
@@ -141,3 +143,12 @@ class Api(PlaywrightProviderBase):
                 for entry in self._iter_accounts()
             ]
         )
+
+
+def _parse_account_type_and_subtype(account_data: dict[str, Any]) -> tuple[AccountType, str]:
+    raw_account_type = account_data["natureCompteBam"].strip()
+    if raw_account_type == "CCHQ":
+        return AccountType.depository, "checking"
+    if raw_account_type in ("LDD", "LEP", "LIV A"):
+        return AccountType.depository, "savings"
+    raise UnsupportedAccountType(raw_account_type, account_data["libelleProduit"])

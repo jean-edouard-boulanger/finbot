@@ -47,6 +47,7 @@ class Api(ProviderBase):
             name="Portfolio",
             iso_currency=self._account_ccy,
             type=AccountType.investment,
+            sub_type="crypto exchange",
         )
 
     def initialize(self) -> None:

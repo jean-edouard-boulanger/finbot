@@ -97,6 +97,7 @@ def sample_previous_snapshot(
                         sub_account_ccy="EUR",
                         sub_account_description="My test account 01",
                         sub_account_type="depository",
+                        sub_account_sub_type="checking",
                         items_entries=[
                             SubAccountItemSnapshotEntry(
                                 item_type=SubAccountItemType.Asset,
@@ -117,6 +118,7 @@ def sample_previous_snapshot(
                         sub_account_ccy="EUR",
                         sub_account_description="My test account 02 (empty)",
                         sub_account_type="investment",
+                        sub_account_sub_type="brokerage",
                         items_entries=[],
                     ),
                 ],
@@ -130,6 +132,7 @@ def sample_previous_snapshot(
                         sub_account_ccy="USD",
                         sub_account_description="My test account 03",
                         sub_account_type="investment",
+                        sub_account_sub_type="brokerage",
                         items_entries=[
                             SubAccountItemSnapshotEntry(
                                 item_type=SubAccountItemType.Asset,
@@ -184,6 +187,7 @@ def sample_last_snapshot(
                         sub_account_ccy="EUR",
                         sub_account_description="My test account 01",
                         sub_account_type="depository",
+                        sub_account_sub_type="checking",
                         items_entries=[
                             SubAccountItemSnapshotEntry(
                                 item_type=SubAccountItemType.Asset,
@@ -204,6 +208,7 @@ def sample_last_snapshot(
                         sub_account_ccy="EUR",
                         sub_account_description="My test account 02 (empty)",
                         sub_account_type="investment",
+                        sub_account_sub_type="brokerage",
                         items_entries=[],
                     ),
                 ],
@@ -233,6 +238,7 @@ def test_get_consistent_snapshot_data(
                 sub_account_ccy="USD",
                 sub_account_description="My test account 03",
                 sub_account_type="investment",
+                sub_account_sub_type="brokerage",
                 item_name="EUR",
                 item_type=SubAccountItemType.Asset,
                 item_subtype="currency",
@@ -253,6 +259,7 @@ def test_get_consistent_snapshot_data(
                 sub_account_ccy="USD",
                 sub_account_description="My test account 03",
                 sub_account_type="investment",
+                sub_account_sub_type="brokerage",
                 item_name="Test Fund",
                 item_type=SubAccountItemType.Asset,
                 item_subtype="equity",
@@ -273,6 +280,7 @@ def test_get_consistent_snapshot_data(
                 sub_account_ccy="EUR",
                 sub_account_description="My test account 01",
                 sub_account_type="depository",
+                sub_account_sub_type="checking",
                 item_name="EUR",
                 item_type=SubAccountItemType.Asset,
                 item_subtype="currency",
@@ -293,6 +301,7 @@ def test_get_consistent_snapshot_data(
                 sub_account_ccy="EUR",
                 sub_account_description="My test account 02 (empty)",
                 sub_account_type="investment",
+                sub_account_sub_type="brokerage",
             ),
         ]
     )
