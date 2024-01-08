@@ -66,7 +66,7 @@ export const NavigationPanel: React.FC = () => {
 export const Settings: React.FC<Record<string, never>> = () => {
   return (
     <Row>
-      <Col md={3}>
+      <Col md={3} style={{ maxWidth: "20em" }}>
         <NavigationPanel />
       </Col>
       <Col md={9}>

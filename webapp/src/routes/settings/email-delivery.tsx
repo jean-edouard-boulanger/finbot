@@ -116,7 +116,7 @@ export const EmailDeliverySettingsPanel: React.FC<
           <hr />
         </Col>
       </Row>
-      <Row>
+      <Row className={"mb-4"}>
         <Col>
           <Form.Group>
             <Form.Check
@@ -134,8 +134,8 @@ export const EmailDeliverySettingsPanel: React.FC<
           </Form.Group>
         </Col>
       </Row>
-      <Row>
-        <Col>
+      <Row className={"mb-4"}>
+        <Col md={3}>
           <Form.Group>
             <Form.Label>Sender name*</Form.Label>
             <Form.Control
@@ -148,7 +148,7 @@ export const EmailDeliverySettingsPanel: React.FC<
             />
           </Form.Group>
         </Col>
-        <Col>
+        <Col md={3}>
           <Form.Group>
             <Form.Label>Subject prefix</Form.Label>
             <Form.Control
@@ -162,8 +162,8 @@ export const EmailDeliverySettingsPanel: React.FC<
           </Form.Group>
         </Col>
       </Row>
-      <Row>
-        <Col>
+      <Row className={"mb-4"}>
+        <Col md={6}>
           <Form.Group>
             <Form.Label>Delivery method*</Form.Label>
             <Select
@@ -183,8 +183,8 @@ export const EmailDeliverySettingsPanel: React.FC<
           </Form.Group>
         </Col>
       </Row>
-      <Row>
-        <Col>
+      <Row className={"mb-4"}>
+        <Col md={6}>
           {provider && (
             <DataDrivenForm
               formData={providerSettings ?? ({} as any)}
@@ -201,7 +201,6 @@ export const EmailDeliverySettingsPanel: React.FC<
                 }}
                 disabled={!enableDelivery}
                 loading={loading}
-                type={"submit"}
                 size={"sm"}
               >
                 Save
@@ -213,7 +212,6 @@ export const EmailDeliverySettingsPanel: React.FC<
               onClick={handleSaveDisableEmailDelivery}
               disabled={enableDelivery}
               loading={loading}
-              type={"submit"}
               size={"sm"}
             >
               Save

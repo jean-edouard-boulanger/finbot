@@ -84,8 +84,13 @@ export const ProfileSettings: React.FC<Record<string, never>> = () => {
           <hr />
         </Col>
       </Row>
-      <Row>
+      <Row className={"mb-4"}>
         <Col>
+          <h4>Update profile</h4>
+        </Col>
+      </Row>
+      <Row>
+        <Col md={6}>
           <Formik
             enableReinitialize
             validationSchema={PROFILE_SCHEMA}
@@ -94,7 +99,7 @@ export const ProfileSettings: React.FC<Record<string, never>> = () => {
           >
             {({ isSubmitting, submitForm }) => (
               <MetaForm>
-                <Form.Group>
+                <Form.Group className="mb-3">
                   <Form.Label>Full name</Form.Label>
                   <Field type="text" name="fullName" className="form-control" />
                   <ErrorMessage
@@ -103,7 +108,7 @@ export const ProfileSettings: React.FC<Record<string, never>> = () => {
                     component="div"
                   />
                 </Form.Group>
-                <Form.Group>
+                <Form.Group className="mb-3">
                   <Form.Label>Email</Form.Label>
                   <Field type="text" name="email" className="form-control" />
                   <ErrorMessage
@@ -112,7 +117,7 @@ export const ProfileSettings: React.FC<Record<string, never>> = () => {
                     component="div"
                   />
                 </Form.Group>
-                <Form.Group>
+                <Form.Group className="mb-3">
                   <Form.Label>Mobile phone number</Form.Label>
                   <Field
                     type="text"
@@ -128,7 +133,6 @@ export const ProfileSettings: React.FC<Record<string, never>> = () => {
                 <LoadingButton
                   size={"sm"}
                   onClick={submitForm}
-                  variant="dark"
                   loading={isSubmitting}
                 >
                   Update

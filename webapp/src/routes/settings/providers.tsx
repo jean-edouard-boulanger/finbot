@@ -167,8 +167,7 @@ export const EditProviderPanel: React.FC<Record<string, never>> = () => {
       <Row className={"mb-4"}>
         <Col>
           <h3>
-            Providers
-            <small>| {isNew ? "New" : selectedProviderId}</small>
+            Providers <small>| {isNew ? "New" : selectedProviderId}</small>
           </h3>
           <hr />
         </Col>
@@ -301,7 +300,7 @@ export const EditProviderPanel: React.FC<Record<string, never>> = () => {
                 <LoadingButton
                   size={"sm"}
                   onClick={submitForm}
-                  variant="dark"
+                  variant="primary"
                   disabled={schemaError !== null}
                   loading={isSubmitting}
                 >
@@ -312,7 +311,7 @@ export const EditProviderPanel: React.FC<Record<string, never>> = () => {
                     onClick={() => {
                       handleDelete(selectedProviderId);
                     }}
-                    variant={"dark"}
+                    variant={"danger"}
                     size={"sm"}
                   >
                     Delete
