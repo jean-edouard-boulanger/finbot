@@ -60,7 +60,7 @@ def main():
     with provider_type.create(auth_payload, settings.valuation_currency) as provider_api:
         provider_api.initialize()
         print(pretty_dump({
-            "balances": provider_api.get_balances(),
+            "accounts": provider_api.get_accounts(),
             "assets": provider_api.get_assets(),
             "liabilities": provider_api.get_liabilities()
         }, indent=2))

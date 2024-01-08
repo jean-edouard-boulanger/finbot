@@ -156,7 +156,9 @@ class XccyCollector(SnapshotTreeVisitor):
         item: providers_schema.Asset | providers_schema.Liability,
     ) -> None:
         if item.value_in_item_ccy is not None:
-            self._collect(some(item.currency), sub_account.iso_currency)
+            self._collect(item.currency, sub_account.iso_currency)
+        else:
+            self._collect(sub_account.iso_currency, item.currency)
 
     def _collect(self, domestic: core_schema.CurrencyCode, foreign: core_schema.CurrencyCode) -> None:
         if domestic != foreign:
@@ -181,6 +183,7 @@ class CachedXccyRatesGetter(object):
 
 
 class ItemValuationFields(TypedDict):
+    value_item_ccy: float | None
     value_sub_account_ccy: float
     value_snapshot_ccy: float
 
@@ -230,7 +233,8 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
             sub_account_id=sub_account.id,
             sub_account_ccy=sub_account.iso_currency,
             sub_account_description=sub_account.name,
-            sub_account_type=sub_account.type,
+            sub_account_type=sub_account.type.value,
+            sub_account_sub_type=sub_account.sub_type,
         )
         linked_account.sub_accounts_entries.append(sub_account_entry)  # type: ignore
         self.sub_accounts[(linked_account_id, sub_account.id)] = sub_account_entry
@@ -263,21 +267,26 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
         sub_account: providers_schema.Account,
         item: providers_schema.Asset | providers_schema.Liability,
     ) -> ItemValuationFields:
+        value_item_ccy = item.value_in_item_ccy
         value_sub_account_ccy = item.value_in_account_ccy
         if value_sub_account_ccy is None:
-            assert item.value_in_item_ccy is not None
-            assert item.currency is not None
-            value_sub_account_ccy = item.value_in_item_ccy * self.xccy_rates_getter(
+            assert value_item_ccy is not None
+            value_sub_account_ccy = value_item_ccy * self.xccy_rates_getter(
                 fx_market.Xccy(item.currency, sub_account.iso_currency)
             )
         else:
-            assert item.value_in_item_ccy is None
+            assert value_item_ccy is None
+        if value_item_ccy is None:
+            value_item_ccy = value_sub_account_ccy * self.xccy_rates_getter(
+                fx_market.Xccy(sub_account.iso_currency, item.currency)
+            )
         value_snapshot_ccy = value_sub_account_ccy * self.xccy_rates_getter(
             fx_market.Xccy(sub_account.iso_currency, self.target_ccy)
         )
-        return dict(
+        return ItemValuationFields(
             value_sub_account_ccy=value_sub_account_ccy,
             value_snapshot_ccy=value_snapshot_ccy,
+            value_item_ccy=value_item_ccy,
         )
 
     @staticmethod

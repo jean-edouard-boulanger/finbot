@@ -35,13 +35,15 @@ def valid_snapshot_data() -> list[service.LinkedAccountSnapshotResult]:
                                 id="acc-1",
                                 name="Test account 1",
                                 iso_currency=TEST_USER_ACCOUNT_CCY,
-                                type="depository",
+                                type=providers_schema.AccountType.depository,
+                                sub_type="checking",
                             ),
                             providers_schema.Account(
                                 id="acc-2",
                                 name="Test account 2 (credit)",
                                 iso_currency=TEST_USER_ACCOUNT_CCY,
-                                type="credit",
+                                type=providers_schema.AccountType.credit,
+                                sub_type="credit card",
                             ),
                         ]
                     ),
@@ -68,6 +70,7 @@ def valid_snapshot_data() -> list[service.LinkedAccountSnapshotResult]:
                                         name="Credit card",
                                         type="credit",
                                         value_in_account_ccy=1000.0,
+                                        currency="EUR",
                                     )
                                 ],
                             )
@@ -92,7 +95,8 @@ def valid_snapshot_data() -> list[service.LinkedAccountSnapshotResult]:
                                 id="acc-3",
                                 name="Test account 3",
                                 iso_currency=core_schema.CurrencyCode.validate("USD"),
-                                type="brokerage",
+                                type=providers_schema.AccountType.investment,
+                                sub_type="brokerage",
                             )
                         ]
                     ),
@@ -113,7 +117,6 @@ def valid_snapshot_data() -> list[service.LinkedAccountSnapshotResult]:
                                     ),
                                     providers_schema.Asset(
                                         name="AAPL",
-                                        type="stock",
                                         asset_class=providers_schema.AssetClass.equities,
                                         asset_type=providers_schema.AssetType.stock,
                                         value_in_item_ccy=181.18,
@@ -122,12 +125,18 @@ def valid_snapshot_data() -> list[service.LinkedAccountSnapshotResult]:
                                     ),
                                     providers_schema.Asset(
                                         name="LVMH",
-                                        type="stock",
                                         asset_class=providers_schema.AssetClass.equities,
                                         asset_type=providers_schema.AssetType.stock,
                                         value_in_item_ccy=688.90,
                                         units=1.0,
                                         currency=core_schema.CurrencyCode.validate("EUR"),
+                                    ),
+                                    providers_schema.Asset(
+                                        name="JYc1",
+                                        asset_class=providers_schema.AssetClass.currency,
+                                        asset_type=providers_schema.AssetType.future,
+                                        value_in_account_ccy=1000.0,
+                                        currency=core_schema.CurrencyCode.validate("JPY"),
                                     ),
                                 ],
                             )
@@ -158,7 +167,8 @@ def test_visit_snapshot_tree(valid_snapshot_data: list[service.LinkedAccountSnap
                     id="acc-1",
                     name="Test account 1",
                     iso_currency=TEST_USER_ACCOUNT_CCY,
-                    type="depository",
+                    type=providers_schema.AccountType.depository,
+                    sub_type="checking",
                 ),
             ),
             call(
@@ -167,7 +177,8 @@ def test_visit_snapshot_tree(valid_snapshot_data: list[service.LinkedAccountSnap
                     id="acc-2",
                     name="Test account 2 (credit)",
                     iso_currency=TEST_USER_ACCOUNT_CCY,
-                    type="credit",
+                    type=providers_schema.AccountType.credit,
+                    sub_type="credit card",
                 ),
             ),
             call(
@@ -176,12 +187,13 @@ def test_visit_snapshot_tree(valid_snapshot_data: list[service.LinkedAccountSnap
                     id="acc-3",
                     name="Test account 3",
                     iso_currency=core_schema.CurrencyCode.validate("USD"),
-                    type="brokerage",
+                    type=providers_schema.AccountType.investment,
+                    sub_type="brokerage",
                 ),
             ),
         ]
     )
-    assert visitor_mock.visit_sub_account_item.call_count == 6
+    assert visitor_mock.visit_sub_account_item.call_count == 7
     visitor_mock.visit_sub_account_item.assert_has_calls(
         [
             call(
@@ -190,7 +202,8 @@ def test_visit_snapshot_tree(valid_snapshot_data: list[service.LinkedAccountSnap
                     id="acc-1",
                     name="Test account 1",
                     iso_currency=TEST_USER_ACCOUNT_CCY,
-                    type="depository",
+                    type=providers_schema.AccountType.depository,
+                    sub_type="checking",
                 ),
                 item=providers_schema.Asset.cash(
                     currency=TEST_USER_ACCOUNT_CCY,
@@ -204,12 +217,14 @@ def test_visit_snapshot_tree(valid_snapshot_data: list[service.LinkedAccountSnap
                     id="acc-2",
                     name="Test account 2 (credit)",
                     iso_currency=TEST_USER_ACCOUNT_CCY,
-                    type="credit",
+                    type=providers_schema.AccountType.credit,
+                    sub_type="credit card",
                 ),
                 item=providers_schema.Liability(
                     name="Credit card",
                     type="credit",
                     value_in_account_ccy=1000.0,
+                    currency="EUR",
                 ),
             ),
             call(
@@ -218,7 +233,8 @@ def test_visit_snapshot_tree(valid_snapshot_data: list[service.LinkedAccountSnap
                     id="acc-3",
                     name="Test account 3",
                     iso_currency=core_schema.CurrencyCode.validate("USD"),
-                    type="brokerage",
+                    type=providers_schema.AccountType.investment,
+                    sub_type="brokerage",
                 ),
                 item=providers_schema.Asset.cash(
                     currency=core_schema.CurrencyCode.validate("USD"),
@@ -232,7 +248,8 @@ def test_visit_snapshot_tree(valid_snapshot_data: list[service.LinkedAccountSnap
                     id="acc-3",
                     name="Test account 3",
                     iso_currency=core_schema.CurrencyCode.validate("USD"),
-                    type="brokerage",
+                    type=providers_schema.AccountType.investment,
+                    sub_type="brokerage",
                 ),
                 item=providers_schema.Asset.cash(
                     currency=core_schema.CurrencyCode.validate("GBP"),
@@ -246,11 +263,11 @@ def test_visit_snapshot_tree(valid_snapshot_data: list[service.LinkedAccountSnap
                     id="acc-3",
                     name="Test account 3",
                     iso_currency=core_schema.CurrencyCode.validate("USD"),
-                    type="brokerage",
+                    type=providers_schema.AccountType.investment,
+                    sub_type="brokerage",
                 ),
                 item=providers_schema.Asset(
                     name="AAPL",
-                    type="stock",
                     asset_class=providers_schema.AssetClass.equities,
                     asset_type=providers_schema.AssetType.stock,
                     value_in_item_ccy=181.18,
@@ -264,16 +281,33 @@ def test_visit_snapshot_tree(valid_snapshot_data: list[service.LinkedAccountSnap
                     id="acc-3",
                     name="Test account 3",
                     iso_currency=core_schema.CurrencyCode.validate("USD"),
-                    type="brokerage",
+                    type=providers_schema.AccountType.investment,
+                    sub_type="brokerage",
                 ),
                 item=providers_schema.Asset(
                     name="LVMH",
-                    type="stock",
                     asset_class=providers_schema.AssetClass.equities,
                     asset_type=providers_schema.AssetType.stock,
                     value_in_item_ccy=688.90,
                     units=1.0,
                     currency=core_schema.CurrencyCode.validate("EUR"),
+                ),
+            ),
+            call(
+                linked_account_id=2,
+                sub_account=providers_schema.Account(
+                    id="acc-3",
+                    name="Test account 3",
+                    iso_currency=core_schema.CurrencyCode.validate("USD"),
+                    type=providers_schema.AccountType.investment,
+                    sub_type="brokerage",
+                ),
+                item=providers_schema.Asset(
+                    name="JYc1",
+                    asset_class=providers_schema.AssetClass.currency,
+                    asset_type=providers_schema.AssetType.future,
+                    value_in_account_ccy=1000.0,
+                    currency=core_schema.CurrencyCode.validate("JPY"),
                 ),
             ),
         ]
@@ -291,4 +325,5 @@ class TestXccyCollector:
             fx_market.Xccy("USD", TEST_USER_ACCOUNT_CCY),
             fx_market.Xccy("GBP", "USD"),
             fx_market.Xccy("EUR", "USD"),
+            fx_market.Xccy("USD", "JPY"),
         }

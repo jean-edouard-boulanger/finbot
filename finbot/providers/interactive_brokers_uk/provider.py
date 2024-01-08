@@ -26,7 +26,7 @@ from finbot.providers.interactive_brokers_uk.intake import (
     IntakeMethod,
     load_latest_report_payload,
 )
-from finbot.providers.schema import Account
+from finbot.providers.schema import Account, AccountType
 
 
 class PGPKey(BaseModel):
@@ -91,7 +91,8 @@ class FlexStatementWrapper:
             id=self.account_id,
             name=self.account_name,
             iso_currency=self.account_information.currency,
-            type="investment",
+            type=AccountType.investment,
+            sub_type="brokerage",
         )
 
     @property

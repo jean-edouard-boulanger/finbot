@@ -4,6 +4,7 @@ from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.providers.base import ProviderBase
 from finbot.providers.schema import (
     Account,
+    AccountType,
     Asset,
     Assets,
     AssetsEntry,
@@ -15,7 +16,13 @@ class Credentials(BaseModel):
 
 
 DUMMY_BALANCE: float = 1000.0
-DUMMY_ACCOUNT = Account(id="dummy", name="Dummy account", iso_currency=CurrencyCode("GBP"), type="cash")
+DUMMY_ACCOUNT = Account(
+    id="dummy",
+    name="Dummy account",
+    iso_currency=CurrencyCode("GBP"),
+    type=AccountType.depository,
+    sub_type="checking",
+)
 SchemaNamespace = "DummyProvider"
 
 

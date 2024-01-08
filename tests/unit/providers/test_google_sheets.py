@@ -12,6 +12,7 @@ from finbot.providers.google_sheets import (
     LocalSheet,
     TableEntry,
 )
+from finbot.providers.schema import AccountType
 
 
 @pytest.fixture(scope="function")
@@ -20,9 +21,9 @@ def sample_sheet():
         grid=[
             ["", "", "", "", "", ""],
             ["", "ACCOUNTS", "", "", "", ""],
-            ["", "identifier", "description", "currency", "type", ""],
-            ["", "Precious metals", "Precious metals", "EUR", "investment", ""],
-            ["", "Cash", "Cash", "EUR", "cash", ""],
+            ["", "identifier", "description", "currency", "type", "sub_type"],
+            ["", "Precious metals", "Precious metals", "EUR", "investment", "other"],
+            ["", "Cash", "Cash", "EUR", "depository", "checking"],
         ]
     )
 
@@ -68,7 +69,7 @@ class TestLocalSheet:
             Cell(2, 2, "description"),
             Cell(2, 3, "currency"),
             Cell(2, 4, "type"),
-            Cell(2, 5, ""),
+            Cell(2, 5, "sub_type"),
         ]
 
     def test_iter_col_cells(self, sample_sheet: LocalSheet):
@@ -115,7 +116,8 @@ class TestHelpers:
                     identifier="Precious metals",
                     description="Precious metals",
                     currency="EUR",
-                    type="investment",
+                    type=AccountType.investment,
+                    sub_type="other",
                 ),
             ),
             TableEntry(
@@ -124,7 +126,8 @@ class TestHelpers:
                     identifier="Cash",
                     description="Cash",
                     currency="EUR",
-                    type="cash",
+                    type=AccountType.depository,
+                    sub_type="checking",
                 ),
             ),
         ]

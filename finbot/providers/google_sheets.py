@@ -1,6 +1,6 @@
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Any, Generator, Generic, Literal, TypedDict, TypeVar, cast
+from typing import Any, Generator, Generic, TypedDict, TypeVar, cast
 
 import gspread
 from gspread.utils import rowcol_to_a1
@@ -13,6 +13,7 @@ from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationError, UserConfigurationError
 from finbot.providers.schema import (
     Account,
+    AccountType,
     Asset,
     AssetClass,
     Assets,
@@ -62,7 +63,8 @@ class AccountsTableSchema(BaseModel):
     identifier: str
     description: str
     currency: str
-    type: Literal["cash", "credit", "investment"]
+    type: AccountType
+    sub_type: str | None
 
 
 class HoldingsTableSchema(BaseModel):
@@ -74,7 +76,7 @@ class HoldingsTableSchema(BaseModel):
     units: float | None
     value_in_account_ccy: float | None
     value_in_item_ccy: float | None
-    currency: CurrencyCode | None
+    currency: CurrencyCode
     custom: str | None
 
     @property
@@ -135,6 +137,7 @@ class Api(ProviderBase):
                     name=account.description,
                     iso_currency=CurrencyCode(account.currency.upper()),
                     type=account.type,
+                    sub_type=account.sub_type,
                 ),
                 assets=[
                     self._make_asset(holding_entry.record)

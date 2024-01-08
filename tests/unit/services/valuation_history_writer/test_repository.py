@@ -97,6 +97,7 @@ def sample_previous_snapshot(
                         sub_account_ccy="EUR",
                         sub_account_description="My test account 01",
                         sub_account_type="depository",
+                        sub_account_sub_type="checking",
                         items_entries=[
                             SubAccountItemSnapshotEntry(
                                 item_type=SubAccountItemType.Asset,
@@ -106,6 +107,7 @@ def sample_previous_snapshot(
                                 asset_type=AssetType.cash.value,
                                 value_sub_account_ccy=1000.0,
                                 value_snapshot_ccy=1000.0,
+                                value_item_ccy=1000.0,
                                 provider_specific_data={},
                                 currency="EUR",
                             )
@@ -116,6 +118,7 @@ def sample_previous_snapshot(
                         sub_account_ccy="EUR",
                         sub_account_description="My test account 02 (empty)",
                         sub_account_type="investment",
+                        sub_account_sub_type="brokerage",
                         items_entries=[],
                     ),
                 ],
@@ -129,6 +132,7 @@ def sample_previous_snapshot(
                         sub_account_ccy="USD",
                         sub_account_description="My test account 03",
                         sub_account_type="investment",
+                        sub_account_sub_type="brokerage",
                         items_entries=[
                             SubAccountItemSnapshotEntry(
                                 item_type=SubAccountItemType.Asset,
@@ -138,6 +142,7 @@ def sample_previous_snapshot(
                                 asset_type=AssetType.cash.value,
                                 value_sub_account_ccy=500.0,
                                 value_snapshot_ccy=474.0,
+                                value_item_ccy=474.0,
                                 currency="EUR",
                             ),
                             SubAccountItemSnapshotEntry(
@@ -148,6 +153,7 @@ def sample_previous_snapshot(
                                 asset_type=AssetType.ETF.value,
                                 value_sub_account_ccy=1500.0,
                                 value_snapshot_ccy=1422.0,
+                                value_item_ccy=1500.0,
                                 currency="USD",
                             ),
                         ],
@@ -181,6 +187,7 @@ def sample_last_snapshot(
                         sub_account_ccy="EUR",
                         sub_account_description="My test account 01",
                         sub_account_type="depository",
+                        sub_account_sub_type="checking",
                         items_entries=[
                             SubAccountItemSnapshotEntry(
                                 item_type=SubAccountItemType.Asset,
@@ -191,6 +198,7 @@ def sample_last_snapshot(
                                 units=100.0,
                                 value_sub_account_ccy=1000.0,
                                 value_snapshot_ccy=1000.0,
+                                value_item_ccy=1000.0,
                                 currency="EUR",
                             ),
                         ],
@@ -200,6 +208,7 @@ def sample_last_snapshot(
                         sub_account_ccy="EUR",
                         sub_account_description="My test account 02 (empty)",
                         sub_account_type="investment",
+                        sub_account_sub_type="brokerage",
                         items_entries=[],
                     ),
                 ],
@@ -229,6 +238,7 @@ def test_get_consistent_snapshot_data(
                 sub_account_ccy="USD",
                 sub_account_description="My test account 03",
                 sub_account_type="investment",
+                sub_account_sub_type="brokerage",
                 item_name="EUR",
                 item_type=SubAccountItemType.Asset,
                 item_subtype="currency",
@@ -237,6 +247,7 @@ def test_get_consistent_snapshot_data(
                 item_units=None,
                 value_snapshot_ccy=Decimal(474.0),
                 value_sub_account_ccy=Decimal(500.0),
+                value_item_ccy=Decimal(474.0),
                 item_provider_specific_data=None,
                 item_currency="EUR",
             ),
@@ -248,6 +259,7 @@ def test_get_consistent_snapshot_data(
                 sub_account_ccy="USD",
                 sub_account_description="My test account 03",
                 sub_account_type="investment",
+                sub_account_sub_type="brokerage",
                 item_name="Test Fund",
                 item_type=SubAccountItemType.Asset,
                 item_subtype="equity",
@@ -256,6 +268,7 @@ def test_get_consistent_snapshot_data(
                 item_units=None,
                 value_snapshot_ccy=Decimal(1422.0),
                 value_sub_account_ccy=Decimal(1500.0),
+                value_item_ccy=Decimal(1500.0),
                 item_provider_specific_data=None,
                 item_currency="USD",
             ),
@@ -267,6 +280,7 @@ def test_get_consistent_snapshot_data(
                 sub_account_ccy="EUR",
                 sub_account_description="My test account 01",
                 sub_account_type="depository",
+                sub_account_sub_type="checking",
                 item_name="EUR",
                 item_type=SubAccountItemType.Asset,
                 item_subtype="currency",
@@ -275,6 +289,7 @@ def test_get_consistent_snapshot_data(
                 item_units=Decimal(100.0),
                 value_snapshot_ccy=Decimal(1000.0),
                 value_sub_account_ccy=Decimal(1000.0),
+                value_item_ccy=Decimal(1000.0),
                 item_provider_specific_data=None,
                 item_currency="EUR",
             ),
@@ -286,6 +301,7 @@ def test_get_consistent_snapshot_data(
                 sub_account_ccy="EUR",
                 sub_account_description="My test account 02 (empty)",
                 sub_account_type="investment",
+                sub_account_sub_type="brokerage",
             ),
         ]
     )

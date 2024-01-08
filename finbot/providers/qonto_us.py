@@ -9,6 +9,7 @@ from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationError
 from finbot.providers.schema import (
     Account,
+    AccountType,
     Asset,
     Assets,
     AssetsEntry,
@@ -58,7 +59,8 @@ class Api(ProviderBase):
                     id=entry.slug,
                     name=entry.name,
                     iso_currency=CurrencyCode(entry.currency),
-                    type="cash",
+                    type=AccountType.depository,
+                    sub_type="checking",
                 ),
                 account_value=entry.balance,
             )

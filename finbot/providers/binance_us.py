@@ -8,14 +8,7 @@ from finbot.core.pydantic_ import SecretStr
 from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationError
-from finbot.providers.schema import (
-    Account,
-    Asset,
-    AssetClass,
-    Assets,
-    AssetsEntry,
-    AssetType,
-)
+from finbot.providers.schema import Account, AccountType, Asset, AssetClass, Assets, AssetsEntry, AssetType
 
 OWNERSHIP_UNITS_THRESHOLD = 0.00001
 RECV_WINDOW = 60 * 1000
@@ -39,7 +32,7 @@ class Api(ProviderBase):
     ) -> None:
         super().__init__(user_account_currency=user_account_currency, **kwargs)
         self._credentials = credentials
-        self._account_ccy = "USD"
+        self._account_ccy = CurrencyCode.validate("USD")
         self._crypto_market = CryptoMarket()
         self._api: Binance | None = None
 
@@ -52,8 +45,9 @@ class Api(ProviderBase):
         return Account(
             id="portfolio",
             name="Portfolio",
-            iso_currency=CurrencyCode(self._account_ccy),
-            type="investment",
+            iso_currency=self._account_ccy,
+            type=AccountType.investment,
+            sub_type="crypto exchange",
         )
 
     def initialize(self) -> None:
@@ -92,4 +86,5 @@ class Api(ProviderBase):
                     asset_type=AssetType.crypto_currency,
                     units=units,
                     value_in_account_ccy=value,
+                    currency=self._account_ccy,
                 )

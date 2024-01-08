@@ -32,6 +32,7 @@ def iter_sub_account_item_valuation_history_entries(
                 units=entry.item_units,
                 valuation=entry.value_snapshot_ccy,
                 valuation_sub_account_ccy=entry.value_sub_account_ccy,
+                valuation_item_ccy=entry.value_item_ccy,
                 currency=entry.item_currency,
                 provider_specific_data=entry.item_provider_specific_data,
             )
@@ -99,6 +100,7 @@ def write_history_impl(
                     sub_account_ccy=descriptor.sub_account_ccy,
                     sub_account_description=descriptor.sub_account_description,
                     sub_account_type=descriptor.sub_account_type,
+                    sub_account_sub_type=descriptor.sub_account_sub_type,
                     valuation=valuation.value_snapshot_ccy,
                     valuation_sub_account_ccy=valuation.value_sub_account_ccy,
                 )

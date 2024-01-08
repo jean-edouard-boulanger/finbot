@@ -1,6 +1,6 @@
 import json
 from dataclasses import dataclass
-from typing import Literal, Optional, Self
+from typing import Self
 
 import plaid
 from plaid.api import plaid_api
@@ -19,7 +19,7 @@ from plaid.model.link_token_create_response import LinkTokenCreateResponse
 
 from finbot.core.environment import PlaidEnvironment, get_plaid_environment
 from finbot.core.errors import FinbotError
-from finbot.core.schema import CurrencyCode
+from finbot.core.schema import BaseModel, CurrencyCode
 
 ALL_COUNTRY_CODES = [CountryCode(raw_code) for raw_code in ("GB", "US", "CA", "IE", "FR", "ES", "NL")]
 FINBOT_PLAID_CLIENT_NAME = "Finbot"
@@ -62,24 +62,24 @@ class PlaidSettings:
             api_key={"clientId": self.client_id, "secret": self.secret_key},
         )
 
-    @staticmethod
-    def from_env(plaid_environment: PlaidEnvironment) -> "PlaidSettings":
-        return PlaidSettings(
+    @classmethod
+    def from_env(cls, plaid_environment: PlaidEnvironment) -> Self:
+        return cls(
             environment=plaid_environment.environment,
             client_id=plaid_environment.client_id,
             secret_key=plaid_environment.secret_key,
         )
 
-    @staticmethod
-    def get_default() -> Optional["PlaidSettings"]:
+    @classmethod
+    def get_default(cls) -> Self | None:
         plaid_env = get_plaid_environment()
-        return PlaidSettings.from_env(plaid_env) if plaid_env else None
+        return cls.from_env(plaid_env) if plaid_env else None
 
 
-@dataclass(frozen=True)
-class AccountData:
+class AccountData(BaseModel):
     name: str
-    account_type: Literal["credit", "depository", "loan", "brokerage", "other"]
+    account_type: str
+    sub_type: str
     balance: float
     currency: CurrencyCode
 
@@ -155,6 +155,7 @@ class PlaidClient(object):
                 AccountData(
                     name=account_data.name,
                     account_type=account_data.type.value,
+                    sub_type=account_data.subtype.value,
                     balance=account_data.balances.current,
                     currency=account_data.balances.iso_currency_code,
                 )

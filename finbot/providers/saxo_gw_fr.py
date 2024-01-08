@@ -9,6 +9,7 @@ from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationError, UnsupportedFinancialInstrument
 from finbot.providers.schema import (
     Account,
+    AccountType,
     Asset,
     AssetClass,
     Assets,
@@ -85,7 +86,8 @@ class Api(ProviderBase):
                     id=raw_account_data.AccountKey,
                     name=raw_account_data.DisplayName,
                     iso_currency=CurrencyCode(raw_account_data.Currency),
-                    type="investment",
+                    type=AccountType.investment,
+                    sub_type="brokerage",
                 ),
                 raw_account_data,
             )
