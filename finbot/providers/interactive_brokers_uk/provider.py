@@ -1,7 +1,7 @@
 import base64
 import logging
 from contextlib import contextmanager
-from typing import Any, Generator, cast
+from typing import Any, Generator
 
 import pgpy
 
@@ -19,8 +19,7 @@ from finbot.providers.interactive_brokers_uk.flex_report.schema import (
     FlexReport,
     FlexStatement,
     FlexStatementEntries,
-    MTMPerformanceSummaryUnderlying,
-    SecurityInfo,
+    OpenPosition,
 )
 from finbot.providers.interactive_brokers_uk.intake import (
     IntakeMethod,
@@ -86,7 +85,6 @@ class Api(ProviderBase):
 class FlexStatementWrapper:
     def __init__(self, statement: FlexStatement):
         self.statement = statement
-        self.securities = _make_securities_mapping(statement)
         self.account = providers_schema.Account(
             id=self.account_id,
             name=self.account_name,
@@ -118,16 +116,17 @@ class FlexStatementWrapper:
         return self.account_id
 
     def get_assets(self, user_account_currency: CurrencyCode) -> providers_schema.AssetsEntry:
+        cash_assets = [
+            providers_schema.Asset.cash(
+                currency=entry.currency,
+                is_domestic=entry.currency == user_account_currency,
+                amount=entry.ending_cash,
+            )
+            for entry in some(self.entries.cash_report).entries
+        ]
         return providers_schema.AssetsEntry(
             account_id=self.account.id,
-            items=[
-                _make_asset(
-                    entry=entry,
-                    securities=self.securities,
-                    user_account_currency=user_account_currency,
-                )
-                for entry in some(self.entries.mtm_performance_summary_in_base).entries
-            ],
+            items=cash_assets + [_make_asset(entry=entry) for entry in some(self.entries.open_positions).entries],
         )
 
 
@@ -138,45 +137,29 @@ class FlexReportWrapper:
 
 
 def _make_asset(
-    entry: MTMPerformanceSummaryUnderlying,
-    securities: dict[str, SecurityInfo],
-    user_account_currency: CurrencyCode,
+    entry: OpenPosition,
 ) -> providers_schema.Asset:
     asset_category = entry.asset_category
     if asset_category == "STK":
-        stock_currency = CurrencyCode(securities[entry.full_security_id].currency.upper())
         return providers_schema.Asset(
             name=f"{entry.symbol} - {entry.description}",
             type="equity",
             asset_class=providers_schema.AssetClass.equities,
             asset_type=providers_schema.AssetType.stock,
-            value_in_item_ccy=entry.close_quantity * entry.close_price,
-            units=entry.close_quantity,
-            currency=stock_currency,
+            value_in_item_ccy=entry.position_value,
+            units=entry.position,
+            currency=entry.currency,
             provider_specific={
                 "Symbol": entry.symbol,
                 "Description": entry.description,
+                "Side": entry.side.value.lower(),
                 entry.security_id_type: entry.security_id,
-                "Stock currency": stock_currency,
+                "Stock currency": entry.currency,
                 "Listing exchange": entry.listing_exchange,
-                f"Close price ({stock_currency})": entry.close_price,
                 "Report date": entry.report_date.strftime("%Y-%b-%d"),
             },
         )
-    elif asset_category == "CASH":
-        currency = CurrencyCode(entry.symbol)
-        return providers_schema.Asset.cash(
-            currency=currency,
-            is_domestic=currency == user_account_currency,
-            amount=entry.close_quantity,
-            provider_specific={"Report date": entry.report_date.strftime("%Y-%b-%d")},
-        )
     raise UnsupportedFinancialInstrument(asset_category, entry.symbol)
-
-
-def _make_securities_mapping(statement: FlexStatement) -> dict[str, SecurityInfo]:
-    entries = some(statement.entries.securities_info).entries
-    return {entry.full_security_id: entry for entry in entries}
 
 
 def _attempt_decrypt_flex_report_payload(payload: bytes, pgp_key: pgpy.PGPKey) -> str:
@@ -187,4 +170,4 @@ def _attempt_decrypt_flex_report_payload(payload: bytes, pgp_key: pgpy.PGPKey) -
         # flex report payload. In that case, simply attempt to decode.
         logging.debug("report does not appear encrypted, although pgp key was provided")
         return payload.decode()
-    return cast(str, pgp_key.decrypt(pgp_message).message)
+    return pgp_key.decrypt(pgp_message).message.decode()
