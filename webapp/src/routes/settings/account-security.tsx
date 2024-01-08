@@ -84,7 +84,7 @@ export const AccountSecuritySettings: React.FC<
       <Row>
         <Col>
           <Form>
-            <Form.Group>
+            <Form.Group className="mb-4">
               <Form.Label>Old password</Form.Label>
               <Form.Control
                 type="password"
@@ -93,7 +93,7 @@ export const AccountSecuritySettings: React.FC<
                 onChange={handleFormChange}
               />
             </Form.Group>
-            <Form.Group>
+            <Form.Group className="mb-4">
               <Form.Label>New password</Form.Label>
               <Form.Control
                 type="password"
@@ -102,7 +102,7 @@ export const AccountSecuritySettings: React.FC<
                 onChange={handleFormChange}
               />
             </Form.Group>
-            <Form.Group>
+            <Form.Group className="mb-4">
               <Form.Label>Confirm new password</Form.Label>
               <Form.Control
                 type="password"
@@ -116,7 +116,7 @@ export const AccountSecuritySettings: React.FC<
               onClick={() => {
                 handleFormSubmit({ ...passwordForm });
               }}
-              variant="dark"
+              variant="primary"
               loading={loading}
               disabled={!passwordValidation.valid}
             >
