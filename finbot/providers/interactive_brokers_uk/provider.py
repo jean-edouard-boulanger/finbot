@@ -1,7 +1,7 @@
 import base64
 import logging
 from contextlib import contextmanager
-from typing import Any, Generator
+from typing import Any, Generator, cast
 
 import pgpy
 
@@ -170,4 +170,4 @@ def _attempt_decrypt_flex_report_payload(payload: bytes, pgp_key: pgpy.PGPKey) -
         # flex report payload. In that case, simply attempt to decode.
         logging.debug("report does not appear encrypted, although pgp key was provided")
         return payload.decode()
-    return pgp_key.decrypt(pgp_message).message.decode()
+    return cast(str, pgp_key.decrypt(pgp_message).message.decode())
