@@ -89,6 +89,7 @@ class Api(ProviderBase):
                         asset_type=AssetType.crypto_currency,
                         units=units,
                         value_in_account_ccy=units * rate,
+                        currency=self._account_ccy,
                     )
 
     def initialize(self) -> None:

@@ -61,7 +61,7 @@ class Asset(BaseModel):
         " (mutually exclusive with `value_in_account_ccy`)",
     )
     units: float | None = Field(default=None, description="Number of asset units held in the account")
-    currency: CurrencyCode | None = Field(default=None, description="Asset currency")
+    currency: CurrencyCode = Field(description="Asset currency")
     provider_specific: ProviderSpecificPayloadType | None = Field(
         default=None,
         description="Arbitrary data (key/value pair) specific to the provider/asset",
@@ -118,7 +118,7 @@ class Liability(BaseModel):
         description="Liability amount expressed in the specified liability currency"
         " (mutually exclusive with `value_in_account_ccy`)",
     )
-    currency: CurrencyCode | None = Field(default=None, description="Liability currency")
+    currency: CurrencyCode = Field(description="Liability currency")
     provider_specific: ProviderSpecificPayloadType | None = Field(
         default=None,
         description="Arbitrary data (key/value pair) specific to the provider/asset",

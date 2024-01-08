@@ -156,8 +156,8 @@ class XccyCollector(SnapshotTreeVisitor):
         item: providers_schema.Asset | providers_schema.Liability,
     ) -> None:
         if item.value_in_item_ccy is not None:
-            self._collect(some(item.currency), sub_account.iso_currency)
-        elif item.currency is not None:
+            self._collect(item.currency, sub_account.iso_currency)
+        else:
             self._collect(sub_account.iso_currency, item.currency)
 
     def _collect(self, domestic: core_schema.CurrencyCode, foreign: core_schema.CurrencyCode) -> None:
@@ -270,13 +270,12 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
         value_sub_account_ccy = item.value_in_account_ccy
         if value_sub_account_ccy is None:
             assert value_item_ccy is not None
-            assert item.currency is not None
             value_sub_account_ccy = value_item_ccy * self.xccy_rates_getter(
                 fx_market.Xccy(item.currency, sub_account.iso_currency)
             )
         else:
             assert value_item_ccy is None
-        if value_item_ccy is None and item.currency is not None:
+        if value_item_ccy is None:
             value_item_ccy = value_sub_account_ccy * self.xccy_rates_getter(
                 fx_market.Xccy(sub_account.iso_currency, item.currency)
             )

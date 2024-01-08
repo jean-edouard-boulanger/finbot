@@ -156,7 +156,7 @@ class PlaidClient(object):
                     name=account_data.name,
                     account_type=account_data.type.value,
                     balance=account_data.balances.current,
-                    currency=account_data.balances.iso_currency_code,
+                    currency=CurrencyCode.validate(account_data.balances.iso_currency_code),
                 )
                 for account_data in response.accounts
             ]

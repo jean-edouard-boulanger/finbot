@@ -39,7 +39,7 @@ class Api(ProviderBase):
     ) -> None:
         super().__init__(user_account_currency=user_account_currency, **kwargs)
         self._credentials = credentials
-        self._account_ccy = "USD"
+        self._account_ccy = CurrencyCode.validate("USD")
         self._crypto_market = CryptoMarket()
         self._api: Binance | None = None
 
@@ -52,7 +52,7 @@ class Api(ProviderBase):
         return Account(
             id="portfolio",
             name="Portfolio",
-            iso_currency=CurrencyCode(self._account_ccy),
+            iso_currency=self._account_ccy,
             type="investment",
         )
 
@@ -92,4 +92,5 @@ class Api(ProviderBase):
                     asset_type=AssetType.crypto_currency,
                     units=units,
                     value_in_account_ccy=value,
+                    currency=self._account_ccy,
                 )

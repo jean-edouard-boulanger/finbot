@@ -74,7 +74,7 @@ class HoldingsTableSchema(BaseModel):
     units: float | None
     value_in_account_ccy: float | None
     value_in_item_ccy: float | None
-    currency: CurrencyCode | None
+    currency: CurrencyCode
     custom: str | None
 
     @property
