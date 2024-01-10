@@ -110,6 +110,7 @@ def sample_previous_snapshot(
                                 value_item_ccy=1000.0,
                                 provider_specific_data={},
                                 currency="EUR",
+                                isin_code=None,
                             )
                         ],
                     ),
@@ -144,6 +145,7 @@ def sample_previous_snapshot(
                                 value_snapshot_ccy=474.0,
                                 value_item_ccy=474.0,
                                 currency="EUR",
+                                isin_code=None,
                             ),
                             SubAccountItemSnapshotEntry(
                                 item_type=SubAccountItemType.Asset,
@@ -155,6 +157,7 @@ def sample_previous_snapshot(
                                 value_snapshot_ccy=1422.0,
                                 value_item_ccy=1500.0,
                                 currency="USD",
+                                isin_code="US0004026250",
                             ),
                         ],
                     )
@@ -200,6 +203,7 @@ def sample_last_snapshot(
                                 value_snapshot_ccy=1000.0,
                                 value_item_ccy=1000.0,
                                 currency="EUR",
+                                isin_code=None,
                             ),
                         ],
                     ),
@@ -250,6 +254,7 @@ def test_get_consistent_snapshot_data(
                 value_item_ccy=Decimal(474.0),
                 item_provider_specific_data=None,
                 item_currency="EUR",
+                item_isin_code=None,
             ),
             ConsistencySnapshotItemEntry(
                 snapshot_id=1,
@@ -271,6 +276,7 @@ def test_get_consistent_snapshot_data(
                 value_item_ccy=Decimal(1500.0),
                 item_provider_specific_data=None,
                 item_currency="USD",
+                item_isin_code="US0004026250",
             ),
             ConsistencySnapshotItemEntry(
                 snapshot_id=2,
@@ -292,6 +298,7 @@ def test_get_consistent_snapshot_data(
                 value_item_ccy=Decimal(1000.0),
                 item_provider_specific_data=None,
                 item_currency="EUR",
+                item_isin_code=None,
             ),
             ConsistencySnapshotEmptySubAccountEntry(
                 snapshot_id=2,

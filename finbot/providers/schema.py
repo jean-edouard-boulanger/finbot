@@ -129,25 +129,35 @@ class AccountType(str, enum.Enum):
     other = "other"
 
 
+ALL_ACCOUNT_SUB_TYPES = (
+    DEPOSITORY_ACCOUNT_SUB_TYPES + CREDIT_ACCOUNT_SUB_TYPES + LOAN_ACCOUNT_SUB_TYPES + INVESTMENT_ACCOUNT_SUB_TYPES
+)
+VALID_ACCOUNT_SUB_TYPES = {
+    AccountType.depository: DEPOSITORY_ACCOUNT_SUB_TYPES,
+    AccountType.credit: CREDIT_ACCOUNT_SUB_TYPES,
+    AccountType.investment: INVESTMENT_ACCOUNT_SUB_TYPES,
+    AccountType.loan: LOAN_ACCOUNT_SUB_TYPES,
+    AccountType.other: (None,),
+}
+
+
 class Account(BaseModel):
     id: str = Field(description="Account identifier (unique across all accounts in this linked account)")
     name: str = Field(description="Account name/description")
     iso_currency: CurrencyCode = Field(description="Account currency")
     type: AccountType = Field(description="Account type")
-    sub_type: str | None = Field(description="Account sub-type")
+    sub_type: str | None = Field(description="Account sub-type", enum=list(ALL_ACCOUNT_SUB_TYPES))
 
     @root_validator
     def validate_sub_type(cls, values: Any) -> Any:
-        allowed_sub_types = {
-            AccountType.depository: DEPOSITORY_ACCOUNT_SUB_TYPES,
-            AccountType.credit: CREDIT_ACCOUNT_SUB_TYPES,
-            AccountType.investment: INVESTMENT_ACCOUNT_SUB_TYPES,
-            AccountType.loan: LOAN_ACCOUNT_SUB_TYPES,
-            AccountType.other: (None,),
-        }
         account_type, account_sub_type = values.get("type"), values.get("sub_type")
-        if account_type is not None and account_sub_type not in allowed_sub_types[account_type]:
-            raise ValueError(f"'{account_sub_type}' is not a valid '{account_type.value}' account sub-type")
+        if account_type is not None:
+            allowed_sub_types = VALID_ACCOUNT_SUB_TYPES[account_type]
+            if account_sub_type not in allowed_sub_types:
+                raise ValueError(
+                    f"'{account_sub_type}' is not a valid '{account_type.value}' account sub-type."
+                    f" Valid values are: {', '.join(str(type_) for type_ in allowed_sub_types)}."
+                )
         return values
 
 
@@ -168,17 +178,20 @@ class Asset(BaseModel):
     )
     units: float | None = Field(default=None, description="Number of asset units held in the account")
     currency: CurrencyCode = Field(description="Asset currency")
+    isin_code: str | None = Field(
+        default=None,
+        description="International securities identification number (when applicable and available)",
+    )
     provider_specific: ProviderSpecificPayloadType | None = Field(
         default=None,
         description="Arbitrary data (key/value pair) specific to the provider/asset",
     )
 
     @root_validator
-    def validate_value_and_currency(cls, values: Any) -> Any:
-        _validate_value_and_currency(
+    def validate_item_value(cls, values: Any) -> Any:
+        _validate_item_value(
             value_in_account_ccy=values.get("value_in_account_ccy"),
             value_in_item_ccy=values.get("value_in_item_ccy"),
-            currency=values.get("currency"),
         )
         return values
 
@@ -231,11 +244,10 @@ class Liability(BaseModel):
     )
 
     @root_validator
-    def validate_value_and_currency(cls, values: Any) -> Any:
-        _validate_value_and_currency(
+    def validate_item_value(cls, values: Any) -> Any:
+        _validate_item_value(
             value_in_account_ccy=values.get("value_in_account_ccy"),
             value_in_item_ccy=values.get("value_in_item_ccy"),
-            currency=values.get("currency"),
         )
         return values
 
@@ -252,17 +264,14 @@ class Liabilities(BaseModel):
 ItemType: TypeAlias = Asset | Liability
 
 
-def _validate_value_and_currency(
+def _validate_item_value(
     value_in_account_ccy: float | None,
     value_in_item_ccy: float | None,
-    currency: CurrencyCode | None,
 ) -> None:
     if (value_in_item_ccy is not None and value_in_account_ccy is not None) or (
         value_in_item_ccy is None and value_in_account_ccy is None
     ):
         raise ValueError(
-            f"Either `value_in_account_ccy` (={value_in_account_ccy})"
-            f" or `value_in_unit_ccy` (={value_in_item_ccy}) must be set"
+            f"Either `value_in_account_ccy` ({value_in_account_ccy})"
+            f" or `value_in_unit_ccy` ({value_in_item_ccy}) must be set."
         )
-    if value_in_item_ccy is not None and currency is None:
-        raise ValueError(f"`currency` must be set when `value_in_unit_ccy` (={value_in_item_ccy}) is set")

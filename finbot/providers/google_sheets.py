@@ -1,13 +1,14 @@
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Any, Generator, Generic, TypedDict, TypeVar, cast
+from typing import Any, Generator, Generic, TypedDict, cast
 
 import gspread
 from gspread.utils import rowcol_to_a1
 from oauth2client.service_account import ServiceAccountCredentials
 
 from finbot.core.pydantic_ import ValidationError as PydanticValidationError
-from finbot.core.schema import BaseModel, CurrencyCode
+from finbot.core.pydantic_ import root_validator
+from finbot.core.schema import BaseModel, BaseModelT, CurrencyCode
 from finbot.core.utils import some
 from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationError, UserConfigurationError
@@ -50,9 +51,6 @@ class Credentials(BaseModel):
     google_api_credentials: GoogleApiCredentials
 
 
-TableSchemaT = TypeVar("TableSchemaT", bound=BaseModel)
-
-
 @dataclass
 class AccountAssets:
     account: Account
@@ -62,9 +60,15 @@ class AccountAssets:
 class AccountsTableSchema(BaseModel):
     identifier: str
     description: str
-    currency: str
+    currency: CurrencyCode
     type: AccountType
     sub_type: str | None
+
+    @root_validator(pre=True)
+    def nullify_sub_type_if_empty_str(cls, values: Any) -> Any:
+        if values.get("sub_type") == "":
+            values["sub_type"] = None
+        return values
 
 
 class HoldingsTableSchema(BaseModel):
@@ -77,6 +81,7 @@ class HoldingsTableSchema(BaseModel):
     value_in_account_ccy: float | None
     value_in_item_ccy: float | None
     currency: CurrencyCode
+    isin_code: str | None
     custom: str | None
 
     @property
@@ -110,6 +115,7 @@ class Api(ProviderBase):
             value_in_item_ccy=holding.value_in_item_ccy,
             provider_specific=holding.provider_specific,
             currency=holding.currency,
+            isin_code=holding.isin_code,
         )
 
     def _iter_accounts(self) -> Generator[AccountAssets, None, None]:
@@ -231,16 +237,16 @@ class LocalSheet(object):
 
 
 @dataclass
-class TableEntry(Generic[TableSchemaT]):
+class TableEntry(Generic[BaseModelT]):
     row: int
-    record: TableSchemaT
+    record: BaseModelT
 
 
 def _extract_generic_table(
     sheet: LocalSheet,
     marker_cell: Cell,
-    schema: type[TableSchemaT],
-) -> list[TableEntry[TableSchemaT]]:
+    schema: type[BaseModelT],
+) -> list[TableEntry[BaseModelT]]:
     header_start_cell = sheet.get_cell(marker_cell.row + 1, marker_cell.col)
     header = {}
     table_type = some(marker_cell.val)
@@ -254,7 +260,7 @@ def _extract_generic_table(
                     f"Invalid '{table_type}' table header at row {header_start_cell.row + 1} ({pretty_row}):"
                     f" unknown attribute '{attribute}'. Table schema: {_format_table_schema(schema)}."
                 )
-    records: list[TableEntry[TableSchemaT]] = []
+    records: list[TableEntry[BaseModelT]] = []
     data_start_cell = sheet.get_cell(header_start_cell.row + 1, marker_cell.col)
     for cell in sheet.iter_col_cells(from_cell=data_start_cell):
         if not cell.val:
@@ -283,8 +289,8 @@ def _extract_generic_table(
 def _get_table(
     sheet: LocalSheet,
     table_marker: str,
-    schema: type[TableSchemaT],
-) -> list[TableEntry[TableSchemaT]]:
+    schema: type[BaseModelT],
+) -> list[TableEntry[BaseModelT]]:
     marker_cells = sheet.find_all(table_marker)
     if not marker_cells:
         raise InvalidSheetData(f"Unable to find cell with text '{table_marker}' in the sheet")
@@ -301,7 +307,7 @@ def _format_row(sheet: LocalSheet, ref_cell: Cell) -> str:
     return ";".join(cell.val or "" for cell in sheet.iter_row_cells(ref_cell))
 
 
-def _format_table_schema(table_schema: TableSchemaT | type[TableSchemaT]) -> str:
+def _format_table_schema(table_schema: BaseModelT | type[BaseModelT]) -> str:
     items: list[str] = []
     for field_name, field in table_schema.__fields__.items():
         items.append(f"{field_name}:{field.annotation}")

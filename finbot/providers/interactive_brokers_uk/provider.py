@@ -149,6 +149,7 @@ def _make_asset(
             value_in_item_ccy=entry.position_value,
             units=entry.position,
             currency=entry.currency,
+            isin_code=entry.isin if entry.isin else None,
             provider_specific={
                 "Symbol": entry.symbol,
                 "Description": entry.description,
