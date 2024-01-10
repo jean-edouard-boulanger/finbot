@@ -257,6 +257,7 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
             asset_type=asset_type.value if asset_type else None,
             units=item.units if isinstance(item, providers_schema.Asset) else None,
             currency=item.currency if isinstance(item, providers_schema.Asset) else None,
+            isin_code=item.isin_code if isinstance(item, providers_schema.Asset) else None,
             provider_specific_data=item.provider_specific,
             **self._get_item_valuation(sub_account, item),
         )

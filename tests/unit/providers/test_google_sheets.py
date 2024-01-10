@@ -147,3 +147,16 @@ class TestHelpers:
                 marker_cell=sample_sheet.find_all(ACCOUNTS_TABLE_MARKER)[0],
                 schema=TestTableSchema,
             )
+
+
+class TestAccountsTableSchema:
+    def test_sub_type_is_null_when_input_value_is_empty_str(self):
+        input_payload = {
+            "identifier": "acc_1",
+            "description": "account 1",
+            "currency": "USD",
+            "type": "other",
+            "sub_type": "",
+        }
+        table = AccountsTableSchema(**input_payload)
+        assert table.sub_type is None

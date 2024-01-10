@@ -100,6 +100,7 @@ class ConsistencySnapshotItemEntry(ConsistencySnapshotEntryHeader):
     value_item_ccy: Decimal
     item_provider_specific_data: dict[str, Any] | None
     item_currency: str | None
+    item_isin_code: str | None
 
     def get_value_snapshot_ccy(self) -> Decimal:
         return self.value_snapshot_ccy
@@ -193,6 +194,7 @@ class ReportRepository(object):
                    sais.value_sub_account_ccy AS value_sub_account_ccy,
                    sais.value_item_ccy AS value_item_ccy,
                    sais.currency AS item_currency,
+                   sais.isin_code AS item_isin_code,
                    sais.provider_specific_data AS item_provider_specific_data
             FROM (
                 -- Find the latest linked account snapshot entry in a
