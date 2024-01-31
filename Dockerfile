@@ -59,5 +59,7 @@ COPY requirements-dev.txt .
 
 RUN python3.12 -m pip install --no-cache-dir -r requirements-dev.txt && \
     python3.12 -m pip install --no-cache-dir pip-tools && \
-    npm install @openapitools/openapi-generator-cli -g && \
+    echo "installing openapi-generator-cli" && \
+    npm install @openapitools/openapi-generator-cli@2.7.0 -g && \
+    echo "downloading pinned openapi-generator-cli version" && \
     openapi-generator-cli version  # downloads the openapi-generator-cli version specified in openapitools.json
