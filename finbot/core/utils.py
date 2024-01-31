@@ -1,12 +1,10 @@
 import functools
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Callable, Optional, Type, TypeVar
-
-from pytz import timezone
 
 
 def now_utc() -> datetime:
-    return datetime.now(timezone("UTC"))
+    return datetime.now(tz=timezone.utc)
 
 
 def swallow_exc(*exc_types: Type[BaseException], default: Optional[Any] = None) -> Callable[..., Any]:
