@@ -172,7 +172,7 @@ pycoingecko==3.1.0
     # via -r requirements.in
 pycparser==2.21
     # via cffi
-pycryptodome==3.19.0
+pycryptodome==3.19.1
     # via python-binance
 pydantic==2.5.2
     # via
