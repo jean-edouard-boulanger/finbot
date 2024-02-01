@@ -51,9 +51,10 @@ const DataDrivenAccountForm: React.FC<DataDrivenAccountFormProps> = ({
     >
       <LoadingButton
         loading={operation !== null}
-        variant={"dark"}
+        variant={"primary"}
         type="submit"
-        size={"sm"}
+        size="sm"
+        style={{ marginTop: "1.3em" }}
       >
         {operation || (updateMode ? "Update credentials" : "Link account")}
       </LoadingButton>
@@ -78,7 +79,7 @@ const PlaidForm: React.FC<PlaidFormProps> = ({
 
   if (operation !== null) {
     return (
-      <LoadingButton variant={"dark"} loading={true}>
+      <LoadingButton variant="primary" size="sm" loading>
         {operation}
       </LoadingButton>
     );
@@ -103,8 +104,17 @@ const PlaidForm: React.FC<PlaidFormProps> = ({
       env={settings.environment}
       countryCodes={["GB", "US", "CA", "IE", "FR", "ES", "NL"]}
       product={updateMode ? [] : ["transactions", "identity"]}
+      style={{
+        background: "#3458e6",
+        color: "#FFFFFF",
+        fontSize: "13px",
+        paddingLeft: "0.8em",
+        paddingRight: "0.8em",
+        fontWeight: 500,
+        borderRadius: "0.4em",
+      }}
     >
-      {updateMode ? "Update account" : "Link account"}&nbsp;via Plaid
+      {updateMode ? "Update" : "Link account"}&nbsp;via Plaid
     </PlaidLink>
   );
 };
@@ -329,10 +339,10 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
   return (
     <>
       <Row>
-        <Col>
+        <Col md={6}>
           <Row className={"mb-4"}>
             <Col>
-              <h5>1. Provider selection</h5>
+              <h5>Provider selection</h5>
             </Col>
           </Row>
           <Row className={"mb-4"}>
@@ -365,7 +375,7 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
             <>
               <Row className={"mb-4"}>
                 <Col>
-                  <h5>2. Account name</h5>
+                  <h5>Account name</h5>
                 </Col>
               </Row>
               <Row className={"mb-4"}>
@@ -399,10 +409,10 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
               </Row>
             </>
           )}
-          {selectedProvider !== null && !isPlaidSelected(selectedProvider) && (
-            <Row className={"mb-4"}>
+          {selectedProvider !== null && (
+            <Row className={"mb-3"}>
               <Col>
-                <h5>3. Credentials</h5>
+                <h5>Credentials</h5>
               </Col>
             </Row>
           )}

@@ -198,8 +198,10 @@ export const EmailDeliverySettingsPanel: React.FC<
               <LoadingButton
                 style={{
                   display: enableDelivery ? "block" : "none",
+                  marginTop: "1.3em",
                 }}
-                disabled={!enableDelivery}
+                type="submit"
+                disabled={loading || !enableDelivery}
                 loading={loading}
                 size={"sm"}
               >
