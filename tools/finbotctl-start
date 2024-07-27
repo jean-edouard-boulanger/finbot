@@ -3,7 +3,7 @@ OWN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "${OWN_DIR}/bash-utils.sh"
 
 wait_dep () {
-  docker-compose run --rm operator env FINBOT_WAIT_DEPS="${1}" ./tools/finbot-wait
+  docker compose run --rm operator env FINBOT_WAIT_DEPS="${1}" ./tools/finbot-wait
 }
 
 start_frontend=1
@@ -48,15 +48,15 @@ log_info "starting finbot (environment: ${FINBOT_ENV})"
 if [[ "${start_frontend}" == "1" ]]
 then
   log_info "starting finbot frontend container (webapp)"
-  docker-compose up --no-deps -d webapp || die failed to start containers
+  docker compose up --no-deps -d webapp || die failed to start containers
 fi
 
 log_info "starting finbot database and message queue containers"
-docker-compose up -d finbotdb finbotrmq || die failed to start containers
+docker compose up -d finbotdb finbotrmq || die failed to start containers
 wait_dep finbotdb,finbotrmq
 
 log_info "starting finbot application containers"
-docker-compose up -d \
+docker compose up -d \
   workersrv \
   appwsrv \
   finbotwsrv \

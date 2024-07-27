@@ -15,6 +15,7 @@ from sqlalchemy import (
     UniqueConstraint,
     func,
 )
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
@@ -98,6 +99,7 @@ class LinkedAccount(Base):
     provider_id = Column(String(64), ForeignKey(Provider.id, ondelete="CASCADE"), nullable=False)
     account_name = Column(String(256), nullable=False)
     account_colour = Column(String(10), nullable=False)
+    selected_sub_accounts = Column(ARRAY(String), nullable=True)
     encrypted_credentials = Column(Text)
     deleted = Column(Boolean, nullable=False, default=False)
     frozen = Column(Boolean, nullable=False, default=False, server_default=expression.false())

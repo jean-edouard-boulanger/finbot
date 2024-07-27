@@ -1,34 +1,40 @@
-version: "3"
 services:
-
   finbotdb:
     image: "postgres:12"
-    env_file:
-      - envs/dev.env
-      - envs/secrets.dev.env
-      - envs/dev-overrides.env
+    env_file: &env_files
+      - path: envs/dev.env
+        required: false
+      - path: envs/secrets.dev.env
+        required: false
+      - path: envs/dev-overrides.env
+        required: false
     shm_size: 256MB
     ports:
-      - "5432:5432"
+      - "15432:5432"
     volumes:
       - .finbotdb:/var/lib/postgresql/data
 
+  finbotdb-test:
+    image: "postgres:12"
+    environment:
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: finbot
+      POSTGRES_USER: finbot
+      POSTGRES_PASSWORD: finbot
+    shm_size: 256MB
+    ports:
+      - "15433:5432"
+
   finbotrmq:
     image: "rabbitmq:3-management-alpine"
-    env_file:
-      - envs/dev.env
-      - envs/secrets.dev.env
-      - envs/dev-overrides.env
+    env_file: *env_files
     ports:
       - "5672:5672"
       - "15672:15672"
 
   finbotwsrv:
     image: "finbotapp/runtime-dev:latest"
-    env_file:
-      - envs/dev.env
-      - envs/secrets.dev.env
-      - envs/dev-overrides.env
+    env_file: *env_files
     working_dir: /finbot
     command: bash -c "./tools/run finbotwsrv"
     tty: true
@@ -40,10 +46,7 @@ services:
 
   schedsrv:
     image: "finbotapp/runtime-dev:latest"
-    env_file:
-      - envs/dev.env
-      - envs/secrets.dev.env
-      - envs/dev-overrides.env
+    env_file: *env_files
     depends_on:
       - finbotdb
       - workersrv
@@ -57,10 +60,7 @@ services:
 
   workersrv:
     image: "finbotapp/runtime-dev:latest"
-    env_file:
-      - envs/dev.env
-      - envs/secrets.dev.env
-      - envs/dev-overrides.env
+    env_file: *env_files
     depends_on:
       - finbotdb
       - finbotrmq
@@ -74,10 +74,7 @@ services:
 
   appwsrv:
     image: "finbotapp/runtime-dev:latest"
-    env_file:
-      - envs/dev.env
-      - envs/secrets.dev.env
-      - envs/dev-overrides.env
+    env_file: *env_files
     depends_on:
       - finbotdb
       - finbotwsrv
@@ -94,12 +91,7 @@ services:
 
   operator:
     image: "finbotapp/runtime-dev:latest"
-    env_file:
-      - envs/dev.env
-      - envs/secrets.dev.env
-      - envs/dev-overrides.env
-    profiles:
-      - operator
+    env_file: *env_files
     container_name: operator
     depends_on:
       - finbotdb
@@ -111,11 +103,8 @@ services:
       - .:/finbot
 
   webapp:
-    image: "node:16-buster"
-    env_file:
-      - envs/dev.env
-      - envs/secrets.dev.env
-      - envs/dev-overrides.env
+    image: "node:22-bullseye"
+    env_file: *env_files
     profiles:
       - webapp
     depends_on:
@@ -127,3 +116,11 @@ services:
     tty: true
     ports:
       - "5005:5005"
+
+  smtp4dev:
+    image: rnwood/smtp4dev:v3
+    restart: always
+    ports:
+      - '5000:80'
+    profiles:
+      - smtp4dev
