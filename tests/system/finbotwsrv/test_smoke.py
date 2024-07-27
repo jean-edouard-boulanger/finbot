@@ -3,6 +3,7 @@ import pytest
 from finbot.apps.finbotwsrv import schema as finbotwsrv_schema
 from finbot.apps.finbotwsrv.client import FinbotwsrvClient
 from finbot.providers import schema as providers_schema
+from finbot.providers.dummy_uk import make_default_dummy_data
 
 
 @pytest.fixture
@@ -42,9 +43,12 @@ def check_accounts_financial_data(results: list[providers_schema.Account]):
 
 
 def test_get_financial_data(api: FinbotwsrvClient):
+    user_account_currency = providers_schema.CurrencyCode("EUR")
     response = api.get_financial_data(
         provider_id="dummy_uk",
-        credentials_data={},
+        credentials_data={
+            "dummy_data": make_default_dummy_data(user_account_currency, sub_accounts_count=1).dict(),
+        },
         line_items=[
             finbotwsrv_schema.LineItem.Assets,
             finbotwsrv_schema.LineItem.Accounts,

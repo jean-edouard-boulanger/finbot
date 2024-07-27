@@ -91,6 +91,10 @@ INVESTMENT_ACCOUNT_SUB_TYPES = (
 )
 
 
+SubAccountId: TypeAlias = str
+ProviderId: TypeAlias = str
+
+
 class AssetClass(str, enum.Enum):
     equities = "equities"
     fixed_income = "fixed_income"
@@ -142,7 +146,7 @@ VALID_ACCOUNT_SUB_TYPES = {
 
 
 class Account(BaseModel):
-    id: str = Field(description="Account identifier (unique across all accounts in this linked account)")
+    id: SubAccountId = Field(description="Account identifier (unique across all accounts in this linked account)")
     name: str = Field(description="Account name/description")
     iso_currency: CurrencyCode = Field(description="Account currency")
     type: AccountType = Field(description="Account type")
@@ -216,7 +220,7 @@ class Asset(BaseModel):
 
 
 class AssetsEntry(BaseModel):
-    account_id: str = Field(description="Identifier of the account holding the assets")
+    account_id: SubAccountId = Field(description="Identifier of the account holding the assets")
     items: list[Asset] = Field(description="Assets held in the account")
 
 
@@ -253,7 +257,7 @@ class Liability(BaseModel):
 
 
 class LiabilitiesEntry(BaseModel):
-    account_id: str = Field(description="Identifier of the account holding the liabilities")
+    account_id: SubAccountId = Field(description="Identifier of the account holding the liabilities")
     items: list[Liability] = Field(description="Liabilities held in the account")
 
 

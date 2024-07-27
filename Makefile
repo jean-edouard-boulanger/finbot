@@ -1,18 +1,19 @@
 export FINBOT_EDIT_CMD ?= code --wait
 export PYTHONPATH := ${PWD}:${PYTHONPATH}
 
+
 alembic-gen:
 	tools/check-env.sh message;
-	docker-compose run --rm operator bash -c 'env FINBOT_WAIT_DEPS=finbotdb ./tools/finbot-wait && alembic revision -m "${message}"'
+	docker compose run --rm operator bash -c 'env FINBOT_WAIT_DEPS=finbotdb ./tools/finbot-wait && alembic revision -m "${message}"'
 
 alembic-upgrade:
-	docker-compose run --rm operator bash -c 'env FINBOT_WAIT_DEPS=finbotdb ./tools/finbot-wait && alembic upgrade head'
+	docker compose run --rm operator bash -c 'env FINBOT_WAIT_DEPS=finbotdb ./tools/finbot-wait && alembic upgrade head'
 
 alembic-downgrade:
-	docker-compose run --rm operator bash -c 'env FINBOT_WAIT_DEPS=finbotdb ./tools/finbot-wait && alembic downgrade head-1'
+	docker compose run --rm operator bash -c 'env FINBOT_WAIT_DEPS=finbotdb ./tools/finbot-wait && alembic downgrade head-1'
 
 alembic-history:
-	docker-compose run --rm operator bash -c 'env FINBOT_WAIT_DEPS=finbotdb ./tools/finbot-wait && alembic history'
+	docker compose run --rm operator bash -c 'env FINBOT_WAIT_DEPS=finbotdb ./tools/finbot-wait && alembic history'
 
 pip-compile-all:
 	./tools/pip-compile-all
@@ -35,14 +36,14 @@ docker-build-all: docker-build-dev docker-build-prod
 
 trigger-valuation:
 	tools/check-env.sh accounts;
-	docker-compose exec schedsrv \
+	docker compose exec schedsrv \
 		./tools/run -- python3.12 finbot/apps/schedsrv/schedsrv.py \
 			--mode one_shot \
 			--accounts ${accounts}
 
 run-system-tests:
-	docker-compose run --rm operator env FINBOT_WAIT_DEPS=appwsrv,finbotwsrv ./tools/finbot-wait;
-	docker-compose run --rm operator python3.12 -m pytest tests/system/
+	docker compose run --rm operator env FINBOT_WAIT_DEPS=appwsrv,finbotwsrv ./tools/finbot-wait;
+	docker compose run --rm operator python3.12 -m pytest tests/system/
 
 finbotdb-build:
 	python3.12 tools/finbotdb build
@@ -63,9 +64,6 @@ finbotdb-psql:
 
 init-dev:
 	tools/init-dev.sh
-
-py-unit-tests:
-	python3.12 -m pytest tests/unit
 
 prettier-ts:
 	cd webapp && npm run prettier
@@ -119,13 +117,13 @@ lint-sh:
  		xargs shellcheck -e SC1090 -e SC1091 -e SC2002 -S style
 
 lint-schema:
-	docker-compose run --rm operator ./tools/lint-schema.py
+	docker compose run --rm operator ./tools/lint-schema.py
 
 generate-ts-client:
-	docker-compose run --rm operator ./tools/generate-ts-client
+	docker compose run --rm operator ./tools/generate-ts-client
 
 bash:
-	docker-compose run --rm operator bash
+	docker compose run --rm operator bash
 
 lint-py: mypy flakes-check black-check isort-check banned-keywords-check-py unit-tests-py
 lint-ts: eslint tsc-build-check prettier-check-ts banned-keywords-check-ts

@@ -25,8 +25,8 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class LinkedAccountSnapshotRequest:
-    linked_account_id: int
-    provider_id: str
+    linked_account_id: core_schema.LinkedAccountId
+    provider_id: providers_schema.ProviderId
     credentials_data: dict[Any, Any]
     line_items: list[finbotwsrv_schema.LineItem]
     user_account_currency: core_schema.CurrencyCode
@@ -144,14 +144,14 @@ class XccyCollector(SnapshotTreeVisitor):
 
     def visit_sub_account(
         self,
-        linked_account_id: int,
+        linked_account_id: core_schema.LinkedAccountId,
         sub_account: providers_schema.Account,
     ) -> None:
         self._collect(sub_account.iso_currency, self.target_ccy)
 
     def visit_sub_account_item(
         self,
-        linked_account_id: int,
+        linked_account_id: core_schema.LinkedAccountId,
         sub_account: providers_schema.Account,
         item: providers_schema.Asset | providers_schema.Liability,
     ) -> None:
@@ -194,19 +194,21 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
         snapshot: model.UserAccountSnapshot,
         xccy_rates_getter: CachedXccyRatesGetter,
         target_ccy: str,
+        selected_sub_accounts: dict[core_schema.LinkedAccountId, list[providers_schema.SubAccountId] | None],
     ):
         self.snapshot = snapshot
         self.xccy_rates_getter = xccy_rates_getter
         self.target_ccy = target_ccy
+        self.selected_sub_accounts = selected_sub_accounts
         self.linked_accounts: dict[int, model.LinkedAccountSnapshotEntry] = {}  # linked_account_id -> account
         self.sub_accounts: dict[
-            tuple[int, str], model.SubAccountSnapshotEntry
-        ] = {}  # link_account_id, sub_account_id -> sub_account
+            tuple[core_schema.LinkedAccountId, providers_schema.SubAccountId], model.SubAccountSnapshotEntry
+        ] = {}
         self.results_count = schema.SnapshotResultsCount(total=0, failures=0)
 
     def visit_linked_account(
         self,
-        linked_account_id: int,
+        linked_account_id: core_schema.LinkedAccountId,
         errors: list[SnapshotErrorEntry],
     ) -> None:
         snapshot = self.snapshot
@@ -224,9 +226,11 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
 
     def visit_sub_account(
         self,
-        linked_account_id: int,
+        linked_account_id: core_schema.LinkedAccountId,
         sub_account: providers_schema.Account,
     ) -> None:
+        if not self._include_sub_account(linked_account_id, sub_account.id):
+            return
         linked_account = self.linked_accounts[linked_account_id]
         assert (linked_account_id, sub_account.id) not in self.sub_accounts
         sub_account_entry = model.SubAccountSnapshotEntry(
@@ -241,10 +245,12 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
 
     def visit_sub_account_item(
         self,
-        linked_account_id: int,
+        linked_account_id: core_schema.LinkedAccountId,
         sub_account: providers_schema.Account,
         item: providers_schema.Asset | providers_schema.Liability,
     ) -> None:
+        if not self._include_sub_account(linked_account_id, sub_account.id):
+            return
         sub_account_entry = self.sub_accounts[(linked_account_id, sub_account.id)]
         item_type = self._get_item_type(item)
         asset_class = item.asset_class if isinstance(item, providers_schema.Asset) else None
@@ -289,6 +295,14 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
             value_snapshot_ccy=value_snapshot_ccy,
             value_item_ccy=value_item_ccy,
         )
+
+    def _include_sub_account(
+        self,
+        linked_account_id: core_schema.LinkedAccountId,
+        sub_account_id: providers_schema.SubAccountId,
+    ) -> bool:
+        sub_account_ids = self.selected_sub_accounts.get(linked_account_id)
+        return not sub_account_ids or sub_account_id in sub_account_ids
 
     @staticmethod
     def _get_item_type(item: providers_schema.ItemType) -> model.SubAccountItemType:
@@ -357,7 +371,7 @@ def get_credentials_data(
 
 def is_linked_account_included_in_snapshot(
     linked_account: model.LinkedAccount,
-    linked_account_ids: list[int] | None,
+    linked_account_ids: list[core_schema.LinkedAccountId] | None,
 ) -> bool:
     if linked_account.deleted or linked_account.frozen:
         return False
@@ -368,7 +382,7 @@ def is_linked_account_included_in_snapshot(
 
 def take_raw_snapshot(
     user_account: model.UserAccount,
-    linked_account_ids: list[int] | None,
+    linked_account_ids: list[core_schema.LinkedAccountId] | None,
 ) -> list[LinkedAccountSnapshotResult]:
     with ThreadPoolExecutor(max_workers=4) as executor:
         logger.info("initializing accounts snapshot requests")
@@ -401,7 +415,9 @@ def validate_fx_rates(rates: dict[fx_market.Xccy, Optional[float]]) -> None:
 
 
 def take_snapshot_impl(
-    user_account_id: int, linked_account_ids: Optional[list[int]], db_session: Session
+    user_account_id: int,
+    linked_account_ids: Optional[list[core_schema.LinkedAccountId]],
+    db_session: Session,
 ) -> schema.SnapshotSummary:
     logger.info(
         f"fetching user information for"
@@ -454,7 +470,12 @@ def take_snapshot_impl(
     logger.debug("building final snapshot")
 
     snapshot_builder = SnapshotBuilderVisitor(
-        new_snapshot, CachedXccyRatesGetter(xccy_rates), new_snapshot.requested_ccy
+        snapshot=new_snapshot,
+        xccy_rates_getter=CachedXccyRatesGetter(xccy_rates),
+        target_ccy=new_snapshot.requested_ccy,
+        selected_sub_accounts={
+            linked_account.id: linked_account.selected_sub_accounts for linked_account in user_account.linked_accounts
+        },
     )
 
     with db_session.persist(new_snapshot):
@@ -475,7 +496,9 @@ class UserAccountSnapshotService(object):
         self._db_session = db_session
 
     def take_snapshot(
-        self, user_account_id: int, linked_account_ids: list[int] | None = None
+        self,
+        user_account_id: int,
+        linked_account_ids: list[core_schema.LinkedAccountId] | None = None,
     ) -> schema.TakeSnapshotResponse:
         try:
             return schema.TakeSnapshotResponse(

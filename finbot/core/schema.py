@@ -129,3 +129,4 @@ class HealthResponse(BaseModel):
 
 
 HexColour = Annotated[str, Field(regex=r"^#[A-Fa-f0-9]{6}$")]
+LinkedAccountId: TypeAlias = int

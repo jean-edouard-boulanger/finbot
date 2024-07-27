@@ -10,6 +10,9 @@ PRODUCTION_ENV = "production"
 DEVELOPMENT_ENV = "development"
 
 
+DEFAULT_TEST_DATABASE_URL = "postgresql+psycopg2://finbot:finbot@localhost:15433/finbot"
+
+
 class MissingEnvironment(RuntimeError):
     pass
 
@@ -86,6 +89,11 @@ def get_database_url() -> str:
     db_port = get_environment_value("FINBOT_DB_PORT")
     db_name = get_environment_value("FINBOT_DB_DBNAME")
     return f"postgresql+psycopg2://{db_user}:{db_password}@{db_hostname}:{db_port}/{db_name}"
+
+
+def get_test_database_url() -> str:
+    test_db_url = get_environment_value_or("FINBOT_TEST_DB_URL")
+    return test_db_url or DEFAULT_TEST_DATABASE_URL
 
 
 def get_finbotwsrv_endpoint() -> str:
