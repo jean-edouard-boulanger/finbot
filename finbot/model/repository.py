@@ -362,8 +362,7 @@ def get_historical_valuation_by(
     from_time: Optional[datetime] = None,
     to_time: Optional[datetime] = None,
     frequency: Optional[ValuationFrequency] = None,
-) -> list[AssetTypeHistoricalValuationEntry]:
-    ...
+) -> list[AssetTypeHistoricalValuationEntry]: ...
 
 
 @overload
@@ -374,8 +373,7 @@ def get_historical_valuation_by(
     from_time: Optional[datetime] = None,
     to_time: Optional[datetime] = None,
     frequency: Optional[ValuationFrequency] = None,
-) -> list[AssetClassHistoricalValuationEntry]:
-    ...
+) -> list[AssetClassHistoricalValuationEntry]: ...
 
 
 def get_historical_valuation_by(

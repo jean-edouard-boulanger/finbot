@@ -110,15 +110,12 @@ class EmailProvider(Protocol):
     description: str
     schema: ProviderSchema
 
-    def send_email(self, message: EmailMessage) -> None:
-        ...
+    def send_email(self, message: EmailMessage) -> None: ...
 
-    def get_sender_email(self) -> str:
-        ...
+    def get_sender_email(self) -> str: ...
 
     @staticmethod
-    def create(settings_payload: DeliverySettings) -> "EmailProvider":
-        ...
+    def create(settings_payload: DeliverySettings) -> "EmailProvider": ...
 
 
 EMAIL_PROVIDERS: dict[str, Type[EmailProvider]] = {}
@@ -206,12 +203,10 @@ def smtp_client(*args: Any, **kwargs: Any) -> Iterator[smtplib.SMTP]:
 
 
 class SMTPServerAuthStrategy(Protocol):
-    def authenticate(self, client: smtplib.SMTP) -> None:
-        ...
+    def authenticate(self, client: smtplib.SMTP) -> None: ...
 
     @staticmethod
-    def deserialize(auth_payload: dict[str, Any]) -> "SMTPServerAuthStrategy":
-        ...
+    def deserialize(auth_payload: dict[str, Any]) -> "SMTPServerAuthStrategy": ...
 
 
 class SMTPServerAuthLogin(SMTPServerAuthStrategy):

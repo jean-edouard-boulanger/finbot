@@ -122,9 +122,9 @@ def get_linked_accounts_historical_valuation(
         if entry.valuation_period not in x_axis_layout:
             x_axis_layout[entry.valuation_period] = current_index
             current_index += 1
-    valuation_history_by_linked_account: dict[
-        Tuple[int, str], list[Optional[repository.HistoricalValuationEntry]]
-    ] = defaultdict(lambda: [None] * len(x_axis_layout))
+    valuation_history_by_linked_account: dict[Tuple[int, str], list[Optional[repository.HistoricalValuationEntry]]] = (
+        defaultdict(lambda: [None] * len(x_axis_layout))
+    )
     for entry in valuation_history:
         descriptor = (entry.linked_account_id, entry.linked_account_name)
         entry_index = x_axis_layout[entry.valuation_period]

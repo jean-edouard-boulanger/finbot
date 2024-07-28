@@ -1,9 +1,10 @@
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Any, Generator, Generic, TypedDict, cast
+from typing import Any, Generator, Generic, TypedDict
 
-import gspread
-from gspread.utils import rowcol_to_a1
+import gspread.client
+import gspread.spreadsheet
+import gspread.utils
 from oauth2client.service_account import ServiceAccountCredentials
 
 from finbot.core.pydantic_ import ValidationError as PydanticValidationError
@@ -101,8 +102,8 @@ class Api(ProviderBase):
     ) -> None:
         super().__init__(user_account_currency=user_account_currency, **kwargs)
         self._credentials = credentials
-        self._api: gspread.Client | None = None
-        self._sheet: gspread.Spreadsheet | None = None
+        self._api: gspread.client.Client | None = None
+        self._sheet: gspread.spreadsheet.Spreadsheet | None = None
 
     @staticmethod
     def _make_asset(holding: HoldingsTableSchema) -> Asset:
@@ -154,7 +155,7 @@ class Api(ProviderBase):
 
     def initialize(self) -> None:
         try:
-            self._api = gspread.authorize(
+            self._api = gspread.auth.authorize(
                 ServiceAccountCredentials.from_json_keyfile_dict(
                     keyfile_dict=self._credentials.google_api_credentials,
                     scopes=["https://www.googleapis.com/auth/spreadsheets"],
@@ -190,7 +191,7 @@ class Cell(object):
 
     @property
     def pretty_loc(self) -> str:
-        return cast(str, rowcol_to_a1(self.row + 1, self.col + 1))
+        return gspread.utils.rowcol_to_a1(self.row + 1, self.col + 1)
 
 
 class LocalSheet(object):
