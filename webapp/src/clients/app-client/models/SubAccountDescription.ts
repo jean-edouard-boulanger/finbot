@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 /**
  *
  * @export
@@ -47,14 +47,15 @@ export interface SubAccountDescription {
 /**
  * Check if a given object implements the SubAccountDescription interface.
  */
-export function instanceOfSubAccountDescription(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "id" in value;
-  isInstance = isInstance && "currency" in value;
-  isInstance = isInstance && "description" in value;
-  isInstance = isInstance && "type" in value;
-
-  return isInstance;
+export function instanceOfSubAccountDescription(
+  value: object,
+): value is SubAccountDescription {
+  if (!("id" in value) || value["id"] === undefined) return false;
+  if (!("currency" in value) || value["currency"] === undefined) return false;
+  if (!("description" in value) || value["description"] === undefined)
+    return false;
+  if (!("type" in value) || value["type"] === undefined) return false;
+  return true;
 }
 
 export function SubAccountDescriptionFromJSON(
@@ -67,7 +68,7 @@ export function SubAccountDescriptionFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): SubAccountDescription {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -81,16 +82,13 @@ export function SubAccountDescriptionFromJSONTyped(
 export function SubAccountDescriptionToJSON(
   value?: SubAccountDescription | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    id: value.id,
-    currency: value.currency,
-    description: value.description,
-    type: value.type,
+    id: value["id"],
+    currency: value["currency"],
+    description: value["description"],
+    type: value["type"],
   };
 }

@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 import type { PlaidSettings } from "./PlaidSettings";
 import {
   PlaidSettingsFromJSON,
@@ -36,10 +36,10 @@ export interface AppGetPlaidSettingsResponse {
 /**
  * Check if a given object implements the AppGetPlaidSettingsResponse interface.
  */
-export function instanceOfAppGetPlaidSettingsResponse(value: object): boolean {
-  let isInstance = true;
-
-  return isInstance;
+export function instanceOfAppGetPlaidSettingsResponse(
+  value: object,
+): value is AppGetPlaidSettingsResponse {
+  return true;
 }
 
 export function AppGetPlaidSettingsResponseFromJSON(
@@ -52,26 +52,24 @@ export function AppGetPlaidSettingsResponseFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): AppGetPlaidSettingsResponse {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
-    settings: !exists(json, "settings")
-      ? undefined
-      : PlaidSettingsFromJSON(json["settings"]),
+    settings:
+      json["settings"] == null
+        ? undefined
+        : PlaidSettingsFromJSON(json["settings"]),
   };
 }
 
 export function AppGetPlaidSettingsResponseToJSON(
   value?: AppGetPlaidSettingsResponse | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    settings: PlaidSettingsToJSON(value.settings),
+    settings: PlaidSettingsToJSON(value["settings"]),
   };
 }

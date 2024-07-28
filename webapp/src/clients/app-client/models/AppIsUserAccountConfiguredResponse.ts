@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 /**
  *
  * @export
@@ -31,11 +31,10 @@ export interface AppIsUserAccountConfiguredResponse {
  */
 export function instanceOfAppIsUserAccountConfiguredResponse(
   value: object,
-): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "configured" in value;
-
-  return isInstance;
+): value is AppIsUserAccountConfiguredResponse {
+  if (!("configured" in value) || value["configured"] === undefined)
+    return false;
+  return true;
 }
 
 export function AppIsUserAccountConfiguredResponseFromJSON(
@@ -48,7 +47,7 @@ export function AppIsUserAccountConfiguredResponseFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): AppIsUserAccountConfiguredResponse {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -59,13 +58,10 @@ export function AppIsUserAccountConfiguredResponseFromJSONTyped(
 export function AppIsUserAccountConfiguredResponseToJSON(
   value?: AppIsUserAccountConfiguredResponse | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    configured: value.configured,
+    configured: value["configured"],
   };
 }

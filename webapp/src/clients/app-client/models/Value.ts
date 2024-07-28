@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 /**
  *
  * @export
@@ -22,10 +22,8 @@ export interface Value {}
 /**
  * Check if a given object implements the Value interface.
  */
-export function instanceOfValue(value: object): boolean {
-  let isInstance = true;
-
-  return isInstance;
+export function instanceOfValue(value: object): value is Value {
+  return true;
 }
 
 export function ValueFromJSON(json: any): Value {

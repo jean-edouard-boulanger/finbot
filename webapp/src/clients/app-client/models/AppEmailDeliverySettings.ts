@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 /**
  *
  * @export
@@ -47,14 +47,18 @@ export interface AppEmailDeliverySettings {
 /**
  * Check if a given object implements the AppEmailDeliverySettings interface.
  */
-export function instanceOfAppEmailDeliverySettings(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "subjectPrefix" in value;
-  isInstance = isInstance && "senderName" in value;
-  isInstance = isInstance && "providerId" in value;
-  isInstance = isInstance && "providerSettings" in value;
-
-  return isInstance;
+export function instanceOfAppEmailDeliverySettings(
+  value: object,
+): value is AppEmailDeliverySettings {
+  if (!("subjectPrefix" in value) || value["subjectPrefix"] === undefined)
+    return false;
+  if (!("senderName" in value) || value["senderName"] === undefined)
+    return false;
+  if (!("providerId" in value) || value["providerId"] === undefined)
+    return false;
+  if (!("providerSettings" in value) || value["providerSettings"] === undefined)
+    return false;
+  return true;
 }
 
 export function AppEmailDeliverySettingsFromJSON(
@@ -67,7 +71,7 @@ export function AppEmailDeliverySettingsFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): AppEmailDeliverySettings {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -81,16 +85,13 @@ export function AppEmailDeliverySettingsFromJSONTyped(
 export function AppEmailDeliverySettingsToJSON(
   value?: AppEmailDeliverySettings | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    subject_prefix: value.subjectPrefix,
-    sender_name: value.senderName,
-    provider_id: value.providerId,
-    provider_settings: value.providerSettings,
+    subject_prefix: value["subjectPrefix"],
+    sender_name: value["senderName"],
+    provider_id: value["providerId"],
+    provider_settings: value["providerSettings"],
   };
 }

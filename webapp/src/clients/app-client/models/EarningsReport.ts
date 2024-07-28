@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 import type { Metrics } from "./Metrics";
 import {
   MetricsFromJSON,
@@ -54,13 +54,13 @@ export interface EarningsReport {
 /**
  * Check if a given object implements the EarningsReport interface.
  */
-export function instanceOfEarningsReport(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "currency" in value;
-  isInstance = isInstance && "entries" in value;
-  isInstance = isInstance && "rollup" in value;
-
-  return isInstance;
+export function instanceOfEarningsReport(
+  value: object,
+): value is EarningsReport {
+  if (!("currency" in value) || value["currency"] === undefined) return false;
+  if (!("entries" in value) || value["entries"] === undefined) return false;
+  if (!("rollup" in value) || value["rollup"] === undefined) return false;
+  return true;
 }
 
 export function EarningsReportFromJSON(json: any): EarningsReport {
@@ -71,7 +71,7 @@ export function EarningsReportFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): EarningsReport {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -82,15 +82,12 @@ export function EarningsReportFromJSONTyped(
 }
 
 export function EarningsReportToJSON(value?: EarningsReport | null): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    currency: value.currency,
-    entries: (value.entries as Array<any>).map(ReportEntryToJSON),
-    rollup: MetricsToJSON(value.rollup),
+    currency: value["currency"],
+    entries: (value["entries"] as Array<any>).map(ReportEntryToJSON),
+    rollup: MetricsToJSON(value["rollup"]),
   };
 }

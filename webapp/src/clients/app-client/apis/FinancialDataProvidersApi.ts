@@ -174,13 +174,10 @@ export class FinancialDataProvidersApi
     requestParameters: DeleteFinancialDataProviderRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<object>> {
-    if (
-      requestParameters.providerId === null ||
-      requestParameters.providerId === undefined
-    ) {
+    if (requestParameters["providerId"] == null) {
       throw new runtime.RequiredError(
         "providerId",
-        "Required parameter requestParameters.providerId was null or undefined when calling deleteFinancialDataProvider.",
+        'Required parameter "providerId" was null or undefined when calling deleteFinancialDataProvider().',
       );
     }
 
@@ -200,7 +197,7 @@ export class FinancialDataProvidersApi
       {
         path: `/api/v1/providers/{provider_id}/`.replace(
           `{${"provider_id"}}`,
-          encodeURIComponent(String(requestParameters.providerId)),
+          encodeURIComponent(String(requestParameters["providerId"])),
         ),
         method: "DELETE",
         headers: headerParameters,
@@ -235,13 +232,10 @@ export class FinancialDataProvidersApi
     requestParameters: GetFinancialDataProviderRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<AppGetProviderResponse>> {
-    if (
-      requestParameters.providerId === null ||
-      requestParameters.providerId === undefined
-    ) {
+    if (requestParameters["providerId"] == null) {
       throw new runtime.RequiredError(
         "providerId",
-        "Required parameter requestParameters.providerId was null or undefined when calling getFinancialDataProvider.",
+        'Required parameter "providerId" was null or undefined when calling getFinancialDataProvider().',
       );
     }
 
@@ -261,7 +255,7 @@ export class FinancialDataProvidersApi
       {
         path: `/api/v1/providers/{provider_id}/`.replace(
           `{${"provider_id"}}`,
-          encodeURIComponent(String(requestParameters.providerId)),
+          encodeURIComponent(String(requestParameters["providerId"])),
         ),
         method: "GET",
         headers: headerParameters,
@@ -409,7 +403,7 @@ export class FinancialDataProvidersApi
         headers: headerParameters,
         query: queryParameters,
         body: AppCreateOrUpdateProviderRequestToJSON(
-          requestParameters.appCreateOrUpdateProviderRequest,
+          requestParameters["appCreateOrUpdateProviderRequest"],
         ),
       },
       initOverrides,

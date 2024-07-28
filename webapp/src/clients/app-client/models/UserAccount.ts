@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 /**
  *
  * @export
@@ -59,14 +59,12 @@ export interface UserAccount {
 /**
  * Check if a given object implements the UserAccount interface.
  */
-export function instanceOfUserAccount(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "id" in value;
-  isInstance = isInstance && "email" in value;
-  isInstance = isInstance && "fullName" in value;
-  isInstance = isInstance && "createdAt" in value;
-
-  return isInstance;
+export function instanceOfUserAccount(value: object): value is UserAccount {
+  if (!("id" in value) || value["id"] === undefined) return false;
+  if (!("email" in value) || value["email"] === undefined) return false;
+  if (!("fullName" in value) || value["fullName"] === undefined) return false;
+  if (!("createdAt" in value) || value["createdAt"] === undefined) return false;
+  return true;
 }
 
 export function UserAccountFromJSON(json: any): UserAccount {
@@ -77,37 +75,34 @@ export function UserAccountFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): UserAccount {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
     id: json["id"],
     email: json["email"],
     fullName: json["full_name"],
-    mobilePhoneNumber: !exists(json, "mobile_phone_number")
-      ? undefined
-      : json["mobile_phone_number"],
+    mobilePhoneNumber:
+      json["mobile_phone_number"] == null
+        ? undefined
+        : json["mobile_phone_number"],
     createdAt: new Date(json["created_at"]),
-    updatedAt: !exists(json, "updated_at")
-      ? undefined
-      : new Date(json["updated_at"]),
+    updatedAt:
+      json["updated_at"] == null ? undefined : new Date(json["updated_at"]),
   };
 }
 
 export function UserAccountToJSON(value?: UserAccount | null): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    id: value.id,
-    email: value.email,
-    full_name: value.fullName,
-    mobile_phone_number: value.mobilePhoneNumber,
-    created_at: value.createdAt.toISOString(),
+    id: value["id"],
+    email: value["email"],
+    full_name: value["fullName"],
+    mobile_phone_number: value["mobilePhoneNumber"],
+    created_at: value["createdAt"].toISOString(),
     updated_at:
-      value.updatedAt === undefined ? undefined : value.updatedAt.toISOString(),
+      value["updatedAt"] == null ? undefined : value["updatedAt"].toISOString(),
   };
 }

@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 import type { LinkedAccountStatusErrorEntry } from "./LinkedAccountStatusErrorEntry";
 import {
   LinkedAccountStatusErrorEntryFromJSON,
@@ -64,13 +64,15 @@ export type LinkedAccountStatusStatusEnum =
 /**
  * Check if a given object implements the LinkedAccountStatus interface.
  */
-export function instanceOfLinkedAccountStatus(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "status" in value;
-  isInstance = isInstance && "lastSnapshotId" in value;
-  isInstance = isInstance && "lastSnapshotTime" in value;
-
-  return isInstance;
+export function instanceOfLinkedAccountStatus(
+  value: object,
+): value is LinkedAccountStatus {
+  if (!("status" in value) || value["status"] === undefined) return false;
+  if (!("lastSnapshotId" in value) || value["lastSnapshotId"] === undefined)
+    return false;
+  if (!("lastSnapshotTime" in value) || value["lastSnapshotTime"] === undefined)
+    return false;
+  return true;
 }
 
 export function LinkedAccountStatusFromJSON(json: any): LinkedAccountStatus {
@@ -81,16 +83,17 @@ export function LinkedAccountStatusFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): LinkedAccountStatus {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
     status: json["status"],
-    errors: !exists(json, "errors")
-      ? undefined
-      : (json["errors"] as Array<any>).map(
-          LinkedAccountStatusErrorEntryFromJSON,
-        ),
+    errors:
+      json["errors"] == null
+        ? undefined
+        : (json["errors"] as Array<any>).map(
+            LinkedAccountStatusErrorEntryFromJSON,
+          ),
     lastSnapshotId: json["last_snapshot_id"],
     lastSnapshotTime: new Date(json["last_snapshot_time"]),
   };
@@ -99,19 +102,18 @@ export function LinkedAccountStatusFromJSONTyped(
 export function LinkedAccountStatusToJSON(
   value?: LinkedAccountStatus | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    status: value.status,
+    status: value["status"],
     errors:
-      value.errors === undefined
+      value["errors"] == null
         ? undefined
-        : (value.errors as Array<any>).map(LinkedAccountStatusErrorEntryToJSON),
-    last_snapshot_id: value.lastSnapshotId,
-    last_snapshot_time: value.lastSnapshotTime.toISOString(),
+        : (value["errors"] as Array<any>).map(
+            LinkedAccountStatusErrorEntryToJSON,
+          ),
+    last_snapshot_id: value["lastSnapshotId"],
+    last_snapshot_time: value["lastSnapshotTime"].toISOString(),
   };
 }

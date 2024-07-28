@@ -303,32 +303,29 @@ export class UserAccountsValuationApi
     requestParameters: GetUserAccountHistoricalValuationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<AppGetUserAccountValuationHistoryResponse>> {
-    if (
-      requestParameters.userAccountId === null ||
-      requestParameters.userAccountId === undefined
-    ) {
+    if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
-        "Required parameter requestParameters.userAccountId was null or undefined when calling getUserAccountHistoricalValuation.",
+        'Required parameter "userAccountId" was null or undefined when calling getUserAccountHistoricalValuation().',
       );
     }
 
     const queryParameters: any = {};
 
-    if (requestParameters.fromTime !== undefined) {
+    if (requestParameters["fromTime"] != null) {
       queryParameters["from_time"] = (
-        requestParameters.fromTime as any
+        requestParameters["fromTime"] as any
       ).toISOString();
     }
 
-    if (requestParameters.toTime !== undefined) {
+    if (requestParameters["toTime"] != null) {
       queryParameters["to_time"] = (
-        requestParameters.toTime as any
+        requestParameters["toTime"] as any
       ).toISOString();
     }
 
-    if (requestParameters.frequency !== undefined) {
-      queryParameters["frequency"] = requestParameters.frequency;
+    if (requestParameters["frequency"] != null) {
+      queryParameters["frequency"] = requestParameters["frequency"];
     }
 
     const headerParameters: runtime.HTTPHeaders = {};
@@ -345,7 +342,7 @@ export class UserAccountsValuationApi
       {
         path: `/api/v1/accounts/{user_account_id}/valuation/history/`.replace(
           `{${"user_account_id"}}`,
-          encodeURIComponent(String(requestParameters.userAccountId)),
+          encodeURIComponent(String(requestParameters["userAccountId"])),
         ),
         method: "GET",
         headers: headerParameters,
@@ -384,32 +381,29 @@ export class UserAccountsValuationApi
   ): Promise<
     runtime.ApiResponse<AppGetUserAccountValuationHistoryByAssetClassResponse>
   > {
-    if (
-      requestParameters.userAccountId === null ||
-      requestParameters.userAccountId === undefined
-    ) {
+    if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
-        "Required parameter requestParameters.userAccountId was null or undefined when calling getUserAccountHistoricalValuationByAssetClass.",
+        'Required parameter "userAccountId" was null or undefined when calling getUserAccountHistoricalValuationByAssetClass().',
       );
     }
 
     const queryParameters: any = {};
 
-    if (requestParameters.fromTime !== undefined) {
+    if (requestParameters["fromTime"] != null) {
       queryParameters["from_time"] = (
-        requestParameters.fromTime as any
+        requestParameters["fromTime"] as any
       ).toISOString();
     }
 
-    if (requestParameters.toTime !== undefined) {
+    if (requestParameters["toTime"] != null) {
       queryParameters["to_time"] = (
-        requestParameters.toTime as any
+        requestParameters["toTime"] as any
       ).toISOString();
     }
 
-    if (requestParameters.frequency !== undefined) {
-      queryParameters["frequency"] = requestParameters.frequency;
+    if (requestParameters["frequency"] != null) {
+      queryParameters["frequency"] = requestParameters["frequency"];
     }
 
     const headerParameters: runtime.HTTPHeaders = {};
@@ -426,7 +420,7 @@ export class UserAccountsValuationApi
       {
         path: `/api/v1/accounts/{user_account_id}/valuation/history/by/asset_class/`.replace(
           `{${"user_account_id"}}`,
-          encodeURIComponent(String(requestParameters.userAccountId)),
+          encodeURIComponent(String(requestParameters["userAccountId"])),
         ),
         method: "GET",
         headers: headerParameters,
@@ -466,32 +460,29 @@ export class UserAccountsValuationApi
   ): Promise<
     runtime.ApiResponse<AppGetUserAccountValuationHistoryByAssetTypeResponse>
   > {
-    if (
-      requestParameters.userAccountId === null ||
-      requestParameters.userAccountId === undefined
-    ) {
+    if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
-        "Required parameter requestParameters.userAccountId was null or undefined when calling getUserAccountHistoricalValuationByAssetType.",
+        'Required parameter "userAccountId" was null or undefined when calling getUserAccountHistoricalValuationByAssetType().',
       );
     }
 
     const queryParameters: any = {};
 
-    if (requestParameters.fromTime !== undefined) {
+    if (requestParameters["fromTime"] != null) {
       queryParameters["from_time"] = (
-        requestParameters.fromTime as any
+        requestParameters["fromTime"] as any
       ).toISOString();
     }
 
-    if (requestParameters.toTime !== undefined) {
+    if (requestParameters["toTime"] != null) {
       queryParameters["to_time"] = (
-        requestParameters.toTime as any
+        requestParameters["toTime"] as any
       ).toISOString();
     }
 
-    if (requestParameters.frequency !== undefined) {
-      queryParameters["frequency"] = requestParameters.frequency;
+    if (requestParameters["frequency"] != null) {
+      queryParameters["frequency"] = requestParameters["frequency"];
     }
 
     const headerParameters: runtime.HTTPHeaders = {};
@@ -508,7 +499,7 @@ export class UserAccountsValuationApi
       {
         path: `/api/v1/accounts/{user_account_id}/valuation/history/by/asset_type/`.replace(
           `{${"user_account_id"}}`,
-          encodeURIComponent(String(requestParameters.userAccountId)),
+          encodeURIComponent(String(requestParameters["userAccountId"])),
         ),
         method: "GET",
         headers: headerParameters,
@@ -545,13 +536,10 @@ export class UserAccountsValuationApi
     requestParameters: GetUserAccountValuationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<AppGetUserAccountValuationResponse>> {
-    if (
-      requestParameters.userAccountId === null ||
-      requestParameters.userAccountId === undefined
-    ) {
+    if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
-        "Required parameter requestParameters.userAccountId was null or undefined when calling getUserAccountValuation.",
+        'Required parameter "userAccountId" was null or undefined when calling getUserAccountValuation().',
       );
     }
 
@@ -571,7 +559,7 @@ export class UserAccountsValuationApi
       {
         path: `/api/v1/accounts/{user_account_id}/valuation/`.replace(
           `{${"user_account_id"}}`,
-          encodeURIComponent(String(requestParameters.userAccountId)),
+          encodeURIComponent(String(requestParameters["userAccountId"])),
         ),
         method: "GET",
         headers: headerParameters,
@@ -610,13 +598,10 @@ export class UserAccountsValuationApi
   ): Promise<
     runtime.ApiResponse<AppGetUserAccountValuationByAssetClassResponse>
   > {
-    if (
-      requestParameters.userAccountId === null ||
-      requestParameters.userAccountId === undefined
-    ) {
+    if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
-        "Required parameter requestParameters.userAccountId was null or undefined when calling getUserAccountValuationByAssetClass.",
+        'Required parameter "userAccountId" was null or undefined when calling getUserAccountValuationByAssetClass().',
       );
     }
 
@@ -636,7 +621,7 @@ export class UserAccountsValuationApi
       {
         path: `/api/v1/accounts/{user_account_id}/valuation/by/asset_class/`.replace(
           `{${"user_account_id"}}`,
-          encodeURIComponent(String(requestParameters.userAccountId)),
+          encodeURIComponent(String(requestParameters["userAccountId"])),
         ),
         method: "GET",
         headers: headerParameters,
@@ -675,13 +660,10 @@ export class UserAccountsValuationApi
   ): Promise<
     runtime.ApiResponse<AppGetUserAccountValuationByAssetTypeResponse>
   > {
-    if (
-      requestParameters.userAccountId === null ||
-      requestParameters.userAccountId === undefined
-    ) {
+    if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
-        "Required parameter requestParameters.userAccountId was null or undefined when calling getUserAccountValuationByAssetType.",
+        'Required parameter "userAccountId" was null or undefined when calling getUserAccountValuationByAssetType().',
       );
     }
 
@@ -701,7 +683,7 @@ export class UserAccountsValuationApi
       {
         path: `/api/v1/accounts/{user_account_id}/valuation/by/asset_type/`.replace(
           `{${"user_account_id"}}`,
-          encodeURIComponent(String(requestParameters.userAccountId)),
+          encodeURIComponent(String(requestParameters["userAccountId"])),
         ),
         method: "GET",
         headers: headerParameters,
@@ -740,13 +722,10 @@ export class UserAccountsValuationApi
   ): Promise<
     runtime.ApiResponse<AppGetUserAccountValuationByCurrencyExposureResponse>
   > {
-    if (
-      requestParameters.userAccountId === null ||
-      requestParameters.userAccountId === undefined
-    ) {
+    if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
-        "Required parameter requestParameters.userAccountId was null or undefined when calling getUserAccountValuationByCurrencyExposure.",
+        'Required parameter "userAccountId" was null or undefined when calling getUserAccountValuationByCurrencyExposure().',
       );
     }
 
@@ -766,7 +745,7 @@ export class UserAccountsValuationApi
       {
         path: `/api/v1/accounts/{user_account_id}/valuation/by/currency_exposure/`.replace(
           `{${"user_account_id"}}`,
-          encodeURIComponent(String(requestParameters.userAccountId)),
+          encodeURIComponent(String(requestParameters["userAccountId"])),
         ),
         method: "GET",
         headers: headerParameters,
@@ -803,13 +782,10 @@ export class UserAccountsValuationApi
     requestParameters: TriggerUserAccountValuationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<object>> {
-    if (
-      requestParameters.userAccountId === null ||
-      requestParameters.userAccountId === undefined
-    ) {
+    if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
-        "Required parameter requestParameters.userAccountId was null or undefined when calling triggerUserAccountValuation.",
+        'Required parameter "userAccountId" was null or undefined when calling triggerUserAccountValuation().',
       );
     }
 
@@ -829,7 +805,7 @@ export class UserAccountsValuationApi
       {
         path: `/api/v1/accounts/{user_account_id}/valuation/trigger/`.replace(
           `{${"user_account_id"}}`,
-          encodeURIComponent(String(requestParameters.userAccountId)),
+          encodeURIComponent(String(requestParameters["userAccountId"])),
         ),
         method: "POST",
         headers: headerParameters,

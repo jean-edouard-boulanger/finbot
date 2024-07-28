@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 import type { GroupValuation } from "./GroupValuation";
 import {
   GroupValuationFromJSON,
@@ -42,12 +42,17 @@ export interface ValuationByCurrencyExposure {
 /**
  * Check if a given object implements the ValuationByCurrencyExposure interface.
  */
-export function instanceOfValuationByCurrencyExposure(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "valuationCcy" in value;
-  isInstance = isInstance && "byCurrencyExposure" in value;
-
-  return isInstance;
+export function instanceOfValuationByCurrencyExposure(
+  value: object,
+): value is ValuationByCurrencyExposure {
+  if (!("valuationCcy" in value) || value["valuationCcy"] === undefined)
+    return false;
+  if (
+    !("byCurrencyExposure" in value) ||
+    value["byCurrencyExposure"] === undefined
+  )
+    return false;
+  return true;
 }
 
 export function ValuationByCurrencyExposureFromJSON(
@@ -60,7 +65,7 @@ export function ValuationByCurrencyExposureFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): ValuationByCurrencyExposure {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -74,15 +79,12 @@ export function ValuationByCurrencyExposureFromJSONTyped(
 export function ValuationByCurrencyExposureToJSON(
   value?: ValuationByCurrencyExposure | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    valuation_ccy: value.valuationCcy,
-    by_currency_exposure: (value.byCurrencyExposure as Array<any>).map(
+    valuation_ccy: value["valuationCcy"],
+    by_currency_exposure: (value["byCurrencyExposure"] as Array<any>).map(
       GroupValuationToJSON,
     ),
   };

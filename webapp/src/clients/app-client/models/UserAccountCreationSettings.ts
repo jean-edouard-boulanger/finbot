@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 /**
  *
  * @export
@@ -29,11 +29,12 @@ export interface UserAccountCreationSettings {
 /**
  * Check if a given object implements the UserAccountCreationSettings interface.
  */
-export function instanceOfUserAccountCreationSettings(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "valuationCcy" in value;
-
-  return isInstance;
+export function instanceOfUserAccountCreationSettings(
+  value: object,
+): value is UserAccountCreationSettings {
+  if (!("valuationCcy" in value) || value["valuationCcy"] === undefined)
+    return false;
+  return true;
 }
 
 export function UserAccountCreationSettingsFromJSON(
@@ -46,7 +47,7 @@ export function UserAccountCreationSettingsFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): UserAccountCreationSettings {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -57,13 +58,10 @@ export function UserAccountCreationSettingsFromJSONTyped(
 export function UserAccountCreationSettingsToJSON(
   value?: UserAccountCreationSettings | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    valuation_ccy: value.valuationCcy,
+    valuation_ccy: value["valuationCcy"],
   };
 }

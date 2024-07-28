@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 /**
  *
  * @export
@@ -41,13 +41,15 @@ export interface LinkedAccountDescription {
 /**
  * Check if a given object implements the LinkedAccountDescription interface.
  */
-export function instanceOfLinkedAccountDescription(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "id" in value;
-  isInstance = isInstance && "providerId" in value;
-  isInstance = isInstance && "description" in value;
-
-  return isInstance;
+export function instanceOfLinkedAccountDescription(
+  value: object,
+): value is LinkedAccountDescription {
+  if (!("id" in value) || value["id"] === undefined) return false;
+  if (!("providerId" in value) || value["providerId"] === undefined)
+    return false;
+  if (!("description" in value) || value["description"] === undefined)
+    return false;
+  return true;
 }
 
 export function LinkedAccountDescriptionFromJSON(
@@ -60,7 +62,7 @@ export function LinkedAccountDescriptionFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): LinkedAccountDescription {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -73,15 +75,12 @@ export function LinkedAccountDescriptionFromJSONTyped(
 export function LinkedAccountDescriptionToJSON(
   value?: LinkedAccountDescription | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    id: value.id,
-    provider_id: value.providerId,
-    description: value.description,
+    id: value["id"],
+    provider_id: value["providerId"],
+    description: value["description"],
   };
 }

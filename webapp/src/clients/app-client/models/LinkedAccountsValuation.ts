@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 import type { LinkedAccountValuationEntry } from "./LinkedAccountValuationEntry";
 import {
   LinkedAccountValuationEntryFromJSON,
@@ -42,12 +42,13 @@ export interface LinkedAccountsValuation {
 /**
  * Check if a given object implements the LinkedAccountsValuation interface.
  */
-export function instanceOfLinkedAccountsValuation(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "valuationCcy" in value;
-  isInstance = isInstance && "entries" in value;
-
-  return isInstance;
+export function instanceOfLinkedAccountsValuation(
+  value: object,
+): value is LinkedAccountsValuation {
+  if (!("valuationCcy" in value) || value["valuationCcy"] === undefined)
+    return false;
+  if (!("entries" in value) || value["entries"] === undefined) return false;
+  return true;
 }
 
 export function LinkedAccountsValuationFromJSON(
@@ -60,7 +61,7 @@ export function LinkedAccountsValuationFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): LinkedAccountsValuation {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -74,15 +75,12 @@ export function LinkedAccountsValuationFromJSONTyped(
 export function LinkedAccountsValuationToJSON(
   value?: LinkedAccountsValuation | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    valuation_ccy: value.valuationCcy,
-    entries: (value.entries as Array<any>).map(
+    valuation_ccy: value["valuationCcy"],
+    entries: (value["entries"] as Array<any>).map(
       LinkedAccountValuationEntryToJSON,
     ),
   };

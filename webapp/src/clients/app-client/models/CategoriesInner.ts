@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 /**
  *
  * @export
@@ -22,10 +22,10 @@ export interface CategoriesInner {}
 /**
  * Check if a given object implements the CategoriesInner interface.
  */
-export function instanceOfCategoriesInner(value: object): boolean {
-  let isInstance = true;
-
-  return isInstance;
+export function instanceOfCategoriesInner(
+  value: object,
+): value is CategoriesInner {
+  return true;
 }
 
 export function CategoriesInnerFromJSON(json: any): CategoriesInner {

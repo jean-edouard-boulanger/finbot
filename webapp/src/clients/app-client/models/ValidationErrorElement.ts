@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 /**
  * Model of a validation error response element.
  * @export
@@ -47,13 +47,13 @@ export interface ValidationErrorElement {
 /**
  * Check if a given object implements the ValidationErrorElement interface.
  */
-export function instanceOfValidationErrorElement(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "loc" in value;
-  isInstance = isInstance && "msg" in value;
-  isInstance = isInstance && "type" in value;
-
-  return isInstance;
+export function instanceOfValidationErrorElement(
+  value: object,
+): value is ValidationErrorElement {
+  if (!("loc" in value) || value["loc"] === undefined) return false;
+  if (!("msg" in value) || value["msg"] === undefined) return false;
+  if (!("type" in value) || value["type"] === undefined) return false;
+  return true;
 }
 
 export function ValidationErrorElementFromJSON(
@@ -66,30 +66,27 @@ export function ValidationErrorElementFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): ValidationErrorElement {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
     loc: json["loc"],
     msg: json["msg"],
     type: json["type"],
-    ctx: !exists(json, "ctx") ? undefined : json["ctx"],
+    ctx: json["ctx"] == null ? undefined : json["ctx"],
   };
 }
 
 export function ValidationErrorElementToJSON(
   value?: ValidationErrorElement | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    loc: value.loc,
-    msg: value.msg,
-    type: value.type,
-    ctx: value.ctx,
+    loc: value["loc"],
+    msg: value["msg"],
+    type: value["type"],
+    ctx: value["ctx"],
   };
 }

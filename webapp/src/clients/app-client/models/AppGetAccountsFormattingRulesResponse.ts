@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 /**
  *
  * @export
@@ -31,11 +31,10 @@ export interface AppGetAccountsFormattingRulesResponse {
  */
 export function instanceOfAppGetAccountsFormattingRulesResponse(
   value: object,
-): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "colourPalette" in value;
-
-  return isInstance;
+): value is AppGetAccountsFormattingRulesResponse {
+  if (!("colourPalette" in value) || value["colourPalette"] === undefined)
+    return false;
+  return true;
 }
 
 export function AppGetAccountsFormattingRulesResponseFromJSON(
@@ -48,7 +47,7 @@ export function AppGetAccountsFormattingRulesResponseFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): AppGetAccountsFormattingRulesResponse {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -59,13 +58,10 @@ export function AppGetAccountsFormattingRulesResponseFromJSONTyped(
 export function AppGetAccountsFormattingRulesResponseToJSON(
   value?: AppGetAccountsFormattingRulesResponse | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    colour_palette: value.colourPalette,
+    colour_palette: value["colourPalette"],
   };
 }

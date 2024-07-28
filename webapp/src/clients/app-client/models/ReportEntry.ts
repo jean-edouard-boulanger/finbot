@@ -11,19 +11,19 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
-import type { AggregationDescription } from "./AggregationDescription";
-import {
-  AggregationDescriptionFromJSON,
-  AggregationDescriptionFromJSONTyped,
-  AggregationDescriptionToJSON,
-} from "./AggregationDescription";
+import { mapValues } from "../runtime";
 import type { Metrics } from "./Metrics";
 import {
   MetricsFromJSON,
   MetricsFromJSONTyped,
   MetricsToJSON,
 } from "./Metrics";
+import type { AggregationDescription } from "./AggregationDescription";
+import {
+  AggregationDescriptionFromJSON,
+  AggregationDescriptionFromJSONTyped,
+  AggregationDescriptionToJSON,
+} from "./AggregationDescription";
 
 /**
  *
@@ -48,12 +48,11 @@ export interface ReportEntry {
 /**
  * Check if a given object implements the ReportEntry interface.
  */
-export function instanceOfReportEntry(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "aggregation" in value;
-  isInstance = isInstance && "metrics" in value;
-
-  return isInstance;
+export function instanceOfReportEntry(value: object): value is ReportEntry {
+  if (!("aggregation" in value) || value["aggregation"] === undefined)
+    return false;
+  if (!("metrics" in value) || value["metrics"] === undefined) return false;
+  return true;
 }
 
 export function ReportEntryFromJSON(json: any): ReportEntry {
@@ -64,7 +63,7 @@ export function ReportEntryFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): ReportEntry {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -74,14 +73,11 @@ export function ReportEntryFromJSONTyped(
 }
 
 export function ReportEntryToJSON(value?: ReportEntry | null): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    aggregation: AggregationDescriptionToJSON(value.aggregation),
-    metrics: MetricsToJSON(value.metrics),
+    aggregation: AggregationDescriptionToJSON(value["aggregation"]),
+    metrics: MetricsToJSON(value["metrics"]),
   };
 }

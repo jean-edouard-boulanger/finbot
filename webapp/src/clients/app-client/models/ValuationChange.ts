@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 /**
  *
  * @export
@@ -65,10 +65,10 @@ export interface ValuationChange {
 /**
  * Check if a given object implements the ValuationChange interface.
  */
-export function instanceOfValuationChange(value: object): boolean {
-  let isInstance = true;
-
-  return isInstance;
+export function instanceOfValuationChange(
+  value: object,
+): value is ValuationChange {
+  return true;
 }
 
 export function ValuationChangeFromJSON(json: any): ValuationChange {
@@ -79,46 +79,37 @@ export function ValuationChangeFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): ValuationChange {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
-    change1hour: !exists(json, "change_1hour")
-      ? undefined
-      : json["change_1hour"],
-    change1day: !exists(json, "change_1day") ? undefined : json["change_1day"],
-    change1week: !exists(json, "change_1week")
-      ? undefined
-      : json["change_1week"],
-    change1month: !exists(json, "change_1month")
-      ? undefined
-      : json["change_1month"],
-    change6months: !exists(json, "change_6months")
-      ? undefined
-      : json["change_6months"],
-    change1year: !exists(json, "change_1year")
-      ? undefined
-      : json["change_1year"],
-    change2years: !exists(json, "change_2years")
-      ? undefined
-      : json["change_2years"],
+    change1hour:
+      json["change_1hour"] == null ? undefined : json["change_1hour"],
+    change1day: json["change_1day"] == null ? undefined : json["change_1day"],
+    change1week:
+      json["change_1week"] == null ? undefined : json["change_1week"],
+    change1month:
+      json["change_1month"] == null ? undefined : json["change_1month"],
+    change6months:
+      json["change_6months"] == null ? undefined : json["change_6months"],
+    change1year:
+      json["change_1year"] == null ? undefined : json["change_1year"],
+    change2years:
+      json["change_2years"] == null ? undefined : json["change_2years"],
   };
 }
 
 export function ValuationChangeToJSON(value?: ValuationChange | null): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    change_1hour: value.change1hour,
-    change_1day: value.change1day,
-    change_1week: value.change1week,
-    change_1month: value.change1month,
-    change_6months: value.change6months,
-    change_1year: value.change1year,
-    change_2years: value.change2years,
+    change_1hour: value["change1hour"],
+    change_1day: value["change1day"],
+    change_1week: value["change1week"],
+    change_1month: value["change1month"],
+    change_6months: value["change6months"],
+    change_1year: value["change1year"],
+    change_2years: value["change2years"],
   };
 }

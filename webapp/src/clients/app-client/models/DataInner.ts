@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 /**
  *
  * @export
@@ -22,10 +22,8 @@ export interface DataInner {}
 /**
  * Check if a given object implements the DataInner interface.
  */
-export function instanceOfDataInner(value: object): boolean {
-  let isInstance = true;
-
-  return isInstance;
+export function instanceOfDataInner(value: object): value is DataInner {
+  return true;
 }
 
 export function DataInnerFromJSON(json: any): DataInner {

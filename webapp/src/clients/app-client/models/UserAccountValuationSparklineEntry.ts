@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 /**
  *
  * @export
@@ -37,11 +37,10 @@ export interface UserAccountValuationSparklineEntry {
  */
 export function instanceOfUserAccountValuationSparklineEntry(
   value: object,
-): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "effectiveAt" in value;
-
-  return isInstance;
+): value is UserAccountValuationSparklineEntry {
+  if (!("effectiveAt" in value) || value["effectiveAt"] === undefined)
+    return false;
+  return true;
 }
 
 export function UserAccountValuationSparklineEntryFromJSON(
@@ -54,26 +53,23 @@ export function UserAccountValuationSparklineEntryFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): UserAccountValuationSparklineEntry {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
     effectiveAt: new Date(json["effective_at"]),
-    value: !exists(json, "value") ? undefined : json["value"],
+    value: json["value"] == null ? undefined : json["value"],
   };
 }
 
 export function UserAccountValuationSparklineEntryToJSON(
   value?: UserAccountValuationSparklineEntry | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    effective_at: value.effectiveAt.toISOString(),
-    value: value.value,
+    effective_at: value["effectiveAt"].toISOString(),
+    value: value["value"],
   };
 }

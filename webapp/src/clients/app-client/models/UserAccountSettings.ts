@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 /**
  *
  * @export
@@ -41,12 +41,13 @@ export interface UserAccountSettings {
 /**
  * Check if a given object implements the UserAccountSettings interface.
  */
-export function instanceOfUserAccountSettings(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "valuationCcy" in value;
-  isInstance = isInstance && "createdAt" in value;
-
-  return isInstance;
+export function instanceOfUserAccountSettings(
+  value: object,
+): value is UserAccountSettings {
+  if (!("valuationCcy" in value) || value["valuationCcy"] === undefined)
+    return false;
+  if (!("createdAt" in value) || value["createdAt"] === undefined) return false;
+  return true;
 }
 
 export function UserAccountSettingsFromJSON(json: any): UserAccountSettings {
@@ -57,31 +58,27 @@ export function UserAccountSettingsFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): UserAccountSettings {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
     valuationCcy: json["valuation_ccy"],
     createdAt: new Date(json["created_at"]),
-    updatedAt: !exists(json, "updated_at")
-      ? undefined
-      : new Date(json["updated_at"]),
+    updatedAt:
+      json["updated_at"] == null ? undefined : new Date(json["updated_at"]),
   };
 }
 
 export function UserAccountSettingsToJSON(
   value?: UserAccountSettings | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    valuation_ccy: value.valuationCcy,
-    created_at: value.createdAt.toISOString(),
+    valuation_ccy: value["valuationCcy"],
+    created_at: value["createdAt"].toISOString(),
     updated_at:
-      value.updatedAt === undefined ? undefined : value.updatedAt.toISOString(),
+      value["updatedAt"] == null ? undefined : value["updatedAt"].toISOString(),
   };
 }

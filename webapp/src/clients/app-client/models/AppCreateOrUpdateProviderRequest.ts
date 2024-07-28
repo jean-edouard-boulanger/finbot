@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 /**
  *
  * @export
@@ -49,14 +49,18 @@ export interface AppCreateOrUpdateProviderRequest {
  */
 export function instanceOfAppCreateOrUpdateProviderRequest(
   value: object,
-): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "id" in value;
-  isInstance = isInstance && "description" in value;
-  isInstance = isInstance && "websiteUrl" in value;
-  isInstance = isInstance && "credentialsSchema" in value;
-
-  return isInstance;
+): value is AppCreateOrUpdateProviderRequest {
+  if (!("id" in value) || value["id"] === undefined) return false;
+  if (!("description" in value) || value["description"] === undefined)
+    return false;
+  if (!("websiteUrl" in value) || value["websiteUrl"] === undefined)
+    return false;
+  if (
+    !("credentialsSchema" in value) ||
+    value["credentialsSchema"] === undefined
+  )
+    return false;
+  return true;
 }
 
 export function AppCreateOrUpdateProviderRequestFromJSON(
@@ -69,7 +73,7 @@ export function AppCreateOrUpdateProviderRequestFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): AppCreateOrUpdateProviderRequest {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -83,16 +87,13 @@ export function AppCreateOrUpdateProviderRequestFromJSONTyped(
 export function AppCreateOrUpdateProviderRequestToJSON(
   value?: AppCreateOrUpdateProviderRequest | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    id: value.id,
-    description: value.description,
-    website_url: value.websiteUrl,
-    credentials_schema: value.credentialsSchema,
+    id: value["id"],
+    description: value["description"],
+    website_url: value["websiteUrl"],
+    credentials_schema: value["credentialsSchema"],
   };
 }

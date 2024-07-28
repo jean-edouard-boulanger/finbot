@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 import type { LinkedAccount } from "./LinkedAccount";
 import {
   LinkedAccountFromJSON,
@@ -36,11 +36,12 @@ export interface AppGetLinkedAccountsResponse {
 /**
  * Check if a given object implements the AppGetLinkedAccountsResponse interface.
  */
-export function instanceOfAppGetLinkedAccountsResponse(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "linkedAccounts" in value;
-
-  return isInstance;
+export function instanceOfAppGetLinkedAccountsResponse(
+  value: object,
+): value is AppGetLinkedAccountsResponse {
+  if (!("linkedAccounts" in value) || value["linkedAccounts"] === undefined)
+    return false;
+  return true;
 }
 
 export function AppGetLinkedAccountsResponseFromJSON(
@@ -53,7 +54,7 @@ export function AppGetLinkedAccountsResponseFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): AppGetLinkedAccountsResponse {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -66,14 +67,11 @@ export function AppGetLinkedAccountsResponseFromJSONTyped(
 export function AppGetLinkedAccountsResponseToJSON(
   value?: AppGetLinkedAccountsResponse | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    linked_accounts: (value.linkedAccounts as Array<any>).map(
+    linked_accounts: (value["linkedAccounts"] as Array<any>).map(
       LinkedAccountToJSON,
     ),
   };

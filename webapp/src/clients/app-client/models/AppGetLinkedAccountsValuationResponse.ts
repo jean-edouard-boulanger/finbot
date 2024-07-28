@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 import type { LinkedAccountsValuation } from "./LinkedAccountsValuation";
 import {
   LinkedAccountsValuationFromJSON,
@@ -38,11 +38,9 @@ export interface AppGetLinkedAccountsValuationResponse {
  */
 export function instanceOfAppGetLinkedAccountsValuationResponse(
   value: object,
-): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "valuation" in value;
-
-  return isInstance;
+): value is AppGetLinkedAccountsValuationResponse {
+  if (!("valuation" in value) || value["valuation"] === undefined) return false;
+  return true;
 }
 
 export function AppGetLinkedAccountsValuationResponseFromJSON(
@@ -55,7 +53,7 @@ export function AppGetLinkedAccountsValuationResponseFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): AppGetLinkedAccountsValuationResponse {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -66,13 +64,10 @@ export function AppGetLinkedAccountsValuationResponseFromJSONTyped(
 export function AppGetLinkedAccountsValuationResponseToJSON(
   value?: AppGetLinkedAccountsValuationResponse | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    valuation: LinkedAccountsValuationToJSON(value.valuation),
+    valuation: LinkedAccountsValuationToJSON(value["valuation"]),
   };
 }

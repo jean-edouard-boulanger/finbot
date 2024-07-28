@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 /**
  *
  * @export
@@ -71,18 +71,17 @@ export interface Metrics {
 /**
  * Check if a given object implements the Metrics interface.
  */
-export function instanceOfMetrics(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "firstDate" in value;
-  isInstance = isInstance && "firstValue" in value;
-  isInstance = isInstance && "lastDate" in value;
-  isInstance = isInstance && "lastValue" in value;
-  isInstance = isInstance && "minValue" in value;
-  isInstance = isInstance && "maxValue" in value;
-  isInstance = isInstance && "absChange" in value;
-  isInstance = isInstance && "relChange" in value;
-
-  return isInstance;
+export function instanceOfMetrics(value: object): value is Metrics {
+  if (!("firstDate" in value) || value["firstDate"] === undefined) return false;
+  if (!("firstValue" in value) || value["firstValue"] === undefined)
+    return false;
+  if (!("lastDate" in value) || value["lastDate"] === undefined) return false;
+  if (!("lastValue" in value) || value["lastValue"] === undefined) return false;
+  if (!("minValue" in value) || value["minValue"] === undefined) return false;
+  if (!("maxValue" in value) || value["maxValue"] === undefined) return false;
+  if (!("absChange" in value) || value["absChange"] === undefined) return false;
+  if (!("relChange" in value) || value["relChange"] === undefined) return false;
+  return true;
 }
 
 export function MetricsFromJSON(json: any): Metrics {
@@ -93,7 +92,7 @@ export function MetricsFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): Metrics {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -109,20 +108,17 @@ export function MetricsFromJSONTyped(
 }
 
 export function MetricsToJSON(value?: Metrics | null): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    first_date: value.firstDate.toISOString(),
-    first_value: value.firstValue,
-    last_date: value.lastDate.toISOString(),
-    last_value: value.lastValue,
-    min_value: value.minValue,
-    max_value: value.maxValue,
-    abs_change: value.absChange,
-    rel_change: value.relChange,
+    first_date: value["firstDate"].toISOString(),
+    first_value: value["firstValue"],
+    last_date: value["lastDate"].toISOString(),
+    last_value: value["lastValue"],
+    min_value: value["minValue"],
+    max_value: value["maxValue"],
+    abs_change: value["absChange"],
+    rel_change: value["relChange"],
   };
 }

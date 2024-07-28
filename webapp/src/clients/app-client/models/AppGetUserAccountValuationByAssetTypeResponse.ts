@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 import type { ValuationByAssetType } from "./ValuationByAssetType";
 import {
   ValuationByAssetTypeFromJSON,
@@ -38,11 +38,9 @@ export interface AppGetUserAccountValuationByAssetTypeResponse {
  */
 export function instanceOfAppGetUserAccountValuationByAssetTypeResponse(
   value: object,
-): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "valuation" in value;
-
-  return isInstance;
+): value is AppGetUserAccountValuationByAssetTypeResponse {
+  if (!("valuation" in value) || value["valuation"] === undefined) return false;
+  return true;
 }
 
 export function AppGetUserAccountValuationByAssetTypeResponseFromJSON(
@@ -58,7 +56,7 @@ export function AppGetUserAccountValuationByAssetTypeResponseFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): AppGetUserAccountValuationByAssetTypeResponse {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -69,13 +67,10 @@ export function AppGetUserAccountValuationByAssetTypeResponseFromJSONTyped(
 export function AppGetUserAccountValuationByAssetTypeResponseToJSON(
   value?: AppGetUserAccountValuationByAssetTypeResponse | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    valuation: ValuationByAssetTypeToJSON(value.valuation),
+    valuation: ValuationByAssetTypeToJSON(value["valuation"]),
   };
 }

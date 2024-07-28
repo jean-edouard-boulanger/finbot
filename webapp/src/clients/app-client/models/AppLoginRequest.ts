@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 /**
  *
  * @export
@@ -35,12 +35,12 @@ export interface AppLoginRequest {
 /**
  * Check if a given object implements the AppLoginRequest interface.
  */
-export function instanceOfAppLoginRequest(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "email" in value;
-  isInstance = isInstance && "password" in value;
-
-  return isInstance;
+export function instanceOfAppLoginRequest(
+  value: object,
+): value is AppLoginRequest {
+  if (!("email" in value) || value["email"] === undefined) return false;
+  if (!("password" in value) || value["password"] === undefined) return false;
+  return true;
 }
 
 export function AppLoginRequestFromJSON(json: any): AppLoginRequest {
@@ -51,7 +51,7 @@ export function AppLoginRequestFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): AppLoginRequest {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -61,14 +61,11 @@ export function AppLoginRequestFromJSONTyped(
 }
 
 export function AppLoginRequestToJSON(value?: AppLoginRequest | null): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    email: value.email,
-    password: value.password,
+    email: value["email"],
+    password: value["password"],
   };
 }

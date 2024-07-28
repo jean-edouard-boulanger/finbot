@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 import type { UserAccountSettings } from "./UserAccountSettings";
 import {
   UserAccountSettingsFromJSON,
@@ -38,11 +38,9 @@ export interface AppGetUserAccountSettingsResponse {
  */
 export function instanceOfAppGetUserAccountSettingsResponse(
   value: object,
-): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "settings" in value;
-
-  return isInstance;
+): value is AppGetUserAccountSettingsResponse {
+  if (!("settings" in value) || value["settings"] === undefined) return false;
+  return true;
 }
 
 export function AppGetUserAccountSettingsResponseFromJSON(
@@ -55,7 +53,7 @@ export function AppGetUserAccountSettingsResponseFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): AppGetUserAccountSettingsResponse {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -66,13 +64,10 @@ export function AppGetUserAccountSettingsResponseFromJSONTyped(
 export function AppGetUserAccountSettingsResponseToJSON(
   value?: AppGetUserAccountSettingsResponse | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    settings: UserAccountSettingsToJSON(value.settings),
+    settings: UserAccountSettingsToJSON(value["settings"]),
   };
 }

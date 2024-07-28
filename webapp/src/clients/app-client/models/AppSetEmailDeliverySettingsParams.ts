@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 /**
  *
  * @export
@@ -31,10 +31,8 @@ export interface AppSetEmailDeliverySettingsParams {
  */
 export function instanceOfAppSetEmailDeliverySettingsParams(
   value: object,
-): boolean {
-  let isInstance = true;
-
-  return isInstance;
+): value is AppSetEmailDeliverySettingsParams {
+  return true;
 }
 
 export function AppSetEmailDeliverySettingsParamsFromJSON(
@@ -47,24 +45,21 @@ export function AppSetEmailDeliverySettingsParamsFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): AppSetEmailDeliverySettingsParams {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
-    validate: !exists(json, "validate") ? undefined : json["validate"],
+    validate: json["validate"] == null ? undefined : json["validate"],
   };
 }
 
 export function AppSetEmailDeliverySettingsParamsToJSON(
   value?: AppSetEmailDeliverySettingsParams | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    validate: value.validate,
+    validate: value["validate"],
   };
 }

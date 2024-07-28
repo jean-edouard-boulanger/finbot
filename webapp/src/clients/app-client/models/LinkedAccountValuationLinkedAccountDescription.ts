@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 /**
  *
  * @export
@@ -49,14 +49,15 @@ export interface LinkedAccountValuationLinkedAccountDescription {
  */
 export function instanceOfLinkedAccountValuationLinkedAccountDescription(
   value: object,
-): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "id" in value;
-  isInstance = isInstance && "providerId" in value;
-  isInstance = isInstance && "description" in value;
-  isInstance = isInstance && "accountColour" in value;
-
-  return isInstance;
+): value is LinkedAccountValuationLinkedAccountDescription {
+  if (!("id" in value) || value["id"] === undefined) return false;
+  if (!("providerId" in value) || value["providerId"] === undefined)
+    return false;
+  if (!("description" in value) || value["description"] === undefined)
+    return false;
+  if (!("accountColour" in value) || value["accountColour"] === undefined)
+    return false;
+  return true;
 }
 
 export function LinkedAccountValuationLinkedAccountDescriptionFromJSON(
@@ -72,7 +73,7 @@ export function LinkedAccountValuationLinkedAccountDescriptionFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): LinkedAccountValuationLinkedAccountDescription {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -86,16 +87,13 @@ export function LinkedAccountValuationLinkedAccountDescriptionFromJSONTyped(
 export function LinkedAccountValuationLinkedAccountDescriptionToJSON(
   value?: LinkedAccountValuationLinkedAccountDescription | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    id: value.id,
-    provider_id: value.providerId,
-    description: value.description,
-    account_colour: value.accountColour,
+    id: value["id"],
+    provider_id: value["providerId"],
+    description: value["description"],
+    account_colour: value["accountColour"],
   };
 }

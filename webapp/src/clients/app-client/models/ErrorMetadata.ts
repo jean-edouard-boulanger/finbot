@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 /**
  *
  * @export
@@ -53,11 +53,10 @@ export interface ErrorMetadata {
 /**
  * Check if a given object implements the ErrorMetadata interface.
  */
-export function instanceOfErrorMetadata(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "userMessage" in value;
-
-  return isInstance;
+export function instanceOfErrorMetadata(value: object): value is ErrorMetadata {
+  if (!("userMessage" in value) || value["userMessage"] === undefined)
+    return false;
+  return true;
 }
 
 export function ErrorMetadataFromJSON(json: any): ErrorMetadata {
@@ -68,34 +67,29 @@ export function ErrorMetadataFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): ErrorMetadata {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
     userMessage: json["user_message"],
-    debugMessage: !exists(json, "debug_message")
-      ? undefined
-      : json["debug_message"],
-    errorCode: !exists(json, "error_code") ? undefined : json["error_code"],
-    exceptionType: !exists(json, "exception_type")
-      ? undefined
-      : json["exception_type"],
-    trace: !exists(json, "trace") ? undefined : json["trace"],
+    debugMessage:
+      json["debug_message"] == null ? undefined : json["debug_message"],
+    errorCode: json["error_code"] == null ? undefined : json["error_code"],
+    exceptionType:
+      json["exception_type"] == null ? undefined : json["exception_type"],
+    trace: json["trace"] == null ? undefined : json["trace"],
   };
 }
 
 export function ErrorMetadataToJSON(value?: ErrorMetadata | null): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    user_message: value.userMessage,
-    debug_message: value.debugMessage,
-    error_code: value.errorCode,
-    exception_type: value.exceptionType,
-    trace: value.trace,
+    user_message: value["userMessage"],
+    debug_message: value["debugMessage"],
+    error_code: value["errorCode"],
+    exception_type: value["exceptionType"],
+    trace: value["trace"],
   };
 }

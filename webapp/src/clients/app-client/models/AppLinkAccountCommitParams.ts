@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 /**
  *
  * @export
@@ -35,10 +35,10 @@ export interface AppLinkAccountCommitParams {
 /**
  * Check if a given object implements the AppLinkAccountCommitParams interface.
  */
-export function instanceOfAppLinkAccountCommitParams(value: object): boolean {
-  let isInstance = true;
-
-  return isInstance;
+export function instanceOfAppLinkAccountCommitParams(
+  value: object,
+): value is AppLinkAccountCommitParams {
+  return true;
 }
 
 export function AppLinkAccountCommitParamsFromJSON(
@@ -51,26 +51,23 @@ export function AppLinkAccountCommitParamsFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): AppLinkAccountCommitParams {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
-    validate: !exists(json, "validate") ? undefined : json["validate"],
-    persist: !exists(json, "persist") ? undefined : json["persist"],
+    validate: json["validate"] == null ? undefined : json["validate"],
+    persist: json["persist"] == null ? undefined : json["persist"],
   };
 }
 
 export function AppLinkAccountCommitParamsToJSON(
   value?: AppLinkAccountCommitParams | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    validate: value.validate,
-    persist: value.persist,
+    validate: value["validate"],
+    persist: value["persist"],
   };
 }

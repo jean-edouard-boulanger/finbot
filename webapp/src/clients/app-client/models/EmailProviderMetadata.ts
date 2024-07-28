@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 /**
  *
  * @export
@@ -41,13 +41,16 @@ export interface EmailProviderMetadata {
 /**
  * Check if a given object implements the EmailProviderMetadata interface.
  */
-export function instanceOfEmailProviderMetadata(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "providerId" in value;
-  isInstance = isInstance && "description" in value;
-  isInstance = isInstance && "settingsSchema" in value;
-
-  return isInstance;
+export function instanceOfEmailProviderMetadata(
+  value: object,
+): value is EmailProviderMetadata {
+  if (!("providerId" in value) || value["providerId"] === undefined)
+    return false;
+  if (!("description" in value) || value["description"] === undefined)
+    return false;
+  if (!("settingsSchema" in value) || value["settingsSchema"] === undefined)
+    return false;
+  return true;
 }
 
 export function EmailProviderMetadataFromJSON(
@@ -60,7 +63,7 @@ export function EmailProviderMetadataFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): EmailProviderMetadata {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -73,15 +76,12 @@ export function EmailProviderMetadataFromJSONTyped(
 export function EmailProviderMetadataToJSON(
   value?: EmailProviderMetadata | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    provider_id: value.providerId,
-    description: value.description,
-    settings_schema: value.settingsSchema,
+    provider_id: value["providerId"],
+    description: value["description"],
+    settings_schema: value["settingsSchema"],
   };
 }

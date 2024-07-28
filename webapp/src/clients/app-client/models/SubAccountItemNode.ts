@@ -11,25 +11,25 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
-import type { SubAccountItemDescription } from "./SubAccountItemDescription";
-import {
-  SubAccountItemDescriptionFromJSON,
-  SubAccountItemDescriptionFromJSONTyped,
-  SubAccountItemDescriptionToJSON,
-} from "./SubAccountItemDescription";
-import type { SubAccountItemMetadataNode } from "./SubAccountItemMetadataNode";
-import {
-  SubAccountItemMetadataNodeFromJSON,
-  SubAccountItemMetadataNodeFromJSONTyped,
-  SubAccountItemMetadataNodeToJSON,
-} from "./SubAccountItemMetadataNode";
+import { mapValues } from "../runtime";
 import type { Valuation } from "./Valuation";
 import {
   ValuationFromJSON,
   ValuationFromJSONTyped,
   ValuationToJSON,
 } from "./Valuation";
+import type { SubAccountItemMetadataNode } from "./SubAccountItemMetadataNode";
+import {
+  SubAccountItemMetadataNodeFromJSON,
+  SubAccountItemMetadataNodeFromJSONTyped,
+  SubAccountItemMetadataNodeToJSON,
+} from "./SubAccountItemMetadataNode";
+import type { SubAccountItemDescription } from "./SubAccountItemDescription";
+import {
+  SubAccountItemDescriptionFromJSON,
+  SubAccountItemDescriptionFromJSONTyped,
+  SubAccountItemDescriptionToJSON,
+} from "./SubAccountItemDescription";
 
 /**
  *
@@ -75,13 +75,13 @@ export type SubAccountItemNodeRoleEnum =
 /**
  * Check if a given object implements the SubAccountItemNode interface.
  */
-export function instanceOfSubAccountItemNode(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "item" in value;
-  isInstance = isInstance && "valuation" in value;
-  isInstance = isInstance && "children" in value;
-
-  return isInstance;
+export function instanceOfSubAccountItemNode(
+  value: object,
+): value is SubAccountItemNode {
+  if (!("item" in value) || value["item"] === undefined) return false;
+  if (!("valuation" in value) || value["valuation"] === undefined) return false;
+  if (!("children" in value) || value["children"] === undefined) return false;
+  return true;
 }
 
 export function SubAccountItemNodeFromJSON(json: any): SubAccountItemNode {
@@ -92,11 +92,11 @@ export function SubAccountItemNodeFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): SubAccountItemNode {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
-    role: !exists(json, "role") ? undefined : json["role"],
+    role: json["role"] == null ? undefined : json["role"],
     item: SubAccountItemDescriptionFromJSON(json["item"]),
     valuation: ValuationFromJSON(json["valuation"]),
     children: (json["children"] as Array<any>).map(
@@ -108,17 +108,14 @@ export function SubAccountItemNodeFromJSONTyped(
 export function SubAccountItemNodeToJSON(
   value?: SubAccountItemNode | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    role: value.role,
-    item: SubAccountItemDescriptionToJSON(value.item),
-    valuation: ValuationToJSON(value.valuation),
-    children: (value.children as Array<any>).map(
+    role: value["role"],
+    item: SubAccountItemDescriptionToJSON(value["item"]),
+    valuation: ValuationToJSON(value["valuation"]),
+    children: (value["children"] as Array<any>).map(
       SubAccountItemMetadataNodeToJSON,
     ),
   };

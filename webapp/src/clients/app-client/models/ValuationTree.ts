@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 import type { UserAccountNode } from "./UserAccountNode";
 import {
   UserAccountNodeFromJSON,
@@ -36,11 +36,10 @@ export interface ValuationTree {
 /**
  * Check if a given object implements the ValuationTree interface.
  */
-export function instanceOfValuationTree(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "valuationTree" in value;
-
-  return isInstance;
+export function instanceOfValuationTree(value: object): value is ValuationTree {
+  if (!("valuationTree" in value) || value["valuationTree"] === undefined)
+    return false;
+  return true;
 }
 
 export function ValuationTreeFromJSON(json: any): ValuationTree {
@@ -51,7 +50,7 @@ export function ValuationTreeFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): ValuationTree {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -60,13 +59,10 @@ export function ValuationTreeFromJSONTyped(
 }
 
 export function ValuationTreeToJSON(value?: ValuationTree | null): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    valuation_tree: UserAccountNodeToJSON(value.valuationTree),
+    valuation_tree: UserAccountNodeToJSON(value["valuationTree"]),
   };
 }

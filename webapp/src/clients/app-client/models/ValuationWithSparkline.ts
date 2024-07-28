@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 import type { ValuationChange } from "./ValuationChange";
 import {
   ValuationChangeFromJSON,
@@ -54,14 +54,14 @@ export interface ValuationWithSparkline {
 /**
  * Check if a given object implements the ValuationWithSparkline interface.
  */
-export function instanceOfValuationWithSparkline(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "currency" in value;
-  isInstance = isInstance && "value" in value;
-  isInstance = isInstance && "change" in value;
-  isInstance = isInstance && "sparkline" in value;
-
-  return isInstance;
+export function instanceOfValuationWithSparkline(
+  value: object,
+): value is ValuationWithSparkline {
+  if (!("currency" in value) || value["currency"] === undefined) return false;
+  if (!("value" in value) || value["value"] === undefined) return false;
+  if (!("change" in value) || value["change"] === undefined) return false;
+  if (!("sparkline" in value) || value["sparkline"] === undefined) return false;
+  return true;
 }
 
 export function ValuationWithSparklineFromJSON(
@@ -74,7 +74,7 @@ export function ValuationWithSparklineFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): ValuationWithSparkline {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -88,16 +88,13 @@ export function ValuationWithSparklineFromJSONTyped(
 export function ValuationWithSparklineToJSON(
   value?: ValuationWithSparkline | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    currency: value.currency,
-    value: value.value,
-    change: ValuationChangeToJSON(value.change),
-    sparkline: value.sparkline,
+    currency: value["currency"],
+    value: value["value"],
+    change: ValuationChangeToJSON(value["change"]),
+    sparkline: value["sparkline"],
   };
 }

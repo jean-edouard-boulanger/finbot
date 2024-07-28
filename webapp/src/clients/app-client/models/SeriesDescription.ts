@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 import type { DataInner } from "./DataInner";
 import {
   DataInnerFromJSON,
@@ -48,13 +48,13 @@ export interface SeriesDescription {
 /**
  * Check if a given object implements the SeriesDescription interface.
  */
-export function instanceOfSeriesDescription(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "name" in value;
-  isInstance = isInstance && "data" in value;
-  isInstance = isInstance && "colour" in value;
-
-  return isInstance;
+export function instanceOfSeriesDescription(
+  value: object,
+): value is SeriesDescription {
+  if (!("name" in value) || value["name"] === undefined) return false;
+  if (!("data" in value) || value["data"] === undefined) return false;
+  if (!("colour" in value) || value["colour"] === undefined) return false;
+  return true;
 }
 
 export function SeriesDescriptionFromJSON(json: any): SeriesDescription {
@@ -65,7 +65,7 @@ export function SeriesDescriptionFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): SeriesDescription {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -76,15 +76,12 @@ export function SeriesDescriptionFromJSONTyped(
 }
 
 export function SeriesDescriptionToJSON(value?: SeriesDescription | null): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    name: value.name,
-    data: (value.data as Array<any>).map(DataInnerToJSON),
-    colour: value.colour,
+    name: value["name"],
+    data: (value["data"] as Array<any>).map(DataInnerToJSON),
+    colour: value["colour"],
   };
 }

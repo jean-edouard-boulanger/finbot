@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 import type { ValuationFrequency } from "./ValuationFrequency";
 import {
   ValuationFrequencyFromJSON,
@@ -48,10 +48,10 @@ export interface AppHistoricalValuationParams {
 /**
  * Check if a given object implements the AppHistoricalValuationParams interface.
  */
-export function instanceOfAppHistoricalValuationParams(value: object): boolean {
-  let isInstance = true;
-
-  return isInstance;
+export function instanceOfAppHistoricalValuationParams(
+  value: object,
+): value is AppHistoricalValuationParams {
+  return true;
 }
 
 export function AppHistoricalValuationParamsFromJSON(
@@ -64,34 +64,31 @@ export function AppHistoricalValuationParamsFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): AppHistoricalValuationParams {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
-    fromTime: !exists(json, "from_time")
-      ? undefined
-      : new Date(json["from_time"]),
-    toTime: !exists(json, "to_time") ? undefined : new Date(json["to_time"]),
-    frequency: !exists(json, "frequency")
-      ? undefined
-      : ValuationFrequencyFromJSON(json["frequency"]),
+    fromTime:
+      json["from_time"] == null ? undefined : new Date(json["from_time"]),
+    toTime: json["to_time"] == null ? undefined : new Date(json["to_time"]),
+    frequency:
+      json["frequency"] == null
+        ? undefined
+        : ValuationFrequencyFromJSON(json["frequency"]),
   };
 }
 
 export function AppHistoricalValuationParamsToJSON(
   value?: AppHistoricalValuationParams | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
     from_time:
-      value.fromTime === undefined ? undefined : value.fromTime.toISOString(),
+      value["fromTime"] == null ? undefined : value["fromTime"].toISOString(),
     to_time:
-      value.toTime === undefined ? undefined : value.toTime.toISOString(),
-    frequency: ValuationFrequencyToJSON(value.frequency),
+      value["toTime"] == null ? undefined : value["toTime"].toISOString(),
+    frequency: ValuationFrequencyToJSON(value["frequency"]),
   };
 }
