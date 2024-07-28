@@ -33,14 +33,12 @@ class Notifier(Protocol):
     def notify_valuation(
         self,
         notification: ValuationNotification,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     def notify_linked_accounts_snapshot_errors(
         self,
         error_entries: list[model.LinkedAccountSnapshotEntry],
-    ) -> None:
-        ...
+    ) -> None: ...
 
 
 class EmailNotifier(Notifier):

@@ -20,7 +20,7 @@ def serialize(data: Any) -> Any:
     if isinstance(data, BaseModel):
         return serialize(data.dict())
     if dataclasses.is_dataclass(data):
-        return serialize(dataclasses.asdict(data))
+        return serialize(dataclasses.asdict(data))  # type: ignore
     if hasattr(data, "serialize"):
         return serialize(data.serialize())
     if isinstance(data, decimal.Decimal):

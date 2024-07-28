@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+OWN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source "${OWN_DIR}/bash-utils.sh"
+
+function pip-upgrade-single () {
+  req_file_path="$1"
+  [[ -f "${req_file_path}" ]] || die "could not find requirement file: ${req_file_path}"
+  tmp_req_file_path="$(mktemp --suffix "$(basename -- "_${req_file_path}").txt")"
+  grep -v '\-r' "${req_file_path}" > "${tmp_req_file_path}"
+  pip-upgrade "${tmp_req_file_path}" --skip-package-installation \
+    && cat <(grep '\-r' "${req_file_path}") <(env LC_COLLATE=C sort "${tmp_req_file_path}") > "${tmp_req_file_path}.1" \
+    && mv "${tmp_req_file_path}.1" "${req_file_path}" \
+    && rm -f "${tmp_req_file_path}" "${tmp_req_file_path}.1"
+}
+
+pip-upgrade-single "${FINBOT_ROOT_DIR}"/requirements.in
+pip-upgrade-single "${FINBOT_ROOT_DIR}"/requirements-dev.in

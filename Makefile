@@ -81,10 +81,10 @@ banned-keywords-check-ts:
 	tools/banned-keywords.py --source-dirs webapp/src
 
 flakes-check:
-	python3.12 -m ruff --ignore I
+	python3.12 -m ruff check --ignore I
 
 flakes:
-	python3.12 -m ruff --ignore I --fix
+	python3.12 -m ruff check --ignore I --fix
 
 version-bump-check:
 	tools/versioning check-version-bump
