@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 /**
  *
  * @export
@@ -47,14 +47,18 @@ export interface AppLinkAccountRequest {
 /**
  * Check if a given object implements the AppLinkAccountRequest interface.
  */
-export function instanceOfAppLinkAccountRequest(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "providerId" in value;
-  isInstance = isInstance && "credentials" in value;
-  isInstance = isInstance && "accountName" in value;
-  isInstance = isInstance && "accountColour" in value;
-
-  return isInstance;
+export function instanceOfAppLinkAccountRequest(
+  value: object,
+): value is AppLinkAccountRequest {
+  if (!("providerId" in value) || value["providerId"] === undefined)
+    return false;
+  if (!("credentials" in value) || value["credentials"] === undefined)
+    return false;
+  if (!("accountName" in value) || value["accountName"] === undefined)
+    return false;
+  if (!("accountColour" in value) || value["accountColour"] === undefined)
+    return false;
+  return true;
 }
 
 export function AppLinkAccountRequestFromJSON(
@@ -67,7 +71,7 @@ export function AppLinkAccountRequestFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): AppLinkAccountRequest {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -81,16 +85,13 @@ export function AppLinkAccountRequestFromJSONTyped(
 export function AppLinkAccountRequestToJSON(
   value?: AppLinkAccountRequest | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    provider_id: value.providerId,
-    credentials: value.credentials,
-    account_name: value.accountName,
-    account_colour: value.accountColour,
+    provider_id: value["providerId"],
+    credentials: value["credentials"],
+    account_name: value["accountName"],
+    account_colour: value["accountColour"],
   };
 }

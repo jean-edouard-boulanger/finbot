@@ -87,7 +87,7 @@ export class AuthenticationApi
         method: "POST",
         headers: headerParameters,
         query: queryParameters,
-        body: AppLoginRequestToJSON(requestParameters.appLoginRequest),
+        body: AppLoginRequestToJSON(requestParameters["appLoginRequest"]),
       },
       initOverrides,
     );

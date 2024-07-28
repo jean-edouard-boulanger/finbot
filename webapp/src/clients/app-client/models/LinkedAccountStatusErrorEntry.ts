@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 import type { ErrorMetadata } from "./ErrorMetadata";
 import {
   ErrorMetadataFromJSON,
@@ -44,12 +44,10 @@ export interface LinkedAccountStatusErrorEntry {
  */
 export function instanceOfLinkedAccountStatusErrorEntry(
   value: object,
-): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "scope" in value;
-  isInstance = isInstance && "error" in value;
-
-  return isInstance;
+): value is LinkedAccountStatusErrorEntry {
+  if (!("scope" in value) || value["scope"] === undefined) return false;
+  if (!("error" in value) || value["error"] === undefined) return false;
+  return true;
 }
 
 export function LinkedAccountStatusErrorEntryFromJSON(
@@ -62,7 +60,7 @@ export function LinkedAccountStatusErrorEntryFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): LinkedAccountStatusErrorEntry {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -74,14 +72,11 @@ export function LinkedAccountStatusErrorEntryFromJSONTyped(
 export function LinkedAccountStatusErrorEntryToJSON(
   value?: LinkedAccountStatusErrorEntry | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    scope: value.scope,
-    error: ErrorMetadataToJSON(value.error),
+    scope: value["scope"],
+    error: ErrorMetadataToJSON(value["error"]),
   };
 }

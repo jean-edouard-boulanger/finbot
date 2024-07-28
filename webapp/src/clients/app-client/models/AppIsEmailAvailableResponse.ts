@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 /**
  *
  * @export
@@ -29,11 +29,11 @@ export interface AppIsEmailAvailableResponse {
 /**
  * Check if a given object implements the AppIsEmailAvailableResponse interface.
  */
-export function instanceOfAppIsEmailAvailableResponse(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "available" in value;
-
-  return isInstance;
+export function instanceOfAppIsEmailAvailableResponse(
+  value: object,
+): value is AppIsEmailAvailableResponse {
+  if (!("available" in value) || value["available"] === undefined) return false;
+  return true;
 }
 
 export function AppIsEmailAvailableResponseFromJSON(
@@ -46,7 +46,7 @@ export function AppIsEmailAvailableResponseFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): AppIsEmailAvailableResponse {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -57,13 +57,10 @@ export function AppIsEmailAvailableResponseFromJSONTyped(
 export function AppIsEmailAvailableResponseToJSON(
   value?: AppIsEmailAvailableResponse | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    available: value.available,
+    available: value["available"],
   };
 }

@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 /**
  *
  * @export
@@ -41,13 +41,12 @@ export interface PlaidSettings {
 /**
  * Check if a given object implements the PlaidSettings interface.
  */
-export function instanceOfPlaidSettings(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "environment" in value;
-  isInstance = isInstance && "clientId" in value;
-  isInstance = isInstance && "publicKey" in value;
-
-  return isInstance;
+export function instanceOfPlaidSettings(value: object): value is PlaidSettings {
+  if (!("environment" in value) || value["environment"] === undefined)
+    return false;
+  if (!("clientId" in value) || value["clientId"] === undefined) return false;
+  if (!("publicKey" in value) || value["publicKey"] === undefined) return false;
+  return true;
 }
 
 export function PlaidSettingsFromJSON(json: any): PlaidSettings {
@@ -58,7 +57,7 @@ export function PlaidSettingsFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): PlaidSettings {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -69,15 +68,12 @@ export function PlaidSettingsFromJSONTyped(
 }
 
 export function PlaidSettingsToJSON(value?: PlaidSettings | null): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    environment: value.environment,
-    client_id: value.clientId,
-    public_key: value.publicKey,
+    environment: value["environment"],
+    client_id: value["clientId"],
+    public_key: value["publicKey"],
   };
 }

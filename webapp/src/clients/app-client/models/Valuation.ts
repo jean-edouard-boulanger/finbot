@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 import type { ValuationChange } from "./ValuationChange";
 import {
   ValuationChangeFromJSON,
@@ -48,13 +48,11 @@ export interface Valuation {
 /**
  * Check if a given object implements the Valuation interface.
  */
-export function instanceOfValuation(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "currency" in value;
-  isInstance = isInstance && "value" in value;
-  isInstance = isInstance && "change" in value;
-
-  return isInstance;
+export function instanceOfValuation(value: object): value is Valuation {
+  if (!("currency" in value) || value["currency"] === undefined) return false;
+  if (!("value" in value) || value["value"] === undefined) return false;
+  if (!("change" in value) || value["change"] === undefined) return false;
+  return true;
 }
 
 export function ValuationFromJSON(json: any): Valuation {
@@ -65,7 +63,7 @@ export function ValuationFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): Valuation {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -76,15 +74,12 @@ export function ValuationFromJSONTyped(
 }
 
 export function ValuationToJSON(value?: Valuation | null): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    currency: value.currency,
-    value: value.value,
-    change: ValuationChangeToJSON(value.change),
+    currency: value["currency"],
+    value: value["value"],
+    change: ValuationChangeToJSON(value["change"]),
   };
 }

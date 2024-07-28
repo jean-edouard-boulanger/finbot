@@ -11,19 +11,19 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
-import type { LinkedAccountNode } from "./LinkedAccountNode";
-import {
-  LinkedAccountNodeFromJSON,
-  LinkedAccountNodeFromJSONTyped,
-  LinkedAccountNodeToJSON,
-} from "./LinkedAccountNode";
+import { mapValues } from "../runtime";
 import type { ValuationWithSparkline } from "./ValuationWithSparkline";
 import {
   ValuationWithSparklineFromJSON,
   ValuationWithSparklineFromJSONTyped,
   ValuationWithSparklineToJSON,
 } from "./ValuationWithSparkline";
+import type { LinkedAccountNode } from "./LinkedAccountNode";
+import {
+  LinkedAccountNodeFromJSON,
+  LinkedAccountNodeFromJSONTyped,
+  LinkedAccountNodeToJSON,
+} from "./LinkedAccountNode";
 
 /**
  *
@@ -63,12 +63,12 @@ export type UserAccountNodeRoleEnum =
 /**
  * Check if a given object implements the UserAccountNode interface.
  */
-export function instanceOfUserAccountNode(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "valuation" in value;
-  isInstance = isInstance && "children" in value;
-
-  return isInstance;
+export function instanceOfUserAccountNode(
+  value: object,
+): value is UserAccountNode {
+  if (!("valuation" in value) || value["valuation"] === undefined) return false;
+  if (!("children" in value) || value["children"] === undefined) return false;
+  return true;
 }
 
 export function UserAccountNodeFromJSON(json: any): UserAccountNode {
@@ -79,26 +79,23 @@ export function UserAccountNodeFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): UserAccountNode {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
-    role: !exists(json, "role") ? undefined : json["role"],
+    role: json["role"] == null ? undefined : json["role"],
     valuation: ValuationWithSparklineFromJSON(json["valuation"]),
     children: (json["children"] as Array<any>).map(LinkedAccountNodeFromJSON),
   };
 }
 
 export function UserAccountNodeToJSON(value?: UserAccountNode | null): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    role: value.role,
-    valuation: ValuationWithSparklineToJSON(value.valuation),
-    children: (value.children as Array<any>).map(LinkedAccountNodeToJSON),
+    role: value["role"],
+    valuation: ValuationWithSparklineToJSON(value["valuation"]),
+    children: (value["children"] as Array<any>).map(LinkedAccountNodeToJSON),
   };
 }

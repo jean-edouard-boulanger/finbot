@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 import type { UserAccountProfile } from "./UserAccountProfile";
 import {
   UserAccountProfileFromJSON,
@@ -38,11 +38,9 @@ export interface AppUpdateUserAccountProfileResponse {
  */
 export function instanceOfAppUpdateUserAccountProfileResponse(
   value: object,
-): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "profile" in value;
-
-  return isInstance;
+): value is AppUpdateUserAccountProfileResponse {
+  if (!("profile" in value) || value["profile"] === undefined) return false;
+  return true;
 }
 
 export function AppUpdateUserAccountProfileResponseFromJSON(
@@ -55,7 +53,7 @@ export function AppUpdateUserAccountProfileResponseFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): AppUpdateUserAccountProfileResponse {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -66,13 +64,10 @@ export function AppUpdateUserAccountProfileResponseFromJSONTyped(
 export function AppUpdateUserAccountProfileResponseToJSON(
   value?: AppUpdateUserAccountProfileResponse | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    profile: UserAccountProfileToJSON(value.profile),
+    profile: UserAccountProfileToJSON(value["profile"]),
   };
 }

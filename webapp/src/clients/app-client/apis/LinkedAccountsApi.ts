@@ -236,23 +236,17 @@ export class LinkedAccountsApi
     requestParameters: DeleteLinkedAccountRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<object>> {
-    if (
-      requestParameters.userAccountId === null ||
-      requestParameters.userAccountId === undefined
-    ) {
+    if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
-        "Required parameter requestParameters.userAccountId was null or undefined when calling deleteLinkedAccount.",
+        'Required parameter "userAccountId" was null or undefined when calling deleteLinkedAccount().',
       );
     }
 
-    if (
-      requestParameters.linkedAccountId === null ||
-      requestParameters.linkedAccountId === undefined
-    ) {
+    if (requestParameters["linkedAccountId"] == null) {
       throw new runtime.RequiredError(
         "linkedAccountId",
-        "Required parameter requestParameters.linkedAccountId was null or undefined when calling deleteLinkedAccount.",
+        'Required parameter "linkedAccountId" was null or undefined when calling deleteLinkedAccount().',
       );
     }
 
@@ -273,11 +267,11 @@ export class LinkedAccountsApi
         path: `/api/v1/accounts/{user_account_id}/linked_accounts/{linked_account_id}/`
           .replace(
             `{${"user_account_id"}}`,
-            encodeURIComponent(String(requestParameters.userAccountId)),
+            encodeURIComponent(String(requestParameters["userAccountId"])),
           )
           .replace(
             `{${"linked_account_id"}}`,
-            encodeURIComponent(String(requestParameters.linkedAccountId)),
+            encodeURIComponent(String(requestParameters["linkedAccountId"])),
           ),
         method: "DELETE",
         headers: headerParameters,
@@ -312,23 +306,17 @@ export class LinkedAccountsApi
     requestParameters: GetLinkedAccountRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<AppGetLinkedAccountResponse>> {
-    if (
-      requestParameters.userAccountId === null ||
-      requestParameters.userAccountId === undefined
-    ) {
+    if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
-        "Required parameter requestParameters.userAccountId was null or undefined when calling getLinkedAccount.",
+        'Required parameter "userAccountId" was null or undefined when calling getLinkedAccount().',
       );
     }
 
-    if (
-      requestParameters.linkedAccountId === null ||
-      requestParameters.linkedAccountId === undefined
-    ) {
+    if (requestParameters["linkedAccountId"] == null) {
       throw new runtime.RequiredError(
         "linkedAccountId",
-        "Required parameter requestParameters.linkedAccountId was null or undefined when calling getLinkedAccount.",
+        'Required parameter "linkedAccountId" was null or undefined when calling getLinkedAccount().',
       );
     }
 
@@ -349,11 +337,11 @@ export class LinkedAccountsApi
         path: `/api/v1/accounts/{user_account_id}/linked_accounts/{linked_account_id}/`
           .replace(
             `{${"user_account_id"}}`,
-            encodeURIComponent(String(requestParameters.userAccountId)),
+            encodeURIComponent(String(requestParameters["userAccountId"])),
           )
           .replace(
             `{${"linked_account_id"}}`,
-            encodeURIComponent(String(requestParameters.linkedAccountId)),
+            encodeURIComponent(String(requestParameters["linkedAccountId"])),
           ),
         method: "GET",
         headers: headerParameters,
@@ -390,13 +378,10 @@ export class LinkedAccountsApi
     requestParameters: GetUserAccountLinkedAccountsRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<AppGetLinkedAccountsResponse>> {
-    if (
-      requestParameters.userAccountId === null ||
-      requestParameters.userAccountId === undefined
-    ) {
+    if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
-        "Required parameter requestParameters.userAccountId was null or undefined when calling getUserAccountLinkedAccounts.",
+        'Required parameter "userAccountId" was null or undefined when calling getUserAccountLinkedAccounts().',
       );
     }
 
@@ -416,7 +401,7 @@ export class LinkedAccountsApi
       {
         path: `/api/v1/accounts/{user_account_id}/linked_accounts/`.replace(
           `{${"user_account_id"}}`,
-          encodeURIComponent(String(requestParameters.userAccountId)),
+          encodeURIComponent(String(requestParameters["userAccountId"])),
         ),
         method: "GET",
         headers: headerParameters,
@@ -453,24 +438,21 @@ export class LinkedAccountsApi
     requestParameters: LinkNewAccountRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<object>> {
-    if (
-      requestParameters.userAccountId === null ||
-      requestParameters.userAccountId === undefined
-    ) {
+    if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
-        "Required parameter requestParameters.userAccountId was null or undefined when calling linkNewAccount.",
+        'Required parameter "userAccountId" was null or undefined when calling linkNewAccount().',
       );
     }
 
     const queryParameters: any = {};
 
-    if (requestParameters.validate !== undefined) {
-      queryParameters["validate"] = requestParameters.validate;
+    if (requestParameters["validate"] != null) {
+      queryParameters["validate"] = requestParameters["validate"];
     }
 
-    if (requestParameters.persist !== undefined) {
-      queryParameters["persist"] = requestParameters.persist;
+    if (requestParameters["persist"] != null) {
+      queryParameters["persist"] = requestParameters["persist"];
     }
 
     const headerParameters: runtime.HTTPHeaders = {};
@@ -489,13 +471,13 @@ export class LinkedAccountsApi
       {
         path: `/api/v1/accounts/{user_account_id}/linked_accounts/`.replace(
           `{${"user_account_id"}}`,
-          encodeURIComponent(String(requestParameters.userAccountId)),
+          encodeURIComponent(String(requestParameters["userAccountId"])),
         ),
         method: "POST",
         headers: headerParameters,
         query: queryParameters,
         body: AppLinkAccountRequestToJSON(
-          requestParameters.appLinkAccountRequest,
+          requestParameters["appLinkAccountRequest"],
         ),
       },
       initOverrides,
@@ -527,34 +509,28 @@ export class LinkedAccountsApi
     requestParameters: UpdateLinkedAccountCredentialsRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<object>> {
-    if (
-      requestParameters.userAccountId === null ||
-      requestParameters.userAccountId === undefined
-    ) {
+    if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
-        "Required parameter requestParameters.userAccountId was null or undefined when calling updateLinkedAccountCredentials.",
+        'Required parameter "userAccountId" was null or undefined when calling updateLinkedAccountCredentials().',
       );
     }
 
-    if (
-      requestParameters.linkedAccountId === null ||
-      requestParameters.linkedAccountId === undefined
-    ) {
+    if (requestParameters["linkedAccountId"] == null) {
       throw new runtime.RequiredError(
         "linkedAccountId",
-        "Required parameter requestParameters.linkedAccountId was null or undefined when calling updateLinkedAccountCredentials.",
+        'Required parameter "linkedAccountId" was null or undefined when calling updateLinkedAccountCredentials().',
       );
     }
 
     const queryParameters: any = {};
 
-    if (requestParameters.validate !== undefined) {
-      queryParameters["validate"] = requestParameters.validate;
+    if (requestParameters["validate"] != null) {
+      queryParameters["validate"] = requestParameters["validate"];
     }
 
-    if (requestParameters.persist !== undefined) {
-      queryParameters["persist"] = requestParameters.persist;
+    if (requestParameters["persist"] != null) {
+      queryParameters["persist"] = requestParameters["persist"];
     }
 
     const headerParameters: runtime.HTTPHeaders = {};
@@ -574,17 +550,17 @@ export class LinkedAccountsApi
         path: `/api/v1/accounts/{user_account_id}/linked_accounts/{linked_account_id}/credentials/`
           .replace(
             `{${"user_account_id"}}`,
-            encodeURIComponent(String(requestParameters.userAccountId)),
+            encodeURIComponent(String(requestParameters["userAccountId"])),
           )
           .replace(
             `{${"linked_account_id"}}`,
-            encodeURIComponent(String(requestParameters.linkedAccountId)),
+            encodeURIComponent(String(requestParameters["linkedAccountId"])),
           ),
         method: "PUT",
         headers: headerParameters,
         query: queryParameters,
         body: AppUpdateLinkedAccountCredentialsRequestToJSON(
-          requestParameters.appUpdateLinkedAccountCredentialsRequest,
+          requestParameters["appUpdateLinkedAccountCredentialsRequest"],
         ),
       },
       initOverrides,
@@ -616,23 +592,17 @@ export class LinkedAccountsApi
     requestParameters: UpdateLinkedAccountMetadataRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<object>> {
-    if (
-      requestParameters.userAccountId === null ||
-      requestParameters.userAccountId === undefined
-    ) {
+    if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
-        "Required parameter requestParameters.userAccountId was null or undefined when calling updateLinkedAccountMetadata.",
+        'Required parameter "userAccountId" was null or undefined when calling updateLinkedAccountMetadata().',
       );
     }
 
-    if (
-      requestParameters.linkedAccountId === null ||
-      requestParameters.linkedAccountId === undefined
-    ) {
+    if (requestParameters["linkedAccountId"] == null) {
       throw new runtime.RequiredError(
         "linkedAccountId",
-        "Required parameter requestParameters.linkedAccountId was null or undefined when calling updateLinkedAccountMetadata.",
+        'Required parameter "linkedAccountId" was null or undefined when calling updateLinkedAccountMetadata().',
       );
     }
 
@@ -655,17 +625,17 @@ export class LinkedAccountsApi
         path: `/api/v1/accounts/{user_account_id}/linked_accounts/{linked_account_id}/metadata/`
           .replace(
             `{${"user_account_id"}}`,
-            encodeURIComponent(String(requestParameters.userAccountId)),
+            encodeURIComponent(String(requestParameters["userAccountId"])),
           )
           .replace(
             `{${"linked_account_id"}}`,
-            encodeURIComponent(String(requestParameters.linkedAccountId)),
+            encodeURIComponent(String(requestParameters["linkedAccountId"])),
           ),
         method: "PUT",
         headers: headerParameters,
         query: queryParameters,
         body: AppUpdateLinkedAccountMetadataRequestToJSON(
-          requestParameters.appUpdateLinkedAccountMetadataRequest,
+          requestParameters["appUpdateLinkedAccountMetadataRequest"],
         ),
       },
       initOverrides,

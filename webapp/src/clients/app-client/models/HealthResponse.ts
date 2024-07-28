@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 /**
  *
  * @export
@@ -29,11 +29,11 @@ export interface HealthResponse {
 /**
  * Check if a given object implements the HealthResponse interface.
  */
-export function instanceOfHealthResponse(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "healthy" in value;
-
-  return isInstance;
+export function instanceOfHealthResponse(
+  value: object,
+): value is HealthResponse {
+  if (!("healthy" in value) || value["healthy"] === undefined) return false;
+  return true;
 }
 
 export function HealthResponseFromJSON(json: any): HealthResponse {
@@ -44,7 +44,7 @@ export function HealthResponseFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): HealthResponse {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -53,13 +53,10 @@ export function HealthResponseFromJSONTyped(
 }
 
 export function HealthResponseToJSON(value?: HealthResponse | null): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    healthy: value.healthy,
+    healthy: value["healthy"],
   };
 }

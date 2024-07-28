@@ -11,25 +11,25 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 import type { LinkedAccountDescription } from "./LinkedAccountDescription";
 import {
   LinkedAccountDescriptionFromJSON,
   LinkedAccountDescriptionFromJSONTyped,
   LinkedAccountDescriptionToJSON,
 } from "./LinkedAccountDescription";
-import type { SubAccountNode } from "./SubAccountNode";
-import {
-  SubAccountNodeFromJSON,
-  SubAccountNodeFromJSONTyped,
-  SubAccountNodeToJSON,
-} from "./SubAccountNode";
 import type { ValuationWithSparkline } from "./ValuationWithSparkline";
 import {
   ValuationWithSparklineFromJSON,
   ValuationWithSparklineFromJSONTyped,
   ValuationWithSparklineToJSON,
 } from "./ValuationWithSparkline";
+import type { SubAccountNode } from "./SubAccountNode";
+import {
+  SubAccountNodeFromJSON,
+  SubAccountNodeFromJSONTyped,
+  SubAccountNodeToJSON,
+} from "./SubAccountNode";
 
 /**
  *
@@ -75,13 +75,14 @@ export type LinkedAccountNodeRoleEnum =
 /**
  * Check if a given object implements the LinkedAccountNode interface.
  */
-export function instanceOfLinkedAccountNode(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "linkedAccount" in value;
-  isInstance = isInstance && "valuation" in value;
-  isInstance = isInstance && "children" in value;
-
-  return isInstance;
+export function instanceOfLinkedAccountNode(
+  value: object,
+): value is LinkedAccountNode {
+  if (!("linkedAccount" in value) || value["linkedAccount"] === undefined)
+    return false;
+  if (!("valuation" in value) || value["valuation"] === undefined) return false;
+  if (!("children" in value) || value["children"] === undefined) return false;
+  return true;
 }
 
 export function LinkedAccountNodeFromJSON(json: any): LinkedAccountNode {
@@ -92,11 +93,11 @@ export function LinkedAccountNodeFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): LinkedAccountNode {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
-    role: !exists(json, "role") ? undefined : json["role"],
+    role: json["role"] == null ? undefined : json["role"],
     linkedAccount: LinkedAccountDescriptionFromJSON(json["linked_account"]),
     valuation: ValuationWithSparklineFromJSON(json["valuation"]),
     children: (json["children"] as Array<any>).map(SubAccountNodeFromJSON),
@@ -104,16 +105,13 @@ export function LinkedAccountNodeFromJSONTyped(
 }
 
 export function LinkedAccountNodeToJSON(value?: LinkedAccountNode | null): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    role: value.role,
-    linked_account: LinkedAccountDescriptionToJSON(value.linkedAccount),
-    valuation: ValuationWithSparklineToJSON(value.valuation),
-    children: (value.children as Array<any>).map(SubAccountNodeToJSON),
+    role: value["role"],
+    linked_account: LinkedAccountDescriptionToJSON(value["linkedAccount"]),
+    valuation: ValuationWithSparklineToJSON(value["valuation"]),
+    children: (value["children"] as Array<any>).map(SubAccountNodeToJSON),
   };
 }

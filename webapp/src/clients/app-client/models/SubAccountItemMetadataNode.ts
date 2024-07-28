@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 import type { Value } from "./Value";
 import { ValueFromJSON, ValueFromJSONTyped, ValueToJSON } from "./Value";
 
@@ -53,12 +53,12 @@ export type SubAccountItemMetadataNodeRoleEnum =
 /**
  * Check if a given object implements the SubAccountItemMetadataNode interface.
  */
-export function instanceOfSubAccountItemMetadataNode(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "label" in value;
-  isInstance = isInstance && "value" in value;
-
-  return isInstance;
+export function instanceOfSubAccountItemMetadataNode(
+  value: object,
+): value is SubAccountItemMetadataNode {
+  if (!("label" in value) || value["label"] === undefined) return false;
+  if (!("value" in value) || value["value"] === undefined) return false;
+  return true;
 }
 
 export function SubAccountItemMetadataNodeFromJSON(
@@ -71,11 +71,11 @@ export function SubAccountItemMetadataNodeFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): SubAccountItemMetadataNode {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
-    role: !exists(json, "role") ? undefined : json["role"],
+    role: json["role"] == null ? undefined : json["role"],
     label: json["label"],
     value: ValueFromJSON(json["value"]),
   };
@@ -84,15 +84,12 @@ export function SubAccountItemMetadataNodeFromJSONTyped(
 export function SubAccountItemMetadataNodeToJSON(
   value?: SubAccountItemMetadataNode | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    role: value.role,
-    label: value.label,
-    value: ValueToJSON(value.value),
+    role: value["role"],
+    label: value["label"],
+    value: ValueToJSON(value["value"]),
   };
 }

@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 import type { HistoricalValuation } from "./HistoricalValuation";
 import {
   HistoricalValuationFromJSON,
@@ -38,11 +38,13 @@ export interface AppGetLinkedAccountsHistoricalValuation {
  */
 export function instanceOfAppGetLinkedAccountsHistoricalValuation(
   value: object,
-): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "historicalValuation" in value;
-
-  return isInstance;
+): value is AppGetLinkedAccountsHistoricalValuation {
+  if (
+    !("historicalValuation" in value) ||
+    value["historicalValuation"] === undefined
+  )
+    return false;
+  return true;
 }
 
 export function AppGetLinkedAccountsHistoricalValuationFromJSON(
@@ -55,7 +57,7 @@ export function AppGetLinkedAccountsHistoricalValuationFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): AppGetLinkedAccountsHistoricalValuation {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -68,13 +70,12 @@ export function AppGetLinkedAccountsHistoricalValuationFromJSONTyped(
 export function AppGetLinkedAccountsHistoricalValuationToJSON(
   value?: AppGetLinkedAccountsHistoricalValuation | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    historical_valuation: HistoricalValuationToJSON(value.historicalValuation),
+    historical_valuation: HistoricalValuationToJSON(
+      value["historicalValuation"],
+    ),
   };
 }

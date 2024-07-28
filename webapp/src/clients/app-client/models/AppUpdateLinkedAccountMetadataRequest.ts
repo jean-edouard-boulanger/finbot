@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 /**
  *
  * @export
@@ -43,10 +43,8 @@ export interface AppUpdateLinkedAccountMetadataRequest {
  */
 export function instanceOfAppUpdateLinkedAccountMetadataRequest(
   value: object,
-): boolean {
-  let isInstance = true;
-
-  return isInstance;
+): value is AppUpdateLinkedAccountMetadataRequest {
+  return true;
 }
 
 export function AppUpdateLinkedAccountMetadataRequestFromJSON(
@@ -59,32 +57,27 @@ export function AppUpdateLinkedAccountMetadataRequestFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): AppUpdateLinkedAccountMetadataRequest {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
-    accountName: !exists(json, "account_name")
-      ? undefined
-      : json["account_name"],
-    accountColour: !exists(json, "account_colour")
-      ? undefined
-      : json["account_colour"],
-    frozen: !exists(json, "frozen") ? undefined : json["frozen"],
+    accountName:
+      json["account_name"] == null ? undefined : json["account_name"],
+    accountColour:
+      json["account_colour"] == null ? undefined : json["account_colour"],
+    frozen: json["frozen"] == null ? undefined : json["frozen"],
   };
 }
 
 export function AppUpdateLinkedAccountMetadataRequestToJSON(
   value?: AppUpdateLinkedAccountMetadataRequest | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    account_name: value.accountName,
-    account_colour: value.accountColour,
-    frozen: value.frozen,
+    account_name: value["accountName"],
+    account_colour: value["accountColour"],
+    frozen: value["frozen"],
   };
 }

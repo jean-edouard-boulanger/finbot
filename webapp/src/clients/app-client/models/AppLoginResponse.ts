@@ -11,19 +11,19 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
-import type { AuthenticationPayload } from "./AuthenticationPayload";
-import {
-  AuthenticationPayloadFromJSON,
-  AuthenticationPayloadFromJSONTyped,
-  AuthenticationPayloadToJSON,
-} from "./AuthenticationPayload";
+import { mapValues } from "../runtime";
 import type { UserAccount } from "./UserAccount";
 import {
   UserAccountFromJSON,
   UserAccountFromJSONTyped,
   UserAccountToJSON,
 } from "./UserAccount";
+import type { AuthenticationPayload } from "./AuthenticationPayload";
+import {
+  AuthenticationPayloadFromJSON,
+  AuthenticationPayloadFromJSONTyped,
+  AuthenticationPayloadToJSON,
+} from "./AuthenticationPayload";
 
 /**
  *
@@ -48,12 +48,12 @@ export interface AppLoginResponse {
 /**
  * Check if a given object implements the AppLoginResponse interface.
  */
-export function instanceOfAppLoginResponse(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "auth" in value;
-  isInstance = isInstance && "account" in value;
-
-  return isInstance;
+export function instanceOfAppLoginResponse(
+  value: object,
+): value is AppLoginResponse {
+  if (!("auth" in value) || value["auth"] === undefined) return false;
+  if (!("account" in value) || value["account"] === undefined) return false;
+  return true;
 }
 
 export function AppLoginResponseFromJSON(json: any): AppLoginResponse {
@@ -64,7 +64,7 @@ export function AppLoginResponseFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): AppLoginResponse {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -74,14 +74,11 @@ export function AppLoginResponseFromJSONTyped(
 }
 
 export function AppLoginResponseToJSON(value?: AppLoginResponse | null): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    auth: AuthenticationPayloadToJSON(value.auth),
-    account: UserAccountToJSON(value.account),
+    auth: AuthenticationPayloadToJSON(value["auth"]),
+    account: UserAccountToJSON(value["account"]),
   };
 }

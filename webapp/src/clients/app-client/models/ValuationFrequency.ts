@@ -25,6 +25,20 @@ export const ValuationFrequency = {
 export type ValuationFrequency =
   (typeof ValuationFrequency)[keyof typeof ValuationFrequency];
 
+export function instanceOfValuationFrequency(value: any): boolean {
+  for (const key in ValuationFrequency) {
+    if (Object.prototype.hasOwnProperty.call(ValuationFrequency, key)) {
+      if (
+        (ValuationFrequency as Record<string, ValuationFrequency>)[key] ===
+        value
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 export function ValuationFrequencyFromJSON(json: any): ValuationFrequency {
   return ValuationFrequencyFromJSONTyped(json, false);
 }

@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 /**
  *
  * @export
@@ -35,12 +35,14 @@ export interface AuthenticationPayload {
 /**
  * Check if a given object implements the AuthenticationPayload interface.
  */
-export function instanceOfAuthenticationPayload(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "accessToken" in value;
-  isInstance = isInstance && "refreshToken" in value;
-
-  return isInstance;
+export function instanceOfAuthenticationPayload(
+  value: object,
+): value is AuthenticationPayload {
+  if (!("accessToken" in value) || value["accessToken"] === undefined)
+    return false;
+  if (!("refreshToken" in value) || value["refreshToken"] === undefined)
+    return false;
+  return true;
 }
 
 export function AuthenticationPayloadFromJSON(
@@ -53,7 +55,7 @@ export function AuthenticationPayloadFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): AuthenticationPayload {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -65,14 +67,11 @@ export function AuthenticationPayloadFromJSONTyped(
 export function AuthenticationPayloadToJSON(
   value?: AuthenticationPayload | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    access_token: value.accessToken,
-    refresh_token: value.refreshToken,
+    access_token: value["accessToken"],
+    refresh_token: value["refreshToken"],
   };
 }

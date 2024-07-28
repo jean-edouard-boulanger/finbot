@@ -12,7 +12,7 @@ then
   exit 1
 elif [[ "${service_name}" == "webapp" ]]
 then
-  exec "${script_dir}/run-webapp.sh"
+  exec "${script_dir}/run-webapp-dev.sh"
 elif [[ "${service_name}" == "schedsrv" ]]
 then
   exec python3.12 finbot/apps/schedsrv/schedsrv.py

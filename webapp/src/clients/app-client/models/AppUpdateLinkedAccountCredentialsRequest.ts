@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 /**
  *
  * @export
@@ -31,11 +31,10 @@ export interface AppUpdateLinkedAccountCredentialsRequest {
  */
 export function instanceOfAppUpdateLinkedAccountCredentialsRequest(
   value: object,
-): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "credentials" in value;
-
-  return isInstance;
+): value is AppUpdateLinkedAccountCredentialsRequest {
+  if (!("credentials" in value) || value["credentials"] === undefined)
+    return false;
+  return true;
 }
 
 export function AppUpdateLinkedAccountCredentialsRequestFromJSON(
@@ -48,7 +47,7 @@ export function AppUpdateLinkedAccountCredentialsRequestFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): AppUpdateLinkedAccountCredentialsRequest {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -59,13 +58,10 @@ export function AppUpdateLinkedAccountCredentialsRequestFromJSONTyped(
 export function AppUpdateLinkedAccountCredentialsRequestToJSON(
   value?: AppUpdateLinkedAccountCredentialsRequest | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    credentials: value.credentials,
+    credentials: value["credentials"],
   };
 }

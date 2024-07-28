@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 import type { LinkedAccountStatus } from "./LinkedAccountStatus";
 import {
   LinkedAccountStatusFromJSON,
@@ -108,19 +108,21 @@ export interface LinkedAccount {
 /**
  * Check if a given object implements the LinkedAccount interface.
  */
-export function instanceOfLinkedAccount(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "id" in value;
-  isInstance = isInstance && "userAccountId" in value;
-  isInstance = isInstance && "accountName" in value;
-  isInstance = isInstance && "accountColour" in value;
-  isInstance = isInstance && "deleted" in value;
-  isInstance = isInstance && "frozen" in value;
-  isInstance = isInstance && "providerId" in value;
-  isInstance = isInstance && "provider" in value;
-  isInstance = isInstance && "createdAt" in value;
-
-  return isInstance;
+export function instanceOfLinkedAccount(value: object): value is LinkedAccount {
+  if (!("id" in value) || value["id"] === undefined) return false;
+  if (!("userAccountId" in value) || value["userAccountId"] === undefined)
+    return false;
+  if (!("accountName" in value) || value["accountName"] === undefined)
+    return false;
+  if (!("accountColour" in value) || value["accountColour"] === undefined)
+    return false;
+  if (!("deleted" in value) || value["deleted"] === undefined) return false;
+  if (!("frozen" in value) || value["frozen"] === undefined) return false;
+  if (!("providerId" in value) || value["providerId"] === undefined)
+    return false;
+  if (!("provider" in value) || value["provider"] === undefined) return false;
+  if (!("createdAt" in value) || value["createdAt"] === undefined) return false;
+  return true;
 }
 
 export function LinkedAccountFromJSON(json: any): LinkedAccount {
@@ -131,7 +133,7 @@ export function LinkedAccountFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): LinkedAccount {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -143,37 +145,34 @@ export function LinkedAccountFromJSONTyped(
     frozen: json["frozen"],
     providerId: json["provider_id"],
     provider: ProviderFromJSON(json["provider"]),
-    status: !exists(json, "status")
-      ? undefined
-      : LinkedAccountStatusFromJSON(json["status"]),
-    credentials: !exists(json, "credentials") ? undefined : json["credentials"],
+    status:
+      json["status"] == null
+        ? undefined
+        : LinkedAccountStatusFromJSON(json["status"]),
+    credentials: json["credentials"] == null ? undefined : json["credentials"],
     createdAt: new Date(json["created_at"]),
-    updatedAt: !exists(json, "updated_at")
-      ? undefined
-      : new Date(json["updated_at"]),
+    updatedAt:
+      json["updated_at"] == null ? undefined : new Date(json["updated_at"]),
   };
 }
 
 export function LinkedAccountToJSON(value?: LinkedAccount | null): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    id: value.id,
-    user_account_id: value.userAccountId,
-    account_name: value.accountName,
-    account_colour: value.accountColour,
-    deleted: value.deleted,
-    frozen: value.frozen,
-    provider_id: value.providerId,
-    provider: ProviderToJSON(value.provider),
-    status: LinkedAccountStatusToJSON(value.status),
-    credentials: value.credentials,
-    created_at: value.createdAt.toISOString(),
+    id: value["id"],
+    user_account_id: value["userAccountId"],
+    account_name: value["accountName"],
+    account_colour: value["accountColour"],
+    deleted: value["deleted"],
+    frozen: value["frozen"],
+    provider_id: value["providerId"],
+    provider: ProviderToJSON(value["provider"]),
+    status: LinkedAccountStatusToJSON(value["status"]),
+    credentials: value["credentials"],
+    created_at: value["createdAt"].toISOString(),
     updated_at:
-      value.updatedAt === undefined ? undefined : value.updatedAt.toISOString(),
+      value["updatedAt"] == null ? undefined : value["updatedAt"].toISOString(),
   };
 }

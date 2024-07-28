@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 import type { UserAccountValuation } from "./UserAccountValuation";
 import {
   UserAccountValuationFromJSON,
@@ -38,11 +38,9 @@ export interface AppGetUserAccountValuationResponse {
  */
 export function instanceOfAppGetUserAccountValuationResponse(
   value: object,
-): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "valuation" in value;
-
-  return isInstance;
+): value is AppGetUserAccountValuationResponse {
+  if (!("valuation" in value) || value["valuation"] === undefined) return false;
+  return true;
 }
 
 export function AppGetUserAccountValuationResponseFromJSON(
@@ -55,7 +53,7 @@ export function AppGetUserAccountValuationResponseFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): AppGetUserAccountValuationResponse {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -66,13 +64,10 @@ export function AppGetUserAccountValuationResponseFromJSONTyped(
 export function AppGetUserAccountValuationResponseToJSON(
   value?: AppGetUserAccountValuationResponse | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    valuation: UserAccountValuationToJSON(value.valuation),
+    valuation: UserAccountValuationToJSON(value["valuation"]),
   };
 }

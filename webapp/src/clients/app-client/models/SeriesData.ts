@@ -11,19 +11,19 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
-import type { SeriesDescription } from "./SeriesDescription";
-import {
-  SeriesDescriptionFromJSON,
-  SeriesDescriptionFromJSONTyped,
-  SeriesDescriptionToJSON,
-} from "./SeriesDescription";
+import { mapValues } from "../runtime";
 import type { XAxisDescription } from "./XAxisDescription";
 import {
   XAxisDescriptionFromJSON,
   XAxisDescriptionFromJSONTyped,
   XAxisDescriptionToJSON,
 } from "./XAxisDescription";
+import type { SeriesDescription } from "./SeriesDescription";
+import {
+  SeriesDescriptionFromJSON,
+  SeriesDescriptionFromJSONTyped,
+  SeriesDescriptionToJSON,
+} from "./SeriesDescription";
 
 /**
  *
@@ -48,12 +48,10 @@ export interface SeriesData {
 /**
  * Check if a given object implements the SeriesData interface.
  */
-export function instanceOfSeriesData(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "xAxis" in value;
-  isInstance = isInstance && "series" in value;
-
-  return isInstance;
+export function instanceOfSeriesData(value: object): value is SeriesData {
+  if (!("xAxis" in value) || value["xAxis"] === undefined) return false;
+  if (!("series" in value) || value["series"] === undefined) return false;
+  return true;
 }
 
 export function SeriesDataFromJSON(json: any): SeriesData {
@@ -64,7 +62,7 @@ export function SeriesDataFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): SeriesData {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -74,14 +72,11 @@ export function SeriesDataFromJSONTyped(
 }
 
 export function SeriesDataToJSON(value?: SeriesData | null): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    x_axis: XAxisDescriptionToJSON(value.xAxis),
-    series: (value.series as Array<any>).map(SeriesDescriptionToJSON),
+    x_axis: XAxisDescriptionToJSON(value["xAxis"]),
+    series: (value["series"] as Array<any>).map(SeriesDescriptionToJSON),
   };
 }

@@ -269,7 +269,7 @@ export class UserAccountsApi
         headers: headerParameters,
         query: queryParameters,
         body: AppCreateUserAccountRequestToJSON(
-          requestParameters.appCreateUserAccountRequest,
+          requestParameters["appCreateUserAccountRequest"],
         ),
       },
       initOverrides,
@@ -303,13 +303,10 @@ export class UserAccountsApi
     requestParameters: GetUserAccountRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<AppGetUserAccountResponse>> {
-    if (
-      requestParameters.userAccountId === null ||
-      requestParameters.userAccountId === undefined
-    ) {
+    if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
-        "Required parameter requestParameters.userAccountId was null or undefined when calling getUserAccount.",
+        'Required parameter "userAccountId" was null or undefined when calling getUserAccount().',
       );
     }
 
@@ -329,7 +326,7 @@ export class UserAccountsApi
       {
         path: `/api/v1/accounts/{user_account_id}/`.replace(
           `{${"user_account_id"}}`,
-          encodeURIComponent(String(requestParameters.userAccountId)),
+          encodeURIComponent(String(requestParameters["userAccountId"])),
         ),
         method: "GET",
         headers: headerParameters,
@@ -366,13 +363,10 @@ export class UserAccountsApi
     requestParameters: GetUserAccountSettingsRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<AppGetUserAccountSettingsResponse>> {
-    if (
-      requestParameters.userAccountId === null ||
-      requestParameters.userAccountId === undefined
-    ) {
+    if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
-        "Required parameter requestParameters.userAccountId was null or undefined when calling getUserAccountSettings.",
+        'Required parameter "userAccountId" was null or undefined when calling getUserAccountSettings().',
       );
     }
 
@@ -392,7 +386,7 @@ export class UserAccountsApi
       {
         path: `/api/v1/accounts/{user_account_id}/settings/`.replace(
           `{${"user_account_id"}}`,
-          encodeURIComponent(String(requestParameters.userAccountId)),
+          encodeURIComponent(String(requestParameters["userAccountId"])),
         ),
         method: "GET",
         headers: headerParameters,
@@ -429,20 +423,17 @@ export class UserAccountsApi
     requestParameters: IsEmailAvailableRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<AppIsEmailAvailableResponse>> {
-    if (
-      requestParameters.email === null ||
-      requestParameters.email === undefined
-    ) {
+    if (requestParameters["email"] == null) {
       throw new runtime.RequiredError(
         "email",
-        "Required parameter requestParameters.email was null or undefined when calling isEmailAvailable.",
+        'Required parameter "email" was null or undefined when calling isEmailAvailable().',
       );
     }
 
     const queryParameters: any = {};
 
-    if (requestParameters.email !== undefined) {
-      queryParameters["email"] = requestParameters.email;
+    if (requestParameters["email"] != null) {
+      queryParameters["email"] = requestParameters["email"];
     }
 
     const headerParameters: runtime.HTTPHeaders = {};
@@ -493,13 +484,10 @@ export class UserAccountsApi
     requestParameters: IsUserAccountConfiguredRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<AppIsUserAccountConfiguredResponse>> {
-    if (
-      requestParameters.userAccountId === null ||
-      requestParameters.userAccountId === undefined
-    ) {
+    if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
-        "Required parameter requestParameters.userAccountId was null or undefined when calling isUserAccountConfigured.",
+        'Required parameter "userAccountId" was null or undefined when calling isUserAccountConfigured().',
       );
     }
 
@@ -519,7 +507,7 @@ export class UserAccountsApi
       {
         path: `/api/v1/accounts/{user_account_id}/is_configured/`.replace(
           `{${"user_account_id"}}`,
-          encodeURIComponent(String(requestParameters.userAccountId)),
+          encodeURIComponent(String(requestParameters["userAccountId"])),
         ),
         method: "GET",
         headers: headerParameters,
@@ -556,13 +544,10 @@ export class UserAccountsApi
     requestParameters: UpdateUserAccountPasswordRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<object>> {
-    if (
-      requestParameters.userAccountId === null ||
-      requestParameters.userAccountId === undefined
-    ) {
+    if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
-        "Required parameter requestParameters.userAccountId was null or undefined when calling updateUserAccountPassword.",
+        'Required parameter "userAccountId" was null or undefined when calling updateUserAccountPassword().',
       );
     }
 
@@ -584,13 +569,13 @@ export class UserAccountsApi
       {
         path: `/api/v1/accounts/{user_account_id}/password/`.replace(
           `{${"user_account_id"}}`,
-          encodeURIComponent(String(requestParameters.userAccountId)),
+          encodeURIComponent(String(requestParameters["userAccountId"])),
         ),
         method: "PUT",
         headers: headerParameters,
         query: queryParameters,
         body: AppUpdateUserAccountPasswordRequestToJSON(
-          requestParameters.appUpdateUserAccountPasswordRequest,
+          requestParameters["appUpdateUserAccountPasswordRequest"],
         ),
       },
       initOverrides,
@@ -622,13 +607,10 @@ export class UserAccountsApi
     requestParameters: UpdateUserAccountProfileRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<AppUpdateUserAccountProfileResponse>> {
-    if (
-      requestParameters.userAccountId === null ||
-      requestParameters.userAccountId === undefined
-    ) {
+    if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
-        "Required parameter requestParameters.userAccountId was null or undefined when calling updateUserAccountProfile.",
+        'Required parameter "userAccountId" was null or undefined when calling updateUserAccountProfile().',
       );
     }
 
@@ -650,13 +632,13 @@ export class UserAccountsApi
       {
         path: `/api/v1/accounts/{user_account_id}/profile/`.replace(
           `{${"user_account_id"}}`,
-          encodeURIComponent(String(requestParameters.userAccountId)),
+          encodeURIComponent(String(requestParameters["userAccountId"])),
         ),
         method: "PUT",
         headers: headerParameters,
         query: queryParameters,
         body: AppUpdateUserAccountProfileRequestToJSON(
-          requestParameters.appUpdateUserAccountProfileRequest,
+          requestParameters["appUpdateUserAccountProfileRequest"],
         ),
       },
       initOverrides,

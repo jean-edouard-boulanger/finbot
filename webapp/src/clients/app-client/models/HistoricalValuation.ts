@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 import type { SeriesData } from "./SeriesData";
 import {
   SeriesDataFromJSON,
@@ -42,12 +42,14 @@ export interface HistoricalValuation {
 /**
  * Check if a given object implements the HistoricalValuation interface.
  */
-export function instanceOfHistoricalValuation(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "valuationCcy" in value;
-  isInstance = isInstance && "seriesData" in value;
-
-  return isInstance;
+export function instanceOfHistoricalValuation(
+  value: object,
+): value is HistoricalValuation {
+  if (!("valuationCcy" in value) || value["valuationCcy"] === undefined)
+    return false;
+  if (!("seriesData" in value) || value["seriesData"] === undefined)
+    return false;
+  return true;
 }
 
 export function HistoricalValuationFromJSON(json: any): HistoricalValuation {
@@ -58,7 +60,7 @@ export function HistoricalValuationFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): HistoricalValuation {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -70,14 +72,11 @@ export function HistoricalValuationFromJSONTyped(
 export function HistoricalValuationToJSON(
   value?: HistoricalValuation | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    valuation_ccy: value.valuationCcy,
-    series_data: SeriesDataToJSON(value.seriesData),
+    valuation_ccy: value["valuationCcy"],
+    series_data: SeriesDataToJSON(value["seriesData"]),
   };
 }

@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 /**
  *
  * @export
@@ -29,11 +29,11 @@ export interface AggregationDescription {
 /**
  * Check if a given object implements the AggregationDescription interface.
  */
-export function instanceOfAggregationDescription(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "asStr" in value;
-
-  return isInstance;
+export function instanceOfAggregationDescription(
+  value: object,
+): value is AggregationDescription {
+  if (!("asStr" in value) || value["asStr"] === undefined) return false;
+  return true;
 }
 
 export function AggregationDescriptionFromJSON(
@@ -46,7 +46,7 @@ export function AggregationDescriptionFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): AggregationDescription {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -57,13 +57,10 @@ export function AggregationDescriptionFromJSONTyped(
 export function AggregationDescriptionToJSON(
   value?: AggregationDescription | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    as_str: value.asStr,
+    as_str: value["asStr"],
   };
 }

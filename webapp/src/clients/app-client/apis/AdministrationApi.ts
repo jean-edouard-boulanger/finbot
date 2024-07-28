@@ -272,8 +272,8 @@ export class AdministrationApi
   ): Promise<runtime.ApiResponse<object>> {
     const queryParameters: any = {};
 
-    if (requestParameters.validate !== undefined) {
-      queryParameters["validate"] = requestParameters.validate;
+    if (requestParameters["validate"] != null) {
+      queryParameters["validate"] = requestParameters["validate"];
     }
 
     const headerParameters: runtime.HTTPHeaders = {};
@@ -295,7 +295,7 @@ export class AdministrationApi
         headers: headerParameters,
         query: queryParameters,
         body: AppEmailDeliverySettingsToJSON(
-          requestParameters.appEmailDeliverySettings,
+          requestParameters["appEmailDeliverySettings"],
         ),
       },
       initOverrides,

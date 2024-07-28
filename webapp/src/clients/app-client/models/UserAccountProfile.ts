@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 /**
  *
  * @export
@@ -41,12 +41,12 @@ export interface UserAccountProfile {
 /**
  * Check if a given object implements the UserAccountProfile interface.
  */
-export function instanceOfUserAccountProfile(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "email" in value;
-  isInstance = isInstance && "fullName" in value;
-
-  return isInstance;
+export function instanceOfUserAccountProfile(
+  value: object,
+): value is UserAccountProfile {
+  if (!("email" in value) || value["email"] === undefined) return false;
+  if (!("fullName" in value) || value["fullName"] === undefined) return false;
+  return true;
 }
 
 export function UserAccountProfileFromJSON(json: any): UserAccountProfile {
@@ -57,30 +57,28 @@ export function UserAccountProfileFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): UserAccountProfile {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
     email: json["email"],
     fullName: json["full_name"],
-    mobilePhoneNumber: !exists(json, "mobile_phone_number")
-      ? undefined
-      : json["mobile_phone_number"],
+    mobilePhoneNumber:
+      json["mobile_phone_number"] == null
+        ? undefined
+        : json["mobile_phone_number"],
   };
 }
 
 export function UserAccountProfileToJSON(
   value?: UserAccountProfile | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    email: value.email,
-    full_name: value.fullName,
-    mobile_phone_number: value.mobilePhoneNumber,
+    email: value["email"],
+    full_name: value["fullName"],
+    mobile_phone_number: value["mobilePhoneNumber"],
   };
 }

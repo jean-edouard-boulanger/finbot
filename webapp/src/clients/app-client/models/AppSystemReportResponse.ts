@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 import type { SystemReport } from "./SystemReport";
 import {
   SystemReportFromJSON,
@@ -36,11 +36,12 @@ export interface AppSystemReportResponse {
 /**
  * Check if a given object implements the AppSystemReportResponse interface.
  */
-export function instanceOfAppSystemReportResponse(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "systemReport" in value;
-
-  return isInstance;
+export function instanceOfAppSystemReportResponse(
+  value: object,
+): value is AppSystemReportResponse {
+  if (!("systemReport" in value) || value["systemReport"] === undefined)
+    return false;
+  return true;
 }
 
 export function AppSystemReportResponseFromJSON(
@@ -53,7 +54,7 @@ export function AppSystemReportResponseFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): AppSystemReportResponse {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -64,13 +65,10 @@ export function AppSystemReportResponseFromJSONTyped(
 export function AppSystemReportResponseToJSON(
   value?: AppSystemReportResponse | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    system_report: SystemReportToJSON(value.systemReport),
+    system_report: SystemReportToJSON(value["systemReport"]),
   };
 }

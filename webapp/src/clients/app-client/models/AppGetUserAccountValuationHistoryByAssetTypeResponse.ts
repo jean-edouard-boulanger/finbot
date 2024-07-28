@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 import type { HistoricalValuation } from "./HistoricalValuation";
 import {
   HistoricalValuationFromJSON,
@@ -38,11 +38,13 @@ export interface AppGetUserAccountValuationHistoryByAssetTypeResponse {
  */
 export function instanceOfAppGetUserAccountValuationHistoryByAssetTypeResponse(
   value: object,
-): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "historicalValuation" in value;
-
-  return isInstance;
+): value is AppGetUserAccountValuationHistoryByAssetTypeResponse {
+  if (
+    !("historicalValuation" in value) ||
+    value["historicalValuation"] === undefined
+  )
+    return false;
+  return true;
 }
 
 export function AppGetUserAccountValuationHistoryByAssetTypeResponseFromJSON(
@@ -58,7 +60,7 @@ export function AppGetUserAccountValuationHistoryByAssetTypeResponseFromJSONType
   json: any,
   ignoreDiscriminator: boolean,
 ): AppGetUserAccountValuationHistoryByAssetTypeResponse {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -71,13 +73,12 @@ export function AppGetUserAccountValuationHistoryByAssetTypeResponseFromJSONType
 export function AppGetUserAccountValuationHistoryByAssetTypeResponseToJSON(
   value?: AppGetUserAccountValuationHistoryByAssetTypeResponse | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    historical_valuation: HistoricalValuationToJSON(value.historicalValuation),
+    historical_valuation: HistoricalValuationToJSON(
+      value["historicalValuation"],
+    ),
   };
 }

@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 import type { LinkedAccountValuation } from "./LinkedAccountValuation";
 import {
   LinkedAccountValuationFromJSON,
@@ -48,12 +48,13 @@ export interface LinkedAccountValuationEntry {
 /**
  * Check if a given object implements the LinkedAccountValuationEntry interface.
  */
-export function instanceOfLinkedAccountValuationEntry(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "linkedAccount" in value;
-  isInstance = isInstance && "valuation" in value;
-
-  return isInstance;
+export function instanceOfLinkedAccountValuationEntry(
+  value: object,
+): value is LinkedAccountValuationEntry {
+  if (!("linkedAccount" in value) || value["linkedAccount"] === undefined)
+    return false;
+  if (!("valuation" in value) || value["valuation"] === undefined) return false;
+  return true;
 }
 
 export function LinkedAccountValuationEntryFromJSON(
@@ -66,7 +67,7 @@ export function LinkedAccountValuationEntryFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): LinkedAccountValuationEntry {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -80,16 +81,13 @@ export function LinkedAccountValuationEntryFromJSONTyped(
 export function LinkedAccountValuationEntryToJSON(
   value?: LinkedAccountValuationEntry | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
     linked_account: LinkedAccountValuationLinkedAccountDescriptionToJSON(
-      value.linkedAccount,
+      value["linkedAccount"],
     ),
-    valuation: LinkedAccountValuationToJSON(value.valuation),
+    valuation: LinkedAccountValuationToJSON(value["valuation"]),
   };
 }

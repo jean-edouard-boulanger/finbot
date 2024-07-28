@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 import type { Provider } from "./Provider";
 import {
   ProviderFromJSON,
@@ -36,11 +36,11 @@ export interface AppGetProvidersResponse {
 /**
  * Check if a given object implements the AppGetProvidersResponse interface.
  */
-export function instanceOfAppGetProvidersResponse(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "providers" in value;
-
-  return isInstance;
+export function instanceOfAppGetProvidersResponse(
+  value: object,
+): value is AppGetProvidersResponse {
+  if (!("providers" in value) || value["providers"] === undefined) return false;
+  return true;
 }
 
 export function AppGetProvidersResponseFromJSON(
@@ -53,7 +53,7 @@ export function AppGetProvidersResponseFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): AppGetProvidersResponse {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -64,13 +64,10 @@ export function AppGetProvidersResponseFromJSONTyped(
 export function AppGetProvidersResponseToJSON(
   value?: AppGetProvidersResponse | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    providers: (value.providers as Array<any>).map(ProviderToJSON),
+    providers: (value["providers"] as Array<any>).map(ProviderToJSON),
   };
 }

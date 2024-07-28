@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 /**
  *
  * @export
@@ -41,13 +41,13 @@ export interface SystemReport {
 /**
  * Check if a given object implements the SystemReport interface.
  */
-export function instanceOfSystemReport(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "finbotVersion" in value;
-  isInstance = isInstance && "finbotApiVersion" in value;
-  isInstance = isInstance && "runtime" in value;
-
-  return isInstance;
+export function instanceOfSystemReport(value: object): value is SystemReport {
+  if (!("finbotVersion" in value) || value["finbotVersion"] === undefined)
+    return false;
+  if (!("finbotApiVersion" in value) || value["finbotApiVersion"] === undefined)
+    return false;
+  if (!("runtime" in value) || value["runtime"] === undefined) return false;
+  return true;
 }
 
 export function SystemReportFromJSON(json: any): SystemReport {
@@ -58,7 +58,7 @@ export function SystemReportFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): SystemReport {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -69,15 +69,12 @@ export function SystemReportFromJSONTyped(
 }
 
 export function SystemReportToJSON(value?: SystemReport | null): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    finbot_version: value.finbotVersion,
-    finbot_api_version: value.finbotApiVersion,
-    runtime: value.runtime,
+    finbot_version: value["finbotVersion"],
+    finbot_api_version: value["finbotApiVersion"],
+    runtime: value["runtime"],
   };
 }

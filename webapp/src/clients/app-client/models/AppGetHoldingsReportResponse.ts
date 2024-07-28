@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 import type { ValuationTree } from "./ValuationTree";
 import {
   ValuationTreeFromJSON,
@@ -36,11 +36,11 @@ export interface AppGetHoldingsReportResponse {
 /**
  * Check if a given object implements the AppGetHoldingsReportResponse interface.
  */
-export function instanceOfAppGetHoldingsReportResponse(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "report" in value;
-
-  return isInstance;
+export function instanceOfAppGetHoldingsReportResponse(
+  value: object,
+): value is AppGetHoldingsReportResponse {
+  if (!("report" in value) || value["report"] === undefined) return false;
+  return true;
 }
 
 export function AppGetHoldingsReportResponseFromJSON(
@@ -53,7 +53,7 @@ export function AppGetHoldingsReportResponseFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): AppGetHoldingsReportResponse {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -64,13 +64,10 @@ export function AppGetHoldingsReportResponseFromJSONTyped(
 export function AppGetHoldingsReportResponseToJSON(
   value?: AppGetHoldingsReportResponse | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    report: ValuationTreeToJSON(value.report),
+    report: ValuationTreeToJSON(value["report"]),
   };
 }

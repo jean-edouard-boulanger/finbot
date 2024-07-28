@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 import type { EmailProviderMetadata } from "./EmailProviderMetadata";
 import {
   EmailProviderMetadataFromJSON,
@@ -38,11 +38,9 @@ export interface AppGetEmailDeliveryProvidersResponse {
  */
 export function instanceOfAppGetEmailDeliveryProvidersResponse(
   value: object,
-): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "providers" in value;
-
-  return isInstance;
+): value is AppGetEmailDeliveryProvidersResponse {
+  if (!("providers" in value) || value["providers"] === undefined) return false;
+  return true;
 }
 
 export function AppGetEmailDeliveryProvidersResponseFromJSON(
@@ -55,7 +53,7 @@ export function AppGetEmailDeliveryProvidersResponseFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): AppGetEmailDeliveryProvidersResponse {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -68,13 +66,12 @@ export function AppGetEmailDeliveryProvidersResponseFromJSONTyped(
 export function AppGetEmailDeliveryProvidersResponseToJSON(
   value?: AppGetEmailDeliveryProvidersResponse | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    providers: (value.providers as Array<any>).map(EmailProviderMetadataToJSON),
+    providers: (value["providers"] as Array<any>).map(
+      EmailProviderMetadataToJSON,
+    ),
   };
 }

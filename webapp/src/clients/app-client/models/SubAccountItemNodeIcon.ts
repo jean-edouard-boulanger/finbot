@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 /**
  *
  * @export
@@ -41,13 +41,14 @@ export interface SubAccountItemNodeIcon {
 /**
  * Check if a given object implements the SubAccountItemNodeIcon interface.
  */
-export function instanceOfSubAccountItemNodeIcon(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "backgroundColour" in value;
-  isInstance = isInstance && "label" in value;
-  isInstance = isInstance && "tooltip" in value;
-
-  return isInstance;
+export function instanceOfSubAccountItemNodeIcon(
+  value: object,
+): value is SubAccountItemNodeIcon {
+  if (!("backgroundColour" in value) || value["backgroundColour"] === undefined)
+    return false;
+  if (!("label" in value) || value["label"] === undefined) return false;
+  if (!("tooltip" in value) || value["tooltip"] === undefined) return false;
+  return true;
 }
 
 export function SubAccountItemNodeIconFromJSON(
@@ -60,7 +61,7 @@ export function SubAccountItemNodeIconFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): SubAccountItemNodeIcon {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -73,15 +74,12 @@ export function SubAccountItemNodeIconFromJSONTyped(
 export function SubAccountItemNodeIconToJSON(
   value?: SubAccountItemNodeIcon | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    background_colour: value.backgroundColour,
-    label: value.label,
-    tooltip: value.tooltip,
+    background_colour: value["backgroundColour"],
+    label: value["label"],
+    tooltip: value["tooltip"],
   };
 }

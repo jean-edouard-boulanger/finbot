@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 import type { ValuationByCurrencyExposure } from "./ValuationByCurrencyExposure";
 import {
   ValuationByCurrencyExposureFromJSON,
@@ -38,11 +38,9 @@ export interface AppGetUserAccountValuationByCurrencyExposureResponse {
  */
 export function instanceOfAppGetUserAccountValuationByCurrencyExposureResponse(
   value: object,
-): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "valuation" in value;
-
-  return isInstance;
+): value is AppGetUserAccountValuationByCurrencyExposureResponse {
+  if (!("valuation" in value) || value["valuation"] === undefined) return false;
+  return true;
 }
 
 export function AppGetUserAccountValuationByCurrencyExposureResponseFromJSON(
@@ -58,7 +56,7 @@ export function AppGetUserAccountValuationByCurrencyExposureResponseFromJSONType
   json: any,
   ignoreDiscriminator: boolean,
 ): AppGetUserAccountValuationByCurrencyExposureResponse {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -69,13 +67,10 @@ export function AppGetUserAccountValuationByCurrencyExposureResponseFromJSONType
 export function AppGetUserAccountValuationByCurrencyExposureResponseToJSON(
   value?: AppGetUserAccountValuationByCurrencyExposureResponse | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    valuation: ValuationByCurrencyExposureToJSON(value.valuation),
+    valuation: ValuationByCurrencyExposureToJSON(value["valuation"]),
   };
 }

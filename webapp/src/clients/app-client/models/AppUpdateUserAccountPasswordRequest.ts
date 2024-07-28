@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 /**
  *
  * @export
@@ -37,12 +37,12 @@ export interface AppUpdateUserAccountPasswordRequest {
  */
 export function instanceOfAppUpdateUserAccountPasswordRequest(
   value: object,
-): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "oldPassword" in value;
-  isInstance = isInstance && "newPassword" in value;
-
-  return isInstance;
+): value is AppUpdateUserAccountPasswordRequest {
+  if (!("oldPassword" in value) || value["oldPassword"] === undefined)
+    return false;
+  if (!("newPassword" in value) || value["newPassword"] === undefined)
+    return false;
+  return true;
 }
 
 export function AppUpdateUserAccountPasswordRequestFromJSON(
@@ -55,7 +55,7 @@ export function AppUpdateUserAccountPasswordRequestFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): AppUpdateUserAccountPasswordRequest {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -67,14 +67,11 @@ export function AppUpdateUserAccountPasswordRequestFromJSONTyped(
 export function AppUpdateUserAccountPasswordRequestToJSON(
   value?: AppUpdateUserAccountPasswordRequest | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    old_password: value.oldPassword,
-    new_password: value.newPassword,
+    old_password: value["oldPassword"],
+    new_password: value["newPassword"],
   };
 }

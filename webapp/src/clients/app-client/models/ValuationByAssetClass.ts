@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 import type { GroupValuation } from "./GroupValuation";
 import {
   GroupValuationFromJSON,
@@ -42,12 +42,14 @@ export interface ValuationByAssetClass {
 /**
  * Check if a given object implements the ValuationByAssetClass interface.
  */
-export function instanceOfValuationByAssetClass(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "valuationCcy" in value;
-  isInstance = isInstance && "byAssetClass" in value;
-
-  return isInstance;
+export function instanceOfValuationByAssetClass(
+  value: object,
+): value is ValuationByAssetClass {
+  if (!("valuationCcy" in value) || value["valuationCcy"] === undefined)
+    return false;
+  if (!("byAssetClass" in value) || value["byAssetClass"] === undefined)
+    return false;
+  return true;
 }
 
 export function ValuationByAssetClassFromJSON(
@@ -60,7 +62,7 @@ export function ValuationByAssetClassFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): ValuationByAssetClass {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -74,15 +76,12 @@ export function ValuationByAssetClassFromJSONTyped(
 export function ValuationByAssetClassToJSON(
   value?: ValuationByAssetClass | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    valuation_ccy: value.valuationCcy,
-    by_asset_class: (value.byAssetClass as Array<any>).map(
+    valuation_ccy: value["valuationCcy"],
+    by_asset_class: (value["byAssetClass"] as Array<any>).map(
       GroupValuationToJSON,
     ),
   };

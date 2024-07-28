@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 import type { Provider } from "./Provider";
 import {
   ProviderFromJSON,
@@ -38,11 +38,9 @@ export interface AppCreateOrUpdateProviderResponse {
  */
 export function instanceOfAppCreateOrUpdateProviderResponse(
   value: object,
-): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "provider" in value;
-
-  return isInstance;
+): value is AppCreateOrUpdateProviderResponse {
+  if (!("provider" in value) || value["provider"] === undefined) return false;
+  return true;
 }
 
 export function AppCreateOrUpdateProviderResponseFromJSON(
@@ -55,7 +53,7 @@ export function AppCreateOrUpdateProviderResponseFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): AppCreateOrUpdateProviderResponse {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -66,13 +64,10 @@ export function AppCreateOrUpdateProviderResponseFromJSONTyped(
 export function AppCreateOrUpdateProviderResponseToJSON(
   value?: AppCreateOrUpdateProviderResponse | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    provider: ProviderToJSON(value.provider),
+    provider: ProviderToJSON(value["provider"]),
   };
 }

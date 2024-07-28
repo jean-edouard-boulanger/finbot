@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 /**
  *
  * @export
@@ -41,13 +41,13 @@ export interface GroupValuation {
 /**
  * Check if a given object implements the GroupValuation interface.
  */
-export function instanceOfGroupValuation(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "name" in value;
-  isInstance = isInstance && "colour" in value;
-  isInstance = isInstance && "value" in value;
-
-  return isInstance;
+export function instanceOfGroupValuation(
+  value: object,
+): value is GroupValuation {
+  if (!("name" in value) || value["name"] === undefined) return false;
+  if (!("colour" in value) || value["colour"] === undefined) return false;
+  if (!("value" in value) || value["value"] === undefined) return false;
+  return true;
 }
 
 export function GroupValuationFromJSON(json: any): GroupValuation {
@@ -58,7 +58,7 @@ export function GroupValuationFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): GroupValuation {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -69,15 +69,12 @@ export function GroupValuationFromJSONTyped(
 }
 
 export function GroupValuationToJSON(value?: GroupValuation | null): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    name: value.name,
-    colour: value.colour,
-    value: value.value,
+    name: value["name"],
+    colour: value["colour"],
+    value: value["value"],
   };
 }

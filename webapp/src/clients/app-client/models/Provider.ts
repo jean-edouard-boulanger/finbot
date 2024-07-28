@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 /**
  *
  * @export
@@ -59,15 +59,19 @@ export interface Provider {
 /**
  * Check if a given object implements the Provider interface.
  */
-export function instanceOfProvider(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "id" in value;
-  isInstance = isInstance && "description" in value;
-  isInstance = isInstance && "websiteUrl" in value;
-  isInstance = isInstance && "credentialsSchema" in value;
-  isInstance = isInstance && "createdAt" in value;
-
-  return isInstance;
+export function instanceOfProvider(value: object): value is Provider {
+  if (!("id" in value) || value["id"] === undefined) return false;
+  if (!("description" in value) || value["description"] === undefined)
+    return false;
+  if (!("websiteUrl" in value) || value["websiteUrl"] === undefined)
+    return false;
+  if (
+    !("credentialsSchema" in value) ||
+    value["credentialsSchema"] === undefined
+  )
+    return false;
+  if (!("createdAt" in value) || value["createdAt"] === undefined) return false;
+  return true;
 }
 
 export function ProviderFromJSON(json: any): Provider {
@@ -78,7 +82,7 @@ export function ProviderFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): Provider {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -87,26 +91,22 @@ export function ProviderFromJSONTyped(
     websiteUrl: json["website_url"],
     credentialsSchema: json["credentials_schema"],
     createdAt: new Date(json["created_at"]),
-    updatedAt: !exists(json, "updated_at")
-      ? undefined
-      : new Date(json["updated_at"]),
+    updatedAt:
+      json["updated_at"] == null ? undefined : new Date(json["updated_at"]),
   };
 }
 
 export function ProviderToJSON(value?: Provider | null): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    id: value.id,
-    description: value.description,
-    website_url: value.websiteUrl,
-    credentials_schema: value.credentialsSchema,
-    created_at: value.createdAt.toISOString(),
+    id: value["id"],
+    description: value["description"],
+    website_url: value["websiteUrl"],
+    credentials_schema: value["credentialsSchema"],
+    created_at: value["createdAt"].toISOString(),
     updated_at:
-      value.updatedAt === undefined ? undefined : value.updatedAt.toISOString(),
+      value["updatedAt"] == null ? undefined : value["updatedAt"].toISOString(),
   };
 }

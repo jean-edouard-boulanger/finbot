@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 import type { ValuationChange } from "./ValuationChange";
 import {
   ValuationChangeFromJSON,
@@ -54,14 +54,14 @@ export interface LinkedAccountValuation {
 /**
  * Check if a given object implements the LinkedAccountValuation interface.
  */
-export function instanceOfLinkedAccountValuation(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "date" in value;
-  isInstance = isInstance && "currency" in value;
-  isInstance = isInstance && "value" in value;
-  isInstance = isInstance && "change" in value;
-
-  return isInstance;
+export function instanceOfLinkedAccountValuation(
+  value: object,
+): value is LinkedAccountValuation {
+  if (!("date" in value) || value["date"] === undefined) return false;
+  if (!("currency" in value) || value["currency"] === undefined) return false;
+  if (!("value" in value) || value["value"] === undefined) return false;
+  if (!("change" in value) || value["change"] === undefined) return false;
+  return true;
 }
 
 export function LinkedAccountValuationFromJSON(
@@ -74,7 +74,7 @@ export function LinkedAccountValuationFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): LinkedAccountValuation {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -88,16 +88,13 @@ export function LinkedAccountValuationFromJSONTyped(
 export function LinkedAccountValuationToJSON(
   value?: LinkedAccountValuation | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    date: value.date.toISOString(),
-    currency: value.currency,
-    value: value.value,
-    change: ValuationChangeToJSON(value.change),
+    date: value["date"].toISOString(),
+    currency: value["currency"],
+    value: value["value"],
+    change: ValuationChangeToJSON(value["change"]),
   };
 }

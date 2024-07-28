@@ -110,32 +110,29 @@ export class LinkedAccountsValuationApi
     requestParameters: GetLinkedAccountsHistoricalValuationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<AppGetLinkedAccountsHistoricalValuation>> {
-    if (
-      requestParameters.userAccountId === null ||
-      requestParameters.userAccountId === undefined
-    ) {
+    if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
-        "Required parameter requestParameters.userAccountId was null or undefined when calling getLinkedAccountsHistoricalValuation.",
+        'Required parameter "userAccountId" was null or undefined when calling getLinkedAccountsHistoricalValuation().',
       );
     }
 
     const queryParameters: any = {};
 
-    if (requestParameters.fromTime !== undefined) {
+    if (requestParameters["fromTime"] != null) {
       queryParameters["from_time"] = (
-        requestParameters.fromTime as any
+        requestParameters["fromTime"] as any
       ).toISOString();
     }
 
-    if (requestParameters.toTime !== undefined) {
+    if (requestParameters["toTime"] != null) {
       queryParameters["to_time"] = (
-        requestParameters.toTime as any
+        requestParameters["toTime"] as any
       ).toISOString();
     }
 
-    if (requestParameters.frequency !== undefined) {
-      queryParameters["frequency"] = requestParameters.frequency;
+    if (requestParameters["frequency"] != null) {
+      queryParameters["frequency"] = requestParameters["frequency"];
     }
 
     const headerParameters: runtime.HTTPHeaders = {};
@@ -152,7 +149,7 @@ export class LinkedAccountsValuationApi
       {
         path: `/api/v1/accounts/{user_account_id}/linked_accounts/valuation/history/`.replace(
           `{${"user_account_id"}}`,
-          encodeURIComponent(String(requestParameters.userAccountId)),
+          encodeURIComponent(String(requestParameters["userAccountId"])),
         ),
         method: "GET",
         headers: headerParameters,
@@ -189,13 +186,10 @@ export class LinkedAccountsValuationApi
     requestParameters: GetLinkedAccountsValuationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<runtime.ApiResponse<AppGetLinkedAccountsValuationResponse>> {
-    if (
-      requestParameters.userAccountId === null ||
-      requestParameters.userAccountId === undefined
-    ) {
+    if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
-        "Required parameter requestParameters.userAccountId was null or undefined when calling getLinkedAccountsValuation.",
+        'Required parameter "userAccountId" was null or undefined when calling getLinkedAccountsValuation().',
       );
     }
 
@@ -215,7 +209,7 @@ export class LinkedAccountsValuationApi
       {
         path: `/api/v1/accounts/{user_account_id}/linked_accounts/valuation/`.replace(
           `{${"user_account_id"}}`,
-          encodeURIComponent(String(requestParameters.userAccountId)),
+          encodeURIComponent(String(requestParameters["userAccountId"])),
         ),
         method: "GET",
         headers: headerParameters,

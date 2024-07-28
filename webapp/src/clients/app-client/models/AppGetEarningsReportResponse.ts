@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 import type { EarningsReport } from "./EarningsReport";
 import {
   EarningsReportFromJSON,
@@ -36,11 +36,11 @@ export interface AppGetEarningsReportResponse {
 /**
  * Check if a given object implements the AppGetEarningsReportResponse interface.
  */
-export function instanceOfAppGetEarningsReportResponse(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "report" in value;
-
-  return isInstance;
+export function instanceOfAppGetEarningsReportResponse(
+  value: object,
+): value is AppGetEarningsReportResponse {
+  if (!("report" in value) || value["report"] === undefined) return false;
+  return true;
 }
 
 export function AppGetEarningsReportResponseFromJSON(
@@ -53,7 +53,7 @@ export function AppGetEarningsReportResponseFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): AppGetEarningsReportResponse {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -64,13 +64,10 @@ export function AppGetEarningsReportResponseFromJSONTyped(
 export function AppGetEarningsReportResponseToJSON(
   value?: AppGetEarningsReportResponse | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    report: EarningsReportToJSON(value.report),
+    report: EarningsReportToJSON(value["report"]),
   };
 }

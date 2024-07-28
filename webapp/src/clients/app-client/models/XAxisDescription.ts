@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 import type { CategoriesInner } from "./CategoriesInner";
 import {
   CategoriesInnerFromJSON,
@@ -42,12 +42,13 @@ export interface XAxisDescription {
 /**
  * Check if a given object implements the XAxisDescription interface.
  */
-export function instanceOfXAxisDescription(value: object): boolean {
-  let isInstance = true;
-  isInstance = isInstance && "type" in value;
-  isInstance = isInstance && "categories" in value;
-
-  return isInstance;
+export function instanceOfXAxisDescription(
+  value: object,
+): value is XAxisDescription {
+  if (!("type" in value) || value["type"] === undefined) return false;
+  if (!("categories" in value) || value["categories"] === undefined)
+    return false;
+  return true;
 }
 
 export function XAxisDescriptionFromJSON(json: any): XAxisDescription {
@@ -58,7 +59,7 @@ export function XAxisDescriptionFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): XAxisDescription {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
@@ -68,14 +69,11 @@ export function XAxisDescriptionFromJSONTyped(
 }
 
 export function XAxisDescriptionToJSON(value?: XAxisDescription | null): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    type: value.type,
-    categories: (value.categories as Array<any>).map(CategoriesInnerToJSON),
+    type: value["type"],
+    categories: (value["categories"] as Array<any>).map(CategoriesInnerToJSON),
   };
 }

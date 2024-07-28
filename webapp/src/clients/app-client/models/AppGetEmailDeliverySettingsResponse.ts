@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import { exists, mapValues } from "../runtime";
+import { mapValues } from "../runtime";
 import type { EmailDeliverySettings } from "./EmailDeliverySettings";
 import {
   EmailDeliverySettingsFromJSON,
@@ -38,10 +38,8 @@ export interface AppGetEmailDeliverySettingsResponse {
  */
 export function instanceOfAppGetEmailDeliverySettingsResponse(
   value: object,
-): boolean {
-  let isInstance = true;
-
-  return isInstance;
+): value is AppGetEmailDeliverySettingsResponse {
+  return true;
 }
 
 export function AppGetEmailDeliverySettingsResponseFromJSON(
@@ -54,26 +52,24 @@ export function AppGetEmailDeliverySettingsResponseFromJSONTyped(
   json: any,
   ignoreDiscriminator: boolean,
 ): AppGetEmailDeliverySettingsResponse {
-  if (json === undefined || json === null) {
+  if (json == null) {
     return json;
   }
   return {
-    settings: !exists(json, "settings")
-      ? undefined
-      : EmailDeliverySettingsFromJSON(json["settings"]),
+    settings:
+      json["settings"] == null
+        ? undefined
+        : EmailDeliverySettingsFromJSON(json["settings"]),
   };
 }
 
 export function AppGetEmailDeliverySettingsResponseToJSON(
   value?: AppGetEmailDeliverySettingsResponse | null,
 ): any {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null) {
-    return null;
+  if (value == null) {
+    return value;
   }
   return {
-    settings: EmailDeliverySettingsToJSON(value.settings),
+    settings: EmailDeliverySettingsToJSON(value["settings"]),
   };
 }
