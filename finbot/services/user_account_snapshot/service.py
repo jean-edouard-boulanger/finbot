@@ -1,6 +1,7 @@
 import json
 import logging
 import traceback
+from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from decimal import Decimal
@@ -200,6 +201,7 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
         self.xccy_rates_getter = xccy_rates_getter
         self.target_ccy = target_ccy
         self.selected_sub_accounts = selected_sub_accounts
+        self.seen_sub_accounts: dict[core_schema.LinkedAccountId, set[providers_schema.SubAccountId]] = defaultdict(set)
         self.linked_accounts: dict[int, model.LinkedAccountSnapshotEntry] = {}  # linked_account_id -> account
         self.sub_accounts: dict[
             tuple[core_schema.LinkedAccountId, providers_schema.SubAccountId], model.SubAccountSnapshotEntry
@@ -229,6 +231,7 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
         linked_account_id: core_schema.LinkedAccountId,
         sub_account: providers_schema.Account,
     ) -> None:
+        self.seen_sub_accounts[linked_account_id].add(sub_account.id)
         if not self._include_sub_account(linked_account_id, sub_account.id):
             return
         linked_account = self.linked_accounts[linked_account_id]
@@ -425,7 +428,7 @@ def take_snapshot_impl(
         f" linked_account_ids={linked_account_ids}"
     )
 
-    user_account = (
+    user_account: model.UserAccount = (
         db_session.query(model.UserAccount)  # type: ignore
         .options(joinedload(model.UserAccount.linked_accounts))
         .options(joinedload(model.UserAccount.settings))
@@ -437,7 +440,7 @@ def take_snapshot_impl(
         f"starting snapshot for user account " f"linked to {len(user_account.linked_accounts)} external accounts"
     )
 
-    requested_ccy = user_account.settings.valuation_ccy
+    requested_ccy = core_schema.CurrencyCode(user_account.settings.valuation_ccy)
     logger.info(f"requested valuation currency is {requested_ccy}")
 
     with db_session.persist(model.UserAccountSnapshot()) as new_snapshot:

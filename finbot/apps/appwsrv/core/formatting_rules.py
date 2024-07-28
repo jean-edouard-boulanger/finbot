@@ -132,6 +132,21 @@ ASSET_TYPES_FORMATTING_RULES: dict[AssetType, AssetTypeFormattingRule] = {
         pretty_name="Stable-coin",
         abbreviated_name="SCx",
     ),
+    AssetType.commercial: AssetTypeFormattingRule(
+        asset_type=AssetType.commercial,
+        pretty_name="Commercial property",
+        abbreviated_name="CP",
+    ),
+    AssetType.residential: AssetTypeFormattingRule(
+        asset_type=AssetType.residential,
+        pretty_name="Residential property",
+        abbreviated_name="RP",
+    ),
+    AssetType.land: AssetTypeFormattingRule(
+        asset_type=AssetType.land,
+        pretty_name="Land property",
+        abbreviated_name="LP",
+    ),
 }
 
 ASSETS_VALUATION_COLOUR = "#07E4A2"
