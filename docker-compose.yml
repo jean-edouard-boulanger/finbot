@@ -103,7 +103,7 @@ services:
       - .:/finbot
 
   webapp:
-    image: "node:22-bullseye"
+    image: "node:iron-bullseye"
     env_file: *env_files
     profiles:
       - webapp

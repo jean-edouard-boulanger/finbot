@@ -25,6 +25,9 @@ jobs:
     steps:
       - name: Check out finbot source
         uses: actions/checkout@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/iron
       - name: Install JS dependencies
         working-directory: webapp/
         run: npm install
@@ -36,6 +39,9 @@ jobs:
     steps:
       - name: Check out finbot source
         uses: actions/checkout@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/iron
       - name: Install JS dependencies
         working-directory: webapp/
         run: npm install
