@@ -123,9 +123,9 @@ class AssetType(str, enum.Enum):
     utility_token = "utility_token"
     security_token = "security_token"
     stable_coin = "stable_coin"
-    commercial = "commercial"
-    residential = "residential"
-    land = "land"
+    commercial_property = "commercial_property"
+    residential_property = "residential_property"
+    land_property = "land_property"
 
 
 class AccountType(str, enum.Enum):
