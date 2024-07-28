@@ -132,18 +132,18 @@ ASSET_TYPES_FORMATTING_RULES: dict[AssetType, AssetTypeFormattingRule] = {
         pretty_name="Stable-coin",
         abbreviated_name="SCx",
     ),
-    AssetType.commercial: AssetTypeFormattingRule(
-        asset_type=AssetType.commercial,
+    AssetType.commercial_property: AssetTypeFormattingRule(
+        asset_type=AssetType.commercial_property,
         pretty_name="Commercial property",
         abbreviated_name="CP",
     ),
-    AssetType.residential: AssetTypeFormattingRule(
-        asset_type=AssetType.residential,
+    AssetType.residential_property: AssetTypeFormattingRule(
+        asset_type=AssetType.residential_property,
         pretty_name="Residential property",
         abbreviated_name="RP",
     ),
-    AssetType.land: AssetTypeFormattingRule(
-        asset_type=AssetType.land,
+    AssetType.land_property: AssetTypeFormattingRule(
+        asset_type=AssetType.land_property,
         pretty_name="Land property",
         abbreviated_name="LP",
     ),
