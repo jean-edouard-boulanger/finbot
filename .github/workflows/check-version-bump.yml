@@ -1,0 +1,52 @@
+name: Check Version Bump
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  check-version-bump:
+    name: check-version-bump
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out finbot source
+        uses: actions/checkout@v3
+      - run: git fetch origin master --depth 1
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.12
+      - name: Install Python dependencies
+        run: python3.12 -m pip install click semver
+      - run: echo "PYTHONPATH=$PWD:$PYTHONPATH" >> $GITHUB_ENV
+      - name: Check Version Bump
+        id: meta
+        run: |
+          ./tools/versioning check-version-bump && \
+          echo "FINBOT_BUMP=$(./tools/versioning check-version-bump)" >> $GITHUB_OUTPUT && \
+          echo "FINBOT_MASTER_VERSION=$(./tools/versioning get-master-version)" >> $GITHUB_OUTPUT
+          echo "FINBOT_REL_VERSION=$(./tools/versioning get-current-version)" >> $GITHUB_OUTPUT
+      - name: Print Message (No Release)
+        if: startsWith(steps.meta.outputs.FINBOT_BUMP, 'NOT_BUMPED')
+        uses: mshick/add-pr-comment@v2
+        with:
+          message-id: 'finbot-release'
+          refresh-message-position: true
+          message: |
+            ⚠️ The Finbot Application version hasn't been bumped, merging this pull request will not start a new release.
+            
+            | Master Version | PR Version |
+            | -------------- | ---------- |
+            | `${{ steps.meta.outputs.FINBOT_MASTER_VERSION }}` | 🟰 `${{ steps.meta.outputs.FINBOT_REL_VERSION }}`
+
+      - name: Print Message (Release)
+        if: startsWith(steps.meta.outputs.FINBOT_BUMP, 'BUMP')
+        uses: mshick/add-pr-comment@v2
+        with:
+          message-id: 'finbot-release'
+          refresh-message-position: true
+          message: |
+            🚀️ A new Finbot version `${{ steps.meta.outputs.FINBOT_REL_VERSION }}` release will be created after merging this pull request.
+
+            | Master Version | PR Version |
+            | -------------- | ---------- |
+            | `${{ steps.meta.outputs.FINBOT_MASTER_VERSION }}` | ⬆️ `${{ steps.meta.outputs.FINBOT_REL_VERSION }}`
