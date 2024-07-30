@@ -1,6 +1,8 @@
-![Screenshot 2021-02-27 at 12 20 56](https://user-images.githubusercontent.com/4021545/109386980-6105f380-78f6-11eb-9e40-d6b9c6b3d51b.png)
+![Finbot Home](./doc/home.png)
 
 # finbot
+
+Try finbot [here](https://demo.jboulanger.fr/finbot/) (email: `demo@finbot.com`, password: `demo`)
 
 ## 1. Introduction
 
