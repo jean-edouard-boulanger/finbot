@@ -329,7 +329,7 @@ webencodings==0.5.1
     # via html5lib
 websockets==11.0.3
     # via python-binance
-werkzeug==3.0.0
+werkzeug==3.0.3
     # via
     #   flask
     #   flask-jwt-extended
