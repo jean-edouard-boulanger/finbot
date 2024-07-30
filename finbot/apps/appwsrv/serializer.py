@@ -16,6 +16,7 @@ def serialize_user_account(
         email=user_account.email,
         full_name=user_account.full_name,
         mobile_phone_number=user_account.mobile_phone_number,
+        is_demo=user_account.is_demo,
         created_at=user_account.created_at,
         updated_at=user_account.updated_at,
     )

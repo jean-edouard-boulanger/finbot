@@ -44,6 +44,12 @@ export interface UserAccount {
   mobilePhoneNumber?: string;
   /**
    *
+   * @type {boolean}
+   * @memberof UserAccount
+   */
+  isDemo: boolean;
+  /**
+   *
    * @type {Date}
    * @memberof UserAccount
    */
@@ -63,6 +69,7 @@ export function instanceOfUserAccount(value: object): value is UserAccount {
   if (!("id" in value) || value["id"] === undefined) return false;
   if (!("email" in value) || value["email"] === undefined) return false;
   if (!("fullName" in value) || value["fullName"] === undefined) return false;
+  if (!("isDemo" in value) || value["isDemo"] === undefined) return false;
   if (!("createdAt" in value) || value["createdAt"] === undefined) return false;
   return true;
 }
@@ -86,6 +93,7 @@ export function UserAccountFromJSONTyped(
       json["mobile_phone_number"] == null
         ? undefined
         : json["mobile_phone_number"],
+    isDemo: json["is_demo"],
     createdAt: new Date(json["created_at"]),
     updatedAt:
       json["updated_at"] == null ? undefined : new Date(json["updated_at"]),
@@ -101,6 +109,7 @@ export function UserAccountToJSON(value?: UserAccount | null): any {
     email: value["email"],
     full_name: value["fullName"],
     mobile_phone_number: value["mobilePhoneNumber"],
+    is_demo: value["isDemo"],
     created_at: value["createdAt"].toISOString(),
     updated_at:
       value["updatedAt"] == null ? undefined : value["updatedAt"].toISOString(),

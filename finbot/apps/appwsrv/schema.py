@@ -51,6 +51,7 @@ class UserAccount(BaseModel):
     email: str
     full_name: str
     mobile_phone_number: str | None
+    is_demo: bool
     created_at: datetime
     updated_at: datetime | None
 
@@ -95,6 +96,7 @@ class SystemReport(BaseModel):
     finbot_version: str
     finbot_api_version: str
     runtime: str
+    is_demo: bool
 
 
 class LoginRequest(BaseModel):

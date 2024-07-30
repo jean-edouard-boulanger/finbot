@@ -36,6 +36,12 @@ export interface SystemReport {
    * @memberof SystemReport
    */
   runtime: string;
+  /**
+   *
+   * @type {boolean}
+   * @memberof SystemReport
+   */
+  isDemo: boolean;
 }
 
 /**
@@ -47,6 +53,7 @@ export function instanceOfSystemReport(value: object): value is SystemReport {
   if (!("finbotApiVersion" in value) || value["finbotApiVersion"] === undefined)
     return false;
   if (!("runtime" in value) || value["runtime"] === undefined) return false;
+  if (!("isDemo" in value) || value["isDemo"] === undefined) return false;
   return true;
 }
 
@@ -65,6 +72,7 @@ export function SystemReportFromJSONTyped(
     finbotVersion: json["finbot_version"],
     finbotApiVersion: json["finbot_api_version"],
     runtime: json["runtime"],
+    isDemo: json["is_demo"],
   };
 }
 
@@ -76,5 +84,6 @@ export function SystemReportToJSON(value?: SystemReport | null): any {
     finbot_version: value["finbotVersion"],
     finbot_api_version: value["finbotApiVersion"],
     runtime: value["runtime"],
+    is_demo: value["isDemo"],
   };
 }

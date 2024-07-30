@@ -45,5 +45,6 @@ def get_system_report() -> appwsrv_schema.SystemReportResponse:
             finbot_version=__version__,
             finbot_api_version=__api_version__,
             runtime=environment.get_finbot_runtime(),
+            is_demo=environment.is_demo(),
         )
     )

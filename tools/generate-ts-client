@@ -13,6 +13,7 @@ openapi-generator-cli generate \
   --additional-properties=withSeparateModelsAndApi=true,useSingleRequestParameter=true,withInterfaces=true,supportsES6=true \
   -o "${workdir}/output/"
 
+git config --global --add safe.directory "*"
 finbot_root_dir=$(git rev-parse --show-toplevel)
 app_client_dir="${finbot_root_dir}/webapp/src/clients/app-client"
 mkdir -p "${app_client_dir}"
