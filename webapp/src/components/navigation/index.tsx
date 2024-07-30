@@ -32,14 +32,19 @@ const SystemStatusBadge: React.FC<Record<string, never>> = () => {
     updateReport();
   }, 10000);
 
-  return (
-    <>
-      {backendReachable && report?.runtime === "development" && (
-        <Badge bg={"danger"}>DEV build v{report!.finbotVersion}</Badge>
-      )}
-      {!backendReachable && <Badge bg={"danger"}>BACKEND UNREACHABLE</Badge>}
-    </>
-  );
+  if (!backendReachable) {
+    return <Badge bg={"danger"}>BACKEND UNREACHABLE</Badge>;
+  }
+
+  if (report?.runtime === "development") {
+    return <Badge bg={"danger"}>DEV build v{report!.finbotVersion}</Badge>;
+  }
+
+  if (report?.isDemo) {
+    return <Badge bg={"info"}>DEMO</Badge>;
+  }
+
+  return <></>;
 };
 
 const UserNavbar: React.FC = () => {

@@ -27,3 +27,4 @@ schedule==1.2.2
 spectree==1.2.10
 sqlalchemy==2.0.31
 twilio==9.2.3
+yfinance==0.2.41

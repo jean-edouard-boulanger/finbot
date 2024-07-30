@@ -28,6 +28,8 @@ attrs==23.1.0
     #   referencing
 bcrypt==4.2.0
     # via -r requirements.in
+beautifulsoup4==4.12.3
+    # via yfinance
 billiard==4.2.0
     # via celery
 blinker==1.6.3
@@ -72,6 +74,8 @@ flask-cors==4.0.1
     # via -r requirements.in
 flask-jwt-extended==4.6.0
     # via -r requirements.in
+frozendict==2.4.4
+    # via yfinance
 frozenlist==1.4.0
     # via
     #   aiohttp
@@ -90,6 +94,8 @@ gspread==6.1.2
     # via -r requirements.in
 gunicorn==22.0.0
     # via -r requirements.in
+html5lib==1.1
+    # via yfinance
 httplib2==0.22.0
     # via oauth2client
 idna==3.4
@@ -108,6 +114,8 @@ kombu==5.3.4
     # via celery
 krakenex==2.2.2
     # via -r requirements.in
+lxml==5.2.2
+    # via yfinance
 mako==1.2.4
     # via alembic
 markupsafe==2.1.3
@@ -119,8 +127,14 @@ multidict==6.0.4
     # via
     #   aiohttp
     #   yarl
+multitasking==0.0.11
+    # via yfinance
 nulltype==2.3.1
     # via plaid-python
+numpy==2.0.1
+    # via
+    #   pandas
+    #   yfinance
 oauth2client==4.1.3
     # via -r requirements.in
 oauthlib==3.2.2
@@ -129,12 +143,18 @@ orjson==3.10.6
     # via -r requirements.in
 packaging==23.2
     # via gunicorn
+pandas==2.2.2
+    # via yfinance
+peewee==3.17.6
+    # via yfinance
 pgpy==0.6.0
     # via -r requirements.in
 pika==1.3.2
     # via -r requirements.in
 plaid-python==24.0.0
     # via -r requirements.in
+platformdirs==4.2.2
+    # via yfinance
 playwright==1.45.1
     # via -r requirements.in
 price-parser==0.3.4
@@ -179,9 +199,13 @@ python-dateutil==2.8.2
     # via
     #   celery
     #   dateparser
+    #   pandas
     #   plaid-python
 pytz==2023.3
-    # via dateparser
+    # via
+    #   dateparser
+    #   pandas
+    #   yfinance
 referencing==0.30.2
     # via
     #   jsonschema
@@ -196,6 +220,7 @@ requests==2.32.3
     #   python-binance
     #   requests-oauthlib
     #   twilio
+    #   yfinance
 requests-oauthlib==1.3.1
     # via google-auth-oauthlib
 rpds-py==0.10.6
@@ -210,9 +235,12 @@ schedule==1.2.2
     # via -r requirements.in
 six==1.16.0
     # via
+    #   html5lib
     #   oauth2client
     #   python-binance
     #   python-dateutil
+soupsieve==2.5
+    # via beautifulsoup4
 spectree==1.2.10
     # via -r requirements.in
 sqlalchemy==2.0.31
@@ -229,7 +257,9 @@ typing-extensions==4.8.0
     #   pyee
     #   sqlalchemy
 tzdata==2023.3
-    # via celery
+    # via
+    #   celery
+    #   pandas
 tzlocal==5.1
     # via dateparser
 ujson==5.8.0
@@ -245,6 +275,8 @@ vine==5.1.0
     #   kombu
 wcwidth==0.2.8
     # via prompt-toolkit
+webencodings==0.5.1
+    # via html5lib
 websockets==11.0.3
     # via python-binance
 werkzeug==3.0.0
@@ -253,3 +285,5 @@ werkzeug==3.0.0
     #   flask-jwt-extended
 yarl==1.9.2
     # via aiohttp
+yfinance==0.2.41
+    # via -r requirements.in
