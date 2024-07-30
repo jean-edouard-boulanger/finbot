@@ -336,4 +336,4 @@ werkzeug==3.0.0
 yarl==1.9.2
     # via aiohttp
 yfinance==0.2.41
-    # via -r requirements-dev.in
+    # via -r requirements.in

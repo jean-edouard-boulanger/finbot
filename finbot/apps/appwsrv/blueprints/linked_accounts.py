@@ -81,6 +81,7 @@ def link_new_account(
     query: appwsrv_schema.LinkAccountCommitParams,
 ) -> appwsrv_schema.LinkAccountResponse:
     """Link new account"""
+
     do_validate = query.do_validate
     do_persist = query.do_persist
     logging.info(f"validate={do_validate} persist={do_persist}")
@@ -89,10 +90,10 @@ def link_new_account(
 
     provider_id = json.provider_id
     provider = repository.get_provider(db_session, provider_id)
+    if not appwsrv_providers.is_provider_supported(provider):
+        raise InvalidUserInput(f"provider '{provider.id}' is not supported")
 
     is_plaid = provider.id == appwsrv_providers.PLAID_PROVIDER_ID
-    if is_plaid and not is_plaid_configured():
-        raise InvalidUserInput("user account is not setup for Plaid")
     credentials = json.credentials
     if is_plaid:
         credentials = PlaidClient().exchange_public_token(credentials["public_token"]).dict()

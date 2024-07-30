@@ -28,6 +28,10 @@ class PlaidEnvironment:
     public_key: str
     secret_key: str
 
+    @property
+    def is_sandbox(self) -> bool:
+        return self.environment == "sandbox"
+
 
 @dataclass(frozen=True)
 class TwilioEnvironment:
