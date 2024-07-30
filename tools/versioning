@@ -13,15 +13,15 @@ VERSION_FILE_PATH = Path("finbot/_version.py")
 assert VERSION_FILE_PATH.is_file()
 
 
-def get_master_version() -> semver.VersionInfo:
+def _get_master_version() -> semver.Version:
     output = check_output(f"git show origin/master:{VERSION_FILE_PATH}", shell=True).decode().strip()
-    matches = re.findall(r"^__version__ = (.+)$", output)
-    version = matches[0].strip('"')
-    return semver.VersionInfo.parse(version)
+    line = [line for line in output.splitlines(keepends=False) if "__version__" in line][0]
+    raw_version = line.split("=")[1].strip('" ')
+    return semver.Version.parse(raw_version)
 
 
-def get_current_version() -> semver.VersionInfo:
-    return semver.VersionInfo.parse(__version__)
+def _get_current_version() -> semver.Version:
+    return semver.Version.parse(__version__)
 
 
 cli = click.Group()
@@ -29,11 +29,15 @@ cli = click.Group()
 
 @cli.command()
 def check_version_bump():
-    master_version = get_master_version()
-    was_bumped = semver.VersionInfo.parse(__version__).compare(master_version) > 0
-    if not was_bumped:
-        print(f"Error: please bump __version__ in {VERSION_FILE_PATH}", file=sys.stderr)
+    master_version = _get_master_version()
+    diff = semver.Version.parse(__version__).compare(master_version) > 0
+    if diff < 0:
+        print(f"Cannot downgrade Finbot app version from {master_version} to {__version__}")
         sys.exit(1)
+    if diff == 0:
+        print(f"NOT_BUMPED={__version__}")
+    if diff > 0:
+        print(f"BUMPED_TO={__version__}")
     sys.exit(0)
 
 
@@ -43,9 +47,14 @@ def get_current_version():
 
 
 @cli.command()
+def get_master_version():
+    print(str(_get_master_version()), end='')
+
+
+@cli.command()
 @click.argument("mode", nargs=1, type=click.Choice(["patch", "minor", "major"]))
 def bump(mode: str):
-    master_version = get_master_version()
+    master_version = _get_master_version()
     new_version = getattr(master_version, f"bump_{mode}")()
     VERSION_FILE_PATH.write_text(f'__version__ = "{new_version}"\n')
     print(f"bumped master version from {master_version} to {new_version} ({mode})", file=sys.stderr)
