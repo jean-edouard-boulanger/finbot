@@ -10,3 +10,4 @@ semver==3.0.2
 sqlalchemy-stubs==0.4
 types-Flask==1.1.6
 types-pytz==2024.1.0.20240417
+yfinance==0.2.41

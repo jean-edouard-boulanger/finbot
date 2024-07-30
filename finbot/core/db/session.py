@@ -1,5 +1,5 @@
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Generic, Iterator, Type, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Generic, Iterable, Iterator, Sequence, Type, TypeVar, Union
 
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import scoped_session
@@ -35,7 +35,7 @@ class Session(object):
     def add(self, entity: Entity) -> None:
         self._impl.add(entity)
 
-    def add_all(self, entities: list[Entity]) -> None:
+    def add_all(self, entities: Iterable[Entity]) -> None:
         self._impl.add_all(entities)
 
     def merge(self, instance: Entity, load: bool = True) -> Entity:
@@ -58,6 +58,9 @@ class Session(object):
 
     def remove(self) -> None:
         self._impl.remove()  # type: ignore
+
+    def flush(self, objects: Sequence[Entity] | None = None) -> None:
+        self._impl.flush(objects)
 
     @contextmanager
     def begin(self, nested: bool = False) -> Iterator["Session"]:

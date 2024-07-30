@@ -46,6 +46,7 @@ class Environment:
     webapp_endpoint: str
     runtime: str
     rmq_url: str
+    is_demo: bool
     freecurrencyapi_key: str
     saxo_gateway_url: str | None
     plaid_environment: PlaidEnvironment | None
@@ -169,6 +170,12 @@ def is_production() -> bool:
     return get_finbot_runtime() == PRODUCTION_ENV
 
 
+def is_demo() -> bool:
+    value = get_environment_value_or("FINBOT_IS_DEMO", "0")
+    assert isinstance(value, str)
+    return bool(int(value))
+
+
 def get_rmq_url() -> str:
     rmq_hostname = get_environment_value("FINBOT_RMQ_HOSTNAME")
     rmq_port = get_environment_value("FINBOT_RMQ_PORT")
@@ -187,6 +194,7 @@ def get() -> Environment:
         appwsrv_endpoint=get_appwsrv_endpoint(),
         webapp_endpoint=get_webapp_endpoint(),
         runtime=get_finbot_runtime(),
+        is_demo=is_demo(),
         rmq_url=get_rmq_url(),
         freecurrencyapi_key=get_freecurrencyapi_key(),
         saxo_gateway_url=get_saxo_gateway_url(),

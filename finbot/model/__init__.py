@@ -45,11 +45,34 @@ class UserAccount(Base):
     password_hash = Column(LargeBinary, nullable=False)
     full_name = Column(String(128), nullable=False)
     mobile_phone_number = Column(String(128))
+    is_demo = Column(Boolean, default=False)
     created_at = Column(DateTimeTz, server_default=func.now(), nullable=False)
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
-    linked_accounts = relationship("LinkedAccount", back_populates="user_account", uselist=True)
-    settings = relationship("UserAccountSettings", uselist=False, back_populates="user_account")
+    linked_accounts = relationship(
+        "LinkedAccount",
+        back_populates="user_account",
+        uselist=True,
+        passive_deletes=True,
+    )
+    settings = relationship(
+        "UserAccountSettings",
+        uselist=False,
+        back_populates="user_account",
+        passive_deletes=True,
+    )
+    snapshots = relationship(
+        "UserAccountSnapshot",
+        uselist=True,
+        back_populates="user_account",
+        passive_deletes=True,
+    )
+    history_entries = relationship(
+        "UserAccountHistoryEntry",
+        uselist=True,
+        back_populates="user_account",
+        passive_deletes=True,
+    )
 
 
 class UserAccountSettings(Base):
@@ -139,8 +162,18 @@ class UserAccountSnapshot(Base):
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
     user_account = relationship(UserAccount, uselist=False)
-    xccy_rates_entries = relationship("XccyRateSnapshotEntry", back_populates="snapshot", uselist=True)
-    linked_accounts_entries = relationship("LinkedAccountSnapshotEntry", back_populates="snapshot", uselist=True)
+    xccy_rates_entries = relationship(
+        "XccyRateSnapshotEntry",
+        back_populates="snapshot",
+        uselist=True,
+        passive_deletes=True,
+    )
+    linked_accounts_entries = relationship(
+        "LinkedAccountSnapshotEntry",
+        back_populates="snapshot",
+        uselist=True,
+        passive_deletes=True,
+    )
 
     @property
     def effective_at(self) -> Optional[datetime]:
@@ -173,8 +206,12 @@ class LinkedAccountSnapshotEntry(Base):
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
     snapshot = relationship(UserAccountSnapshot, uselist=False, back_populates="linked_accounts_entries")
-    sub_accounts_entries = relationship("SubAccountSnapshotEntry", back_populates="linked_account_entry")
     linked_account = relationship(LinkedAccount, uselist=False)
+    sub_accounts_entries = relationship(
+        "SubAccountSnapshotEntry",
+        back_populates="linked_account_entry",
+        passive_deletes=True,
+    )
 
 
 class SubAccountSnapshotEntry(Base):
@@ -192,7 +229,9 @@ class SubAccountSnapshotEntry(Base):
     linked_account_entry = relationship(
         LinkedAccountSnapshotEntry, uselist=False, back_populates="sub_accounts_entries"
     )
-    items_entries = relationship("SubAccountItemSnapshotEntry", back_populates="sub_account_entry")
+    items_entries = relationship(
+        "SubAccountItemSnapshotEntry", back_populates="sub_account_entry", passive_deletes=True
+    )
 
 
 class SubAccountItemType(enum.Enum):
@@ -271,16 +310,19 @@ class UserAccountHistoryEntry(Base):
         "LinkedAccountValuationHistoryEntry",
         back_populates="account_valuation_history_entry",
         uselist=True,
+        passive_deletes=True,
     )
     sub_accounts_valuation_history_entries = relationship(
         "SubAccountValuationHistoryEntry",
         back_populates="account_valuation_history_entry",
         uselist=True,
+        passive_deletes=True,
     )
     sub_accounts_items_valuation_history_entries = relationship(
         "SubAccountItemValuationHistoryEntry",
         back_populates="account_valuation_history_entry",
         uselist=True,
+        passive_deletes=True,
     )
 
 
