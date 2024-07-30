@@ -9,6 +9,7 @@ import {
   FinancialDataProvidersApi,
   FormattingRulesApi,
   PlaidSettings,
+  SystemApi,
   AppGetAccountsFormattingRulesResponse,
 } from "clients";
 import { AuthContext } from "contexts";
@@ -16,7 +17,7 @@ import { LoadingButton, ColourPicker } from "components";
 
 import { default as DataDrivenForm, ISubmitEvent } from "react-jsonschema-form";
 import { toast } from "react-toastify";
-import { Row, Col, Form, InputGroup, Button } from "react-bootstrap";
+import { Row, Col, Form, InputGroup, Button, Alert } from "react-bootstrap";
 import { FaCheck } from "react-icons/fa";
 import { PlaidLink } from "react-plaid-link";
 
@@ -139,6 +140,7 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
   const linkedAccountsApi = useApi(LinkedAccountsApi);
   const providersApi = useApi(FinancialDataProvidersApi);
   const formattingRulesApi = useApi(FormattingRulesApi);
+  const systemApi = useApi(SystemApi);
 
   const [formattingRules, setFormattingRules] =
     useState<FormattingRules | null>(null);
@@ -156,6 +158,7 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
   const [accountColour, setAccountColour] = useState<string | null>(null);
   const [operation, setOperation] = useState<string | null>(null);
   const [linked, setLinked] = useState<boolean>(false);
+  const [isDemo, setIsDemo] = useState<boolean>(false);
   const accountNameRef = useRef(accountName);
   const accountColourRef = useRef(accountColour);
   const updateMode = linkedAccount !== null;
@@ -171,12 +174,11 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
       setPlaidSettings(
         (await providersApi.getPlaidSettings()).settings ?? null,
       );
-      setFormattingRules(
-        await formattingRulesApi!.getAccountsFormattingRules(),
-      );
+      setFormattingRules(await formattingRulesApi.getAccountsFormattingRules());
+      setIsDemo((await systemApi.getSystemReport()).systemReport.isDemo);
     };
     fetch();
-  }, [providersApi, formattingRulesApi]);
+  }, [providersApi, formattingRulesApi, systemApi]);
 
   useEffect(() => {
     if (props.linkedAccount) {
@@ -340,6 +342,14 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
     <>
       <Row>
         <Col md={6}>
+          {isDemo && (
+            <Row className={"mb-2"}>
+              <Alert variant={"warning"}>
+                <strong>Note</strong>: Only fake financial data providers are
+                available in the Finbot demo.
+              </Alert>
+            </Row>
+          )}
           <Row className={"mb-4"}>
             <Col>
               <h5>Provider selection</h5>
