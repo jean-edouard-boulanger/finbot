@@ -1,6 +1,6 @@
 ![Finbot Home](./doc/home.png)
 
-# finbot
+# 🤖 finbot
 
 Try finbot [here](https://demo.jboulanger.fr/finbot/) (email: `demo@finbot.com`, password: `demo`)
 
