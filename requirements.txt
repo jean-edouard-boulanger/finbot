@@ -4,7 +4,9 @@
 #
 #    pip-compile --output-file=requirements.txt requirements.in
 #
-aiohttp==3.9.5
+aiohappyeyeballs==2.4.3
+    # via aiohttp
+aiohttp==3.10.10
     # via
     #   -r requirements.in
     #   aiohttp-retry
@@ -161,6 +163,8 @@ price-parser==0.3.4
     # via -r requirements.in
 prompt-toolkit==3.0.39
     # via click-repl
+propcache==0.2.0
+    # via yarl
 psycopg2==2.9.9
     # via -r requirements.in
 pyasn1==0.5.0
@@ -283,7 +287,7 @@ werkzeug==3.0.0
     # via
     #   flask
     #   flask-jwt-extended
-yarl==1.9.2
+yarl==1.14.0
     # via aiohttp
 yfinance==0.2.41
     # via -r requirements.in
