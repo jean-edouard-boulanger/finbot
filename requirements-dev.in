@@ -1,5 +1,5 @@
 -r requirements.in
-types-requests==2.31.0.10
+types-requests==2.32.0.20241016
 click==8.1.7
 mypy==1.11.0
 pika-stubs==0.1.3
