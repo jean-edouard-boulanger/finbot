@@ -4,7 +4,7 @@ alembic==1.13.2
 bcrypt==4.2.0
 celery==5.4.0
 cffi==1.16.0
-cryptography==43.0.0
+cryptography==43.0.3
 flask-cors==4.0.1
 flask-jwt-extended==4.6.0
 flask==3.0.3
