@@ -62,7 +62,7 @@ click-repl==0.3.0
     # via celery
 colorclass==2.2.2
     # via pip-upgrader
-cryptography==43.0.0
+cryptography==43.0.3
     # via
     #   -r requirements.in
     #   pgpy
