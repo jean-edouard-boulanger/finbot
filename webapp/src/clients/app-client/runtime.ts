@@ -423,7 +423,9 @@ function querystringSingleKey(
     return querystringSingleKey(key, valueAsArray, keyPrefix);
   }
   if (value instanceof Date) {
-    return `${encodeURIComponent(fullKey)}=${encodeURIComponent(value.toISOString())}`;
+    return `${encodeURIComponent(fullKey)}=${encodeURIComponent(
+      value.toISOString(),
+    )}`;
   }
   if (value instanceof Object) {
     return querystring(value as HTTPQuery, fullKey);

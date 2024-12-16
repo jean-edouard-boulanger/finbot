@@ -1,19 +1,10 @@
 export FINBOT_EDIT_CMD ?= code --wait
 export PYTHONPATH := ${PWD}:${PYTHONPATH}
 
-
-alembic-gen:
-	tools/check-env.sh message;
-	docker compose run --rm operator bash -c 'env FINBOT_WAIT_DEPS=finbotdb ./tools/finbot-wait && alembic revision -m "${message}"'
-
-alembic-upgrade:
-	docker compose run --rm operator bash -c 'env FINBOT_WAIT_DEPS=finbotdb ./tools/finbot-wait && alembic upgrade head'
-
-alembic-downgrade:
-	docker compose run --rm operator bash -c 'env FINBOT_WAIT_DEPS=finbotdb ./tools/finbot-wait && alembic downgrade head-1'
-
-alembic-history:
-	docker compose run --rm operator bash -c 'env FINBOT_WAIT_DEPS=finbotdb ./tools/finbot-wait && alembic history'
+docker_exec := docker compose exec operator
+ifneq (,$(wildcard /.dockerenv))
+	docker_exec :=
+endif
 
 pip-compile-all:
 	./tools/pip-compile-all
@@ -36,31 +27,47 @@ docker-build-all: docker-build-dev docker-build-prod
 
 trigger-valuation:
 	tools/check-env.sh accounts;
-	docker compose exec schedsrv \
+	$(docker_exec) \
 		./tools/run -- python3.12 finbot/apps/schedsrv/schedsrv.py \
 			--mode one_shot \
 			--accounts ${accounts}
 
 run-system-tests:
-	docker compose run --rm operator env FINBOT_WAIT_DEPS=appwsrv,finbotwsrv ./tools/finbot-wait;
-	docker compose run --rm operator python3.12 -m pytest tests/system/
+	$(docker_exec) env FINBOT_WAIT_DEPS=appwsrv,finbotwsrv ./tools/finbot-wait && \
+		$(docker_exec) python3.12 -m pytest tests/system/
 
 finbotdb-build:
-	python3.12 tools/finbotdb build
+	$(docker_exec) python3.12 tools/finbotdb build
 
 finbotdb-destroy:
-	python3.12 tools/finbotdb destroy
+	$(docker_exec) python3.12 tools/finbotdb destroy
 
 finbotdb-rebuild:
-	python3.12 tools/finbotdb destroy && \
-	python3.12 tools/finbotdb build
+	$(docker_exec) python3.12 tools/finbotdb destroy && \
+		python3.12 tools/finbotdb build
 
 finbotdb-hydrate:
-	python3.12 tools/finbotdb hydrate \
+	$(docker_exec) python3.12 tools/finbotdb hydrate \
 		--data-file ./tools/hydrate.json
 
 finbotdb-psql:
 	docker compose exec finbotdb psql -U finbot
+
+finbotdb-migrate:
+	tools/check-env.sh message;
+	$(docker_exec) bash -c 'env FINBOT_WAIT_DEPS=finbotdb ./tools/finbot-wait && alembic revision -m "${message}"'
+
+finbotdb-upgrade:
+	$(docker_exec) bash -c 'env FINBOT_WAIT_DEPS=finbotdb ./tools/finbot-wait && alembic upgrade head'
+
+finbotdb-downgrade:
+	$(docker_exec) bash -c 'env FINBOT_WAIT_DEPS=finbotdb ./tools/finbot-wait && alembic downgrade head-1'
+
+finbotdb-history:
+	$(docker_exec) bash -c 'env FINBOT_WAIT_DEPS=finbotdb ./tools/finbot-wait && alembic history'
+
+finbotdb-heads:
+	$(docker_exec) bash -c 'env FINBOT_WAIT_DEPS=finbotdb ./tools/finbot-wait && alembic heads'
 
 init-dev:
 	tools/init-dev.sh
@@ -78,52 +85,52 @@ eslint:
 	cd webapp && npm run lint-check:prod
 
 banned-keywords-check-ts:
-	tools/banned-keywords.py --source-dirs webapp/src
+	$(docker_exec) tools/banned-keywords.py --source-dirs webapp/src
 
 flakes-check:
-	python3.12 -m ruff check --ignore I
+	$(docker_exec) python3.12 -m ruff check --ignore I
 
 flakes:
-	python3.12 -m ruff check --ignore I --fix
+	$(docker_exec) python3.12 -m ruff check --ignore I --fix
 
 version-bump-check:
-	tools/versioning check-version-bump
+	$(docker_exec) tools/versioning check-version-bump
 
 black-check:
-	python3.12 -m ruff format --check
+	$(docker_exec) python3.12 -m ruff format --check
 
 black:
-	python3.12 -m ruff format
+	$(docker_exec) python3.12 -m ruff format
 
 isort-check:
-	python3.12 -m ruff check --select I
+	$(docker_exec) python3.12 -m ruff check --select I
 
 isort:
-	python3.12 -m ruff check --select I --fix
+	$(docker_exec) python3.12 -m ruff check --select I --fix
 
 mypy:
-	python3.12 -m mypy --strict finbot/
+	$(docker_exec) python3.12 -m mypy --strict finbot/
 
 unit-tests-py:
-	python3.12 -m pytest -vv tests/unit
+	$(docker_exec) python3.12 -m pytest -vv tests/unit
 
 unit-tests: unit-tests-py
 
 banned-keywords-check-py:
-	tools/banned-keywords.py --source-dirs finbot
+	$(docker_exec) tools/banned-keywords.py --source-dirs finbot
 
 lint-sh:
-	grep -rl '^#!/.*bash' --exclude-dir=webapp --exclude-dir='./.*' --exclude-dir='venv' . |\
+	$(docker_exec) grep -rl '^#!/.*bash' --exclude-dir=webapp --exclude-dir='./.*' --exclude-dir='venv' . |\
  		xargs shellcheck -e SC1090 -e SC1091 -e SC2002 -S style
 
 lint-schema:
-	docker compose run --rm operator ./tools/lint-schema.py
+	$(docker_exec) ./tools/lint-schema.py
 
 generate-ts-client:
-	docker compose run --rm operator ./tools/generate-ts-client
+	$(docker_exec) ./tools/generate-ts-client
 
-bash:
-	docker compose run --rm operator bash
+shell:
+	$(docker_exec) bash
 
 lint-py: mypy flakes-check black-check isort-check banned-keywords-check-py unit-tests-py
 lint-ts: eslint tsc-build-check prettier-check-ts banned-keywords-check-ts
