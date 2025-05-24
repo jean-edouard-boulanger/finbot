@@ -1,4 +1,5 @@
 import tempfile
+from typing import cast
 
 import gnupg
 from cryptography.fernet import Fernet
@@ -25,4 +26,4 @@ def pgp_decrypt(*, pgp_key_blob: bytes, passphrase: str | None, encrypted_blob: 
         assert import_result
         decrypted_data = gpg.decrypt(encrypted_blob, passphrase=passphrase)
         assert decrypted_data.ok
-        return decrypted_data.data
+        return cast(bytes, decrypted_data.data)

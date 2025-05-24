@@ -57,7 +57,7 @@ class Api(ProviderBase):
         if pgp_key := self._credentials.pgp_key:
             report_payload = pgp_decrypt(
                 pgp_key_blob=pgp_key.pgp_key,
-                passphrase=pgp_key.passphrase.get_secret_value(),
+                passphrase=pgp_key.passphrase.get_secret_value() if pgp_key.passphrase else None,
                 encrypted_blob=raw_report_payload,
             ).decode()
         else:

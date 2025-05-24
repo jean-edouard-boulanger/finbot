@@ -145,7 +145,7 @@ class LinkedAccount(Base):
     )
 
     @property
-    def plain_credentials(self):
+    def plain_credentials(self) -> Any:
         from finbot.core import environment, secure
 
         return orjson.loads(
