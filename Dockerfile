@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.3
-FROM python:3.12-bullseye AS builder
+FROM python:3.13-bookworm AS builder
 
 ENV VENV_DIR="/venv"
 ENV PATH="${VENV_DIR}/bin:${PATH}"
@@ -7,13 +7,13 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y libgconf-2-4 libpq-dev
 
-RUN python3.12 -m venv ${VENV_DIR}
+RUN python3 -m venv ${VENV_DIR}
 
 COPY requirements.txt .
 
-RUN python3.12 -m pip install --upgrade --no-cache-dir -r requirements.txt
+RUN python3 -m pip install --upgrade --no-cache-dir -r requirements.txt
 
-FROM python:3.12-slim-bullseye AS runtime
+FROM python:3.13-slim-bookworm AS runtime
 
 ENV FINBOT_ROOT_DIR="/finbot"
 ENV VENV_DIR="/venv"
@@ -57,8 +57,8 @@ RUN apt-get update && \
 
 COPY requirements-dev.txt .
 
-RUN python3.12 -m pip install --no-cache-dir -r requirements-dev.txt && \
-    python3.12 -m pip install --no-cache-dir pip-tools && \
+RUN python3 -m pip install --no-cache-dir -r requirements-dev.txt && \
+    python3 -m pip install --no-cache-dir pip-tools && \
     echo "installing openapi-generator-cli" && \
     npm install @openapitools/openapi-generator-cli@2.7.0 -g && \
     echo "downloading pinned openapi-generator-cli version" && \

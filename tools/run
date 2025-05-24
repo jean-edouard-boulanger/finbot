@@ -15,10 +15,10 @@ then
   exec "${script_dir}/run-webapp-dev.sh"
 elif [[ "${service_name}" == "schedsrv" ]]
 then
-  exec python3.12 finbot/apps/schedsrv/schedsrv.py
+  exec python3 finbot/apps/schedsrv/schedsrv.py
 elif [[ "${service_name}" == "workersrv" ]]
 then
-  exec python3.12 -m celery \
+  exec python3 -m celery \
     -A finbot.tasks.base worker \
     --loglevel INFO
 elif [[ "${service_name}" == "finbotwsrv" ]]

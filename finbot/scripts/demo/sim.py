@@ -112,9 +112,7 @@ class BrokerageAccount(SubAccount):
         as_of: date,
         market: Market,
     ) -> None:
-        logging.info(
-            f"{type(self).__name__}({self.identifier}) buy_fx_to_meet_expected_balance" f" {expected=} {as_of=}"
-        )
+        logging.info(f"{type(self).__name__}({self.identifier}) buy_fx_to_meet_expected_balance {expected=} {as_of=}")
         if self.cash_balances.get(expected.currency, 0) >= expected.amount:
             return
         dest_ccy = expected.currency

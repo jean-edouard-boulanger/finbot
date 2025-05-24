@@ -137,7 +137,7 @@ def display_error_message(error: Error):
         )
     else:
         print(
-            f"{relative_path}:" f"{error.line_number}:" f"{error.start_column}: ",
+            f"{relative_path}:{error.line_number}:{error.start_column}: ",
             end="",
         )
         print("error: " + error.error_message)

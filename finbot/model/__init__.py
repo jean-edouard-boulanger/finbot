@@ -2,6 +2,7 @@ import enum
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Optional, Type, TypeVar
 
+import orjson
 from sqlalchemy import (
     Boolean,
     Column,
@@ -21,6 +22,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
 
 from finbot.core.db.types import DateTimeTz, JSONEncoded
+from finbot.core.utils import some
 
 if TYPE_CHECKING:
     from sqlalchemy.sql.type_api import TypeEngine
@@ -141,6 +143,17 @@ class LinkedAccount(Base):
             name="uidx_linked_accounts_user_provider_account_name",
         ),
     )
+
+    @property
+    def plain_credentials(self):
+        from finbot.core import environment, secure
+
+        return orjson.loads(
+            secure.fernet_decrypt(
+                some(self.encrypted_credentials).encode(),
+                environment.get_secret_key().encode(),
+            ).decode()
+        )
 
 
 class SnapshotStatus(enum.Enum):

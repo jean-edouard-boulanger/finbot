@@ -1,5 +1,6 @@
 export FINBOT_EDIT_CMD ?= code --wait
 export PYTHONPATH := ${PWD}:${PYTHONPATH}
+export PYTHON := python3
 
 
 alembic-gen:
@@ -37,26 +38,26 @@ docker-build-all: docker-build-dev docker-build-prod
 trigger-valuation:
 	tools/check-env.sh accounts;
 	docker compose exec schedsrv \
-		./tools/run -- python3.12 finbot/apps/schedsrv/schedsrv.py \
+		./tools/run -- $(PYTHON) finbot/apps/schedsrv/schedsrv.py \
 			--mode one_shot \
 			--accounts ${accounts}
 
 run-system-tests:
 	docker compose run --rm operator env FINBOT_WAIT_DEPS=appwsrv,finbotwsrv ./tools/finbot-wait;
-	docker compose run --rm operator python3.12 -m pytest tests/system/
+	docker compose run --rm operator $(PYTHON) -m pytest tests/system/
 
 finbotdb-build:
-	python3.12 tools/finbotdb build
+	$(PYTHON) tools/finbotdb build
 
 finbotdb-destroy:
-	python3.12 tools/finbotdb destroy
+	$(PYTHON) tools/finbotdb destroy
 
 finbotdb-rebuild:
-	python3.12 tools/finbotdb destroy && \
-	python3.12 tools/finbotdb build
+	$(PYTHON) tools/finbotdb destroy && \
+	$(PYTHON) tools/finbotdb build
 
 finbotdb-hydrate:
-	python3.12 tools/finbotdb hydrate \
+	$(PYTHON) tools/finbotdb hydrate \
 		--data-file ./tools/hydrate.json
 
 finbotdb-psql:
@@ -81,31 +82,31 @@ banned-keywords-check-ts:
 	tools/banned-keywords.py --source-dirs webapp/src
 
 flakes-check:
-	python3.12 -m ruff check --ignore I
+	$(PYTHON) -m ruff check --ignore I
 
 flakes:
-	python3.12 -m ruff check --ignore I --fix
+	$(PYTHON) -m ruff check --ignore I --fix
 
 version-bump-check:
 	tools/versioning check-version-bump
 
 black-check:
-	python3.12 -m ruff format --check
+	$(PYTHON) -m ruff format --check
 
 black:
-	python3.12 -m ruff format
+	$(PYTHON) -m ruff format
 
 isort-check:
-	python3.12 -m ruff check --select I
+	$(PYTHON) -m ruff check --select I
 
 isort:
-	python3.12 -m ruff check --select I --fix
+	$(PYTHON) -m ruff check --select I --fix
 
 mypy:
-	python3.12 -m mypy --strict finbot/
+	$(PYTHON) -m mypy --strict finbot/
 
 unit-tests-py:
-	python3.12 -m pytest -vv tests/unit
+	$(PYTHON) -m pytest -vv tests/unit
 
 unit-tests: unit-tests-py
 

@@ -14,9 +14,9 @@ jobs:
       - run: git fetch origin master --depth 1
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.12
+          python-version: 3.13
       - name: Install Python dependencies
-        run: python3.12 -m pip install click semver
+        run: python3 -m pip install click semver
       - run: echo "PYTHONPATH=$PWD:$PYTHONPATH" >> $GITHUB_ENV
       - name: Check Version Bump
         id: meta

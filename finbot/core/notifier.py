@@ -65,7 +65,7 @@ class EmailNotifier(Notifier):
                 body=dedent(
                     f"""\
                 Finbot failed to get a snapshot from the following linked accounts: \
-                {(', '.join(entry.linked_account.account_name for entry in error_entries)).strip()}
+                {(", ".join(entry.linked_account.account_name for entry in error_entries)).strip()}
                 """
                 ),
             )
@@ -93,7 +93,7 @@ class TwilioNotifier(Notifier):
         notification: ValuationNotification,
     ) -> None:
         message_body = (
-            f"💰 Finbot valuation: {notification.user_account_valuation:,.1f}" f" {notification.valuation_currency}\n"
+            f"💰 Finbot valuation: {notification.user_account_valuation:,.1f} {notification.valuation_currency}\n"
         )
         if notification.change_1day is not None:
             message_body += (

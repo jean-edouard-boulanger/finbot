@@ -319,7 +319,7 @@ def _format_record_validation_error(e: PydanticValidationError) -> str:
     pretty_errors = []
     for error in e.errors():
         pretty_loc = ", ".join(f"'{entry}'" for entry in error["loc"])
-        pretty_errors.append(f"{pretty_loc} {error["msg"]}")
+        pretty_errors.append(f"{pretty_loc} {error['msg']}")
     return ", ".join(pretty_errors)
 
 

@@ -423,9 +423,7 @@ def take_snapshot_impl(
     db_session: Session,
 ) -> schema.SnapshotSummary:
     logger.info(
-        f"fetching user information for"
-        f" user_account_id={user_account_id}"
-        f" linked_account_ids={linked_account_ids}"
+        f"fetching user information for user_account_id={user_account_id} linked_account_ids={linked_account_ids}"
     )
 
     user_account: model.UserAccount = (
@@ -436,9 +434,7 @@ def take_snapshot_impl(
         .first()
     )
 
-    logger.info(
-        f"starting snapshot for user account " f"linked to {len(user_account.linked_accounts)} external accounts"
-    )
+    logger.info(f"starting snapshot for user account linked to {len(user_account.linked_accounts)} external accounts")
 
     requested_ccy = core_schema.CurrencyCode(user_account.settings.valuation_ccy)
     logger.info(f"requested valuation currency is {requested_ccy}")
@@ -513,8 +509,7 @@ class UserAccountSnapshotService(object):
             )
         except Exception as e:
             logger.error(
-                "fatal error while taking snapshot for"
-                " user_account_id=%s, linked_account_ids=%s, error: %s trace:\n%s",
+                "fatal error while taking snapshot for user_account_id=%s, linked_account_ids=%s, error: %s trace:\n%s",
                 user_account_id,
                 linked_account_ids,
                 e,

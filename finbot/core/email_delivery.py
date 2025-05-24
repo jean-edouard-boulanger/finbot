@@ -127,7 +127,7 @@ def register_provider(provider_type: Type[EmailProvider]) -> Type[EmailProvider]
         raise ProviderAlreadyRegistered(provider_id)
     if "settings_schema" not in provider_type.schema:
         raise InvalidProviderMetadata(
-            f"email provider '{provider_type.provider_id}'" f" is missing 'settings_schema' property"
+            f"email provider '{provider_type.provider_id}' is missing 'settings_schema' property"
         )
     EMAIL_PROVIDERS[provider_id] = provider_type
     return provider_type

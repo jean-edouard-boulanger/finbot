@@ -1,6 +1,21 @@
 #!/usr/bin/env bash
 set -e
-echo "compiling prod requirements"
-docker compose run --no-deps --rm operator pip-compile --resolver=backtracking -o requirements.txt requirements.in
-echo "compiling dev requirements"
-docker compose run --no-deps --rm operator pip-compile --resolver=backtracking -o requirements-dev.txt requirements-dev.in
+root_dir=$(git rev-parse --show-toplevel)
+work_dir=$(mktemp -d)
+docker run --rm -w /finbot \
+  -v "${root_dir}"/requirements.in:/finbot/requirements.in:ro \
+  -v "${root_dir}"/requirements-dev.in:/finbot/requirements-dev.in:ro \
+  -v "${work_dir}":"${work_dir}" \
+  python:3.13-bookworm bash -c "\
+    set -e && \
+    python3 -m venv venv/ && \
+    venv/bin/pip install --upgrade pip && \
+    venv/bin/pip install pip-tools==7.4.1 && \
+    echo compiling prod requirements && \
+    venv/bin/pip-compile --resolver=backtracking -o requirements.txt requirements.in && \
+    echo compiling dev requirements && \
+    venv/bin/pip-compile --resolver=backtracking -o requirements-dev.txt requirements-dev.in && \
+    mv requirements*.txt ${work_dir} && \
+    echo all done
+"
+mv "${work_dir}"/requirements*.txt "${root_dir}"/

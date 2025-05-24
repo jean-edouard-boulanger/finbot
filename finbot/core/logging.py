@@ -8,11 +8,7 @@ def configure_logging(log_level: Optional[str] = None) -> None:
             "version": 1,
             "formatters": {
                 "default": {
-                    "format": "%(asctime)s"
-                    " (%(threadName)s)"
-                    " [%(levelname)s]"
-                    " %(message)s"
-                    " (%(filename)s:%(lineno)d)",
+                    "format": "%(asctime)s (%(threadName)s) [%(levelname)s] %(message)s (%(filename)s:%(lineno)d)",
                 }
             },
             "handlers": {
