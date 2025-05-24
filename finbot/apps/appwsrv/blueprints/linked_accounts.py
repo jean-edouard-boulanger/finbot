@@ -100,7 +100,7 @@ def link_new_account(
 
     if do_validate:
         logging.info(
-            f"validating authentication details for " f"account_id={user_account_id} and provider_id={provider_id}"
+            f"validating authentication details for account_id={user_account_id} and provider_id={provider_id}"
         )
         appwsrv_providers.validate_credentials(
             finbot_client=FinbotwsrvClient.create(),
@@ -114,7 +114,7 @@ def link_new_account(
         if repository.linked_account_exists(db_session, user_account_id, account_name):
             raise InvalidUserInput(f"A linked account with name '{account_name}' already exists")
 
-        logging.info(f"Linking external account (provider_id={provider.id})" f" to user account_id={user_account.id}")
+        logging.info(f"Linking external account (provider_id={provider.id}) to user account_id={user_account.id}")
 
         try:
             new_linked_account: LinkedAccount
@@ -129,7 +129,7 @@ def link_new_account(
                 ).decode()
         except IntegrityError:
             raise InvalidOperation(
-                f"Provider '{provider.description}' was already linked " f"as '{account_name}' in this account"
+                f"Provider '{provider.description}' was already linked as '{account_name}' in this account"
             )
 
     if do_persist:

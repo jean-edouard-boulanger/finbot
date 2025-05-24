@@ -1,12 +1,9 @@
 import base64
-import logging
-from contextlib import contextmanager
-from typing import Any, Generator, cast
-
-import pgpy
+from typing import Any
 
 from finbot.core.pydantic_ import SecretStr
 from finbot.core.schema import BaseModel, CurrencyCode
+from finbot.core.secure import pgp_decrypt
 from finbot.core.utils import some
 from finbot.providers import schema as providers_schema
 from finbot.providers.base import ProviderBase
@@ -32,15 +29,9 @@ class PGPKey(BaseModel):
     data_base64: SecretStr
     passphrase: SecretStr | None = None
 
-    @contextmanager
-    def unlocked_pgp_key(self) -> Generator[pgpy.PGPKey, None, None]:
-        pgp_key_data = base64.b64decode(self.data_base64.get_secret_value())
-        pgp_key: pgpy.PGPKey = pgpy.PGPKey.from_blob(pgp_key_data)[0]
-        if self.passphrase:
-            with pgp_key.unlock(self.passphrase.get_secret_value()):
-                yield pgp_key
-                return
-        yield pgp_key
+    @property
+    def pgp_key(self) -> bytes:
+        return base64.b64decode(self.data_base64.get_secret_value())
 
 
 class Credentials(BaseModel):
@@ -63,12 +54,12 @@ class Api(ProviderBase):
             self._credentials.report_file_pattern,
             self._credentials.intake_method,
         )
-        if self._credentials.pgp_key:
-            with self._credentials.pgp_key.unlocked_pgp_key() as pgp_key:
-                report_payload = _attempt_decrypt_flex_report_payload(
-                    payload=raw_report_payload,
-                    pgp_key=pgp_key,
-                )
+        if pgp_key := self._credentials.pgp_key:
+            report_payload = pgp_decrypt(
+                pgp_key_blob=pgp_key.pgp_key,
+                passphrase=pgp_key.passphrase.get_secret_value() if pgp_key.passphrase else None,
+                encrypted_blob=raw_report_payload,
+            ).decode()
         else:
             report_payload = raw_report_payload.decode()
         self.__report = FlexReportWrapper(parse_flex_report_payload(report_payload))
@@ -161,14 +152,3 @@ def _make_asset(
             },
         )
     raise UnsupportedFinancialInstrument(asset_category, entry.symbol)
-
-
-def _attempt_decrypt_flex_report_payload(payload: bytes, pgp_key: pgpy.PGPKey) -> str:
-    try:
-        pgp_message = pgpy.PGPMessage.from_blob(payload)
-    except ValueError:
-        # This is an indication that we tried to load a clear-text (i.e. not encrypted)
-        # flex report payload. In that case, simply attempt to decode.
-        logging.debug("report does not appear encrypted, although pgp key was provided")
-        return payload.decode()
-    return cast(str, pgp_key.decrypt(pgp_message).message.decode())

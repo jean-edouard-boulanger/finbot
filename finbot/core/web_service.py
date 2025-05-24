@@ -31,8 +31,7 @@ class RequestValidationError(FinbotError):
 
 def get_user_account_id() -> int:
     user_account_id = get_jwt_identity()
-    assert isinstance(user_account_id, int)
-    return user_account_id
+    return int(user_account_id)
 
 
 RT = TypeVar("RT")
@@ -59,7 +58,7 @@ def service_endpoint() -> Callable[[Callable[P, RT]], Callable[P, FlaskResponse]
             except HTTPException:
                 raise
             except Exception as e:
-                logging.warning("error while processing request:" f" {e}\n{traceback.format_exc()}")
+                logging.warning(f"error while processing request: {e}\n{traceback.format_exc()}")
                 return cast(
                     FlaskResponse,
                     flask.current_app.response_class(

@@ -145,7 +145,7 @@ class Scheduler(Worker):
         logging.info("[scheduler thread] starting")
         if not environment.is_production():
             logging.warning(
-                f"[scheduler thread] not scheduling jobs in the" f" '{environment.get_finbot_runtime()}' environment"
+                f"[scheduler thread] not scheduling jobs in the '{environment.get_finbot_runtime()}' environment"
             )
             while not self._stop_event.is_set():
                 time.sleep(1.0)

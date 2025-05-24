@@ -63,7 +63,7 @@ class UserAccountValuationService(object):
 
     def process_valuation(self, request: ValuationRequest) -> ValuationResponse:
         user_account_id = request.user_account_id
-        logger.info(f"starting workflow for user_id={user_account_id} " f"linked_accounts={request.linked_accounts}")
+        logger.info(f"starting workflow for user_id={user_account_id} linked_accounts={request.linked_accounts}")
 
         user_account = repository.get_user_account(self._db_session, user_account_id)
         notifier = _configure_notifier(db_session=self._db_session, user_account=user_account)
@@ -84,9 +84,7 @@ class UserAccountValuationService(object):
 
         history_report = history_metadata.report
 
-        logger.info(
-            f"history report written with id={history_report.history_entry_id}" f" {pretty_dump(history_metadata)}"
-        )
+        logger.info(f"history report written with id={history_report.history_entry_id} {pretty_dump(history_metadata)}")
         logger.info(f"valuation workflow done for user_id={user_account_id}")
 
         if request.notify_valuation:

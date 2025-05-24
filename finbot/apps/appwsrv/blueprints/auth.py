@@ -46,11 +46,11 @@ def auth_login(json: appwsrv_schema.LoginRequest) -> appwsrv_schema.LoginRespons
     return appwsrv_schema.LoginResponse(
         auth=appwsrv_schema.AuthenticationPayload(
             access_token=create_access_token(
-                identity=account.id,
+                identity=f"{account.id}",
                 expires_delta=timedelta(days=1),
             ),
             refresh_token=create_refresh_token(
-                identity=account.id,
+                identity=f"{account.id}",
                 expires_delta=timedelta(days=1),
             ),
         ),

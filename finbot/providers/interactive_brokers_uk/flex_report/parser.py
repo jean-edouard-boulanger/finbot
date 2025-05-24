@@ -52,7 +52,7 @@ def _parse_xml_to_pydantic(
         return model_type(**raw_payload)
     except PydanticValidationError as e:
         raise FlexReportParserError(
-            f"failed to convert XML to pydantic '{model_type.__name__}'" f" object (extracted payload: {raw_payload})"
+            f"failed to convert XML to pydantic '{model_type.__name__}' object (extracted payload: {raw_payload})"
         ) from e
 
 

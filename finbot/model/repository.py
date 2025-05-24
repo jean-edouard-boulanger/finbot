@@ -494,7 +494,7 @@ def get_linked_accounts_statuses(
                   select id
                     from finbot_linked_accounts
                     where user_account_id = :user_account_id
-                      and not deleted and {linked_account_ids_filter or '1 = 1'}
+                      and not deleted and {linked_account_ids_filter or "1 = 1"}
               )
            group by linked_account_id
         )

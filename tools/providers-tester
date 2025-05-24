@@ -42,6 +42,13 @@ def create_parser() -> ArgumentParser:
         default=None,
         help="Path to provider authentication payload file (JSON)"
     )
+    auth_group.add_argument(
+        "-al", "--auth-payload-from-linked-account-id",
+        type=int,
+        required=False,
+        default=None,
+        help="Use authentication payload saved with a specific linked account"
+    )
     return parser
 
 
@@ -50,6 +57,12 @@ def get_authentication_payload(settings) -> dict[str, Any] | None:
         return json.loads(settings.auth_payload)
     if settings.auth_payload_file:
         return json.loads(settings.auth_payload_file.read_text())
+    if settings.auth_payload_from_linked_account_id:
+        from finbot.model.db import db_session
+        from finbot.model import LinkedAccount
+        linked_account: LinkedAccount = db_session.query(LinkedAccount).get(settings.auth_payload_from_linked_account_id)
+        return linked_account.plain_credentials
+
     return None
 
 
