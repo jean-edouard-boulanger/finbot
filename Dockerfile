@@ -21,7 +21,7 @@ ENV PYTHONPATH="${FINBOT_ROOT_DIR}:${PYTHONPATH}"
 ENV PATH="${VENV_DIR}/bin:${PATH}"
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install -y xvfb && \
+RUN apt-get update && apt-get install -y xvfb gnupg && \
     apt-get clean
 
 COPY --from=builder ${VENV_DIR} ${VENV_DIR}
