@@ -6,7 +6,7 @@ docker run --rm -w /finbot \
   -v "${root_dir}"/requirements.in:/finbot/requirements.in:ro \
   -v "${root_dir}"/requirements-dev.in:/finbot/requirements-dev.in:ro \
   -v "${work_dir}":"${work_dir}" \
-  python:3.13-bookworm bash -c "\
+  python:3.13-bullseye bash -c "\
     set -e && \
     python3 -m venv venv/ && \
     venv/bin/pip install --upgrade pip && \
