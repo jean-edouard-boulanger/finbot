@@ -5,13 +5,16 @@ ENV VENV_DIR="/venv"
 ENV PATH="${VENV_DIR}/bin:${PATH}"
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install -y libgconf-2-4 libpq-dev
+RUN apt-get update && apt-get install -y libgconf-2-4 libpq-dev wget
 
-RUN python3 -m venv ${VENV_DIR}
+ADD https://astral.sh/uv/install.sh /uv-installer.sh
+
+RUN env XDG_BIN_HOME=/usr/local/bin sh /uv-installer.sh && rm -f /uv-installer.sh
 
 COPY requirements.txt .
 
-RUN python3 -m pip install --upgrade --no-cache-dir -r requirements.txt
+RUN uv venv ${VENV_DIR} \
+    && uv pip install -r requirements.txt
 
 FROM python:3.13-slim-bullseye AS runtime
 
@@ -57,8 +60,9 @@ RUN apt-get update && \
 
 COPY requirements-dev.txt .
 
-RUN python3 -m pip install --no-cache-dir -r requirements-dev.txt && \
-    python3 -m pip install --no-cache-dir pip-tools && \
+COPY --from=builder /usr/local/bin/uv /usr/local/bin/uv
+
+RUN uv pip install -r requirements-dev.txt && \
     echo "installing openapi-generator-cli" && \
     npm install @openapitools/openapi-generator-cli@2.7.0 -g && \
     echo "downloading pinned openapi-generator-cli version" && \
