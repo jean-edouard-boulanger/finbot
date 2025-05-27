@@ -1,4 +1,3 @@
-import time
 from abc import ABC
 from contextlib import ExitStack
 from dataclasses import dataclass
@@ -16,6 +15,8 @@ from playwright.sync_api import (
 
 from finbot.providers.base import ProviderBase
 
+HEADLESS_SETTING = "headless_playwright"
+
 
 def _get_default_chrome_options(window_size: tuple[int, int]) -> list[str]:
     return [
@@ -29,14 +30,15 @@ def _get_default_chrome_options(window_size: tuple[int, int]) -> list[str]:
 
 
 class BrowserLauncher(object):
-    def __init__(self, playwright: Playwright) -> None:
+    def __init__(self, playwright: Playwright, headless: bool) -> None:
         self._playwright = playwright
         self._browser: Browser | None = None
+        self._headless = headless
 
     def __enter__(self) -> "BrowserLauncher":
         window_size = (1920, 1080)
         self._browser = self._playwright.chromium.launch(
-            headless=True,
+            headless=self._headless,
             args=_get_default_chrome_options(window_size),
         )
         return self
@@ -79,7 +81,7 @@ class ConditionGuard(object):
         self._poll_interval = poll_interval or self.default_poll_interval
         self._timeout = timeout or self.default_timeout
 
-    def _timed_loop(self) -> Generator[None, None, None]:
+    def _timed_loop(self, page: Page) -> Generator[None, None, None]:
         timeout_at = (datetime.now() + self._timeout) if self._timeout else None
         while True:
             if timeout_at and datetime.now() >= timeout_at:
@@ -88,11 +90,11 @@ class ConditionGuard(object):
                     f" after {self._timeout.total_seconds()} seconds"
                 )
             yield
-            time.sleep(self._poll_interval.total_seconds())
+            page.wait_for_timeout(self._poll_interval.total_seconds() * 1000.0)
 
-    def wait_all(self) -> tuple[Any, ...]:
+    def wait_all(self, page: Page) -> tuple[Any, ...]:
         when_fulfilled_callbacks = [cond.when_fulfilled for cond in self._conditions]
-        for _ in self._timed_loop():
+        for _ in self._timed_loop(page):
             all_vals = tuple(cond.predicate() for cond in self._conditions)
             all_true = True
             for index, val in enumerate(all_vals):
@@ -106,17 +108,17 @@ class ConditionGuard(object):
                 return all_vals
         return tuple()
 
-    def wait_any(self) -> tuple[int, Any]:
-        for _ in self._timed_loop():
+    def wait_any(self, page: Page) -> tuple[int, Any]:
+        for _ in self._timed_loop(page):
             for index, cond in enumerate(self._conditions):
                 if val := cond.predicate():
                     cond.when_fulfilled and cond.when_fulfilled(val)
                     return index, val
         return -1, None
 
-    def wait(self) -> Any:
+    def wait(self, page: Page) -> Any:
         assert len(self._conditions) == 1
-        return self.wait_all()[0]
+        return self.wait_all(page)[0]
 
 
 class PlaywrightProviderBase(ProviderBase, ABC):
@@ -125,11 +127,12 @@ class PlaywrightProviderBase(ProviderBase, ABC):
         self._launcher: BrowserLauncher | None = None
         self._stack: ExitStack | None = None
         self._page: Page | None = None
+        self._headless: bool = kwargs.pop(HEADLESS_SETTING, True)
 
     def __enter__(self) -> Self:
         with ExitStack() as stack:
             playwright: Playwright = stack.enter_context(sync_playwright())
-            self._launcher = stack.enter_context(BrowserLauncher(playwright))
+            self._launcher = stack.enter_context(BrowserLauncher(playwright, self._headless))
             self._page = self.browser.new_page()
             self._stack = stack.pop_all()
         return self

@@ -63,7 +63,7 @@ class MainDashboardPage(object):
     def get_accounts(self) -> list[AccountValue]:
         account_locators = ConditionGuard(
             Condition(lambda: self.page.locator(".card-product-1").all()),
-        ).wait()
+        ).wait(self.page)
         return [self._extract_account(locator) for locator in account_locators]
 
 
@@ -95,7 +95,7 @@ class Api(PlaywrightProviderBase):
                     AuthenticationError(el.inner_text().strip()),
                 ),
             ),
-        ).wait_any()
+        ).wait_any(page)
         self._accounts = MainDashboardPage(page).get_accounts()
 
     def get_accounts(self) -> list[Account]:

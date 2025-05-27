@@ -70,6 +70,40 @@
             "ui:widget": "password"
           },
           "ui:order": [
+            "email",
+            "password"
+          ]
+        }
+      }
+    },
+    {
+      "id": "suravenir_fr",
+      "description": "Suravenir (FR)",
+      "website_url": "https://espaceclient.suravenir.fr/web/suravenir",
+      "credentials_schema": {
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "required": [
+            "Username",
+            "Password"
+          ],
+          "properties": {
+            "username": {
+              "title": "Username",
+              "type": "string"
+            },
+            "password": {
+              "title": "Password",
+              "type": "string"
+            }
+          }
+        },
+        "ui_schema": {
+          "password": {
+            "ui:widget": "password"
+          },
+          "ui:order": [
             "username",
             "password"
           ]
