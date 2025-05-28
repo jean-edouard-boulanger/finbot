@@ -82,7 +82,7 @@ class Api(PlaywrightProviderBase):
                     AuthenticationError(element.inner_text().strip()),
                 ),
             ),
-        ).wait_any()
+        ).wait_any(page)
 
         # 1. Enter account number
 
@@ -90,13 +90,13 @@ class Api(PlaywrightProviderBase):
         page.click("xpath=//button[@login-submit-btn]")
         keypad_locator: Locator = ConditionGuard(
             Condition(lambda: self.get_element_or_none("#clavier_num")),
-        ).wait()
+        ).wait(page)
 
         # 2. Type password and validate
 
         login_keys_by_num = {}
         for key in keypad_locator.locator(".Login-key").all():
-            ConditionGuard(Condition(lambda: key.inner_text().strip().isdigit())).wait()
+            ConditionGuard(Condition(lambda: key.inner_text().strip().isdigit())).wait(page)
             login_keys_by_num[key.inner_text().strip()] = key
         for digit in self._credentials.password.get_secret_value():
             login_keys_by_num[digit].click()
@@ -110,7 +110,7 @@ class Api(PlaywrightProviderBase):
                     AuthenticationError(el.inner_text().strip()),
                 ),
             ),
-        ).wait_any()
+        ).wait_any(page)
 
         # 2. Get account data
 
