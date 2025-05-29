@@ -1,7 +1,7 @@
 import logging
 
-from finbot.apps.appwsrv.db import db_session
 from finbot.model import repository
+from finbot.model.db import db_session
 from finbot.services.user_account_valuation import ValuationRequest
 from finbot.tasks import user_account_valuation
 

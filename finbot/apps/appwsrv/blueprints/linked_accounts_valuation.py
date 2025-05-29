@@ -9,7 +9,6 @@ from finbot.apps.appwsrv import schema as appwsrv_schema
 from finbot.apps.appwsrv import serializer
 from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
 from finbot.apps.appwsrv.core.series import order_series_by_last_value
-from finbot.apps.appwsrv.db import db_session
 from finbot.apps.appwsrv.spec import spec
 from finbot.core import schema as core_schema
 from finbot.core.errors import InvalidUserInput
@@ -17,6 +16,7 @@ from finbot.core.spec_tree import JWT_REQUIRED, ResponseSpec
 from finbot.core.utils import some
 from finbot.core.web_service import jwt_required, service_endpoint
 from finbot.model import repository
+from finbot.model.db import db_session
 
 logger = logging.getLogger(__name__)
 

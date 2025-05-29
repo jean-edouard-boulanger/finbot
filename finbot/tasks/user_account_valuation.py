@@ -1,6 +1,7 @@
 import logging
 
 from finbot.core.typing_extensions import JSONSerialized
+from finbot.model.db import db_session
 from finbot.services.user_account_snapshot import UserAccountSnapshotService
 from finbot.services.user_account_valuation import (
     UserAccountValuationService,
@@ -8,7 +9,7 @@ from finbot.services.user_account_valuation import (
     ValuationResponse,
 )
 from finbot.services.valuation_history_writer import ValuationHistoryWriterService
-from finbot.tasks.base import Client, celery_app, db_session
+from finbot.tasks.base import Client, celery_app
 
 logger = logging.getLogger(__name__)
 

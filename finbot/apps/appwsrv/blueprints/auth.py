@@ -7,12 +7,12 @@ from flask_jwt_extended import create_access_token, create_refresh_token
 from finbot.apps.appwsrv import schema as appwsrv_schema
 from finbot.apps.appwsrv import serializer
 from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
-from finbot.apps.appwsrv.db import db_session
 from finbot.apps.appwsrv.spec import spec
 from finbot.core.errors import InvalidUserInput
 from finbot.core.spec_tree import ResponseSpec
 from finbot.core.web_service import service_endpoint
 from finbot.model import repository
+from finbot.model.db import db_session
 
 auth_api = Blueprint(
     name="auth_api",

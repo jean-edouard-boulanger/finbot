@@ -6,7 +6,6 @@ from flask import Blueprint
 from finbot.apps.appwsrv import schema as appwsrv_schema
 from finbot.apps.appwsrv import serializer
 from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
-from finbot.apps.appwsrv.db import db_session
 from finbot.apps.appwsrv.spec import spec
 from finbot.core import email_delivery
 from finbot.core.email_delivery import Email, EmailService
@@ -14,6 +13,7 @@ from finbot.core.kv_store import DBKVStore
 from finbot.core.spec_tree import JWT_REQUIRED, ResponseSpec
 from finbot.core.web_service import get_user_account_id, jwt_required, service_endpoint
 from finbot.model import repository
+from finbot.model.db import db_session
 
 admin_api = Blueprint(
     name="admin_api",

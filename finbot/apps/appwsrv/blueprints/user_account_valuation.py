@@ -13,7 +13,6 @@ from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
 from finbot.apps.appwsrv.core import formatting_rules
 from finbot.apps.appwsrv.core import valuation as appwsrv_valuation
 from finbot.apps.appwsrv.core.series import order_series_by_last_value
-from finbot.apps.appwsrv.db import db_session
 from finbot.apps.appwsrv.spec import spec
 from finbot.core import schema as core_schema
 from finbot.core import timeseries
@@ -26,6 +25,7 @@ from finbot.model import (
     SubAccountItemValuationHistoryEntry,
     repository,
 )
+from finbot.model.db import db_session
 from finbot.providers.schema import AssetClass, AssetType
 
 logger = logging.getLogger(__name__)

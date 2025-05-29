@@ -5,7 +5,6 @@ from flask import Blueprint
 
 from finbot.apps.appwsrv import schema as appwsrv_schema
 from finbot.apps.appwsrv.blueprints.base import API_URL_PREFIX
-from finbot.apps.appwsrv.db import db_session
 from finbot.apps.appwsrv.reports.earnings.report import (
     generate as generate_earnings_report,
 )
@@ -18,6 +17,7 @@ from finbot.core.spec_tree import JWT_REQUIRED, ResponseSpec
 from finbot.core.utils import now_utc
 from finbot.core.web_service import get_user_account_id, jwt_required, service_endpoint
 from finbot.model import repository
+from finbot.model.db import db_session
 
 logger = logging.getLogger(__name__)
 

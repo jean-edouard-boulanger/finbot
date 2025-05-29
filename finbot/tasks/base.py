@@ -3,22 +3,15 @@ from typing import Any, Generic, TypeAlias, TypeVar
 
 from celery import Celery
 from celery.result import AsyncResult
-from sqlalchemy import create_engine
-from sqlalchemy.orm import scoped_session, sessionmaker
 
 from finbot.core import environment
-from finbot.core.db.session import Session
 from finbot.core.logging import configure_logging
 from finbot.core.schema import BaseModel
 
-db_engine = create_engine(environment.get_database_url())
-db_session = Session(scoped_session(sessionmaker(bind=db_engine)))
-
-FINBOT_ENV = environment.get()
-configure_logging(FINBOT_ENV.desired_log_level)
+configure_logging(environment.get_desired_log_level())
 
 
-celery_app = Celery("tasks", backend="rpc://", broker=FINBOT_ENV.rmq_url)
+celery_app = Celery("tasks", backend="rpc://", broker=environment.get_rmq_url())
 celery_app.conf.update(
     task_serializer="json",
     accept_content=["json"],

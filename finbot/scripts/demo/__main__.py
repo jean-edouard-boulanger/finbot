@@ -5,15 +5,12 @@ from argparse import ArgumentParser
 from datetime import date, datetime, timedelta
 
 import bcrypt
-from sqlalchemy import create_engine
-from sqlalchemy.orm import scoped_session, sessionmaker
 
 from finbot import model
 from finbot.apps.appwsrv.core.formatting_rules import ACCOUNTS_PALETTE
-from finbot.core import environment
-from finbot.core.db.session import Session
 from finbot.core.logging import configure_logging
 from finbot.core.schema import CurrencyCode
+from finbot.model.db import db_session
 from finbot.providers.schema import Asset
 from finbot.scripts.demo import scenarios, sim
 from finbot.scripts.demo.market import Market
@@ -21,9 +18,6 @@ from finbot.services.valuation_history_writer import ValuationHistoryWriterServi
 
 configure_logging()
 logger = logging.getLogger("demo")
-
-db_engine = create_engine(environment.get_database_url())
-db_session = Session(scoped_session(sessionmaker(bind=db_engine)))
 
 
 DEFAULT_DEMO_ACCOUNT_PASSWORD = "demo"

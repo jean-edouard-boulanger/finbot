@@ -3,13 +3,10 @@ import traceback
 from typing import Any
 
 from flask import Flask
-from sqlalchemy import create_engine
-from sqlalchemy.orm import scoped_session, sessionmaker
 
 from finbot.apps.finbotwsrv import schema
 from finbot.core import environment
 from finbot.core import schema as core_schema
-from finbot.core.db.session import Session
 from finbot.core.logging import configure_logging
 from finbot.core.schema import ApplicationErrorData, CurrencyCode
 from finbot.core.spec_tree import ResponseSpec, SpecTree
@@ -18,11 +15,8 @@ from finbot.providers import ProviderBase
 from finbot.providers.errors import AuthenticationError
 from finbot.providers.factory import get_provider
 
-FINBOT_ENV = environment.get()
-configure_logging(FINBOT_ENV.desired_log_level)
+configure_logging(environment.get_desired_log_level())
 
-db_engine = create_engine(FINBOT_ENV.database_url)
-db_session = Session(scoped_session(sessionmaker(bind=db_engine)))
 
 app = Flask(__name__)
 app.json = CustomJsonProvider(app)  # type: ignore

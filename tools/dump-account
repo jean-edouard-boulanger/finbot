@@ -1,20 +1,13 @@
 #!/usr/bin/env python3
 from argparse import ArgumentParser
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import scoped_session, sessionmaker
-
-from finbot.core import environment
-from finbot.core.db.session import Session
 from finbot.core.logging import configure_logging
 from finbot.core.serialization import pretty_dump
 from finbot.model import UserAccount
+from finbot.model.db import db_session
 
-FINBOT_ENV = environment.get()
-configure_logging(FINBOT_ENV.desired_log_level)
 
-db_engine = create_engine(FINBOT_ENV.database_url)
-db_session = Session(scoped_session(sessionmaker(bind=db_engine)))
+configure_logging()
 
 def create_parser() -> ArgumentParser:
     parser = ArgumentParser(description="Dump user account metadata")

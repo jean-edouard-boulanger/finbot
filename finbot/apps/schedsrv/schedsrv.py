@@ -11,22 +11,16 @@ from types import FrameType
 from typing import Generator, Iterable
 
 import schedule
-from sqlalchemy import create_engine
-from sqlalchemy.orm import scoped_session, sessionmaker
 
 from finbot.core import environment
-from finbot.core.db.session import Session
 from finbot.core.errors import FinbotError
 from finbot.core.logging import configure_logging
 from finbot.model import UserAccount
+from finbot.model.db import db_session
 from finbot.services.user_account_valuation import ValuationRequest
 from finbot.tasks.user_account_valuation import client as user_account_valuation_client
 
-FINBOT_ENV = environment.get()
-configure_logging(FINBOT_ENV.desired_log_level)
-
-db_engine = create_engine(FINBOT_ENV.database_url)
-db_session = Session(scoped_session(sessionmaker(bind=db_engine)))
+configure_logging(environment.get_desired_log_level())
 
 
 @dataclass(frozen=True)

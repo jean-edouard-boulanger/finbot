@@ -2,7 +2,7 @@ import logging
 import os
 from dataclasses import dataclass
 from functools import cache
-from typing import TypeVar, cast
+from typing import Literal, TypeVar, cast
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +62,7 @@ class Environment:
 
     @property
     def desired_log_level(self) -> str:
-        return "INFO" if self.runtime == PRODUCTION_ENV else "DEBUG"
+        return get_desired_log_level(self.runtime)
 
 
 T = TypeVar("T")
@@ -131,10 +131,15 @@ def get_finbot_runtime() -> str:
     if raw_value not in (DEVELOPMENT_ENV, PRODUCTION_ENV):
         logger.warning(
             f"got bad value for '{env_var_name}' (expected {DEVELOPMENT_ENV} or {PRODUCTION_ENV}),"
-            f" defaulting to '{DEVELOPMENT_ENV}'"
+            f" defaulting to '{PRODUCTION_ENV}'"
         )
         return PRODUCTION_ENV
     return raw_value
+
+
+def get_desired_log_level(runtime: str | None = None) -> Literal["INFO", "DEBUG"]:
+    runtime = runtime or get_finbot_runtime()
+    return "INFO" if runtime == PRODUCTION_ENV else "DEBUG"
 
 
 def get_freecurrencyapi_key() -> str:
