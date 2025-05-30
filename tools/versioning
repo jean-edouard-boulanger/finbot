@@ -2,61 +2,99 @@
 import re
 import sys
 from pathlib import Path
+from typing import Literal
 from subprocess import check_output
 
 import click
 import semver
+import subprocess
 
-from finbot._version import __version__
+import finbot._version as finbot_version
 
 VERSION_FILE_PATH = Path("finbot/_version.py")
 assert VERSION_FILE_PATH.is_file()
 
 
-def _get_master_version() -> semver.Version:
+def _get_version_var_name(for_: Literal['app', 'api']):
+    if for_ == 'app':
+        return "__version__"
+    assert for_ == "api"
+    return "__api_version__"
+
+
+def _get_master_version(for_: Literal['app', 'api']) -> semver.Version:
+    version_var_name = _get_version_var_name(for_)
     output = check_output(f"git show origin/master:{VERSION_FILE_PATH}", shell=True).decode().strip()
-    line = [line for line in output.splitlines(keepends=False) if "__version__" in line][0]
+    line = [line for line in output.splitlines(keepends=False) if version_var_name in line][0]
     raw_version = line.split("=")[1].strip('" ')
     return semver.Version.parse(raw_version)
 
 
-def _get_current_version() -> semver.Version:
-    return semver.Version.parse(__version__)
+def _get_current_version(for_: Literal['app', 'api']) -> semver.Version:
+    return semver.Version.parse(getattr(finbot_version, _get_version_var_name(for_)))
 
 
 cli = click.Group()
 
 
 @cli.command()
-def check_version_bump():
-    master_version = _get_master_version()
-    diff = semver.Version.parse(__version__).compare(master_version) > 0
+@click.option('-c', '--component', type=click.Choice(['app', 'api']), default='app')
+def check_version_bump(component: Literal['app', 'api']):
+    master_version = _get_master_version(component)
+    current_version = _get_current_version(component)
+    diff = current_version.compare(master_version) > 0
     if diff < 0:
-        print(f"Cannot downgrade Finbot app version from {master_version} to {__version__}")
+        print(f"Cannot downgrade Finbot app version from {master_version} to {current_version}")
         sys.exit(1)
     if diff == 0:
-        print(f"NOT_BUMPED={__version__}")
+        print(f"NOT_BUMPED={current_version}")
     if diff > 0:
-        print(f"BUMPED_TO={__version__}")
+        print(f"BUMPED_TO={current_version}")
     sys.exit(0)
 
 
 @cli.command()
-def get_current_version():
-    print(__version__, end='')
+@click.option('-c', '--component', type=click.Choice(['app', 'api']), default='app')
+def get_current_version(component: Literal['app', 'api']):
+    print(_get_current_version(component), end='')
 
 
 @cli.command()
-def get_master_version():
-    print(str(_get_master_version()), end='')
+@click.option('-c', '--component', type=click.Choice(['app', 'api']), default='app')
+def get_master_version(component: Literal['app', 'api']):
+    print(str(_get_master_version(component)), end='')
 
 
 @cli.command()
-@click.argument("mode", nargs=1, type=click.Choice(["patch", "minor", "major"]))
-def bump(mode: str):
-    master_version = _get_master_version()
+@click.option("-m", "--mode", type=click.Choice(["patch", "minor", "major"]), default='patch')
+@click.option('-c', '--component', type=click.Choice(['app', 'api']), default='app')
+@click.option('--commit', is_flag=True, default=False)
+def bump(
+    mode: Literal['patch', 'minor', 'major'],
+    component: Literal['app', 'api'],
+    commit: bool,
+):
+    master_version = _get_master_version(component)
     new_version = getattr(master_version, f"bump_{mode}")()
-    VERSION_FILE_PATH.write_text(f'__version__ = "{new_version}"\n')
+    var_name = _get_version_var_name(component)
+
+    current_versioning_info = VERSION_FILE_PATH.read_text()
+    new_versioning_info = re.sub(
+        rf'{var_name} = "\d+\.\d+\.\d+"',
+        rf'{var_name} = "{new_version}"',
+        current_versioning_info
+    )
+
+    VERSION_FILE_PATH.write_text(new_versioning_info)
+    if commit:
+        subprocess.check_output([
+            "git",
+            "commit",
+            "-m",
+            f"bump {component} version '{master_version}' -> '{new_version}' ({mode})",
+            "--",
+            "finbot/_version.py"
+        ])
     print(f"bumped master version from {master_version} to {new_version} ({mode})", file=sys.stderr)
 
 

@@ -1,4 +1,3 @@
-import inspect
 from typing import Any, TypeAlias
 
 from spectree import Response
@@ -14,11 +13,8 @@ JWT_REQUIRED: dict[str, list[str]] = {SECURITY_SCHEME_NAME: []}
 
 
 def get_model_key(model: type[BaseModel]) -> str:
-    model_name_prefix = None
-    model_module = inspect.getmodule(model)
-    if model_module and (namespace := getattr(model_module, "SchemaNamespace", None)):
-        model_name_prefix = namespace
-    return f"{model_name_prefix or ''}{model.__name__}"
+    schema_namespace = getattr(model, "__schema_namespace__", "")
+    return f"{schema_namespace}{model.__name__}"
 
 
 def get_nested_model_key(_: str, child_name: str) -> str:

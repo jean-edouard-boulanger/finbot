@@ -10,8 +10,6 @@ from finbot.providers.schema import (
     AssetsEntry,
 )
 
-SchemaNamespace = "DummyProvider"
-
 
 class DummyAccountData(BaseModel):
     accounts: list[Account]

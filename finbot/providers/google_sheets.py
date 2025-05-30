@@ -23,9 +23,6 @@ from finbot.providers.schema import (
     AssetType,
 )
 
-SchemaNamespace = "GoogleSheetsProvider"
-
-
 ACCOUNTS_TABLE_MARKER = "ACCOUNTS"
 HOLDINGS_TABLE_MARKER = "HOLDINGS"
 

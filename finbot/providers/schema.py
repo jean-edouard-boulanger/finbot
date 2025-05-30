@@ -5,7 +5,6 @@ from finbot.core.pydantic_ import Field, root_validator
 from finbot.core.schema import BaseModel, CurrencyCode
 
 ProviderSpecificPayloadType: TypeAlias = dict[str, str | int | float | bool]
-SchemaNamespace = "Providers"
 
 
 DEPOSITORY_ACCOUNT_SUB_TYPES = (

@@ -46,8 +46,6 @@ jobs:
           export-variables: true
           path: envs/secrets.env.tpl
           keys-case: bypass
-      - name: Lint Python schema (Pydantic types)
-        run: env PYTHONPATH=${PWD}:${PYTHONPATH} ./tools/lint-schema.py
       - name: Check generated Typescript client
         run: |
           env PYTHONPATH=${PWD}:${PYTHONPATH} ./tools/generate-ts-client

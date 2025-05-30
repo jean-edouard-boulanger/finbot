@@ -21,8 +21,6 @@ OWNERSHIP_UNITS_THRESHOLD = 0.00001
 KRAKEN_CASH_SYMBOL_PREFIX = "Z"
 KRAKEN_CRYPTOCURRENCY_SYMBOL_PREFIX = "X"
 
-SchemaNamespace = "KrakenProvider"
-
 
 class Credentials(BaseModel):
     api_key: SecretStr

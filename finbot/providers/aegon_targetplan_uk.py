@@ -25,7 +25,6 @@ from finbot.providers.schema import (
 
 AUTH_URL = "https://lwp.aegon.co.uk/targetplanUI/login"
 BALANCES_URL = "https://lwp.aegon.co.uk/targetplanUI/investments"
-SchemaNamespace = "AegonProvider"
 
 
 class AegonTargetplanCredentials(BaseModel):

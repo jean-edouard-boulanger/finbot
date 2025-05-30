@@ -16,7 +16,6 @@ from finbot.providers.schema import (
 )
 
 AUTH_URL = "https://app.qonto.com/signin"
-SchemaNamespace = "QontoProvider"
 
 
 class Credentials(BaseModel):

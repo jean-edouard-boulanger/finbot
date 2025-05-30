@@ -4,8 +4,6 @@ from typing import Literal, TypeAlias
 from finbot.core.schema import ApplicationErrorData, BaseModel, CredentialsPayloadType, CurrencyCode
 from finbot.providers import schema as providers_schema
 
-SchemaNamespace = "Finbot"
-
 
 class LineItem(str, Enum):
     Accounts = "Accounts"

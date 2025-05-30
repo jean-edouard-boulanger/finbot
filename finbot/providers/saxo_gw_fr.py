@@ -17,8 +17,6 @@ from finbot.providers.schema import (
     AssetType,
 )
 
-SchemaNamespace = "SaxoProvider"
-
 
 class Credentials(BaseModel):
     api_key: SecretStr
