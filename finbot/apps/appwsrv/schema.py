@@ -11,14 +11,17 @@ from finbot.providers import schema as providers_schema
 JsonSchemaType: TypeAlias = dict[str, Any]
 CredentialsSchemaType: TypeAlias = JsonSchemaType
 CredentialsPayloadType: TypeAlias = dict[str, Any]
-SchemaNamespace = "App"
 
 
-class UnsetField(BaseModel):
+class AppModel(BaseModel):
+    __schema_namespace__ = "App"
+
+
+class UnsetField(AppModel):
     pass
 
 
-class ErrorMetadata(BaseModel):
+class ErrorMetadata(AppModel):
     user_message: str
     debug_message: str | None
     error_code: str | None
@@ -29,24 +32,24 @@ class ErrorMetadata(BaseModel):
         extra = Extra.ignore
 
 
-class AuthenticationPayload(BaseModel):
+class AuthenticationPayload(AppModel):
     access_token: str
     refresh_token: str
 
 
-class UserAccountProfile(BaseModel):
+class UserAccountProfile(AppModel):
     email: str
     full_name: str
     mobile_phone_number: str | None
 
 
-class UserAccountSettings(BaseModel):
+class UserAccountSettings(AppModel):
     valuation_ccy: str
     created_at: datetime
     updated_at: datetime | None
 
 
-class UserAccount(BaseModel):
+class UserAccount(AppModel):
     id: int
     email: str
     full_name: str
@@ -56,7 +59,7 @@ class UserAccount(BaseModel):
     updated_at: datetime | None
 
 
-class Provider(BaseModel):
+class Provider(AppModel):
     id: str
     description: str
     website_url: str
@@ -65,19 +68,19 @@ class Provider(BaseModel):
     updated_at: datetime | None
 
 
-class LinkedAccountStatusErrorEntry(BaseModel):
+class LinkedAccountStatusErrorEntry(AppModel):
     scope: str
     error: ErrorMetadata
 
 
-class LinkedAccountStatus(BaseModel):
+class LinkedAccountStatus(AppModel):
     status: Literal["stable", "unstable"]
     errors: list[LinkedAccountStatusErrorEntry] | None
     last_snapshot_id: int
     last_snapshot_time: datetime
 
 
-class LinkedAccount(BaseModel):
+class LinkedAccount(AppModel):
     id: int
     user_account_id: int
     account_name: str
@@ -92,160 +95,160 @@ class LinkedAccount(BaseModel):
     updated_at: datetime | None
 
 
-class SystemReport(BaseModel):
+class SystemReport(AppModel):
     finbot_version: str
     finbot_api_version: str
     runtime: str
     is_demo: bool
 
 
-class LoginRequest(BaseModel):
+class LoginRequest(AppModel):
     email: str
     password: str
 
 
-class LoginResponse(BaseModel):
+class LoginResponse(AppModel):
     auth: AuthenticationPayload
     account: UserAccount
 
 
-class SystemReportResponse(BaseModel):
+class SystemReportResponse(AppModel):
     system_report: SystemReport
 
 
-class UpdateLinkedAccountMetadataRequest(BaseModel):
+class UpdateLinkedAccountMetadataRequest(AppModel):
     account_name: str | None = None
     account_colour: HexColour | None = None
     frozen: bool | None = None
 
 
-class UpdateLinkedAccountMetadataResponse(BaseModel):
+class UpdateLinkedAccountMetadataResponse(AppModel):
     pass
 
 
-class LinkAccountCommitParams(BaseModel):
+class LinkAccountCommitParams(AppModel):
     do_validate: bool = Field(default=True, alias="validate")
     do_persist: bool = Field(default=True, alias="persist")
 
 
-class LinkAccountRequest(BaseModel):
+class LinkAccountRequest(AppModel):
     provider_id: str
     credentials: CredentialsPayloadType
     account_name: str
     account_colour: HexColour
 
 
-class LinkAccountResponse(BaseModel):
+class LinkAccountResponse(AppModel):
     pass
 
 
-class UpdateLinkedAccountCredentialsRequest(BaseModel):
+class UpdateLinkedAccountCredentialsRequest(AppModel):
     credentials: CredentialsPayloadType
 
 
-class UpdateLinkedAccountCredentialsResponse(BaseModel):
+class UpdateLinkedAccountCredentialsResponse(AppModel):
     pass
 
 
-class GetLinkedAccountsResponse(BaseModel):
+class GetLinkedAccountsResponse(AppModel):
     linked_accounts: list[LinkedAccount]
 
 
-class GetLinkedAccountResponse(BaseModel):
+class GetLinkedAccountResponse(AppModel):
     linked_account: LinkedAccount
 
 
-class DeleteLinkedAccountResponse(BaseModel):
+class DeleteLinkedAccountResponse(AppModel):
     pass
 
 
-class CreateOrUpdateProviderRequest(BaseModel):
+class CreateOrUpdateProviderRequest(AppModel):
     id: str
     description: str
     website_url: str
     credentials_schema: CredentialsSchemaType
 
 
-class CreateOrUpdateProviderResponse(BaseModel):
+class CreateOrUpdateProviderResponse(AppModel):
     provider: Provider
 
 
-class GetProvidersResponse(BaseModel):
+class GetProvidersResponse(AppModel):
     providers: list[Provider]
 
 
-class GetProviderResponse(BaseModel):
+class GetProviderResponse(AppModel):
     provider: Provider
 
 
-class DeleteProviderResponse(BaseModel):
+class DeleteProviderResponse(AppModel):
     pass
 
 
-class UserAccountCreationSettings(BaseModel):
+class UserAccountCreationSettings(AppModel):
     valuation_ccy: str
 
 
-class CreateUserAccountRequest(BaseModel):
+class CreateUserAccountRequest(AppModel):
     email: str
     password: SecretStr
     full_name: str
     settings: UserAccountCreationSettings
 
 
-class CreateUserAccountResponse(BaseModel):
+class CreateUserAccountResponse(AppModel):
     user_account: UserAccount
 
 
-class GetUserAccountResponse(BaseModel):
+class GetUserAccountResponse(AppModel):
     user_account: UserAccount
 
 
-class UpdateUserAccountPasswordRequest(BaseModel):
+class UpdateUserAccountPasswordRequest(AppModel):
     old_password: SecretStr
     new_password: SecretStr
 
 
-class UpdateUserAccountPasswordResponse(BaseModel):
+class UpdateUserAccountPasswordResponse(AppModel):
     pass
 
 
-class UpdateUserAccountProfileRequest(BaseModel):
+class UpdateUserAccountProfileRequest(AppModel):
     email: str
     full_name: str
     mobile_phone_number: str | None = None
 
 
-class UpdateUserAccountProfileResponse(BaseModel):
+class UpdateUserAccountProfileResponse(AppModel):
     profile: UserAccountProfile
 
 
-class GetUserAccountSettingsResponse(BaseModel):
+class GetUserAccountSettingsResponse(AppModel):
     settings: UserAccountSettings
 
 
-class IsUserAccountConfiguredResponse(BaseModel):
+class IsUserAccountConfiguredResponse(AppModel):
     configured: bool
 
 
-class IsEmailAvailableRequestParams(BaseModel):
+class IsEmailAvailableRequestParams(AppModel):
     email: str
 
 
-class IsEmailAvailableResponse(BaseModel):
+class IsEmailAvailableResponse(AppModel):
     available: bool
 
 
-class TriggerUserAccountValuationResponse(BaseModel):
+class TriggerUserAccountValuationResponse(AppModel):
     pass
 
 
-class UserAccountValuationSparklineEntry(BaseModel):
+class UserAccountValuationSparklineEntry(AppModel):
     effective_at: datetime
     value: float | None
 
 
-class UserAccountValuation(BaseModel):
+class UserAccountValuation(AppModel):
     date: datetime
     currency: str
     value: float
@@ -254,183 +257,183 @@ class UserAccountValuation(BaseModel):
     sparkline: list[UserAccountValuationSparklineEntry]
 
 
-class GetUserAccountValuationResponse(BaseModel):
+class GetUserAccountValuationResponse(AppModel):
     valuation: UserAccountValuation
 
 
-class GroupValuation(BaseModel):
+class GroupValuation(AppModel):
     name: str
     colour: HexColour
     value: float
 
 
-class ValuationByAssetType(BaseModel):
+class ValuationByAssetType(AppModel):
     valuation_ccy: str
     by_asset_type: list[GroupValuation]
 
 
-class GetUserAccountValuationByAssetTypeResponse(BaseModel):
+class GetUserAccountValuationByAssetTypeResponse(AppModel):
     valuation: ValuationByAssetType
 
 
-class ValuationByAssetClass(BaseModel):
+class ValuationByAssetClass(AppModel):
     valuation_ccy: str
     by_asset_class: list[GroupValuation]
 
 
-class GetUserAccountValuationByAssetClassResponse(BaseModel):
+class GetUserAccountValuationByAssetClassResponse(AppModel):
     valuation: ValuationByAssetClass
 
 
-class ValuationByCurrencyExposure(BaseModel):
+class ValuationByCurrencyExposure(AppModel):
     valuation_ccy: str
     by_currency_exposure: list[GroupValuation]
 
 
-class GetUserAccountValuationByCurrencyExposureResponse(BaseModel):
+class GetUserAccountValuationByCurrencyExposureResponse(AppModel):
     valuation: ValuationByCurrencyExposure
 
 
-class HistoricalValuationParams(BaseModel):
+class HistoricalValuationParams(AppModel):
     from_time: datetime | None = None
     to_time: datetime | None = None
     frequency: core_schema.ValuationFrequency = core_schema.ValuationFrequency.Daily
 
 
-class XAxisDescription(BaseModel):
+class XAxisDescription(AppModel):
     type: str
     categories: list[str | date | datetime]
 
 
-class SeriesDescription(BaseModel):
+class SeriesDescription(AppModel):
     name: str
     data: list[int | float | None]
     colour: str
 
 
-class SeriesData(BaseModel):
+class SeriesData(AppModel):
     x_axis: XAxisDescription
     series: list[SeriesDescription]
 
 
-class HistoricalValuation(BaseModel):
+class HistoricalValuation(AppModel):
     valuation_ccy: str
     series_data: SeriesData
 
 
-class GetUserAccountValuationHistoryResponse(BaseModel):
+class GetUserAccountValuationHistoryResponse(AppModel):
     historical_valuation: HistoricalValuation
 
 
-class GetUserAccountValuationHistoryByAssetTypeResponse(BaseModel):
+class GetUserAccountValuationHistoryByAssetTypeResponse(AppModel):
     historical_valuation: HistoricalValuation
 
 
-class GetUserAccountValuationHistoryByAssetClassResponse(BaseModel):
+class GetUserAccountValuationHistoryByAssetClassResponse(AppModel):
     historical_valuation: HistoricalValuation
 
 
-class LinkedAccountValuation(BaseModel):
+class LinkedAccountValuation(AppModel):
     date: datetime
     currency: str
     value: float
     change: core_schema.ValuationChange
 
 
-class LinkedAccountValuationLinkedAccountDescription(BaseModel):
+class LinkedAccountValuationLinkedAccountDescription(AppModel):
     id: int
     provider_id: str
     description: str
     account_colour: HexColour
 
 
-class LinkedAccountValuationEntry(BaseModel):
+class LinkedAccountValuationEntry(AppModel):
     linked_account: LinkedAccountValuationLinkedAccountDescription
     valuation: LinkedAccountValuation
 
 
-class LinkedAccountsValuation(BaseModel):
+class LinkedAccountsValuation(AppModel):
     valuation_ccy: str
     entries: list[LinkedAccountValuationEntry]
 
 
-class GetLinkedAccountsValuationResponse(BaseModel):
+class GetLinkedAccountsValuationResponse(AppModel):
     valuation: LinkedAccountsValuation
 
 
-class GetLinkedAccountsHistoricalValuation(BaseModel):
+class GetLinkedAccountsHistoricalValuation(AppModel):
     historical_valuation: HistoricalValuation
 
 
-class EmailProviderMetadata(BaseModel):
+class EmailProviderMetadata(AppModel):
     provider_id: str
     description: str
     settings_schema: dict[str, Any]
 
 
-class GetEmailDeliveryProvidersResponse(BaseModel):
+class GetEmailDeliveryProvidersResponse(AppModel):
     providers: list[EmailProviderMetadata]
 
 
-class EmailDeliverySettings(BaseModel):
+class EmailDeliverySettings(AppModel):
     subject_prefix: str
     sender_name: str
     provider_id: str
     provider_settings: dict[str, Any]
 
 
-class GetEmailDeliverySettingsResponse(BaseModel):
+class GetEmailDeliverySettingsResponse(AppModel):
     settings: EmailDeliverySettings | None
 
 
-class SetEmailDeliverySettingsParams(BaseModel):
+class SetEmailDeliverySettingsParams(AppModel):
     do_validate: bool = Field(default=False, alias="validate")
 
 
-class SetEmailDeliverySettingsResponse(BaseModel):
+class SetEmailDeliverySettingsResponse(AppModel):
     pass
 
 
-class RemoveEmailDeliverySettingsResponse(BaseModel):
+class RemoveEmailDeliverySettingsResponse(AppModel):
     pass
 
 
-class GetHoldingsReportResponse(BaseModel):
+class GetHoldingsReportResponse(AppModel):
     report: holdings_schema.ValuationTree
 
 
-class GetEarningsReportResponse(BaseModel):
+class GetEarningsReportResponse(AppModel):
     report: earnings_schema.EarningsReport
 
 
-class PlaidSettings(BaseModel):
+class PlaidSettings(AppModel):
     environment: str
     client_id: str
     public_key: str
 
 
-class GetPlaidSettingsResponse(BaseModel):
+class GetPlaidSettingsResponse(AppModel):
     settings: PlaidSettings | None
 
 
-class AssetClassFormattingRule(BaseModel):
+class AssetClassFormattingRule(AppModel):
     asset_class: providers_schema.AssetClass
     pretty_name: str
     dominant_colour: HexColour
 
 
-class AssetTypeFormattingRule(BaseModel):
+class AssetTypeFormattingRule(AppModel):
     asset_type: providers_schema.AssetType
     pretty_name: str
     abbreviated_name: str
 
 
-class AssetTypeClassFormattingRule(BaseModel):
+class AssetTypeClassFormattingRule(AppModel):
     asset_type: providers_schema.AssetType
     asset_class: providers_schema.AssetClass
     pretty_name: str
     dominant_colour: HexColour
 
 
-class GetAccountsFormattingRulesResponse(BaseModel):
+class GetAccountsFormattingRulesResponse(AppModel):
     colour_palette: list[HexColour]

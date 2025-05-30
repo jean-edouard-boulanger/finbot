@@ -1,0 +1,4101 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+        "title": "Finbot application service",
+        "description": "API documentation for appwsrv",
+        "version": "v0.0.6"
+    },
+    "tags": [
+        {
+            "name": "System"
+        },
+        {
+            "name": "Administration"
+        },
+        {
+            "name": "Authentication"
+        },
+        {
+            "name": "Financial data providers"
+        },
+        {
+            "name": "User accounts"
+        },
+        {
+            "name": "Linked accounts"
+        },
+        {
+            "name": "User accounts (reports)"
+        },
+        {
+            "name": "User accounts (valuation)"
+        },
+        {
+            "name": "Linked accounts (valuation)"
+        },
+        {
+            "name": "Formatting rules"
+        }
+    ],
+    "paths": {
+        "/api/v1/healthy/": {
+            "get": {
+                "summary": "Is server healthy",
+                "operationId": "is_healthy",
+                "description": "",
+                "tags": [
+                    "System"
+                ],
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HealthResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/system_report/": {
+            "get": {
+                "summary": "Get system report",
+                "operationId": "get_system_report",
+                "description": "",
+                "tags": [
+                    "System"
+                ],
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppSystemReportResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/settings/email_delivery/providers/": {
+            "get": {
+                "summary": "Get email delivery providers",
+                "operationId": "get_email_delivery_providers",
+                "description": "",
+                "tags": [
+                    "Administration"
+                ],
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppGetEmailDeliveryProvidersResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin/settings/email_delivery/": {
+            "get": {
+                "summary": "Get email delivery settings",
+                "operationId": "get_email_delivery_settings",
+                "description": "",
+                "tags": [
+                    "Administration"
+                ],
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppGetEmailDeliverySettingsResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "summary": "set_email_delivery_settings <PUT>",
+                "operationId": "set_email_delivery_settings",
+                "description": "",
+                "tags": [
+                    "Administration"
+                ],
+                "parameters": [
+                    {
+                        "name": "validate",
+                        "in": "query",
+                        "schema": {
+                            "title": "Validate",
+                            "default": false,
+                            "type": "boolean"
+                        },
+                        "required": false,
+                        "description": ""
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppSetEmailDeliverySettingsResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AppEmailDeliverySettings"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "summary": "remove_email_delivery_settings <DELETE>",
+                "operationId": "remove_email_delivery_settings",
+                "description": "",
+                "tags": [
+                    "Administration"
+                ],
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppRemoveEmailDeliverySettingsResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/auth/login/": {
+            "post": {
+                "summary": "Authenticate user",
+                "operationId": "authenticate_user",
+                "description": "",
+                "tags": [
+                    "Authentication"
+                ],
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppLoginResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AppLoginRequest"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/providers/": {
+            "put": {
+                "summary": "Update or create provider",
+                "operationId": "update_or_create_financial_data_provider",
+                "description": "",
+                "tags": [
+                    "Financial data providers"
+                ],
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppCreateOrUpdateProviderResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AppCreateOrUpdateProviderRequest"
+                            }
+                        }
+                    }
+                }
+            },
+            "get": {
+                "summary": "Get providers",
+                "operationId": "get_financial_data_providers",
+                "description": "",
+                "tags": [
+                    "Financial data providers"
+                ],
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppGetProvidersResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/providers/{provider_id}/": {
+            "get": {
+                "summary": "Get provider",
+                "operationId": "get_financial_data_provider",
+                "description": "",
+                "tags": [
+                    "Financial data providers"
+                ],
+                "parameters": [
+                    {
+                        "name": "provider_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": ""
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppGetProviderResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "summary": "Delete provider",
+                "operationId": "delete_financial_data_provider",
+                "description": "",
+                "tags": [
+                    "Financial data providers"
+                ],
+                "parameters": [
+                    {
+                        "name": "provider_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": ""
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppDeleteProviderResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/providers/plaid/settings/": {
+            "get": {
+                "summary": "Get plaid settings",
+                "operationId": "get_plaid_settings",
+                "description": "",
+                "tags": [
+                    "Financial data providers"
+                ],
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppGetPlaidSettingsResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/accounts/": {
+            "post": {
+                "summary": "create_user_account <POST>",
+                "operationId": "create_user_account",
+                "description": "",
+                "tags": [
+                    "User accounts"
+                ],
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppCreateUserAccountResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AppCreateUserAccountRequest"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/accounts/{user_account_id}/": {
+            "get": {
+                "summary": "get_user_account <GET>",
+                "operationId": "get_user_account",
+                "description": "",
+                "tags": [
+                    "User accounts"
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "description": ""
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppGetUserAccountResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/accounts/{user_account_id}/password/": {
+            "put": {
+                "summary": "update_user_account_password <PUT>",
+                "operationId": "update_user_account_password",
+                "description": "",
+                "tags": [
+                    "User accounts"
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "description": ""
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppUpdateUserAccountPasswordResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AppUpdateUserAccountPasswordRequest"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/accounts/{user_account_id}/profile/": {
+            "put": {
+                "summary": "update_user_account_profile <PUT>",
+                "operationId": "update_user_account_profile",
+                "description": "",
+                "tags": [
+                    "User accounts"
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "description": ""
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppUpdateUserAccountProfileResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AppUpdateUserAccountProfileRequest"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/accounts/{user_account_id}/settings/": {
+            "get": {
+                "summary": "get_user_account_settings <GET>",
+                "operationId": "get_user_account_settings",
+                "description": "",
+                "tags": [
+                    "User accounts"
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "description": ""
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppGetUserAccountSettingsResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/accounts/{user_account_id}/is_configured/": {
+            "get": {
+                "summary": "is_user_account_configured <GET>",
+                "operationId": "is_user_account_configured",
+                "description": "",
+                "tags": [
+                    "User accounts"
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "description": ""
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppIsUserAccountConfiguredResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/accounts/email_available/": {
+            "get": {
+                "summary": "is_email_available <GET>",
+                "operationId": "is_email_available",
+                "description": "",
+                "tags": [
+                    "User accounts"
+                ],
+                "parameters": [
+                    {
+                        "name": "email",
+                        "in": "query",
+                        "schema": {
+                            "title": "Email",
+                            "type": "string"
+                        },
+                        "required": true,
+                        "description": ""
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppIsEmailAvailableResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/accounts/{user_account_id}/linked_accounts/": {
+            "get": {
+                "summary": "Get linked accounts",
+                "operationId": "get_user_account_linked_accounts",
+                "description": "",
+                "tags": [
+                    "Linked accounts"
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "description": ""
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppGetLinkedAccountsResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "summary": "Link new account",
+                "operationId": "link_new_account",
+                "description": "",
+                "tags": [
+                    "Linked accounts"
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "description": ""
+                    },
+                    {
+                        "name": "validate",
+                        "in": "query",
+                        "schema": {
+                            "title": "Validate",
+                            "default": true,
+                            "type": "boolean"
+                        },
+                        "required": false,
+                        "description": ""
+                    },
+                    {
+                        "name": "persist",
+                        "in": "query",
+                        "schema": {
+                            "title": "Persist",
+                            "default": true,
+                            "type": "boolean"
+                        },
+                        "required": false,
+                        "description": ""
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppLinkAccountResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AppLinkAccountRequest"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/accounts/{user_account_id}/linked_accounts/{linked_account_id}/": {
+            "get": {
+                "summary": "Get linked account",
+                "operationId": "get_linked_account",
+                "description": "",
+                "tags": [
+                    "Linked accounts"
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "description": ""
+                    },
+                    {
+                        "name": "linked_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "description": ""
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppGetLinkedAccountResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "summary": "Delete linked account",
+                "operationId": "delete_linked_account",
+                "description": "",
+                "tags": [
+                    "Linked accounts"
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "description": ""
+                    },
+                    {
+                        "name": "linked_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "description": ""
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppDeleteLinkedAccountResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/accounts/{user_account_id}/linked_accounts/{linked_account_id}/metadata/": {
+            "put": {
+                "summary": "Update linked account metadata",
+                "operationId": "update_linked_account_metadata",
+                "description": "",
+                "tags": [
+                    "Linked accounts"
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "description": ""
+                    },
+                    {
+                        "name": "linked_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "description": ""
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppUpdateLinkedAccountMetadataResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AppUpdateLinkedAccountMetadataRequest"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/accounts/{user_account_id}/linked_accounts/{linked_account_id}/credentials/": {
+            "put": {
+                "summary": "Update linked account credentials",
+                "operationId": "update_linked_account_credentials",
+                "description": "",
+                "tags": [
+                    "Linked accounts"
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "description": ""
+                    },
+                    {
+                        "name": "linked_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "description": ""
+                    },
+                    {
+                        "name": "validate",
+                        "in": "query",
+                        "schema": {
+                            "title": "Validate",
+                            "default": true,
+                            "type": "boolean"
+                        },
+                        "required": false,
+                        "description": ""
+                    },
+                    {
+                        "name": "persist",
+                        "in": "query",
+                        "schema": {
+                            "title": "Persist",
+                            "default": true,
+                            "type": "boolean"
+                        },
+                        "required": false,
+                        "description": ""
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppUpdateLinkedAccountCredentialsResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AppUpdateLinkedAccountCredentialsRequest"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/reports/holdings/": {
+            "get": {
+                "summary": "Get holdings report",
+                "operationId": "get_user_account_holdings_report",
+                "description": "",
+                "tags": [
+                    "User accounts (reports)"
+                ],
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppGetHoldingsReportResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/reports/earnings/": {
+            "get": {
+                "summary": "Get earnings report",
+                "operationId": "get_user_account_earnings_report",
+                "description": "",
+                "tags": [
+                    "User accounts (reports)"
+                ],
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppGetEarningsReportResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/accounts/{user_account_id}/valuation/trigger/": {
+            "post": {
+                "summary": "Trigger user account valuation",
+                "operationId": "trigger_user_account_valuation",
+                "description": "",
+                "tags": [
+                    "User accounts (valuation)"
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "description": ""
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppTriggerUserAccountValuationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/accounts/{user_account_id}/valuation/": {
+            "get": {
+                "summary": "Get user account valuation",
+                "operationId": "get_user_account_valuation",
+                "description": "",
+                "tags": [
+                    "User accounts (valuation)"
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "description": ""
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppGetUserAccountValuationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/accounts/{user_account_id}/valuation/by/asset_type/": {
+            "get": {
+                "summary": "Get user account valuation by asset type",
+                "operationId": "get_user_account_valuation_by_asset_type",
+                "description": "",
+                "tags": [
+                    "User accounts (valuation)"
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "description": ""
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppGetUserAccountValuationByAssetTypeResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/accounts/{user_account_id}/valuation/by/currency_exposure/": {
+            "get": {
+                "summary": "Get user account valuation by currency exposure",
+                "operationId": "get_user_account_valuation_by_currency_exposure",
+                "description": "",
+                "tags": [
+                    "User accounts (valuation)"
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "description": ""
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppGetUserAccountValuationByCurrencyExposureResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/accounts/{user_account_id}/valuation/by/asset_class/": {
+            "get": {
+                "summary": "Get user account valuation by asset class",
+                "operationId": "get_user_account_valuation_by_asset_class",
+                "description": "",
+                "tags": [
+                    "User accounts (valuation)"
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "description": ""
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppGetUserAccountValuationByAssetClassResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/accounts/{user_account_id}/valuation/history/": {
+            "get": {
+                "summary": "Get user account valuation historical valuation",
+                "operationId": "get_user_account_historical_valuation",
+                "description": "",
+                "tags": [
+                    "User accounts (valuation)"
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "description": ""
+                    },
+                    {
+                        "name": "from_time",
+                        "in": "query",
+                        "schema": {
+                            "title": "From Time",
+                            "type": "string",
+                            "format": "date-time"
+                        },
+                        "required": false,
+                        "description": ""
+                    },
+                    {
+                        "name": "to_time",
+                        "in": "query",
+                        "schema": {
+                            "title": "To Time",
+                            "type": "string",
+                            "format": "date-time"
+                        },
+                        "required": false,
+                        "description": ""
+                    },
+                    {
+                        "name": "frequency",
+                        "in": "query",
+                        "schema": {
+                            "default": "Daily",
+                            "allOf": [
+                                {
+                                    "$ref": "#/components/schemas/ValuationFrequency"
+                                }
+                            ]
+                        },
+                        "required": false,
+                        "description": ""
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppGetUserAccountValuationHistoryResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/accounts/{user_account_id}/valuation/history/by/asset_type/": {
+            "get": {
+                "summary": "Get user account valuation historical valuation by asset type",
+                "operationId": "get_user_account_historical_valuation_by_asset_type",
+                "description": "",
+                "tags": [
+                    "User accounts (valuation)"
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "description": ""
+                    },
+                    {
+                        "name": "from_time",
+                        "in": "query",
+                        "schema": {
+                            "title": "From Time",
+                            "type": "string",
+                            "format": "date-time"
+                        },
+                        "required": false,
+                        "description": ""
+                    },
+                    {
+                        "name": "to_time",
+                        "in": "query",
+                        "schema": {
+                            "title": "To Time",
+                            "type": "string",
+                            "format": "date-time"
+                        },
+                        "required": false,
+                        "description": ""
+                    },
+                    {
+                        "name": "frequency",
+                        "in": "query",
+                        "schema": {
+                            "default": "Daily",
+                            "allOf": [
+                                {
+                                    "$ref": "#/components/schemas/ValuationFrequency"
+                                }
+                            ]
+                        },
+                        "required": false,
+                        "description": ""
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppGetUserAccountValuationHistoryByAssetTypeResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/accounts/{user_account_id}/valuation/history/by/asset_class/": {
+            "get": {
+                "summary": "Get user account valuation historical valuation by asset class",
+                "operationId": "get_user_account_historical_valuation_by_asset_class",
+                "description": "",
+                "tags": [
+                    "User accounts (valuation)"
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "description": ""
+                    },
+                    {
+                        "name": "from_time",
+                        "in": "query",
+                        "schema": {
+                            "title": "From Time",
+                            "type": "string",
+                            "format": "date-time"
+                        },
+                        "required": false,
+                        "description": ""
+                    },
+                    {
+                        "name": "to_time",
+                        "in": "query",
+                        "schema": {
+                            "title": "To Time",
+                            "type": "string",
+                            "format": "date-time"
+                        },
+                        "required": false,
+                        "description": ""
+                    },
+                    {
+                        "name": "frequency",
+                        "in": "query",
+                        "schema": {
+                            "default": "Daily",
+                            "allOf": [
+                                {
+                                    "$ref": "#/components/schemas/ValuationFrequency"
+                                }
+                            ]
+                        },
+                        "required": false,
+                        "description": ""
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppGetUserAccountValuationHistoryByAssetClassResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/accounts/{user_account_id}/linked_accounts/valuation/": {
+            "get": {
+                "summary": "Get linked accounts valuation",
+                "operationId": "get_linked_accounts_valuation",
+                "description": "",
+                "tags": [
+                    "Linked accounts (valuation)"
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "description": ""
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppGetLinkedAccountsValuationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/accounts/{user_account_id}/linked_accounts/valuation/history/": {
+            "get": {
+                "summary": "Get linked accounts historical valuation",
+                "operationId": "get_linked_accounts_historical_valuation",
+                "description": "",
+                "tags": [
+                    "Linked accounts (valuation)"
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        },
+                        "description": ""
+                    },
+                    {
+                        "name": "from_time",
+                        "in": "query",
+                        "schema": {
+                            "title": "From Time",
+                            "type": "string",
+                            "format": "date-time"
+                        },
+                        "required": false,
+                        "description": ""
+                    },
+                    {
+                        "name": "to_time",
+                        "in": "query",
+                        "schema": {
+                            "title": "To Time",
+                            "type": "string",
+                            "format": "date-time"
+                        },
+                        "required": false,
+                        "description": ""
+                    },
+                    {
+                        "name": "frequency",
+                        "in": "query",
+                        "schema": {
+                            "default": "Daily",
+                            "allOf": [
+                                {
+                                    "$ref": "#/components/schemas/ValuationFrequency"
+                                }
+                            ]
+                        },
+                        "required": false,
+                        "description": ""
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppGetLinkedAccountsHistoricalValuation"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/formatting_rules/accounts/": {
+            "get": {
+                "summary": "Get accounts formatting rules",
+                "operationId": "get_accounts_formatting_rules",
+                "description": "",
+                "tags": [
+                    "Formatting rules"
+                ],
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppGetAccountsFormattingRulesResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "HealthResponse": {
+                "title": "HealthResponse",
+                "type": "object",
+                "properties": {
+                    "healthy": {
+                        "title": "Healthy",
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "healthy"
+                ],
+                "additionalProperties": false
+            },
+            "ValidationError": {
+                "title": "ValidationError",
+                "description": "Model of a validation error response.",
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/ValidationErrorElement"
+                }
+            },
+            "AppSystemReportResponse": {
+                "title": "SystemReportResponse",
+                "type": "object",
+                "properties": {
+                    "system_report": {
+                        "$ref": "#/components/schemas/SystemReport"
+                    }
+                },
+                "required": [
+                    "system_report"
+                ],
+                "additionalProperties": false
+            },
+            "AppGetEmailDeliveryProvidersResponse": {
+                "title": "GetEmailDeliveryProvidersResponse",
+                "type": "object",
+                "properties": {
+                    "providers": {
+                        "title": "Providers",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/EmailProviderMetadata"
+                        }
+                    }
+                },
+                "required": [
+                    "providers"
+                ],
+                "additionalProperties": false
+            },
+            "AppGetEmailDeliverySettingsResponse": {
+                "title": "GetEmailDeliverySettingsResponse",
+                "type": "object",
+                "properties": {
+                    "settings": {
+                        "$ref": "#/components/schemas/EmailDeliverySettings"
+                    }
+                },
+                "additionalProperties": false
+            },
+            "AppSetEmailDeliverySettingsParams": {
+                "title": "SetEmailDeliverySettingsParams",
+                "type": "object",
+                "properties": {
+                    "validate": {
+                        "title": "Validate",
+                        "default": false,
+                        "type": "boolean"
+                    }
+                },
+                "additionalProperties": false
+            },
+            "AppEmailDeliverySettings": {
+                "title": "EmailDeliverySettings",
+                "type": "object",
+                "properties": {
+                    "subject_prefix": {
+                        "title": "Subject Prefix",
+                        "type": "string"
+                    },
+                    "sender_name": {
+                        "title": "Sender Name",
+                        "type": "string"
+                    },
+                    "provider_id": {
+                        "title": "Provider Id",
+                        "type": "string"
+                    },
+                    "provider_settings": {
+                        "title": "Provider Settings",
+                        "type": "object"
+                    }
+                },
+                "required": [
+                    "subject_prefix",
+                    "sender_name",
+                    "provider_id",
+                    "provider_settings"
+                ],
+                "additionalProperties": false
+            },
+            "AppSetEmailDeliverySettingsResponse": {
+                "title": "SetEmailDeliverySettingsResponse",
+                "type": "object",
+                "properties": {},
+                "additionalProperties": false
+            },
+            "AppRemoveEmailDeliverySettingsResponse": {
+                "title": "RemoveEmailDeliverySettingsResponse",
+                "type": "object",
+                "properties": {},
+                "additionalProperties": false
+            },
+            "AppLoginRequest": {
+                "title": "LoginRequest",
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "title": "Email",
+                        "type": "string"
+                    },
+                    "password": {
+                        "title": "Password",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "email",
+                    "password"
+                ],
+                "additionalProperties": false
+            },
+            "AppLoginResponse": {
+                "title": "LoginResponse",
+                "type": "object",
+                "properties": {
+                    "auth": {
+                        "$ref": "#/components/schemas/AuthenticationPayload"
+                    },
+                    "account": {
+                        "$ref": "#/components/schemas/UserAccount"
+                    }
+                },
+                "required": [
+                    "auth",
+                    "account"
+                ],
+                "additionalProperties": false
+            },
+            "AppGetAccountsFormattingRulesResponse": {
+                "title": "GetAccountsFormattingRulesResponse",
+                "type": "object",
+                "properties": {
+                    "colour_palette": {
+                        "title": "Colour Palette",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": [
+                    "colour_palette"
+                ],
+                "additionalProperties": false
+            },
+            "AppGetLinkedAccountsResponse": {
+                "title": "GetLinkedAccountsResponse",
+                "type": "object",
+                "properties": {
+                    "linked_accounts": {
+                        "title": "Linked Accounts",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/LinkedAccount"
+                        }
+                    }
+                },
+                "required": [
+                    "linked_accounts"
+                ],
+                "additionalProperties": false
+            },
+            "AppLinkAccountCommitParams": {
+                "title": "LinkAccountCommitParams",
+                "type": "object",
+                "properties": {
+                    "validate": {
+                        "title": "Validate",
+                        "default": true,
+                        "type": "boolean"
+                    },
+                    "persist": {
+                        "title": "Persist",
+                        "default": true,
+                        "type": "boolean"
+                    }
+                },
+                "additionalProperties": false
+            },
+            "AppLinkAccountRequest": {
+                "title": "LinkAccountRequest",
+                "type": "object",
+                "properties": {
+                    "provider_id": {
+                        "title": "Provider Id",
+                        "type": "string"
+                    },
+                    "credentials": {
+                        "title": "Credentials",
+                        "type": "object"
+                    },
+                    "account_name": {
+                        "title": "Account Name",
+                        "type": "string"
+                    },
+                    "account_colour": {
+                        "title": "Account Colour",
+                        "pattern": "^#[A-Fa-f0-9]{6}$",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "provider_id",
+                    "credentials",
+                    "account_name",
+                    "account_colour"
+                ],
+                "additionalProperties": false
+            },
+            "AppLinkAccountResponse": {
+                "title": "LinkAccountResponse",
+                "type": "object",
+                "properties": {},
+                "additionalProperties": false
+            },
+            "AppGetLinkedAccountResponse": {
+                "title": "GetLinkedAccountResponse",
+                "type": "object",
+                "properties": {
+                    "linked_account": {
+                        "$ref": "#/components/schemas/LinkedAccount"
+                    }
+                },
+                "required": [
+                    "linked_account"
+                ],
+                "additionalProperties": false
+            },
+            "AppDeleteLinkedAccountResponse": {
+                "title": "DeleteLinkedAccountResponse",
+                "type": "object",
+                "properties": {},
+                "additionalProperties": false
+            },
+            "AppUpdateLinkedAccountMetadataRequest": {
+                "title": "UpdateLinkedAccountMetadataRequest",
+                "type": "object",
+                "properties": {
+                    "account_name": {
+                        "title": "Account Name",
+                        "type": "string"
+                    },
+                    "account_colour": {
+                        "title": "Account Colour",
+                        "type": "string"
+                    },
+                    "frozen": {
+                        "title": "Frozen",
+                        "type": "boolean"
+                    }
+                },
+                "additionalProperties": false
+            },
+            "AppUpdateLinkedAccountMetadataResponse": {
+                "title": "UpdateLinkedAccountMetadataResponse",
+                "type": "object",
+                "properties": {},
+                "additionalProperties": false
+            },
+            "AppUpdateLinkedAccountCredentialsRequest": {
+                "title": "UpdateLinkedAccountCredentialsRequest",
+                "type": "object",
+                "properties": {
+                    "credentials": {
+                        "title": "Credentials",
+                        "type": "object"
+                    }
+                },
+                "required": [
+                    "credentials"
+                ],
+                "additionalProperties": false
+            },
+            "AppUpdateLinkedAccountCredentialsResponse": {
+                "title": "UpdateLinkedAccountCredentialsResponse",
+                "type": "object",
+                "properties": {},
+                "additionalProperties": false
+            },
+            "AppGetLinkedAccountsValuationResponse": {
+                "title": "GetLinkedAccountsValuationResponse",
+                "type": "object",
+                "properties": {
+                    "valuation": {
+                        "$ref": "#/components/schemas/LinkedAccountsValuation"
+                    }
+                },
+                "required": [
+                    "valuation"
+                ],
+                "additionalProperties": false
+            },
+            "AppHistoricalValuationParams": {
+                "title": "HistoricalValuationParams",
+                "type": "object",
+                "properties": {
+                    "from_time": {
+                        "title": "From Time",
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "to_time": {
+                        "title": "To Time",
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "frequency": {
+                        "default": "Daily",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ValuationFrequency"
+                            }
+                        ]
+                    }
+                },
+                "additionalProperties": false
+            },
+            "AppGetLinkedAccountsHistoricalValuation": {
+                "title": "GetLinkedAccountsHistoricalValuation",
+                "type": "object",
+                "properties": {
+                    "historical_valuation": {
+                        "$ref": "#/components/schemas/HistoricalValuation"
+                    }
+                },
+                "required": [
+                    "historical_valuation"
+                ],
+                "additionalProperties": false
+            },
+            "AppCreateOrUpdateProviderRequest": {
+                "title": "CreateOrUpdateProviderRequest",
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "title": "Id",
+                        "type": "string"
+                    },
+                    "description": {
+                        "title": "Description",
+                        "type": "string"
+                    },
+                    "website_url": {
+                        "title": "Website Url",
+                        "type": "string"
+                    },
+                    "credentials_schema": {
+                        "title": "Credentials Schema",
+                        "type": "object"
+                    }
+                },
+                "required": [
+                    "id",
+                    "description",
+                    "website_url",
+                    "credentials_schema"
+                ],
+                "additionalProperties": false
+            },
+            "AppCreateOrUpdateProviderResponse": {
+                "title": "CreateOrUpdateProviderResponse",
+                "type": "object",
+                "properties": {
+                    "provider": {
+                        "$ref": "#/components/schemas/Provider"
+                    }
+                },
+                "required": [
+                    "provider"
+                ],
+                "additionalProperties": false
+            },
+            "AppGetProvidersResponse": {
+                "title": "GetProvidersResponse",
+                "type": "object",
+                "properties": {
+                    "providers": {
+                        "title": "Providers",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Provider"
+                        }
+                    }
+                },
+                "required": [
+                    "providers"
+                ],
+                "additionalProperties": false
+            },
+            "AppGetProviderResponse": {
+                "title": "GetProviderResponse",
+                "type": "object",
+                "properties": {
+                    "provider": {
+                        "$ref": "#/components/schemas/Provider"
+                    }
+                },
+                "required": [
+                    "provider"
+                ],
+                "additionalProperties": false
+            },
+            "AppDeleteProviderResponse": {
+                "title": "DeleteProviderResponse",
+                "type": "object",
+                "properties": {},
+                "additionalProperties": false
+            },
+            "AppGetPlaidSettingsResponse": {
+                "title": "GetPlaidSettingsResponse",
+                "type": "object",
+                "properties": {
+                    "settings": {
+                        "$ref": "#/components/schemas/PlaidSettings"
+                    }
+                },
+                "additionalProperties": false
+            },
+            "AppGetHoldingsReportResponse": {
+                "title": "GetHoldingsReportResponse",
+                "type": "object",
+                "properties": {
+                    "report": {
+                        "$ref": "#/components/schemas/ValuationTree"
+                    }
+                },
+                "required": [
+                    "report"
+                ],
+                "additionalProperties": false
+            },
+            "AppGetEarningsReportResponse": {
+                "title": "GetEarningsReportResponse",
+                "type": "object",
+                "properties": {
+                    "report": {
+                        "$ref": "#/components/schemas/EarningsReport"
+                    }
+                },
+                "required": [
+                    "report"
+                ],
+                "additionalProperties": false
+            },
+            "AppTriggerUserAccountValuationResponse": {
+                "title": "TriggerUserAccountValuationResponse",
+                "type": "object",
+                "properties": {},
+                "additionalProperties": false
+            },
+            "AppGetUserAccountValuationResponse": {
+                "title": "GetUserAccountValuationResponse",
+                "type": "object",
+                "properties": {
+                    "valuation": {
+                        "$ref": "#/components/schemas/UserAccountValuation"
+                    }
+                },
+                "required": [
+                    "valuation"
+                ],
+                "additionalProperties": false
+            },
+            "AppGetUserAccountValuationByAssetTypeResponse": {
+                "title": "GetUserAccountValuationByAssetTypeResponse",
+                "type": "object",
+                "properties": {
+                    "valuation": {
+                        "$ref": "#/components/schemas/ValuationByAssetType"
+                    }
+                },
+                "required": [
+                    "valuation"
+                ],
+                "additionalProperties": false
+            },
+            "AppGetUserAccountValuationByCurrencyExposureResponse": {
+                "title": "GetUserAccountValuationByCurrencyExposureResponse",
+                "type": "object",
+                "properties": {
+                    "valuation": {
+                        "$ref": "#/components/schemas/ValuationByCurrencyExposure"
+                    }
+                },
+                "required": [
+                    "valuation"
+                ],
+                "additionalProperties": false
+            },
+            "AppGetUserAccountValuationByAssetClassResponse": {
+                "title": "GetUserAccountValuationByAssetClassResponse",
+                "type": "object",
+                "properties": {
+                    "valuation": {
+                        "$ref": "#/components/schemas/ValuationByAssetClass"
+                    }
+                },
+                "required": [
+                    "valuation"
+                ],
+                "additionalProperties": false
+            },
+            "AppGetUserAccountValuationHistoryResponse": {
+                "title": "GetUserAccountValuationHistoryResponse",
+                "type": "object",
+                "properties": {
+                    "historical_valuation": {
+                        "$ref": "#/components/schemas/HistoricalValuation"
+                    }
+                },
+                "required": [
+                    "historical_valuation"
+                ],
+                "additionalProperties": false
+            },
+            "AppGetUserAccountValuationHistoryByAssetTypeResponse": {
+                "title": "GetUserAccountValuationHistoryByAssetTypeResponse",
+                "type": "object",
+                "properties": {
+                    "historical_valuation": {
+                        "$ref": "#/components/schemas/HistoricalValuation"
+                    }
+                },
+                "required": [
+                    "historical_valuation"
+                ],
+                "additionalProperties": false
+            },
+            "AppGetUserAccountValuationHistoryByAssetClassResponse": {
+                "title": "GetUserAccountValuationHistoryByAssetClassResponse",
+                "type": "object",
+                "properties": {
+                    "historical_valuation": {
+                        "$ref": "#/components/schemas/HistoricalValuation"
+                    }
+                },
+                "required": [
+                    "historical_valuation"
+                ],
+                "additionalProperties": false
+            },
+            "AppCreateUserAccountRequest": {
+                "title": "CreateUserAccountRequest",
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "title": "Email",
+                        "type": "string"
+                    },
+                    "password": {
+                        "title": "Password",
+                        "type": "string",
+                        "writeOnly": true,
+                        "format": "password"
+                    },
+                    "full_name": {
+                        "title": "Full Name",
+                        "type": "string"
+                    },
+                    "settings": {
+                        "$ref": "#/components/schemas/UserAccountCreationSettings"
+                    }
+                },
+                "required": [
+                    "email",
+                    "password",
+                    "full_name",
+                    "settings"
+                ],
+                "additionalProperties": false
+            },
+            "AppCreateUserAccountResponse": {
+                "title": "CreateUserAccountResponse",
+                "type": "object",
+                "properties": {
+                    "user_account": {
+                        "$ref": "#/components/schemas/UserAccount"
+                    }
+                },
+                "required": [
+                    "user_account"
+                ],
+                "additionalProperties": false
+            },
+            "AppGetUserAccountResponse": {
+                "title": "GetUserAccountResponse",
+                "type": "object",
+                "properties": {
+                    "user_account": {
+                        "$ref": "#/components/schemas/UserAccount"
+                    }
+                },
+                "required": [
+                    "user_account"
+                ],
+                "additionalProperties": false
+            },
+            "AppUpdateUserAccountPasswordRequest": {
+                "title": "UpdateUserAccountPasswordRequest",
+                "type": "object",
+                "properties": {
+                    "old_password": {
+                        "title": "Old Password",
+                        "type": "string",
+                        "writeOnly": true,
+                        "format": "password"
+                    },
+                    "new_password": {
+                        "title": "New Password",
+                        "type": "string",
+                        "writeOnly": true,
+                        "format": "password"
+                    }
+                },
+                "required": [
+                    "old_password",
+                    "new_password"
+                ],
+                "additionalProperties": false
+            },
+            "AppUpdateUserAccountPasswordResponse": {
+                "title": "UpdateUserAccountPasswordResponse",
+                "type": "object",
+                "properties": {},
+                "additionalProperties": false
+            },
+            "AppUpdateUserAccountProfileRequest": {
+                "title": "UpdateUserAccountProfileRequest",
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "title": "Email",
+                        "type": "string"
+                    },
+                    "full_name": {
+                        "title": "Full Name",
+                        "type": "string"
+                    },
+                    "mobile_phone_number": {
+                        "title": "Mobile Phone Number",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "email",
+                    "full_name"
+                ],
+                "additionalProperties": false
+            },
+            "AppUpdateUserAccountProfileResponse": {
+                "title": "UpdateUserAccountProfileResponse",
+                "type": "object",
+                "properties": {
+                    "profile": {
+                        "$ref": "#/components/schemas/UserAccountProfile"
+                    }
+                },
+                "required": [
+                    "profile"
+                ],
+                "additionalProperties": false
+            },
+            "AppGetUserAccountSettingsResponse": {
+                "title": "GetUserAccountSettingsResponse",
+                "type": "object",
+                "properties": {
+                    "settings": {
+                        "$ref": "#/components/schemas/UserAccountSettings"
+                    }
+                },
+                "required": [
+                    "settings"
+                ],
+                "additionalProperties": false
+            },
+            "AppIsUserAccountConfiguredResponse": {
+                "title": "IsUserAccountConfiguredResponse",
+                "type": "object",
+                "properties": {
+                    "configured": {
+                        "title": "Configured",
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "configured"
+                ],
+                "additionalProperties": false
+            },
+            "AppIsEmailAvailableRequestParams": {
+                "title": "IsEmailAvailableRequestParams",
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "title": "Email",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "email"
+                ],
+                "additionalProperties": false
+            },
+            "AppIsEmailAvailableResponse": {
+                "title": "IsEmailAvailableResponse",
+                "type": "object",
+                "properties": {
+                    "available": {
+                        "title": "Available",
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "available"
+                ],
+                "additionalProperties": false
+            },
+            "ValidationErrorElement": {
+                "title": "ValidationErrorElement",
+                "description": "Model of a validation error response element.",
+                "type": "object",
+                "properties": {
+                    "loc": {
+                        "title": "Missing field name",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "msg": {
+                        "title": "Error message",
+                        "type": "string"
+                    },
+                    "type": {
+                        "title": "Error type",
+                        "type": "string"
+                    },
+                    "ctx": {
+                        "title": "Error context",
+                        "type": "object"
+                    }
+                },
+                "required": [
+                    "loc",
+                    "msg",
+                    "type"
+                ]
+            },
+            "SystemReport": {
+                "title": "SystemReport",
+                "type": "object",
+                "properties": {
+                    "finbot_version": {
+                        "title": "Finbot Version",
+                        "type": "string"
+                    },
+                    "finbot_api_version": {
+                        "title": "Finbot Api Version",
+                        "type": "string"
+                    },
+                    "runtime": {
+                        "title": "Runtime",
+                        "type": "string"
+                    },
+                    "is_demo": {
+                        "title": "Is Demo",
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "finbot_version",
+                    "finbot_api_version",
+                    "runtime",
+                    "is_demo"
+                ],
+                "additionalProperties": false
+            },
+            "EmailProviderMetadata": {
+                "title": "EmailProviderMetadata",
+                "type": "object",
+                "properties": {
+                    "provider_id": {
+                        "title": "Provider Id",
+                        "type": "string"
+                    },
+                    "description": {
+                        "title": "Description",
+                        "type": "string"
+                    },
+                    "settings_schema": {
+                        "title": "Settings Schema",
+                        "type": "object"
+                    }
+                },
+                "required": [
+                    "provider_id",
+                    "description",
+                    "settings_schema"
+                ],
+                "additionalProperties": false
+            },
+            "EmailDeliverySettings": {
+                "title": "EmailDeliverySettings",
+                "type": "object",
+                "properties": {
+                    "subject_prefix": {
+                        "title": "Subject Prefix",
+                        "type": "string"
+                    },
+                    "sender_name": {
+                        "title": "Sender Name",
+                        "type": "string"
+                    },
+                    "provider_id": {
+                        "title": "Provider Id",
+                        "type": "string"
+                    },
+                    "provider_settings": {
+                        "title": "Provider Settings",
+                        "type": "object"
+                    }
+                },
+                "required": [
+                    "subject_prefix",
+                    "sender_name",
+                    "provider_id",
+                    "provider_settings"
+                ],
+                "additionalProperties": false
+            },
+            "AuthenticationPayload": {
+                "title": "AuthenticationPayload",
+                "type": "object",
+                "properties": {
+                    "access_token": {
+                        "title": "Access Token",
+                        "type": "string"
+                    },
+                    "refresh_token": {
+                        "title": "Refresh Token",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "access_token",
+                    "refresh_token"
+                ],
+                "additionalProperties": false
+            },
+            "UserAccount": {
+                "title": "UserAccount",
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "title": "Id",
+                        "type": "integer"
+                    },
+                    "email": {
+                        "title": "Email",
+                        "type": "string"
+                    },
+                    "full_name": {
+                        "title": "Full Name",
+                        "type": "string"
+                    },
+                    "mobile_phone_number": {
+                        "title": "Mobile Phone Number",
+                        "type": "string"
+                    },
+                    "is_demo": {
+                        "title": "Is Demo",
+                        "type": "boolean"
+                    },
+                    "created_at": {
+                        "title": "Created At",
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "title": "Updated At",
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "id",
+                    "email",
+                    "full_name",
+                    "is_demo",
+                    "created_at"
+                ],
+                "additionalProperties": false
+            },
+            "Provider": {
+                "title": "Provider",
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "title": "Id",
+                        "type": "string"
+                    },
+                    "description": {
+                        "title": "Description",
+                        "type": "string"
+                    },
+                    "website_url": {
+                        "title": "Website Url",
+                        "type": "string"
+                    },
+                    "credentials_schema": {
+                        "title": "Credentials Schema",
+                        "type": "object"
+                    },
+                    "created_at": {
+                        "title": "Created At",
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "title": "Updated At",
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "id",
+                    "description",
+                    "website_url",
+                    "credentials_schema",
+                    "created_at"
+                ],
+                "additionalProperties": false
+            },
+            "ErrorMetadata": {
+                "title": "ErrorMetadata",
+                "type": "object",
+                "properties": {
+                    "user_message": {
+                        "title": "User Message",
+                        "type": "string"
+                    },
+                    "debug_message": {
+                        "title": "Debug Message",
+                        "type": "string"
+                    },
+                    "error_code": {
+                        "title": "Error Code",
+                        "type": "string"
+                    },
+                    "exception_type": {
+                        "title": "Exception Type",
+                        "type": "string"
+                    },
+                    "trace": {
+                        "title": "Trace",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "user_message"
+                ]
+            },
+            "LinkedAccountStatusErrorEntry": {
+                "title": "LinkedAccountStatusErrorEntry",
+                "type": "object",
+                "properties": {
+                    "scope": {
+                        "title": "Scope",
+                        "type": "string"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ErrorMetadata"
+                    }
+                },
+                "required": [
+                    "scope",
+                    "error"
+                ],
+                "additionalProperties": false
+            },
+            "LinkedAccountStatus": {
+                "title": "LinkedAccountStatus",
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "title": "Status",
+                        "enum": [
+                            "stable",
+                            "unstable"
+                        ],
+                        "type": "string"
+                    },
+                    "errors": {
+                        "title": "Errors",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/LinkedAccountStatusErrorEntry"
+                        }
+                    },
+                    "last_snapshot_id": {
+                        "title": "Last Snapshot Id",
+                        "type": "integer"
+                    },
+                    "last_snapshot_time": {
+                        "title": "Last Snapshot Time",
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "status",
+                    "last_snapshot_id",
+                    "last_snapshot_time"
+                ],
+                "additionalProperties": false
+            },
+            "LinkedAccount": {
+                "title": "LinkedAccount",
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "title": "Id",
+                        "type": "integer"
+                    },
+                    "user_account_id": {
+                        "title": "User Account Id",
+                        "type": "integer"
+                    },
+                    "account_name": {
+                        "title": "Account Name",
+                        "type": "string"
+                    },
+                    "account_colour": {
+                        "title": "Account Colour",
+                        "pattern": "^#[A-Fa-f0-9]{6}$",
+                        "type": "string"
+                    },
+                    "deleted": {
+                        "title": "Deleted",
+                        "type": "boolean"
+                    },
+                    "frozen": {
+                        "title": "Frozen",
+                        "type": "boolean"
+                    },
+                    "provider_id": {
+                        "title": "Provider Id",
+                        "type": "string"
+                    },
+                    "provider": {
+                        "$ref": "#/components/schemas/Provider"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/LinkedAccountStatus"
+                    },
+                    "credentials": {
+                        "title": "Credentials",
+                        "type": "object"
+                    },
+                    "created_at": {
+                        "title": "Created At",
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "title": "Updated At",
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "id",
+                    "user_account_id",
+                    "account_name",
+                    "account_colour",
+                    "deleted",
+                    "frozen",
+                    "provider_id",
+                    "provider",
+                    "created_at"
+                ],
+                "additionalProperties": false
+            },
+            "LinkedAccountValuationLinkedAccountDescription": {
+                "title": "LinkedAccountValuationLinkedAccountDescription",
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "title": "Id",
+                        "type": "integer"
+                    },
+                    "provider_id": {
+                        "title": "Provider Id",
+                        "type": "string"
+                    },
+                    "description": {
+                        "title": "Description",
+                        "type": "string"
+                    },
+                    "account_colour": {
+                        "title": "Account Colour",
+                        "pattern": "^#[A-Fa-f0-9]{6}$",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "provider_id",
+                    "description",
+                    "account_colour"
+                ],
+                "additionalProperties": false
+            },
+            "ValuationChange": {
+                "title": "ValuationChange",
+                "type": "object",
+                "properties": {
+                    "change_1hour": {
+                        "title": "Change 1Hour",
+                        "type": "number"
+                    },
+                    "change_1day": {
+                        "title": "Change 1Day",
+                        "type": "number"
+                    },
+                    "change_1week": {
+                        "title": "Change 1Week",
+                        "type": "number"
+                    },
+                    "change_1month": {
+                        "title": "Change 1Month",
+                        "type": "number"
+                    },
+                    "change_6months": {
+                        "title": "Change 6Months",
+                        "type": "number"
+                    },
+                    "change_1year": {
+                        "title": "Change 1Year",
+                        "type": "number"
+                    },
+                    "change_2years": {
+                        "title": "Change 2Years",
+                        "type": "number"
+                    }
+                },
+                "additionalProperties": false
+            },
+            "LinkedAccountValuation": {
+                "title": "LinkedAccountValuation",
+                "type": "object",
+                "properties": {
+                    "date": {
+                        "title": "Date",
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "currency": {
+                        "title": "Currency",
+                        "type": "string"
+                    },
+                    "value": {
+                        "title": "Value",
+                        "type": "number"
+                    },
+                    "change": {
+                        "$ref": "#/components/schemas/ValuationChange"
+                    }
+                },
+                "required": [
+                    "date",
+                    "currency",
+                    "value",
+                    "change"
+                ],
+                "additionalProperties": false
+            },
+            "LinkedAccountValuationEntry": {
+                "title": "LinkedAccountValuationEntry",
+                "type": "object",
+                "properties": {
+                    "linked_account": {
+                        "$ref": "#/components/schemas/LinkedAccountValuationLinkedAccountDescription"
+                    },
+                    "valuation": {
+                        "$ref": "#/components/schemas/LinkedAccountValuation"
+                    }
+                },
+                "required": [
+                    "linked_account",
+                    "valuation"
+                ],
+                "additionalProperties": false
+            },
+            "LinkedAccountsValuation": {
+                "title": "LinkedAccountsValuation",
+                "type": "object",
+                "properties": {
+                    "valuation_ccy": {
+                        "title": "Valuation Ccy",
+                        "type": "string"
+                    },
+                    "entries": {
+                        "title": "Entries",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/LinkedAccountValuationEntry"
+                        }
+                    }
+                },
+                "required": [
+                    "valuation_ccy",
+                    "entries"
+                ],
+                "additionalProperties": false
+            },
+            "ValuationFrequency": {
+                "title": "ValuationFrequency",
+                "description": "An enumeration.",
+                "enum": [
+                    "Daily",
+                    "Weekly",
+                    "Monthly",
+                    "Quarterly",
+                    "Yearly"
+                ],
+                "type": "string"
+            },
+            "XAxisDescription": {
+                "title": "XAxisDescription",
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "title": "Type",
+                        "type": "string"
+                    },
+                    "categories": {
+                        "title": "Categories",
+                        "type": "array",
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "string",
+                                    "format": "date"
+                                },
+                                {
+                                    "type": "string",
+                                    "format": "date-time"
+                                }
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "type",
+                    "categories"
+                ],
+                "additionalProperties": false
+            },
+            "SeriesDescription": {
+                "title": "SeriesDescription",
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "title": "Name",
+                        "type": "string"
+                    },
+                    "data": {
+                        "title": "Data",
+                        "type": "array",
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "integer"
+                                },
+                                {
+                                    "type": "number"
+                                }
+                            ]
+                        }
+                    },
+                    "colour": {
+                        "title": "Colour",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "name",
+                    "data",
+                    "colour"
+                ],
+                "additionalProperties": false
+            },
+            "SeriesData": {
+                "title": "SeriesData",
+                "type": "object",
+                "properties": {
+                    "x_axis": {
+                        "$ref": "#/components/schemas/XAxisDescription"
+                    },
+                    "series": {
+                        "title": "Series",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/SeriesDescription"
+                        }
+                    }
+                },
+                "required": [
+                    "x_axis",
+                    "series"
+                ],
+                "additionalProperties": false
+            },
+            "HistoricalValuation": {
+                "title": "HistoricalValuation",
+                "type": "object",
+                "properties": {
+                    "valuation_ccy": {
+                        "title": "Valuation Ccy",
+                        "type": "string"
+                    },
+                    "series_data": {
+                        "$ref": "#/components/schemas/SeriesData"
+                    }
+                },
+                "required": [
+                    "valuation_ccy",
+                    "series_data"
+                ],
+                "additionalProperties": false
+            },
+            "PlaidSettings": {
+                "title": "PlaidSettings",
+                "type": "object",
+                "properties": {
+                    "environment": {
+                        "title": "Environment",
+                        "type": "string"
+                    },
+                    "client_id": {
+                        "title": "Client Id",
+                        "type": "string"
+                    },
+                    "public_key": {
+                        "title": "Public Key",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "environment",
+                    "client_id",
+                    "public_key"
+                ],
+                "additionalProperties": false
+            },
+            "ValuationWithSparkline": {
+                "title": "ValuationWithSparkline",
+                "type": "object",
+                "properties": {
+                    "currency": {
+                        "title": "Currency",
+                        "type": "string"
+                    },
+                    "value": {
+                        "title": "Value",
+                        "type": "number"
+                    },
+                    "change": {
+                        "$ref": "#/components/schemas/ValuationChange"
+                    },
+                    "sparkline": {
+                        "title": "Sparkline",
+                        "type": "array",
+                        "items": {
+                            "type": "number"
+                        }
+                    }
+                },
+                "required": [
+                    "currency",
+                    "value",
+                    "change",
+                    "sparkline"
+                ],
+                "additionalProperties": false
+            },
+            "LinkedAccountDescription": {
+                "title": "LinkedAccountDescription",
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "title": "Id",
+                        "type": "integer"
+                    },
+                    "provider_id": {
+                        "title": "Provider Id",
+                        "type": "string"
+                    },
+                    "description": {
+                        "title": "Description",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "provider_id",
+                    "description"
+                ],
+                "additionalProperties": false
+            },
+            "SubAccountDescription": {
+                "title": "SubAccountDescription",
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "title": "Id",
+                        "type": "string"
+                    },
+                    "currency": {
+                        "title": "Currency",
+                        "type": "string"
+                    },
+                    "description": {
+                        "title": "Description",
+                        "type": "string"
+                    },
+                    "type": {
+                        "title": "Type",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "currency",
+                    "description",
+                    "type"
+                ],
+                "additionalProperties": false
+            },
+            "Valuation": {
+                "title": "Valuation",
+                "type": "object",
+                "properties": {
+                    "currency": {
+                        "title": "Currency",
+                        "type": "string"
+                    },
+                    "value": {
+                        "title": "Value",
+                        "type": "number"
+                    },
+                    "change": {
+                        "$ref": "#/components/schemas/ValuationChange"
+                    }
+                },
+                "required": [
+                    "currency",
+                    "value",
+                    "change"
+                ],
+                "additionalProperties": false
+            },
+            "SubAccountItemNodeIcon": {
+                "title": "SubAccountItemNodeIcon",
+                "type": "object",
+                "properties": {
+                    "background_colour": {
+                        "title": "Background Colour",
+                        "pattern": "^#[A-Fa-f0-9]{6}$",
+                        "type": "string"
+                    },
+                    "label": {
+                        "title": "Label",
+                        "type": "string"
+                    },
+                    "tooltip": {
+                        "title": "Tooltip",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "background_colour",
+                    "label",
+                    "tooltip"
+                ],
+                "additionalProperties": false
+            },
+            "SubAccountItemDescription": {
+                "title": "SubAccountItemDescription",
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "title": "Name",
+                        "type": "string"
+                    },
+                    "type": {
+                        "title": "Type",
+                        "type": "string"
+                    },
+                    "sub_type": {
+                        "title": "Sub Type",
+                        "type": "string"
+                    },
+                    "asset_class": {
+                        "title": "Asset Class",
+                        "type": "string"
+                    },
+                    "asset_type": {
+                        "title": "Asset Type",
+                        "type": "string"
+                    },
+                    "icon": {
+                        "$ref": "#/components/schemas/SubAccountItemNodeIcon"
+                    }
+                },
+                "required": [
+                    "name",
+                    "type",
+                    "sub_type"
+                ],
+                "additionalProperties": false
+            },
+            "SubAccountItemMetadataNode": {
+                "title": "SubAccountItemMetadataNode",
+                "type": "object",
+                "properties": {
+                    "role": {
+                        "title": "Role",
+                        "default": "metadata",
+                        "enum": [
+                            "metadata"
+                        ],
+                        "type": "string"
+                    },
+                    "label": {
+                        "title": "Label",
+                        "type": "string"
+                    },
+                    "value": {
+                        "title": "Value",
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "boolean"
+                            }
+                        ]
+                    }
+                },
+                "required": [
+                    "label",
+                    "value"
+                ],
+                "additionalProperties": false
+            },
+            "SubAccountItemNode": {
+                "title": "SubAccountItemNode",
+                "type": "object",
+                "properties": {
+                    "role": {
+                        "title": "Role",
+                        "default": "item",
+                        "enum": [
+                            "item"
+                        ],
+                        "type": "string"
+                    },
+                    "item": {
+                        "$ref": "#/components/schemas/SubAccountItemDescription"
+                    },
+                    "valuation": {
+                        "$ref": "#/components/schemas/Valuation"
+                    },
+                    "children": {
+                        "title": "Children",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/SubAccountItemMetadataNode"
+                        }
+                    }
+                },
+                "required": [
+                    "item",
+                    "valuation",
+                    "children"
+                ],
+                "additionalProperties": false
+            },
+            "SubAccountNode": {
+                "title": "SubAccountNode",
+                "type": "object",
+                "properties": {
+                    "role": {
+                        "title": "Role",
+                        "default": "sub_account",
+                        "enum": [
+                            "sub_account"
+                        ],
+                        "type": "string"
+                    },
+                    "sub_account": {
+                        "$ref": "#/components/schemas/SubAccountDescription"
+                    },
+                    "valuation": {
+                        "$ref": "#/components/schemas/Valuation"
+                    },
+                    "children": {
+                        "title": "Children",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/SubAccountItemNode"
+                        }
+                    }
+                },
+                "required": [
+                    "sub_account",
+                    "valuation",
+                    "children"
+                ],
+                "additionalProperties": false
+            },
+            "LinkedAccountNode": {
+                "title": "LinkedAccountNode",
+                "type": "object",
+                "properties": {
+                    "role": {
+                        "title": "Role",
+                        "default": "linked_account",
+                        "enum": [
+                            "linked_account"
+                        ],
+                        "type": "string"
+                    },
+                    "linked_account": {
+                        "$ref": "#/components/schemas/LinkedAccountDescription"
+                    },
+                    "valuation": {
+                        "$ref": "#/components/schemas/ValuationWithSparkline"
+                    },
+                    "children": {
+                        "title": "Children",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/SubAccountNode"
+                        }
+                    }
+                },
+                "required": [
+                    "linked_account",
+                    "valuation",
+                    "children"
+                ],
+                "additionalProperties": false
+            },
+            "UserAccountNode": {
+                "title": "UserAccountNode",
+                "type": "object",
+                "properties": {
+                    "role": {
+                        "title": "Role",
+                        "default": "user_account",
+                        "enum": [
+                            "user_account"
+                        ],
+                        "type": "string"
+                    },
+                    "valuation": {
+                        "$ref": "#/components/schemas/ValuationWithSparkline"
+                    },
+                    "children": {
+                        "title": "Children",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/LinkedAccountNode"
+                        }
+                    }
+                },
+                "required": [
+                    "valuation",
+                    "children"
+                ],
+                "additionalProperties": false
+            },
+            "ValuationTree": {
+                "title": "ValuationTree",
+                "type": "object",
+                "properties": {
+                    "valuation_tree": {
+                        "$ref": "#/components/schemas/UserAccountNode"
+                    }
+                },
+                "required": [
+                    "valuation_tree"
+                ],
+                "additionalProperties": false
+            },
+            "AggregationDescription": {
+                "title": "AggregationDescription",
+                "type": "object",
+                "properties": {
+                    "as_str": {
+                        "title": "As Str",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "as_str"
+                ],
+                "additionalProperties": false
+            },
+            "Metrics": {
+                "title": "Metrics",
+                "type": "object",
+                "properties": {
+                    "first_date": {
+                        "title": "First Date",
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "first_value": {
+                        "title": "First Value",
+                        "type": "number"
+                    },
+                    "last_date": {
+                        "title": "Last Date",
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "last_value": {
+                        "title": "Last Value",
+                        "type": "number"
+                    },
+                    "min_value": {
+                        "title": "Min Value",
+                        "type": "number"
+                    },
+                    "max_value": {
+                        "title": "Max Value",
+                        "type": "number"
+                    },
+                    "abs_change": {
+                        "title": "Abs Change",
+                        "type": "number"
+                    },
+                    "rel_change": {
+                        "title": "Rel Change",
+                        "type": "number"
+                    }
+                },
+                "required": [
+                    "first_date",
+                    "first_value",
+                    "last_date",
+                    "last_value",
+                    "min_value",
+                    "max_value",
+                    "abs_change",
+                    "rel_change"
+                ],
+                "additionalProperties": false
+            },
+            "ReportEntry": {
+                "title": "ReportEntry",
+                "type": "object",
+                "properties": {
+                    "aggregation": {
+                        "$ref": "#/components/schemas/AggregationDescription"
+                    },
+                    "metrics": {
+                        "$ref": "#/components/schemas/Metrics"
+                    }
+                },
+                "required": [
+                    "aggregation",
+                    "metrics"
+                ],
+                "additionalProperties": false
+            },
+            "EarningsReport": {
+                "title": "EarningsReport",
+                "type": "object",
+                "properties": {
+                    "currency": {
+                        "title": "Currency",
+                        "type": "string"
+                    },
+                    "entries": {
+                        "title": "Entries",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ReportEntry"
+                        }
+                    },
+                    "rollup": {
+                        "$ref": "#/components/schemas/Metrics"
+                    }
+                },
+                "required": [
+                    "currency",
+                    "entries",
+                    "rollup"
+                ],
+                "additionalProperties": false
+            },
+            "UserAccountValuationSparklineEntry": {
+                "title": "UserAccountValuationSparklineEntry",
+                "type": "object",
+                "properties": {
+                    "effective_at": {
+                        "title": "Effective At",
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "value": {
+                        "title": "Value",
+                        "type": "number"
+                    }
+                },
+                "required": [
+                    "effective_at"
+                ],
+                "additionalProperties": false
+            },
+            "UserAccountValuation": {
+                "title": "UserAccountValuation",
+                "type": "object",
+                "properties": {
+                    "date": {
+                        "title": "Date",
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "currency": {
+                        "title": "Currency",
+                        "type": "string"
+                    },
+                    "value": {
+                        "title": "Value",
+                        "type": "number"
+                    },
+                    "total_liabilities": {
+                        "title": "Total Liabilities",
+                        "type": "number"
+                    },
+                    "change": {
+                        "$ref": "#/components/schemas/ValuationChange"
+                    },
+                    "sparkline": {
+                        "title": "Sparkline",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/UserAccountValuationSparklineEntry"
+                        }
+                    }
+                },
+                "required": [
+                    "date",
+                    "currency",
+                    "value",
+                    "total_liabilities",
+                    "change",
+                    "sparkline"
+                ],
+                "additionalProperties": false
+            },
+            "GroupValuation": {
+                "title": "GroupValuation",
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "title": "Name",
+                        "type": "string"
+                    },
+                    "colour": {
+                        "title": "Colour",
+                        "pattern": "^#[A-Fa-f0-9]{6}$",
+                        "type": "string"
+                    },
+                    "value": {
+                        "title": "Value",
+                        "type": "number"
+                    }
+                },
+                "required": [
+                    "name",
+                    "colour",
+                    "value"
+                ],
+                "additionalProperties": false
+            },
+            "ValuationByAssetType": {
+                "title": "ValuationByAssetType",
+                "type": "object",
+                "properties": {
+                    "valuation_ccy": {
+                        "title": "Valuation Ccy",
+                        "type": "string"
+                    },
+                    "by_asset_type": {
+                        "title": "By Asset Type",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/GroupValuation"
+                        }
+                    }
+                },
+                "required": [
+                    "valuation_ccy",
+                    "by_asset_type"
+                ],
+                "additionalProperties": false
+            },
+            "ValuationByCurrencyExposure": {
+                "title": "ValuationByCurrencyExposure",
+                "type": "object",
+                "properties": {
+                    "valuation_ccy": {
+                        "title": "Valuation Ccy",
+                        "type": "string"
+                    },
+                    "by_currency_exposure": {
+                        "title": "By Currency Exposure",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/GroupValuation"
+                        }
+                    }
+                },
+                "required": [
+                    "valuation_ccy",
+                    "by_currency_exposure"
+                ],
+                "additionalProperties": false
+            },
+            "ValuationByAssetClass": {
+                "title": "ValuationByAssetClass",
+                "type": "object",
+                "properties": {
+                    "valuation_ccy": {
+                        "title": "Valuation Ccy",
+                        "type": "string"
+                    },
+                    "by_asset_class": {
+                        "title": "By Asset Class",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/GroupValuation"
+                        }
+                    }
+                },
+                "required": [
+                    "valuation_ccy",
+                    "by_asset_class"
+                ],
+                "additionalProperties": false
+            },
+            "UserAccountCreationSettings": {
+                "title": "UserAccountCreationSettings",
+                "type": "object",
+                "properties": {
+                    "valuation_ccy": {
+                        "title": "Valuation Ccy",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "valuation_ccy"
+                ],
+                "additionalProperties": false
+            },
+            "UserAccountProfile": {
+                "title": "UserAccountProfile",
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "title": "Email",
+                        "type": "string"
+                    },
+                    "full_name": {
+                        "title": "Full Name",
+                        "type": "string"
+                    },
+                    "mobile_phone_number": {
+                        "title": "Mobile Phone Number",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "email",
+                    "full_name"
+                ],
+                "additionalProperties": false
+            },
+            "UserAccountSettings": {
+                "title": "UserAccountSettings",
+                "type": "object",
+                "properties": {
+                    "valuation_ccy": {
+                        "title": "Valuation Ccy",
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "title": "Created At",
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "title": "Updated At",
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "valuation_ccy",
+                    "created_at"
+                ],
+                "additionalProperties": false
+            }
+        },
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
+            }
+        }
+    },
+    "security": []
+}

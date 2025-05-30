@@ -18,7 +18,6 @@ from finbot.providers.playwright_base import (
 from finbot.providers.schema import Account, AccountType, Asset, AssetClass, Assets, AssetsEntry, AssetType
 
 BASE_URL = "https://espaceclient.suravenir.fr/web/suravenir"
-SchemaNamespace = "SuravenirProvider"
 
 
 logger = logging.getLogger(__name__)
