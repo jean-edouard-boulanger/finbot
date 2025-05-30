@@ -1,4 +1,3 @@
-import inspect
 from typing import Any, TypeAlias
 
 from spectree import Response
