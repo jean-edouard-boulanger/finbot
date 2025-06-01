@@ -17,12 +17,14 @@ import {
   MetricsFromJSON,
   MetricsFromJSONTyped,
   MetricsToJSON,
+  MetricsToJSONTyped,
 } from "./Metrics";
 import type { AggregationDescription } from "./AggregationDescription";
 import {
   AggregationDescriptionFromJSON,
   AggregationDescriptionFromJSONTyped,
   AggregationDescriptionToJSON,
+  AggregationDescriptionToJSONTyped,
 } from "./AggregationDescription";
 
 /**
@@ -31,6 +33,7 @@ import {
  * @interface ReportEntry
  */
 export interface ReportEntry {
+  [key: string]: any | any;
   /**
    *
    * @type {AggregationDescription}
@@ -67,16 +70,26 @@ export function ReportEntryFromJSONTyped(
     return json;
   }
   return {
+    ...json,
     aggregation: AggregationDescriptionFromJSON(json["aggregation"]),
     metrics: MetricsFromJSON(json["metrics"]),
   };
 }
 
-export function ReportEntryToJSON(value?: ReportEntry | null): any {
+export function ReportEntryToJSON(json: any): ReportEntry {
+  return ReportEntryToJSONTyped(json, false);
+}
+
+export function ReportEntryToJSONTyped(
+  value?: ReportEntry | null,
+  ignoreDiscriminator: boolean = false,
+): any {
   if (value == null) {
     return value;
   }
+
   return {
+    ...value,
     aggregation: AggregationDescriptionToJSON(value["aggregation"]),
     metrics: MetricsToJSON(value["metrics"]),
   };

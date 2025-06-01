@@ -5,8 +5,8 @@ from threading import Lock
 from typing import Any
 
 from playwright.sync_api import Route
+from pydantic import SecretStr
 
-from finbot.core.pydantic_ import SecretStr
 from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.core.utils import raise_, some
 from finbot.providers.errors import AuthenticationError

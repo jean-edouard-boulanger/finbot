@@ -17,12 +17,14 @@ import {
   MetricsFromJSON,
   MetricsFromJSONTyped,
   MetricsToJSON,
+  MetricsToJSONTyped,
 } from "./Metrics";
 import type { ReportEntry } from "./ReportEntry";
 import {
   ReportEntryFromJSON,
   ReportEntryFromJSONTyped,
   ReportEntryToJSON,
+  ReportEntryToJSONTyped,
 } from "./ReportEntry";
 
 /**
@@ -31,6 +33,7 @@ import {
  * @interface EarningsReport
  */
 export interface EarningsReport {
+  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -75,17 +78,27 @@ export function EarningsReportFromJSONTyped(
     return json;
   }
   return {
+    ...json,
     currency: json["currency"],
     entries: (json["entries"] as Array<any>).map(ReportEntryFromJSON),
     rollup: MetricsFromJSON(json["rollup"]),
   };
 }
 
-export function EarningsReportToJSON(value?: EarningsReport | null): any {
+export function EarningsReportToJSON(json: any): EarningsReport {
+  return EarningsReportToJSONTyped(json, false);
+}
+
+export function EarningsReportToJSONTyped(
+  value?: EarningsReport | null,
+  ignoreDiscriminator: boolean = false,
+): any {
   if (value == null) {
     return value;
   }
+
   return {
+    ...value,
     currency: value["currency"],
     entries: (value["entries"] as Array<any>).map(ReportEntryToJSON),
     rollup: MetricsToJSON(value["rollup"]),

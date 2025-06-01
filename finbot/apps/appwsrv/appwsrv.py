@@ -1,52 +1,36 @@
-from typing import Any
+from fastapi import FastAPI
 
-from flask import Flask
-from flask_cors import CORS
-from flask_jwt_extended import JWTManager
-
-from finbot.apps.appwsrv.blueprints import (
-    admin_api,
-    auth_api,
-    base_api,
-    formatting_rules_api,
-    linked_accounts_api,
-    linked_accounts_valuation_api,
-    providers_api,
-    reports_api,
-    user_account_valuation_api,
-    user_accounts_api,
-)
-from finbot.apps.appwsrv.spec import spec
+from finbot.apps.appwsrv.routes.admin import router as admin_router
+from finbot.apps.appwsrv.routes.auth import router as auth_router
+from finbot.apps.appwsrv.routes.base import router as base_router
+from finbot.apps.appwsrv.routes.formatting_rules import router as formatting_rules_router
+from finbot.apps.appwsrv.routes.linked_accounts import router as linked_accounts_router
+from finbot.apps.appwsrv.routes.linked_accounts_valuation import router as linked_accounts_valuation_router
+from finbot.apps.appwsrv.routes.providers import router as providers_router
+from finbot.apps.appwsrv.routes.reports import router as reports_router
+from finbot.apps.appwsrv.routes.user_account_valuation import router as user_account_valuation_router
+from finbot.apps.appwsrv.routes.user_accounts import router as user_accounts_router
+from finbot.apps.http_base import ORJSONResponse, setup_app
 from finbot.core import environment
 from finbot.core.logging import configure_logging
-from finbot.core.web_service import CustomJsonProvider
-from finbot.model.db import db_session
 
 configure_logging(environment.get_desired_log_level())
 
+app = FastAPI(
+    root_path="/api/v1",
+    default_response_class=ORJSONResponse,
+    title="Finbot application service",
+    description="API documentation for appwsrv",
+)
+setup_app(app)
 
-app = Flask(__name__)
-app.json = CustomJsonProvider(app)  # type: ignore
-app.config["JWT_SECRET_KEY"] = environment.get_jwt_secret_key()
-
-CORS(app)
-JWTManager(app)
-
-
-@app.teardown_appcontext
-def cleanup_context(*args: Any, **kwargs: Any) -> None:
-    db_session.remove()
-
-
-app.register_blueprint(base_api)
-app.register_blueprint(admin_api)
-app.register_blueprint(auth_api)
-app.register_blueprint(providers_api)
-app.register_blueprint(user_accounts_api)
-app.register_blueprint(linked_accounts_api)
-app.register_blueprint(reports_api)
-app.register_blueprint(user_account_valuation_api)
-app.register_blueprint(linked_accounts_valuation_api)
-app.register_blueprint(formatting_rules_api)
-
-spec.register(app)
+app.include_router(admin_router)
+app.include_router(base_router)
+app.include_router(auth_router)
+app.include_router(providers_router)
+app.include_router(user_account_valuation_router)
+app.include_router(user_accounts_router)
+app.include_router(linked_accounts_valuation_router)
+app.include_router(linked_accounts_router)
+app.include_router(reports_router)
+app.include_router(formatting_rules_router)

@@ -8,9 +8,7 @@ dependencies = [
     "celery==5.5.2",
     "cffi==1.17.1",
     "cryptography==45.0.2",
-    "flask-cors==6.0.0",
-    "flask-jwt-extended==4.7.1",
-    "flask==3.1.1",
+    "fastapi[standard]<1",
     "gspread==6.2.1",
     "gunicorn==23.0.0",
     "jsonschema==4.23.0",
@@ -26,11 +24,13 @@ dependencies = [
     "pydantic==2.11.5",
     "python-binance==1.0.29",
     "python-gnupg==0.5.4",
+    "python-jose[cryptography]<4",
     "requests==2.32.3",
     "schedule==1.2.2",
     "spectree==1.2.10",
     "sqlalchemy==2.0.41",
     "twilio==9.6.1",
+    "uvicorn<1",
     "yfinance==0.2.61",
 ]
 
@@ -43,8 +43,8 @@ dev = [
     "ruff==0.11.11",
     "semver==3.0.4",
     "sqlalchemy-stubs==0.4",
-    "types-Flask==1.1.6",
     "types-requests==2.32.0.20250515",
+    "watchdog[watchmedo]<7",
 ]
 
 [tool.ruff]

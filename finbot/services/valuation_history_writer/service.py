@@ -5,7 +5,7 @@ from typing import Any, Generator, cast
 from finbot import model
 from finbot.core import schema as core_schema
 from finbot.core.db.session import Session
-from finbot.core.serialization import pretty_dump, to_pydantic
+from finbot.core.serialization import pretty_dump, reinterpret_as_pydantic
 from finbot.core.utils import some
 from finbot.services.valuation_history_writer import repository, schema
 
@@ -185,7 +185,7 @@ def write_history_impl(
             valuation_date=valuation_date,
             valuation_currency=history_entry.valuation_ccy,
             user_account_valuation=float(user_account_valuation),
-            valuation_change=to_pydantic(core_schema.ValuationChange, user_account_valuation_change),
+            valuation_change=reinterpret_as_pydantic(core_schema.ValuationChange, user_account_valuation_change),
         )
     )
 

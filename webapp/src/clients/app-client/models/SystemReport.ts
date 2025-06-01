@@ -18,6 +18,7 @@ import { mapValues } from "../runtime";
  * @interface SystemReport
  */
 export interface SystemReport {
+  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -69,6 +70,7 @@ export function SystemReportFromJSONTyped(
     return json;
   }
   return {
+    ...json,
     finbotVersion: json["finbot_version"],
     finbotApiVersion: json["finbot_api_version"],
     runtime: json["runtime"],
@@ -76,11 +78,20 @@ export function SystemReportFromJSONTyped(
   };
 }
 
-export function SystemReportToJSON(value?: SystemReport | null): any {
+export function SystemReportToJSON(json: any): SystemReport {
+  return SystemReportToJSONTyped(json, false);
+}
+
+export function SystemReportToJSONTyped(
+  value?: SystemReport | null,
+  ignoreDiscriminator: boolean = false,
+): any {
   if (value == null) {
     return value;
   }
+
   return {
+    ...value,
     finbot_version: value["finbotVersion"],
     finbot_api_version: value["finbotApiVersion"],
     runtime: value["runtime"],

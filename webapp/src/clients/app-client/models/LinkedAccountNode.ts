@@ -17,18 +17,21 @@ import {
   LinkedAccountDescriptionFromJSON,
   LinkedAccountDescriptionFromJSONTyped,
   LinkedAccountDescriptionToJSON,
+  LinkedAccountDescriptionToJSONTyped,
 } from "./LinkedAccountDescription";
 import type { ValuationWithSparkline } from "./ValuationWithSparkline";
 import {
   ValuationWithSparklineFromJSON,
   ValuationWithSparklineFromJSONTyped,
   ValuationWithSparklineToJSON,
+  ValuationWithSparklineToJSONTyped,
 } from "./ValuationWithSparkline";
 import type { SubAccountNode } from "./SubAccountNode";
 import {
   SubAccountNodeFromJSON,
   SubAccountNodeFromJSONTyped,
   SubAccountNodeToJSON,
+  SubAccountNodeToJSONTyped,
 } from "./SubAccountNode";
 
 /**
@@ -37,6 +40,7 @@ import {
  * @interface LinkedAccountNode
  */
 export interface LinkedAccountNode {
+  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -97,6 +101,7 @@ export function LinkedAccountNodeFromJSONTyped(
     return json;
   }
   return {
+    ...json,
     role: json["role"] == null ? undefined : json["role"],
     linkedAccount: LinkedAccountDescriptionFromJSON(json["linked_account"]),
     valuation: ValuationWithSparklineFromJSON(json["valuation"]),
@@ -104,11 +109,20 @@ export function LinkedAccountNodeFromJSONTyped(
   };
 }
 
-export function LinkedAccountNodeToJSON(value?: LinkedAccountNode | null): any {
+export function LinkedAccountNodeToJSON(json: any): LinkedAccountNode {
+  return LinkedAccountNodeToJSONTyped(json, false);
+}
+
+export function LinkedAccountNodeToJSONTyped(
+  value?: LinkedAccountNode | null,
+  ignoreDiscriminator: boolean = false,
+): any {
   if (value == null) {
     return value;
   }
+
   return {
+    ...value,
     role: value["role"],
     linked_account: LinkedAccountDescriptionToJSON(value["linkedAccount"]),
     valuation: ValuationWithSparklineToJSON(value["valuation"]),

@@ -17,6 +17,7 @@ import {
   GroupValuationFromJSON,
   GroupValuationFromJSONTyped,
   GroupValuationToJSON,
+  GroupValuationToJSONTyped,
 } from "./GroupValuation";
 
 /**
@@ -25,6 +26,7 @@ import {
  * @interface ValuationByAssetType
  */
 export interface ValuationByAssetType {
+  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -64,6 +66,7 @@ export function ValuationByAssetTypeFromJSONTyped(
     return json;
   }
   return {
+    ...json,
     valuationCcy: json["valuation_ccy"],
     byAssetType: (json["by_asset_type"] as Array<any>).map(
       GroupValuationFromJSON,
@@ -71,13 +74,20 @@ export function ValuationByAssetTypeFromJSONTyped(
   };
 }
 
-export function ValuationByAssetTypeToJSON(
+export function ValuationByAssetTypeToJSON(json: any): ValuationByAssetType {
+  return ValuationByAssetTypeToJSONTyped(json, false);
+}
+
+export function ValuationByAssetTypeToJSONTyped(
   value?: ValuationByAssetType | null,
+  ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {
     return value;
   }
+
   return {
+    ...value,
     valuation_ccy: value["valuationCcy"],
     by_asset_type: (value["byAssetType"] as Array<any>).map(
       GroupValuationToJSON,

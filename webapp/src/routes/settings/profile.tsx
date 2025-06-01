@@ -5,7 +5,7 @@ import {
   UserAccountsApi,
   UserAccountProfile,
   UserAccount,
-  UpdateUserAccountProfileRequest,
+  UpdateUserAccountProfileOperationRequest,
 } from "clients";
 import { AuthContext } from "contexts";
 import { LoadingButton } from "components/loading-button";
@@ -31,17 +31,17 @@ const makeProfile = (
   return {
     email: profile?.email ?? "",
     fullName: profile?.fullName ?? "",
-    mobilePhoneNumber: profile?.mobilePhoneNumber,
+    mobilePhoneNumber: profile?.mobilePhoneNumber ?? null,
   };
 };
 
 const makeUpdateRequest = (
   userAccountId: number,
   profile?: Partial<UserAccountProfile>,
-): UpdateUserAccountProfileRequest => {
+): UpdateUserAccountProfileOperationRequest => {
   return {
     userAccountId: userAccountId,
-    appUpdateUserAccountProfileRequest: makeProfile(profile),
+    updateUserAccountProfileRequest: makeProfile(profile),
   };
 };
 

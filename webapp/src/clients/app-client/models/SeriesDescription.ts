@@ -12,12 +12,13 @@
  */
 
 import { mapValues } from "../runtime";
-import type { DataInner } from "./DataInner";
+import type { SeriesDescriptionDataInner } from "./SeriesDescriptionDataInner";
 import {
-  DataInnerFromJSON,
-  DataInnerFromJSONTyped,
-  DataInnerToJSON,
-} from "./DataInner";
+  SeriesDescriptionDataInnerFromJSON,
+  SeriesDescriptionDataInnerFromJSONTyped,
+  SeriesDescriptionDataInnerToJSON,
+  SeriesDescriptionDataInnerToJSONTyped,
+} from "./SeriesDescriptionDataInner";
 
 /**
  *
@@ -25,6 +26,7 @@ import {
  * @interface SeriesDescription
  */
 export interface SeriesDescription {
+  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -33,10 +35,10 @@ export interface SeriesDescription {
   name: string;
   /**
    *
-   * @type {Array<DataInner>}
+   * @type {Array<SeriesDescriptionDataInner>}
    * @memberof SeriesDescription
    */
-  data: Array<DataInner>;
+  data: Array<SeriesDescriptionDataInner>;
   /**
    *
    * @type {string}
@@ -69,19 +71,29 @@ export function SeriesDescriptionFromJSONTyped(
     return json;
   }
   return {
+    ...json,
     name: json["name"],
-    data: (json["data"] as Array<any>).map(DataInnerFromJSON),
+    data: (json["data"] as Array<any>).map(SeriesDescriptionDataInnerFromJSON),
     colour: json["colour"],
   };
 }
 
-export function SeriesDescriptionToJSON(value?: SeriesDescription | null): any {
+export function SeriesDescriptionToJSON(json: any): SeriesDescription {
+  return SeriesDescriptionToJSONTyped(json, false);
+}
+
+export function SeriesDescriptionToJSONTyped(
+  value?: SeriesDescription | null,
+  ignoreDiscriminator: boolean = false,
+): any {
   if (value == null) {
     return value;
   }
+
   return {
+    ...value,
     name: value["name"],
-    data: (value["data"] as Array<any>).map(DataInnerToJSON),
+    data: (value["data"] as Array<any>).map(SeriesDescriptionDataInnerToJSON),
     colour: value["colour"],
   };
 }

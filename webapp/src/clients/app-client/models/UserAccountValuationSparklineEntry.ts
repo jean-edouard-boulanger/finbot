@@ -18,6 +18,7 @@ import { mapValues } from "../runtime";
  * @interface UserAccountValuationSparklineEntry
  */
 export interface UserAccountValuationSparklineEntry {
+  [key: string]: any | any;
   /**
    *
    * @type {Date}
@@ -29,7 +30,7 @@ export interface UserAccountValuationSparklineEntry {
    * @type {number}
    * @memberof UserAccountValuationSparklineEntry
    */
-  value?: number;
+  value: number | null;
 }
 
 /**
@@ -40,6 +41,7 @@ export function instanceOfUserAccountValuationSparklineEntry(
 ): value is UserAccountValuationSparklineEntry {
   if (!("effectiveAt" in value) || value["effectiveAt"] === undefined)
     return false;
+  if (!("value" in value) || value["value"] === undefined) return false;
   return true;
 }
 
@@ -57,18 +59,28 @@ export function UserAccountValuationSparklineEntryFromJSONTyped(
     return json;
   }
   return {
+    ...json,
     effectiveAt: new Date(json["effective_at"]),
-    value: json["value"] == null ? undefined : json["value"],
+    value: json["value"],
   };
 }
 
 export function UserAccountValuationSparklineEntryToJSON(
+  json: any,
+): UserAccountValuationSparklineEntry {
+  return UserAccountValuationSparklineEntryToJSONTyped(json, false);
+}
+
+export function UserAccountValuationSparklineEntryToJSONTyped(
   value?: UserAccountValuationSparklineEntry | null,
+  ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {
     return value;
   }
+
   return {
+    ...value,
     effective_at: value["effectiveAt"].toISOString(),
     value: value["value"],
   };

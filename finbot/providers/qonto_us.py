@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from typing import Any, Optional
 
-from finbot.core.pydantic_ import SecretStr
+from pydantic import SecretStr
+
 from finbot.core.qonto_api import QontoApi, Unauthorized
 from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.core.utils import some

@@ -1,8 +1,9 @@
 from typing import Any, Generator
 
+from pydantic import SecretStr
+
 from finbot.core import fx_market, saxo
 from finbot.core.environment import get_saxo_gateway_url
-from finbot.core.pydantic_ import SecretStr
 from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.core.utils import some
 from finbot.providers.base import ProviderBase

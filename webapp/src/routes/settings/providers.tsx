@@ -111,7 +111,7 @@ export const EditProviderPanel: React.FC<Record<string, never>> = () => {
     try {
       const result =
         await financialDataProvidersApi.updateOrCreateFinancialDataProvider({
-          appCreateOrUpdateProviderRequest: {
+          createOrUpdateProviderRequest: {
             ...description,
             credentialsSchema: schema,
           },

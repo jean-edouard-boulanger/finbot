@@ -29,25 +29,25 @@ export interface ErrorMetadata {
    * @type {string}
    * @memberof ErrorMetadata
    */
-  debugMessage?: string;
+  debugMessage: string | null;
   /**
    *
    * @type {string}
    * @memberof ErrorMetadata
    */
-  errorCode?: string;
+  errorCode: string | null;
   /**
    *
    * @type {string}
    * @memberof ErrorMetadata
    */
-  exceptionType?: string;
+  exceptionType: string | null;
   /**
    *
    * @type {string}
    * @memberof ErrorMetadata
    */
-  trace?: string;
+  trace: string | null;
 }
 
 /**
@@ -56,6 +56,12 @@ export interface ErrorMetadata {
 export function instanceOfErrorMetadata(value: object): value is ErrorMetadata {
   if (!("userMessage" in value) || value["userMessage"] === undefined)
     return false;
+  if (!("debugMessage" in value) || value["debugMessage"] === undefined)
+    return false;
+  if (!("errorCode" in value) || value["errorCode"] === undefined) return false;
+  if (!("exceptionType" in value) || value["exceptionType"] === undefined)
+    return false;
+  if (!("trace" in value) || value["trace"] === undefined) return false;
   return true;
 }
 
@@ -72,19 +78,25 @@ export function ErrorMetadataFromJSONTyped(
   }
   return {
     userMessage: json["user_message"],
-    debugMessage:
-      json["debug_message"] == null ? undefined : json["debug_message"],
-    errorCode: json["error_code"] == null ? undefined : json["error_code"],
-    exceptionType:
-      json["exception_type"] == null ? undefined : json["exception_type"],
-    trace: json["trace"] == null ? undefined : json["trace"],
+    debugMessage: json["debug_message"],
+    errorCode: json["error_code"],
+    exceptionType: json["exception_type"],
+    trace: json["trace"],
   };
 }
 
-export function ErrorMetadataToJSON(value?: ErrorMetadata | null): any {
+export function ErrorMetadataToJSON(json: any): ErrorMetadata {
+  return ErrorMetadataToJSONTyped(json, false);
+}
+
+export function ErrorMetadataToJSONTyped(
+  value?: ErrorMetadata | null,
+  ignoreDiscriminator: boolean = false,
+): any {
   if (value == null) {
     return value;
   }
+
   return {
     user_message: value["userMessage"],
     debug_message: value["debugMessage"],

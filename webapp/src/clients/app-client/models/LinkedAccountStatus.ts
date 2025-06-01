@@ -17,6 +17,7 @@ import {
   LinkedAccountStatusErrorEntryFromJSON,
   LinkedAccountStatusErrorEntryFromJSONTyped,
   LinkedAccountStatusErrorEntryToJSON,
+  LinkedAccountStatusErrorEntryToJSONTyped,
 } from "./LinkedAccountStatusErrorEntry";
 
 /**
@@ -36,7 +37,7 @@ export interface LinkedAccountStatus {
    * @type {Array<LinkedAccountStatusErrorEntry>}
    * @memberof LinkedAccountStatus
    */
-  errors?: Array<LinkedAccountStatusErrorEntry>;
+  errors: Array<LinkedAccountStatusErrorEntry>;
   /**
    *
    * @type {number}
@@ -68,6 +69,7 @@ export function instanceOfLinkedAccountStatus(
   value: object,
 ): value is LinkedAccountStatus {
   if (!("status" in value) || value["status"] === undefined) return false;
+  if (!("errors" in value) || value["errors"] === undefined) return false;
   if (!("lastSnapshotId" in value) || value["lastSnapshotId"] === undefined)
     return false;
   if (!("lastSnapshotTime" in value) || value["lastSnapshotTime"] === undefined)
@@ -88,31 +90,31 @@ export function LinkedAccountStatusFromJSONTyped(
   }
   return {
     status: json["status"],
-    errors:
-      json["errors"] == null
-        ? undefined
-        : (json["errors"] as Array<any>).map(
-            LinkedAccountStatusErrorEntryFromJSON,
-          ),
+    errors: (json["errors"] as Array<any>).map(
+      LinkedAccountStatusErrorEntryFromJSON,
+    ),
     lastSnapshotId: json["last_snapshot_id"],
     lastSnapshotTime: new Date(json["last_snapshot_time"]),
   };
 }
 
-export function LinkedAccountStatusToJSON(
+export function LinkedAccountStatusToJSON(json: any): LinkedAccountStatus {
+  return LinkedAccountStatusToJSONTyped(json, false);
+}
+
+export function LinkedAccountStatusToJSONTyped(
   value?: LinkedAccountStatus | null,
+  ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {
     return value;
   }
+
   return {
     status: value["status"],
-    errors:
-      value["errors"] == null
-        ? undefined
-        : (value["errors"] as Array<any>).map(
-            LinkedAccountStatusErrorEntryToJSON,
-          ),
+    errors: (value["errors"] as Array<any>).map(
+      LinkedAccountStatusErrorEntryToJSON,
+    ),
     last_snapshot_id: value["lastSnapshotId"],
     last_snapshot_time: value["lastSnapshotTime"].toISOString(),
   };

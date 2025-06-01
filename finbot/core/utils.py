@@ -43,3 +43,8 @@ def float_or_none(value: int | float | str) -> float | None:
         return float(value)
     except ValueError:
         return None
+
+
+def strict_cast(t: type[T], val: Any) -> T:
+    assert isinstance(val, t)
+    return val

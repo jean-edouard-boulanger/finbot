@@ -17,18 +17,21 @@ import {
   SubAccountItemNodeFromJSON,
   SubAccountItemNodeFromJSONTyped,
   SubAccountItemNodeToJSON,
+  SubAccountItemNodeToJSONTyped,
 } from "./SubAccountItemNode";
 import type { Valuation } from "./Valuation";
 import {
   ValuationFromJSON,
   ValuationFromJSONTyped,
   ValuationToJSON,
+  ValuationToJSONTyped,
 } from "./Valuation";
 import type { SubAccountDescription } from "./SubAccountDescription";
 import {
   SubAccountDescriptionFromJSON,
   SubAccountDescriptionFromJSONTyped,
   SubAccountDescriptionToJSON,
+  SubAccountDescriptionToJSONTyped,
 } from "./SubAccountDescription";
 
 /**
@@ -37,6 +40,7 @@ import {
  * @interface SubAccountNode
  */
 export interface SubAccountNode {
+  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -97,6 +101,7 @@ export function SubAccountNodeFromJSONTyped(
     return json;
   }
   return {
+    ...json,
     role: json["role"] == null ? undefined : json["role"],
     subAccount: SubAccountDescriptionFromJSON(json["sub_account"]),
     valuation: ValuationFromJSON(json["valuation"]),
@@ -104,11 +109,20 @@ export function SubAccountNodeFromJSONTyped(
   };
 }
 
-export function SubAccountNodeToJSON(value?: SubAccountNode | null): any {
+export function SubAccountNodeToJSON(json: any): SubAccountNode {
+  return SubAccountNodeToJSONTyped(json, false);
+}
+
+export function SubAccountNodeToJSONTyped(
+  value?: SubAccountNode | null,
+  ignoreDiscriminator: boolean = false,
+): any {
   if (value == null) {
     return value;
   }
+
   return {
+    ...value,
     role: value["role"],
     sub_account: SubAccountDescriptionToJSON(value["subAccount"]),
     valuation: ValuationToJSON(value["valuation"]),

@@ -18,6 +18,7 @@ import { mapValues } from "../runtime";
  * @interface EmailDeliverySettings
  */
 export interface EmailDeliverySettings {
+  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -38,10 +39,10 @@ export interface EmailDeliverySettings {
   providerId: string;
   /**
    *
-   * @type {object}
+   * @type {{ [key: string]: any; }}
    * @memberof EmailDeliverySettings
    */
-  providerSettings: object;
+  providerSettings: { [key: string]: any };
 }
 
 /**
@@ -75,6 +76,7 @@ export function EmailDeliverySettingsFromJSONTyped(
     return json;
   }
   return {
+    ...json,
     subjectPrefix: json["subject_prefix"],
     senderName: json["sender_name"],
     providerId: json["provider_id"],
@@ -82,13 +84,20 @@ export function EmailDeliverySettingsFromJSONTyped(
   };
 }
 
-export function EmailDeliverySettingsToJSON(
+export function EmailDeliverySettingsToJSON(json: any): EmailDeliverySettings {
+  return EmailDeliverySettingsToJSONTyped(json, false);
+}
+
+export function EmailDeliverySettingsToJSONTyped(
   value?: EmailDeliverySettings | null,
+  ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {
     return value;
   }
+
   return {
+    ...value,
     subject_prefix: value["subjectPrefix"],
     sender_name: value["senderName"],
     provider_id: value["providerId"],

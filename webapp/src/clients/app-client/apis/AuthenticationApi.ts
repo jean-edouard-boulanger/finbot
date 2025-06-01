@@ -13,21 +13,21 @@
 
 import * as runtime from "../runtime";
 import type {
-  AppLoginRequest,
-  AppLoginResponse,
-  ValidationErrorElement,
+  HTTPValidationError,
+  LoginRequest,
+  LoginResponse,
 } from "../models/index";
 import {
-  AppLoginRequestFromJSON,
-  AppLoginRequestToJSON,
-  AppLoginResponseFromJSON,
-  AppLoginResponseToJSON,
-  ValidationErrorElementFromJSON,
-  ValidationErrorElementToJSON,
+  HTTPValidationErrorFromJSON,
+  HTTPValidationErrorToJSON,
+  LoginRequestFromJSON,
+  LoginRequestToJSON,
+  LoginResponseFromJSON,
+  LoginResponseToJSON,
 } from "../models/index";
 
 export interface AuthenticateUserRequest {
-  appLoginRequest?: AppLoginRequest;
+  loginRequest: LoginRequest;
 }
 
 /**
@@ -38,9 +38,9 @@ export interface AuthenticateUserRequest {
  */
 export interface AuthenticationApiInterface {
   /**
-   *
-   * @summary Authenticate user
-   * @param {AppLoginRequest} [appLoginRequest]
+   * Authenticate user
+   * @summary Auth Login
+   * @param {LoginRequest} loginRequest
    * @param {*} [options] Override http request option.
    * @throws {RequiredError}
    * @memberof AuthenticationApiInterface
@@ -48,16 +48,16 @@ export interface AuthenticationApiInterface {
   authenticateUserRaw(
     requestParameters: AuthenticateUserRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppLoginResponse>>;
+  ): Promise<runtime.ApiResponse<LoginResponse>>;
 
   /**
-   *
    * Authenticate user
+   * Auth Login
    */
   authenticateUser(
     requestParameters: AuthenticateUserRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppLoginResponse>;
+  ): Promise<LoginResponse>;
 }
 
 /**
@@ -68,13 +68,20 @@ export class AuthenticationApi
   implements AuthenticationApiInterface
 {
   /**
-   *
    * Authenticate user
+   * Auth Login
    */
   async authenticateUserRaw(
     requestParameters: AuthenticateUserRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppLoginResponse>> {
+  ): Promise<runtime.ApiResponse<LoginResponse>> {
+    if (requestParameters["loginRequest"] == null) {
+      throw new runtime.RequiredError(
+        "loginRequest",
+        'Required parameter "loginRequest" was null or undefined when calling authenticateUser().',
+      );
+    }
+
     const queryParameters: any = {};
 
     const headerParameters: runtime.HTTPHeaders = {};
@@ -83,28 +90,28 @@ export class AuthenticationApi
 
     const response = await this.request(
       {
-        path: `/api/v1/auth/login/`,
+        path: `/auth/login/`,
         method: "POST",
         headers: headerParameters,
         query: queryParameters,
-        body: AppLoginRequestToJSON(requestParameters["appLoginRequest"]),
+        body: LoginRequestToJSON(requestParameters["loginRequest"]),
       },
       initOverrides,
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AppLoginResponseFromJSON(jsonValue),
+      LoginResponseFromJSON(jsonValue),
     );
   }
 
   /**
-   *
    * Authenticate user
+   * Auth Login
    */
   async authenticateUser(
-    requestParameters: AuthenticateUserRequest = {},
+    requestParameters: AuthenticateUserRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppLoginResponse> {
+  ): Promise<LoginResponse> {
     const response = await this.authenticateUserRaw(
       requestParameters,
       initOverrides,

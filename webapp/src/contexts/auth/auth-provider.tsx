@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import {
   makeApi,
   AuthenticationApi,
-  AppLoginRequest,
+  LoginRequest,
   useResponseInterceptor,
 } from "clients";
 
@@ -51,10 +51,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = (props) => {
     updateAuthState(null);
   }
 
-  async function login(credentials: AppLoginRequest) {
+  async function login(credentials: LoginRequest) {
     const api = makeApi(AuthenticationApi);
     const response = await api.authenticateUser({
-      appLoginRequest: credentials,
+      loginRequest: credentials,
     });
     const authState: AuthState = {
       accessToken: response.auth.accessToken,

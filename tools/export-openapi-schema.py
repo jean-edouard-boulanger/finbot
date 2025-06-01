@@ -9,15 +9,13 @@ from finbot._version import __api_version__
 def export_appwsrv_openapi_schema():
     from finbot.apps.appwsrv import appwsrv
 
-    with appwsrv.app.app_context():
-        return appwsrv.spec.spec
+    return appwsrv.app.openapi()
 
 
 def export_finbotwsrv_openapi_schema():
     from finbot.apps.finbotwsrv import finbotwsrv
 
-    with finbotwsrv.app.app_context():
-        return finbotwsrv.spec.spec
+    return finbotwsrv.app.openapi()
 
 
 SCHEMA_EXPORTERS = {

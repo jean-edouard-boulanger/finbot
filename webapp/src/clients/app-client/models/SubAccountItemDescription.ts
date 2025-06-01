@@ -17,6 +17,7 @@ import {
   SubAccountItemNodeIconFromJSON,
   SubAccountItemNodeIconFromJSONTyped,
   SubAccountItemNodeIconToJSON,
+  SubAccountItemNodeIconToJSONTyped,
 } from "./SubAccountItemNodeIcon";
 
 /**
@@ -25,6 +26,7 @@ import {
  * @interface SubAccountItemDescription
  */
 export interface SubAccountItemDescription {
+  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -48,19 +50,19 @@ export interface SubAccountItemDescription {
    * @type {string}
    * @memberof SubAccountItemDescription
    */
-  assetClass?: string;
+  assetClass: string | null;
   /**
    *
    * @type {string}
    * @memberof SubAccountItemDescription
    */
-  assetType?: string;
+  assetType: string | null;
   /**
    *
    * @type {SubAccountItemNodeIcon}
    * @memberof SubAccountItemDescription
    */
-  icon?: SubAccountItemNodeIcon;
+  icon: SubAccountItemNodeIcon | null;
 }
 
 /**
@@ -72,6 +74,10 @@ export function instanceOfSubAccountItemDescription(
   if (!("name" in value) || value["name"] === undefined) return false;
   if (!("type" in value) || value["type"] === undefined) return false;
   if (!("subType" in value) || value["subType"] === undefined) return false;
+  if (!("assetClass" in value) || value["assetClass"] === undefined)
+    return false;
+  if (!("assetType" in value) || value["assetType"] === undefined) return false;
+  if (!("icon" in value) || value["icon"] === undefined) return false;
   return true;
 }
 
@@ -89,25 +95,32 @@ export function SubAccountItemDescriptionFromJSONTyped(
     return json;
   }
   return {
+    ...json,
     name: json["name"],
     type: json["type"],
     subType: json["sub_type"],
-    assetClass: json["asset_class"] == null ? undefined : json["asset_class"],
-    assetType: json["asset_type"] == null ? undefined : json["asset_type"],
-    icon:
-      json["icon"] == null
-        ? undefined
-        : SubAccountItemNodeIconFromJSON(json["icon"]),
+    assetClass: json["asset_class"],
+    assetType: json["asset_type"],
+    icon: SubAccountItemNodeIconFromJSON(json["icon"]),
   };
 }
 
 export function SubAccountItemDescriptionToJSON(
+  json: any,
+): SubAccountItemDescription {
+  return SubAccountItemDescriptionToJSONTyped(json, false);
+}
+
+export function SubAccountItemDescriptionToJSONTyped(
   value?: SubAccountItemDescription | null,
+  ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {
     return value;
   }
+
   return {
+    ...value,
     name: value["name"],
     type: value["type"],
     sub_type: value["subType"],

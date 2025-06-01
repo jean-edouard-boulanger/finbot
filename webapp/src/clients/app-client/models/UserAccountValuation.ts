@@ -17,12 +17,14 @@ import {
   ValuationChangeFromJSON,
   ValuationChangeFromJSONTyped,
   ValuationChangeToJSON,
+  ValuationChangeToJSONTyped,
 } from "./ValuationChange";
 import type { UserAccountValuationSparklineEntry } from "./UserAccountValuationSparklineEntry";
 import {
   UserAccountValuationSparklineEntryFromJSON,
   UserAccountValuationSparklineEntryFromJSONTyped,
   UserAccountValuationSparklineEntryToJSON,
+  UserAccountValuationSparklineEntryToJSONTyped,
 } from "./UserAccountValuationSparklineEntry";
 
 /**
@@ -31,6 +33,7 @@ import {
  * @interface UserAccountValuation
  */
 export interface UserAccountValuation {
+  [key: string]: any | any;
   /**
    *
    * @type {Date}
@@ -97,6 +100,7 @@ export function UserAccountValuationFromJSONTyped(
     return json;
   }
   return {
+    ...json,
     date: new Date(json["date"]),
     currency: json["currency"],
     value: json["value"],
@@ -108,13 +112,20 @@ export function UserAccountValuationFromJSONTyped(
   };
 }
 
-export function UserAccountValuationToJSON(
+export function UserAccountValuationToJSON(json: any): UserAccountValuation {
+  return UserAccountValuationToJSONTyped(json, false);
+}
+
+export function UserAccountValuationToJSONTyped(
   value?: UserAccountValuation | null,
+  ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {
     return value;
   }
+
   return {
+    ...value,
     date: value["date"].toISOString(),
     currency: value["currency"],
     value: value["value"],

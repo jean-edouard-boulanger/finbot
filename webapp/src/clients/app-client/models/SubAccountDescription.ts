@@ -18,6 +18,7 @@ import { mapValues } from "../runtime";
  * @interface SubAccountDescription
  */
 export interface SubAccountDescription {
+  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -72,6 +73,7 @@ export function SubAccountDescriptionFromJSONTyped(
     return json;
   }
   return {
+    ...json,
     id: json["id"],
     currency: json["currency"],
     description: json["description"],
@@ -79,13 +81,20 @@ export function SubAccountDescriptionFromJSONTyped(
   };
 }
 
-export function SubAccountDescriptionToJSON(
+export function SubAccountDescriptionToJSON(json: any): SubAccountDescription {
+  return SubAccountDescriptionToJSONTyped(json, false);
+}
+
+export function SubAccountDescriptionToJSONTyped(
   value?: SubAccountDescription | null,
+  ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {
     return value;
   }
+
   return {
+    ...value,
     id: value["id"],
     currency: value["currency"],
     description: value["description"],

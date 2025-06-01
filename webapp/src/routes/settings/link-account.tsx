@@ -10,7 +10,7 @@ import {
   FormattingRulesApi,
   PlaidSettings,
   SystemApi,
-  AppGetAccountsFormattingRulesResponse,
+  GetAccountsFormattingRulesResponse,
 } from "clients";
 import { AuthContext } from "contexts";
 import { LoadingButton, ColourPicker } from "components";
@@ -25,7 +25,7 @@ const NO_PROVIDER_SELECTED = "NO_PROVIDER_SELECTED";
 const PLAID_PROVIDER_ID = "plaid_us";
 const FALLBACK_COLOUR = "#FFFFFF";
 
-type FormattingRules = AppGetAccountsFormattingRulesResponse;
+type FormattingRules = GetAccountsFormattingRulesResponse;
 type LinkedAccountCredentials = object;
 
 interface DataDrivenAccountFormProps {
@@ -241,7 +241,7 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
       await linkedAccountsApi.updateLinkedAccountMetadata({
         userAccountId: userAccountId!,
         linkedAccountId: linkedAccount!.id,
-        appUpdateLinkedAccountMetadataRequest: {
+        updateLinkedAccountMetadataRequest: {
           accountName: updatedProps.accountName,
           accountColour: updatedProps.accountColour,
         },
@@ -263,7 +263,7 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
         linkedAccountId: linkedAccount!.id,
         validate: true,
         persist: false,
-        appUpdateLinkedAccountCredentialsRequest: {
+        updateLinkedAccountCredentialsRequest: {
           credentials: credentials,
         },
       });
@@ -279,7 +279,7 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
         linkedAccountId: linkedAccount!.id,
         validate: false,
         persist: true,
-        appUpdateLinkedAccountCredentialsRequest: {
+        updateLinkedAccountCredentialsRequest: {
           credentials: credentials,
         },
       });
@@ -310,7 +310,7 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
         userAccountId: userAccountId!,
         validate: true,
         persist: false,
-        appLinkAccountRequest: linkRequest,
+        linkAccountRequest: linkRequest,
       });
     } catch (e) {
       toast.error(`Error validating credentials: ${e}`);
@@ -323,7 +323,7 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
         userAccountId: userAccountId!,
         validate: false,
         persist: true,
-        appLinkAccountRequest: linkRequest,
+        linkAccountRequest: linkRequest,
       });
     } catch (e) {
       toast.error(`Error updating credentials: ${e}`);

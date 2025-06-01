@@ -1,11 +1,11 @@
-from pydantic.v1 import BaseModel, Extra, Field, SecretStr, ValidationError, root_validator, validator
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, ValidationError, field_validator, model_validator
 
 __all__ = [
     "BaseModel",
-    "Extra",
     "Field",
     "SecretStr",
     "ValidationError",
-    "validator",
-    "root_validator",
+    "field_validator",
+    "model_validator",
+    "ConfigDict",
 ]

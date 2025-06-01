@@ -2,15 +2,14 @@ import logging
 import traceback
 from typing import Any
 
-from flask import Flask
+from fastapi import FastAPI
 
 from finbot.apps.finbotwsrv import schema
+from finbot.apps.http_base import ORJSONResponse, setup_app
 from finbot.core import environment
 from finbot.core import schema as core_schema
 from finbot.core.logging import configure_logging
 from finbot.core.schema import ApplicationErrorData, CurrencyCode
-from finbot.core.spec_tree import ResponseSpec, SpecTree
-from finbot.core.web_service import CustomJsonProvider, service_endpoint
 from finbot.providers import ProviderBase
 from finbot.providers.errors import AuthenticationError
 from finbot.providers.factory import get_provider
@@ -18,13 +17,11 @@ from finbot.providers.factory import get_provider
 configure_logging(environment.get_desired_log_level())
 
 
-app = Flask(__name__)
-app.json = CustomJsonProvider(app)  # type: ignore
-
-spec = SpecTree(
-    title="Financial data capture service",
-    description="API documentation for finbotwsrv",
+app = FastAPI(
+    root_path="/api/v1",
+    default_response_class=ORJSONResponse,
 )
+setup_app(app)
 
 
 def accounts_handler(provider_api: ProviderBase) -> schema.LineItemResults:
@@ -74,16 +71,12 @@ def get_financial_data_impl(
         )
 
 
-@app.route("/healthy/", methods=["GET"])
-@service_endpoint()
-@spec.validate(resp=ResponseSpec(HTTP_200=core_schema.HealthResponse))
+@app.get("/healthy/")
 def healthy() -> core_schema.HealthResponse:
     return core_schema.HealthResponse(healthy=True)
 
 
-@app.route("/financial_data/", methods=["POST"])
-@service_endpoint()
-@spec.validate(resp=ResponseSpec(HTTP_200=schema.GetFinancialDataResponse))
+@app.post("/financial_data/")
 def get_financial_data(
     json: schema.GetFinancialDataRequest,
 ) -> schema.GetFinancialDataResponse:
@@ -102,9 +95,7 @@ def get_financial_data(
         )
 
 
-@app.route("/validate_credentials/", methods=["POST"])
-@service_endpoint()
-@spec.validate(resp=ResponseSpec(HTTP_200=schema.ValidateCredentialsResponse))
+@app.post("/validate_credentials/")
 def validate_credentials(
     json: schema.ValidateCredentialsRequest,
 ) -> schema.ValidateCredentialsResponse:
@@ -115,6 +106,3 @@ def validate_credentials(
             return schema.ValidateCredentialsResponse(valid=True)
         except AuthenticationError as e:
             return schema.ValidateCredentialsResponse(valid=False, error_message=str(e))
-
-
-spec.register(app)

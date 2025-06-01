@@ -47,6 +47,6 @@ def pretty_dump(data: Any, **json_override_kwarg: Any) -> str:
 PydanticType = TypeVar("PydanticType", bound=BaseModel)
 
 
-def to_pydantic(pydantic_type: type[PydanticType], obj: T) -> PydanticType:
-    data = {attr: getattr(obj, attr) for attr in pydantic_type.__fields__}
+def reinterpret_as_pydantic(pydantic_type: type[PydanticType], obj: T) -> PydanticType:
+    data = {attr: getattr(obj, attr) for attr in pydantic_type.model_fields}
     return pydantic_type(**data)

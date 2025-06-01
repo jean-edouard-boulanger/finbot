@@ -1,7 +1,8 @@
 import base64
 from typing import Any
 
-from finbot.core.pydantic_ import SecretStr
+from pydantic import SecretStr
+
 from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.core.secure import pgp_decrypt
 from finbot.core.utils import some

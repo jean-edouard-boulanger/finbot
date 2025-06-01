@@ -18,6 +18,7 @@ import { mapValues } from "../runtime";
  * @interface HealthResponse
  */
 export interface HealthResponse {
+  [key: string]: any | any;
   /**
    *
    * @type {boolean}
@@ -48,15 +49,25 @@ export function HealthResponseFromJSONTyped(
     return json;
   }
   return {
+    ...json,
     healthy: json["healthy"],
   };
 }
 
-export function HealthResponseToJSON(value?: HealthResponse | null): any {
+export function HealthResponseToJSON(json: any): HealthResponse {
+  return HealthResponseToJSONTyped(json, false);
+}
+
+export function HealthResponseToJSONTyped(
+  value?: HealthResponse | null,
+  ignoreDiscriminator: boolean = false,
+): any {
   if (value == null) {
     return value;
   }
+
   return {
+    ...value,
     healthy: value["healthy"],
   };
 }

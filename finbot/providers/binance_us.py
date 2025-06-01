@@ -2,9 +2,9 @@ from typing import Any, Generator
 
 from binance.client import Client as Binance
 from binance.exceptions import BinanceAPIException
+from pydantic import SecretStr
 
 from finbot.core.crypto_market import CryptoMarket
-from finbot.core.pydantic_ import SecretStr
 from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationError

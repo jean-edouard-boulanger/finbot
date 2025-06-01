@@ -17,6 +17,7 @@ import {
   LinkedAccountValuationEntryFromJSON,
   LinkedAccountValuationEntryFromJSONTyped,
   LinkedAccountValuationEntryToJSON,
+  LinkedAccountValuationEntryToJSONTyped,
 } from "./LinkedAccountValuationEntry";
 
 /**
@@ -25,6 +26,7 @@ import {
  * @interface LinkedAccountsValuation
  */
 export interface LinkedAccountsValuation {
+  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -65,6 +67,7 @@ export function LinkedAccountsValuationFromJSONTyped(
     return json;
   }
   return {
+    ...json,
     valuationCcy: json["valuation_ccy"],
     entries: (json["entries"] as Array<any>).map(
       LinkedAccountValuationEntryFromJSON,
@@ -73,12 +76,21 @@ export function LinkedAccountsValuationFromJSONTyped(
 }
 
 export function LinkedAccountsValuationToJSON(
+  json: any,
+): LinkedAccountsValuation {
+  return LinkedAccountsValuationToJSONTyped(json, false);
+}
+
+export function LinkedAccountsValuationToJSONTyped(
   value?: LinkedAccountsValuation | null,
+  ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {
     return value;
   }
+
   return {
+    ...value,
     valuation_ccy: value["valuationCcy"],
     entries: (value["entries"] as Array<any>).map(
       LinkedAccountValuationEntryToJSON,

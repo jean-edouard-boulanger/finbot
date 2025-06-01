@@ -13,26 +13,26 @@
 
 import * as runtime from "../runtime";
 import type {
-  AppCreateOrUpdateProviderRequest,
-  AppCreateOrUpdateProviderResponse,
-  AppGetPlaidSettingsResponse,
-  AppGetProviderResponse,
-  AppGetProvidersResponse,
-  ValidationErrorElement,
+  CreateOrUpdateProviderRequest,
+  CreateOrUpdateProviderResponse,
+  GetPlaidSettingsResponse,
+  GetProviderResponse,
+  GetProvidersResponse,
+  HTTPValidationError,
 } from "../models/index";
 import {
-  AppCreateOrUpdateProviderRequestFromJSON,
-  AppCreateOrUpdateProviderRequestToJSON,
-  AppCreateOrUpdateProviderResponseFromJSON,
-  AppCreateOrUpdateProviderResponseToJSON,
-  AppGetPlaidSettingsResponseFromJSON,
-  AppGetPlaidSettingsResponseToJSON,
-  AppGetProviderResponseFromJSON,
-  AppGetProviderResponseToJSON,
-  AppGetProvidersResponseFromJSON,
-  AppGetProvidersResponseToJSON,
-  ValidationErrorElementFromJSON,
-  ValidationErrorElementToJSON,
+  CreateOrUpdateProviderRequestFromJSON,
+  CreateOrUpdateProviderRequestToJSON,
+  CreateOrUpdateProviderResponseFromJSON,
+  CreateOrUpdateProviderResponseToJSON,
+  GetPlaidSettingsResponseFromJSON,
+  GetPlaidSettingsResponseToJSON,
+  GetProviderResponseFromJSON,
+  GetProviderResponseToJSON,
+  GetProvidersResponseFromJSON,
+  GetProvidersResponseToJSON,
+  HTTPValidationErrorFromJSON,
+  HTTPValidationErrorToJSON,
 } from "../models/index";
 
 export interface DeleteFinancialDataProviderRequest {
@@ -44,7 +44,7 @@ export interface GetFinancialDataProviderRequest {
 }
 
 export interface UpdateOrCreateFinancialDataProviderRequest {
-  appCreateOrUpdateProviderRequest?: AppCreateOrUpdateProviderRequest;
+  createOrUpdateProviderRequest: CreateOrUpdateProviderRequest;
 }
 
 /**
@@ -55,8 +55,8 @@ export interface UpdateOrCreateFinancialDataProviderRequest {
  */
 export interface FinancialDataProvidersApiInterface {
   /**
-   *
-   * @summary Delete provider
+   * Delete provider
+   * @summary Delete Provider
    * @param {string} providerId
    * @param {*} [options] Override http request option.
    * @throws {RequiredError}
@@ -65,20 +65,20 @@ export interface FinancialDataProvidersApiInterface {
   deleteFinancialDataProviderRaw(
     requestParameters: DeleteFinancialDataProviderRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<object>>;
+  ): Promise<runtime.ApiResponse<{ [key: string]: any }>>;
 
   /**
-   *
    * Delete provider
+   * Delete Provider
    */
   deleteFinancialDataProvider(
     requestParameters: DeleteFinancialDataProviderRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<object>;
+  ): Promise<{ [key: string]: any }>;
 
   /**
-   *
-   * @summary Get provider
+   * Get provider
+   * @summary Get Provider
    * @param {string} providerId
    * @param {*} [options] Override http request option.
    * @throws {RequiredError}
@@ -87,59 +87,59 @@ export interface FinancialDataProvidersApiInterface {
   getFinancialDataProviderRaw(
     requestParameters: GetFinancialDataProviderRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppGetProviderResponse>>;
+  ): Promise<runtime.ApiResponse<GetProviderResponse>>;
 
   /**
-   *
    * Get provider
+   * Get Provider
    */
   getFinancialDataProvider(
     requestParameters: GetFinancialDataProviderRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetProviderResponse>;
+  ): Promise<GetProviderResponse>;
 
   /**
-   *
-   * @summary Get providers
+   * Get providers
+   * @summary Get Providers
    * @param {*} [options] Override http request option.
    * @throws {RequiredError}
    * @memberof FinancialDataProvidersApiInterface
    */
   getFinancialDataProvidersRaw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppGetProvidersResponse>>;
+  ): Promise<runtime.ApiResponse<GetProvidersResponse>>;
 
   /**
-   *
    * Get providers
+   * Get Providers
    */
   getFinancialDataProviders(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetProvidersResponse>;
+  ): Promise<GetProvidersResponse>;
 
   /**
-   *
-   * @summary Get plaid settings
+   * Get plaid settings
+   * @summary Get Plaid Settings
    * @param {*} [options] Override http request option.
    * @throws {RequiredError}
    * @memberof FinancialDataProvidersApiInterface
    */
   getPlaidSettingsRaw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppGetPlaidSettingsResponse>>;
+  ): Promise<runtime.ApiResponse<GetPlaidSettingsResponse>>;
 
   /**
-   *
    * Get plaid settings
+   * Get Plaid Settings
    */
   getPlaidSettings(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetPlaidSettingsResponse>;
+  ): Promise<GetPlaidSettingsResponse>;
 
   /**
-   *
-   * @summary Update or create provider
-   * @param {AppCreateOrUpdateProviderRequest} [appCreateOrUpdateProviderRequest]
+   * Update or create provider
+   * @summary Update Or Create Provider
+   * @param {CreateOrUpdateProviderRequest} createOrUpdateProviderRequest
    * @param {*} [options] Override http request option.
    * @throws {RequiredError}
    * @memberof FinancialDataProvidersApiInterface
@@ -147,16 +147,16 @@ export interface FinancialDataProvidersApiInterface {
   updateOrCreateFinancialDataProviderRaw(
     requestParameters: UpdateOrCreateFinancialDataProviderRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppCreateOrUpdateProviderResponse>>;
+  ): Promise<runtime.ApiResponse<CreateOrUpdateProviderResponse>>;
 
   /**
-   *
    * Update or create provider
+   * Update Or Create Provider
    */
   updateOrCreateFinancialDataProvider(
     requestParameters: UpdateOrCreateFinancialDataProviderRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppCreateOrUpdateProviderResponse>;
+  ): Promise<CreateOrUpdateProviderResponse>;
 }
 
 /**
@@ -167,13 +167,13 @@ export class FinancialDataProvidersApi
   implements FinancialDataProvidersApiInterface
 {
   /**
-   *
    * Delete provider
+   * Delete Provider
    */
   async deleteFinancialDataProviderRaw(
     requestParameters: DeleteFinancialDataProviderRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<object>> {
+  ): Promise<runtime.ApiResponse<{ [key: string]: any }>> {
     if (requestParameters["providerId"] == null) {
       throw new runtime.RequiredError(
         "providerId",
@@ -187,7 +187,7 @@ export class FinancialDataProvidersApi
 
     if (this.configuration && this.configuration.accessToken) {
       const token = this.configuration.accessToken;
-      const tokenString = await token("bearerAuth", []);
+      const tokenString = await token("HTTPBearer", []);
 
       if (tokenString) {
         headerParameters["Authorization"] = `Bearer ${tokenString}`;
@@ -195,7 +195,7 @@ export class FinancialDataProvidersApi
     }
     const response = await this.request(
       {
-        path: `/api/v1/providers/{provider_id}/`.replace(
+        path: `/providers/{provider_id}/`.replace(
           `{${"provider_id"}}`,
           encodeURIComponent(String(requestParameters["providerId"])),
         ),
@@ -210,13 +210,13 @@ export class FinancialDataProvidersApi
   }
 
   /**
-   *
    * Delete provider
+   * Delete Provider
    */
   async deleteFinancialDataProvider(
     requestParameters: DeleteFinancialDataProviderRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<object> {
+  ): Promise<{ [key: string]: any }> {
     const response = await this.deleteFinancialDataProviderRaw(
       requestParameters,
       initOverrides,
@@ -225,13 +225,13 @@ export class FinancialDataProvidersApi
   }
 
   /**
-   *
    * Get provider
+   * Get Provider
    */
   async getFinancialDataProviderRaw(
     requestParameters: GetFinancialDataProviderRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppGetProviderResponse>> {
+  ): Promise<runtime.ApiResponse<GetProviderResponse>> {
     if (requestParameters["providerId"] == null) {
       throw new runtime.RequiredError(
         "providerId",
@@ -245,7 +245,7 @@ export class FinancialDataProvidersApi
 
     if (this.configuration && this.configuration.accessToken) {
       const token = this.configuration.accessToken;
-      const tokenString = await token("bearerAuth", []);
+      const tokenString = await token("HTTPBearer", []);
 
       if (tokenString) {
         headerParameters["Authorization"] = `Bearer ${tokenString}`;
@@ -253,7 +253,7 @@ export class FinancialDataProvidersApi
     }
     const response = await this.request(
       {
-        path: `/api/v1/providers/{provider_id}/`.replace(
+        path: `/providers/{provider_id}/`.replace(
           `{${"provider_id"}}`,
           encodeURIComponent(String(requestParameters["providerId"])),
         ),
@@ -265,18 +265,18 @@ export class FinancialDataProvidersApi
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AppGetProviderResponseFromJSON(jsonValue),
+      GetProviderResponseFromJSON(jsonValue),
     );
   }
 
   /**
-   *
    * Get provider
+   * Get Provider
    */
   async getFinancialDataProvider(
     requestParameters: GetFinancialDataProviderRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetProviderResponse> {
+  ): Promise<GetProviderResponse> {
     const response = await this.getFinancialDataProviderRaw(
       requestParameters,
       initOverrides,
@@ -285,19 +285,19 @@ export class FinancialDataProvidersApi
   }
 
   /**
-   *
    * Get providers
+   * Get Providers
    */
   async getFinancialDataProvidersRaw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppGetProvidersResponse>> {
+  ): Promise<runtime.ApiResponse<GetProvidersResponse>> {
     const queryParameters: any = {};
 
     const headerParameters: runtime.HTTPHeaders = {};
 
     if (this.configuration && this.configuration.accessToken) {
       const token = this.configuration.accessToken;
-      const tokenString = await token("bearerAuth", []);
+      const tokenString = await token("HTTPBearer", []);
 
       if (tokenString) {
         headerParameters["Authorization"] = `Bearer ${tokenString}`;
@@ -305,7 +305,7 @@ export class FinancialDataProvidersApi
     }
     const response = await this.request(
       {
-        path: `/api/v1/providers/`,
+        path: `/providers/`,
         method: "GET",
         headers: headerParameters,
         query: queryParameters,
@@ -314,35 +314,35 @@ export class FinancialDataProvidersApi
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AppGetProvidersResponseFromJSON(jsonValue),
+      GetProvidersResponseFromJSON(jsonValue),
     );
   }
 
   /**
-   *
    * Get providers
+   * Get Providers
    */
   async getFinancialDataProviders(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetProvidersResponse> {
+  ): Promise<GetProvidersResponse> {
     const response = await this.getFinancialDataProvidersRaw(initOverrides);
     return await response.value();
   }
 
   /**
-   *
    * Get plaid settings
+   * Get Plaid Settings
    */
   async getPlaidSettingsRaw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppGetPlaidSettingsResponse>> {
+  ): Promise<runtime.ApiResponse<GetPlaidSettingsResponse>> {
     const queryParameters: any = {};
 
     const headerParameters: runtime.HTTPHeaders = {};
 
     if (this.configuration && this.configuration.accessToken) {
       const token = this.configuration.accessToken;
-      const tokenString = await token("bearerAuth", []);
+      const tokenString = await token("HTTPBearer", []);
 
       if (tokenString) {
         headerParameters["Authorization"] = `Bearer ${tokenString}`;
@@ -350,7 +350,7 @@ export class FinancialDataProvidersApi
     }
     const response = await this.request(
       {
-        path: `/api/v1/providers/plaid/settings/`,
+        path: `/providers/plaid/settings/`,
         method: "GET",
         headers: headerParameters,
         query: queryParameters,
@@ -359,29 +359,36 @@ export class FinancialDataProvidersApi
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AppGetPlaidSettingsResponseFromJSON(jsonValue),
+      GetPlaidSettingsResponseFromJSON(jsonValue),
     );
   }
 
   /**
-   *
    * Get plaid settings
+   * Get Plaid Settings
    */
   async getPlaidSettings(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetPlaidSettingsResponse> {
+  ): Promise<GetPlaidSettingsResponse> {
     const response = await this.getPlaidSettingsRaw(initOverrides);
     return await response.value();
   }
 
   /**
-   *
    * Update or create provider
+   * Update Or Create Provider
    */
   async updateOrCreateFinancialDataProviderRaw(
     requestParameters: UpdateOrCreateFinancialDataProviderRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppCreateOrUpdateProviderResponse>> {
+  ): Promise<runtime.ApiResponse<CreateOrUpdateProviderResponse>> {
+    if (requestParameters["createOrUpdateProviderRequest"] == null) {
+      throw new runtime.RequiredError(
+        "createOrUpdateProviderRequest",
+        'Required parameter "createOrUpdateProviderRequest" was null or undefined when calling updateOrCreateFinancialDataProvider().',
+      );
+    }
+
     const queryParameters: any = {};
 
     const headerParameters: runtime.HTTPHeaders = {};
@@ -390,7 +397,7 @@ export class FinancialDataProvidersApi
 
     if (this.configuration && this.configuration.accessToken) {
       const token = this.configuration.accessToken;
-      const tokenString = await token("bearerAuth", []);
+      const tokenString = await token("HTTPBearer", []);
 
       if (tokenString) {
         headerParameters["Authorization"] = `Bearer ${tokenString}`;
@@ -398,30 +405,30 @@ export class FinancialDataProvidersApi
     }
     const response = await this.request(
       {
-        path: `/api/v1/providers/`,
+        path: `/providers/`,
         method: "PUT",
         headers: headerParameters,
         query: queryParameters,
-        body: AppCreateOrUpdateProviderRequestToJSON(
-          requestParameters["appCreateOrUpdateProviderRequest"],
+        body: CreateOrUpdateProviderRequestToJSON(
+          requestParameters["createOrUpdateProviderRequest"],
         ),
       },
       initOverrides,
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AppCreateOrUpdateProviderResponseFromJSON(jsonValue),
+      CreateOrUpdateProviderResponseFromJSON(jsonValue),
     );
   }
 
   /**
-   *
    * Update or create provider
+   * Update Or Create Provider
    */
   async updateOrCreateFinancialDataProvider(
-    requestParameters: UpdateOrCreateFinancialDataProviderRequest = {},
+    requestParameters: UpdateOrCreateFinancialDataProviderRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppCreateOrUpdateProviderResponse> {
+  ): Promise<CreateOrUpdateProviderResponse> {
     const response = await this.updateOrCreateFinancialDataProviderRaw(
       requestParameters,
       initOverrides,

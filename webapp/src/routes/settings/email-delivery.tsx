@@ -82,13 +82,13 @@ export const EmailDeliverySettingsPanel: React.FC<
       setProviderSettings(formData);
       const validate = true;
       await administrationApi.setEmailDeliverySettings({
-        validate,
-        appEmailDeliverySettings: {
+        emailDeliverySettings: {
           senderName,
           subjectPrefix,
           providerId: provider!.providerId,
           providerSettings: formData,
         },
+        validate: validate,
       });
       toast.success("Email delivery settings have been updated successfully");
     } catch (e) {

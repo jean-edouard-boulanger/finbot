@@ -1,9 +1,9 @@
 from typing import Any, Generator
 
 import krakenex
+from pydantic import SecretStr
 
 from finbot.core.errors import FinbotError
-from finbot.core.pydantic_ import SecretStr
 from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationError

@@ -12,15 +12,10 @@
  */
 
 import * as runtime from "../runtime";
-import type {
-  AppGetAccountsFormattingRulesResponse,
-  ValidationErrorElement,
-} from "../models/index";
+import type { GetAccountsFormattingRulesResponse } from "../models/index";
 import {
-  AppGetAccountsFormattingRulesResponseFromJSON,
-  AppGetAccountsFormattingRulesResponseToJSON,
-  ValidationErrorElementFromJSON,
-  ValidationErrorElementToJSON,
+  GetAccountsFormattingRulesResponseFromJSON,
+  GetAccountsFormattingRulesResponseToJSON,
 } from "../models/index";
 
 /**
@@ -31,23 +26,23 @@ import {
  */
 export interface FormattingRulesApiInterface {
   /**
-   *
-   * @summary Get accounts formatting rules
+   * Get accounts formatting rules
+   * @summary Get Accounts Formatting Rules
    * @param {*} [options] Override http request option.
    * @throws {RequiredError}
    * @memberof FormattingRulesApiInterface
    */
   getAccountsFormattingRulesRaw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppGetAccountsFormattingRulesResponse>>;
+  ): Promise<runtime.ApiResponse<GetAccountsFormattingRulesResponse>>;
 
   /**
-   *
    * Get accounts formatting rules
+   * Get Accounts Formatting Rules
    */
   getAccountsFormattingRules(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetAccountsFormattingRulesResponse>;
+  ): Promise<GetAccountsFormattingRulesResponse>;
 }
 
 /**
@@ -58,19 +53,19 @@ export class FormattingRulesApi
   implements FormattingRulesApiInterface
 {
   /**
-   *
    * Get accounts formatting rules
+   * Get Accounts Formatting Rules
    */
   async getAccountsFormattingRulesRaw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppGetAccountsFormattingRulesResponse>> {
+  ): Promise<runtime.ApiResponse<GetAccountsFormattingRulesResponse>> {
     const queryParameters: any = {};
 
     const headerParameters: runtime.HTTPHeaders = {};
 
     if (this.configuration && this.configuration.accessToken) {
       const token = this.configuration.accessToken;
-      const tokenString = await token("bearerAuth", []);
+      const tokenString = await token("HTTPBearer", []);
 
       if (tokenString) {
         headerParameters["Authorization"] = `Bearer ${tokenString}`;
@@ -78,7 +73,7 @@ export class FormattingRulesApi
     }
     const response = await this.request(
       {
-        path: `/api/v1/formatting_rules/accounts/`,
+        path: `/formatting_rules/accounts/`,
         method: "GET",
         headers: headerParameters,
         query: queryParameters,
@@ -87,17 +82,17 @@ export class FormattingRulesApi
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AppGetAccountsFormattingRulesResponseFromJSON(jsonValue),
+      GetAccountsFormattingRulesResponseFromJSON(jsonValue),
     );
   }
 
   /**
-   *
    * Get accounts formatting rules
+   * Get Accounts Formatting Rules
    */
   async getAccountsFormattingRules(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetAccountsFormattingRulesResponse> {
+  ): Promise<GetAccountsFormattingRulesResponse> {
     const response = await this.getAccountsFormattingRulesRaw(initOverrides);
     return await response.value();
   }

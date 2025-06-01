@@ -18,6 +18,7 @@ import { mapValues } from "../runtime";
  * @interface AggregationDescription
  */
 export interface AggregationDescription {
+  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -50,17 +51,27 @@ export function AggregationDescriptionFromJSONTyped(
     return json;
   }
   return {
+    ...json,
     asStr: json["as_str"],
   };
 }
 
 export function AggregationDescriptionToJSON(
+  json: any,
+): AggregationDescription {
+  return AggregationDescriptionToJSONTyped(json, false);
+}
+
+export function AggregationDescriptionToJSONTyped(
   value?: AggregationDescription | null,
+  ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {
     return value;
   }
+
   return {
+    ...value,
     as_str: value["asStr"],
   };
 }

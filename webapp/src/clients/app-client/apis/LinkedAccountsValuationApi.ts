@@ -13,26 +13,26 @@
 
 import * as runtime from "../runtime";
 import type {
-  AppGetLinkedAccountsHistoricalValuation,
-  AppGetLinkedAccountsValuationResponse,
-  ValidationErrorElement,
+  GetLinkedAccountsHistoricalValuation,
+  GetLinkedAccountsValuationResponse,
+  HTTPValidationError,
   ValuationFrequency,
 } from "../models/index";
 import {
-  AppGetLinkedAccountsHistoricalValuationFromJSON,
-  AppGetLinkedAccountsHistoricalValuationToJSON,
-  AppGetLinkedAccountsValuationResponseFromJSON,
-  AppGetLinkedAccountsValuationResponseToJSON,
-  ValidationErrorElementFromJSON,
-  ValidationErrorElementToJSON,
+  GetLinkedAccountsHistoricalValuationFromJSON,
+  GetLinkedAccountsHistoricalValuationToJSON,
+  GetLinkedAccountsValuationResponseFromJSON,
+  GetLinkedAccountsValuationResponseToJSON,
+  HTTPValidationErrorFromJSON,
+  HTTPValidationErrorToJSON,
   ValuationFrequencyFromJSON,
   ValuationFrequencyToJSON,
 } from "../models/index";
 
 export interface GetLinkedAccountsHistoricalValuationRequest {
   userAccountId: number;
-  fromTime?: Date;
-  toTime?: Date;
+  fromTime?: Date | null;
+  toTime?: Date | null;
   frequency?: ValuationFrequency;
 }
 
@@ -48,8 +48,8 @@ export interface GetLinkedAccountsValuationRequest {
  */
 export interface LinkedAccountsValuationApiInterface {
   /**
-   *
-   * @summary Get linked accounts historical valuation
+   * Get linked accounts historical valuation
+   * @summary Get Linked Accounts Historical Valuation
    * @param {number} userAccountId
    * @param {Date} [fromTime]
    * @param {Date} [toTime]
@@ -61,20 +61,20 @@ export interface LinkedAccountsValuationApiInterface {
   getLinkedAccountsHistoricalValuationRaw(
     requestParameters: GetLinkedAccountsHistoricalValuationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppGetLinkedAccountsHistoricalValuation>>;
+  ): Promise<runtime.ApiResponse<GetLinkedAccountsHistoricalValuation>>;
 
   /**
-   *
    * Get linked accounts historical valuation
+   * Get Linked Accounts Historical Valuation
    */
   getLinkedAccountsHistoricalValuation(
     requestParameters: GetLinkedAccountsHistoricalValuationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetLinkedAccountsHistoricalValuation>;
+  ): Promise<GetLinkedAccountsHistoricalValuation>;
 
   /**
-   *
-   * @summary Get linked accounts valuation
+   * Get linked accounts valuation
+   * @summary Get Linked Accounts Valuation
    * @param {number} userAccountId
    * @param {*} [options] Override http request option.
    * @throws {RequiredError}
@@ -83,16 +83,16 @@ export interface LinkedAccountsValuationApiInterface {
   getLinkedAccountsValuationRaw(
     requestParameters: GetLinkedAccountsValuationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppGetLinkedAccountsValuationResponse>>;
+  ): Promise<runtime.ApiResponse<GetLinkedAccountsValuationResponse>>;
 
   /**
-   *
    * Get linked accounts valuation
+   * Get Linked Accounts Valuation
    */
   getLinkedAccountsValuation(
     requestParameters: GetLinkedAccountsValuationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetLinkedAccountsValuationResponse>;
+  ): Promise<GetLinkedAccountsValuationResponse>;
 }
 
 /**
@@ -103,13 +103,13 @@ export class LinkedAccountsValuationApi
   implements LinkedAccountsValuationApiInterface
 {
   /**
-   *
    * Get linked accounts historical valuation
+   * Get Linked Accounts Historical Valuation
    */
   async getLinkedAccountsHistoricalValuationRaw(
     requestParameters: GetLinkedAccountsHistoricalValuationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppGetLinkedAccountsHistoricalValuation>> {
+  ): Promise<runtime.ApiResponse<GetLinkedAccountsHistoricalValuation>> {
     if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
@@ -139,7 +139,7 @@ export class LinkedAccountsValuationApi
 
     if (this.configuration && this.configuration.accessToken) {
       const token = this.configuration.accessToken;
-      const tokenString = await token("bearerAuth", []);
+      const tokenString = await token("HTTPBearer", []);
 
       if (tokenString) {
         headerParameters["Authorization"] = `Bearer ${tokenString}`;
@@ -147,7 +147,7 @@ export class LinkedAccountsValuationApi
     }
     const response = await this.request(
       {
-        path: `/api/v1/accounts/{user_account_id}/linked_accounts/valuation/history/`.replace(
+        path: `/accounts/{user_account_id}/linked_accounts/valuation/history/`.replace(
           `{${"user_account_id"}}`,
           encodeURIComponent(String(requestParameters["userAccountId"])),
         ),
@@ -159,18 +159,18 @@ export class LinkedAccountsValuationApi
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AppGetLinkedAccountsHistoricalValuationFromJSON(jsonValue),
+      GetLinkedAccountsHistoricalValuationFromJSON(jsonValue),
     );
   }
 
   /**
-   *
    * Get linked accounts historical valuation
+   * Get Linked Accounts Historical Valuation
    */
   async getLinkedAccountsHistoricalValuation(
     requestParameters: GetLinkedAccountsHistoricalValuationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetLinkedAccountsHistoricalValuation> {
+  ): Promise<GetLinkedAccountsHistoricalValuation> {
     const response = await this.getLinkedAccountsHistoricalValuationRaw(
       requestParameters,
       initOverrides,
@@ -179,13 +179,13 @@ export class LinkedAccountsValuationApi
   }
 
   /**
-   *
    * Get linked accounts valuation
+   * Get Linked Accounts Valuation
    */
   async getLinkedAccountsValuationRaw(
     requestParameters: GetLinkedAccountsValuationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppGetLinkedAccountsValuationResponse>> {
+  ): Promise<runtime.ApiResponse<GetLinkedAccountsValuationResponse>> {
     if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
@@ -199,7 +199,7 @@ export class LinkedAccountsValuationApi
 
     if (this.configuration && this.configuration.accessToken) {
       const token = this.configuration.accessToken;
-      const tokenString = await token("bearerAuth", []);
+      const tokenString = await token("HTTPBearer", []);
 
       if (tokenString) {
         headerParameters["Authorization"] = `Bearer ${tokenString}`;
@@ -207,7 +207,7 @@ export class LinkedAccountsValuationApi
     }
     const response = await this.request(
       {
-        path: `/api/v1/accounts/{user_account_id}/linked_accounts/valuation/`.replace(
+        path: `/accounts/{user_account_id}/linked_accounts/valuation/`.replace(
           `{${"user_account_id"}}`,
           encodeURIComponent(String(requestParameters["userAccountId"])),
         ),
@@ -219,18 +219,18 @@ export class LinkedAccountsValuationApi
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AppGetLinkedAccountsValuationResponseFromJSON(jsonValue),
+      GetLinkedAccountsValuationResponseFromJSON(jsonValue),
     );
   }
 
   /**
-   *
    * Get linked accounts valuation
+   * Get Linked Accounts Valuation
    */
   async getLinkedAccountsValuation(
     requestParameters: GetLinkedAccountsValuationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetLinkedAccountsValuationResponse> {
+  ): Promise<GetLinkedAccountsValuationResponse> {
     const response = await this.getLinkedAccountsValuationRaw(
       requestParameters,
       initOverrides,

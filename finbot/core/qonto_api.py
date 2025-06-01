@@ -1,9 +1,9 @@
 from typing import cast
 
 import requests
+from pydantic import BaseModel
 
 from finbot.core.errors import FinbotError
-from finbot.core.pydantic_ import BaseModel
 from finbot.core.typing_extensions import JSON
 
 
@@ -13,7 +13,7 @@ class BankAccount(BaseModel):
     bic: str
     currency: str
     balance: float
-    balance_cents: str
+    balance_cents: float
     authorized_balance: float
     authorized_balance_cents: int
     name: str

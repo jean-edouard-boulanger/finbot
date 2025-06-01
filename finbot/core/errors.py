@@ -6,21 +6,41 @@ class FinbotError(Exception):
 
 
 class ApplicationError(FinbotError):
-    def __init__(self, error_message: str, error_code: str) -> None:
+    error_code: str = "G00X"
+
+    def __init__(self, error_message: str) -> None:
         super().__init__(error_message)
-        self.error_code = error_code
 
 
 class InvalidUserInput(ApplicationError):
-    def __init__(self, error_message: str) -> None:
-        super().__init__(error_message, "G001")
+    error_code = "G001"
 
 
 class InvalidOperation(ApplicationError):
-    def __init__(self, error_message: str) -> None:
-        super().__init__(error_message, "G002")
+    error_code = "G002"
 
 
 class MissingUserData(ApplicationError):
-    def __init__(self, error_message: str) -> None:
-        super().__init__(error_message, "G003")
+    error_code = "G003"
+
+
+class NotAllowedError(ApplicationError):
+    error_code = "G004"
+
+    def __init__(self, error_message: str = "Not allowed"):
+        super().__init__(error_message)
+
+
+class ResourceNotFoundError(ApplicationError):
+    error_code = "G005"
+
+
+class AuthError(ApplicationError):
+    error_code = "A00X"
+
+
+class InvalidJwtError(AuthError):
+    error_code = "A001"
+
+    def __init__(self) -> None:
+        super().__init__("Invalid JWT token")

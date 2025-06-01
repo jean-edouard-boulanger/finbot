@@ -3,8 +3,8 @@ from dataclasses import dataclass
 from typing import Any, Generator, cast
 
 from playwright.sync_api import Locator
+from pydantic import SecretStr
 
-from finbot.core.pydantic_ import SecretStr
 from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.core.utils import raise_
 from finbot.providers.errors import AuthenticationError, UnsupportedAccountType
