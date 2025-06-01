@@ -37,6 +37,13 @@ export function ValueFromJSONTyped(
   return json;
 }
 
-export function ValueToJSON(value?: Value | null): any {
+export function ValueToJSON(json: any): Value {
+  return ValueToJSONTyped(json, false);
+}
+
+export function ValueToJSONTyped(
+  value?: Value | null,
+  ignoreDiscriminator: boolean = false,
+): any {
   return value;
 }

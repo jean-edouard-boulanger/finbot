@@ -1,3 +1,4 @@
+import enum
 from typing import Literal
 
 from finbot.core import schema as core_schema
@@ -15,8 +16,16 @@ class ValuationWithSparkline(Valuation):
     sparkline: list[float | None]
 
 
+class NodeRole(str, enum.Enum):
+    metadata = "metadata"
+    item = "item"
+    sub_account = "sub_account"
+    linked_account = "linked_account"
+    user_account = "user_account"
+
+
 class SubAccountItemMetadataNode(BaseModel):
-    role: Literal["metadata"] = "metadata"
+    role: Literal[NodeRole.metadata] = NodeRole.metadata
     label: str
     value: int | float | str | bool
 
@@ -37,7 +46,7 @@ class SubAccountItemDescription(BaseModel):
 
 
 class SubAccountItemNode(BaseModel):
-    role: Literal["item"] = "item"
+    role: Literal[NodeRole.item] = NodeRole.item
     item: SubAccountItemDescription
     valuation: Valuation
     children: list[SubAccountItemMetadataNode]
@@ -51,7 +60,7 @@ class SubAccountDescription(BaseModel):
 
 
 class SubAccountNode(BaseModel):
-    role: Literal["sub_account"] = "sub_account"
+    role: Literal[NodeRole.sub_account] = NodeRole.sub_account
     sub_account: SubAccountDescription
     valuation: Valuation
     children: list[SubAccountItemNode]
@@ -64,14 +73,14 @@ class LinkedAccountDescription(BaseModel):
 
 
 class LinkedAccountNode(BaseModel):
-    role: Literal["linked_account"] = "linked_account"
+    role: Literal[NodeRole.linked_account] = NodeRole.linked_account
     linked_account: LinkedAccountDescription
     valuation: ValuationWithSparkline
     children: list[SubAccountNode]
 
 
 class UserAccountNode(BaseModel):
-    role: Literal["user_account"] = "user_account"
+    role: Literal[NodeRole.user_account] = NodeRole.user_account
     valuation: ValuationWithSparkline
     children: list[LinkedAccountNode]
 

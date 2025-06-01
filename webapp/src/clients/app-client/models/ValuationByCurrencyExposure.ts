@@ -17,6 +17,7 @@ import {
   GroupValuationFromJSON,
   GroupValuationFromJSONTyped,
   GroupValuationToJSON,
+  GroupValuationToJSONTyped,
 } from "./GroupValuation";
 
 /**
@@ -25,6 +26,7 @@ import {
  * @interface ValuationByCurrencyExposure
  */
 export interface ValuationByCurrencyExposure {
+  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -69,6 +71,7 @@ export function ValuationByCurrencyExposureFromJSONTyped(
     return json;
   }
   return {
+    ...json,
     valuationCcy: json["valuation_ccy"],
     byCurrencyExposure: (json["by_currency_exposure"] as Array<any>).map(
       GroupValuationFromJSON,
@@ -77,12 +80,21 @@ export function ValuationByCurrencyExposureFromJSONTyped(
 }
 
 export function ValuationByCurrencyExposureToJSON(
+  json: any,
+): ValuationByCurrencyExposure {
+  return ValuationByCurrencyExposureToJSONTyped(json, false);
+}
+
+export function ValuationByCurrencyExposureToJSONTyped(
   value?: ValuationByCurrencyExposure | null,
+  ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {
     return value;
   }
+
   return {
+    ...value,
     valuation_ccy: value["valuationCcy"],
     by_currency_exposure: (value["byCurrencyExposure"] as Array<any>).map(
       GroupValuationToJSON,

@@ -55,7 +55,7 @@ export const AccountSecuritySettings: React.FC<
       setLoading(true);
       await userAccountsApi.updateUserAccountPassword({
         userAccountId: userAccountId!,
-        appUpdateUserAccountPasswordRequest: {
+        updateUserAccountPasswordRequest: {
           oldPassword: form.oldPassword,
           newPassword: form.password,
         },

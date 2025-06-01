@@ -17,6 +17,7 @@ import {
   ValuationChangeFromJSON,
   ValuationChangeFromJSONTyped,
   ValuationChangeToJSON,
+  ValuationChangeToJSONTyped,
 } from "./ValuationChange";
 
 /**
@@ -25,6 +26,7 @@ import {
  * @interface ValuationWithSparkline
  */
 export interface ValuationWithSparkline {
+  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -45,10 +47,10 @@ export interface ValuationWithSparkline {
   change: ValuationChange;
   /**
    *
-   * @type {Array<number>}
+   * @type {Array<number | null>}
    * @memberof ValuationWithSparkline
    */
-  sparkline: Array<number>;
+  sparkline: Array<number | null>;
 }
 
 /**
@@ -78,6 +80,7 @@ export function ValuationWithSparklineFromJSONTyped(
     return json;
   }
   return {
+    ...json,
     currency: json["currency"],
     value: json["value"],
     change: ValuationChangeFromJSON(json["change"]),
@@ -86,12 +89,21 @@ export function ValuationWithSparklineFromJSONTyped(
 }
 
 export function ValuationWithSparklineToJSON(
+  json: any,
+): ValuationWithSparkline {
+  return ValuationWithSparklineToJSONTyped(json, false);
+}
+
+export function ValuationWithSparklineToJSONTyped(
   value?: ValuationWithSparkline | null,
+  ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {
     return value;
   }
+
   return {
+    ...value,
     currency: value["currency"],
     value: value["value"],
     change: ValuationChangeToJSON(value["change"]),

@@ -112,7 +112,7 @@ export const SignupForm: React.FC<Record<string, never>> = () => {
     try {
       setLoading(true);
       await userAccountsApi.createUserAccount({
-        appCreateUserAccountRequest: {
+        createUserAccountRequest: {
           email: form.email,
           fullName: form.fullName,
           password: form.password,

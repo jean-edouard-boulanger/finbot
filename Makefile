@@ -16,9 +16,6 @@ alembic-downgrade:
 alembic-history:
 	docker compose run --rm operator bash -c 'env FINBOT_WAIT_DEPS=finbotdb ./tools/finbot-wait && alembic history'
 
-pip-compile-all:
-	./tools/pip-compile-all
-
 docker-build-webapp:
 	cd webapp && docker build -t finbotapp/webapp:latest -f Dockerfile --pull .
 
@@ -125,6 +122,9 @@ generate-ts-client:
 
 bash:
 	docker compose run --rm operator bash
+
+freeze-py:
+	./tools/freeze-py
 
 lint-py: mypy flakes-check black-check isort-check banned-keywords-check-py unit-tests-py
 lint-ts: eslint tsc-build-check prettier-check-ts banned-keywords-check-ts

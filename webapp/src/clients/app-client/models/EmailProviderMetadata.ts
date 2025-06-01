@@ -18,6 +18,7 @@ import { mapValues } from "../runtime";
  * @interface EmailProviderMetadata
  */
 export interface EmailProviderMetadata {
+  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -32,10 +33,10 @@ export interface EmailProviderMetadata {
   description: string;
   /**
    *
-   * @type {object}
+   * @type {{ [key: string]: any; }}
    * @memberof EmailProviderMetadata
    */
-  settingsSchema: object;
+  settingsSchema: { [key: string]: any };
 }
 
 /**
@@ -67,19 +68,27 @@ export function EmailProviderMetadataFromJSONTyped(
     return json;
   }
   return {
+    ...json,
     providerId: json["provider_id"],
     description: json["description"],
     settingsSchema: json["settings_schema"],
   };
 }
 
-export function EmailProviderMetadataToJSON(
+export function EmailProviderMetadataToJSON(json: any): EmailProviderMetadata {
+  return EmailProviderMetadataToJSONTyped(json, false);
+}
+
+export function EmailProviderMetadataToJSONTyped(
   value?: EmailProviderMetadata | null,
+  ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {
     return value;
   }
+
   return {
+    ...value,
     provider_id: value["providerId"],
     description: value["description"],
     settings_schema: value["settingsSchema"],

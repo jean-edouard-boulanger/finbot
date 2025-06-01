@@ -20,7 +20,7 @@ from sqlalchemy.sql import text
 
 from finbot.core.db.session import Session
 from finbot.core.db.utils import row_to_dict
-from finbot.core.errors import InvalidUserInput, MissingUserData
+from finbot.core.errors import MissingUserData, ResourceNotFoundError
 from finbot.core.schema import ValuationFrequency
 from finbot.model import (
     LinkedAccount,
@@ -49,7 +49,7 @@ def get_user_account(
         .first()
     )
     if not account:
-        raise InvalidUserInput(f"user account '{user_account_id}' not found")
+        raise ResourceNotFoundError(f"user account '{user_account_id}' not found")
     return account
 
 
@@ -69,7 +69,7 @@ def get_user_account_settings(
         .first()
     )
     if not settings:
-        raise InvalidUserInput(f"user account '{user_account_id}' not found")
+        raise ResourceNotFoundError(f"user account '{user_account_id}' not found")
     return settings
 
 
@@ -86,7 +86,7 @@ def get_provider(
 ) -> Provider:
     provider = find_provider(session, provider_id)
     if not provider:
-        raise InvalidUserInput(f"provider '{provider_id}' not found")
+        raise ResourceNotFoundError(f"provider '{provider_id}' not found")
     return provider
 
 
@@ -507,7 +507,7 @@ def get_linked_accounts_statuses(
         raw_failure_details = data["failure_details"]
         results[data["linked_account_id"]] = {
             "status": "stable" if success else "unstable",
-            "errors": json.loads(raw_failure_details) if raw_failure_details else None,
+            "errors": json.loads(raw_failure_details) if raw_failure_details else [],
             "last_snapshot_id": data["snapshot_id"],
             "last_snapshot_time": data["snapshot_time"],
         }
@@ -600,5 +600,5 @@ def get_linked_account(
         .first()
     )
     if not linked_account:
-        raise InvalidUserInput(f"linked account {linked_account} not found")
+        raise ResourceNotFoundError(f"linked account {linked_account} not found")
     return linked_account

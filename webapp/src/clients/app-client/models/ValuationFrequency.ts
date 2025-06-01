@@ -12,7 +12,7 @@
  */
 
 /**
- * An enumeration.
+ *
  * @export
  */
 export const ValuationFrequency = {
@@ -29,8 +29,7 @@ export function instanceOfValuationFrequency(value: any): boolean {
   for (const key in ValuationFrequency) {
     if (Object.prototype.hasOwnProperty.call(ValuationFrequency, key)) {
       if (
-        (ValuationFrequency as Record<string, ValuationFrequency>)[key] ===
-        value
+        ValuationFrequency[key as keyof typeof ValuationFrequency] === value
       ) {
         return true;
       }
@@ -54,4 +53,11 @@ export function ValuationFrequencyToJSON(
   value?: ValuationFrequency | null,
 ): any {
   return value as any;
+}
+
+export function ValuationFrequencyToJSONTyped(
+  value: any,
+  ignoreDiscriminator: boolean,
+): ValuationFrequency {
+  return value as ValuationFrequency;
 }

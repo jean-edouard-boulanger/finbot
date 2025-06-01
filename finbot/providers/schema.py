@@ -1,7 +1,8 @@
 import enum
 from typing import Any, Self, TypeAlias
 
-from finbot.core.pydantic_ import Field, root_validator
+from pydantic import Field, model_validator
+
 from finbot.core.schema import BaseModel, CurrencyCode
 
 ProviderSpecificPayloadType: TypeAlias = dict[str, str | int | float | bool]
@@ -152,11 +153,11 @@ class Account(BaseModel):
     name: str = Field(description="Account name/description")
     iso_currency: CurrencyCode = Field(description="Account currency")
     type: AccountType = Field(description="Account type")
-    sub_type: str | None = Field(description="Account sub-type", enum=list(ALL_ACCOUNT_SUB_TYPES))
+    sub_type: str | None = Field(description="Account sub-type")
 
-    @root_validator
-    def validate_sub_type(cls, values: Any) -> Any:
-        account_type, account_sub_type = values.get("type"), values.get("sub_type")
+    @model_validator(mode="before")
+    def validate_sub_type(cls, data: Any) -> Any:
+        account_type, account_sub_type = data.get("type"), data.get("sub_type")
         if account_type is not None:
             allowed_sub_types = VALID_ACCOUNT_SUB_TYPES[account_type]
             if account_sub_type not in allowed_sub_types:
@@ -164,7 +165,7 @@ class Account(BaseModel):
                     f"'{account_sub_type}' is not a valid '{account_type.value}' account sub-type."
                     f" Valid values are: {', '.join(str(type_) for type_ in allowed_sub_types)}."
                 )
-        return values
+        return data
 
 
 class Asset(BaseModel):
@@ -193,13 +194,13 @@ class Asset(BaseModel):
         description="Arbitrary data (key/value pair) specific to the provider/asset",
     )
 
-    @root_validator
-    def validate_item_value(cls, values: Any) -> Any:
+    @model_validator(mode="before")
+    def validate_item_value(cls, data: Any) -> Any:
         _validate_item_value(
-            value_in_account_ccy=values.get("value_in_account_ccy"),
-            value_in_item_ccy=values.get("value_in_item_ccy"),
+            value_in_account_ccy=data.get("value_in_account_ccy"),
+            value_in_item_ccy=data.get("value_in_item_ccy"),
         )
-        return values
+        return data
 
     @classmethod
     def cash(
@@ -249,13 +250,13 @@ class Liability(BaseModel):
         description="Arbitrary data (key/value pair) specific to the provider/asset",
     )
 
-    @root_validator
-    def validate_item_value(cls, values: Any) -> Any:
+    @model_validator(mode="before")
+    def validate_item_value(cls, data: Any) -> Any:
         _validate_item_value(
-            value_in_account_ccy=values.get("value_in_account_ccy"),
-            value_in_item_ccy=values.get("value_in_item_ccy"),
+            value_in_account_ccy=data.get("value_in_account_ccy"),
+            value_in_item_ccy=data.get("value_in_item_ccy"),
         )
-        return values
+        return data
 
 
 class LiabilitiesEntry(BaseModel):

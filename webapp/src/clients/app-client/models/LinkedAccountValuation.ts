@@ -17,6 +17,7 @@ import {
   ValuationChangeFromJSON,
   ValuationChangeFromJSONTyped,
   ValuationChangeToJSON,
+  ValuationChangeToJSONTyped,
 } from "./ValuationChange";
 
 /**
@@ -25,6 +26,7 @@ import {
  * @interface LinkedAccountValuation
  */
 export interface LinkedAccountValuation {
+  [key: string]: any | any;
   /**
    *
    * @type {Date}
@@ -78,6 +80,7 @@ export function LinkedAccountValuationFromJSONTyped(
     return json;
   }
   return {
+    ...json,
     date: new Date(json["date"]),
     currency: json["currency"],
     value: json["value"],
@@ -86,12 +89,21 @@ export function LinkedAccountValuationFromJSONTyped(
 }
 
 export function LinkedAccountValuationToJSON(
+  json: any,
+): LinkedAccountValuation {
+  return LinkedAccountValuationToJSONTyped(json, false);
+}
+
+export function LinkedAccountValuationToJSONTyped(
   value?: LinkedAccountValuation | null,
+  ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {
     return value;
   }
+
   return {
+    ...value,
     date: value["date"].toISOString(),
     currency: value["currency"],
     value: value["value"],

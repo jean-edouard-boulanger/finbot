@@ -4,7 +4,7 @@ from finbot import model
 from finbot.apps.appwsrv import schema as appwsrv_schema
 from finbot.core import schema as core_schema
 from finbot.core.email_delivery import DeliverySettings
-from finbot.core.serialization import to_pydantic
+from finbot.core.serialization import reinterpret_as_pydantic
 from finbot.model import repository
 
 
@@ -45,7 +45,7 @@ def serialize_user_account_settings(
 def serialize_linked_account_status(
     linked_account_status: repository.LinkedAccountStatus | None,
 ) -> appwsrv_schema.LinkedAccountStatus | None:
-    return appwsrv_schema.LinkedAccountStatus.parse_obj(linked_account_status) if linked_account_status else None
+    return appwsrv_schema.LinkedAccountStatus.model_validate(linked_account_status) if linked_account_status else None
 
 
 def serialize_provider(provider: model.Provider) -> appwsrv_schema.Provider:
@@ -83,7 +83,7 @@ def serialize_linked_account(
 def serialize_valuation_change(
     change: model.ValuationChangeEntry,
 ) -> core_schema.ValuationChange:
-    return to_pydantic(core_schema.ValuationChange, change)
+    return reinterpret_as_pydantic(core_schema.ValuationChange, change)
 
 
 def serialize_email_delivery_settings(

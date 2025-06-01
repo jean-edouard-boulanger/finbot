@@ -17,18 +17,21 @@ import {
   ValuationFromJSON,
   ValuationFromJSONTyped,
   ValuationToJSON,
+  ValuationToJSONTyped,
 } from "./Valuation";
 import type { SubAccountItemMetadataNode } from "./SubAccountItemMetadataNode";
 import {
   SubAccountItemMetadataNodeFromJSON,
   SubAccountItemMetadataNodeFromJSONTyped,
   SubAccountItemMetadataNodeToJSON,
+  SubAccountItemMetadataNodeToJSONTyped,
 } from "./SubAccountItemMetadataNode";
 import type { SubAccountItemDescription } from "./SubAccountItemDescription";
 import {
   SubAccountItemDescriptionFromJSON,
   SubAccountItemDescriptionFromJSONTyped,
   SubAccountItemDescriptionToJSON,
+  SubAccountItemDescriptionToJSONTyped,
 } from "./SubAccountItemDescription";
 
 /**
@@ -37,6 +40,7 @@ import {
  * @interface SubAccountItemNode
  */
 export interface SubAccountItemNode {
+  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -96,6 +100,7 @@ export function SubAccountItemNodeFromJSONTyped(
     return json;
   }
   return {
+    ...json,
     role: json["role"] == null ? undefined : json["role"],
     item: SubAccountItemDescriptionFromJSON(json["item"]),
     valuation: ValuationFromJSON(json["valuation"]),
@@ -105,13 +110,20 @@ export function SubAccountItemNodeFromJSONTyped(
   };
 }
 
-export function SubAccountItemNodeToJSON(
+export function SubAccountItemNodeToJSON(json: any): SubAccountItemNode {
+  return SubAccountItemNodeToJSONTyped(json, false);
+}
+
+export function SubAccountItemNodeToJSONTyped(
   value?: SubAccountItemNode | null,
+  ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {
     return value;
   }
+
   return {
+    ...value,
     role: value["role"],
     item: SubAccountItemDescriptionToJSON(value["item"]),
     valuation: ValuationToJSON(value["valuation"]),

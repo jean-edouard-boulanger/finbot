@@ -18,6 +18,7 @@ import { mapValues } from "../runtime";
  * @interface UserAccountProfile
  */
 export interface UserAccountProfile {
+  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -35,7 +36,7 @@ export interface UserAccountProfile {
    * @type {string}
    * @memberof UserAccountProfile
    */
-  mobilePhoneNumber?: string;
+  mobilePhoneNumber: string | null;
 }
 
 /**
@@ -46,6 +47,11 @@ export function instanceOfUserAccountProfile(
 ): value is UserAccountProfile {
   if (!("email" in value) || value["email"] === undefined) return false;
   if (!("fullName" in value) || value["fullName"] === undefined) return false;
+  if (
+    !("mobilePhoneNumber" in value) ||
+    value["mobilePhoneNumber"] === undefined
+  )
+    return false;
   return true;
 }
 
@@ -61,22 +67,27 @@ export function UserAccountProfileFromJSONTyped(
     return json;
   }
   return {
+    ...json,
     email: json["email"],
     fullName: json["full_name"],
-    mobilePhoneNumber:
-      json["mobile_phone_number"] == null
-        ? undefined
-        : json["mobile_phone_number"],
+    mobilePhoneNumber: json["mobile_phone_number"],
   };
 }
 
-export function UserAccountProfileToJSON(
+export function UserAccountProfileToJSON(json: any): UserAccountProfile {
+  return UserAccountProfileToJSONTyped(json, false);
+}
+
+export function UserAccountProfileToJSONTyped(
   value?: UserAccountProfile | null,
+  ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {
     return value;
   }
+
   return {
+    ...value,
     email: value["email"],
     full_name: value["fullName"],
     mobile_phone_number: value["mobilePhoneNumber"],

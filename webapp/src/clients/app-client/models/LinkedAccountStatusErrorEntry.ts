@@ -17,6 +17,7 @@ import {
   ErrorMetadataFromJSON,
   ErrorMetadataFromJSONTyped,
   ErrorMetadataToJSON,
+  ErrorMetadataToJSONTyped,
 } from "./ErrorMetadata";
 
 /**
@@ -25,6 +26,7 @@ import {
  * @interface LinkedAccountStatusErrorEntry
  */
 export interface LinkedAccountStatusErrorEntry {
+  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -64,18 +66,28 @@ export function LinkedAccountStatusErrorEntryFromJSONTyped(
     return json;
   }
   return {
+    ...json,
     scope: json["scope"],
     error: ErrorMetadataFromJSON(json["error"]),
   };
 }
 
 export function LinkedAccountStatusErrorEntryToJSON(
+  json: any,
+): LinkedAccountStatusErrorEntry {
+  return LinkedAccountStatusErrorEntryToJSONTyped(json, false);
+}
+
+export function LinkedAccountStatusErrorEntryToJSONTyped(
   value?: LinkedAccountStatusErrorEntry | null,
+  ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {
     return value;
   }
+
   return {
+    ...value,
     scope: value["scope"],
     error: ErrorMetadataToJSON(value["error"]),
   };

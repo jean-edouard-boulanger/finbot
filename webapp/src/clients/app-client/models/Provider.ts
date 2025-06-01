@@ -12,12 +12,21 @@
  */
 
 import { mapValues } from "../runtime";
+import type { UpdatedAt } from "./UpdatedAt";
+import {
+  UpdatedAtFromJSON,
+  UpdatedAtFromJSONTyped,
+  UpdatedAtToJSON,
+  UpdatedAtToJSONTyped,
+} from "./UpdatedAt";
+
 /**
  *
  * @export
  * @interface Provider
  */
 export interface Provider {
+  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -38,10 +47,10 @@ export interface Provider {
   websiteUrl: string;
   /**
    *
-   * @type {object}
+   * @type {{ [key: string]: any; }}
    * @memberof Provider
    */
-  credentialsSchema: object;
+  credentialsSchema: { [key: string]: any };
   /**
    *
    * @type {Date}
@@ -50,10 +59,10 @@ export interface Provider {
   createdAt: Date;
   /**
    *
-   * @type {Date}
+   * @type {UpdatedAt}
    * @memberof Provider
    */
-  updatedAt?: Date;
+  updatedAt: UpdatedAt;
 }
 
 /**
@@ -71,6 +80,7 @@ export function instanceOfProvider(value: object): value is Provider {
   )
     return false;
   if (!("createdAt" in value) || value["createdAt"] === undefined) return false;
+  if (!("updatedAt" in value) || value["updatedAt"] === undefined) return false;
   return true;
 }
 
@@ -86,27 +96,35 @@ export function ProviderFromJSONTyped(
     return json;
   }
   return {
+    ...json,
     id: json["id"],
     description: json["description"],
     websiteUrl: json["website_url"],
     credentialsSchema: json["credentials_schema"],
     createdAt: new Date(json["created_at"]),
-    updatedAt:
-      json["updated_at"] == null ? undefined : new Date(json["updated_at"]),
+    updatedAt: UpdatedAtFromJSON(json["updated_at"]),
   };
 }
 
-export function ProviderToJSON(value?: Provider | null): any {
+export function ProviderToJSON(json: any): Provider {
+  return ProviderToJSONTyped(json, false);
+}
+
+export function ProviderToJSONTyped(
+  value?: Provider | null,
+  ignoreDiscriminator: boolean = false,
+): any {
   if (value == null) {
     return value;
   }
+
   return {
+    ...value,
     id: value["id"],
     description: value["description"],
     website_url: value["websiteUrl"],
     credentials_schema: value["credentialsSchema"],
     created_at: value["createdAt"].toISOString(),
-    updated_at:
-      value["updatedAt"] == null ? undefined : value["updatedAt"].toISOString(),
+    updated_at: UpdatedAtToJSON(value["updatedAt"]),
   };
 }

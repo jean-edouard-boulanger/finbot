@@ -1,21 +1,22 @@
 import enum
 import re
 import traceback
-from typing import Annotated, Any, Callable, ClassVar, Generator, Pattern, Self, TypeAlias, TypeVar
+from typing import Annotated, Any, Callable, Pattern, Self, TypeAlias, TypeVar
+
+from pydantic import BaseModel as _BaseModel
+from pydantic import ConfigDict, Field, GetJsonSchemaHandler
+from pydantic.json_schema import JsonSchemaValue
+from pydantic_core import CoreSchema
+from pydantic_core import core_schema as pydantic_core_schema
 
 from finbot.core.errors import ApplicationError, FinbotError
-from finbot.core.pydantic_ import BaseModel as _BaseModel
-from finbot.core.pydantic_ import Extra, Field
 from finbot.core.utils import fully_qualified_type_name
 
 CRYPTOCURRENCY_CODE_PREFIX = "X:"
 
 
 class BaseModel(_BaseModel):
-    __schema_namespace__: ClassVar[str] = ""
-
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
 
 BaseModelT = TypeVar("BaseModelT", bound=BaseModel)
@@ -27,25 +28,28 @@ class RegexValidatedStr(str):
     pre_formatters: list[Callable[[str], str]] | None = None
 
     @classmethod
-    def __get_validators__(cls) -> Generator[Callable[[Any], str], None, None]:
-        yield cls.validate
-
-    @classmethod
-    def __modify_schema__(cls, field_schema: dict[str, Any]) -> None:
-        field_schema.update(
-            pattern=cls.validation_regex.pattern,
-            examples=cls.examples,
+    def __get_pydantic_core_schema__(cls, *_: Any) -> CoreSchema:
+        return pydantic_core_schema.no_info_after_validator_function(
+            cls.validate,
+            pydantic_core_schema.str_schema(),
         )
 
     @classmethod
-    def validate(cls, v: Any) -> Self:
-        if not isinstance(v, str):
-            raise TypeError("string required")
+    def __get_pydantic_json_schema__(cls, schema: CoreSchema, handler: GetJsonSchemaHandler) -> JsonSchemaValue:
+        json_schema = handler(schema)
+        json_schema.update(
+            pattern=cls.validation_regex.pattern,
+            examples=cls.examples,
+        )
+        return json_schema
+
+    @classmethod
+    def validate(cls, v: str) -> Self:  # v is already validated as str by core_schema
         for formatter in cls.pre_formatters or []:
             v = formatter(v)
         if not cls.validation_regex.match(v):
             raise ValueError("invalid format")
-        return cls(f"{v}")
+        return cls(v)  # Remove f-string, just pass v directly
 
 
 class CurrencyCode(RegexValidatedStr):
@@ -114,6 +118,11 @@ class ApplicationErrorData(BaseModel):
         )
 
 
+class GenericError(BaseModel):
+    error: str
+    code: str | None = None
+
+
 class ApplicationErrorResponse(BaseModel):
     error: ApplicationErrorData
 
@@ -130,5 +139,5 @@ class HealthResponse(BaseModel):
     healthy: bool
 
 
-HexColour = Annotated[str, Field(regex=r"^#[A-Fa-f0-9]{6}$")]
+HexColour = Annotated[str, Field(pattern=r"^#[A-Fa-f0-9]{6}$")]
 LinkedAccountId: TypeAlias = int

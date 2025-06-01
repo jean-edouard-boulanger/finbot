@@ -13,17 +13,14 @@
 
 import * as runtime from "../runtime";
 import type {
-  AppGetEarningsReportResponse,
-  AppGetHoldingsReportResponse,
-  ValidationErrorElement,
+  GetEarningsReportResponse,
+  GetHoldingsReportResponse,
 } from "../models/index";
 import {
-  AppGetEarningsReportResponseFromJSON,
-  AppGetEarningsReportResponseToJSON,
-  AppGetHoldingsReportResponseFromJSON,
-  AppGetHoldingsReportResponseToJSON,
-  ValidationErrorElementFromJSON,
-  ValidationErrorElementToJSON,
+  GetEarningsReportResponseFromJSON,
+  GetEarningsReportResponseToJSON,
+  GetHoldingsReportResponseFromJSON,
+  GetHoldingsReportResponseToJSON,
 } from "../models/index";
 
 /**
@@ -34,42 +31,42 @@ import {
  */
 export interface UserAccountsReportsApiInterface {
   /**
-   *
-   * @summary Get earnings report
+   * Get earnings report
+   * @summary Get Earnings Report
    * @param {*} [options] Override http request option.
    * @throws {RequiredError}
    * @memberof UserAccountsReportsApiInterface
    */
   getUserAccountEarningsReportRaw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppGetEarningsReportResponse>>;
+  ): Promise<runtime.ApiResponse<GetEarningsReportResponse>>;
 
   /**
-   *
    * Get earnings report
+   * Get Earnings Report
    */
   getUserAccountEarningsReport(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetEarningsReportResponse>;
+  ): Promise<GetEarningsReportResponse>;
 
   /**
-   *
-   * @summary Get holdings report
+   * Get holdings report
+   * @summary Get Holdings Report
    * @param {*} [options] Override http request option.
    * @throws {RequiredError}
    * @memberof UserAccountsReportsApiInterface
    */
   getUserAccountHoldingsReportRaw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppGetHoldingsReportResponse>>;
+  ): Promise<runtime.ApiResponse<GetHoldingsReportResponse>>;
 
   /**
-   *
    * Get holdings report
+   * Get Holdings Report
    */
   getUserAccountHoldingsReport(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetHoldingsReportResponse>;
+  ): Promise<GetHoldingsReportResponse>;
 }
 
 /**
@@ -80,19 +77,19 @@ export class UserAccountsReportsApi
   implements UserAccountsReportsApiInterface
 {
   /**
-   *
    * Get earnings report
+   * Get Earnings Report
    */
   async getUserAccountEarningsReportRaw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppGetEarningsReportResponse>> {
+  ): Promise<runtime.ApiResponse<GetEarningsReportResponse>> {
     const queryParameters: any = {};
 
     const headerParameters: runtime.HTTPHeaders = {};
 
     if (this.configuration && this.configuration.accessToken) {
       const token = this.configuration.accessToken;
-      const tokenString = await token("bearerAuth", []);
+      const tokenString = await token("HTTPBearer", []);
 
       if (tokenString) {
         headerParameters["Authorization"] = `Bearer ${tokenString}`;
@@ -100,7 +97,7 @@ export class UserAccountsReportsApi
     }
     const response = await this.request(
       {
-        path: `/api/v1/reports/earnings/`,
+        path: `/reports/earnings/`,
         method: "GET",
         headers: headerParameters,
         query: queryParameters,
@@ -109,35 +106,35 @@ export class UserAccountsReportsApi
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AppGetEarningsReportResponseFromJSON(jsonValue),
+      GetEarningsReportResponseFromJSON(jsonValue),
     );
   }
 
   /**
-   *
    * Get earnings report
+   * Get Earnings Report
    */
   async getUserAccountEarningsReport(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetEarningsReportResponse> {
+  ): Promise<GetEarningsReportResponse> {
     const response = await this.getUserAccountEarningsReportRaw(initOverrides);
     return await response.value();
   }
 
   /**
-   *
    * Get holdings report
+   * Get Holdings Report
    */
   async getUserAccountHoldingsReportRaw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppGetHoldingsReportResponse>> {
+  ): Promise<runtime.ApiResponse<GetHoldingsReportResponse>> {
     const queryParameters: any = {};
 
     const headerParameters: runtime.HTTPHeaders = {};
 
     if (this.configuration && this.configuration.accessToken) {
       const token = this.configuration.accessToken;
-      const tokenString = await token("bearerAuth", []);
+      const tokenString = await token("HTTPBearer", []);
 
       if (tokenString) {
         headerParameters["Authorization"] = `Bearer ${tokenString}`;
@@ -145,7 +142,7 @@ export class UserAccountsReportsApi
     }
     const response = await this.request(
       {
-        path: `/api/v1/reports/holdings/`,
+        path: `/reports/holdings/`,
         method: "GET",
         headers: headerParameters,
         query: queryParameters,
@@ -154,17 +151,17 @@ export class UserAccountsReportsApi
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AppGetHoldingsReportResponseFromJSON(jsonValue),
+      GetHoldingsReportResponseFromJSON(jsonValue),
     );
   }
 
   /**
-   *
    * Get holdings report
+   * Get Holdings Report
    */
   async getUserAccountHoldingsReport(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetHoldingsReportResponse> {
+  ): Promise<GetHoldingsReportResponse> {
     const response = await this.getUserAccountHoldingsReportRaw(initOverrides);
     return await response.value();
   }

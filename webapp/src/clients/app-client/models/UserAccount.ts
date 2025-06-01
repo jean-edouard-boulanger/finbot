@@ -18,6 +18,7 @@ import { mapValues } from "../runtime";
  * @interface UserAccount
  */
 export interface UserAccount {
+  [key: string]: any | any;
   /**
    *
    * @type {number}
@@ -41,7 +42,7 @@ export interface UserAccount {
    * @type {string}
    * @memberof UserAccount
    */
-  mobilePhoneNumber?: string;
+  mobilePhoneNumber: string | null;
   /**
    *
    * @type {boolean}
@@ -59,7 +60,7 @@ export interface UserAccount {
    * @type {Date}
    * @memberof UserAccount
    */
-  updatedAt?: Date;
+  updatedAt: Date | null;
 }
 
 /**
@@ -69,8 +70,14 @@ export function instanceOfUserAccount(value: object): value is UserAccount {
   if (!("id" in value) || value["id"] === undefined) return false;
   if (!("email" in value) || value["email"] === undefined) return false;
   if (!("fullName" in value) || value["fullName"] === undefined) return false;
+  if (
+    !("mobilePhoneNumber" in value) ||
+    value["mobilePhoneNumber"] === undefined
+  )
+    return false;
   if (!("isDemo" in value) || value["isDemo"] === undefined) return false;
   if (!("createdAt" in value) || value["createdAt"] === undefined) return false;
+  if (!("updatedAt" in value) || value["updatedAt"] === undefined) return false;
   return true;
 }
 
@@ -86,25 +93,31 @@ export function UserAccountFromJSONTyped(
     return json;
   }
   return {
+    ...json,
     id: json["id"],
     email: json["email"],
     fullName: json["full_name"],
-    mobilePhoneNumber:
-      json["mobile_phone_number"] == null
-        ? undefined
-        : json["mobile_phone_number"],
+    mobilePhoneNumber: json["mobile_phone_number"],
     isDemo: json["is_demo"],
     createdAt: new Date(json["created_at"]),
-    updatedAt:
-      json["updated_at"] == null ? undefined : new Date(json["updated_at"]),
+    updatedAt: json["updated_at"] == null ? null : new Date(json["updated_at"]),
   };
 }
 
-export function UserAccountToJSON(value?: UserAccount | null): any {
+export function UserAccountToJSON(json: any): UserAccount {
+  return UserAccountToJSONTyped(json, false);
+}
+
+export function UserAccountToJSONTyped(
+  value?: UserAccount | null,
+  ignoreDiscriminator: boolean = false,
+): any {
   if (value == null) {
     return value;
   }
+
   return {
+    ...value,
     id: value["id"],
     email: value["email"],
     full_name: value["fullName"],
@@ -112,6 +125,8 @@ export function UserAccountToJSON(value?: UserAccount | null): any {
     is_demo: value["isDemo"],
     created_at: value["createdAt"].toISOString(),
     updated_at:
-      value["updatedAt"] == null ? undefined : value["updatedAt"].toISOString(),
+      value["updatedAt"] == null
+        ? null
+        : (value["updatedAt"] as any).toISOString(),
   };
 }

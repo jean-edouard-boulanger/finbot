@@ -7,7 +7,8 @@ from xml.etree.ElementTree import ParseError as XMLParseError
 from xml.etree.ElementTree import fromstring as parse_xml_payload
 from xml.etree.ElementTree import parse as parse_xml_file
 
-from finbot.core.pydantic_ import ValidationError as PydanticValidationError
+from pydantic import ValidationError as PydanticValidationError
+
 from finbot.core.schema import BaseModelT
 from finbot.providers.interactive_brokers_uk.flex_report import schema
 
@@ -35,7 +36,7 @@ def _parse_xml_to_pydantic(
 ) -> BaseModelT:
     raw_payload = {}
     model_to_xml_fields_overrides = model_to_xml_fields_overrides or {}
-    for model_field_name in model_type.__fields__:
+    for model_field_name in model_type.model_fields:
         if mapping := model_to_xml_fields_overrides.get(model_field_name):
             if isinstance(mapping, _FieldMapping):
                 xml_field_name = mapping.xml_field

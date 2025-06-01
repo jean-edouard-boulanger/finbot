@@ -17,6 +17,7 @@ import {
   UserAccountNodeFromJSON,
   UserAccountNodeFromJSONTyped,
   UserAccountNodeToJSON,
+  UserAccountNodeToJSONTyped,
 } from "./UserAccountNode";
 
 /**
@@ -25,6 +26,7 @@ import {
  * @interface ValuationTree
  */
 export interface ValuationTree {
+  [key: string]: any | any;
   /**
    *
    * @type {UserAccountNode}
@@ -54,15 +56,25 @@ export function ValuationTreeFromJSONTyped(
     return json;
   }
   return {
+    ...json,
     valuationTree: UserAccountNodeFromJSON(json["valuation_tree"]),
   };
 }
 
-export function ValuationTreeToJSON(value?: ValuationTree | null): any {
+export function ValuationTreeToJSON(json: any): ValuationTree {
+  return ValuationTreeToJSONTyped(json, false);
+}
+
+export function ValuationTreeToJSONTyped(
+  value?: ValuationTree | null,
+  ignoreDiscriminator: boolean = false,
+): any {
   if (value == null) {
     return value;
   }
+
   return {
+    ...value,
     valuation_tree: UserAccountNodeToJSON(value["valuationTree"]),
   };
 }

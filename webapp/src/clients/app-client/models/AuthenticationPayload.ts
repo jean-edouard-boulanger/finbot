@@ -18,6 +18,7 @@ import { mapValues } from "../runtime";
  * @interface AuthenticationPayload
  */
 export interface AuthenticationPayload {
+  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -59,18 +60,26 @@ export function AuthenticationPayloadFromJSONTyped(
     return json;
   }
   return {
+    ...json,
     accessToken: json["access_token"],
     refreshToken: json["refresh_token"],
   };
 }
 
-export function AuthenticationPayloadToJSON(
+export function AuthenticationPayloadToJSON(json: any): AuthenticationPayload {
+  return AuthenticationPayloadToJSONTyped(json, false);
+}
+
+export function AuthenticationPayloadToJSONTyped(
   value?: AuthenticationPayload | null,
+  ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {
     return value;
   }
+
   return {
+    ...value,
     access_token: value["accessToken"],
     refresh_token: value["refreshToken"],
   };

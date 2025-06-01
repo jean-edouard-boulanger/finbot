@@ -18,6 +18,7 @@ import { mapValues } from "../runtime";
  * @interface PlaidSettings
  */
 export interface PlaidSettings {
+  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -61,17 +62,27 @@ export function PlaidSettingsFromJSONTyped(
     return json;
   }
   return {
+    ...json,
     environment: json["environment"],
     clientId: json["client_id"],
     publicKey: json["public_key"],
   };
 }
 
-export function PlaidSettingsToJSON(value?: PlaidSettings | null): any {
+export function PlaidSettingsToJSON(json: any): PlaidSettings {
+  return PlaidSettingsToJSONTyped(json, false);
+}
+
+export function PlaidSettingsToJSONTyped(
+  value?: PlaidSettings | null,
+  ignoreDiscriminator: boolean = false,
+): any {
   if (value == null) {
     return value;
   }
+
   return {
+    ...value,
     environment: value["environment"],
     client_id: value["clientId"],
     public_key: value["publicKey"],

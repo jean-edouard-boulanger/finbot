@@ -18,6 +18,7 @@ import { mapValues } from "../runtime";
  * @interface UserAccountSettings
  */
 export interface UserAccountSettings {
+  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -35,7 +36,7 @@ export interface UserAccountSettings {
    * @type {Date}
    * @memberof UserAccountSettings
    */
-  updatedAt?: Date;
+  updatedAt: Date | null;
 }
 
 /**
@@ -47,6 +48,7 @@ export function instanceOfUserAccountSettings(
   if (!("valuationCcy" in value) || value["valuationCcy"] === undefined)
     return false;
   if (!("createdAt" in value) || value["createdAt"] === undefined) return false;
+  if (!("updatedAt" in value) || value["updatedAt"] === undefined) return false;
   return true;
 }
 
@@ -62,23 +64,32 @@ export function UserAccountSettingsFromJSONTyped(
     return json;
   }
   return {
+    ...json,
     valuationCcy: json["valuation_ccy"],
     createdAt: new Date(json["created_at"]),
-    updatedAt:
-      json["updated_at"] == null ? undefined : new Date(json["updated_at"]),
+    updatedAt: json["updated_at"] == null ? null : new Date(json["updated_at"]),
   };
 }
 
-export function UserAccountSettingsToJSON(
+export function UserAccountSettingsToJSON(json: any): UserAccountSettings {
+  return UserAccountSettingsToJSONTyped(json, false);
+}
+
+export function UserAccountSettingsToJSONTyped(
   value?: UserAccountSettings | null,
+  ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {
     return value;
   }
+
   return {
+    ...value,
     valuation_ccy: value["valuationCcy"],
     created_at: value["createdAt"].toISOString(),
     updated_at:
-      value["updatedAt"] == null ? undefined : value["updatedAt"].toISOString(),
+      value["updatedAt"] == null
+        ? null
+        : (value["updatedAt"] as any).toISOString(),
   };
 }

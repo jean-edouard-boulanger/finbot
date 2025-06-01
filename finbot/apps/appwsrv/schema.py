@@ -1,10 +1,11 @@
 from datetime import date, datetime
 from typing import Any, Literal, TypeAlias
 
+from pydantic import ConfigDict, Field, SecretStr
+
 from finbot.apps.appwsrv.reports.earnings import schema as earnings_schema
 from finbot.apps.appwsrv.reports.holdings import schema as holdings_schema
 from finbot.core import schema as core_schema
-from finbot.core.pydantic_ import Extra, Field, SecretStr
 from finbot.core.schema import BaseModel, HexColour
 from finbot.providers import schema as providers_schema
 
@@ -14,7 +15,7 @@ CredentialsPayloadType: TypeAlias = dict[str, Any]
 
 
 class AppModel(BaseModel):
-    __schema_namespace__ = "App"
+    pass
 
 
 class UnsetField(AppModel):
@@ -28,8 +29,7 @@ class ErrorMetadata(AppModel):
     exception_type: str | None
     trace: str | None
 
-    class Config:
-        extra = Extra.ignore
+    model_config = ConfigDict(extra="ignore")
 
 
 class AuthenticationPayload(AppModel):
@@ -75,7 +75,7 @@ class LinkedAccountStatusErrorEntry(AppModel):
 
 class LinkedAccountStatus(AppModel):
     status: Literal["stable", "unstable"]
-    errors: list[LinkedAccountStatusErrorEntry] | None
+    errors: list[LinkedAccountStatusErrorEntry]
     last_snapshot_id: int
     last_snapshot_time: datetime
 

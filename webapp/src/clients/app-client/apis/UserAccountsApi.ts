@@ -13,42 +13,42 @@
 
 import * as runtime from "../runtime";
 import type {
-  AppCreateUserAccountRequest,
-  AppCreateUserAccountResponse,
-  AppGetUserAccountResponse,
-  AppGetUserAccountSettingsResponse,
-  AppIsEmailAvailableResponse,
-  AppIsUserAccountConfiguredResponse,
-  AppUpdateUserAccountPasswordRequest,
-  AppUpdateUserAccountProfileRequest,
-  AppUpdateUserAccountProfileResponse,
-  ValidationErrorElement,
+  CreateUserAccountRequest,
+  CreateUserAccountResponse,
+  GetUserAccountResponse,
+  GetUserAccountSettingsResponse,
+  HTTPValidationError,
+  IsEmailAvailableResponse,
+  IsUserAccountConfiguredResponse,
+  UpdateUserAccountPasswordRequest,
+  UpdateUserAccountProfileRequest,
+  UpdateUserAccountProfileResponse,
 } from "../models/index";
 import {
-  AppCreateUserAccountRequestFromJSON,
-  AppCreateUserAccountRequestToJSON,
-  AppCreateUserAccountResponseFromJSON,
-  AppCreateUserAccountResponseToJSON,
-  AppGetUserAccountResponseFromJSON,
-  AppGetUserAccountResponseToJSON,
-  AppGetUserAccountSettingsResponseFromJSON,
-  AppGetUserAccountSettingsResponseToJSON,
-  AppIsEmailAvailableResponseFromJSON,
-  AppIsEmailAvailableResponseToJSON,
-  AppIsUserAccountConfiguredResponseFromJSON,
-  AppIsUserAccountConfiguredResponseToJSON,
-  AppUpdateUserAccountPasswordRequestFromJSON,
-  AppUpdateUserAccountPasswordRequestToJSON,
-  AppUpdateUserAccountProfileRequestFromJSON,
-  AppUpdateUserAccountProfileRequestToJSON,
-  AppUpdateUserAccountProfileResponseFromJSON,
-  AppUpdateUserAccountProfileResponseToJSON,
-  ValidationErrorElementFromJSON,
-  ValidationErrorElementToJSON,
+  CreateUserAccountRequestFromJSON,
+  CreateUserAccountRequestToJSON,
+  CreateUserAccountResponseFromJSON,
+  CreateUserAccountResponseToJSON,
+  GetUserAccountResponseFromJSON,
+  GetUserAccountResponseToJSON,
+  GetUserAccountSettingsResponseFromJSON,
+  GetUserAccountSettingsResponseToJSON,
+  HTTPValidationErrorFromJSON,
+  HTTPValidationErrorToJSON,
+  IsEmailAvailableResponseFromJSON,
+  IsEmailAvailableResponseToJSON,
+  IsUserAccountConfiguredResponseFromJSON,
+  IsUserAccountConfiguredResponseToJSON,
+  UpdateUserAccountPasswordRequestFromJSON,
+  UpdateUserAccountPasswordRequestToJSON,
+  UpdateUserAccountProfileRequestFromJSON,
+  UpdateUserAccountProfileRequestToJSON,
+  UpdateUserAccountProfileResponseFromJSON,
+  UpdateUserAccountProfileResponseToJSON,
 } from "../models/index";
 
-export interface CreateUserAccountRequest {
-  appCreateUserAccountRequest?: AppCreateUserAccountRequest;
+export interface CreateUserAccountOperationRequest {
+  createUserAccountRequest: CreateUserAccountRequest;
 }
 
 export interface GetUserAccountRequest {
@@ -67,14 +67,14 @@ export interface IsUserAccountConfiguredRequest {
   userAccountId: number;
 }
 
-export interface UpdateUserAccountPasswordRequest {
+export interface UpdateUserAccountPasswordOperationRequest {
   userAccountId: number;
-  appUpdateUserAccountPasswordRequest?: AppUpdateUserAccountPasswordRequest;
+  updateUserAccountPasswordRequest: UpdateUserAccountPasswordRequest;
 }
 
-export interface UpdateUserAccountProfileRequest {
+export interface UpdateUserAccountProfileOperationRequest {
   userAccountId: number;
-  appUpdateUserAccountProfileRequest?: AppUpdateUserAccountProfileRequest;
+  updateUserAccountProfileRequest: UpdateUserAccountProfileRequest;
 }
 
 /**
@@ -86,29 +86,28 @@ export interface UpdateUserAccountProfileRequest {
 export interface UserAccountsApiInterface {
   /**
    *
-   * @summary create_user_account <POST>
-   * @param {AppCreateUserAccountRequest} [appCreateUserAccountRequest]
+   * @summary Create User Account
+   * @param {CreateUserAccountRequest} createUserAccountRequest
    * @param {*} [options] Override http request option.
    * @throws {RequiredError}
    * @memberof UserAccountsApiInterface
    */
   createUserAccountRaw(
-    requestParameters: CreateUserAccountRequest,
+    requestParameters: CreateUserAccountOperationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppCreateUserAccountResponse>>;
+  ): Promise<runtime.ApiResponse<CreateUserAccountResponse>>;
 
   /**
-   *
-   * create_user_account <POST>
+   * Create User Account
    */
   createUserAccount(
-    requestParameters: CreateUserAccountRequest,
+    requestParameters: CreateUserAccountOperationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppCreateUserAccountResponse>;
+  ): Promise<CreateUserAccountResponse>;
 
   /**
    *
-   * @summary get_user_account <GET>
+   * @summary Get User Account
    * @param {number} userAccountId
    * @param {*} [options] Override http request option.
    * @throws {RequiredError}
@@ -117,20 +116,19 @@ export interface UserAccountsApiInterface {
   getUserAccountRaw(
     requestParameters: GetUserAccountRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppGetUserAccountResponse>>;
+  ): Promise<runtime.ApiResponse<GetUserAccountResponse>>;
 
   /**
-   *
-   * get_user_account <GET>
+   * Get User Account
    */
   getUserAccount(
     requestParameters: GetUserAccountRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetUserAccountResponse>;
+  ): Promise<GetUserAccountResponse>;
 
   /**
    *
-   * @summary get_user_account_settings <GET>
+   * @summary Get User Account Settings
    * @param {number} userAccountId
    * @param {*} [options] Override http request option.
    * @throws {RequiredError}
@@ -139,20 +137,19 @@ export interface UserAccountsApiInterface {
   getUserAccountSettingsRaw(
     requestParameters: GetUserAccountSettingsRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppGetUserAccountSettingsResponse>>;
+  ): Promise<runtime.ApiResponse<GetUserAccountSettingsResponse>>;
 
   /**
-   *
-   * get_user_account_settings <GET>
+   * Get User Account Settings
    */
   getUserAccountSettings(
     requestParameters: GetUserAccountSettingsRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetUserAccountSettingsResponse>;
+  ): Promise<GetUserAccountSettingsResponse>;
 
   /**
    *
-   * @summary is_email_available <GET>
+   * @summary Is Email Available
    * @param {string} email
    * @param {*} [options] Override http request option.
    * @throws {RequiredError}
@@ -161,20 +158,19 @@ export interface UserAccountsApiInterface {
   isEmailAvailableRaw(
     requestParameters: IsEmailAvailableRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppIsEmailAvailableResponse>>;
+  ): Promise<runtime.ApiResponse<IsEmailAvailableResponse>>;
 
   /**
-   *
-   * is_email_available <GET>
+   * Is Email Available
    */
   isEmailAvailable(
     requestParameters: IsEmailAvailableRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppIsEmailAvailableResponse>;
+  ): Promise<IsEmailAvailableResponse>;
 
   /**
    *
-   * @summary is_user_account_configured <GET>
+   * @summary Is User Account Configured
    * @param {number} userAccountId
    * @param {*} [options] Override http request option.
    * @throws {RequiredError}
@@ -183,62 +179,59 @@ export interface UserAccountsApiInterface {
   isUserAccountConfiguredRaw(
     requestParameters: IsUserAccountConfiguredRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppIsUserAccountConfiguredResponse>>;
+  ): Promise<runtime.ApiResponse<IsUserAccountConfiguredResponse>>;
 
   /**
-   *
-   * is_user_account_configured <GET>
+   * Is User Account Configured
    */
   isUserAccountConfigured(
     requestParameters: IsUserAccountConfiguredRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppIsUserAccountConfiguredResponse>;
+  ): Promise<IsUserAccountConfiguredResponse>;
 
   /**
    *
-   * @summary update_user_account_password <PUT>
+   * @summary Update User Account Password
    * @param {number} userAccountId
-   * @param {AppUpdateUserAccountPasswordRequest} [appUpdateUserAccountPasswordRequest]
+   * @param {UpdateUserAccountPasswordRequest} updateUserAccountPasswordRequest
    * @param {*} [options] Override http request option.
    * @throws {RequiredError}
    * @memberof UserAccountsApiInterface
    */
   updateUserAccountPasswordRaw(
-    requestParameters: UpdateUserAccountPasswordRequest,
+    requestParameters: UpdateUserAccountPasswordOperationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<object>>;
+  ): Promise<runtime.ApiResponse<{ [key: string]: any }>>;
 
   /**
-   *
-   * update_user_account_password <PUT>
+   * Update User Account Password
    */
   updateUserAccountPassword(
-    requestParameters: UpdateUserAccountPasswordRequest,
+    requestParameters: UpdateUserAccountPasswordOperationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<object>;
+  ): Promise<{ [key: string]: any }>;
 
   /**
    *
-   * @summary update_user_account_profile <PUT>
+   * @summary Update User Account Profile
    * @param {number} userAccountId
-   * @param {AppUpdateUserAccountProfileRequest} [appUpdateUserAccountProfileRequest]
+   * @param {UpdateUserAccountProfileRequest} updateUserAccountProfileRequest
    * @param {*} [options] Override http request option.
    * @throws {RequiredError}
    * @memberof UserAccountsApiInterface
    */
   updateUserAccountProfileRaw(
-    requestParameters: UpdateUserAccountProfileRequest,
+    requestParameters: UpdateUserAccountProfileOperationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppUpdateUserAccountProfileResponse>>;
+  ): Promise<runtime.ApiResponse<UpdateUserAccountProfileResponse>>;
 
   /**
-   *
-   * update_user_account_profile <PUT>
+   * Update User Account Profile
    */
   updateUserAccountProfile(
-    requestParameters: UpdateUserAccountProfileRequest,
+    requestParameters: UpdateUserAccountProfileOperationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppUpdateUserAccountProfileResponse>;
+  ): Promise<UpdateUserAccountProfileResponse>;
 }
 
 /**
@@ -249,13 +242,19 @@ export class UserAccountsApi
   implements UserAccountsApiInterface
 {
   /**
-   *
-   * create_user_account <POST>
+   * Create User Account
    */
   async createUserAccountRaw(
-    requestParameters: CreateUserAccountRequest,
+    requestParameters: CreateUserAccountOperationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppCreateUserAccountResponse>> {
+  ): Promise<runtime.ApiResponse<CreateUserAccountResponse>> {
+    if (requestParameters["createUserAccountRequest"] == null) {
+      throw new runtime.RequiredError(
+        "createUserAccountRequest",
+        'Required parameter "createUserAccountRequest" was null or undefined when calling createUserAccount().',
+      );
+    }
+
     const queryParameters: any = {};
 
     const headerParameters: runtime.HTTPHeaders = {};
@@ -264,30 +263,29 @@ export class UserAccountsApi
 
     const response = await this.request(
       {
-        path: `/api/v1/accounts/`,
+        path: `/accounts/`,
         method: "POST",
         headers: headerParameters,
         query: queryParameters,
-        body: AppCreateUserAccountRequestToJSON(
-          requestParameters["appCreateUserAccountRequest"],
+        body: CreateUserAccountRequestToJSON(
+          requestParameters["createUserAccountRequest"],
         ),
       },
       initOverrides,
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AppCreateUserAccountResponseFromJSON(jsonValue),
+      CreateUserAccountResponseFromJSON(jsonValue),
     );
   }
 
   /**
-   *
-   * create_user_account <POST>
+   * Create User Account
    */
   async createUserAccount(
-    requestParameters: CreateUserAccountRequest = {},
+    requestParameters: CreateUserAccountOperationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppCreateUserAccountResponse> {
+  ): Promise<CreateUserAccountResponse> {
     const response = await this.createUserAccountRaw(
       requestParameters,
       initOverrides,
@@ -296,13 +294,12 @@ export class UserAccountsApi
   }
 
   /**
-   *
-   * get_user_account <GET>
+   * Get User Account
    */
   async getUserAccountRaw(
     requestParameters: GetUserAccountRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppGetUserAccountResponse>> {
+  ): Promise<runtime.ApiResponse<GetUserAccountResponse>> {
     if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
@@ -316,7 +313,7 @@ export class UserAccountsApi
 
     if (this.configuration && this.configuration.accessToken) {
       const token = this.configuration.accessToken;
-      const tokenString = await token("bearerAuth", []);
+      const tokenString = await token("HTTPBearer", []);
 
       if (tokenString) {
         headerParameters["Authorization"] = `Bearer ${tokenString}`;
@@ -324,7 +321,7 @@ export class UserAccountsApi
     }
     const response = await this.request(
       {
-        path: `/api/v1/accounts/{user_account_id}/`.replace(
+        path: `/accounts/{user_account_id}/`.replace(
           `{${"user_account_id"}}`,
           encodeURIComponent(String(requestParameters["userAccountId"])),
         ),
@@ -336,18 +333,17 @@ export class UserAccountsApi
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AppGetUserAccountResponseFromJSON(jsonValue),
+      GetUserAccountResponseFromJSON(jsonValue),
     );
   }
 
   /**
-   *
-   * get_user_account <GET>
+   * Get User Account
    */
   async getUserAccount(
     requestParameters: GetUserAccountRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetUserAccountResponse> {
+  ): Promise<GetUserAccountResponse> {
     const response = await this.getUserAccountRaw(
       requestParameters,
       initOverrides,
@@ -356,13 +352,12 @@ export class UserAccountsApi
   }
 
   /**
-   *
-   * get_user_account_settings <GET>
+   * Get User Account Settings
    */
   async getUserAccountSettingsRaw(
     requestParameters: GetUserAccountSettingsRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppGetUserAccountSettingsResponse>> {
+  ): Promise<runtime.ApiResponse<GetUserAccountSettingsResponse>> {
     if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
@@ -376,7 +371,7 @@ export class UserAccountsApi
 
     if (this.configuration && this.configuration.accessToken) {
       const token = this.configuration.accessToken;
-      const tokenString = await token("bearerAuth", []);
+      const tokenString = await token("HTTPBearer", []);
 
       if (tokenString) {
         headerParameters["Authorization"] = `Bearer ${tokenString}`;
@@ -384,7 +379,7 @@ export class UserAccountsApi
     }
     const response = await this.request(
       {
-        path: `/api/v1/accounts/{user_account_id}/settings/`.replace(
+        path: `/accounts/{user_account_id}/settings/`.replace(
           `{${"user_account_id"}}`,
           encodeURIComponent(String(requestParameters["userAccountId"])),
         ),
@@ -396,18 +391,17 @@ export class UserAccountsApi
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AppGetUserAccountSettingsResponseFromJSON(jsonValue),
+      GetUserAccountSettingsResponseFromJSON(jsonValue),
     );
   }
 
   /**
-   *
-   * get_user_account_settings <GET>
+   * Get User Account Settings
    */
   async getUserAccountSettings(
     requestParameters: GetUserAccountSettingsRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetUserAccountSettingsResponse> {
+  ): Promise<GetUserAccountSettingsResponse> {
     const response = await this.getUserAccountSettingsRaw(
       requestParameters,
       initOverrides,
@@ -416,13 +410,12 @@ export class UserAccountsApi
   }
 
   /**
-   *
-   * is_email_available <GET>
+   * Is Email Available
    */
   async isEmailAvailableRaw(
     requestParameters: IsEmailAvailableRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppIsEmailAvailableResponse>> {
+  ): Promise<runtime.ApiResponse<IsEmailAvailableResponse>> {
     if (requestParameters["email"] == null) {
       throw new runtime.RequiredError(
         "email",
@@ -438,17 +431,9 @@ export class UserAccountsApi
 
     const headerParameters: runtime.HTTPHeaders = {};
 
-    if (this.configuration && this.configuration.accessToken) {
-      const token = this.configuration.accessToken;
-      const tokenString = await token("bearerAuth", []);
-
-      if (tokenString) {
-        headerParameters["Authorization"] = `Bearer ${tokenString}`;
-      }
-    }
     const response = await this.request(
       {
-        path: `/api/v1/accounts/email_available/`,
+        path: `/accounts/email_available/`,
         method: "GET",
         headers: headerParameters,
         query: queryParameters,
@@ -457,18 +442,17 @@ export class UserAccountsApi
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AppIsEmailAvailableResponseFromJSON(jsonValue),
+      IsEmailAvailableResponseFromJSON(jsonValue),
     );
   }
 
   /**
-   *
-   * is_email_available <GET>
+   * Is Email Available
    */
   async isEmailAvailable(
     requestParameters: IsEmailAvailableRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppIsEmailAvailableResponse> {
+  ): Promise<IsEmailAvailableResponse> {
     const response = await this.isEmailAvailableRaw(
       requestParameters,
       initOverrides,
@@ -477,13 +461,12 @@ export class UserAccountsApi
   }
 
   /**
-   *
-   * is_user_account_configured <GET>
+   * Is User Account Configured
    */
   async isUserAccountConfiguredRaw(
     requestParameters: IsUserAccountConfiguredRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppIsUserAccountConfiguredResponse>> {
+  ): Promise<runtime.ApiResponse<IsUserAccountConfiguredResponse>> {
     if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
@@ -497,7 +480,7 @@ export class UserAccountsApi
 
     if (this.configuration && this.configuration.accessToken) {
       const token = this.configuration.accessToken;
-      const tokenString = await token("bearerAuth", []);
+      const tokenString = await token("HTTPBearer", []);
 
       if (tokenString) {
         headerParameters["Authorization"] = `Bearer ${tokenString}`;
@@ -505,7 +488,7 @@ export class UserAccountsApi
     }
     const response = await this.request(
       {
-        path: `/api/v1/accounts/{user_account_id}/is_configured/`.replace(
+        path: `/accounts/{user_account_id}/is_configured/`.replace(
           `{${"user_account_id"}}`,
           encodeURIComponent(String(requestParameters["userAccountId"])),
         ),
@@ -517,18 +500,17 @@ export class UserAccountsApi
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AppIsUserAccountConfiguredResponseFromJSON(jsonValue),
+      IsUserAccountConfiguredResponseFromJSON(jsonValue),
     );
   }
 
   /**
-   *
-   * is_user_account_configured <GET>
+   * Is User Account Configured
    */
   async isUserAccountConfigured(
     requestParameters: IsUserAccountConfiguredRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppIsUserAccountConfiguredResponse> {
+  ): Promise<IsUserAccountConfiguredResponse> {
     const response = await this.isUserAccountConfiguredRaw(
       requestParameters,
       initOverrides,
@@ -537,17 +519,23 @@ export class UserAccountsApi
   }
 
   /**
-   *
-   * update_user_account_password <PUT>
+   * Update User Account Password
    */
   async updateUserAccountPasswordRaw(
-    requestParameters: UpdateUserAccountPasswordRequest,
+    requestParameters: UpdateUserAccountPasswordOperationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<object>> {
+  ): Promise<runtime.ApiResponse<{ [key: string]: any }>> {
     if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
         'Required parameter "userAccountId" was null or undefined when calling updateUserAccountPassword().',
+      );
+    }
+
+    if (requestParameters["updateUserAccountPasswordRequest"] == null) {
+      throw new runtime.RequiredError(
+        "updateUserAccountPasswordRequest",
+        'Required parameter "updateUserAccountPasswordRequest" was null or undefined when calling updateUserAccountPassword().',
       );
     }
 
@@ -559,7 +547,7 @@ export class UserAccountsApi
 
     if (this.configuration && this.configuration.accessToken) {
       const token = this.configuration.accessToken;
-      const tokenString = await token("bearerAuth", []);
+      const tokenString = await token("HTTPBearer", []);
 
       if (tokenString) {
         headerParameters["Authorization"] = `Bearer ${tokenString}`;
@@ -567,15 +555,15 @@ export class UserAccountsApi
     }
     const response = await this.request(
       {
-        path: `/api/v1/accounts/{user_account_id}/password/`.replace(
+        path: `/accounts/{user_account_id}/password/`.replace(
           `{${"user_account_id"}}`,
           encodeURIComponent(String(requestParameters["userAccountId"])),
         ),
         method: "PUT",
         headers: headerParameters,
         query: queryParameters,
-        body: AppUpdateUserAccountPasswordRequestToJSON(
-          requestParameters["appUpdateUserAccountPasswordRequest"],
+        body: UpdateUserAccountPasswordRequestToJSON(
+          requestParameters["updateUserAccountPasswordRequest"],
         ),
       },
       initOverrides,
@@ -585,13 +573,12 @@ export class UserAccountsApi
   }
 
   /**
-   *
-   * update_user_account_password <PUT>
+   * Update User Account Password
    */
   async updateUserAccountPassword(
-    requestParameters: UpdateUserAccountPasswordRequest,
+    requestParameters: UpdateUserAccountPasswordOperationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<object> {
+  ): Promise<{ [key: string]: any }> {
     const response = await this.updateUserAccountPasswordRaw(
       requestParameters,
       initOverrides,
@@ -600,17 +587,23 @@ export class UserAccountsApi
   }
 
   /**
-   *
-   * update_user_account_profile <PUT>
+   * Update User Account Profile
    */
   async updateUserAccountProfileRaw(
-    requestParameters: UpdateUserAccountProfileRequest,
+    requestParameters: UpdateUserAccountProfileOperationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppUpdateUserAccountProfileResponse>> {
+  ): Promise<runtime.ApiResponse<UpdateUserAccountProfileResponse>> {
     if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
         'Required parameter "userAccountId" was null or undefined when calling updateUserAccountProfile().',
+      );
+    }
+
+    if (requestParameters["updateUserAccountProfileRequest"] == null) {
+      throw new runtime.RequiredError(
+        "updateUserAccountProfileRequest",
+        'Required parameter "updateUserAccountProfileRequest" was null or undefined when calling updateUserAccountProfile().',
       );
     }
 
@@ -622,7 +615,7 @@ export class UserAccountsApi
 
     if (this.configuration && this.configuration.accessToken) {
       const token = this.configuration.accessToken;
-      const tokenString = await token("bearerAuth", []);
+      const tokenString = await token("HTTPBearer", []);
 
       if (tokenString) {
         headerParameters["Authorization"] = `Bearer ${tokenString}`;
@@ -630,33 +623,32 @@ export class UserAccountsApi
     }
     const response = await this.request(
       {
-        path: `/api/v1/accounts/{user_account_id}/profile/`.replace(
+        path: `/accounts/{user_account_id}/profile/`.replace(
           `{${"user_account_id"}}`,
           encodeURIComponent(String(requestParameters["userAccountId"])),
         ),
         method: "PUT",
         headers: headerParameters,
         query: queryParameters,
-        body: AppUpdateUserAccountProfileRequestToJSON(
-          requestParameters["appUpdateUserAccountProfileRequest"],
+        body: UpdateUserAccountProfileRequestToJSON(
+          requestParameters["updateUserAccountProfileRequest"],
         ),
       },
       initOverrides,
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AppUpdateUserAccountProfileResponseFromJSON(jsonValue),
+      UpdateUserAccountProfileResponseFromJSON(jsonValue),
     );
   }
 
   /**
-   *
-   * update_user_account_profile <PUT>
+   * Update User Account Profile
    */
   async updateUserAccountProfile(
-    requestParameters: UpdateUserAccountProfileRequest,
+    requestParameters: UpdateUserAccountProfileOperationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppUpdateUserAccountProfileResponse> {
+  ): Promise<UpdateUserAccountProfileResponse> {
     const response = await this.updateUserAccountProfileRaw(
       requestParameters,
       initOverrides,

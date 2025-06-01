@@ -18,6 +18,7 @@ import { mapValues } from "../runtime";
  * @interface LinkedAccountValuationLinkedAccountDescription
  */
 export interface LinkedAccountValuationLinkedAccountDescription {
+  [key: string]: any | any;
   /**
    *
    * @type {number}
@@ -77,6 +78,7 @@ export function LinkedAccountValuationLinkedAccountDescriptionFromJSONTyped(
     return json;
   }
   return {
+    ...json,
     id: json["id"],
     providerId: json["provider_id"],
     description: json["description"],
@@ -85,12 +87,21 @@ export function LinkedAccountValuationLinkedAccountDescriptionFromJSONTyped(
 }
 
 export function LinkedAccountValuationLinkedAccountDescriptionToJSON(
+  json: any,
+): LinkedAccountValuationLinkedAccountDescription {
+  return LinkedAccountValuationLinkedAccountDescriptionToJSONTyped(json, false);
+}
+
+export function LinkedAccountValuationLinkedAccountDescriptionToJSONTyped(
   value?: LinkedAccountValuationLinkedAccountDescription | null,
+  ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {
     return value;
   }
+
   return {
+    ...value,
     id: value["id"],
     provider_id: value["providerId"],
     description: value["description"],

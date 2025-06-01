@@ -13,26 +13,26 @@
 
 import * as runtime from "../runtime";
 import type {
-  AppGetLinkedAccountResponse,
-  AppGetLinkedAccountsResponse,
-  AppLinkAccountRequest,
-  AppUpdateLinkedAccountCredentialsRequest,
-  AppUpdateLinkedAccountMetadataRequest,
-  ValidationErrorElement,
+  GetLinkedAccountResponse,
+  GetLinkedAccountsResponse,
+  HTTPValidationError,
+  LinkAccountRequest,
+  UpdateLinkedAccountCredentialsRequest,
+  UpdateLinkedAccountMetadataRequest,
 } from "../models/index";
 import {
-  AppGetLinkedAccountResponseFromJSON,
-  AppGetLinkedAccountResponseToJSON,
-  AppGetLinkedAccountsResponseFromJSON,
-  AppGetLinkedAccountsResponseToJSON,
-  AppLinkAccountRequestFromJSON,
-  AppLinkAccountRequestToJSON,
-  AppUpdateLinkedAccountCredentialsRequestFromJSON,
-  AppUpdateLinkedAccountCredentialsRequestToJSON,
-  AppUpdateLinkedAccountMetadataRequestFromJSON,
-  AppUpdateLinkedAccountMetadataRequestToJSON,
-  ValidationErrorElementFromJSON,
-  ValidationErrorElementToJSON,
+  GetLinkedAccountResponseFromJSON,
+  GetLinkedAccountResponseToJSON,
+  GetLinkedAccountsResponseFromJSON,
+  GetLinkedAccountsResponseToJSON,
+  HTTPValidationErrorFromJSON,
+  HTTPValidationErrorToJSON,
+  LinkAccountRequestFromJSON,
+  LinkAccountRequestToJSON,
+  UpdateLinkedAccountCredentialsRequestFromJSON,
+  UpdateLinkedAccountCredentialsRequestToJSON,
+  UpdateLinkedAccountMetadataRequestFromJSON,
+  UpdateLinkedAccountMetadataRequestToJSON,
 } from "../models/index";
 
 export interface DeleteLinkedAccountRequest {
@@ -51,23 +51,23 @@ export interface GetUserAccountLinkedAccountsRequest {
 
 export interface LinkNewAccountRequest {
   userAccountId: number;
+  linkAccountRequest: LinkAccountRequest;
   validate?: boolean;
   persist?: boolean;
-  appLinkAccountRequest?: AppLinkAccountRequest;
 }
 
-export interface UpdateLinkedAccountCredentialsRequest {
+export interface UpdateLinkedAccountCredentialsOperationRequest {
   userAccountId: number;
   linkedAccountId: number;
+  updateLinkedAccountCredentialsRequest: UpdateLinkedAccountCredentialsRequest;
   validate?: boolean;
   persist?: boolean;
-  appUpdateLinkedAccountCredentialsRequest?: AppUpdateLinkedAccountCredentialsRequest;
 }
 
-export interface UpdateLinkedAccountMetadataRequest {
+export interface UpdateLinkedAccountMetadataOperationRequest {
   userAccountId: number;
   linkedAccountId: number;
-  appUpdateLinkedAccountMetadataRequest?: AppUpdateLinkedAccountMetadataRequest;
+  updateLinkedAccountMetadataRequest: UpdateLinkedAccountMetadataRequest;
 }
 
 /**
@@ -78,8 +78,8 @@ export interface UpdateLinkedAccountMetadataRequest {
  */
 export interface LinkedAccountsApiInterface {
   /**
-   *
-   * @summary Delete linked account
+   * Delete linked account
+   * @summary Delete Linked Account
    * @param {number} userAccountId
    * @param {number} linkedAccountId
    * @param {*} [options] Override http request option.
@@ -89,20 +89,20 @@ export interface LinkedAccountsApiInterface {
   deleteLinkedAccountRaw(
     requestParameters: DeleteLinkedAccountRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<object>>;
+  ): Promise<runtime.ApiResponse<{ [key: string]: any }>>;
 
   /**
-   *
    * Delete linked account
+   * Delete Linked Account
    */
   deleteLinkedAccount(
     requestParameters: DeleteLinkedAccountRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<object>;
+  ): Promise<{ [key: string]: any }>;
 
   /**
-   *
-   * @summary Get linked account
+   * Get linked account
+   * @summary Get Linked Account
    * @param {number} userAccountId
    * @param {number} linkedAccountId
    * @param {*} [options] Override http request option.
@@ -112,20 +112,20 @@ export interface LinkedAccountsApiInterface {
   getLinkedAccountRaw(
     requestParameters: GetLinkedAccountRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppGetLinkedAccountResponse>>;
+  ): Promise<runtime.ApiResponse<GetLinkedAccountResponse>>;
 
   /**
-   *
    * Get linked account
+   * Get Linked Account
    */
   getLinkedAccount(
     requestParameters: GetLinkedAccountRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetLinkedAccountResponse>;
+  ): Promise<GetLinkedAccountResponse>;
 
   /**
-   *
-   * @summary Get linked accounts
+   * Get linked accounts
+   * @summary Get Linked Accounts
    * @param {number} userAccountId
    * @param {*} [options] Override http request option.
    * @throws {RequiredError}
@@ -134,24 +134,24 @@ export interface LinkedAccountsApiInterface {
   getUserAccountLinkedAccountsRaw(
     requestParameters: GetUserAccountLinkedAccountsRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppGetLinkedAccountsResponse>>;
+  ): Promise<runtime.ApiResponse<GetLinkedAccountsResponse>>;
 
   /**
-   *
    * Get linked accounts
+   * Get Linked Accounts
    */
   getUserAccountLinkedAccounts(
     requestParameters: GetUserAccountLinkedAccountsRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetLinkedAccountsResponse>;
+  ): Promise<GetLinkedAccountsResponse>;
 
   /**
-   *
-   * @summary Link new account
+   * Link new account
+   * @summary Link New Account
    * @param {number} userAccountId
+   * @param {LinkAccountRequest} linkAccountRequest
    * @param {boolean} [validate]
    * @param {boolean} [persist]
-   * @param {AppLinkAccountRequest} [appLinkAccountRequest]
    * @param {*} [options] Override http request option.
    * @throws {RequiredError}
    * @memberof LinkedAccountsApiInterface
@@ -159,66 +159,66 @@ export interface LinkedAccountsApiInterface {
   linkNewAccountRaw(
     requestParameters: LinkNewAccountRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<object>>;
+  ): Promise<runtime.ApiResponse<{ [key: string]: any }>>;
 
   /**
-   *
    * Link new account
+   * Link New Account
    */
   linkNewAccount(
     requestParameters: LinkNewAccountRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<object>;
+  ): Promise<{ [key: string]: any }>;
 
   /**
-   *
-   * @summary Update linked account credentials
+   * Update linked account credentials
+   * @summary Update Linked Account Credentials
    * @param {number} userAccountId
    * @param {number} linkedAccountId
+   * @param {UpdateLinkedAccountCredentialsRequest} updateLinkedAccountCredentialsRequest
    * @param {boolean} [validate]
    * @param {boolean} [persist]
-   * @param {AppUpdateLinkedAccountCredentialsRequest} [appUpdateLinkedAccountCredentialsRequest]
    * @param {*} [options] Override http request option.
    * @throws {RequiredError}
    * @memberof LinkedAccountsApiInterface
    */
   updateLinkedAccountCredentialsRaw(
-    requestParameters: UpdateLinkedAccountCredentialsRequest,
+    requestParameters: UpdateLinkedAccountCredentialsOperationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<object>>;
+  ): Promise<runtime.ApiResponse<{ [key: string]: any }>>;
 
   /**
-   *
    * Update linked account credentials
+   * Update Linked Account Credentials
    */
   updateLinkedAccountCredentials(
-    requestParameters: UpdateLinkedAccountCredentialsRequest,
+    requestParameters: UpdateLinkedAccountCredentialsOperationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<object>;
+  ): Promise<{ [key: string]: any }>;
 
   /**
-   *
-   * @summary Update linked account metadata
+   * Update linked account metadata
+   * @summary Update Linked Account Metadata
    * @param {number} userAccountId
    * @param {number} linkedAccountId
-   * @param {AppUpdateLinkedAccountMetadataRequest} [appUpdateLinkedAccountMetadataRequest]
+   * @param {UpdateLinkedAccountMetadataRequest} updateLinkedAccountMetadataRequest
    * @param {*} [options] Override http request option.
    * @throws {RequiredError}
    * @memberof LinkedAccountsApiInterface
    */
   updateLinkedAccountMetadataRaw(
-    requestParameters: UpdateLinkedAccountMetadataRequest,
+    requestParameters: UpdateLinkedAccountMetadataOperationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<object>>;
+  ): Promise<runtime.ApiResponse<{ [key: string]: any }>>;
 
   /**
-   *
    * Update linked account metadata
+   * Update Linked Account Metadata
    */
   updateLinkedAccountMetadata(
-    requestParameters: UpdateLinkedAccountMetadataRequest,
+    requestParameters: UpdateLinkedAccountMetadataOperationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<object>;
+  ): Promise<{ [key: string]: any }>;
 }
 
 /**
@@ -229,13 +229,13 @@ export class LinkedAccountsApi
   implements LinkedAccountsApiInterface
 {
   /**
-   *
    * Delete linked account
+   * Delete Linked Account
    */
   async deleteLinkedAccountRaw(
     requestParameters: DeleteLinkedAccountRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<object>> {
+  ): Promise<runtime.ApiResponse<{ [key: string]: any }>> {
     if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
@@ -256,7 +256,7 @@ export class LinkedAccountsApi
 
     if (this.configuration && this.configuration.accessToken) {
       const token = this.configuration.accessToken;
-      const tokenString = await token("bearerAuth", []);
+      const tokenString = await token("HTTPBearer", []);
 
       if (tokenString) {
         headerParameters["Authorization"] = `Bearer ${tokenString}`;
@@ -264,7 +264,7 @@ export class LinkedAccountsApi
     }
     const response = await this.request(
       {
-        path: `/api/v1/accounts/{user_account_id}/linked_accounts/{linked_account_id}/`
+        path: `/accounts/{user_account_id}/linked_accounts/{linked_account_id}/`
           .replace(
             `{${"user_account_id"}}`,
             encodeURIComponent(String(requestParameters["userAccountId"])),
@@ -284,13 +284,13 @@ export class LinkedAccountsApi
   }
 
   /**
-   *
    * Delete linked account
+   * Delete Linked Account
    */
   async deleteLinkedAccount(
     requestParameters: DeleteLinkedAccountRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<object> {
+  ): Promise<{ [key: string]: any }> {
     const response = await this.deleteLinkedAccountRaw(
       requestParameters,
       initOverrides,
@@ -299,13 +299,13 @@ export class LinkedAccountsApi
   }
 
   /**
-   *
    * Get linked account
+   * Get Linked Account
    */
   async getLinkedAccountRaw(
     requestParameters: GetLinkedAccountRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppGetLinkedAccountResponse>> {
+  ): Promise<runtime.ApiResponse<GetLinkedAccountResponse>> {
     if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
@@ -326,7 +326,7 @@ export class LinkedAccountsApi
 
     if (this.configuration && this.configuration.accessToken) {
       const token = this.configuration.accessToken;
-      const tokenString = await token("bearerAuth", []);
+      const tokenString = await token("HTTPBearer", []);
 
       if (tokenString) {
         headerParameters["Authorization"] = `Bearer ${tokenString}`;
@@ -334,7 +334,7 @@ export class LinkedAccountsApi
     }
     const response = await this.request(
       {
-        path: `/api/v1/accounts/{user_account_id}/linked_accounts/{linked_account_id}/`
+        path: `/accounts/{user_account_id}/linked_accounts/{linked_account_id}/`
           .replace(
             `{${"user_account_id"}}`,
             encodeURIComponent(String(requestParameters["userAccountId"])),
@@ -351,18 +351,18 @@ export class LinkedAccountsApi
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AppGetLinkedAccountResponseFromJSON(jsonValue),
+      GetLinkedAccountResponseFromJSON(jsonValue),
     );
   }
 
   /**
-   *
    * Get linked account
+   * Get Linked Account
    */
   async getLinkedAccount(
     requestParameters: GetLinkedAccountRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetLinkedAccountResponse> {
+  ): Promise<GetLinkedAccountResponse> {
     const response = await this.getLinkedAccountRaw(
       requestParameters,
       initOverrides,
@@ -371,13 +371,13 @@ export class LinkedAccountsApi
   }
 
   /**
-   *
    * Get linked accounts
+   * Get Linked Accounts
    */
   async getUserAccountLinkedAccountsRaw(
     requestParameters: GetUserAccountLinkedAccountsRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppGetLinkedAccountsResponse>> {
+  ): Promise<runtime.ApiResponse<GetLinkedAccountsResponse>> {
     if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
@@ -391,7 +391,7 @@ export class LinkedAccountsApi
 
     if (this.configuration && this.configuration.accessToken) {
       const token = this.configuration.accessToken;
-      const tokenString = await token("bearerAuth", []);
+      const tokenString = await token("HTTPBearer", []);
 
       if (tokenString) {
         headerParameters["Authorization"] = `Bearer ${tokenString}`;
@@ -399,7 +399,7 @@ export class LinkedAccountsApi
     }
     const response = await this.request(
       {
-        path: `/api/v1/accounts/{user_account_id}/linked_accounts/`.replace(
+        path: `/accounts/{user_account_id}/linked_accounts/`.replace(
           `{${"user_account_id"}}`,
           encodeURIComponent(String(requestParameters["userAccountId"])),
         ),
@@ -411,18 +411,18 @@ export class LinkedAccountsApi
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AppGetLinkedAccountsResponseFromJSON(jsonValue),
+      GetLinkedAccountsResponseFromJSON(jsonValue),
     );
   }
 
   /**
-   *
    * Get linked accounts
+   * Get Linked Accounts
    */
   async getUserAccountLinkedAccounts(
     requestParameters: GetUserAccountLinkedAccountsRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetLinkedAccountsResponse> {
+  ): Promise<GetLinkedAccountsResponse> {
     const response = await this.getUserAccountLinkedAccountsRaw(
       requestParameters,
       initOverrides,
@@ -431,17 +431,24 @@ export class LinkedAccountsApi
   }
 
   /**
-   *
    * Link new account
+   * Link New Account
    */
   async linkNewAccountRaw(
     requestParameters: LinkNewAccountRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<object>> {
+  ): Promise<runtime.ApiResponse<{ [key: string]: any }>> {
     if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
         'Required parameter "userAccountId" was null or undefined when calling linkNewAccount().',
+      );
+    }
+
+    if (requestParameters["linkAccountRequest"] == null) {
+      throw new runtime.RequiredError(
+        "linkAccountRequest",
+        'Required parameter "linkAccountRequest" was null or undefined when calling linkNewAccount().',
       );
     }
 
@@ -461,7 +468,7 @@ export class LinkedAccountsApi
 
     if (this.configuration && this.configuration.accessToken) {
       const token = this.configuration.accessToken;
-      const tokenString = await token("bearerAuth", []);
+      const tokenString = await token("HTTPBearer", []);
 
       if (tokenString) {
         headerParameters["Authorization"] = `Bearer ${tokenString}`;
@@ -469,16 +476,14 @@ export class LinkedAccountsApi
     }
     const response = await this.request(
       {
-        path: `/api/v1/accounts/{user_account_id}/linked_accounts/`.replace(
+        path: `/accounts/{user_account_id}/linked_accounts/`.replace(
           `{${"user_account_id"}}`,
           encodeURIComponent(String(requestParameters["userAccountId"])),
         ),
         method: "POST",
         headers: headerParameters,
         query: queryParameters,
-        body: AppLinkAccountRequestToJSON(
-          requestParameters["appLinkAccountRequest"],
-        ),
+        body: LinkAccountRequestToJSON(requestParameters["linkAccountRequest"]),
       },
       initOverrides,
     );
@@ -487,13 +492,13 @@ export class LinkedAccountsApi
   }
 
   /**
-   *
    * Link new account
+   * Link New Account
    */
   async linkNewAccount(
     requestParameters: LinkNewAccountRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<object> {
+  ): Promise<{ [key: string]: any }> {
     const response = await this.linkNewAccountRaw(
       requestParameters,
       initOverrides,
@@ -502,13 +507,13 @@ export class LinkedAccountsApi
   }
 
   /**
-   *
    * Update linked account credentials
+   * Update Linked Account Credentials
    */
   async updateLinkedAccountCredentialsRaw(
-    requestParameters: UpdateLinkedAccountCredentialsRequest,
+    requestParameters: UpdateLinkedAccountCredentialsOperationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<object>> {
+  ): Promise<runtime.ApiResponse<{ [key: string]: any }>> {
     if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
@@ -523,6 +528,13 @@ export class LinkedAccountsApi
       );
     }
 
+    if (requestParameters["updateLinkedAccountCredentialsRequest"] == null) {
+      throw new runtime.RequiredError(
+        "updateLinkedAccountCredentialsRequest",
+        'Required parameter "updateLinkedAccountCredentialsRequest" was null or undefined when calling updateLinkedAccountCredentials().',
+      );
+    }
+
     const queryParameters: any = {};
 
     if (requestParameters["validate"] != null) {
@@ -539,7 +551,7 @@ export class LinkedAccountsApi
 
     if (this.configuration && this.configuration.accessToken) {
       const token = this.configuration.accessToken;
-      const tokenString = await token("bearerAuth", []);
+      const tokenString = await token("HTTPBearer", []);
 
       if (tokenString) {
         headerParameters["Authorization"] = `Bearer ${tokenString}`;
@@ -547,7 +559,7 @@ export class LinkedAccountsApi
     }
     const response = await this.request(
       {
-        path: `/api/v1/accounts/{user_account_id}/linked_accounts/{linked_account_id}/credentials/`
+        path: `/accounts/{user_account_id}/linked_accounts/{linked_account_id}/credentials/`
           .replace(
             `{${"user_account_id"}}`,
             encodeURIComponent(String(requestParameters["userAccountId"])),
@@ -559,8 +571,8 @@ export class LinkedAccountsApi
         method: "PUT",
         headers: headerParameters,
         query: queryParameters,
-        body: AppUpdateLinkedAccountCredentialsRequestToJSON(
-          requestParameters["appUpdateLinkedAccountCredentialsRequest"],
+        body: UpdateLinkedAccountCredentialsRequestToJSON(
+          requestParameters["updateLinkedAccountCredentialsRequest"],
         ),
       },
       initOverrides,
@@ -570,13 +582,13 @@ export class LinkedAccountsApi
   }
 
   /**
-   *
    * Update linked account credentials
+   * Update Linked Account Credentials
    */
   async updateLinkedAccountCredentials(
-    requestParameters: UpdateLinkedAccountCredentialsRequest,
+    requestParameters: UpdateLinkedAccountCredentialsOperationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<object> {
+  ): Promise<{ [key: string]: any }> {
     const response = await this.updateLinkedAccountCredentialsRaw(
       requestParameters,
       initOverrides,
@@ -585,13 +597,13 @@ export class LinkedAccountsApi
   }
 
   /**
-   *
    * Update linked account metadata
+   * Update Linked Account Metadata
    */
   async updateLinkedAccountMetadataRaw(
-    requestParameters: UpdateLinkedAccountMetadataRequest,
+    requestParameters: UpdateLinkedAccountMetadataOperationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<object>> {
+  ): Promise<runtime.ApiResponse<{ [key: string]: any }>> {
     if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
@@ -606,6 +618,13 @@ export class LinkedAccountsApi
       );
     }
 
+    if (requestParameters["updateLinkedAccountMetadataRequest"] == null) {
+      throw new runtime.RequiredError(
+        "updateLinkedAccountMetadataRequest",
+        'Required parameter "updateLinkedAccountMetadataRequest" was null or undefined when calling updateLinkedAccountMetadata().',
+      );
+    }
+
     const queryParameters: any = {};
 
     const headerParameters: runtime.HTTPHeaders = {};
@@ -614,7 +633,7 @@ export class LinkedAccountsApi
 
     if (this.configuration && this.configuration.accessToken) {
       const token = this.configuration.accessToken;
-      const tokenString = await token("bearerAuth", []);
+      const tokenString = await token("HTTPBearer", []);
 
       if (tokenString) {
         headerParameters["Authorization"] = `Bearer ${tokenString}`;
@@ -622,7 +641,7 @@ export class LinkedAccountsApi
     }
     const response = await this.request(
       {
-        path: `/api/v1/accounts/{user_account_id}/linked_accounts/{linked_account_id}/metadata/`
+        path: `/accounts/{user_account_id}/linked_accounts/{linked_account_id}/metadata/`
           .replace(
             `{${"user_account_id"}}`,
             encodeURIComponent(String(requestParameters["userAccountId"])),
@@ -634,8 +653,8 @@ export class LinkedAccountsApi
         method: "PUT",
         headers: headerParameters,
         query: queryParameters,
-        body: AppUpdateLinkedAccountMetadataRequestToJSON(
-          requestParameters["appUpdateLinkedAccountMetadataRequest"],
+        body: UpdateLinkedAccountMetadataRequestToJSON(
+          requestParameters["updateLinkedAccountMetadataRequest"],
         ),
       },
       initOverrides,
@@ -645,13 +664,13 @@ export class LinkedAccountsApi
   }
 
   /**
-   *
    * Update linked account metadata
+   * Update Linked Account Metadata
    */
   async updateLinkedAccountMetadata(
-    requestParameters: UpdateLinkedAccountMetadataRequest,
+    requestParameters: UpdateLinkedAccountMetadataOperationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<object> {
+  ): Promise<{ [key: string]: any }> {
     const response = await this.updateLinkedAccountMetadataRaw(
       requestParameters,
       initOverrides,

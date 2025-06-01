@@ -13,55 +13,55 @@
 
 import * as runtime from "../runtime";
 import type {
-  AppGetUserAccountValuationByAssetClassResponse,
-  AppGetUserAccountValuationByAssetTypeResponse,
-  AppGetUserAccountValuationByCurrencyExposureResponse,
-  AppGetUserAccountValuationHistoryByAssetClassResponse,
-  AppGetUserAccountValuationHistoryByAssetTypeResponse,
-  AppGetUserAccountValuationHistoryResponse,
-  AppGetUserAccountValuationResponse,
-  ValidationErrorElement,
+  GetUserAccountValuationByAssetClassResponse,
+  GetUserAccountValuationByAssetTypeResponse,
+  GetUserAccountValuationByCurrencyExposureResponse,
+  GetUserAccountValuationHistoryByAssetClassResponse,
+  GetUserAccountValuationHistoryByAssetTypeResponse,
+  GetUserAccountValuationHistoryResponse,
+  GetUserAccountValuationResponse,
+  HTTPValidationError,
   ValuationFrequency,
 } from "../models/index";
 import {
-  AppGetUserAccountValuationByAssetClassResponseFromJSON,
-  AppGetUserAccountValuationByAssetClassResponseToJSON,
-  AppGetUserAccountValuationByAssetTypeResponseFromJSON,
-  AppGetUserAccountValuationByAssetTypeResponseToJSON,
-  AppGetUserAccountValuationByCurrencyExposureResponseFromJSON,
-  AppGetUserAccountValuationByCurrencyExposureResponseToJSON,
-  AppGetUserAccountValuationHistoryByAssetClassResponseFromJSON,
-  AppGetUserAccountValuationHistoryByAssetClassResponseToJSON,
-  AppGetUserAccountValuationHistoryByAssetTypeResponseFromJSON,
-  AppGetUserAccountValuationHistoryByAssetTypeResponseToJSON,
-  AppGetUserAccountValuationHistoryResponseFromJSON,
-  AppGetUserAccountValuationHistoryResponseToJSON,
-  AppGetUserAccountValuationResponseFromJSON,
-  AppGetUserAccountValuationResponseToJSON,
-  ValidationErrorElementFromJSON,
-  ValidationErrorElementToJSON,
+  GetUserAccountValuationByAssetClassResponseFromJSON,
+  GetUserAccountValuationByAssetClassResponseToJSON,
+  GetUserAccountValuationByAssetTypeResponseFromJSON,
+  GetUserAccountValuationByAssetTypeResponseToJSON,
+  GetUserAccountValuationByCurrencyExposureResponseFromJSON,
+  GetUserAccountValuationByCurrencyExposureResponseToJSON,
+  GetUserAccountValuationHistoryByAssetClassResponseFromJSON,
+  GetUserAccountValuationHistoryByAssetClassResponseToJSON,
+  GetUserAccountValuationHistoryByAssetTypeResponseFromJSON,
+  GetUserAccountValuationHistoryByAssetTypeResponseToJSON,
+  GetUserAccountValuationHistoryResponseFromJSON,
+  GetUserAccountValuationHistoryResponseToJSON,
+  GetUserAccountValuationResponseFromJSON,
+  GetUserAccountValuationResponseToJSON,
+  HTTPValidationErrorFromJSON,
+  HTTPValidationErrorToJSON,
   ValuationFrequencyFromJSON,
   ValuationFrequencyToJSON,
 } from "../models/index";
 
 export interface GetUserAccountHistoricalValuationRequest {
   userAccountId: number;
-  fromTime?: Date;
-  toTime?: Date;
+  fromTime?: Date | null;
+  toTime?: Date | null;
   frequency?: ValuationFrequency;
 }
 
 export interface GetUserAccountHistoricalValuationByAssetClassRequest {
   userAccountId: number;
-  fromTime?: Date;
-  toTime?: Date;
+  fromTime?: Date | null;
+  toTime?: Date | null;
   frequency?: ValuationFrequency;
 }
 
 export interface GetUserAccountHistoricalValuationByAssetTypeRequest {
   userAccountId: number;
-  fromTime?: Date;
-  toTime?: Date;
+  fromTime?: Date | null;
+  toTime?: Date | null;
   frequency?: ValuationFrequency;
 }
 
@@ -93,8 +93,8 @@ export interface TriggerUserAccountValuationRequest {
  */
 export interface UserAccountsValuationApiInterface {
   /**
-   *
-   * @summary Get user account valuation historical valuation
+   * Get user account valuation historical valuation
+   * @summary Get User Account Historical Valuation
    * @param {number} userAccountId
    * @param {Date} [fromTime]
    * @param {Date} [toTime]
@@ -106,20 +106,20 @@ export interface UserAccountsValuationApiInterface {
   getUserAccountHistoricalValuationRaw(
     requestParameters: GetUserAccountHistoricalValuationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppGetUserAccountValuationHistoryResponse>>;
+  ): Promise<runtime.ApiResponse<GetUserAccountValuationHistoryResponse>>;
 
   /**
-   *
    * Get user account valuation historical valuation
+   * Get User Account Historical Valuation
    */
   getUserAccountHistoricalValuation(
     requestParameters: GetUserAccountHistoricalValuationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetUserAccountValuationHistoryResponse>;
+  ): Promise<GetUserAccountValuationHistoryResponse>;
 
   /**
-   *
-   * @summary Get user account valuation historical valuation by asset class
+   * Get user account valuation historical valuation by asset class
+   * @summary Get User Account Historical Valuation By Asset Class
    * @param {number} userAccountId
    * @param {Date} [fromTime]
    * @param {Date} [toTime]
@@ -132,21 +132,21 @@ export interface UserAccountsValuationApiInterface {
     requestParameters: GetUserAccountHistoricalValuationByAssetClassRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<
-    runtime.ApiResponse<AppGetUserAccountValuationHistoryByAssetClassResponse>
+    runtime.ApiResponse<GetUserAccountValuationHistoryByAssetClassResponse>
   >;
 
   /**
-   *
    * Get user account valuation historical valuation by asset class
+   * Get User Account Historical Valuation By Asset Class
    */
   getUserAccountHistoricalValuationByAssetClass(
     requestParameters: GetUserAccountHistoricalValuationByAssetClassRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetUserAccountValuationHistoryByAssetClassResponse>;
+  ): Promise<GetUserAccountValuationHistoryByAssetClassResponse>;
 
   /**
-   *
-   * @summary Get user account valuation historical valuation by asset type
+   * Get user account valuation historical valuation by asset type
+   * @summary Get User Account Historical Valuation By Asset Type
    * @param {number} userAccountId
    * @param {Date} [fromTime]
    * @param {Date} [toTime]
@@ -159,21 +159,21 @@ export interface UserAccountsValuationApiInterface {
     requestParameters: GetUserAccountHistoricalValuationByAssetTypeRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<
-    runtime.ApiResponse<AppGetUserAccountValuationHistoryByAssetTypeResponse>
+    runtime.ApiResponse<GetUserAccountValuationHistoryByAssetTypeResponse>
   >;
 
   /**
-   *
    * Get user account valuation historical valuation by asset type
+   * Get User Account Historical Valuation By Asset Type
    */
   getUserAccountHistoricalValuationByAssetType(
     requestParameters: GetUserAccountHistoricalValuationByAssetTypeRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetUserAccountValuationHistoryByAssetTypeResponse>;
+  ): Promise<GetUserAccountValuationHistoryByAssetTypeResponse>;
 
   /**
-   *
-   * @summary Get user account valuation
+   * Get user account valuation
+   * @summary Get User Account Valuation
    * @param {number} userAccountId
    * @param {*} [options] Override http request option.
    * @throws {RequiredError}
@@ -182,20 +182,20 @@ export interface UserAccountsValuationApiInterface {
   getUserAccountValuationRaw(
     requestParameters: GetUserAccountValuationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppGetUserAccountValuationResponse>>;
+  ): Promise<runtime.ApiResponse<GetUserAccountValuationResponse>>;
 
   /**
-   *
    * Get user account valuation
+   * Get User Account Valuation
    */
   getUserAccountValuation(
     requestParameters: GetUserAccountValuationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetUserAccountValuationResponse>;
+  ): Promise<GetUserAccountValuationResponse>;
 
   /**
-   *
-   * @summary Get user account valuation by asset class
+   * Get user account valuation by asset class
+   * @summary Get User Account Valuation By Asset Class
    * @param {number} userAccountId
    * @param {*} [options] Override http request option.
    * @throws {RequiredError}
@@ -204,22 +204,20 @@ export interface UserAccountsValuationApiInterface {
   getUserAccountValuationByAssetClassRaw(
     requestParameters: GetUserAccountValuationByAssetClassRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<
-    runtime.ApiResponse<AppGetUserAccountValuationByAssetClassResponse>
-  >;
+  ): Promise<runtime.ApiResponse<GetUserAccountValuationByAssetClassResponse>>;
 
   /**
-   *
    * Get user account valuation by asset class
+   * Get User Account Valuation By Asset Class
    */
   getUserAccountValuationByAssetClass(
     requestParameters: GetUserAccountValuationByAssetClassRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetUserAccountValuationByAssetClassResponse>;
+  ): Promise<GetUserAccountValuationByAssetClassResponse>;
 
   /**
-   *
-   * @summary Get user account valuation by asset type
+   * Get user account valuation by asset type
+   * @summary Get User Account Valuation By Asset Type
    * @param {number} userAccountId
    * @param {*} [options] Override http request option.
    * @throws {RequiredError}
@@ -228,22 +226,20 @@ export interface UserAccountsValuationApiInterface {
   getUserAccountValuationByAssetTypeRaw(
     requestParameters: GetUserAccountValuationByAssetTypeRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<
-    runtime.ApiResponse<AppGetUserAccountValuationByAssetTypeResponse>
-  >;
+  ): Promise<runtime.ApiResponse<GetUserAccountValuationByAssetTypeResponse>>;
 
   /**
-   *
    * Get user account valuation by asset type
+   * Get User Account Valuation By Asset Type
    */
   getUserAccountValuationByAssetType(
     requestParameters: GetUserAccountValuationByAssetTypeRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetUserAccountValuationByAssetTypeResponse>;
+  ): Promise<GetUserAccountValuationByAssetTypeResponse>;
 
   /**
-   *
-   * @summary Get user account valuation by currency exposure
+   * Get user account valuation by currency exposure
+   * @summary Get User Account Valuation By Currency Exposure
    * @param {number} userAccountId
    * @param {*} [options] Override http request option.
    * @throws {RequiredError}
@@ -253,21 +249,21 @@ export interface UserAccountsValuationApiInterface {
     requestParameters: GetUserAccountValuationByCurrencyExposureRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<
-    runtime.ApiResponse<AppGetUserAccountValuationByCurrencyExposureResponse>
+    runtime.ApiResponse<GetUserAccountValuationByCurrencyExposureResponse>
   >;
 
   /**
-   *
    * Get user account valuation by currency exposure
+   * Get User Account Valuation By Currency Exposure
    */
   getUserAccountValuationByCurrencyExposure(
     requestParameters: GetUserAccountValuationByCurrencyExposureRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetUserAccountValuationByCurrencyExposureResponse>;
+  ): Promise<GetUserAccountValuationByCurrencyExposureResponse>;
 
   /**
-   *
-   * @summary Trigger user account valuation
+   * Trigger user account valuation
+   * @summary Trigger User Account Valuation
    * @param {number} userAccountId
    * @param {*} [options] Override http request option.
    * @throws {RequiredError}
@@ -276,16 +272,16 @@ export interface UserAccountsValuationApiInterface {
   triggerUserAccountValuationRaw(
     requestParameters: TriggerUserAccountValuationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<object>>;
+  ): Promise<runtime.ApiResponse<{ [key: string]: any }>>;
 
   /**
-   *
    * Trigger user account valuation
+   * Trigger User Account Valuation
    */
   triggerUserAccountValuation(
     requestParameters: TriggerUserAccountValuationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<object>;
+  ): Promise<{ [key: string]: any }>;
 }
 
 /**
@@ -296,13 +292,13 @@ export class UserAccountsValuationApi
   implements UserAccountsValuationApiInterface
 {
   /**
-   *
    * Get user account valuation historical valuation
+   * Get User Account Historical Valuation
    */
   async getUserAccountHistoricalValuationRaw(
     requestParameters: GetUserAccountHistoricalValuationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppGetUserAccountValuationHistoryResponse>> {
+  ): Promise<runtime.ApiResponse<GetUserAccountValuationHistoryResponse>> {
     if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
@@ -332,7 +328,7 @@ export class UserAccountsValuationApi
 
     if (this.configuration && this.configuration.accessToken) {
       const token = this.configuration.accessToken;
-      const tokenString = await token("bearerAuth", []);
+      const tokenString = await token("HTTPBearer", []);
 
       if (tokenString) {
         headerParameters["Authorization"] = `Bearer ${tokenString}`;
@@ -340,7 +336,7 @@ export class UserAccountsValuationApi
     }
     const response = await this.request(
       {
-        path: `/api/v1/accounts/{user_account_id}/valuation/history/`.replace(
+        path: `/accounts/{user_account_id}/valuation/history/`.replace(
           `{${"user_account_id"}}`,
           encodeURIComponent(String(requestParameters["userAccountId"])),
         ),
@@ -352,18 +348,18 @@ export class UserAccountsValuationApi
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AppGetUserAccountValuationHistoryResponseFromJSON(jsonValue),
+      GetUserAccountValuationHistoryResponseFromJSON(jsonValue),
     );
   }
 
   /**
-   *
    * Get user account valuation historical valuation
+   * Get User Account Historical Valuation
    */
   async getUserAccountHistoricalValuation(
     requestParameters: GetUserAccountHistoricalValuationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetUserAccountValuationHistoryResponse> {
+  ): Promise<GetUserAccountValuationHistoryResponse> {
     const response = await this.getUserAccountHistoricalValuationRaw(
       requestParameters,
       initOverrides,
@@ -372,14 +368,14 @@ export class UserAccountsValuationApi
   }
 
   /**
-   *
    * Get user account valuation historical valuation by asset class
+   * Get User Account Historical Valuation By Asset Class
    */
   async getUserAccountHistoricalValuationByAssetClassRaw(
     requestParameters: GetUserAccountHistoricalValuationByAssetClassRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<
-    runtime.ApiResponse<AppGetUserAccountValuationHistoryByAssetClassResponse>
+    runtime.ApiResponse<GetUserAccountValuationHistoryByAssetClassResponse>
   > {
     if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
@@ -410,7 +406,7 @@ export class UserAccountsValuationApi
 
     if (this.configuration && this.configuration.accessToken) {
       const token = this.configuration.accessToken;
-      const tokenString = await token("bearerAuth", []);
+      const tokenString = await token("HTTPBearer", []);
 
       if (tokenString) {
         headerParameters["Authorization"] = `Bearer ${tokenString}`;
@@ -418,7 +414,7 @@ export class UserAccountsValuationApi
     }
     const response = await this.request(
       {
-        path: `/api/v1/accounts/{user_account_id}/valuation/history/by/asset_class/`.replace(
+        path: `/accounts/{user_account_id}/valuation/history/by/asset_class/`.replace(
           `{${"user_account_id"}}`,
           encodeURIComponent(String(requestParameters["userAccountId"])),
         ),
@@ -430,18 +426,18 @@ export class UserAccountsValuationApi
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AppGetUserAccountValuationHistoryByAssetClassResponseFromJSON(jsonValue),
+      GetUserAccountValuationHistoryByAssetClassResponseFromJSON(jsonValue),
     );
   }
 
   /**
-   *
    * Get user account valuation historical valuation by asset class
+   * Get User Account Historical Valuation By Asset Class
    */
   async getUserAccountHistoricalValuationByAssetClass(
     requestParameters: GetUserAccountHistoricalValuationByAssetClassRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetUserAccountValuationHistoryByAssetClassResponse> {
+  ): Promise<GetUserAccountValuationHistoryByAssetClassResponse> {
     const response =
       await this.getUserAccountHistoricalValuationByAssetClassRaw(
         requestParameters,
@@ -451,14 +447,14 @@ export class UserAccountsValuationApi
   }
 
   /**
-   *
    * Get user account valuation historical valuation by asset type
+   * Get User Account Historical Valuation By Asset Type
    */
   async getUserAccountHistoricalValuationByAssetTypeRaw(
     requestParameters: GetUserAccountHistoricalValuationByAssetTypeRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<
-    runtime.ApiResponse<AppGetUserAccountValuationHistoryByAssetTypeResponse>
+    runtime.ApiResponse<GetUserAccountValuationHistoryByAssetTypeResponse>
   > {
     if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
@@ -489,7 +485,7 @@ export class UserAccountsValuationApi
 
     if (this.configuration && this.configuration.accessToken) {
       const token = this.configuration.accessToken;
-      const tokenString = await token("bearerAuth", []);
+      const tokenString = await token("HTTPBearer", []);
 
       if (tokenString) {
         headerParameters["Authorization"] = `Bearer ${tokenString}`;
@@ -497,7 +493,7 @@ export class UserAccountsValuationApi
     }
     const response = await this.request(
       {
-        path: `/api/v1/accounts/{user_account_id}/valuation/history/by/asset_type/`.replace(
+        path: `/accounts/{user_account_id}/valuation/history/by/asset_type/`.replace(
           `{${"user_account_id"}}`,
           encodeURIComponent(String(requestParameters["userAccountId"])),
         ),
@@ -509,18 +505,18 @@ export class UserAccountsValuationApi
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AppGetUserAccountValuationHistoryByAssetTypeResponseFromJSON(jsonValue),
+      GetUserAccountValuationHistoryByAssetTypeResponseFromJSON(jsonValue),
     );
   }
 
   /**
-   *
    * Get user account valuation historical valuation by asset type
+   * Get User Account Historical Valuation By Asset Type
    */
   async getUserAccountHistoricalValuationByAssetType(
     requestParameters: GetUserAccountHistoricalValuationByAssetTypeRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetUserAccountValuationHistoryByAssetTypeResponse> {
+  ): Promise<GetUserAccountValuationHistoryByAssetTypeResponse> {
     const response = await this.getUserAccountHistoricalValuationByAssetTypeRaw(
       requestParameters,
       initOverrides,
@@ -529,13 +525,13 @@ export class UserAccountsValuationApi
   }
 
   /**
-   *
    * Get user account valuation
+   * Get User Account Valuation
    */
   async getUserAccountValuationRaw(
     requestParameters: GetUserAccountValuationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppGetUserAccountValuationResponse>> {
+  ): Promise<runtime.ApiResponse<GetUserAccountValuationResponse>> {
     if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
@@ -549,7 +545,7 @@ export class UserAccountsValuationApi
 
     if (this.configuration && this.configuration.accessToken) {
       const token = this.configuration.accessToken;
-      const tokenString = await token("bearerAuth", []);
+      const tokenString = await token("HTTPBearer", []);
 
       if (tokenString) {
         headerParameters["Authorization"] = `Bearer ${tokenString}`;
@@ -557,7 +553,7 @@ export class UserAccountsValuationApi
     }
     const response = await this.request(
       {
-        path: `/api/v1/accounts/{user_account_id}/valuation/`.replace(
+        path: `/accounts/{user_account_id}/valuation/`.replace(
           `{${"user_account_id"}}`,
           encodeURIComponent(String(requestParameters["userAccountId"])),
         ),
@@ -569,18 +565,18 @@ export class UserAccountsValuationApi
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AppGetUserAccountValuationResponseFromJSON(jsonValue),
+      GetUserAccountValuationResponseFromJSON(jsonValue),
     );
   }
 
   /**
-   *
    * Get user account valuation
+   * Get User Account Valuation
    */
   async getUserAccountValuation(
     requestParameters: GetUserAccountValuationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetUserAccountValuationResponse> {
+  ): Promise<GetUserAccountValuationResponse> {
     const response = await this.getUserAccountValuationRaw(
       requestParameters,
       initOverrides,
@@ -589,15 +585,13 @@ export class UserAccountsValuationApi
   }
 
   /**
-   *
    * Get user account valuation by asset class
+   * Get User Account Valuation By Asset Class
    */
   async getUserAccountValuationByAssetClassRaw(
     requestParameters: GetUserAccountValuationByAssetClassRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<
-    runtime.ApiResponse<AppGetUserAccountValuationByAssetClassResponse>
-  > {
+  ): Promise<runtime.ApiResponse<GetUserAccountValuationByAssetClassResponse>> {
     if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
@@ -611,7 +605,7 @@ export class UserAccountsValuationApi
 
     if (this.configuration && this.configuration.accessToken) {
       const token = this.configuration.accessToken;
-      const tokenString = await token("bearerAuth", []);
+      const tokenString = await token("HTTPBearer", []);
 
       if (tokenString) {
         headerParameters["Authorization"] = `Bearer ${tokenString}`;
@@ -619,7 +613,7 @@ export class UserAccountsValuationApi
     }
     const response = await this.request(
       {
-        path: `/api/v1/accounts/{user_account_id}/valuation/by/asset_class/`.replace(
+        path: `/accounts/{user_account_id}/valuation/by/asset_class/`.replace(
           `{${"user_account_id"}}`,
           encodeURIComponent(String(requestParameters["userAccountId"])),
         ),
@@ -631,18 +625,18 @@ export class UserAccountsValuationApi
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AppGetUserAccountValuationByAssetClassResponseFromJSON(jsonValue),
+      GetUserAccountValuationByAssetClassResponseFromJSON(jsonValue),
     );
   }
 
   /**
-   *
    * Get user account valuation by asset class
+   * Get User Account Valuation By Asset Class
    */
   async getUserAccountValuationByAssetClass(
     requestParameters: GetUserAccountValuationByAssetClassRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetUserAccountValuationByAssetClassResponse> {
+  ): Promise<GetUserAccountValuationByAssetClassResponse> {
     const response = await this.getUserAccountValuationByAssetClassRaw(
       requestParameters,
       initOverrides,
@@ -651,15 +645,13 @@ export class UserAccountsValuationApi
   }
 
   /**
-   *
    * Get user account valuation by asset type
+   * Get User Account Valuation By Asset Type
    */
   async getUserAccountValuationByAssetTypeRaw(
     requestParameters: GetUserAccountValuationByAssetTypeRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<
-    runtime.ApiResponse<AppGetUserAccountValuationByAssetTypeResponse>
-  > {
+  ): Promise<runtime.ApiResponse<GetUserAccountValuationByAssetTypeResponse>> {
     if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
@@ -673,7 +665,7 @@ export class UserAccountsValuationApi
 
     if (this.configuration && this.configuration.accessToken) {
       const token = this.configuration.accessToken;
-      const tokenString = await token("bearerAuth", []);
+      const tokenString = await token("HTTPBearer", []);
 
       if (tokenString) {
         headerParameters["Authorization"] = `Bearer ${tokenString}`;
@@ -681,7 +673,7 @@ export class UserAccountsValuationApi
     }
     const response = await this.request(
       {
-        path: `/api/v1/accounts/{user_account_id}/valuation/by/asset_type/`.replace(
+        path: `/accounts/{user_account_id}/valuation/by/asset_type/`.replace(
           `{${"user_account_id"}}`,
           encodeURIComponent(String(requestParameters["userAccountId"])),
         ),
@@ -693,18 +685,18 @@ export class UserAccountsValuationApi
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AppGetUserAccountValuationByAssetTypeResponseFromJSON(jsonValue),
+      GetUserAccountValuationByAssetTypeResponseFromJSON(jsonValue),
     );
   }
 
   /**
-   *
    * Get user account valuation by asset type
+   * Get User Account Valuation By Asset Type
    */
   async getUserAccountValuationByAssetType(
     requestParameters: GetUserAccountValuationByAssetTypeRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetUserAccountValuationByAssetTypeResponse> {
+  ): Promise<GetUserAccountValuationByAssetTypeResponse> {
     const response = await this.getUserAccountValuationByAssetTypeRaw(
       requestParameters,
       initOverrides,
@@ -713,14 +705,14 @@ export class UserAccountsValuationApi
   }
 
   /**
-   *
    * Get user account valuation by currency exposure
+   * Get User Account Valuation By Currency Exposure
    */
   async getUserAccountValuationByCurrencyExposureRaw(
     requestParameters: GetUserAccountValuationByCurrencyExposureRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
   ): Promise<
-    runtime.ApiResponse<AppGetUserAccountValuationByCurrencyExposureResponse>
+    runtime.ApiResponse<GetUserAccountValuationByCurrencyExposureResponse>
   > {
     if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
@@ -735,7 +727,7 @@ export class UserAccountsValuationApi
 
     if (this.configuration && this.configuration.accessToken) {
       const token = this.configuration.accessToken;
-      const tokenString = await token("bearerAuth", []);
+      const tokenString = await token("HTTPBearer", []);
 
       if (tokenString) {
         headerParameters["Authorization"] = `Bearer ${tokenString}`;
@@ -743,7 +735,7 @@ export class UserAccountsValuationApi
     }
     const response = await this.request(
       {
-        path: `/api/v1/accounts/{user_account_id}/valuation/by/currency_exposure/`.replace(
+        path: `/accounts/{user_account_id}/valuation/by/currency_exposure/`.replace(
           `{${"user_account_id"}}`,
           encodeURIComponent(String(requestParameters["userAccountId"])),
         ),
@@ -755,18 +747,18 @@ export class UserAccountsValuationApi
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AppGetUserAccountValuationByCurrencyExposureResponseFromJSON(jsonValue),
+      GetUserAccountValuationByCurrencyExposureResponseFromJSON(jsonValue),
     );
   }
 
   /**
-   *
    * Get user account valuation by currency exposure
+   * Get User Account Valuation By Currency Exposure
    */
   async getUserAccountValuationByCurrencyExposure(
     requestParameters: GetUserAccountValuationByCurrencyExposureRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetUserAccountValuationByCurrencyExposureResponse> {
+  ): Promise<GetUserAccountValuationByCurrencyExposureResponse> {
     const response = await this.getUserAccountValuationByCurrencyExposureRaw(
       requestParameters,
       initOverrides,
@@ -775,13 +767,13 @@ export class UserAccountsValuationApi
   }
 
   /**
-   *
    * Trigger user account valuation
+   * Trigger User Account Valuation
    */
   async triggerUserAccountValuationRaw(
     requestParameters: TriggerUserAccountValuationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<object>> {
+  ): Promise<runtime.ApiResponse<{ [key: string]: any }>> {
     if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
@@ -795,7 +787,7 @@ export class UserAccountsValuationApi
 
     if (this.configuration && this.configuration.accessToken) {
       const token = this.configuration.accessToken;
-      const tokenString = await token("bearerAuth", []);
+      const tokenString = await token("HTTPBearer", []);
 
       if (tokenString) {
         headerParameters["Authorization"] = `Bearer ${tokenString}`;
@@ -803,7 +795,7 @@ export class UserAccountsValuationApi
     }
     const response = await this.request(
       {
-        path: `/api/v1/accounts/{user_account_id}/valuation/trigger/`.replace(
+        path: `/accounts/{user_account_id}/valuation/trigger/`.replace(
           `{${"user_account_id"}}`,
           encodeURIComponent(String(requestParameters["userAccountId"])),
         ),
@@ -818,13 +810,13 @@ export class UserAccountsValuationApi
   }
 
   /**
-   *
    * Trigger user account valuation
+   * Trigger User Account Valuation
    */
   async triggerUserAccountValuation(
     requestParameters: TriggerUserAccountValuationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<object> {
+  ): Promise<{ [key: string]: any }> {
     const response = await this.triggerUserAccountValuationRaw(
       requestParameters,
       initOverrides,

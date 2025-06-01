@@ -13,7 +13,12 @@
 
 import { mapValues } from "../runtime";
 import type { Value } from "./Value";
-import { ValueFromJSON, ValueFromJSONTyped, ValueToJSON } from "./Value";
+import {
+  ValueFromJSON,
+  ValueFromJSONTyped,
+  ValueToJSON,
+  ValueToJSONTyped,
+} from "./Value";
 
 /**
  *
@@ -21,6 +26,7 @@ import { ValueFromJSON, ValueFromJSONTyped, ValueToJSON } from "./Value";
  * @interface SubAccountItemMetadataNode
  */
 export interface SubAccountItemMetadataNode {
+  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -75,6 +81,7 @@ export function SubAccountItemMetadataNodeFromJSONTyped(
     return json;
   }
   return {
+    ...json,
     role: json["role"] == null ? undefined : json["role"],
     label: json["label"],
     value: ValueFromJSON(json["value"]),
@@ -82,12 +89,21 @@ export function SubAccountItemMetadataNodeFromJSONTyped(
 }
 
 export function SubAccountItemMetadataNodeToJSON(
+  json: any,
+): SubAccountItemMetadataNode {
+  return SubAccountItemMetadataNodeToJSONTyped(json, false);
+}
+
+export function SubAccountItemMetadataNodeToJSONTyped(
   value?: SubAccountItemMetadataNode | null,
+  ignoreDiscriminator: boolean = false,
 ): any {
   if (value == null) {
     return value;
   }
+
   return {
+    ...value,
     role: value["role"],
     label: value["label"],
     value: ValueToJSON(value["value"]),

@@ -2,8 +2,8 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 import requests
+from pydantic import BaseModel
 
-from finbot.core.pydantic_ import BaseModel
 from finbot.core.schema import CurrencyCode
 
 

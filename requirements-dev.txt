@@ -18,6 +18,11 @@ amqp==5.3.1
     # via kombu
 annotated-types==0.7.0
     # via pydantic
+anyio==4.9.0
+    # via
+    #   httpx
+    #   starlette
+    #   watchfiles
 attrs==25.3.0
     # via
     #   aiohttp
@@ -30,8 +35,6 @@ beautifulsoup4==4.13.4
     # via yfinance
 billiard==4.2.1
     # via celery
-blinker==1.9.0
-    # via flask
 cachetools==5.5.2
     # via google-auth
 celery==5.5.2
@@ -39,6 +42,8 @@ celery==5.5.2
 certifi==2025.4.26
     # via
     #   curl-cffi
+    #   httpcore
+    #   httpx
     #   requests
 cffi==1.17.1
     # via
@@ -54,7 +59,9 @@ click==8.2.1
     #   click-didyoumean
     #   click-plugins
     #   click-repl
-    #   flask
+    #   rich-toolkit
+    #   typer
+    #   uvicorn
 click-didyoumean==0.3.1
     # via celery
 click-plugins==1.1.1
@@ -62,20 +69,23 @@ click-plugins==1.1.1
 click-repl==0.3.0
     # via celery
 cryptography==45.0.2
-    # via finbot (pyproject.toml)
+    # via
+    #   finbot (pyproject.toml)
+    #   python-jose
 curl-cffi==0.11.1
     # via yfinance
 dateparser==1.2.1
     # via python-binance
-flask==3.1.1
-    # via
-    #   finbot (pyproject.toml)
-    #   flask-cors
-    #   flask-jwt-extended
-flask-cors==6.0.0
+dnspython==2.7.0
+    # via email-validator
+ecdsa==0.19.1
+    # via python-jose
+email-validator==2.2.0
+    # via fastapi
+fastapi==0.115.12
     # via finbot (pyproject.toml)
-flask-jwt-extended==4.7.1
-    # via finbot (pyproject.toml)
+fastapi-cli==0.0.7
+    # via fastapi
 frozendict==2.4.6
     # via yfinance
 frozenlist==1.6.0
@@ -96,18 +106,29 @@ gspread==6.2.1
     # via finbot (pyproject.toml)
 gunicorn==23.0.0
     # via finbot (pyproject.toml)
+h11==0.16.0
+    # via
+    #   httpcore
+    #   uvicorn
+httpcore==1.0.9
+    # via httpx
 httplib2==0.22.0
     # via oauth2client
+httptools==0.6.4
+    # via uvicorn
+httpx==0.28.1
+    # via fastapi
 idna==3.10
     # via
+    #   anyio
+    #   email-validator
+    #   httpx
     #   requests
     #   yarl
 iniconfig==2.1.0
     # via pytest
-itsdangerous==2.2.0
-    # via flask
 jinja2==3.1.6
-    # via flask
+    # via fastapi
 jsonschema==4.23.0
     # via finbot (pyproject.toml)
 jsonschema-specifications==2025.4.1
@@ -118,12 +139,14 @@ krakenex==2.2.2
     # via finbot (pyproject.toml)
 mako==1.3.10
     # via alembic
+markdown-it-py==3.0.0
+    # via rich
 markupsafe==3.0.2
     # via
-    #   flask
     #   jinja2
     #   mako
-    #   werkzeug
+mdurl==0.1.2
+    # via markdown-it-py
 multidict==6.4.4
     # via
     #   aiohttp
@@ -176,7 +199,7 @@ propcache==0.3.1
     # via
     #   aiohttp
     #   yarl
-protobuf==6.31.0
+protobuf==6.31.1
     # via yfinance
 psycopg2==2.9.10
     # via finbot (pyproject.toml)
@@ -184,6 +207,7 @@ pyasn1==0.6.1
     # via
     #   oauth2client
     #   pyasn1-modules
+    #   python-jose
     #   rsa
 pyasn1-modules==0.4.2
     # via
@@ -198,15 +222,16 @@ pycryptodome==3.23.0
 pydantic==2.11.5
     # via
     #   finbot (pyproject.toml)
+    #   fastapi
     #   spectree
 pydantic-core==2.33.2
     # via pydantic
 pyee==13.0.0
     # via playwright
+pygments==2.19.1
+    # via rich
 pyjwt==2.10.1
-    # via
-    #   flask-jwt-extended
-    #   twilio
+    # via twilio
 pyparsing==3.2.3
     # via httplib2
 pytest==8.3.5
@@ -219,13 +244,23 @@ python-dateutil==2.9.0.post0
     #   dateparser
     #   pandas
     #   plaid-python
+python-dotenv==1.1.0
+    # via uvicorn
 python-gnupg==0.5.4
     # via finbot (pyproject.toml)
+python-jose==3.5.0
+    # via finbot (pyproject.toml)
+python-multipart==0.0.20
+    # via fastapi
 pytz==2025.2
     # via
     #   dateparser
     #   pandas
     #   yfinance
+pyyaml==6.0.2
+    # via
+    #   uvicorn
+    #   watchdog
 referencing==0.36.2
     # via
     #   jsonschema
@@ -243,6 +278,12 @@ requests==2.32.3
     #   yfinance
 requests-oauthlib==2.0.0
     # via google-auth-oauthlib
+rich==14.0.0
+    # via
+    #   rich-toolkit
+    #   typer
+rich-toolkit==0.14.7
+    # via fastapi-cli
 rpds-py==0.25.1
     # via
     #   jsonschema
@@ -251,17 +292,23 @@ rsa==4.9.1
     # via
     #   google-auth
     #   oauth2client
+    #   python-jose
 ruff==0.11.11
     # via finbot (pyproject.toml)
 schedule==1.2.2
     # via finbot (pyproject.toml)
 semver==3.0.4
     # via finbot (pyproject.toml)
+shellingham==1.5.4
+    # via typer
 six==1.17.0
     # via
+    #   ecdsa
     #   oauth2client
     #   python-binance
     #   python-dateutil
+sniffio==1.3.1
+    # via anyio
 soupsieve==2.7
     # via beautifulsoup4
 spectree==1.2.10
@@ -272,30 +319,27 @@ sqlalchemy==2.0.41
     #   alembic
 sqlalchemy-stubs==0.4
     # via finbot (pyproject.toml)
+starlette==0.46.2
+    # via fastapi
 twilio==9.6.1
     # via finbot (pyproject.toml)
-types-click==7.1.8
-    # via types-flask
-types-flask==1.1.6
-    # via finbot (pyproject.toml)
-types-jinja2==2.11.9
-    # via types-flask
-types-markupsafe==1.1.10
-    # via types-jinja2
+typer==0.16.0
+    # via fastapi-cli
 types-requests==2.32.0.20250515
     # via finbot (pyproject.toml)
-types-werkzeug==1.0.9
-    # via types-flask
 typing-extensions==4.13.2
     # via
     #   alembic
     #   beautifulsoup4
+    #   fastapi
     #   mypy
     #   pydantic
     #   pydantic-core
     #   pyee
+    #   rich-toolkit
     #   sqlalchemy
     #   sqlalchemy-stubs
+    #   typer
     #   typing-inspection
 typing-inspection==0.4.1
     # via pydantic
@@ -310,22 +354,29 @@ urllib3==2.4.0
     #   plaid-python
     #   requests
     #   types-requests
+uvicorn==0.34.2
+    # via
+    #   finbot (pyproject.toml)
+    #   fastapi
+    #   fastapi-cli
+uvloop==0.21.0
+    # via uvicorn
 vine==5.1.0
     # via
     #   amqp
     #   celery
     #   kombu
+watchdog==6.0.0
+    # via finbot (pyproject.toml)
+watchfiles==1.0.5
+    # via uvicorn
 wcwidth==0.2.13
     # via prompt-toolkit
 websockets==15.0.1
     # via
     #   python-binance
+    #   uvicorn
     #   yfinance
-werkzeug==3.1.3
-    # via
-    #   flask
-    #   flask-cors
-    #   flask-jwt-extended
 yarl==1.20.0
     # via aiohttp
 yfinance==0.2.61

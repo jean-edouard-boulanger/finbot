@@ -12,12 +12,13 @@
  */
 
 import { mapValues } from "../runtime";
-import type { CategoriesInner } from "./CategoriesInner";
+import type { XAxisDescriptionCategoriesInner } from "./XAxisDescriptionCategoriesInner";
 import {
-  CategoriesInnerFromJSON,
-  CategoriesInnerFromJSONTyped,
-  CategoriesInnerToJSON,
-} from "./CategoriesInner";
+  XAxisDescriptionCategoriesInnerFromJSON,
+  XAxisDescriptionCategoriesInnerFromJSONTyped,
+  XAxisDescriptionCategoriesInnerToJSON,
+  XAxisDescriptionCategoriesInnerToJSONTyped,
+} from "./XAxisDescriptionCategoriesInner";
 
 /**
  *
@@ -25,6 +26,7 @@ import {
  * @interface XAxisDescription
  */
 export interface XAxisDescription {
+  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -33,10 +35,10 @@ export interface XAxisDescription {
   type: string;
   /**
    *
-   * @type {Array<CategoriesInner>}
+   * @type {Array<XAxisDescriptionCategoriesInner>}
    * @memberof XAxisDescription
    */
-  categories: Array<CategoriesInner>;
+  categories: Array<XAxisDescriptionCategoriesInner>;
 }
 
 /**
@@ -63,17 +65,31 @@ export function XAxisDescriptionFromJSONTyped(
     return json;
   }
   return {
+    ...json,
     type: json["type"],
-    categories: (json["categories"] as Array<any>).map(CategoriesInnerFromJSON),
+    categories: (json["categories"] as Array<any>).map(
+      XAxisDescriptionCategoriesInnerFromJSON,
+    ),
   };
 }
 
-export function XAxisDescriptionToJSON(value?: XAxisDescription | null): any {
+export function XAxisDescriptionToJSON(json: any): XAxisDescription {
+  return XAxisDescriptionToJSONTyped(json, false);
+}
+
+export function XAxisDescriptionToJSONTyped(
+  value?: XAxisDescription | null,
+  ignoreDiscriminator: boolean = false,
+): any {
   if (value == null) {
     return value;
   }
+
   return {
+    ...value,
     type: value["type"],
-    categories: (value["categories"] as Array<any>).map(CategoriesInnerToJSON),
+    categories: (value["categories"] as Array<any>).map(
+      XAxisDescriptionCategoriesInnerToJSON,
+    ),
   };
 }

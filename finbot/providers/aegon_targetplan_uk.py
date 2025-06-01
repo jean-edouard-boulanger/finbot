@@ -3,8 +3,8 @@ from typing import Any, cast
 
 from playwright.sync_api import Locator, Page
 from price_parser import Price  # type: ignore
+from pydantic import SecretStr
 
-from finbot.core.pydantic_ import SecretStr
 from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.core.utils import raise_, some
 from finbot.providers.errors import AuthenticationError

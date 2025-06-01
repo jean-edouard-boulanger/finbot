@@ -12,18 +12,12 @@
  */
 
 import * as runtime from "../runtime";
-import type {
-  AppSystemReportResponse,
-  HealthResponse,
-  ValidationErrorElement,
-} from "../models/index";
+import type { HealthResponse, SystemReportResponse } from "../models/index";
 import {
-  AppSystemReportResponseFromJSON,
-  AppSystemReportResponseToJSON,
   HealthResponseFromJSON,
   HealthResponseToJSON,
-  ValidationErrorElementFromJSON,
-  ValidationErrorElementToJSON,
+  SystemReportResponseFromJSON,
+  SystemReportResponseToJSON,
 } from "../models/index";
 
 /**
@@ -34,27 +28,27 @@ import {
  */
 export interface SystemApiInterface {
   /**
-   *
-   * @summary Get system report
+   * Get system report
+   * @summary Get System Report
    * @param {*} [options] Override http request option.
    * @throws {RequiredError}
    * @memberof SystemApiInterface
    */
   getSystemReportRaw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppSystemReportResponse>>;
+  ): Promise<runtime.ApiResponse<SystemReportResponse>>;
 
   /**
-   *
    * Get system report
+   * Get System Report
    */
   getSystemReport(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppSystemReportResponse>;
+  ): Promise<SystemReportResponse>;
 
   /**
-   *
-   * @summary Is server healthy
+   * Is server healthy
+   * @summary Healthy
    * @param {*} [options] Override http request option.
    * @throws {RequiredError}
    * @memberof SystemApiInterface
@@ -64,8 +58,8 @@ export interface SystemApiInterface {
   ): Promise<runtime.ApiResponse<HealthResponse>>;
 
   /**
-   *
    * Is server healthy
+   * Healthy
    */
   isHealthy(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
@@ -77,19 +71,19 @@ export interface SystemApiInterface {
  */
 export class SystemApi extends runtime.BaseAPI implements SystemApiInterface {
   /**
-   *
    * Get system report
+   * Get System Report
    */
   async getSystemReportRaw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppSystemReportResponse>> {
+  ): Promise<runtime.ApiResponse<SystemReportResponse>> {
     const queryParameters: any = {};
 
     const headerParameters: runtime.HTTPHeaders = {};
 
     const response = await this.request(
       {
-        path: `/api/v1/system_report/`,
+        path: `/system_report/`,
         method: "GET",
         headers: headerParameters,
         query: queryParameters,
@@ -98,24 +92,24 @@ export class SystemApi extends runtime.BaseAPI implements SystemApiInterface {
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AppSystemReportResponseFromJSON(jsonValue),
+      SystemReportResponseFromJSON(jsonValue),
     );
   }
 
   /**
-   *
    * Get system report
+   * Get System Report
    */
   async getSystemReport(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppSystemReportResponse> {
+  ): Promise<SystemReportResponse> {
     const response = await this.getSystemReportRaw(initOverrides);
     return await response.value();
   }
 
   /**
-   *
    * Is server healthy
+   * Healthy
    */
   async isHealthyRaw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
@@ -126,7 +120,7 @@ export class SystemApi extends runtime.BaseAPI implements SystemApiInterface {
 
     const response = await this.request(
       {
-        path: `/api/v1/healthy/`,
+        path: `/healthy/`,
         method: "GET",
         headers: headerParameters,
         query: queryParameters,
@@ -140,8 +134,8 @@ export class SystemApi extends runtime.BaseAPI implements SystemApiInterface {
   }
 
   /**
-   *
    * Is server healthy
+   * Healthy
    */
   async isHealthy(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,

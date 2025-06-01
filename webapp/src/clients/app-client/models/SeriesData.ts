@@ -17,12 +17,14 @@ import {
   XAxisDescriptionFromJSON,
   XAxisDescriptionFromJSONTyped,
   XAxisDescriptionToJSON,
+  XAxisDescriptionToJSONTyped,
 } from "./XAxisDescription";
 import type { SeriesDescription } from "./SeriesDescription";
 import {
   SeriesDescriptionFromJSON,
   SeriesDescriptionFromJSONTyped,
   SeriesDescriptionToJSON,
+  SeriesDescriptionToJSONTyped,
 } from "./SeriesDescription";
 
 /**
@@ -31,6 +33,7 @@ import {
  * @interface SeriesData
  */
 export interface SeriesData {
+  [key: string]: any | any;
   /**
    *
    * @type {XAxisDescription}
@@ -66,16 +69,26 @@ export function SeriesDataFromJSONTyped(
     return json;
   }
   return {
+    ...json,
     xAxis: XAxisDescriptionFromJSON(json["x_axis"]),
     series: (json["series"] as Array<any>).map(SeriesDescriptionFromJSON),
   };
 }
 
-export function SeriesDataToJSON(value?: SeriesData | null): any {
+export function SeriesDataToJSON(json: any): SeriesData {
+  return SeriesDataToJSONTyped(json, false);
+}
+
+export function SeriesDataToJSONTyped(
+  value?: SeriesData | null,
+  ignoreDiscriminator: boolean = false,
+): any {
   if (value == null) {
     return value;
   }
+
   return {
+    ...value,
     x_axis: XAxisDescriptionToJSON(value["xAxis"]),
     series: (value["series"] as Array<any>).map(SeriesDescriptionToJSON),
   };

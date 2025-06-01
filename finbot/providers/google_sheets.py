@@ -6,9 +6,9 @@ import gspread.client
 import gspread.spreadsheet
 import gspread.utils
 from oauth2client.service_account import ServiceAccountCredentials
+from pydantic import ValidationError as PydanticValidationError
+from pydantic import model_validator
 
-from finbot.core.pydantic_ import ValidationError as PydanticValidationError
-from finbot.core.pydantic_ import root_validator
 from finbot.core.schema import BaseModel, BaseModelT, CurrencyCode
 from finbot.core.utils import some
 from finbot.providers.base import ProviderBase
@@ -60,27 +60,27 @@ class AccountsTableSchema(BaseModel):
     description: str
     currency: CurrencyCode
     type: AccountType
-    sub_type: str | None
+    sub_type: str | None = None
 
-    @root_validator(pre=True)
-    def nullify_sub_type_if_empty_str(cls, values: Any) -> Any:
-        if values.get("sub_type") == "":
-            values["sub_type"] = None
-        return values
+    @model_validator(mode="before")
+    def nullify_sub_type_if_empty_str(cls, data: Any) -> Any:
+        if data.get("sub_type") == "":
+            data["sub_type"] = None
+        return data
 
 
 class HoldingsTableSchema(BaseModel):
     account: str
     symbol: str
-    type: str | None
+    type: str | None = None
     asset_class: AssetClass
     asset_type: AssetType
-    units: float | None
-    value_in_account_ccy: float | None
-    value_in_item_ccy: float | None
+    units: float | None = None
+    value_in_account_ccy: float | None = None
+    value_in_item_ccy: float | None = None
     currency: CurrencyCode
-    isin_code: str | None
-    custom: str | None
+    isin_code: str | None = None
+    custom: str | None = None
 
     @property
     def provider_specific(self) -> dict[str, Any] | None:
@@ -250,7 +250,7 @@ def _extract_generic_table(
     table_type = some(marker_cell.val)
     for cell in sheet.iter_row_cells(from_cell=header_start_cell):
         if attribute := cell.val:
-            if attribute in schema.__fields__:
+            if attribute in schema.model_fields:
                 header[attribute] = cell.col
             else:
                 pretty_row = _format_row(sheet, header_start_cell)
@@ -266,6 +266,8 @@ def _extract_generic_table(
         current_row = cell.row
         record_payload = {attr: sheet.get_cell(current_row, data_col_idx).val for attr, data_col_idx in header.items()}
         try:
+            print(schema)
+            print(record_payload)
             record = schema(**record_payload)
         except PydanticValidationError as e:
             pretty_validation_error = _format_record_validation_error(e)
@@ -307,7 +309,7 @@ def _format_row(sheet: LocalSheet, ref_cell: Cell) -> str:
 
 def _format_table_schema(table_schema: BaseModelT | type[BaseModelT]) -> str:
     items: list[str] = []
-    for field_name, field in table_schema.__fields__.items():
+    for field_name, field in table_schema.model_fields.items():
         items.append(f"{field_name}:{field.annotation}")
     return ", ".join(items)
 

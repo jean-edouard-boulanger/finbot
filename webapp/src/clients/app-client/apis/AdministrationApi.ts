@@ -13,25 +13,25 @@
 
 import * as runtime from "../runtime";
 import type {
-  AppEmailDeliverySettings,
-  AppGetEmailDeliveryProvidersResponse,
-  AppGetEmailDeliverySettingsResponse,
-  ValidationErrorElement,
+  EmailDeliverySettings,
+  GetEmailDeliveryProvidersResponse,
+  GetEmailDeliverySettingsResponse,
+  HTTPValidationError,
 } from "../models/index";
 import {
-  AppEmailDeliverySettingsFromJSON,
-  AppEmailDeliverySettingsToJSON,
-  AppGetEmailDeliveryProvidersResponseFromJSON,
-  AppGetEmailDeliveryProvidersResponseToJSON,
-  AppGetEmailDeliverySettingsResponseFromJSON,
-  AppGetEmailDeliverySettingsResponseToJSON,
-  ValidationErrorElementFromJSON,
-  ValidationErrorElementToJSON,
+  EmailDeliverySettingsFromJSON,
+  EmailDeliverySettingsToJSON,
+  GetEmailDeliveryProvidersResponseFromJSON,
+  GetEmailDeliveryProvidersResponseToJSON,
+  GetEmailDeliverySettingsResponseFromJSON,
+  GetEmailDeliverySettingsResponseToJSON,
+  HTTPValidationErrorFromJSON,
+  HTTPValidationErrorToJSON,
 } from "../models/index";
 
 export interface SetEmailDeliverySettingsRequest {
+  emailDeliverySettings: EmailDeliverySettings;
   validate?: boolean;
-  appEmailDeliverySettings?: AppEmailDeliverySettings;
 }
 
 /**
@@ -42,67 +42,66 @@ export interface SetEmailDeliverySettingsRequest {
  */
 export interface AdministrationApiInterface {
   /**
-   *
-   * @summary Get email delivery providers
+   * Get email delivery providers
+   * @summary Get Email Delivery Providers
    * @param {*} [options] Override http request option.
    * @throws {RequiredError}
    * @memberof AdministrationApiInterface
    */
   getEmailDeliveryProvidersRaw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppGetEmailDeliveryProvidersResponse>>;
+  ): Promise<runtime.ApiResponse<GetEmailDeliveryProvidersResponse>>;
 
   /**
-   *
    * Get email delivery providers
+   * Get Email Delivery Providers
    */
   getEmailDeliveryProviders(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetEmailDeliveryProvidersResponse>;
+  ): Promise<GetEmailDeliveryProvidersResponse>;
 
   /**
-   *
-   * @summary Get email delivery settings
+   * Get email delivery settings
+   * @summary Get Email Delivery Settings
    * @param {*} [options] Override http request option.
    * @throws {RequiredError}
    * @memberof AdministrationApiInterface
    */
   getEmailDeliverySettingsRaw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppGetEmailDeliverySettingsResponse>>;
+  ): Promise<runtime.ApiResponse<GetEmailDeliverySettingsResponse>>;
 
   /**
-   *
    * Get email delivery settings
+   * Get Email Delivery Settings
    */
   getEmailDeliverySettings(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetEmailDeliverySettingsResponse>;
+  ): Promise<GetEmailDeliverySettingsResponse>;
 
   /**
    *
-   * @summary remove_email_delivery_settings <DELETE>
+   * @summary Remove Email Delivery Settings
    * @param {*} [options] Override http request option.
    * @throws {RequiredError}
    * @memberof AdministrationApiInterface
    */
   removeEmailDeliverySettingsRaw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<object>>;
+  ): Promise<runtime.ApiResponse<{ [key: string]: any }>>;
 
   /**
-   *
-   * remove_email_delivery_settings <DELETE>
+   * Remove Email Delivery Settings
    */
   removeEmailDeliverySettings(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<object>;
+  ): Promise<{ [key: string]: any }>;
 
   /**
    *
-   * @summary set_email_delivery_settings <PUT>
+   * @summary Set Email Delivery Settings
+   * @param {EmailDeliverySettings} emailDeliverySettings
    * @param {boolean} [validate]
-   * @param {AppEmailDeliverySettings} [appEmailDeliverySettings]
    * @param {*} [options] Override http request option.
    * @throws {RequiredError}
    * @memberof AdministrationApiInterface
@@ -110,16 +109,15 @@ export interface AdministrationApiInterface {
   setEmailDeliverySettingsRaw(
     requestParameters: SetEmailDeliverySettingsRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<object>>;
+  ): Promise<runtime.ApiResponse<{ [key: string]: any }>>;
 
   /**
-   *
-   * set_email_delivery_settings <PUT>
+   * Set Email Delivery Settings
    */
   setEmailDeliverySettings(
     requestParameters: SetEmailDeliverySettingsRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<object>;
+  ): Promise<{ [key: string]: any }>;
 }
 
 /**
@@ -130,19 +128,19 @@ export class AdministrationApi
   implements AdministrationApiInterface
 {
   /**
-   *
    * Get email delivery providers
+   * Get Email Delivery Providers
    */
   async getEmailDeliveryProvidersRaw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppGetEmailDeliveryProvidersResponse>> {
+  ): Promise<runtime.ApiResponse<GetEmailDeliveryProvidersResponse>> {
     const queryParameters: any = {};
 
     const headerParameters: runtime.HTTPHeaders = {};
 
     if (this.configuration && this.configuration.accessToken) {
       const token = this.configuration.accessToken;
-      const tokenString = await token("bearerAuth", []);
+      const tokenString = await token("HTTPBearer", []);
 
       if (tokenString) {
         headerParameters["Authorization"] = `Bearer ${tokenString}`;
@@ -150,7 +148,7 @@ export class AdministrationApi
     }
     const response = await this.request(
       {
-        path: `/api/v1/admin/settings/email_delivery/providers/`,
+        path: `/settings/email_delivery/providers/`,
         method: "GET",
         headers: headerParameters,
         query: queryParameters,
@@ -159,35 +157,35 @@ export class AdministrationApi
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AppGetEmailDeliveryProvidersResponseFromJSON(jsonValue),
+      GetEmailDeliveryProvidersResponseFromJSON(jsonValue),
     );
   }
 
   /**
-   *
    * Get email delivery providers
+   * Get Email Delivery Providers
    */
   async getEmailDeliveryProviders(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetEmailDeliveryProvidersResponse> {
+  ): Promise<GetEmailDeliveryProvidersResponse> {
     const response = await this.getEmailDeliveryProvidersRaw(initOverrides);
     return await response.value();
   }
 
   /**
-   *
    * Get email delivery settings
+   * Get Email Delivery Settings
    */
   async getEmailDeliverySettingsRaw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<AppGetEmailDeliverySettingsResponse>> {
+  ): Promise<runtime.ApiResponse<GetEmailDeliverySettingsResponse>> {
     const queryParameters: any = {};
 
     const headerParameters: runtime.HTTPHeaders = {};
 
     if (this.configuration && this.configuration.accessToken) {
       const token = this.configuration.accessToken;
-      const tokenString = await token("bearerAuth", []);
+      const tokenString = await token("HTTPBearer", []);
 
       if (tokenString) {
         headerParameters["Authorization"] = `Bearer ${tokenString}`;
@@ -195,7 +193,7 @@ export class AdministrationApi
     }
     const response = await this.request(
       {
-        path: `/api/v1/admin/settings/email_delivery/`,
+        path: `/settings/email_delivery/`,
         method: "GET",
         headers: headerParameters,
         query: queryParameters,
@@ -204,35 +202,34 @@ export class AdministrationApi
     );
 
     return new runtime.JSONApiResponse(response, (jsonValue) =>
-      AppGetEmailDeliverySettingsResponseFromJSON(jsonValue),
+      GetEmailDeliverySettingsResponseFromJSON(jsonValue),
     );
   }
 
   /**
-   *
    * Get email delivery settings
+   * Get Email Delivery Settings
    */
   async getEmailDeliverySettings(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<AppGetEmailDeliverySettingsResponse> {
+  ): Promise<GetEmailDeliverySettingsResponse> {
     const response = await this.getEmailDeliverySettingsRaw(initOverrides);
     return await response.value();
   }
 
   /**
-   *
-   * remove_email_delivery_settings <DELETE>
+   * Remove Email Delivery Settings
    */
   async removeEmailDeliverySettingsRaw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<object>> {
+  ): Promise<runtime.ApiResponse<{ [key: string]: any }>> {
     const queryParameters: any = {};
 
     const headerParameters: runtime.HTTPHeaders = {};
 
     if (this.configuration && this.configuration.accessToken) {
       const token = this.configuration.accessToken;
-      const tokenString = await token("bearerAuth", []);
+      const tokenString = await token("HTTPBearer", []);
 
       if (tokenString) {
         headerParameters["Authorization"] = `Bearer ${tokenString}`;
@@ -240,7 +237,7 @@ export class AdministrationApi
     }
     const response = await this.request(
       {
-        path: `/api/v1/admin/settings/email_delivery/`,
+        path: `/settings/email_delivery/`,
         method: "DELETE",
         headers: headerParameters,
         query: queryParameters,
@@ -252,24 +249,29 @@ export class AdministrationApi
   }
 
   /**
-   *
-   * remove_email_delivery_settings <DELETE>
+   * Remove Email Delivery Settings
    */
   async removeEmailDeliverySettings(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<object> {
+  ): Promise<{ [key: string]: any }> {
     const response = await this.removeEmailDeliverySettingsRaw(initOverrides);
     return await response.value();
   }
 
   /**
-   *
-   * set_email_delivery_settings <PUT>
+   * Set Email Delivery Settings
    */
   async setEmailDeliverySettingsRaw(
     requestParameters: SetEmailDeliverySettingsRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<object>> {
+  ): Promise<runtime.ApiResponse<{ [key: string]: any }>> {
+    if (requestParameters["emailDeliverySettings"] == null) {
+      throw new runtime.RequiredError(
+        "emailDeliverySettings",
+        'Required parameter "emailDeliverySettings" was null or undefined when calling setEmailDeliverySettings().',
+      );
+    }
+
     const queryParameters: any = {};
 
     if (requestParameters["validate"] != null) {
@@ -282,7 +284,7 @@ export class AdministrationApi
 
     if (this.configuration && this.configuration.accessToken) {
       const token = this.configuration.accessToken;
-      const tokenString = await token("bearerAuth", []);
+      const tokenString = await token("HTTPBearer", []);
 
       if (tokenString) {
         headerParameters["Authorization"] = `Bearer ${tokenString}`;
@@ -290,12 +292,12 @@ export class AdministrationApi
     }
     const response = await this.request(
       {
-        path: `/api/v1/admin/settings/email_delivery/`,
+        path: `/settings/email_delivery/`,
         method: "PUT",
         headers: headerParameters,
         query: queryParameters,
-        body: AppEmailDeliverySettingsToJSON(
-          requestParameters["appEmailDeliverySettings"],
+        body: EmailDeliverySettingsToJSON(
+          requestParameters["emailDeliverySettings"],
         ),
       },
       initOverrides,
@@ -305,13 +307,12 @@ export class AdministrationApi
   }
 
   /**
-   *
-   * set_email_delivery_settings <PUT>
+   * Set Email Delivery Settings
    */
   async setEmailDeliverySettings(
-    requestParameters: SetEmailDeliverySettingsRequest = {},
+    requestParameters: SetEmailDeliverySettingsRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<object> {
+  ): Promise<{ [key: string]: any }> {
     const response = await this.setEmailDeliverySettingsRaw(
       requestParameters,
       initOverrides,

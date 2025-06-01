@@ -2,7 +2,7 @@ from typing import Any, Literal
 
 import pytest
 
-from finbot.core.schema import BaseModel
+from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.providers import google_sheets
 from finbot.providers.google_sheets import (
     ACCOUNTS_TABLE_MARKER,
@@ -115,7 +115,7 @@ class TestHelpers:
                 record=AccountsTableSchema(
                     identifier="Precious metals",
                     description="Precious metals",
-                    currency="EUR",
+                    currency=CurrencyCode("EUR"),
                     type=AccountType.investment,
                     sub_type="other",
                 ),
@@ -125,7 +125,7 @@ class TestHelpers:
                 record=AccountsTableSchema(
                     identifier="Cash",
                     description="Cash",
-                    currency="EUR",
+                    currency=CurrencyCode("EUR"),
                     type=AccountType.depository,
                     sub_type="checking",
                 ),
@@ -137,7 +137,7 @@ class TestHelpers:
         sample_sheet: LocalSheet,
     ):
         class TestTableSchema(BaseModel):
-            type_identifier = "ACCOUNTS"
+            type_identifier: str = "ACCOUNTS"
             name: str
             currency: Literal["USD"]
 
