@@ -90,11 +90,10 @@ export function makeApi<ApiT extends Constructible>(
   apiType: ApiT,
   jwtToken?: string,
 ): InstanceType<ApiT> {
-  const serverUrl = APP_SERVICE_ENDPOINT?.replace("/api/v1", "");
   return new apiType(
     new Configuration({
       accessToken: jwtToken,
-      basePath: serverUrl,
+      basePath: APP_SERVICE_ENDPOINT,
       middleware: [appMiddleware],
     }),
   );
