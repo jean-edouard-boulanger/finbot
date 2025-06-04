@@ -4,6 +4,7 @@ from typing import Any
 
 from fastapi import FastAPI
 
+from finbot._version import __api_version__
 from finbot.apps.finbotwsrv import schema
 from finbot.apps.http_base import ORJSONResponse, setup_app
 from finbot.core import environment
@@ -20,6 +21,11 @@ configure_logging(environment.get_desired_log_level())
 app = FastAPI(
     root_path="/api/v1",
     default_response_class=ORJSONResponse,
+    title="Finbot financial data capture service",
+    description="API documentation for finbotwsrv",
+    version=__api_version__,
+    redoc_url="/docs",
+    docs_url=None,
 )
 setup_app(app)
 

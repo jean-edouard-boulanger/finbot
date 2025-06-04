@@ -3,7 +3,7 @@
     "info": {
         "title": "Finbot application service",
         "description": "API documentation for appwsrv",
-        "version": "0.1.0"
+        "version": "0.0.6"
     },
     "paths": {
         "/settings/email_delivery/providers/": {
