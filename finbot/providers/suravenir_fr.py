@@ -1,15 +1,14 @@
-import json
 import logging
 from dataclasses import dataclass
 from threading import Lock
 from typing import Any
 
-from playwright.sync_api import Route
+from playwright.sync_api import Page, Route
 from pydantic import SecretStr
 
 from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.core.utils import raise_, some
-from finbot.providers.errors import AuthenticationError
+from finbot.providers.errors import AuthenticationError, UnsupportedFinancialInstrument
 from finbot.providers.playwright_base import (
     Condition,
     ConditionGuard,
@@ -18,7 +17,7 @@ from finbot.providers.playwright_base import (
 from finbot.providers.schema import Account, AccountType, Asset, AssetClass, Assets, AssetsEntry, AssetType
 
 BASE_URL = "https://espaceclient.suravenir.fr/web/suravenir"
-
+ACCOUNTS_URL = "https://espaceclient.suravenir.fr/mes-contrats#/"
 
 logger = logging.getLogger(__name__)
 
@@ -53,14 +52,15 @@ class Api(PlaywrightProviderBase):
         with self._lock:
             return self._accounts_payload is not None
 
-    def _handle_request(self, route: Route, *_: Any) -> None:
+    def _handle_contracts_request(self, route: Route, *_: Any) -> None:
         response = route.fetch()
         route.fulfill(response=response)
         with self._lock:
             self._accounts_payload = response.json()
 
     def initialize(self) -> None:
-        self.page.route("**/arkea-rest-endpoint-contract-suravenir/v1.0/suravenir-contracts", self._handle_request)
+        spy_uri = "**/arkea-rest-endpoint-contract-suravenir/v1.0/suravenir-contracts"
+        self.page.route(spy_uri, self._handle_contracts_request)
         self.page.goto(BASE_URL)
         self.page.fill(
             "#_com_liferay_login_web_portlet_LoginPortlet_login", self._credentials.identifier.get_secret_value()
@@ -78,7 +78,7 @@ class Api(PlaywrightProviderBase):
                 ),
             ),
         ).wait_any(self.page)
-        print(json.dumps(self._accounts_payload, indent=3))
+        self.page.unroute(spy_uri)
 
     def get_accounts(self) -> list[Account]:
         return [_deserialize_account(raw_account) for raw_account in some(self._accounts_payload)["listeContrats"]]
@@ -86,21 +86,42 @@ class Api(PlaywrightProviderBase):
     def get_assets(self) -> Assets:
         return Assets(
             accounts=[
-                AssetsEntry(
-                    account_id=raw_account["numeroAdherentContrat"],
-                    items=[
-                        Asset(
-                            name="Generic fund (unknown name)",
-                            type="blended fund",
-                            asset_class=AssetClass.multi_asset,
-                            asset_type=AssetType.generic_fund,
-                            currency=CurrencyCode("EUR"),
-                            value_in_account_ccy=raw_account["soldeContrat"],
-                        )
-                    ],
-                )
+                FetchAccountAssets(self.page, raw_account["numeroAdherentContrat"])()
                 for raw_account in some(self._accounts_payload)["listeContrats"]
             ]
+        )
+
+
+class FetchAccountAssets:
+    def __init__(self, page: Page, account_id: str):
+        self.page = page
+        self._account_id = account_id
+        self._assets_payload: dict[str, Any] | None = None
+        self._lock = Lock()
+
+    def _handle_assets_request(self, route: Route, *_: Any) -> None:
+        response = route.fetch()
+        route.fulfill(response=response)
+        with self._lock:
+            self._assets_payload = response.json()
+
+    def _assets_payload_is_set(self) -> bool:
+        with self._lock:
+            return self._assets_payload is not None
+
+    def __call__(self) -> AssetsEntry:
+        logger.debug(f"Fetching account '{self._account_id}' assets")
+        spy_uri = "**/arkea-rest-endpoint-contract-life/v1.0/contract-details/*"
+        self.page.route(spy_uri, self._handle_assets_request)
+        self.page.goto(ACCOUNTS_URL)
+        card_locator = self.page.locator(f'div.contract:has(:text("{self._account_id}"))')
+        button_locator = card_locator.locator('button[title="Consulter le contrat Suravenir Per"]')
+        button_locator.click()
+        ConditionGuard(Condition(lambda: self._assets_payload_is_set())).wait_all(self.page)
+        self.page.unroute(spy_uri)
+        return AssetsEntry(
+            account_id=self._account_id,
+            items=[_make_asset(asset_payload) for asset_payload in some(self._assets_payload)["contractSupports"]],
         )
 
 
@@ -117,4 +138,29 @@ def _deserialize_account(raw_account: Any) -> Account:
         iso_currency=CurrencyCode("EUR"),
         type=AccountType.investment,
         sub_type="pension",
+    )
+
+
+def _make_asset(
+    asset_payload: dict[str, Any],
+) -> Asset:
+    if asset_payload["supportCategoryCode"] in ("ET",):  # Electronically traded?
+        return Asset(
+            name=asset_payload["supportLabel"],
+            asset_class={"ACTIONS INTL - GENERAL": AssetClass.equities}[asset_payload["supportClassificationLabel"]],
+            asset_type=AssetType.ETF,
+            value_in_account_ccy=asset_payload["grossBalance"],
+            units=asset_payload["shareCount"],
+            currency=CurrencyCode("EUR"),
+            isin_code=asset_payload["isinCode"],
+            provider_specific={
+                "Performance (%)": asset_payload["performance"],
+                "Valuation Date": asset_payload["lastNetAssetValue"],
+                "Management Fee": asset_payload["managementFee"],
+                "Unit Cost Price": asset_payload["unitCostPrice"],
+            },
+        )
+    raise UnsupportedFinancialInstrument(
+        asset_type=f"{asset_payload['supportLabel']} - {asset_payload['supportClassificationLabel']}",
+        asset_description=f"{asset_payload.get('supportLabel')}",
     )
