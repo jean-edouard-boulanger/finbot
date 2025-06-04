@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 
+from finbot._version import __api_version__
 from finbot.apps.appwsrv.routes.admin import router as admin_router
 from finbot.apps.appwsrv.routes.auth import router as auth_router
 from finbot.apps.appwsrv.routes.base import router as base_router
@@ -21,6 +22,9 @@ app = FastAPI(
     default_response_class=ORJSONResponse,
     title="Finbot application service",
     description="API documentation for appwsrv",
+    version=__api_version__,
+    redoc_url="/docs",
+    docs_url=None,
 )
 setup_app(app)
 
