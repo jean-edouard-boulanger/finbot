@@ -121,7 +121,7 @@ class FetchAccountAssets:
         self.page.unroute(spy_uri)
         return AssetsEntry(
             account_id=self._account_id,
-            items=[_make_asset(asset_payload) for asset_payload in self._assets_payload["contractSupports"]],
+            items=[_make_asset(asset_payload) for asset_payload in some(self._assets_payload)["contractSupports"]],
         )
 
 
@@ -143,7 +143,7 @@ def _deserialize_account(raw_account: Any) -> Account:
 
 def _make_asset(
     asset_payload: dict[str, Any],
-):
+) -> Asset:
     if asset_payload["supportCategoryCode"] in ("ET",):  # Electronically traded?
         return Asset(
             name=asset_payload["supportLabel"],
