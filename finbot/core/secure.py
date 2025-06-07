@@ -4,6 +4,8 @@ from typing import cast
 import gnupg
 from cryptography.fernet import Fernet
 
+from finbot.core.async_ import aexec
+
 
 def fernet_generate_key() -> bytes:
     return Fernet.generate_key()
@@ -27,3 +29,12 @@ def pgp_decrypt(*, pgp_key_blob: bytes, passphrase: str | None, encrypted_blob: 
         decrypted_data = gpg.decrypt(encrypted_blob, passphrase=passphrase)
         assert decrypted_data.ok
         return cast(bytes, decrypted_data.data)
+
+
+async def async_pgp_decrypt(pgp_key_blob: bytes, passphrase: str | None, encrypted_blob: bytes) -> bytes:
+    return await aexec(
+        pgp_decrypt,
+        pgp_key_blob=pgp_key_blob,
+        passphrase=passphrase,
+        encrypted_blob=encrypted_blob,
+    )

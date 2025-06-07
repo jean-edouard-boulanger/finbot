@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any, Literal
 
-import requests
+import aiohttp
 from pydantic import BaseModel
 
 from finbot.core.schema import CurrencyCode
@@ -72,57 +72,45 @@ class SaxoGatewaySettings:
 class SaxoGatewayClient:
     def __init__(self, settings: SaxoGatewaySettings, api_key: str | None):
         self._settings = settings
-        self._session = requests.Session()
         self._api_key = api_key
 
-    @property
-    def reachable(self) -> bool:
-        try:
-            response = self._session.get(
-                f"{self._settings.gateway_url}/status",
-                timeout=1.0,
-            )
-            response.raise_for_status()
-            return True
-        except Exception:
-            return False
-
-    def send_openapi_request(
+    async def send_openapi_request(
         self,
         verb: Literal["GET"],
         resource: str,
         params: dict[str, str] | None = None,
     ) -> Any:
         resource = resource.lstrip("/")
-        impl = getattr(self._session, verb.lower())
-        response = impl(
-            f"{self._settings.gateway_url}/openapi/{resource}",
-            headers={"Authorization": f"Bearer {self._api_key}"},
-            params=params,
-        )
-        response.raise_for_status()
-        return response.json()
+        async with aiohttp.ClientSession(raise_for_status=True) as session:
+            impl = getattr(session, verb.lower())
+            response: aiohttp.ClientResponse
+            async with impl(
+                f"{self._settings.gateway_url}/openapi/{resource}",
+                headers={"Authorization": f"Bearer {self._api_key}"},
+                params=params,
+            ) as response:
+                return await response.json()
 
-    def openapi_get(
+    async def openapi_get(
         self,
         resource: str,
         params: dict[str, str] | None = None,
     ) -> Any:
-        return self.send_openapi_request(
+        return await self.send_openapi_request(
             verb="GET",
             resource=resource,
             params=params,
         )
 
-    def get_accounts(self) -> AccountsResponse:
-        accounts_response_payload = self.openapi_get("port/v1/accounts/me")
-        return AccountsResponse.parse_obj(accounts_response_payload)
+    async def get_accounts(self) -> AccountsResponse:
+        accounts_response_payload = await self.openapi_get("port/v1/accounts/me")
+        return AccountsResponse.model_validate(accounts_response_payload)
 
-    def get_account_positions(
+    async def get_account_positions(
         self,
         saxo_account: SaxoAccount,
     ) -> NetPositionsResponse:
-        net_positions_payload = self.openapi_get(
+        net_positions_payload = await self.openapi_get(
             "port/v1/netpositions/",
             params={
                 "AccountKey": saxo_account.AccountKey,
@@ -130,17 +118,17 @@ class SaxoGatewayClient:
                 "FieldGroups": "SinglePositionBase,SinglePositionView,DisplayAndFormat,ExchangeInfo",
             },
         )
-        return NetPositionsResponse.parse_obj(net_positions_payload)
+        return NetPositionsResponse.model_validate(net_positions_payload)
 
-    def get_account_balances(
+    async def get_account_balances(
         self,
         saxo_account: SaxoAccount,
     ) -> AccountBalancesResponse:
-        account_balances_response_payload = self.openapi_get(
+        account_balances_response_payload = await self.openapi_get(
             "port/v1/balances/",
             params={
                 "AccountKey": saxo_account.AccountKey,
                 "ClientKey": saxo_account.ClientKey,
             },
         )
-        return AccountBalancesResponse.parse_obj(account_balances_response_payload)
+        return AccountBalancesResponse.model_validate(account_balances_response_payload)

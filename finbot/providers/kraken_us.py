@@ -1,8 +1,9 @@
-from typing import Any, Generator
+from typing import Any, AsyncGenerator
 
 import krakenex
 from pydantic import SecretStr
 
+from finbot.core.async_ import acollect, aexec
 from finbot.core.errors import FinbotError
 from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.providers.base import ProviderBase
@@ -65,10 +66,10 @@ class Api(ProviderBase):
             sub_type="crypto exchange",
         )
 
-    def _iter_assets(self) -> Generator[Asset, None, None]:
+    async def _iter_assets(self) -> AsyncGenerator[Asset]:
         price_fetcher = KrakenPriceFetcher(self._api)
         assert self._api is not None
-        results = self._api.query_private("Balance")["result"]
+        results = (await aexec(self._api.query_private, "Balance"))["result"]
         for symbol, units in results.items():
             units = float(units)
             if units > OWNERSHIP_UNITS_THRESHOLD:
@@ -81,7 +82,7 @@ class Api(ProviderBase):
                         amount=units,
                     )
                 else:
-                    rate = price_fetcher.get_last_price(demangled_symbol, self._account_ccy)
+                    rate = await price_fetcher.get_last_price(demangled_symbol, self._account_ccy)
                     yield Asset(
                         name=demangled_symbol,
                         type="cryptocurrency",  # deprecated
@@ -92,7 +93,7 @@ class Api(ProviderBase):
                         currency=self._account_ccy,
                     )
 
-    def initialize(self) -> None:
+    async def initialize(self) -> None:
         self._api = krakenex.API(
             key=self._credentials.api_key.get_secret_value(),
             secret=self._credentials.private_key.get_secret_value(),
@@ -101,15 +102,15 @@ class Api(ProviderBase):
         if results["error"]:
             raise AuthenticationError(_format_error(results["error"]))
 
-    def get_accounts(self) -> list[Account]:
+    async def get_accounts(self) -> list[Account]:
         return [self._account_description()]
 
-    def get_assets(self) -> Assets:
+    async def get_assets(self) -> Assets:
         return Assets(
             accounts=[
                 AssetsEntry(
                     account_id=self._account_description().id,
-                    items=list(self._iter_assets()),
+                    items=await acollect(self._iter_assets()),
                 )
             ]
         )
@@ -125,7 +126,7 @@ class KrakenPriceFetcher(object):
     ):
         self.api = kraken_api
 
-    def get_last_price(
+    async def get_last_price(
         self,
         source_crypto_asset: str,
         target_ccy: str,
@@ -134,8 +135,7 @@ class KrakenPriceFetcher(object):
             return 1.0
         pair_str = f"{source_crypto_asset}/{target_ccy}"
         pair = f"{source_crypto_asset}{target_ccy}"
-        args = "Ticker", {"pair": pair}
-        results = self.api.query_public(*args)
+        results = await aexec(self.api.query_public, "Ticker", {"pair": pair})
         if results["error"]:
             raise KrakenPriceFetcher.Error(f"{pair_str} " + _format_error(results["error"]))
         return float(results["result"][list(results["result"].keys())[0]]["c"][0])

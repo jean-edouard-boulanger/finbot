@@ -2,7 +2,7 @@ from typing import Any, Generator
 
 from pydantic import SecretStr
 
-from finbot.core import fx_market, saxo
+from finbot.core import saxo
 from finbot.core.environment import get_saxo_gateway_url
 from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.core.utils import some
@@ -43,29 +43,29 @@ class Api(ProviderBase):
         )
         self._accounts: list[saxo.SaxoAccount] | None = None
 
-    def initialize(self) -> None:
+    async def initialize(self) -> None:
         try:
-            self._accounts = self._client.get_accounts().Data
+            self._accounts = (await self._client.get_accounts()).Data
         except Exception as e:
             raise AuthenticationError(str(e))
 
-    def get_accounts(self) -> list[Account]:
+    async def get_accounts(self) -> list[Account]:
         return [account for (account, _) in self._iter_accounts()]
 
-    def get_assets(self) -> Assets:
+    async def get_assets(self) -> Assets:
         return Assets(
             accounts=[
                 AssetsEntry(
                     account_id=account.id,
-                    items=self._get_account_assets(saxo_account=saxo_account),
+                    items=(await self._get_account_assets(saxo_account=saxo_account)),
                 )
                 for (account, saxo_account) in self._iter_accounts()
             ]
         )
 
-    def _get_account_assets(self, saxo_account: saxo.SaxoAccount) -> list[Asset]:
+    async def _get_account_assets(self, saxo_account: saxo.SaxoAccount) -> list[Asset]:
         assets: list[Asset] = []
-        if cash_available := self._client.get_account_balances(saxo_account).CashAvailableForTrading:
+        if cash_available := (await self._client.get_account_balances(saxo_account)).CashAvailableForTrading:
             currency = CurrencyCode(saxo_account.Currency)
             assets.append(
                 Asset.cash(
@@ -74,7 +74,7 @@ class Api(ProviderBase):
                     amount=cash_available,
                 )
             )
-        for position in self._client.get_account_positions(saxo_account).Data:
+        for position in (await self._client.get_account_positions(saxo_account)).Data:
             assets.append(_make_asset(position))
         return assets
 
@@ -90,21 +90,6 @@ class Api(ProviderBase):
                 ),
                 raw_account_data,
             )
-
-
-def _get_value_in_account_currency(
-    saxo_account: saxo.SaxoAccount,
-    position: saxo.NetPosition,
-) -> float:
-    value = position.SinglePosition.PositionView.MarketValue
-    rate = fx_market.get_rate(
-        pair=fx_market.Xccy(
-            domestic=position.DisplayAndFormat.Currency,
-            foreign=saxo_account.Currency,
-        )
-    )
-    assert isinstance(rate, float)
-    return rate * value
 
 
 def _make_asset(

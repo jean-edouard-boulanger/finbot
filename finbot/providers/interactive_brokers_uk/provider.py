@@ -4,7 +4,7 @@ from typing import Any
 from pydantic import SecretStr
 
 from finbot.core.schema import BaseModel, CurrencyCode
-from finbot.core.secure import pgp_decrypt
+from finbot.core.secure import async_pgp_decrypt
 from finbot.core.utils import some
 from finbot.providers import schema as providers_schema
 from finbot.providers.base import ProviderBase
@@ -21,7 +21,7 @@ from finbot.providers.interactive_brokers_uk.flex_report.schema import (
 )
 from finbot.providers.interactive_brokers_uk.intake import (
     IntakeMethod,
-    load_latest_report_payload,
+    async_load_latest_report_payload,
 )
 from finbot.providers.schema import Account, AccountType
 
@@ -50,25 +50,27 @@ class Api(ProviderBase):
         self._credentials = credentials
         self.__report: FlexReportWrapper | None = None
 
-    def initialize(self) -> None:
-        raw_report_payload = load_latest_report_payload(
+    async def initialize(self) -> None:
+        raw_report_payload = await async_load_latest_report_payload(
             self._credentials.report_file_pattern,
             self._credentials.intake_method,
         )
         if pgp_key := self._credentials.pgp_key:
-            report_payload = pgp_decrypt(
-                pgp_key_blob=pgp_key.pgp_key,
-                passphrase=pgp_key.passphrase.get_secret_value() if pgp_key.passphrase else None,
-                encrypted_blob=raw_report_payload,
+            report_payload = (
+                await async_pgp_decrypt(
+                    pgp_key_blob=pgp_key.pgp_key,
+                    passphrase=pgp_key.passphrase.get_secret_value() if pgp_key.passphrase else None,
+                    encrypted_blob=raw_report_payload,
+                )
             ).decode()
         else:
             report_payload = raw_report_payload.decode()
         self.__report = FlexReportWrapper(parse_flex_report_payload(report_payload))
 
-    def get_accounts(self) -> list[Account]:
+    async def get_accounts(self) -> list[Account]:
         return [statement.account for statement in some(self.__report).statements]
 
-    def get_assets(self) -> providers_schema.Assets:
+    async def get_assets(self) -> providers_schema.Assets:
         return providers_schema.Assets(
             accounts=[statement.get_assets(self.user_account_currency) for statement in some(self.__report).statements],
         )

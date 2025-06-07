@@ -36,7 +36,9 @@ beautifulsoup4==4.13.4
 billiard==4.2.1
     # via celery
 cachetools==5.5.2
-    # via google-auth
+    # via
+    #   finbot (pyproject.toml)
+    #   google-auth
 celery==5.5.2
     # via finbot (pyproject.toml)
 certifi==2025.4.26
@@ -71,7 +73,7 @@ cryptography==45.0.2
     # via
     #   finbot (pyproject.toml)
     #   python-jose
-curl-cffi==0.11.1
+curl-cffi==0.11.2
     # via yfinance
 dateparser==1.2.1
     # via python-binance
@@ -87,17 +89,17 @@ fastapi-cli==0.0.7
     # via fastapi
 frozendict==2.4.6
     # via yfinance
-frozenlist==1.6.0
+frozenlist==1.6.2
     # via
     #   aiohttp
     #   aiosignal
-google-auth==2.40.2
+google-auth==2.40.3
     # via
     #   google-auth-oauthlib
     #   gspread
 google-auth-oauthlib==1.2.2
     # via gspread
-greenlet==3.2.2
+greenlet==3.2.3
     # via
     #   playwright
     #   sqlalchemy
@@ -130,7 +132,7 @@ jsonschema==4.23.0
     # via finbot (pyproject.toml)
 jsonschema-specifications==2025.4.1
     # via jsonschema
-kombu==5.5.3
+kombu==5.5.4
     # via celery
 krakenex==2.2.2
     # via finbot (pyproject.toml)
@@ -163,8 +165,10 @@ oauthlib==3.2.2
 orjson==3.10.18
     # via finbot (pyproject.toml)
 packaging==25.0
-    # via gunicorn
-pandas==2.2.3
+    # via
+    #   gunicorn
+    #   kombu
+pandas==2.3.0
     # via yfinance
 peewee==3.18.1
     # via yfinance
@@ -300,7 +304,7 @@ twilio==9.6.1
     # via finbot (pyproject.toml)
 typer==0.16.0
     # via fastapi-cli
-typing-extensions==4.13.2
+typing-extensions==4.14.0
     # via
     #   alembic
     #   beautifulsoup4
@@ -324,7 +328,7 @@ urllib3==2.4.0
     # via
     #   plaid-python
     #   requests
-uvicorn==0.34.2
+uvicorn==0.34.3
     # via
     #   finbot (pyproject.toml)
     #   fastapi

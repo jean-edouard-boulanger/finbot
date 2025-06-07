@@ -44,15 +44,15 @@ class Api(ProviderBase):
         self._credentials = credentials
         self._accounts: Optional[list[AccountValue]] = None
 
-    def initialize(self) -> None:
+    async def initialize(self) -> None:
         api = QontoApi(
             identifier=self._credentials.identifier,
             secret_key=self._credentials.secret_key.get_secret_value(),
         )
         try:
-            organization = api.list_organizations()[0]
+            organization = (await api.list_organizations())[0]
         except Unauthorized as e:
-            raise AuthenticationError(str(e))
+            raise AuthenticationError(str(e)) from e
         self._accounts = [
             AccountValue(
                 account=Account(
@@ -67,10 +67,10 @@ class Api(ProviderBase):
             for entry in organization.bank_accounts
         ]
 
-    def get_accounts(self) -> list[Account]:
+    async def get_accounts(self) -> list[Account]:
         return [entry.account for entry in some(self._accounts)]
 
-    def get_assets(self) -> Assets:
+    async def get_assets(self) -> Assets:
         return Assets(
             accounts=[
                 AssetsEntry(

@@ -9,6 +9,8 @@ from typing import Annotated, Literal, Optional
 
 from pydantic import BaseModel, Field
 
+from finbot.core.async_ import aexec
+
 
 class LocalIntakeMethod(BaseModel):
     method_type: Literal["local_file"] = "local_file"
@@ -99,3 +101,14 @@ def load_latest_report_payload(
             f" (report file pattern: {report_file_pattern})"
         )
     return payload
+
+
+async def async_load_latest_report_payload(
+    report_file_pattern: str,
+    intake_method: IntakeMethodType,
+) -> bytes:
+    return await aexec(
+        load_latest_report_payload,
+        report_file_pattern=report_file_pattern,
+        intake_method=intake_method,
+    )

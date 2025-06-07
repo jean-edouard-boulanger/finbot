@@ -23,8 +23,8 @@ def user_account_valuation_task(
         user_account_snapshot_service=UserAccountSnapshotService(db_session),
         valuation_history_writer_service=ValuationHistoryWriterService(db_session),
     )
-    request = ValuationRequest.parse_obj(serialized_request)
-    return service.process_valuation(request).dict()
+    request = ValuationRequest.model_validate(serialized_request)
+    return service.process_valuation(request).model_dump()
 
 
 client = Client[ValuationRequest, ValuationResponse](user_account_valuation_task, ValuationRequest, ValuationResponse)
