@@ -1,7 +1,7 @@
 import logging
 
 from finbot.core.typing_extensions import JSONSerialized
-from finbot.model.db import db_session
+from finbot.model import ScopedSession
 from finbot.services.user_account_snapshot import UserAccountSnapshotService
 from finbot.services.user_account_valuation import (
     UserAccountValuationService,
@@ -18,13 +18,14 @@ logger = logging.getLogger(__name__)
 def user_account_valuation_task(
     serialized_request: JSONSerialized[ValuationRequest],
 ) -> JSONSerialized[ValuationResponse]:
-    service = UserAccountValuationService(
-        db_session=db_session,
-        user_account_snapshot_service=UserAccountSnapshotService(db_session),
-        valuation_history_writer_service=ValuationHistoryWriterService(db_session),
-    )
-    request = ValuationRequest.model_validate(serialized_request)
-    return service.process_valuation(request).model_dump()
+    with ScopedSession() as session:
+        service = UserAccountValuationService(
+            db_session=session,
+            user_account_snapshot_service=UserAccountSnapshotService(session),
+            valuation_history_writer_service=ValuationHistoryWriterService(session),
+        )
+        request = ValuationRequest.model_validate(serialized_request)
+        return service.process_valuation(request).model_dump()
 
 
 client = Client[ValuationRequest, ValuationResponse](user_account_valuation_task, ValuationRequest, ValuationResponse)

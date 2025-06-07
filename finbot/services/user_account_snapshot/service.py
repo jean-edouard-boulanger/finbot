@@ -7,17 +7,17 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any, Generator, Optional, Protocol, TypedDict, cast
 
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import Session, joinedload
 
 from finbot import model
 from finbot.apps.finbotwsrv import schema as finbotwsrv_schema
 from finbot.apps.finbotwsrv.client import FinbotwsrvClient
 from finbot.core import environment, fx_market, secure, utils
 from finbot.core import schema as core_schema
-from finbot.core.db.session import Session
 from finbot.core.schema import ApplicationErrorData
 from finbot.core.serialization import serialize
 from finbot.core.utils import some
+from finbot.model import PersistScope
 from finbot.providers import schema as providers_schema
 from finbot.services.user_account_snapshot import schema
 
@@ -426,6 +426,7 @@ def take_snapshot_impl(
         f"fetching user information for user_account_id={user_account_id} linked_account_ids={linked_account_ids}"
     )
 
+    persist_scope = PersistScope(db_session)
     user_account: model.UserAccount = (
         db_session.query(model.UserAccount)  # type: ignore
         .options(joinedload(model.UserAccount.linked_accounts))
@@ -439,7 +440,7 @@ def take_snapshot_impl(
     requested_ccy = core_schema.CurrencyCode(user_account.settings.valuation_ccy)
     logger.info(f"requested valuation currency is {requested_ccy}")
 
-    with db_session.persist(model.UserAccountSnapshot()) as new_snapshot:
+    with persist_scope(model.UserAccountSnapshot()) as new_snapshot:
         new_snapshot.status = model.SnapshotStatus.Processing
         new_snapshot.requested_ccy = requested_ccy
         new_snapshot.user_account_id = user_account_id
@@ -455,7 +456,7 @@ def take_snapshot_impl(
 
     logger.debug("adding cross currency rates to snapshot")
 
-    with db_session.persist(new_snapshot):
+    with persist_scope(new_snapshot):
         new_snapshot.xccy_rates_entries.extend(
             [
                 model.XccyRateSnapshotEntry(
@@ -477,7 +478,7 @@ def take_snapshot_impl(
         },
     )
 
-    with db_session.persist(new_snapshot):
+    with persist_scope(new_snapshot):
         visit_snapshot_tree(raw_snapshot, snapshot_builder)
         new_snapshot.status = model.SnapshotStatus.Success
         new_snapshot.end_time = utils.now_utc()

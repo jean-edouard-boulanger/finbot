@@ -9,6 +9,7 @@ from typing import Any
 
 from finbot.core.schema import CurrencyCode
 from finbot.core.serialization import pretty_dump
+from finbot.model import ScopedSession
 from finbot.providers import factory as providers_factory
 from finbot.providers.base import ProviderBase
 from finbot.providers.playwright_base import PlaywrightProviderBase, HEADLESS_SETTING
@@ -69,10 +70,10 @@ def get_authentication_payload(settings) -> dict[str, Any] | None:
     if settings.auth_payload_file:
         return json.loads(settings.auth_payload_file.read_text())
     if settings.auth_payload_from_linked_account_id:
-        from finbot.model.db import db_session
         from finbot.model import LinkedAccount
-        linked_account: LinkedAccount = db_session.query(LinkedAccount).get(settings.auth_payload_from_linked_account_id)
-        return linked_account.plain_credentials
+        with ScopedSession() as session:
+            linked_account: LinkedAccount = session.query(LinkedAccount).get(settings.auth_payload_from_linked_account_id)
+            return linked_account.plain_credentials
 
     return None
 

@@ -7,8 +7,7 @@ from finbot.apps.appwsrv import schema as appwsrv_schema
 from finbot.apps.appwsrv import serializer
 from finbot.core import jwt
 from finbot.core.errors import InvalidUserInput
-from finbot.model import repository
-from finbot.model.db import db_session
+from finbot.model import db, repository
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -19,7 +18,7 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 )
 def auth_login(json: appwsrv_schema.LoginRequest) -> appwsrv_schema.LoginResponse:
     """Authenticate user"""
-    account = repository.find_user_account_by_email(db_session, json.email)
+    account = repository.find_user_account_by_email(db.session, json.email)
     not_found_message = "Invalid email or password"
     if not account:
         raise InvalidUserInput(not_found_message)

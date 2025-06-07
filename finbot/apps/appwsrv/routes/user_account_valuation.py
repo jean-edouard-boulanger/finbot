@@ -17,12 +17,7 @@ from finbot.core import schema as core_schema
 from finbot.core import timeseries
 from finbot.core.errors import InvalidUserInput, MissingUserData, NotAllowedError
 from finbot.core.utils import now_utc, some
-from finbot.model import (
-    SubAccountItemType,
-    SubAccountItemValuationHistoryEntry,
-    repository,
-)
-from finbot.model.db import db_session
+from finbot.model import SubAccountItemType, SubAccountItemValuationHistoryEntry, db, repository
 from finbot.providers.schema import AssetClass, AssetType
 
 logger = logging.getLogger(__name__)
@@ -66,10 +61,10 @@ def get_user_account_valuation(
         raise NotAllowedError()
     to_time = now_utc()
     from_time = to_time - timedelta(days=30)
-    last_valuation = repository.get_last_history_entry(db_session, user_account_id)
+    last_valuation = repository.get_last_history_entry(db.session, user_account_id)
     user_account_valuation = last_valuation.user_account_valuation_history_entry
     valuation_history = repository.get_user_account_historical_valuation(
-        session=db_session,
+        session=db.session,
         user_account_id=user_account_id,
         from_time=from_time,
         to_time=to_time,
@@ -109,9 +104,9 @@ def get_user_account_valuation_by_asset_type(
     """Get user account valuation by asset type"""
     if user_account_id != current_user_id:
         raise NotAllowedError()
-    last_history_entry = repository.get_last_history_entry(db_session, user_account_id)
-    items = repository.find_items_valuation(db_session, last_history_entry.id)
-    valuation_ccy = repository.get_user_account_settings(db_session, user_account_id).valuation_ccy
+    last_history_entry = repository.get_last_history_entry(db.session, user_account_id)
+    items = repository.find_items_valuation(db.session, last_history_entry.id)
+    valuation_ccy = repository.get_user_account_settings(db.session, user_account_id).valuation_ccy
     valuation: dict[str, GroupValuationAgg] = {}
     item: SubAccountItemValuationHistoryEntry
     for item in items:
@@ -148,9 +143,9 @@ def get_user_account_valuation_by_currency_exposure(
     """Get user account valuation by currency exposure"""
     if user_account_id != current_user_id:
         raise NotAllowedError()
-    last_history_entry = repository.get_last_history_entry(db_session, user_account_id)
-    items = repository.find_items_valuation(db_session, last_history_entry.id)
-    valuation_ccy = repository.get_user_account_settings(db_session, user_account_id).valuation_ccy
+    last_history_entry = repository.get_last_history_entry(db.session, user_account_id)
+    items = repository.find_items_valuation(db.session, last_history_entry.id)
+    valuation_ccy = repository.get_user_account_settings(db.session, user_account_id).valuation_ccy
     valuation: dict[str, GroupValuationAgg] = {}
     for item in items:
         if item.item_type == SubAccountItemType.Asset:
@@ -185,9 +180,9 @@ def get_user_account_valuation_by_asset_class(
     """Get user account valuation by asset class"""
     if user_account_id != current_user_id:
         raise NotAllowedError()
-    last_history_entry = repository.get_last_history_entry(db_session, user_account_id)
-    items = repository.find_items_valuation(db_session, last_history_entry.id)
-    valuation_ccy = repository.get_user_account_settings(db_session, user_account_id).valuation_ccy
+    last_history_entry = repository.get_last_history_entry(db.session, user_account_id)
+    items = repository.find_items_valuation(db.session, last_history_entry.id)
+    valuation_ccy = repository.get_user_account_settings(db.session, user_account_id).valuation_ccy
     valuation: dict[str, GroupValuationAgg] = {}
     item: SubAccountItemValuationHistoryEntry
     for item in items:
@@ -222,7 +217,7 @@ def get_user_account_historical_valuation(
     """Get user account valuation historical valuation"""
     if user_account_id != current_user_id:
         raise NotAllowedError()
-    settings = repository.get_user_account_settings(db_session, user_account_id)
+    settings = repository.get_user_account_settings(db.session, user_account_id)
     from_time = query.from_time
     to_time = query.to_time
     if from_time and to_time and from_time >= to_time:
@@ -232,7 +227,7 @@ def get_user_account_historical_valuation(
     is_daily = frequency == core_schema.ValuationFrequency.Daily
 
     historical_valuation: list[repository.HistoricalValuationEntry] = repository.get_user_account_historical_valuation(
-        db_session,
+        db.session,
         user_account_id,
         from_time=from_time,
         to_time=to_time,
@@ -273,7 +268,7 @@ def get_user_account_historical_valuation_by_asset_type(
     """Get user account valuation historical valuation by asset type"""
     if user_account_id != current_user_id:
         raise NotAllowedError()
-    settings = repository.get_user_account_settings(db_session, user_account_id)
+    settings = repository.get_user_account_settings(db.session, user_account_id)
     from_time = query.from_time
     to_time = query.to_time
     if from_time and to_time and from_time >= to_time:
@@ -283,7 +278,7 @@ def get_user_account_historical_valuation_by_asset_type(
     is_daily = frequency == core_schema.ValuationFrequency.Daily
 
     valuation_history: list[repository.AssetTypeHistoricalValuationEntry] = repository.get_historical_valuation_by(
-        db_session,
+        db.session,
         user_account_id,
         by=repository.HistoricalValuationByAssetType,
         from_time=from_time,
@@ -349,7 +344,7 @@ def get_user_account_historical_valuation_by_asset_class(
     """Get user account valuation historical valuation by asset class"""
     if user_account_id != current_user_id:
         raise NotAllowedError()
-    settings = repository.get_user_account_settings(db_session, user_account_id)
+    settings = repository.get_user_account_settings(db.session, user_account_id)
     from_time = query.from_time
     to_time = query.to_time
     if from_time and to_time and from_time >= to_time:
@@ -359,7 +354,7 @@ def get_user_account_historical_valuation_by_asset_class(
     is_daily = frequency == core_schema.ValuationFrequency.Daily
 
     valuation_history: list[repository.AssetClassHistoricalValuationEntry] = repository.get_historical_valuation_by(
-        db_session,
+        db.session,
         user_account_id,
         by=repository.HistoricalValuationByAssetClass,
         from_time=from_time,

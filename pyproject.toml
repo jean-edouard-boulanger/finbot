@@ -43,7 +43,6 @@ dev = [
     "pytest==8.3.5",
     "ruff==0.11.11",
     "semver==3.0.4",
-    "sqlalchemy-stubs==0.4",
     "types-cachetools<7",
     "types-requests==2.32.0.20250515",
     "watchdog[watchmedo]<7",

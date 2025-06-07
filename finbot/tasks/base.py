@@ -72,7 +72,7 @@ class Client(Generic[RequestType, ResponseType]):
     ) -> AsyncResponse[ResponseType]:
         celery_kwargs = celery_kwargs or {}
         async_result = self._task_func.apply_async(
-            args=(request.dict(),),
+            args=(request.model_dump(),),
             **celery_kwargs,
         )
         return AsyncResponse[ResponseType](self._response_type, async_result)

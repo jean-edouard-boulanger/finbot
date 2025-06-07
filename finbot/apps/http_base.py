@@ -15,8 +15,7 @@ from finbot.core.errors import AuthError, NotAllowedError, ResourceNotFoundError
 from finbot.core.jwt import JwtTokenPayload
 from finbot.core.schema import ApplicationErrorResponse, GenericError
 from finbot.core.utils import some
-from finbot.model import UserAccount
-from finbot.model.db import db_session
+from finbot.model import ScopedSession, UserAccount, db
 
 security = HTTPBearer()
 
@@ -34,8 +33,8 @@ class ORJSONResponse(JSONResponse):
 def setup_app(app: FastAPI) -> FastAPI:
     @app.middleware("http")
     async def manage_db_session(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
-        response = await call_next(request)
-        db_session.remove()
+        with ScopedSession():
+            response = await call_next(request)
         return response
 
     @app.exception_handler(ResourceNotFoundError)
@@ -99,7 +98,7 @@ CurrentUserIdDep = Annotated[int, Depends(get_current_user_id)]
 
 
 def get_current_user(current_user_id: CurrentUserIdDep) -> UserAccount:
-    return some(db_session.query(UserAccount).get(current_user_id))
+    return some(db.session.query(UserAccount).get(current_user_id))
 
 
 CurrentUserDep = Annotated[UserAccount, Depends(get_current_user)]

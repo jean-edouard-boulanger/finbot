@@ -10,7 +10,7 @@ from sqlalchemy.orm import sessionmaker
 
 from finbot.core.environment import get_database_url
 from finbot.core.logging import configure_logging
-from finbot.model import Base, Provider, UserAccountHistoryEntry
+from finbot.model import Base, Provider, UserAccountHistoryEntry, db, ScopedSession
 
 configure_logging()
 
@@ -95,17 +95,15 @@ all_tools = {
 }
 
 
-def main():
+def main() -> None:
     parser = create_parser()
     settings = parser.parse_args()
     if not hasattr(settings, "tool_name"):
         parser.print_usage()
         return
-    db_engine = create_engine(settings.database)
-    db_session = sessionmaker(bind=db_engine)()
-    return all_tools[settings.tool_name]["handler"](settings, db_engine, db_session)
+    with ScopedSession() as session:
+        return all_tools[settings.tool_name]["handler"](settings, db.engine, session)
 
 
 if __name__ == "__main__":
-    success = main()
-    sys.exit(0 if success else 1)
+    main()

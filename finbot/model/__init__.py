@@ -17,12 +17,12 @@ from sqlalchemy import (
     func,
 )
 from sqlalchemy.dialects.postgresql import ARRAY
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
 
 from finbot.core.db.types import DateTimeTz, JSONEncoded
 from finbot.core.utils import some
+from finbot.model.base import Base, PersistScope, ScopedSession, SessionType, db, persist_scope, with_scoped_session
 
 if TYPE_CHECKING:
     from sqlalchemy.sql.type_api import TypeEngine
@@ -35,9 +35,6 @@ if TYPE_CHECKING:
 
 else:
     from sqlalchemy import Enum
-
-
-Base = declarative_base()
 
 
 class UserAccount(Base):
@@ -494,3 +491,14 @@ class GenericKeyValueStore(Base):
     __tablename__ = "finbot_generic_key_value_store"
     key = Column(String(64), primary_key=True)
     value = Column(JSONEncoded, nullable=False)
+
+
+__all__ = [
+    "db",
+    "ScopedSession",
+    "with_scoped_session",
+    "Base",
+    "persist_scope",
+    "PersistScope",
+    "SessionType",
+]

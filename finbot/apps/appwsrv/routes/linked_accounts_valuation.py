@@ -12,8 +12,7 @@ from finbot.apps.http_base import CurrentUserIdDep
 from finbot.core import schema as core_schema
 from finbot.core.errors import InvalidUserInput, NotAllowedError
 from finbot.core.utils import some
-from finbot.model import repository
-from finbot.model.db import db_session
+from finbot.model import db, repository
 
 logger = logging.getLogger(__name__)
 
@@ -31,14 +30,14 @@ def get_linked_accounts_valuation(
         raise NotAllowedError()
 
     history_entry = repository.get_last_history_entry(
-        session=db_session,
+        session=db.session,
         user_account_id=user_account_id,
     )
     valuation_ccy = repository.get_user_account_settings(
-        session=db_session,
+        session=db.session,
         user_account_id=user_account_id,
     ).valuation_ccy
-    results = repository.find_linked_accounts_valuation(db_session, history_entry.id)
+    results = repository.find_linked_accounts_valuation(db.session, history_entry.id)
     return appwsrv_schema.GetLinkedAccountsValuationResponse(
         valuation=appwsrv_schema.LinkedAccountsValuation(
             valuation_ccy=valuation_ccy,
@@ -78,17 +77,17 @@ def get_linked_accounts_historical_valuation(
     if user_account_id != current_user_id:
         raise NotAllowedError()
 
-    settings = repository.get_user_account_settings(db_session, user_account_id)
+    settings = repository.get_user_account_settings(db.session, user_account_id)
     from_time = query.from_time
     to_time = query.to_time
     if from_time and to_time and from_time >= to_time:
         raise InvalidUserInput("Start time parameter must be before end time parameter")
     frequency = query.frequency
     is_daily = frequency == core_schema.ValuationFrequency.Daily
-    linked_accounts = repository.find_linked_accounts(db_session, user_account_id)
+    linked_accounts = repository.find_linked_accounts(db.session, user_account_id)
     linked_accounts_colours = {linked_account.id: linked_account.account_colour for linked_account in linked_accounts}
     valuation_history = repository.get_historical_valuation_by_linked_account(
-        session=db_session,
+        session=db.session,
         user_account_id=user_account_id,
         from_time=from_time,
         to_time=to_time,

@@ -9,8 +9,7 @@ from finbot.apps.appwsrv import schema as appwsrv_schema
 from finbot.apps.appwsrv import serializer
 from finbot.apps.http_base import CurrentUserIdDep
 from finbot.core.errors import InvalidUserInput, NotAllowedError
-from finbot.model import UserAccount, UserAccountSettings, repository
-from finbot.model.db import db_session
+from finbot.model import UserAccount, UserAccountSettings, db, persist_scope, repository
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +25,7 @@ def create_user_account(
 ) -> appwsrv_schema.CreateUserAccountResponse:
     try:
         user_account: UserAccount
-        with db_session.persist(UserAccount()) as user_account:
+        with persist_scope(UserAccount()) as user_account:
             user_account.email = json.email
             user_account.password_hash = bcrypt.hashpw(json.password.get_secret_value().encode(), bcrypt.gensalt())
             user_account.full_name = json.full_name
@@ -48,7 +47,7 @@ def get_user_account(
 ) -> appwsrv_schema.GetUserAccountResponse:
     if user_account_id != current_user_id:
         raise NotAllowedError()
-    account = repository.get_user_account(db_session, user_account_id)
+    account = repository.get_user_account(db.session, user_account_id)
     return appwsrv_schema.GetUserAccountResponse(user_account=serializer.serialize_user_account(account))
 
 
@@ -63,11 +62,11 @@ def update_user_account_password(
 ) -> appwsrv_schema.UpdateUserAccountPasswordResponse:
     if user_account_id != current_user_id:
         raise NotAllowedError()
-    account = repository.get_user_account(db_session, user_account_id)
+    account = repository.get_user_account(db.session, user_account_id)
     old_password = json.old_password.get_secret_value()
     if not bcrypt.checkpw(old_password.encode(), account.password_hash):
         raise InvalidUserInput("The old password is incorrect")
-    with db_session.persist(account):
+    with persist_scope(account):
         account.password_hash = bcrypt.hashpw(json.new_password.get_secret_value().encode(), bcrypt.gensalt())
     return appwsrv_schema.UpdateUserAccountPasswordResponse()
 
@@ -83,8 +82,8 @@ def update_user_account_profile(
 ) -> appwsrv_schema.UpdateUserAccountProfileResponse:
     if user_account_id != current_user_id:
         raise NotAllowedError()
-    user_account = repository.get_user_account(db_session, user_account_id)
-    with db_session.persist(user_account):
+    user_account = repository.get_user_account(db.session, user_account_id)
+    with persist_scope(user_account):
         user_account.email = json.email
         user_account.full_name = json.full_name
         user_account.mobile_phone_number = json.mobile_phone_number
@@ -103,7 +102,7 @@ def get_user_account_settings(
 ) -> appwsrv_schema.GetUserAccountSettingsResponse:
     if user_account_id != current_user_id:
         raise NotAllowedError()
-    settings = repository.get_user_account_settings(db_session, user_account_id)
+    settings = repository.get_user_account_settings(db.session, user_account_id)
     return appwsrv_schema.GetUserAccountSettingsResponse(settings=serializer.serialize_user_account_settings(settings))
 
 
@@ -117,7 +116,7 @@ def is_user_account_configured(
 ) -> appwsrv_schema.IsUserAccountConfiguredResponse:
     if user_account_id != current_user_id:
         raise NotAllowedError()
-    account = repository.get_user_account(db_session, user_account_id)
+    account = repository.get_user_account(db.session, user_account_id)
     configured = len(account.linked_accounts) > 0
     return appwsrv_schema.IsUserAccountConfiguredResponse(configured=configured)
 
@@ -129,5 +128,5 @@ def is_user_account_configured(
 def is_email_available(
     query: Annotated[appwsrv_schema.IsEmailAvailableRequestParams, Query()],
 ) -> appwsrv_schema.IsEmailAvailableResponse:
-    user_account = repository.find_user_account_by_email(db_session, query.email)
+    user_account = repository.find_user_account_by_email(db.session, query.email)
     return appwsrv_schema.IsEmailAvailableResponse(available=user_account is None)

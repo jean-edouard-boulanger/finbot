@@ -8,9 +8,8 @@ from finbot.apps.appwsrv.core import formatting_rules
 from finbot.apps.appwsrv.reports.holdings import schema as holdings_schema
 from finbot.apps.appwsrv.serializer import serialize_valuation_change
 from finbot.core import timeseries, utils
-from finbot.core.db.session import Session
 from finbot.core.utils import some
-from finbot.model import repository
+from finbot.model import SessionType, repository
 
 LinkedAccountIdType: TypeAlias = int
 SubAccountIdType: TypeAlias = str
@@ -228,7 +227,7 @@ def build_valuation_tree(data: ReportData) -> holdings_schema.ValuationTree:
 
 
 def fetch_raw_report_data(
-    session: Session,
+    session: SessionType,
     history_entry: model.UserAccountHistoryEntry,
 ) -> ReportData:
     to_time = utils.now_utc()
@@ -276,7 +275,7 @@ def fetch_raw_report_data(
 
 
 def generate(
-    session: Session,
+    session: SessionType,
     history_entry: model.UserAccountHistoryEntry,
 ) -> holdings_schema.ValuationTree:
     report_data = fetch_raw_report_data(session, history_entry)

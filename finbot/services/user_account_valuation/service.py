@@ -1,7 +1,6 @@
 import logging
 
 from finbot import model
-from finbot.core.db.session import Session
 from finbot.core.email_delivery import DeliverySettings as EmailDeliverySettings
 from finbot.core.environment import get_twilio_environment, is_twilio_configured
 from finbot.core.kv_store import DBKVStore
@@ -15,7 +14,7 @@ from finbot.core.notifier import (
 )
 from finbot.core.serialization import pretty_dump
 from finbot.core.utils import some
-from finbot.model import repository
+from finbot.model import SessionType, repository
 from finbot.services.user_account_snapshot.service import UserAccountSnapshotService
 from finbot.services.user_account_valuation.schema import (
     ValuationRequest,
@@ -28,7 +27,7 @@ from finbot.services.valuation_history_writer.service import (
 logger = logging.getLogger(__name__)
 
 
-def _configure_notifier(db_session: Session, user_account: model.UserAccount) -> Notifier:
+def _configure_notifier(db_session: SessionType, user_account: model.UserAccount) -> Notifier:
     notifiers: list[Notifier] = []
     if user_account.mobile_phone_number and is_twilio_configured():
         twilio_settings = TwilioSettings.from_env(some(get_twilio_environment()))
@@ -38,8 +37,7 @@ def _configure_notifier(db_session: Session, user_account: model.UserAccount) ->
                 recipient_phone_number=user_account.mobile_phone_number,
             )
         )
-    kv_store = DBKVStore(db_session)
-    email_delivery_settings = kv_store.get_entity(EmailDeliverySettings)
+    email_delivery_settings = DBKVStore(db_session).get_entity(EmailDeliverySettings)
     if email_delivery_settings:
         notifiers.append(
             EmailNotifier(
@@ -53,7 +51,7 @@ def _configure_notifier(db_session: Session, user_account: model.UserAccount) ->
 class UserAccountValuationService(object):
     def __init__(
         self,
-        db_session: Session,
+        db_session: SessionType,
         user_account_snapshot_service: UserAccountSnapshotService,
         valuation_history_writer_service: ValuationHistoryWriterService,
     ):
