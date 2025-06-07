@@ -1,18 +1,19 @@
 from abc import ABC
-from contextlib import ExitStack
+from contextlib import AsyncExitStack
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Callable, Generator, Self
+from typing import Any, AsyncGenerator, Awaitable, Callable, Self
 
-from playwright.sync_api import (
+from playwright.async_api import (
     Browser,
     Error,
     Locator,
     Page,
     Playwright,
-    sync_playwright,
+    async_playwright,
 )
 
+from finbot.core.async_ import maybe_awaitable
 from finbot.providers.base import ProviderBase
 
 HEADLESS_SETTING = "headless_playwright"
@@ -35,17 +36,17 @@ class BrowserLauncher(object):
         self._browser: Browser | None = None
         self._headless = headless
 
-    def __enter__(self) -> "BrowserLauncher":
+    async def __aenter__(self) -> "BrowserLauncher":
         window_size = (1920, 1080)
-        self._browser = self._playwright.chromium.launch(
+        self._browser = await self._playwright.chromium.launch(
             headless=self._headless,
             args=_get_default_chrome_options(window_size),
         )
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):  # type: ignore
+    async def __aexit__(self, exc_type, exc_val, exc_tb):  # type: ignore
         assert self._browser
-        self._browser.close()
+        await self._browser.close()
 
     @property
     def browser(self) -> Browser:
@@ -63,8 +64,8 @@ class TimedOutWaitingForConditions(PlaywrightHelperError):
 
 @dataclass(frozen=True)
 class Condition:
-    predicate: Callable[[], Any]
-    when_fulfilled: Callable[[Any], None] | None = None
+    predicate: Callable[[], Awaitable[Any] | Any]
+    when_fulfilled: Callable[[Any], Awaitable[None] | None] | None = None
 
 
 class ConditionGuard(object):
@@ -81,7 +82,7 @@ class ConditionGuard(object):
         self._poll_interval = poll_interval or self.default_poll_interval
         self._timeout = timeout or self.default_timeout
 
-    def _timed_loop(self, page: Page) -> Generator[None, None, None]:
+    async def _timer(self, page: Page) -> AsyncGenerator[None]:
         timeout_at = (datetime.now() + self._timeout) if self._timeout else None
         while True:
             if timeout_at and datetime.now() >= timeout_at:
@@ -90,17 +91,20 @@ class ConditionGuard(object):
                     f" after {self._timeout.total_seconds()} seconds"
                 )
             yield
-            page.wait_for_timeout(self._poll_interval.total_seconds() * 1000.0)
+            await page.wait_for_timeout(self._poll_interval.total_seconds() * 1000.0)
 
-    def wait_all(self, page: Page) -> tuple[Any, ...]:
+    async def wait_all(self, page: Page) -> tuple[Any, ...]:
         when_fulfilled_callbacks = [cond.when_fulfilled for cond in self._conditions]
-        for _ in self._timed_loop(page):
-            all_vals = tuple(cond.predicate() for cond in self._conditions)
+        async for _ in self._timer(page):
+            vals_lst: list[Any] = []
+            for cond in self._conditions:
+                vals_lst.append(await maybe_awaitable(cond.predicate()))
+            all_vals = tuple(vals_lst)
             all_true = True
             for index, val in enumerate(all_vals):
                 if bool(val):
-                    when_fulfilled = when_fulfilled_callbacks[index]
-                    when_fulfilled and when_fulfilled(val)
+                    if when_fulfilled := when_fulfilled_callbacks[index]:
+                        await maybe_awaitable(when_fulfilled(val))
                     when_fulfilled_callbacks[index] = None
                 else:
                     all_true = False
@@ -108,34 +112,39 @@ class ConditionGuard(object):
                 return all_vals
         return tuple()
 
-    def wait_any(self, page: Page) -> tuple[int, Any]:
-        for _ in self._timed_loop(page):
+    async def wait_any(self, page: Page) -> tuple[int, Any]:
+        async for _ in self._timer(page):
             for index, cond in enumerate(self._conditions):
-                if val := cond.predicate():
-                    cond.when_fulfilled and cond.when_fulfilled(val)
+                if val := (await cond.predicate()):
+                    if cond.when_fulfilled:
+                        cond.when_fulfilled(val)
                     return index, val
         return -1, None
 
-    def wait(self, page: Page) -> Any:
+    async def wait(self, page: Page) -> Any:
         assert len(self._conditions) == 1
-        return self.wait_all(page)[0]
+        return (await self.wait_all(page))[0]
 
 
 class PlaywrightProviderBase(ProviderBase, ABC):
     def __init__(self, **kwargs: Any):
         super().__init__(**kwargs)
         self._launcher: BrowserLauncher | None = None
-        self._stack: ExitStack | None = None
+        self._stack: AsyncExitStack | None = None
         self._page: Page | None = None
         self._headless: bool = kwargs.pop(HEADLESS_SETTING, True)
 
-    def __enter__(self) -> Self:
-        with ExitStack() as stack:
-            playwright: Playwright = stack.enter_context(sync_playwright())
-            self._launcher = stack.enter_context(BrowserLauncher(playwright, self._headless))
-            self._page = self.browser.new_page()
+    async def __aenter__(self) -> Self:
+        async with AsyncExitStack() as stack:
+            playwright: Playwright = await stack.enter_async_context(async_playwright())
+            self._launcher = await stack.enter_async_context(BrowserLauncher(playwright, self._headless))
+            self._page = await self.browser.new_page()
             self._stack = stack.pop_all()
         return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:  # type: ignore
+        assert self._stack
+        await self._stack.__aexit__(exc_type, exc_val, exc_tb)
 
     @property
     def browser(self) -> Browser:
@@ -147,15 +156,11 @@ class PlaywrightProviderBase(ProviderBase, ABC):
         assert self._page
         return self._page
 
-    def get_element_or_none(self, selector: str) -> Locator | None:
+    async def get_element_or_none(self, selector: str) -> Locator | None:
         try:
             el = self.page.locator(selector)
-            if el.is_visible():
+            if await el.is_visible():
                 return el
             return None
         except Error:
             return None
-
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:  # type: ignore
-        assert self._stack
-        self._stack.__exit__(exc_type, exc_val, exc_tb)

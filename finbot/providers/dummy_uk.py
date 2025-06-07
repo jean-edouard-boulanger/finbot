@@ -72,11 +72,11 @@ class Api(ProviderBase):
         super().__init__(user_account_currency=user_account_currency, **kwargs)
         self.dummy_data = credentials.dummy_data or make_default_dummy_data(self.user_account_currency)
 
-    def initialize(self) -> None:
+    async def initialize(self) -> None:
         pass
 
-    def get_accounts(self) -> list[Account]:
+    async def get_accounts(self) -> list[Account]:
         return self.dummy_data.accounts
 
-    def get_assets(self) -> Assets:
+    async def get_assets(self) -> Assets:
         return self.dummy_data.assets

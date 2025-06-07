@@ -1,9 +1,9 @@
+import asyncio
 import logging
 from dataclasses import dataclass
-from threading import Lock
 from typing import Any
 
-from playwright.sync_api import Page, Route
+from playwright.async_api import Page, Route
 from pydantic import SecretStr
 
 from finbot.core.schema import BaseModel, CurrencyCode
@@ -46,30 +46,30 @@ class Api(PlaywrightProviderBase):
         super().__init__(user_account_currency=user_account_currency, **kwargs)
         self._credentials = credentials
         self._accounts_payload: dict[str, Any] | None = None
-        self._lock = Lock()
+        self._lock = asyncio.Lock()
 
-    def _accounts_payload_is_set(self) -> bool:
-        with self._lock:
+    async def _accounts_payload_is_set(self) -> bool:
+        async with self._lock:
             return self._accounts_payload is not None
 
-    def _handle_contracts_request(self, route: Route, *_: Any) -> None:
-        response = route.fetch()
-        route.fulfill(response=response)
-        with self._lock:
-            self._accounts_payload = response.json()
+    async def _handle_contracts_request(self, route: Route, *_: Any) -> None:
+        response = await route.fetch()
+        await route.fulfill(response=response)
+        async with self._lock:
+            self._accounts_payload = await response.json()
 
-    def initialize(self) -> None:
+    async def initialize(self) -> None:
         spy_uri = "**/arkea-rest-endpoint-contract-suravenir/v1.0/suravenir-contracts"
-        self.page.route(spy_uri, self._handle_contracts_request)
-        self.page.goto(BASE_URL)
-        self.page.fill(
+        await self.page.route(spy_uri, self._handle_contracts_request)
+        await self.page.goto(BASE_URL)
+        await self.page.fill(
             "#_com_liferay_login_web_portlet_LoginPortlet_login", self._credentials.identifier.get_secret_value()
         )
-        self.page.fill(
+        await self.page.fill(
             "#_com_liferay_login_web_portlet_LoginPortlet_password", self._credentials.password.get_secret_value()
         )
-        self.page.click('button[type="submit"]')
-        ConditionGuard(
+        await self.page.click('button[type="submit"]')
+        await ConditionGuard(
             Condition(lambda: self._accounts_payload_is_set()),
             Condition(
                 lambda: self.get_element_or_none(".login-container > .alert.alert-danger"),
@@ -78,15 +78,15 @@ class Api(PlaywrightProviderBase):
                 ),
             ),
         ).wait_any(self.page)
-        self.page.unroute(spy_uri)
+        await self.page.unroute(spy_uri)
 
-    def get_accounts(self) -> list[Account]:
+    async def get_accounts(self) -> list[Account]:
         return [_deserialize_account(raw_account) for raw_account in some(self._accounts_payload)["listeContrats"]]
 
-    def get_assets(self) -> Assets:
+    async def get_assets(self) -> Assets:
         return Assets(
             accounts=[
-                FetchAccountAssets(self.page, raw_account["numeroAdherentContrat"])()
+                await FetchAccountAssets(self.page, raw_account["numeroAdherentContrat"])()
                 for raw_account in some(self._accounts_payload)["listeContrats"]
             ]
         )
@@ -97,28 +97,28 @@ class FetchAccountAssets:
         self.page = page
         self._account_id = account_id
         self._assets_payload: dict[str, Any] | None = None
-        self._lock = Lock()
+        self._lock = asyncio.Lock()
 
-    def _handle_assets_request(self, route: Route, *_: Any) -> None:
-        response = route.fetch()
-        route.fulfill(response=response)
-        with self._lock:
-            self._assets_payload = response.json()
+    async def _handle_assets_request(self, route: Route, *_: Any) -> None:
+        response = await route.fetch()
+        await route.fulfill(response=response)
+        async with self._lock:
+            self._assets_payload = await response.json()
 
-    def _assets_payload_is_set(self) -> bool:
-        with self._lock:
+    async def _assets_payload_is_set(self) -> bool:
+        async with self._lock:
             return self._assets_payload is not None
 
-    def __call__(self) -> AssetsEntry:
+    async def __call__(self) -> AssetsEntry:
         logger.debug(f"Fetching account '{self._account_id}' assets")
         spy_uri = "**/arkea-rest-endpoint-contract-life/v1.0/contract-details/*"
-        self.page.route(spy_uri, self._handle_assets_request)
-        self.page.goto(ACCOUNTS_URL)
+        await self.page.route(spy_uri, self._handle_assets_request)
+        await self.page.goto(ACCOUNTS_URL)
         card_locator = self.page.locator(f'div.contract:has(:text("{self._account_id}"))')
         button_locator = card_locator.locator('button[title="Consulter le contrat Suravenir Per"]')
-        button_locator.click()
-        ConditionGuard(Condition(lambda: self._assets_payload_is_set())).wait_all(self.page)
-        self.page.unroute(spy_uri)
+        await button_locator.click()
+        await ConditionGuard(Condition(lambda: self._assets_payload_is_set())).wait_all(self.page)
+        await self.page.unroute(spy_uri)
         return AssetsEntry(
             account_id=self._account_id,
             items=[_make_asset(asset_payload) for asset_payload in some(self._assets_payload)["contractSupports"]],

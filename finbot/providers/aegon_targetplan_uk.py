@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any, cast
 
-from playwright.sync_api import Locator, Page
+from playwright.async_api import Locator, Page
 from price_parser import Price  # type: ignore
 from pydantic import SecretStr
 
@@ -44,14 +44,14 @@ class MainDashboardPage(object):
         assert "targetplanUI/investments" in self.page.url
 
     @staticmethod
-    def _extract_account(account_locator: Locator) -> AccountValue:
+    async def _extract_account(account_locator: Locator) -> AccountValue:
         body_locator = account_locator.locator(".card-body")
         footer_locator = account_locator.locator(".card-footer")
-        balance_str = body_locator.locator("span.currency-hero").inner_text().strip()
+        balance_str = (await body_locator.locator("span.currency-hero").inner_text()).strip()
         return AccountValue(
             account=Account(
-                id=footer_locator.inner_text().strip().split(" ")[-1],
-                name=body_locator.locator("h3").inner_text().strip(),
+                id=(await footer_locator.inner_text()).strip().split(" ")[-1],
+                name=(await body_locator.locator("h3").inner_text()).strip(),
                 iso_currency=CurrencyCode("GBP"),
                 type=AccountType.investment,
                 sub_type="pension",
@@ -59,11 +59,11 @@ class MainDashboardPage(object):
             account_value=cast(float, Price.fromstring(balance_str).amount_float),
         )
 
-    def get_accounts(self) -> list[AccountValue]:
-        account_locators = ConditionGuard(
+    async def get_accounts(self) -> list[AccountValue]:
+        account_locators = await ConditionGuard(
             Condition(lambda: self.page.locator(".card-product-1").all()),
         ).wait(self.page)
-        return [self._extract_account(locator) for locator in account_locators]
+        return [await self._extract_account(locator) for locator in account_locators]
 
 
 class Api(PlaywrightProviderBase):
@@ -80,13 +80,13 @@ class Api(PlaywrightProviderBase):
         self._credentials = credentials
         self._accounts: list[AccountValue] | None = None
 
-    def initialize(self) -> None:
+    async def initialize(self) -> None:
         page = self.page
-        page.goto(AUTH_URL)
-        page.type("input#username", self._credentials.username)
-        page.type("input#password", self._credentials.password.get_secret_value())
-        page.click("#submitButtonAjaxId")
-        ConditionGuard(
+        await page.goto(AUTH_URL)
+        await page.type("input#username", self._credentials.username)
+        await page.type("input#password", self._credentials.password.get_secret_value())
+        await page.click("#submitButtonAjaxId")
+        await ConditionGuard(
             Condition(lambda: self.get_element_or_none("a#nav-primary-profile")),
             Condition(
                 lambda: self.get_element_or_none("#error-container-wrapper"),
@@ -95,12 +95,12 @@ class Api(PlaywrightProviderBase):
                 ),
             ),
         ).wait_any(page)
-        self._accounts = MainDashboardPage(page).get_accounts()
+        self._accounts = await MainDashboardPage(page).get_accounts()
 
-    def get_accounts(self) -> list[Account]:
+    async def get_accounts(self) -> list[Account]:
         return [entry.account for entry in some(self._accounts)]
 
-    def get_assets(self) -> Assets:
+    async def get_assets(self) -> Assets:
         return Assets(
             accounts=[
                 AssetsEntry(

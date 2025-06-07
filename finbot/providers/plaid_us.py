@@ -39,19 +39,20 @@ class Api(ProviderBase):
         self._credentials = credentials
         self._plaid_accounts: list[PlaidAccountData] | None = None
 
-    def initialize(self) -> None:
+    async def initialize(self) -> None:
         try:
-            self._plaid_accounts = PlaidClient().get_accounts_data(
+            plaid_client = PlaidClient()
+            self._plaid_accounts = await plaid_client.async_get_accounts_data(
                 access_token=self._credentials.access_token.get_secret_value()
             )
         except PlaidClientError as e:
             raise AuthenticationError(str(e))
         _check_all_accounts_supported(self._plaid_accounts)
 
-    def get_accounts(self) -> list[Account]:
+    async def get_accounts(self) -> list[Account]:
         return [_make_account(entry) for entry in some(self._plaid_accounts)]
 
-    def get_assets(self) -> Assets:
+    async def get_assets(self) -> Assets:
         return Assets(
             accounts=[
                 AssetsEntry(
@@ -69,7 +70,7 @@ class Api(ProviderBase):
             ]
         )
 
-    def get_liabilities(self) -> Liabilities:
+    async def get_liabilities(self) -> Liabilities:
         return Liabilities(
             accounts=[
                 LiabilitiesEntry(

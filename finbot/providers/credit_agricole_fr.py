@@ -2,7 +2,7 @@ import json
 from dataclasses import dataclass
 from typing import Any, Generator, cast
 
-from playwright.sync_api import Locator
+from playwright.async_api import Locator
 from pydantic import SecretStr
 
 from finbot.core.schema import BaseModel, CurrencyCode
@@ -70,10 +70,10 @@ class Api(PlaywrightProviderBase):
             for account_data in line_item["elementsContrats"]:
                 yield handle_account(account_data)
 
-    def initialize(self) -> None:
+    async def initialize(self) -> None:
         page = self.page
-        page.goto(BASE_URL.format(region=self._credentials.region))
-        ConditionGuard(
+        await page.goto(BASE_URL.format(region=self._credentials.region))
+        await ConditionGuard(
             Condition(lambda: page.locator("#loginForm").is_visible()),
             Condition(
                 lambda: self.get_element_or_none("div.AemBug-content"),
@@ -85,23 +85,26 @@ class Api(PlaywrightProviderBase):
 
         # 1. Enter account number
 
-        page.fill("#Login-account", self._credentials.account_number)
-        page.click("xpath=//button[@login-submit-btn]")
-        keypad_locator: Locator = ConditionGuard(
+        await page.fill("#Login-account", self._credentials.account_number)
+        await page.click("xpath=//button[@login-submit-btn]")
+        keypad_locator: Locator = await ConditionGuard(
             Condition(lambda: self.get_element_or_none("#clavier_num")),
         ).wait(page)
 
         # 2. Type password and validate
 
-        login_keys_by_num = {}
-        for key in keypad_locator.locator(".Login-key").all():
-            ConditionGuard(Condition(lambda: key.inner_text().strip().isdigit())).wait(page)
-            login_keys_by_num[key.inner_text().strip()] = key
-        for digit in self._credentials.password.get_secret_value():
-            login_keys_by_num[digit].click()
-        page.click("#validation")
+        async def keypad_key_is_ready(key_: Locator) -> bool:
+            return (await key_.inner_text()).strip().isdigit()
 
-        ConditionGuard(
+        login_keys_by_num = {}
+        for key in await keypad_locator.locator(".Login-key").all():
+            await ConditionGuard(Condition(lambda: keypad_key_is_ready(key))).wait(page)
+            login_keys_by_num[(await key.inner_text()).strip()] = key
+        for digit in self._credentials.password.get_secret_value():
+            await login_keys_by_num[digit].click()
+        await page.click("#validation")
+
+        await ConditionGuard(
             Condition(lambda: self.get_element_or_none(".Synthesis-user")),
             Condition(
                 lambda: self.get_element_or_none("#erreur-keypad"),
@@ -115,7 +118,7 @@ class Api(PlaywrightProviderBase):
 
         account_data_str = cast(
             str,
-            page.locator("xpath=//div[@data-ng-controller]").get_attribute("data-ng-init"),
+            await page.locator("xpath=//div[@data-ng-controller]").get_attribute("data-ng-init"),
         )[
             len(
                 "syntheseController.init("
@@ -123,10 +126,10 @@ class Api(PlaywrightProviderBase):
         ]
         self._account_data = json.loads("[" + account_data_str + "]")[0]
 
-    def get_accounts(self) -> list[Account]:
+    async def get_accounts(self) -> list[Account]:
         return [entry.account for entry in self._iter_accounts()]
 
-    def get_assets(self) -> Assets:
+    async def get_assets(self) -> Assets:
         return Assets(
             accounts=[
                 AssetsEntry(

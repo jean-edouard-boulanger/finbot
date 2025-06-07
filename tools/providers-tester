@@ -2,12 +2,15 @@
 import json
 import logging
 import sys
+import asyncio
 from argparse import ArgumentParser
 from pathlib import Path
 from typing import Any
 
+from finbot.core.schema import CurrencyCode
 from finbot.core.serialization import pretty_dump
 from finbot.providers import factory as providers_factory
+from finbot.providers.base import ProviderBase
 from finbot.providers.playwright_base import PlaywrightProviderBase, HEADLESS_SETTING
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
@@ -74,6 +77,21 @@ def get_authentication_payload(settings) -> dict[str, Any] | None:
     return None
 
 
+async def async_main(
+    provider_type: type[ProviderBase],
+    auth_payload: dict[str, Any] | None,
+    valuation_currency: CurrencyCode,
+    **extra_kwargs,
+):
+    async with provider_type.create(auth_payload, valuation_currency, **extra_kwargs) as provider_api:
+        await provider_api.initialize()
+        print(pretty_dump({
+            "accounts": await provider_api.get_accounts(),
+            "assets": await provider_api.get_assets(),
+            "liabilities": await provider_api.get_liabilities()
+        }, indent=2))
+
+
 def main():
     settings = create_parser().parse_args()
     auth_payload = get_authentication_payload(settings)
@@ -81,13 +99,12 @@ def main():
     extra_kwargs = {}
     if settings.show_browser and issubclass(provider_type, PlaywrightProviderBase):
         extra_kwargs[HEADLESS_SETTING] = False
-    with provider_type.create(auth_payload, settings.valuation_currency, **extra_kwargs) as provider_api:
-        provider_api.initialize()
-        print(pretty_dump({
-            "accounts": provider_api.get_accounts(),
-            "assets": provider_api.get_assets(),
-            "liabilities": provider_api.get_liabilities()
-        }, indent=2))
+    asyncio.run(async_main(
+        provider_type=provider_type,
+        auth_payload=auth_payload,
+        valuation_currency=settings.valuation_currency,
+        **extra_kwargs
+    ))
 
 
 if __name__ == "__main__":

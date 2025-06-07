@@ -1,9 +1,10 @@
-from typing import Any, Generator
+from typing import Any, AsyncGenerator
 
 from binance.client import Client as Binance
 from binance.exceptions import BinanceAPIException
 from pydantic import SecretStr
 
+from finbot.core.async_ import acollect, aexec
 from finbot.core.crypto_market import CryptoMarket
 from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.providers.base import ProviderBase
@@ -35,9 +36,9 @@ class Api(ProviderBase):
         self._crypto_market = CryptoMarket()
         self._api: Binance | None = None
 
-    def _get_account(self) -> dict[Any, Any]:
+    async def _get_account(self) -> dict[str, Any]:
         assert self._api is not None
-        account: dict[Any, Any] = self._api.get_account(recvWindow=RECV_WINDOW)
+        account: dict[str, Any] = await aexec(self._api.get_account, recvWindow=RECV_WINDOW)
         return account
 
     def _account_description(self) -> Account:
@@ -49,35 +50,35 @@ class Api(ProviderBase):
             sub_type="crypto exchange",
         )
 
-    def initialize(self) -> None:
+    async def initialize(self) -> None:
         try:
             self._api = Binance(
                 self._credentials.api_key.get_secret_value(),
                 self._credentials.secret_key.get_secret_value(),
             )
-            self._get_account()
+            await self._get_account()
         except BinanceAPIException as e:
             raise AuthenticationError(str(e))
 
-    def get_accounts(self) -> list[Account]:
+    async def get_accounts(self) -> list[Account]:
         return [self._account_description()]
 
-    def get_assets(self) -> Assets:
+    async def get_assets(self) -> Assets:
         return Assets(
             accounts=[
                 AssetsEntry(
                     account_id=self._account_description().id,
-                    items=list(self._iter_assets()),
+                    items=await acollect(self._iter_assets()),
                 )
             ]
         )
 
-    def _iter_assets(self) -> Generator[Asset, None, None]:
-        for entry in self._get_account()["balances"]:
+    async def _iter_assets(self) -> AsyncGenerator[Asset]:
+        for entry in (await self._get_account())["balances"]:
             units = float(entry["free"]) + float(entry["locked"])
             if units > OWNERSHIP_UNITS_THRESHOLD:
                 symbol = entry["asset"]
-                value = units * self._crypto_market.get_spot_cached(symbol, self._account_ccy)
+                value = units * await self._crypto_market.async_get_spot_cached(symbol, self._account_ccy)
                 yield Asset(
                     name=symbol,
                     type="cryptocurrency",

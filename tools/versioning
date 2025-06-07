@@ -66,14 +66,26 @@ def get_master_version(component: Literal['app', 'api']):
 
 
 @cli.command()
-@click.option("-m", "--mode", type=click.Choice(["patch", "minor", "major"]), default='patch')
+@click.option("--major", is_flag=True, default=False, help="Bump major (default)")
+@click.option("--minor", is_flag=True, default=False, help="Bump minor (default)")
+@click.option("--patch", is_flag=True, default=False, help="Bump patch (default)")
 @click.option('-c', '--component', type=click.Choice(['app', 'api']), default='app')
 @click.option('--commit', is_flag=True, default=False)
 def bump(
-    mode: Literal['patch', 'minor', 'major'],
+    major: bool,
+    minor: bool,
+    patch: bool,
     component: Literal['app', 'api'],
     commit: bool,
 ):
+    if int(major) + int(minor) + int(patch) > 1:
+        raise click.UsageError("Only specify one of: --major, --minor, --patch")
+    mode = "patch"
+    if minor:
+        mode = "minor"
+    if major:
+        mode = "major"
+
     master_version = _get_master_version(component)
     new_version = getattr(master_version, f"bump_{mode}")()
     var_name = _get_version_var_name(component)
@@ -91,7 +103,7 @@ def bump(
             "git",
             "commit",
             "-m",
-            f"bump {component} version '{master_version}' -> '{new_version}' ({mode})",
+            f"Bump {component} version '{master_version}' -> '{new_version}' ({mode})",
             "--",
             "finbot/_version.py"
         ])

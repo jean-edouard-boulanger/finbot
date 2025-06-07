@@ -1,6 +1,6 @@
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Any, Generator, Generic, TypedDict
+from typing import Any, AsyncGenerator, Generator, Generic, TypedDict
 
 import gspread.client
 import gspread.spreadsheet
@@ -9,6 +9,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 from pydantic import ValidationError as PydanticValidationError
 from pydantic import model_validator
 
+from finbot.core.async_ import aexec
 from finbot.core.schema import BaseModel, BaseModelT, CurrencyCode
 from finbot.core.utils import some
 from finbot.providers.base import ProviderBase
@@ -116,7 +117,7 @@ class Api(ProviderBase):
             isin_code=holding.isin_code,
         )
 
-    def _iter_accounts(self) -> Generator[AccountAssets, None, None]:
+    async def _iter_accounts(self) -> AsyncGenerator[AccountAssets]:
         assert self._sheet is not None
         sheet = LocalSheet(self._sheet.sheet1.get_all_values())
 
@@ -150,29 +151,30 @@ class Api(ProviderBase):
                 ],
             )
 
-    def initialize(self) -> None:
+    async def initialize(self) -> None:
         try:
-            self._api = gspread.auth.authorize(
+            self._api = await aexec(
+                gspread.auth.authorize,
                 ServiceAccountCredentials.from_json_keyfile_dict(
                     keyfile_dict=self._credentials.google_api_credentials,
                     scopes=["https://www.googleapis.com/auth/spreadsheets"],
-                )
+                ),
             )
-            self._sheet = self._api.open_by_key(self._credentials.sheet_key)
+            self._sheet = await aexec(self._api.open_by_key, self._credentials.sheet_key)
         except Exception as e:
             raise AuthenticationError(str(e)) from e
 
-    def get_accounts(self) -> list[Account]:
-        return [entry.account for entry in self._iter_accounts()]
+    async def get_accounts(self) -> list[Account]:
+        return [entry.account async for entry in self._iter_accounts()]
 
-    def get_assets(self) -> Assets:
+    async def get_assets(self) -> Assets:
         return Assets(
             accounts=[
                 AssetsEntry(
                     account_id=entry.account.id,
                     items=entry.assets,
                 )
-                for entry in self._iter_accounts()
+                async for entry in self._iter_accounts()
             ]
         )
 
@@ -266,8 +268,6 @@ def _extract_generic_table(
         current_row = cell.row
         record_payload = {attr: sheet.get_cell(current_row, data_col_idx).val for attr, data_col_idx in header.items()}
         try:
-            print(schema)
-            print(record_payload)
             record = schema(**record_payload)
         except PydanticValidationError as e:
             pretty_validation_error = _format_record_validation_error(e)

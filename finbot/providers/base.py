@@ -6,7 +6,7 @@ from finbot.providers.errors import RetiredProviderError
 from finbot.providers.schema import Account, Assets, Liabilities
 
 
-class ProviderBase(object):
+class ProviderBase:
     description: str
     credentials_type: type[core_schema.BaseModel]
 
@@ -30,14 +30,14 @@ class ProviderBase(object):
             **kwargs,
         )
 
-    def __enter__(self) -> Self:
+    async def __aenter__(self) -> Self:
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:  # type: ignore
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:  # type: ignore
         pass
 
     @abc.abstractmethod
-    def initialize(self) -> None:
+    async def initialize(self) -> None:
         """Perform any initializations needed before balances/assets/liabilities
         can be retrieved from the associated linked account. This includes
         (but is not limited to) authentication, initialization of resources
@@ -46,15 +46,15 @@ class ProviderBase(object):
         pass
 
     @abc.abstractmethod
-    def get_accounts(self) -> list[Account]:
+    async def get_accounts(self) -> list[Account]:
         """Retrieve all accounts associated with this linked account"""
         pass
 
-    def get_assets(self) -> Assets:
+    async def get_assets(self) -> Assets:
         """Retrieve all accounts and respective assets associated with this linked account"""
         return Assets(accounts=[])
 
-    def get_liabilities(self) -> Liabilities:
+    async def get_liabilities(self) -> Liabilities:
         """Retrieve all accounts and respective liabilities associated with this linked account"""
         return Liabilities(accounts=[])
 
@@ -67,10 +67,10 @@ class RetiredProvider(ProviderBase):
         super().__init__(**kwargs)
         raise RetiredProviderError()
 
-    def initialize(self) -> None:
+    async def initialize(self) -> None:
         pass
 
-    def get_accounts(self) -> list[Account]:
+    async def get_accounts(self) -> list[Account]:
         return []
 
     @staticmethod

@@ -17,6 +17,7 @@ from plaid.model.link_token_create_request import LinkTokenCreateRequest
 from plaid.model.link_token_create_request_user import LinkTokenCreateRequestUser
 from plaid.model.link_token_create_response import LinkTokenCreateResponse
 
+from finbot.core.async_ import aexec
 from finbot.core.environment import PlaidEnvironment, get_plaid_environment
 from finbot.core.errors import FinbotError
 from finbot.core.schema import BaseModel, CurrencyCode
@@ -146,10 +147,11 @@ class PlaidClient(object):
         except plaid.ApiException as e:
             raise PlaidClientError.from_api_exception(e)
 
-    def get_accounts_data(self, access_token: str) -> list[AccountData]:
+    async def async_get_accounts_data(self, access_token: str) -> list[AccountData]:
         try:
-            response: AccountsGetResponse = self._impl.accounts_get(
-                accounts_get_request=AccountsGetRequest(access_token=access_token)
+            response: AccountsGetResponse = await aexec(
+                self._impl.accounts_get,
+                accounts_get_request=AccountsGetRequest(access_token=access_token),
             )
             return [
                 AccountData(

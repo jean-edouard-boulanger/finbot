@@ -30,19 +30,19 @@ app = FastAPI(
 setup_app(app)
 
 
-def accounts_handler(provider_api: ProviderBase) -> schema.LineItemResults:
-    return schema.AccountsResults(results=provider_api.get_accounts())
+async def accounts_handler(provider_api: ProviderBase) -> schema.LineItemResults:
+    return schema.AccountsResults(results=await provider_api.get_accounts())
 
 
-def assets_handler(provider_api: ProviderBase) -> schema.LineItemResults:
-    return schema.AssetsResults(results=provider_api.get_assets().accounts)
+async def assets_handler(provider_api: ProviderBase) -> schema.LineItemResults:
+    return schema.AssetsResults(results=(await provider_api.get_assets()).accounts)
 
 
-def liabilities_handler(provider_api: ProviderBase) -> schema.LineItemResults:
-    return schema.LiabilitiesResults(results=provider_api.get_liabilities().accounts)
+async def liabilities_handler(provider_api: ProviderBase) -> schema.LineItemResults:
+    return schema.LiabilitiesResults(results=(await provider_api.get_liabilities()).accounts)
 
 
-def item_handler(
+async def item_handler(
     item_type: schema.LineItem,
     provider_api: ProviderBase,
 ) -> schema.LineItemResults:
@@ -55,7 +55,7 @@ def item_handler(
         if not handler:
             raise ValueError(f"unknown line item: '{item_type}'")
         logging.debug(f"handling '{item_type}' line item")
-        return handler(provider_api)
+        return await handler(provider_api)
     except Exception as e:
         logging.warning(f"error while handling '{item_type}': {e}\n{traceback.format_exc()}")
         return schema.LineItemError(
@@ -64,31 +64,31 @@ def item_handler(
         )
 
 
-def get_financial_data_impl(
+async def get_financial_data_impl(
     provider_type: type[ProviderBase],
     authentication_payload: dict[str, Any],
     line_items: list[schema.LineItem],
     user_account_currency: CurrencyCode,
 ) -> schema.GetFinancialDataResponse:
-    with provider_type.create(authentication_payload, user_account_currency) as provider_api:
-        provider_api.initialize()
+    async with provider_type.create(authentication_payload, user_account_currency) as provider_api:
+        await provider_api.initialize()
         return schema.GetFinancialDataResponse(
-            financial_data=[item_handler(line_item, provider_api) for line_item in set(line_items)]
+            financial_data=[await item_handler(line_item, provider_api) for line_item in set(line_items)]
         )
 
 
 @app.get("/healthy/")
-def healthy() -> core_schema.HealthResponse:
+async def healthy() -> core_schema.HealthResponse:
     return core_schema.HealthResponse(healthy=True)
 
 
 @app.post("/financial_data/")
-def get_financial_data(
+async def get_financial_data(
     json: schema.GetFinancialDataRequest,
 ) -> schema.GetFinancialDataResponse:
     try:
         provider_type = get_provider(json.provider_id)
-        return get_financial_data_impl(
+        return await get_financial_data_impl(
             provider_type=provider_type,
             authentication_payload=json.credentials,
             line_items=json.items,
@@ -102,13 +102,13 @@ def get_financial_data(
 
 
 @app.post("/validate_credentials/")
-def validate_credentials(
+async def validate_credentials(
     json: schema.ValidateCredentialsRequest,
 ) -> schema.ValidateCredentialsResponse:
     provider_type = get_provider(json.provider_id)
-    with provider_type.create(json.credentials, json.user_account_currency) as provider:
+    async with provider_type.create(json.credentials, json.user_account_currency) as provider:
         try:
-            provider.initialize()
+            await provider.initialize()
             return schema.ValidateCredentialsResponse(valid=True)
         except AuthenticationError as e:
             return schema.ValidateCredentialsResponse(valid=False, error_message=str(e))
