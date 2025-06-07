@@ -10,7 +10,7 @@ from finbot import model
 from finbot.apps.appwsrv.core.formatting_rules import ACCOUNTS_PALETTE
 from finbot.core.logging import configure_logging
 from finbot.core.schema import CurrencyCode
-from finbot.model.db import db_session
+from finbot.model import ScopedSession, db
 from finbot.providers.schema import Asset
 from finbot.scripts.demo import scenarios, sim
 from finbot.scripts.demo.market import Market
@@ -37,8 +37,8 @@ def create_parser() -> ArgumentParser:
 
 
 def drop_demo_account(account_email: str) -> None:
-    db_session.query(model.UserAccount).filter_by(email=account_email).delete()
-    db_session.commit()
+    db.session.query(model.UserAccount).filter_by(email=account_email).delete()
+    db.session.commit()
 
 
 def tmp_email(email: str) -> str:
@@ -61,8 +61,8 @@ def create_demo_account(
             valuation_ccy=valuation_ccy,
         ),
     )
-    db_session.add(user_account)
-    db_session.commit()
+    db.session.add(user_account)
+    db.session.commit()
     return user_account
 
 
@@ -71,10 +71,10 @@ def activate_new_demo_accounts(
     new_demo_account: model.UserAccount,
 ) -> None:
     if old_demo_account:
-        db_session.delete(old_demo_account)
-        db_session.flush()
+        db.session.delete(old_demo_account)  # type: ignore
+        db.session.flush()
     new_demo_account.email = new_demo_account.email.replace(f"{TMP_EMAIL_MARKER}@", "@")
-    db_session.commit()
+    db.session.commit()
 
 
 def create_linked_accounts_if_needed(
@@ -90,8 +90,8 @@ def create_linked_accounts_if_needed(
                 account_name=linked_account.linked_account.description,
                 account_colour=random.choice(ACCOUNTS_PALETTE),
             )
-            db_session.add(new_linked_account)
-            db_session.commit()
+            db.session.add(new_linked_account)
+            db.session.commit()
             existing_linked_accounts[linked_account.linked_account.identifier] = new_linked_account
             logger.info(
                 f"created new linked account model {new_linked_account.id}"
@@ -203,8 +203,8 @@ def build_snapshot_from_sim_result(
             for linked_account_result in sim_result.linked_accounts
         ],
     )
-    db_session.add(snapshot)
-    db_session.commit()
+    db.session.add(snapshot)
+    db.session.commit()
     return snapshot
 
 
@@ -238,16 +238,17 @@ def setup_demo() -> None:
             mapped_linked_accounts=mapped_linked_accounts,
             market=simulator.market,
         )
-        history_writer = ValuationHistoryWriterService(db_session)
+        history_writer = ValuationHistoryWriterService(db.session)
         history_writer.write_history(snapshot_id=snapshot.id)
     activate_new_demo_accounts(
-        old_demo_account=db_session.query(model.UserAccount).filter_by(email=settings.email).first(),
+        old_demo_account=db.session.query(model.UserAccount).filter_by(email=settings.email).first(),
         new_demo_account=demo_account,
     )
 
 
 def main() -> None:
-    setup_demo()
+    with ScopedSession():
+        setup_demo()
 
 
 if __name__ == "__main__":

@@ -2,8 +2,8 @@ from typing import Any
 
 import pytest
 
-from finbot.core.db.session import Session as DBSession
 from finbot.core.kv_store import DBKVStore, KVEntity
+from finbot.model import SessionType
 
 
 class TestEntity(KVEntity):
@@ -21,11 +21,11 @@ class TestEntity(KVEntity):
 
 
 @pytest.fixture(scope="function")
-def kv_store(db_session: DBSession):
+def kv_store(db_session: SessionType):
     return DBKVStore(db_session)
 
 
-def test_init(db_session: DBSession):
+def test_init(db_session: SessionType):
     DBKVStore(db_session)
 
 

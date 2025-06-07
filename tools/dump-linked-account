@@ -5,8 +5,7 @@ from argparse import ArgumentParser
 from finbot.core import environment, secure
 from finbot.core.logging import configure_logging
 from finbot.core.serialization import pretty_dump
-from finbot.model import LinkedAccount
-from finbot.model.db import db_session
+from finbot.model import LinkedAccount, with_scoped_session, db
 
 
 configure_logging()
@@ -19,9 +18,10 @@ def create_parser() -> ArgumentParser:
     return parser
 
 
+@with_scoped_session
 def main():
     settings = create_parser().parse_args()
-    linked_account: LinkedAccount = db_session.query(LinkedAccount).filter_by(id=settings.id).one()
+    linked_account: LinkedAccount = db.session.query(LinkedAccount).filter_by(id=settings.id).one()
     print(pretty_dump({
         "id": linked_account.id,
         "user_account_id": linked_account.user_account_id,

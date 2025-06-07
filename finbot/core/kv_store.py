@@ -1,10 +1,10 @@
 from typing import Any, Optional, Protocol, Type, TypeVar, Union
 
 from sqlalchemy.exc import NoResultFound  # type: ignore
+from sqlalchemy.orm import Query
 
-from finbot.core.db.session import Query, Session
 from finbot.core.serialization import serialize
-from finbot.model import GenericKeyValueStore
+from finbot.model import GenericKeyValueStore, SessionType
 
 
 class KVEntity(Protocol):
@@ -43,7 +43,7 @@ class DBKVStore(KVStore):
     class _NoDefault(object):
         pass
 
-    def __init__(self, session: Session):
+    def __init__(self, session: SessionType):
         self._session = session
 
     def __query(self, key: str) -> Query[GenericKeyValueStore]:

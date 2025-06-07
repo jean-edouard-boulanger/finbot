@@ -9,14 +9,11 @@ from finbot.apps.http_base import CurrentUserIdDep
 from finbot.core import email_delivery
 from finbot.core.email_delivery import Email, EmailService
 from finbot.core.kv_store import DBKVStore
-from finbot.model import repository
-from finbot.model.db import db_session
+from finbot.model import db, repository
 
 router = APIRouter(
     tags=["Administration"],
 )
-
-kv_store = DBKVStore(db_session)
 
 
 @router.get(
@@ -47,7 +44,7 @@ def get_email_delivery_settings(
     _: CurrentUserIdDep,
 ) -> appwsrv_schema.GetEmailDeliverySettingsResponse:
     """Get email delivery settings"""
-    settings = kv_store.get_entity(email_delivery.DeliverySettings)
+    settings = DBKVStore(db.session).get_entity(email_delivery.DeliverySettings)
     return appwsrv_schema.GetEmailDeliverySettingsResponse(
         settings=serializer.serialize_email_delivery_settings(settings)
     )
@@ -72,7 +69,7 @@ def set_email_delivery_settings(
         try:
             service = EmailService(delivery_settings)
             user_account = repository.get_user_account(
-                session=db_session,
+                session=db.session,
                 user_account_id=user_account_id,
             )
             service.send_email(
@@ -90,7 +87,7 @@ def set_email_delivery_settings(
             )
         except Exception:
             raise
-    kv_store.set_entity(delivery_settings)
+    DBKVStore(db.session).set_entity(delivery_settings)
     return appwsrv_schema.SetEmailDeliverySettingsResponse()
 
 
@@ -101,5 +98,5 @@ def set_email_delivery_settings(
 def remove_email_delivery_settings(
     _: CurrentUserIdDep,
 ) -> appwsrv_schema.RemoveEmailDeliverySettingsResponse:
-    kv_store.delete_entity(email_delivery.DeliverySettings)
+    DBKVStore(db.session).delete_entity(email_delivery.DeliverySettings)
     return appwsrv_schema.RemoveEmailDeliverySettingsResponse()

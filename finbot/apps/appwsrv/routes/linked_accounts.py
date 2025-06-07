@@ -18,8 +18,7 @@ from finbot.core.errors import InvalidOperation, InvalidUserInput, NotAllowedErr
 from finbot.core.plaid import PlaidClient
 from finbot.core.schema import CurrencyCode
 from finbot.core.utils import some
-from finbot.model import LinkedAccount, repository
-from finbot.model.db import db_session
+from finbot.model import LinkedAccount, db, persist_scope, repository
 
 logger = logging.getLogger(__name__)
 
@@ -34,8 +33,8 @@ def get_linked_accounts(
     """Get linked accounts"""
     if user_account_id != current_user_id:
         raise NotAllowedError()
-    linked_accounts = repository.find_linked_accounts(db_session, user_account_id)
-    statuses = repository.get_linked_accounts_statuses(db_session, user_account_id)
+    linked_accounts = repository.find_linked_accounts(db.session, user_account_id)
+    statuses = repository.get_linked_accounts_statuses(db.session, user_account_id)
     return appwsrv_schema.GetLinkedAccountsResponse(
         linked_accounts=[
             serializer.serialize_linked_account(
@@ -63,10 +62,10 @@ def link_new_account(
     do_persist = query.do_persist
     logging.info(f"validate={do_validate} persist={do_persist}")
 
-    user_account = repository.get_user_account(db_session, user_account_id)
+    user_account = repository.get_user_account(db.session, user_account_id)
 
     provider_id = json.provider_id
-    provider = repository.get_provider(db_session, provider_id)
+    provider = repository.get_provider(db.session, provider_id)
     if not appwsrv_providers.is_provider_supported(provider):
         raise InvalidUserInput(f"provider '{provider.id}' is not supported")
 
@@ -88,14 +87,14 @@ def link_new_account(
 
     if do_persist:
         account_name: str = json.account_name
-        if repository.linked_account_exists(db_session, user_account_id, account_name):
+        if repository.linked_account_exists(db.session, user_account_id, account_name):
             raise InvalidUserInput(f"A linked account with name '{account_name}' already exists")
 
         logging.info(f"Linking external account (provider_id={provider.id}) to user account_id={user_account.id}")
 
         try:
             new_linked_account: LinkedAccount
-            with db_session.persist(LinkedAccount()) as new_linked_account:
+            with persist_scope(LinkedAccount()) as new_linked_account:
                 new_linked_account.account_colour = json.account_colour
                 new_linked_account.user_account_id = user_account.id
                 new_linked_account.provider_id = json.provider_id
@@ -128,7 +127,7 @@ def get_linked_account(
         raise NotAllowedError()
 
     linked_account = repository.get_linked_account(
-        session=db_session,
+        session=db.session,
         user_account_id=user_account_id,
         linked_account_id=linked_account_id,
     )
@@ -148,7 +147,7 @@ def get_linked_account(
             .link_token,
         }
     linked_account_status = repository.get_linked_account_status(
-        session=db_session,
+        session=db.session,
         user_account_id=user_account_id,
         linked_account_id=linked_account_id,
     )
@@ -172,12 +171,12 @@ def delete_linked_account(
         raise NotAllowedError()
 
     linked_account = repository.get_linked_account(
-        session=db_session,
+        session=db.session,
         user_account_id=user_account_id,
         linked_account_id=linked_account_id,
     )
 
-    with db_session.persist(linked_account):
+    with persist_scope(linked_account):
         linked_account.account_name = f"DELETED {uuid.uuid4()} / {linked_account.account_name}"
         linked_account.deleted = True
 
@@ -197,16 +196,16 @@ def update_linked_account_metadata(
         raise NotAllowedError()
 
     linked_account = repository.get_linked_account(
-        session=db_session,
+        session=db.session,
         user_account_id=user_account_id,
         linked_account_id=linked_account_id,
     )
     if linked_account.frozen:
         raise InvalidUserInput(f"Linked account '{linked_account.account_name}' is frozen and cannot be updated.")
-    with db_session.persist(linked_account):
+    with persist_scope(linked_account):
         if account_name := json.account_name:
             if repository.linked_account_exists(
-                session=db_session,
+                session=db.session,
                 user_account_id=user_account_id,
                 account_name=account_name,
             ):
@@ -236,12 +235,12 @@ def update_linked_account_credentials(
 
     linked_account_id = linked_account_id
     linked_account = repository.get_linked_account(
-        session=db_session,
+        session=db.session,
         user_account_id=user_account_id,
         linked_account_id=linked_account_id,
     )
     user_account_settings = repository.get_user_account_settings(
-        session=db_session,
+        session=db.session,
         user_account_id=user_account_id,
     )
 
@@ -270,7 +269,7 @@ def update_linked_account_credentials(
         )
 
     if do_persist:
-        with db_session.persist(linked_account):
+        with persist_scope(linked_account):
             linked_account.encrypted_credentials = secure.fernet_encrypt(
                 orjson.dumps(credentials),
                 environment.get_secret_key().encode(),

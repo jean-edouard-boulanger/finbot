@@ -13,8 +13,7 @@ from finbot.apps.appwsrv.reports.holdings.report import (
 from finbot.apps.http_base import CurrentUserIdDep
 from finbot.core.errors import MissingUserData
 from finbot.core.utils import now_utc
-from finbot.model import repository
-from finbot.model.db import db_session
+from finbot.model import db, repository
 
 logger = logging.getLogger(__name__)
 
@@ -30,11 +29,11 @@ def get_holdings_report(
     current_user_id: CurrentUserIdDep,
 ) -> appwsrv_schema.GetHoldingsReportResponse:
     """Get holdings report"""
-    history_entry = repository.get_last_history_entry(db_session, current_user_id)
+    history_entry = repository.get_last_history_entry(db.session, current_user_id)
     if not history_entry:
         raise MissingUserData("No valuation available for selected time range")
     return appwsrv_schema.GetHoldingsReportResponse(
-        report=generate_holdings_report(session=db_session, history_entry=history_entry)
+        report=generate_holdings_report(session=db.session, history_entry=history_entry)
     )
 
 
@@ -46,7 +45,7 @@ def get_earnings_report(
     to_time = now_utc()
     return appwsrv_schema.GetEarningsReportResponse(
         report=generate_earnings_report(
-            session=db_session,
+            session=db.session,
             user_account_id=current_user_id,
             from_time=to_time - timedelta(days=365),
             to_time=to_time,

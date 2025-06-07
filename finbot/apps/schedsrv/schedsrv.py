@@ -15,8 +15,7 @@ import schedule
 from finbot.core import environment
 from finbot.core.errors import FinbotError
 from finbot.core.logging import configure_logging
-from finbot.model import UserAccount
-from finbot.model.db import db_session
+from finbot.model import UserAccount, db, with_scoped_session
 from finbot.services.user_account_valuation import ValuationRequest
 from finbot.tasks.user_account_valuation import client as user_account_valuation_client
 
@@ -88,7 +87,7 @@ def create_parser() -> argparse.ArgumentParser:
 
 
 def iter_user_accounts() -> Generator[UserAccount, None, None]:
-    for user_account in db_session.query(UserAccount).all():
+    for user_account in db.session.query(UserAccount).all():
         yield user_account
 
 
@@ -116,7 +115,7 @@ class Scheduler(Worker):
         self._stop_event = threading.Event()
         for schedule_entry in VALUATION_SCHEDULE:
             self._scheduler.every().day.at(schedule_entry.time_str, tz=schedule_entry.tz).do(
-                self._dispatch_valuation,
+                with_scoped_session(self._dispatch_valuation),
                 notify_valuation=schedule_entry.notify_valuation,
             )
 

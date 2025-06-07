@@ -8,8 +8,8 @@ from typing import Any, TypeAlias, cast
 from sqlalchemy.sql import text
 
 from finbot import model
-from finbot.core.db.session import Session
 from finbot.core.db.utils import row_to_dict
+from finbot.model import SessionType
 
 
 @dataclasses.dataclass(frozen=True, eq=True)
@@ -171,7 +171,7 @@ class ReferenceHistoryEntryIds:
 
 
 class ReportRepository(object):
-    def __init__(self, db_session: Session):
+    def __init__(self, db_session: SessionType):
         self._db_session = db_session
 
     def get_consistent_snapshot_data(self, snapshot_id: int) -> ConsistentSnapshot:

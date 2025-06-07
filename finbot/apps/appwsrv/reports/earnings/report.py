@@ -2,8 +2,7 @@ from datetime import date, datetime
 
 from finbot.apps.appwsrv.reports.earnings import schema as earnings_schema
 from finbot.core import schema as core_schema
-from finbot.core.db.session import Session
-from finbot.model import UserAccountHistoryEntry, repository
+from finbot.model import SessionType, UserAccountHistoryEntry, repository
 
 
 def _get_aggregated_metrics(
@@ -45,7 +44,10 @@ def _get_rollup_metrics(
 
 
 def generate(
-    session: Session, user_account_id: int, from_time: datetime, to_time: datetime
+    session: SessionType,
+    user_account_id: int,
+    from_time: datetime,
+    to_time: datetime,
 ) -> earnings_schema.EarningsReport:
     user_settings = repository.get_user_account(session, user_account_id)
     historical_valuation = repository.get_user_account_historical_valuation(

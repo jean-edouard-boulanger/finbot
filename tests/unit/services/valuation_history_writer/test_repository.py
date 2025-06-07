@@ -3,12 +3,13 @@ from decimal import Decimal
 
 import pytest
 
-from finbot.core.db.session import Session as DBSession
 from finbot.core.utils import now_utc
 from finbot.model import (
     LinkedAccount,
     LinkedAccountSnapshotEntry,
+    PersistScope,
     Provider,
+    SessionType,
     SnapshotStatus,
     SubAccountItemSnapshotEntry,
     SubAccountItemType,
@@ -28,10 +29,10 @@ from finbot.services.valuation_history_writer.repository import (
 
 @pytest.fixture(scope="function")
 def sample_provider(
-    db_session: DBSession,
+    db_session: SessionType,
 ) -> Provider:
     provider: Provider
-    with db_session.persist(Provider()) as provider:
+    with PersistScope(db_session)(Provider()) as provider:
         provider.id = "test_bank_fr"
         provider.description = "Test provider"
         provider.website_url = "https://test-bank.fr"
@@ -41,10 +42,10 @@ def sample_provider(
 
 @pytest.fixture(scope="function")
 def sample_user_account(
-    db_session: DBSession,
+    db_session: SessionType,
 ) -> UserAccount:
     user_account: UserAccount
-    with db_session.persist(UserAccount()) as user_account:
+    with PersistScope(db_session)(UserAccount()) as user_account:
         user_account.email = "test@finbot.com"
         user_account.password_hash = b"fake password hash"
         user_account.full_name = "Test Account"
@@ -57,7 +58,7 @@ def sample_user_account(
 def sample_linked_accounts(
     sample_user_account: UserAccount,
     sample_provider: Provider,
-    db_session: DBSession,
+    db_session: SessionType,
 ) -> list[LinkedAccount]:
     linked_accounts = [
         LinkedAccount(
@@ -78,10 +79,10 @@ def sample_linked_accounts(
 def sample_previous_snapshot(
     sample_user_account: UserAccount,
     sample_linked_accounts: list[LinkedAccount],
-    db_session: DBSession,
+    db_session: SessionType,
 ) -> UserAccountSnapshot:
     snapshot: UserAccountSnapshot
-    with db_session.persist(UserAccountSnapshot()) as snapshot:
+    with PersistScope(db_session)(UserAccountSnapshot()) as snapshot:
         snapshot.user_account_id = sample_user_account.id
         snapshot.status = SnapshotStatus.Success
         snapshot.requested_ccy = sample_user_account.settings.valuation_ccy
@@ -171,10 +172,10 @@ def sample_previous_snapshot(
 def sample_last_snapshot(
     sample_user_account: UserAccount,
     sample_linked_accounts: list[LinkedAccount],
-    db_session: DBSession,
+    db_session: SessionType,
 ) -> UserAccountSnapshot:
     snapshot: UserAccountSnapshot
-    with db_session.persist(UserAccountSnapshot()) as snapshot:
+    with PersistScope(db_session)(UserAccountSnapshot()) as snapshot:
         snapshot.user_account_id = sample_user_account.id
         snapshot.status = SnapshotStatus.Success
         snapshot.requested_ccy = sample_user_account.settings.valuation_ccy
@@ -226,7 +227,7 @@ def sample_last_snapshot(
 
 
 def test_get_consistent_snapshot_data(
-    db_session: DBSession,
+    db_session: SessionType,
     sample_previous_snapshot: UserAccountSnapshot,
     sample_last_snapshot: UserAccountSnapshot,
 ):

@@ -18,7 +18,6 @@ from sqlalchemy import desc
 from sqlalchemy.orm import joinedload
 from sqlalchemy.sql import text
 
-from finbot.core.db.session import Session
 from finbot.core.db.utils import row_to_dict
 from finbot.core.errors import MissingUserData, ResourceNotFoundError
 from finbot.core.schema import ValuationFrequency
@@ -27,6 +26,7 @@ from finbot.model import (
     LinkedAccountSnapshotEntry,
     LinkedAccountValuationHistoryEntry,
     Provider,
+    SessionType,
     SubAccountItemValuationHistoryEntry,
     SubAccountValuationHistoryEntry,
     UserAccount,
@@ -38,7 +38,7 @@ from finbot.providers.schema import AssetClass, AssetType
 
 
 def get_user_account(
-    session: Session,
+    session: SessionType,
     user_account_id: int,
 ) -> UserAccount:
     account: Optional[UserAccount] = (
@@ -53,12 +53,12 @@ def get_user_account(
     return account
 
 
-def find_user_account_by_email(session: Session, email: str) -> Optional[UserAccount]:
+def find_user_account_by_email(session: SessionType, email: str) -> Optional[UserAccount]:
     return session.query(UserAccount).filter_by(email=email).first()
 
 
 def get_user_account_settings(
-    session: Session,
+    session: SessionType,
     user_account_id: int,
 ) -> UserAccountSettings:
     settings: Optional[UserAccountSettings] = (
@@ -74,14 +74,14 @@ def get_user_account_settings(
 
 
 def find_provider(
-    session: Session,
+    session: SessionType,
     provider_id: str,
 ) -> Optional[Provider]:
     return session.query(Provider).filter_by(id=provider_id).first()
 
 
 def get_provider(
-    session: Session,
+    session: SessionType,
     provider_id: str,
 ) -> Provider:
     provider = find_provider(session, provider_id)
@@ -91,7 +91,7 @@ def get_provider(
 
 
 def linked_account_exists(
-    session: Session,
+    session: SessionType,
     user_account_id: int,
     account_name: str,
 ) -> bool:
@@ -104,7 +104,7 @@ def linked_account_exists(
 
 
 def find_linked_accounts(
-    session: Session,
+    session: SessionType,
     user_account_id: int,
 ) -> list[LinkedAccount]:
     results: list[LinkedAccount] = (
@@ -118,7 +118,7 @@ def find_linked_accounts(
 
 
 def get_last_history_entry(
-    session: Session,
+    session: SessionType,
     user_account_id: int,
 ) -> UserAccountHistoryEntry:
     entry: Optional[UserAccountHistoryEntry] = (
@@ -189,7 +189,7 @@ def _get_valuation_grouping_from_frequency(
 
 
 def get_user_account_historical_valuation(
-    session: Session,
+    session: SessionType,
     user_account_id: int,
     from_time: Optional[datetime] = None,
     to_time: Optional[datetime] = None,
@@ -254,7 +254,7 @@ class LinkedAccountHistoricalValuationEntry(HistoricalValuationEntry):
 
 
 def get_historical_valuation_by_linked_account(
-    session: Session,
+    session: SessionType,
     user_account_id: int,
     from_time: Optional[datetime] = None,
     to_time: Optional[datetime] = None,
@@ -356,7 +356,7 @@ class HistoricalValuationByAssetClass(object):
 
 @overload
 def get_historical_valuation_by(
-    session: Session,
+    session: SessionType,
     user_account_id: int,
     by: type[HistoricalValuationByAssetType],
     from_time: Optional[datetime] = None,
@@ -367,7 +367,7 @@ def get_historical_valuation_by(
 
 @overload
 def get_historical_valuation_by(
-    session: Session,
+    session: SessionType,
     user_account_id: int,
     by: type[HistoricalValuationByAssetClass],
     from_time: Optional[datetime] = None,
@@ -377,7 +377,7 @@ def get_historical_valuation_by(
 
 
 def get_historical_valuation_by(
-    session: Session,
+    session: SessionType,
     user_account_id: int,
     by: type[HistoricalValuationByAssetType] | type[HistoricalValuationByAssetClass],
     from_time: Optional[datetime] = None,
@@ -453,7 +453,7 @@ def get_historical_valuation_by(
 
 
 def find_snapshot_linked_account_errors(
-    session: Session,
+    session: SessionType,
     snapshot_id: int,
 ) -> list[LinkedAccountSnapshotEntry]:
     return cast(
@@ -474,7 +474,7 @@ class LinkedAccountStatus(TypedDict):
 
 
 def get_linked_accounts_statuses(
-    session: Session, user_account_id: int, linked_account_ids: set[int] | None = None
+    session: SessionType, user_account_id: int, linked_account_ids: set[int] | None = None
 ) -> dict[int, LinkedAccountStatus]:
     linked_account_ids_filter = None
     if linked_account_ids:
@@ -515,7 +515,7 @@ def get_linked_accounts_statuses(
 
 
 def get_linked_account_status(
-    session: Session, user_account_id: int, linked_account_id: int
+    session: SessionType, user_account_id: int, linked_account_id: int
 ) -> LinkedAccountStatus | None:
     return get_linked_accounts_statuses(
         session=session,
@@ -525,7 +525,7 @@ def get_linked_account_status(
 
 
 def get_user_account_valuation(
-    session: Session,
+    session: SessionType,
     history_entry_id: int,
 ) -> UserAccountValuationHistoryEntry:
     entry: UserAccountValuationHistoryEntry = (
@@ -539,7 +539,7 @@ def get_user_account_valuation(
 
 
 def find_linked_accounts_valuation(
-    session: Session,
+    session: SessionType,
     history_entry_id: int,
 ) -> list[LinkedAccountValuationHistoryEntry]:
     entries: list[LinkedAccountValuationHistoryEntry] = (
@@ -554,7 +554,7 @@ def find_linked_accounts_valuation(
 
 
 def find_sub_accounts_valuation(
-    session: Session,
+    session: SessionType,
     history_entry_id: int,
     linked_account_id: Optional[int] = None,
 ) -> list[SubAccountValuationHistoryEntry]:
@@ -568,7 +568,7 @@ def find_sub_accounts_valuation(
 
 
 def find_items_valuation(
-    session: Session,
+    session: SessionType,
     history_entry_id: int,
     linked_account_id: Optional[int] = None,
     sub_account_id: Optional[str] = None,
@@ -585,7 +585,7 @@ def find_items_valuation(
 
 
 def get_linked_account(
-    session: Session,
+    session: SessionType,
     user_account_id: int,
     linked_account_id: int,
 ) -> LinkedAccount:

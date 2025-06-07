@@ -4,9 +4,9 @@ from typing import Any, Generator, cast
 
 from finbot import model
 from finbot.core import schema as core_schema
-from finbot.core.db.session import Session
 from finbot.core.serialization import pretty_dump, reinterpret_as_pydantic
 from finbot.core.utils import some
+from finbot.model import PersistScope, SessionType
 from finbot.services.valuation_history_writer import repository, schema
 
 
@@ -41,9 +41,10 @@ def iter_sub_account_item_valuation_history_entries(
 
 def write_history_impl(
     snapshot_id: int,
-    db_session: Session,
+    db_session: SessionType,
 ) -> schema.WriteHistoryResponse:
     repo = repository.ReportRepository(db_session)
+    persist_scope = PersistScope(db_session)
 
     logging.info("fetching snapshot_id={} metadata".format(snapshot_id))
     snapshot: model.UserAccountSnapshot = db_session.query(model.UserAccountSnapshot).filter_by(id=snapshot_id).one()
@@ -57,7 +58,7 @@ def write_history_impl(
     logging.info(f"consistent snapshot has entries={len(consistent_snapshot)}")
     logging.info("creating new history entry (marked not available)")
 
-    with db_session.persist(model.UserAccountHistoryEntry()) as history_entry:
+    with persist_scope(model.UserAccountHistoryEntry()) as history_entry:
         history_entry.user_account_id = snapshot.user_account_id
         history_entry.source_snapshot_id = snapshot_id
         history_entry.effective_at = valuation_date
@@ -68,7 +69,7 @@ def write_history_impl(
     logging.info("handling basic valuation")
 
     user_account_valuation = consistent_snapshot.get_user_account_valuation()
-    with db_session.persist(history_entry):
+    with persist_scope(history_entry):
         history_entry.user_account_valuation_history_entry = model.UserAccountValuationHistoryEntry(
             valuation=consistent_snapshot.get_user_account_valuation(),
             total_liabilities=consistent_snapshot.get_user_account_liabilities(),
@@ -77,7 +78,7 @@ def write_history_impl(
     linked_accounts_valuation = consistent_snapshot.get_linked_accounts_valuation()
     logging.debug(pretty_dump(linked_accounts_valuation))
 
-    with db_session.persist(history_entry):
+    with persist_scope(history_entry):
         history_entry.linked_accounts_valuation_history_entries.extend(
             [
                 model.LinkedAccountValuationHistoryEntry(
@@ -92,7 +93,7 @@ def write_history_impl(
     sub_accounts_valuation = consistent_snapshot.get_sub_accounts_valuation()
     logging.debug(pretty_dump(sub_accounts_valuation))
 
-    with db_session.persist(history_entry):
+    with persist_scope(history_entry):
         history_entry.sub_accounts_valuation_history_entries.extend(
             [
                 model.SubAccountValuationHistoryEntry(
@@ -109,7 +110,7 @@ def write_history_impl(
             ]
         )
 
-    with db_session.persist(history_entry):
+    with persist_scope(history_entry):
         history_entry.sub_accounts_items_valuation_history_entries.extend(
             list(iter_sub_account_item_valuation_history_entries(consistent_snapshot))
         )
@@ -130,7 +131,7 @@ def write_history_impl(
     logging.info("fetched user account valuation change")
     logging.debug(pretty_dump(user_account_valuation_change))
 
-    with db_session.persist(history_entry):
+    with persist_scope(history_entry):
         history_entry.user_account_valuation_history_entry.valuation_change = user_account_valuation_change
 
     linked_accounts_valuation_change = repo.get_linked_accounts_valuation_change(reference_history_entry_ids)
@@ -138,7 +139,7 @@ def write_history_impl(
     logging.info("fetched linked accounts valuation change")
     logging.debug(pretty_dump(linked_accounts_valuation_change))
 
-    with db_session.persist(history_entry):
+    with persist_scope(history_entry):
         for linked_accounts_valuation_history_entry in history_entry.linked_accounts_valuation_history_entries:
             linked_accounts_valuation_history_entry.valuation_change = linked_accounts_valuation_change[
                 repository.LinkedAccountKey(linked_account_id=linked_accounts_valuation_history_entry.linked_account_id)
@@ -149,7 +150,7 @@ def write_history_impl(
     logging.info("fetched sub accounts valuation change")
     logging.debug(pretty_dump(sub_accounts_valuation_change))
 
-    with db_session.persist(history_entry):
+    with persist_scope(history_entry):
         for entry in history_entry.sub_accounts_valuation_history_entries:
             entry.valuation_change = sub_accounts_valuation_change[
                 repository.SubAccountKey(
@@ -163,7 +164,7 @@ def write_history_impl(
     logging.info("fetched sub accounts items valuation change")
     logging.debug(pretty_dump(sub_accounts_items_valuation_change))
 
-    with db_session.persist(history_entry):
+    with persist_scope(history_entry):
         for sub_accounts_items_valuation_history_entry in history_entry.sub_accounts_items_valuation_history_entries:
             sub_accounts_items_valuation_history_entry.valuation_change = sub_accounts_items_valuation_change[
                 repository.SubAccountItemKey(
@@ -174,7 +175,7 @@ def write_history_impl(
                 )
             ]
 
-    with db_session.persist(history_entry):
+    with persist_scope(history_entry):
         history_entry.available = True
 
     logging.info("new history entry added and enabled successfully")
@@ -191,7 +192,7 @@ def write_history_impl(
 
 
 class ValuationHistoryWriterService(object):
-    def __init__(self, db_session: Session):
+    def __init__(self, db_session: SessionType):
         self._db_session = db_session
 
     def write_history(self, snapshot_id: int) -> schema.WriteHistoryResponse:

@@ -8,8 +8,7 @@ from finbot.apps.appwsrv.core import providers as appwsrv_providers
 from finbot.apps.http_base import CurrentUserIdDep
 from finbot.core.environment import get_plaid_environment
 from finbot.core.errors import InvalidOperation, InvalidUserInput
-from finbot.model import LinkedAccount, Provider, repository
-from finbot.model.db import db_session
+from finbot.model import LinkedAccount, Provider, db, persist_scope, repository
 
 logger = logging.getLogger(__name__)
 
@@ -28,8 +27,8 @@ def update_or_create_provider(
     _: CurrentUserIdDep,
 ) -> appwsrv_schema.CreateOrUpdateProviderResponse:
     """Update or create provider"""
-    existing_provider = repository.find_provider(db_session, json.id)
-    with db_session.persist(existing_provider or Provider()) as provider:
+    existing_provider = repository.find_provider(db.session, json.id)
+    with persist_scope(existing_provider or Provider()) as provider:
         provider.id = json.id
         provider.description = json.description
         provider.website_url = json.website_url
@@ -50,7 +49,7 @@ def get_providers(
     return appwsrv_schema.GetProvidersResponse(
         providers=[
             serializer.serialize_provider(provider)
-            for provider in db_session.query(Provider).all()
+            for provider in db.session.query(Provider).all()
             if appwsrv_providers.is_provider_supported(provider)
         ]
     )
@@ -65,7 +64,7 @@ def get_provider(
     _: CurrentUserIdDep,
 ) -> appwsrv_schema.GetProviderResponse:
     """Get provider"""
-    provider = repository.find_provider(db_session, provider_id)
+    provider = repository.find_provider(db.session, provider_id)
     if not provider:
         raise InvalidUserInput(f"Provider with id '${provider_id}' does not exist")
     return appwsrv_schema.GetProviderResponse(
@@ -82,12 +81,12 @@ def delete_provider(
     _: CurrentUserIdDep,
 ) -> appwsrv_schema.DeleteProviderResponse:
     """Delete provider"""
-    provider = repository.get_provider(db_session, provider_id)
+    provider = repository.get_provider(db.session, provider_id)
     linked_accounts: list[LinkedAccount] = provider.linked_accounts
     if len(linked_accounts) > 0:
         raise InvalidOperation("This provider is still in use")
-    db_session.delete(provider)
-    db_session.commit()
+    db.session.delete(provider)  # type: ignore
+    db.session.commit()
     logging.info(f"deleted provider_id={provider_id}")
     return appwsrv_schema.DeleteProviderResponse()
 
