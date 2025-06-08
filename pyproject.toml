@@ -30,9 +30,9 @@ dependencies = [
     "schedule==1.2.2",
     "spectree==1.2.10",
     "sqlalchemy==2.0.41",
+    "temporalio<2",
     "twilio==9.6.1",
     "uvicorn<1",
-    "yfinance==0.2.61",
 ]
 
 [project.optional-dependencies]
@@ -46,6 +46,7 @@ dev = [
     "types-cachetools<7",
     "types-requests==2.32.0.20250515",
     "watchdog[watchmedo]<7",
+    "yfinance<1",
 ]
 
 [tool.ruff]

@@ -12,7 +12,7 @@ cp "${workdir}/schema/appwsrv.openapi.json" "${finbot_root_dir}/finbot/apps/appw
 openapi-generator-cli generate \
   -i "${workdir}/schema/appwsrv.openapi.json" \
   -g typescript-fetch \
-  --additional-properties=withSeparateModelsAndApi=true,useSingleRequestParameter=true,withInterfaces=true,supportsES6=true \
+  --additional-properties=withSeparateModelsAndApi=true,useSingleRequestParameter=true,withInterfaces=true,supportsES6=true,disallowAdditionalPropertiesIfNotPresent=false \
   -o "${workdir}/output/"
 
 git config --global --add safe.directory "*"

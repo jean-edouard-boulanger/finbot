@@ -1,5 +1,8 @@
 import logging
 
+from finbot.services.financial_data_fetcher.schema import ValidateCredentialsRequest
+from finbot.services.financial_data_fetcher.workflows import ValidateCredentialsWorkflow
+from finbot.core.temporal_ import get_temporal_client, temporal_workflow_id, GENERIC_TASK_QUEUE
 from finbot import model
 from finbot.apps.finbotwsrv.client import FinbotwsrvClient
 from finbot.core import schema as core_schema
@@ -39,16 +42,22 @@ def is_provider_supported(provider: model.Provider) -> bool:
     return True
 
 
-def validate_credentials(
+async def validate_credentials(
     finbot_client: FinbotwsrvClient,
     provider_id: str,
     credentials: core_schema.CredentialsPayloadType,
     user_account_currency: CurrencyCode,
 ) -> None:
-    result = finbot_client.validate_credentials(
-        provider_id=provider_id,
-        credentials_data=credentials,
-        user_account_currency=user_account_currency,
+    temporal_client = await get_temporal_client()
+    result = await temporal_client.execute_workflow(
+        ValidateCredentialsWorkflow,
+        ValidateCredentialsRequest(
+            provider_id=provider_id,
+            credentials=credentials,
+            user_account_currency=user_account_currency,
+        ),
+        id=temporal_workflow_id("app.validate_credentials."),
+        task_queue=GENERIC_TASK_QUEUE,
     )
     if not result.valid:
         raise InvalidUserInput(f"Unable to validate provided credentials ({result.error_message})")

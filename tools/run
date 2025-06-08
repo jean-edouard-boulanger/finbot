@@ -21,6 +21,9 @@ then
   exec python3 -m celery \
     -A finbot.tasks.base worker \
     --loglevel INFO
+elif [[ "${service_name}" == "workersrv[temporal]" ]]
+then
+  exec python3 -m finbot.apps.workersrv_temporal
 elif [[ "${service_name}" == "finbotwsrv" ]]
 then
 	xvfb-run -a "${script_dir}/run-web-service.sh" \

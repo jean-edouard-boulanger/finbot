@@ -1,6 +1,6 @@
-from finbot.apps.finbotwsrv import schema
 from finbot.core.schema import CredentialsPayloadType, CurrencyCode
 from finbot.core.web_service import WebServiceClient
+from finbot.services.financial_data_fetcher import schema
 
 
 class FinbotwsrvClient(WebServiceClient):
@@ -16,7 +16,7 @@ class FinbotwsrvClient(WebServiceClient):
         line_items: list[schema.LineItem],
         user_account_currency: CurrencyCode,
     ) -> schema.GetFinancialDataResponse:
-        return schema.GetFinancialDataResponse.parse_obj(
+        return schema.GetFinancialDataResponse.model_validate(
             self.post(
                 "financial_data/",
                 schema.GetFinancialDataRequest(
@@ -34,7 +34,7 @@ class FinbotwsrvClient(WebServiceClient):
         credentials_data: CredentialsPayloadType,
         user_account_currency: CurrencyCode,
     ) -> schema.ValidateCredentialsResponse:
-        return schema.ValidateCredentialsResponse.parse_obj(
+        return schema.ValidateCredentialsResponse.model_validate(
             self.post(
                 "validate_credentials/",
                 schema.ValidateCredentialsRequest(

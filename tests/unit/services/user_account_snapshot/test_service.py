@@ -2,10 +2,10 @@ from unittest.mock import Mock, call
 
 import pytest
 
-from finbot.apps.finbotwsrv import schema as finbotwsrv_schema
 from finbot.core import fx_market
 from finbot.core import schema as core_schema
 from finbot.providers import schema as providers_schema
+from finbot.services.financial_data_fetcher import schema as finbotwsrv_schema
 from finbot.services.user_account_snapshot import service
 
 TEST_USER_ACCOUNT_CCY = core_schema.CurrencyCode.validate("EUR")

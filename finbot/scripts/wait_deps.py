@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import asyncio
 import enum
 import json
 import logging
@@ -8,7 +9,7 @@ import socket
 import sys
 import time
 from datetime import datetime, timedelta
-from typing import Protocol, cast
+from typing import Any, Coroutine, Protocol, cast
 
 import pika
 import pika.exceptions
@@ -18,9 +19,12 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import text
 
+from finbot.apps.workersrv_temporal.worker import HealthcheckWorkflow
 from finbot.core import environment
 from finbot.core import schema as core_schema
+from finbot.core.async_ import maybe_awaitable
 from finbot.core.logging import configure_logging
+from finbot.core.temporal_ import GENERIC_TASK_QUEUE, get_temporal_client, temporal_workflow_id
 from finbot.core.utils import float_or_none
 
 configure_logging()
@@ -41,8 +45,23 @@ class Error(RuntimeError):
 
 
 class Checker(Protocol):
-    def __call__(self) -> bool:
+    def __call__(self) -> bool | Coroutine[Any, Any, bool]:
         pass
+
+
+class TemporalWorkerChecker(Checker):
+    async def __call__(self) -> bool:
+        try:
+            client = await get_temporal_client()
+            return await client.execute_workflow(
+                HealthcheckWorkflow.run,
+                id=temporal_workflow_id(prefix="wait_deps/"),
+                task_queue=GENERIC_TASK_QUEUE,
+                execution_timeout=timedelta(seconds=1.0),
+            )
+        except Exception:
+            logging.exception("TemporalWorkerChecker")
+            return False
 
 
 class ClientChecker(Checker):
@@ -120,9 +139,12 @@ def get_checker(dep_name: str) -> Checker:
         rmq_url = environment.get_rmq_url()
         logging.info(f"will wait on '{dep_name}': {rmq_url}")
         return RabbitMQChecker(rmq_url)
-    if dep_name == "workersrv":
+    if dep_name == "workersrv_temporal":
         logging.info(f"will wait on '{dep_name}'")
         return CeleryWorkerChecker()
+    if dep_name == "workersrv_temporal[temporal]":
+        logging.info(f"will wait on '{dep_name}'")
+        return TemporalWorkerChecker()
     if dep_name in WEB_SERVICES:
         endpoint = environment.get_web_service_endpoint(dep_name)
         logging.info(f"will wait on '{dep_name}': {endpoint}")
@@ -134,7 +156,7 @@ def get_checker(dep_name: str) -> Checker:
     raise Error(f"Unknown dependency: {dep_name}")
 
 
-def main_impl() -> ExitCode:
+async def main_impl() -> ExitCode:
     raw_deps = os.environ.get("FINBOT_WAIT_DEPS", sys.argv[1] if len(sys.argv) > 1 else None)
     raw_timeout = os.environ.get("FINBOT_WAIT_TIMEOUT")
     if raw_timeout is None:
@@ -161,7 +183,7 @@ def main_impl() -> ExitCode:
         for dep, checker in checkers.items():
             if dep not in resolved:
                 try:
-                    if checker():
+                    if await maybe_awaitable(checker()):
                         resolved.add(dep)
                         logging.info(f"dependency {dep} is now available")
                     else:
@@ -179,13 +201,13 @@ def main_impl() -> ExitCode:
     return ExitCode.Ok
 
 
-def main() -> ExitCode:
+async def main() -> ExitCode:
     try:
-        return main_impl()
+        return await main_impl()
     except Exception as e:
         logging.error(f"leaving early because of uncaught error: {e}")
         return ExitCode.Error
 
 
 if __name__ == "__main__":
-    sys.exit(main().value)
+    asyncio.run(main())

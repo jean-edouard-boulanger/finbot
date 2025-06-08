@@ -72,6 +72,19 @@ services:
     environment:
       FINBOT_WAIT_DEPS: "${FINBOT_WAIT_DEPS:-finbotdb,finbotrmq}"
 
+  workersrv_temporal:
+    image: "finbotapp/runtime-dev:latest"
+    env_file: *env_files
+    depends_on:
+      - finbotdb
+    working_dir: /finbot
+    command: bash -c "./tools/run workersrv[temporal]"
+    tty: true
+    volumes:
+      - .:/finbot
+    environment:
+      FINBOT_WAIT_DEPS: "${FINBOT_WAIT_DEPS:-finbotdb}"
+
   appwsrv:
     image: "finbotapp/runtime-dev:latest"
     env_file: *env_files
@@ -87,7 +100,7 @@ services:
     volumes:
       - .:/finbot
     environment:
-      FINBOT_WAIT_DEPS: "${FINBOT_WAIT_DEPS:-finbotdb,finbotwsrv,workersrv}"
+      FINBOT_WAIT_DEPS: "${FINBOT_WAIT_DEPS:-finbotdb,finbotwsrv,workersrv,workersrv[temporal]}"
 
   operator:
     image: "finbotapp/runtime-dev:latest"
@@ -124,3 +137,44 @@ services:
       - '5000:80'
     profiles:
       - smtp4dev
+
+  temporal:
+    container_name: temporal
+    depends_on:
+      - finbotdb
+    environment:
+      - DB=postgres12
+      - DB_PORT=5432
+      - POSTGRES_USER=finbot
+      - POSTGRES_PWD=finbot
+      - POSTGRES_SEEDS=finbotdb
+      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_CLI_ADDRESS=temporal:7233
+    image: temporalio/auto-setup:1.27
+    ports:
+      - 7233:7233
+    volumes:
+      - ./envs/temporal/dynamicconfig:/etc/temporal/config/dynamicconfig
+
+  temporal-admin-tools:
+    container_name: temporal-admin-tools
+    depends_on:
+      - temporal
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_CLI_ADDRESS=temporal:7233
+    image: temporalio/admin-tools:1.27
+    stdin_open: true
+    tty: true
+
+  temporal-ui:
+    container_name: temporal-ui
+    depends_on:
+      - temporal
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_CORS_ORIGINS=http://localhost:3000
+    image: temporalio/ui:v2.37.4
+    ports:
+      - 5006:8080

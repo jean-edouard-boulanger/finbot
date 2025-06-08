@@ -10,7 +10,6 @@ from typing import Any, Generator, Optional, Protocol, TypedDict, cast
 from sqlalchemy.orm import Session, joinedload
 
 from finbot import model
-from finbot.apps.finbotwsrv import schema as finbotwsrv_schema
 from finbot.apps.finbotwsrv.client import FinbotwsrvClient
 from finbot.core import environment, fx_market, secure, utils
 from finbot.core import schema as core_schema
@@ -19,6 +18,7 @@ from finbot.core.serialization import serialize
 from finbot.core.utils import some
 from finbot.model import PersistScope
 from finbot.providers import schema as providers_schema
+from finbot.services.financial_data_fetcher import schema as finbotwsrv_schema
 from finbot.services.user_account_snapshot import schema
 
 logger = logging.getLogger(__name__)

@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
+import asyncio
+
 from finbot.scripts import wait_deps
-import sys
 
 
 if __name__ == '__main__':
-    sys.exit(wait_deps.main().value)
+    asyncio.run(wait_deps.main())
