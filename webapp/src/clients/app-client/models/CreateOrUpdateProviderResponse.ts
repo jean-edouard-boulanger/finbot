@@ -26,7 +26,6 @@ import {
  * @interface CreateOrUpdateProviderResponse
  */
 export interface CreateOrUpdateProviderResponse {
-  [key: string]: any | any;
   /**
    *
    * @type {Provider}
@@ -59,7 +58,6 @@ export function CreateOrUpdateProviderResponseFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     provider: ProviderFromJSON(json["provider"]),
   };
 }
@@ -79,7 +77,6 @@ export function CreateOrUpdateProviderResponseToJSONTyped(
   }
 
   return {
-    ...value,
     provider: ProviderToJSON(value["provider"]),
   };
 }

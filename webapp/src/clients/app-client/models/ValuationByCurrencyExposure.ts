@@ -26,7 +26,6 @@ import {
  * @interface ValuationByCurrencyExposure
  */
 export interface ValuationByCurrencyExposure {
-  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -71,7 +70,6 @@ export function ValuationByCurrencyExposureFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     valuationCcy: json["valuation_ccy"],
     byCurrencyExposure: (json["by_currency_exposure"] as Array<any>).map(
       GroupValuationFromJSON,
@@ -94,7 +92,6 @@ export function ValuationByCurrencyExposureToJSONTyped(
   }
 
   return {
-    ...value,
     valuation_ccy: value["valuationCcy"],
     by_currency_exposure: (value["byCurrencyExposure"] as Array<any>).map(
       GroupValuationToJSON,

@@ -89,7 +89,7 @@ export interface LinkedAccountsApiInterface {
   deleteLinkedAccountRaw(
     requestParameters: DeleteLinkedAccountRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<{ [key: string]: any }>>;
+  ): Promise<runtime.ApiResponse<object>>;
 
   /**
    * Delete linked account
@@ -98,7 +98,7 @@ export interface LinkedAccountsApiInterface {
   deleteLinkedAccount(
     requestParameters: DeleteLinkedAccountRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<{ [key: string]: any }>;
+  ): Promise<object>;
 
   /**
    * Get linked account
@@ -159,7 +159,7 @@ export interface LinkedAccountsApiInterface {
   linkNewAccountRaw(
     requestParameters: LinkNewAccountRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<{ [key: string]: any }>>;
+  ): Promise<runtime.ApiResponse<object>>;
 
   /**
    * Link new account
@@ -168,7 +168,7 @@ export interface LinkedAccountsApiInterface {
   linkNewAccount(
     requestParameters: LinkNewAccountRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<{ [key: string]: any }>;
+  ): Promise<object>;
 
   /**
    * Update linked account credentials
@@ -185,7 +185,7 @@ export interface LinkedAccountsApiInterface {
   updateLinkedAccountCredentialsRaw(
     requestParameters: UpdateLinkedAccountCredentialsOperationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<{ [key: string]: any }>>;
+  ): Promise<runtime.ApiResponse<object>>;
 
   /**
    * Update linked account credentials
@@ -194,7 +194,7 @@ export interface LinkedAccountsApiInterface {
   updateLinkedAccountCredentials(
     requestParameters: UpdateLinkedAccountCredentialsOperationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<{ [key: string]: any }>;
+  ): Promise<object>;
 
   /**
    * Update linked account metadata
@@ -209,7 +209,7 @@ export interface LinkedAccountsApiInterface {
   updateLinkedAccountMetadataRaw(
     requestParameters: UpdateLinkedAccountMetadataOperationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<{ [key: string]: any }>>;
+  ): Promise<runtime.ApiResponse<object>>;
 
   /**
    * Update linked account metadata
@@ -218,7 +218,7 @@ export interface LinkedAccountsApiInterface {
   updateLinkedAccountMetadata(
     requestParameters: UpdateLinkedAccountMetadataOperationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<{ [key: string]: any }>;
+  ): Promise<object>;
 }
 
 /**
@@ -235,7 +235,7 @@ export class LinkedAccountsApi
   async deleteLinkedAccountRaw(
     requestParameters: DeleteLinkedAccountRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<{ [key: string]: any }>> {
+  ): Promise<runtime.ApiResponse<object>> {
     if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
@@ -290,7 +290,7 @@ export class LinkedAccountsApi
   async deleteLinkedAccount(
     requestParameters: DeleteLinkedAccountRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<{ [key: string]: any }> {
+  ): Promise<object> {
     const response = await this.deleteLinkedAccountRaw(
       requestParameters,
       initOverrides,
@@ -437,7 +437,7 @@ export class LinkedAccountsApi
   async linkNewAccountRaw(
     requestParameters: LinkNewAccountRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<{ [key: string]: any }>> {
+  ): Promise<runtime.ApiResponse<object>> {
     if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
@@ -498,7 +498,7 @@ export class LinkedAccountsApi
   async linkNewAccount(
     requestParameters: LinkNewAccountRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<{ [key: string]: any }> {
+  ): Promise<object> {
     const response = await this.linkNewAccountRaw(
       requestParameters,
       initOverrides,
@@ -513,7 +513,7 @@ export class LinkedAccountsApi
   async updateLinkedAccountCredentialsRaw(
     requestParameters: UpdateLinkedAccountCredentialsOperationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<{ [key: string]: any }>> {
+  ): Promise<runtime.ApiResponse<object>> {
     if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
@@ -588,7 +588,7 @@ export class LinkedAccountsApi
   async updateLinkedAccountCredentials(
     requestParameters: UpdateLinkedAccountCredentialsOperationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<{ [key: string]: any }> {
+  ): Promise<object> {
     const response = await this.updateLinkedAccountCredentialsRaw(
       requestParameters,
       initOverrides,
@@ -603,7 +603,7 @@ export class LinkedAccountsApi
   async updateLinkedAccountMetadataRaw(
     requestParameters: UpdateLinkedAccountMetadataOperationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<{ [key: string]: any }>> {
+  ): Promise<runtime.ApiResponse<object>> {
     if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
@@ -670,7 +670,7 @@ export class LinkedAccountsApi
   async updateLinkedAccountMetadata(
     requestParameters: UpdateLinkedAccountMetadataOperationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<{ [key: string]: any }> {
+  ): Promise<object> {
     const response = await this.updateLinkedAccountMetadataRaw(
       requestParameters,
       initOverrides,

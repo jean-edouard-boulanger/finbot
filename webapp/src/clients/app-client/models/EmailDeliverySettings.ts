@@ -18,7 +18,6 @@ import { mapValues } from "../runtime";
  * @interface EmailDeliverySettings
  */
 export interface EmailDeliverySettings {
-  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -76,7 +75,6 @@ export function EmailDeliverySettingsFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     subjectPrefix: json["subject_prefix"],
     senderName: json["sender_name"],
     providerId: json["provider_id"],
@@ -97,7 +95,6 @@ export function EmailDeliverySettingsToJSONTyped(
   }
 
   return {
-    ...value,
     subject_prefix: value["subjectPrefix"],
     sender_name: value["senderName"],
     provider_id: value["providerId"],

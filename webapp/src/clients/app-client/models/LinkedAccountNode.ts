@@ -40,7 +40,6 @@ import {
  * @interface LinkedAccountNode
  */
 export interface LinkedAccountNode {
-  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -101,7 +100,6 @@ export function LinkedAccountNodeFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     role: json["role"] == null ? undefined : json["role"],
     linkedAccount: LinkedAccountDescriptionFromJSON(json["linked_account"]),
     valuation: ValuationWithSparklineFromJSON(json["valuation"]),
@@ -122,7 +120,6 @@ export function LinkedAccountNodeToJSONTyped(
   }
 
   return {
-    ...value,
     role: value["role"],
     linked_account: LinkedAccountDescriptionToJSON(value["linkedAccount"]),
     valuation: ValuationWithSparklineToJSON(value["valuation"]),

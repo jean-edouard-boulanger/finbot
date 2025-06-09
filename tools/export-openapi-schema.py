@@ -2,6 +2,7 @@
 import json
 from argparse import ArgumentParser
 from pathlib import Path
+from typing import Any
 
 from finbot._version import __api_version__
 
@@ -9,19 +10,37 @@ from finbot._version import __api_version__
 def export_appwsrv_openapi_schema():
     from finbot.apps.appwsrv import appwsrv
 
-    return appwsrv.app.openapi()
+    return patch_schema(appwsrv.app.openapi())
 
 
 def export_finbotwsrv_openapi_schema():
     from finbot.apps.finbotwsrv import finbotwsrv
 
-    return finbotwsrv.app.openapi()
+    return patch_schema(finbotwsrv.app.openapi())
 
 
 SCHEMA_EXPORTERS = {
     "appwsrv": export_appwsrv_openapi_schema,
     "finbotwsrv": export_finbotwsrv_openapi_schema,
 }
+
+
+def patch_schema(node: Any) -> Any:
+    """Under openapi 3.1.0, openapi-generator seems to completely ignore additionalProperties being set to false in
+    the schema - which causes significant issues with the generated API. This function translates openapi 3.0.1 features
+    to 3.0.3, where openapi-generator behaves nicely.
+    """
+    if isinstance(node, dict):
+        if "openapi" in node:
+            node["openapi"] = "3.0.3"
+        if "const" in node:
+            val = node["const"]
+            del node["const"]
+            node["enum"] = [val]
+        return {k: patch_schema(v) for (k, v) in node.items()}
+    if isinstance(node, list):
+        return [patch_schema(x) for x in node]
+    return node
 
 
 def create_argument_parser():

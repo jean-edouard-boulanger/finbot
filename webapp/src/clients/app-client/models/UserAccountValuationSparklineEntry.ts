@@ -18,7 +18,6 @@ import { mapValues } from "../runtime";
  * @interface UserAccountValuationSparklineEntry
  */
 export interface UserAccountValuationSparklineEntry {
-  [key: string]: any | any;
   /**
    *
    * @type {Date}
@@ -59,7 +58,6 @@ export function UserAccountValuationSparklineEntryFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     effectiveAt: new Date(json["effective_at"]),
     value: json["value"],
   };
@@ -80,7 +78,6 @@ export function UserAccountValuationSparklineEntryToJSONTyped(
   }
 
   return {
-    ...value,
     effective_at: value["effectiveAt"].toISOString(),
     value: value["value"],
   };

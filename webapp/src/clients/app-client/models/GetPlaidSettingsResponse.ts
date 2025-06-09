@@ -26,7 +26,6 @@ import {
  * @interface GetPlaidSettingsResponse
  */
 export interface GetPlaidSettingsResponse {
-  [key: string]: any | any;
   /**
    *
    * @type {PlaidSettings}
@@ -59,7 +58,6 @@ export function GetPlaidSettingsResponseFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     settings: PlaidSettingsFromJSON(json["settings"]),
   };
 }
@@ -79,7 +77,6 @@ export function GetPlaidSettingsResponseToJSONTyped(
   }
 
   return {
-    ...value,
     settings: PlaidSettingsToJSON(value["settings"]),
   };
 }

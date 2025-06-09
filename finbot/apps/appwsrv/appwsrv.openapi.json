@@ -1,5 +1,5 @@
 {
-    "openapi": "3.1.0",
+    "openapi": "3.0.3",
     "info": {
         "title": "Finbot application service",
         "description": "API documentation for appwsrv",
@@ -2715,9 +2715,11 @@
                 "properties": {
                     "role": {
                         "type": "string",
-                        "const": "linked_account",
                         "title": "Role",
-                        "default": "linked_account"
+                        "default": "linked_account",
+                        "enum": [
+                            "linked_account"
+                        ]
                     },
                     "linked_account": {
                         "$ref": "#/components/schemas/LinkedAccountDescription"
@@ -3234,9 +3236,11 @@
                 "properties": {
                     "role": {
                         "type": "string",
-                        "const": "metadata",
                         "title": "Role",
-                        "default": "metadata"
+                        "default": "metadata",
+                        "enum": [
+                            "metadata"
+                        ]
                     },
                     "label": {
                         "type": "string",
@@ -3272,9 +3276,11 @@
                 "properties": {
                     "role": {
                         "type": "string",
-                        "const": "item",
                         "title": "Role",
-                        "default": "item"
+                        "default": "item",
+                        "enum": [
+                            "item"
+                        ]
                     },
                     "item": {
                         "$ref": "#/components/schemas/SubAccountItemDescription"
@@ -3328,9 +3334,11 @@
                 "properties": {
                     "role": {
                         "type": "string",
-                        "const": "sub_account",
                         "title": "Role",
-                        "default": "sub_account"
+                        "default": "sub_account",
+                        "enum": [
+                            "sub_account"
+                        ]
                     },
                     "sub_account": {
                         "$ref": "#/components/schemas/SubAccountDescription"
@@ -3621,9 +3629,11 @@
                 "properties": {
                     "role": {
                         "type": "string",
-                        "const": "user_account",
                         "title": "Role",
-                        "default": "user_account"
+                        "default": "user_account",
+                        "enum": [
+                            "user_account"
+                        ]
                     },
                     "valuation": {
                         "$ref": "#/components/schemas/ValuationWithSparkline"

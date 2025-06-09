@@ -18,7 +18,6 @@ import { mapValues } from "../runtime";
  * @interface Metrics
  */
 export interface Metrics {
-  [key: string]: any | any;
   /**
    *
    * @type {Date}
@@ -97,7 +96,6 @@ export function MetricsFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     firstDate: new Date(json["first_date"]),
     firstValue: json["first_value"],
     lastDate: new Date(json["last_date"]),
@@ -122,7 +120,6 @@ export function MetricsToJSONTyped(
   }
 
   return {
-    ...value,
     first_date: value["firstDate"].toISOString(),
     first_value: value["firstValue"],
     last_date: value["lastDate"].toISOString(),

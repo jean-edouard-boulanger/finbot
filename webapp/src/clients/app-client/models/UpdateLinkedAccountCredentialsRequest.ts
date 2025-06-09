@@ -18,7 +18,6 @@ import { mapValues } from "../runtime";
  * @interface UpdateLinkedAccountCredentialsRequest
  */
 export interface UpdateLinkedAccountCredentialsRequest {
-  [key: string]: any | any;
   /**
    *
    * @type {{ [key: string]: any; }}
@@ -52,7 +51,6 @@ export function UpdateLinkedAccountCredentialsRequestFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     credentials: json["credentials"],
   };
 }
@@ -72,7 +70,6 @@ export function UpdateLinkedAccountCredentialsRequestToJSONTyped(
   }
 
   return {
-    ...value,
     credentials: value["credentials"],
   };
 }

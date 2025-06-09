@@ -26,7 +26,6 @@ import {
  * @interface GetLinkedAccountResponse
  */
 export interface GetLinkedAccountResponse {
-  [key: string]: any | any;
   /**
    *
    * @type {LinkedAccount}
@@ -60,7 +59,6 @@ export function GetLinkedAccountResponseFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     linkedAccount: LinkedAccountFromJSON(json["linked_account"]),
   };
 }
@@ -80,7 +78,6 @@ export function GetLinkedAccountResponseToJSONTyped(
   }
 
   return {
-    ...value,
     linked_account: LinkedAccountToJSON(value["linkedAccount"]),
   };
 }

@@ -65,7 +65,7 @@ export interface FinancialDataProvidersApiInterface {
   deleteFinancialDataProviderRaw(
     requestParameters: DeleteFinancialDataProviderRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<{ [key: string]: any }>>;
+  ): Promise<runtime.ApiResponse<object>>;
 
   /**
    * Delete provider
@@ -74,7 +74,7 @@ export interface FinancialDataProvidersApiInterface {
   deleteFinancialDataProvider(
     requestParameters: DeleteFinancialDataProviderRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<{ [key: string]: any }>;
+  ): Promise<object>;
 
   /**
    * Get provider
@@ -173,7 +173,7 @@ export class FinancialDataProvidersApi
   async deleteFinancialDataProviderRaw(
     requestParameters: DeleteFinancialDataProviderRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<{ [key: string]: any }>> {
+  ): Promise<runtime.ApiResponse<object>> {
     if (requestParameters["providerId"] == null) {
       throw new runtime.RequiredError(
         "providerId",
@@ -216,7 +216,7 @@ export class FinancialDataProvidersApi
   async deleteFinancialDataProvider(
     requestParameters: DeleteFinancialDataProviderRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<{ [key: string]: any }> {
+  ): Promise<object> {
     const response = await this.deleteFinancialDataProviderRaw(
       requestParameters,
       initOverrides,

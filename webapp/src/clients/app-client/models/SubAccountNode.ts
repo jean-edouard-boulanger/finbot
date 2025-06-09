@@ -40,7 +40,6 @@ import {
  * @interface SubAccountNode
  */
 export interface SubAccountNode {
-  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -101,7 +100,6 @@ export function SubAccountNodeFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     role: json["role"] == null ? undefined : json["role"],
     subAccount: SubAccountDescriptionFromJSON(json["sub_account"]),
     valuation: ValuationFromJSON(json["valuation"]),
@@ -122,7 +120,6 @@ export function SubAccountNodeToJSONTyped(
   }
 
   return {
-    ...value,
     role: value["role"],
     sub_account: SubAccountDescriptionToJSON(value["subAccount"]),
     valuation: ValuationToJSON(value["valuation"]),

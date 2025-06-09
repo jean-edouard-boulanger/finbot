@@ -33,7 +33,6 @@ import {
  * @interface UserAccountNode
  */
 export interface UserAccountNode {
-  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -86,7 +85,6 @@ export function UserAccountNodeFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     role: json["role"] == null ? undefined : json["role"],
     valuation: ValuationWithSparklineFromJSON(json["valuation"]),
     children: (json["children"] as Array<any>).map(LinkedAccountNodeFromJSON),
@@ -106,7 +104,6 @@ export function UserAccountNodeToJSONTyped(
   }
 
   return {
-    ...value,
     role: value["role"],
     valuation: ValuationWithSparklineToJSON(value["valuation"]),
     children: (value["children"] as Array<any>).map(LinkedAccountNodeToJSON),

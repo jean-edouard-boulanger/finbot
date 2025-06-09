@@ -18,7 +18,6 @@ import { mapValues } from "../runtime";
  * @interface UpdateLinkedAccountMetadataRequest
  */
 export interface UpdateLinkedAccountMetadataRequest {
-  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -62,7 +61,6 @@ export function UpdateLinkedAccountMetadataRequestFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     accountName:
       json["account_name"] == null ? undefined : json["account_name"],
     accountColour:
@@ -86,7 +84,6 @@ export function UpdateLinkedAccountMetadataRequestToJSONTyped(
   }
 
   return {
-    ...value,
     account_name: value["accountName"],
     account_colour: value["accountColour"],
     frozen: value["frozen"],

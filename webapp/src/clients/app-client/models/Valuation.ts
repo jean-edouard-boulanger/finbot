@@ -26,7 +26,6 @@ import {
  * @interface Valuation
  */
 export interface Valuation {
-  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -69,7 +68,6 @@ export function ValuationFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     currency: json["currency"],
     value: json["value"],
     change: ValuationChangeFromJSON(json["change"]),
@@ -89,7 +87,6 @@ export function ValuationToJSONTyped(
   }
 
   return {
-    ...value,
     currency: value["currency"],
     value: value["value"],
     change: ValuationChangeToJSON(value["change"]),

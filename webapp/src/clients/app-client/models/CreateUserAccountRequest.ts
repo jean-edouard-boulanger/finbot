@@ -26,7 +26,6 @@ import {
  * @interface CreateUserAccountRequest
  */
 export interface CreateUserAccountRequest {
-  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -80,7 +79,6 @@ export function CreateUserAccountRequestFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     email: json["email"],
     password: json["password"],
     fullName: json["full_name"],
@@ -103,7 +101,6 @@ export function CreateUserAccountRequestToJSONTyped(
   }
 
   return {
-    ...value,
     email: value["email"],
     password: value["password"],
     full_name: value["fullName"],

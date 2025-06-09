@@ -40,7 +40,6 @@ import {
  * @interface SubAccountItemNode
  */
 export interface SubAccountItemNode {
-  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -100,7 +99,6 @@ export function SubAccountItemNodeFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     role: json["role"] == null ? undefined : json["role"],
     item: SubAccountItemDescriptionFromJSON(json["item"]),
     valuation: ValuationFromJSON(json["valuation"]),
@@ -123,7 +121,6 @@ export function SubAccountItemNodeToJSONTyped(
   }
 
   return {
-    ...value,
     role: value["role"],
     item: SubAccountItemDescriptionToJSON(value["item"]),
     valuation: ValuationToJSON(value["valuation"]),

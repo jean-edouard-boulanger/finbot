@@ -26,7 +26,6 @@ import {
  * @interface CreateUserAccountResponse
  */
 export interface CreateUserAccountResponse {
-  [key: string]: any | any;
   /**
    *
    * @type {UserAccount}
@@ -60,7 +59,6 @@ export function CreateUserAccountResponseFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     userAccount: UserAccountFromJSON(json["user_account"]),
   };
 }
@@ -80,7 +78,6 @@ export function CreateUserAccountResponseToJSONTyped(
   }
 
   return {
-    ...value,
     user_account: UserAccountToJSON(value["userAccount"]),
   };
 }

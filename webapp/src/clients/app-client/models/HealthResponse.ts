@@ -18,7 +18,6 @@ import { mapValues } from "../runtime";
  * @interface HealthResponse
  */
 export interface HealthResponse {
-  [key: string]: any | any;
   /**
    *
    * @type {boolean}
@@ -49,7 +48,6 @@ export function HealthResponseFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     healthy: json["healthy"],
   };
 }
@@ -67,7 +65,6 @@ export function HealthResponseToJSONTyped(
   }
 
   return {
-    ...value,
     healthy: value["healthy"],
   };
 }

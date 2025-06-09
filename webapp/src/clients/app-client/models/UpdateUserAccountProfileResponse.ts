@@ -26,7 +26,6 @@ import {
  * @interface UpdateUserAccountProfileResponse
  */
 export interface UpdateUserAccountProfileResponse {
-  [key: string]: any | any;
   /**
    *
    * @type {UserAccountProfile}
@@ -59,7 +58,6 @@ export function UpdateUserAccountProfileResponseFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     profile: UserAccountProfileFromJSON(json["profile"]),
   };
 }
@@ -79,7 +77,6 @@ export function UpdateUserAccountProfileResponseToJSONTyped(
   }
 
   return {
-    ...value,
     profile: UserAccountProfileToJSON(value["profile"]),
   };
 }

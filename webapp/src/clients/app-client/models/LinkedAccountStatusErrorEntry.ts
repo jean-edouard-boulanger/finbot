@@ -26,7 +26,6 @@ import {
  * @interface LinkedAccountStatusErrorEntry
  */
 export interface LinkedAccountStatusErrorEntry {
-  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -66,7 +65,6 @@ export function LinkedAccountStatusErrorEntryFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     scope: json["scope"],
     error: ErrorMetadataFromJSON(json["error"]),
   };
@@ -87,7 +85,6 @@ export function LinkedAccountStatusErrorEntryToJSONTyped(
   }
 
   return {
-    ...value,
     scope: value["scope"],
     error: ErrorMetadataToJSON(value["error"]),
   };

@@ -26,7 +26,6 @@ import {
  * @interface SubAccountItemMetadataNode
  */
 export interface SubAccountItemMetadataNode {
-  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -81,7 +80,6 @@ export function SubAccountItemMetadataNodeFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     role: json["role"] == null ? undefined : json["role"],
     label: json["label"],
     value: ValueFromJSON(json["value"]),
@@ -103,7 +101,6 @@ export function SubAccountItemMetadataNodeToJSONTyped(
   }
 
   return {
-    ...value,
     role: value["role"],
     label: value["label"],
     value: ValueToJSON(value["value"]),

@@ -18,7 +18,6 @@ import { mapValues } from "../runtime";
  * @interface UserAccountSettings
  */
 export interface UserAccountSettings {
-  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -64,7 +63,6 @@ export function UserAccountSettingsFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     valuationCcy: json["valuation_ccy"],
     createdAt: new Date(json["created_at"]),
     updatedAt: json["updated_at"] == null ? null : new Date(json["updated_at"]),
@@ -84,7 +82,6 @@ export function UserAccountSettingsToJSONTyped(
   }
 
   return {
-    ...value,
     valuation_ccy: value["valuationCcy"],
     created_at: value["createdAt"].toISOString(),
     updated_at:

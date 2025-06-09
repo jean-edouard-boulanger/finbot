@@ -26,7 +26,6 @@ import {
  * @interface GetEarningsReportResponse
  */
 export interface GetEarningsReportResponse {
-  [key: string]: any | any;
   /**
    *
    * @type {EarningsReport}
@@ -59,7 +58,6 @@ export function GetEarningsReportResponseFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     report: EarningsReportFromJSON(json["report"]),
   };
 }
@@ -79,7 +77,6 @@ export function GetEarningsReportResponseToJSONTyped(
   }
 
   return {
-    ...value,
     report: EarningsReportToJSON(value["report"]),
   };
 }

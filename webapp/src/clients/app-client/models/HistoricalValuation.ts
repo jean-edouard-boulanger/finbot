@@ -26,7 +26,6 @@ import {
  * @interface HistoricalValuation
  */
 export interface HistoricalValuation {
-  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -66,7 +65,6 @@ export function HistoricalValuationFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     valuationCcy: json["valuation_ccy"],
     seriesData: SeriesDataFromJSON(json["series_data"]),
   };
@@ -85,7 +83,6 @@ export function HistoricalValuationToJSONTyped(
   }
 
   return {
-    ...value,
     valuation_ccy: value["valuationCcy"],
     series_data: SeriesDataToJSON(value["seriesData"]),
   };

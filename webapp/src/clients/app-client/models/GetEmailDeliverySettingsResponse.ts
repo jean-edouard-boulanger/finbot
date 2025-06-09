@@ -26,7 +26,6 @@ import {
  * @interface GetEmailDeliverySettingsResponse
  */
 export interface GetEmailDeliverySettingsResponse {
-  [key: string]: any | any;
   /**
    *
    * @type {EmailDeliverySettings}
@@ -59,7 +58,6 @@ export function GetEmailDeliverySettingsResponseFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     settings: EmailDeliverySettingsFromJSON(json["settings"]),
   };
 }
@@ -79,7 +77,6 @@ export function GetEmailDeliverySettingsResponseToJSONTyped(
   }
 
   return {
-    ...value,
     settings: EmailDeliverySettingsToJSON(value["settings"]),
   };
 }

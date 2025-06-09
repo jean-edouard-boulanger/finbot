@@ -18,7 +18,6 @@ import { mapValues } from "../runtime";
  * @interface ValuationChange
  */
 export interface ValuationChange {
-  [key: string]: any | any;
   /**
    *
    * @type {number}
@@ -98,7 +97,6 @@ export function ValuationChangeFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     change1hour: json["change_1hour"],
     change1day: json["change_1day"],
     change1week: json["change_1week"],
@@ -122,7 +120,6 @@ export function ValuationChangeToJSONTyped(
   }
 
   return {
-    ...value,
     change_1hour: value["change1hour"],
     change_1day: value["change1day"],
     change_1week: value["change1week"],

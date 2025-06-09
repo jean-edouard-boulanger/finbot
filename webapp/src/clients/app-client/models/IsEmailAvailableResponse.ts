@@ -18,7 +18,6 @@ import { mapValues } from "../runtime";
  * @interface IsEmailAvailableResponse
  */
 export interface IsEmailAvailableResponse {
-  [key: string]: any | any;
   /**
    *
    * @type {boolean}
@@ -51,7 +50,6 @@ export function IsEmailAvailableResponseFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     available: json["available"],
   };
 }
@@ -71,7 +69,6 @@ export function IsEmailAvailableResponseToJSONTyped(
   }
 
   return {
-    ...value,
     available: value["available"],
   };
 }

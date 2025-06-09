@@ -18,7 +18,6 @@ import { mapValues } from "../runtime";
  * @interface UpdateUserAccountPasswordRequest
  */
 export interface UpdateUserAccountPasswordRequest {
-  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -60,7 +59,6 @@ export function UpdateUserAccountPasswordRequestFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     oldPassword: json["old_password"],
     newPassword: json["new_password"],
   };
@@ -81,7 +79,6 @@ export function UpdateUserAccountPasswordRequestToJSONTyped(
   }
 
   return {
-    ...value,
     old_password: value["oldPassword"],
     new_password: value["newPassword"],
   };

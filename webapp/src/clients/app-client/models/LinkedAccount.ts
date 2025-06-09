@@ -19,20 +19,6 @@ import {
   LinkedAccountStatusToJSON,
   LinkedAccountStatusToJSONTyped,
 } from "./LinkedAccountStatus";
-import type { UpdatedAt } from "./UpdatedAt";
-import {
-  UpdatedAtFromJSON,
-  UpdatedAtFromJSONTyped,
-  UpdatedAtToJSON,
-  UpdatedAtToJSONTyped,
-} from "./UpdatedAt";
-import type { Credentials } from "./Credentials";
-import {
-  CredentialsFromJSON,
-  CredentialsFromJSONTyped,
-  CredentialsToJSON,
-  CredentialsToJSONTyped,
-} from "./Credentials";
 import type { Provider } from "./Provider";
 import {
   ProviderFromJSON,
@@ -47,7 +33,6 @@ import {
  * @interface LinkedAccount
  */
 export interface LinkedAccount {
-  [key: string]: any | any;
   /**
    *
    * @type {number}
@@ -101,13 +86,13 @@ export interface LinkedAccount {
    * @type {LinkedAccountStatus}
    * @memberof LinkedAccount
    */
-  status: LinkedAccountStatus;
+  status: LinkedAccountStatus | null;
   /**
    *
-   * @type {Credentials}
+   * @type {{ [key: string]: any; }}
    * @memberof LinkedAccount
    */
-  credentials: Credentials;
+  credentials: { [key: string]: any } | null;
   /**
    *
    * @type {Date}
@@ -116,10 +101,10 @@ export interface LinkedAccount {
   createdAt: Date;
   /**
    *
-   * @type {UpdatedAt}
+   * @type {Date}
    * @memberof LinkedAccount
    */
-  updatedAt: UpdatedAt;
+  updatedAt: Date | null;
 }
 
 /**
@@ -158,7 +143,6 @@ export function LinkedAccountFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     id: json["id"],
     userAccountId: json["user_account_id"],
     accountName: json["account_name"],
@@ -168,9 +152,9 @@ export function LinkedAccountFromJSONTyped(
     providerId: json["provider_id"],
     provider: ProviderFromJSON(json["provider"]),
     status: LinkedAccountStatusFromJSON(json["status"]),
-    credentials: CredentialsFromJSON(json["credentials"]),
+    credentials: json["credentials"],
     createdAt: new Date(json["created_at"]),
-    updatedAt: UpdatedAtFromJSON(json["updated_at"]),
+    updatedAt: json["updated_at"] == null ? null : new Date(json["updated_at"]),
   };
 }
 
@@ -187,7 +171,6 @@ export function LinkedAccountToJSONTyped(
   }
 
   return {
-    ...value,
     id: value["id"],
     user_account_id: value["userAccountId"],
     account_name: value["accountName"],
@@ -197,8 +180,11 @@ export function LinkedAccountToJSONTyped(
     provider_id: value["providerId"],
     provider: ProviderToJSON(value["provider"]),
     status: LinkedAccountStatusToJSON(value["status"]),
-    credentials: CredentialsToJSON(value["credentials"]),
+    credentials: value["credentials"],
     created_at: value["createdAt"].toISOString(),
-    updated_at: UpdatedAtToJSON(value["updatedAt"]),
+    updated_at:
+      value["updatedAt"] == null
+        ? null
+        : (value["updatedAt"] as any).toISOString(),
   };
 }

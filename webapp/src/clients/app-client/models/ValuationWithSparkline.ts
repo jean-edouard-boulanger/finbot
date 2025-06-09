@@ -19,6 +19,13 @@ import {
   ValuationChangeToJSON,
   ValuationChangeToJSONTyped,
 } from "./ValuationChange";
+import type { SparklineInner } from "./SparklineInner";
+import {
+  SparklineInnerFromJSON,
+  SparklineInnerFromJSONTyped,
+  SparklineInnerToJSON,
+  SparklineInnerToJSONTyped,
+} from "./SparklineInner";
 
 /**
  *
@@ -26,7 +33,6 @@ import {
  * @interface ValuationWithSparkline
  */
 export interface ValuationWithSparkline {
-  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -47,10 +53,10 @@ export interface ValuationWithSparkline {
   change: ValuationChange;
   /**
    *
-   * @type {Array<number | null>}
+   * @type {Array<SparklineInner>}
    * @memberof ValuationWithSparkline
    */
-  sparkline: Array<number | null>;
+  sparkline: Array<SparklineInner>;
 }
 
 /**
@@ -80,11 +86,10 @@ export function ValuationWithSparklineFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     currency: json["currency"],
     value: json["value"],
     change: ValuationChangeFromJSON(json["change"]),
-    sparkline: json["sparkline"],
+    sparkline: (json["sparkline"] as Array<any>).map(SparklineInnerFromJSON),
   };
 }
 
@@ -103,10 +108,9 @@ export function ValuationWithSparklineToJSONTyped(
   }
 
   return {
-    ...value,
     currency: value["currency"],
     value: value["value"],
     change: ValuationChangeToJSON(value["change"]),
-    sparkline: value["sparkline"],
+    sparkline: (value["sparkline"] as Array<any>).map(SparklineInnerToJSON),
   };
 }

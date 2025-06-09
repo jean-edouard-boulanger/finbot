@@ -18,7 +18,6 @@ import { mapValues } from "../runtime";
  * @interface UserAccount
  */
 export interface UserAccount {
-  [key: string]: any | any;
   /**
    *
    * @type {number}
@@ -93,7 +92,6 @@ export function UserAccountFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     id: json["id"],
     email: json["email"],
     fullName: json["full_name"],
@@ -117,7 +115,6 @@ export function UserAccountToJSONTyped(
   }
 
   return {
-    ...value,
     id: value["id"],
     email: value["email"],
     full_name: value["fullName"],

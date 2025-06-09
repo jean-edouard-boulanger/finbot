@@ -18,7 +18,6 @@ import { mapValues } from "../runtime";
  * @interface GetAccountsFormattingRulesResponse
  */
 export interface GetAccountsFormattingRulesResponse {
-  [key: string]: any | any;
   /**
    *
    * @type {Array<string>}
@@ -52,7 +51,6 @@ export function GetAccountsFormattingRulesResponseFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     colourPalette: json["colour_palette"],
   };
 }
@@ -72,7 +70,6 @@ export function GetAccountsFormattingRulesResponseToJSONTyped(
   }
 
   return {
-    ...value,
     colour_palette: value["colourPalette"],
   };
 }

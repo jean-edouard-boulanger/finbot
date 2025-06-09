@@ -26,7 +26,6 @@ import {
  * @interface GetUserAccountValuationResponse
  */
 export interface GetUserAccountValuationResponse {
-  [key: string]: any | any;
   /**
    *
    * @type {UserAccountValuation}
@@ -59,7 +58,6 @@ export function GetUserAccountValuationResponseFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     valuation: UserAccountValuationFromJSON(json["valuation"]),
   };
 }
@@ -79,7 +77,6 @@ export function GetUserAccountValuationResponseToJSONTyped(
   }
 
   return {
-    ...value,
     valuation: UserAccountValuationToJSON(value["valuation"]),
   };
 }

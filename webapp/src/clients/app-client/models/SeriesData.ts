@@ -33,7 +33,6 @@ import {
  * @interface SeriesData
  */
 export interface SeriesData {
-  [key: string]: any | any;
   /**
    *
    * @type {XAxisDescription}
@@ -69,7 +68,6 @@ export function SeriesDataFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     xAxis: XAxisDescriptionFromJSON(json["x_axis"]),
     series: (json["series"] as Array<any>).map(SeriesDescriptionFromJSON),
   };
@@ -88,7 +86,6 @@ export function SeriesDataToJSONTyped(
   }
 
   return {
-    ...value,
     x_axis: XAxisDescriptionToJSON(value["xAxis"]),
     series: (value["series"] as Array<any>).map(SeriesDescriptionToJSON),
   };
