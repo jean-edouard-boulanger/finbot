@@ -52,16 +52,16 @@ export interface GetUserAccountLinkedAccountsRequest {
 export interface LinkNewAccountRequest {
   userAccountId: number;
   linkAccountRequest: LinkAccountRequest;
-  validate?: boolean;
-  persist?: boolean;
+  doValidate?: boolean;
+  doPersist?: boolean;
 }
 
 export interface UpdateLinkedAccountCredentialsOperationRequest {
   userAccountId: number;
   linkedAccountId: number;
   updateLinkedAccountCredentialsRequest: UpdateLinkedAccountCredentialsRequest;
-  validate?: boolean;
-  persist?: boolean;
+  doValidate?: boolean;
+  doPersist?: boolean;
 }
 
 export interface UpdateLinkedAccountMetadataOperationRequest {
@@ -150,8 +150,8 @@ export interface LinkedAccountsApiInterface {
    * @summary Link New Account
    * @param {number} userAccountId
    * @param {LinkAccountRequest} linkAccountRequest
-   * @param {boolean} [validate]
-   * @param {boolean} [persist]
+   * @param {boolean} [doValidate]
+   * @param {boolean} [doPersist]
    * @param {*} [options] Override http request option.
    * @throws {RequiredError}
    * @memberof LinkedAccountsApiInterface
@@ -176,8 +176,8 @@ export interface LinkedAccountsApiInterface {
    * @param {number} userAccountId
    * @param {number} linkedAccountId
    * @param {UpdateLinkedAccountCredentialsRequest} updateLinkedAccountCredentialsRequest
-   * @param {boolean} [validate]
-   * @param {boolean} [persist]
+   * @param {boolean} [doValidate]
+   * @param {boolean} [doPersist]
    * @param {*} [options] Override http request option.
    * @throws {RequiredError}
    * @memberof LinkedAccountsApiInterface
@@ -454,12 +454,12 @@ export class LinkedAccountsApi
 
     const queryParameters: any = {};
 
-    if (requestParameters["validate"] != null) {
-      queryParameters["validate"] = requestParameters["validate"];
+    if (requestParameters["doValidate"] != null) {
+      queryParameters["do_validate"] = requestParameters["doValidate"];
     }
 
-    if (requestParameters["persist"] != null) {
-      queryParameters["persist"] = requestParameters["persist"];
+    if (requestParameters["doPersist"] != null) {
+      queryParameters["do_persist"] = requestParameters["doPersist"];
     }
 
     const headerParameters: runtime.HTTPHeaders = {};
@@ -537,12 +537,12 @@ export class LinkedAccountsApi
 
     const queryParameters: any = {};
 
-    if (requestParameters["validate"] != null) {
-      queryParameters["validate"] = requestParameters["validate"];
+    if (requestParameters["doValidate"] != null) {
+      queryParameters["do_validate"] = requestParameters["doValidate"];
     }
 
-    if (requestParameters["persist"] != null) {
-      queryParameters["persist"] = requestParameters["persist"];
+    if (requestParameters["doPersist"] != null) {
+      queryParameters["do_persist"] = requestParameters["doPersist"];
     }
 
     const headerParameters: runtime.HTTPHeaders = {};

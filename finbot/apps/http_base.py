@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from finbot.core import jwt
-from finbot.core.errors import AuthError, NotAllowedError, ResourceNotFoundError
+from finbot.core.errors import AuthError, InvalidOperation, InvalidUserInput, NotAllowedError, ResourceNotFoundError
 from finbot.core.jwt import JwtTokenPayload
 from finbot.core.schema import ApplicationErrorResponse, GenericError
 from finbot.core.utils import some
@@ -59,6 +59,14 @@ def setup_app(app: FastAPI) -> FastAPI:
             content=GenericError(
                 error="User is not authorized to perform this operation", code=exc.error_code
             ).model_dump(),
+        )
+
+    @app.exception_handler(InvalidUserInput)
+    @app.exception_handler(InvalidOperation)
+    def invalid_operation_exception_handler(request: Request, exc: InvalidOperation | InvalidUserInput) -> Response:
+        return ORJSONResponse(
+            status_code=HTTPStatus.BAD_REQUEST,
+            content=GenericError(error=f"{exc}", code=exc.error_code).model_dump(),
         )
 
     @app.exception_handler(Exception)

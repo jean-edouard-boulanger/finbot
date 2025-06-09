@@ -1479,23 +1479,23 @@
                         }
                     },
                     {
-                        "name": "validate",
+                        "name": "do_validate",
                         "in": "query",
                         "required": false,
                         "schema": {
                             "type": "boolean",
                             "default": true,
-                            "title": "Validate"
+                            "title": "Do Validate"
                         }
                     },
                     {
-                        "name": "persist",
+                        "name": "do_persist",
                         "in": "query",
                         "required": false,
                         "schema": {
                             "type": "boolean",
                             "default": true,
-                            "title": "Persist"
+                            "title": "Do Persist"
                         }
                     }
                 ],
@@ -1745,23 +1745,23 @@
                         }
                     },
                     {
-                        "name": "validate",
+                        "name": "do_validate",
                         "in": "query",
                         "required": false,
                         "schema": {
                             "type": "boolean",
                             "default": true,
-                            "title": "Validate"
+                            "title": "Do Validate"
                         }
                     },
                     {
-                        "name": "persist",
+                        "name": "do_persist",
                         "in": "query",
                         "required": false,
                         "schema": {
                             "type": "boolean",
                             "default": true,
-                            "title": "Persist"
+                            "title": "Do Persist"
                         }
                     }
                 ],
