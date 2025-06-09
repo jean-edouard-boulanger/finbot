@@ -26,7 +26,6 @@ import {
  * @interface GetHoldingsReportResponse
  */
 export interface GetHoldingsReportResponse {
-  [key: string]: any | any;
   /**
    *
    * @type {ValuationTree}
@@ -59,7 +58,6 @@ export function GetHoldingsReportResponseFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     report: ValuationTreeFromJSON(json["report"]),
   };
 }
@@ -79,7 +77,6 @@ export function GetHoldingsReportResponseToJSONTyped(
   }
 
   return {
-    ...value,
     report: ValuationTreeToJSON(value["report"]),
   };
 }

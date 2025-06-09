@@ -26,7 +26,6 @@ import {
  * @interface ValuationTree
  */
 export interface ValuationTree {
-  [key: string]: any | any;
   /**
    *
    * @type {UserAccountNode}
@@ -56,7 +55,6 @@ export function ValuationTreeFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     valuationTree: UserAccountNodeFromJSON(json["valuation_tree"]),
   };
 }
@@ -74,7 +72,6 @@ export function ValuationTreeToJSONTyped(
   }
 
   return {
-    ...value,
     valuation_tree: UserAccountNodeToJSON(value["valuationTree"]),
   };
 }

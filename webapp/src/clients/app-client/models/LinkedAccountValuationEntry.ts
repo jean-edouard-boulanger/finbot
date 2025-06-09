@@ -33,7 +33,6 @@ import {
  * @interface LinkedAccountValuationEntry
  */
 export interface LinkedAccountValuationEntry {
-  [key: string]: any | any;
   /**
    *
    * @type {LinkedAccountValuationLinkedAccountDescription}
@@ -74,7 +73,6 @@ export function LinkedAccountValuationEntryFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     linkedAccount: LinkedAccountValuationLinkedAccountDescriptionFromJSON(
       json["linked_account"],
     ),
@@ -97,7 +95,6 @@ export function LinkedAccountValuationEntryToJSONTyped(
   }
 
   return {
-    ...value,
     linked_account: LinkedAccountValuationLinkedAccountDescriptionToJSON(
       value["linkedAccount"],
     ),

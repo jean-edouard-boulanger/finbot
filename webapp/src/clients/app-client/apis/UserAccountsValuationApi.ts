@@ -272,7 +272,7 @@ export interface UserAccountsValuationApiInterface {
   triggerUserAccountValuationRaw(
     requestParameters: TriggerUserAccountValuationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<{ [key: string]: any }>>;
+  ): Promise<runtime.ApiResponse<object>>;
 
   /**
    * Trigger user account valuation
@@ -281,7 +281,7 @@ export interface UserAccountsValuationApiInterface {
   triggerUserAccountValuation(
     requestParameters: TriggerUserAccountValuationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<{ [key: string]: any }>;
+  ): Promise<object>;
 }
 
 /**
@@ -773,7 +773,7 @@ export class UserAccountsValuationApi
   async triggerUserAccountValuationRaw(
     requestParameters: TriggerUserAccountValuationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<{ [key: string]: any }>> {
+  ): Promise<runtime.ApiResponse<object>> {
     if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
@@ -816,7 +816,7 @@ export class UserAccountsValuationApi
   async triggerUserAccountValuation(
     requestParameters: TriggerUserAccountValuationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<{ [key: string]: any }> {
+  ): Promise<object> {
     const response = await this.triggerUserAccountValuationRaw(
       requestParameters,
       initOverrides,

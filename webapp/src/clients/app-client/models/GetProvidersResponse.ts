@@ -26,7 +26,6 @@ import {
  * @interface GetProvidersResponse
  */
 export interface GetProvidersResponse {
-  [key: string]: any | any;
   /**
    *
    * @type {Array<Provider>}
@@ -57,7 +56,6 @@ export function GetProvidersResponseFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     providers: (json["providers"] as Array<any>).map(ProviderFromJSON),
   };
 }
@@ -75,7 +73,6 @@ export function GetProvidersResponseToJSONTyped(
   }
 
   return {
-    ...value,
     providers: (value["providers"] as Array<any>).map(ProviderToJSON),
   };
 }

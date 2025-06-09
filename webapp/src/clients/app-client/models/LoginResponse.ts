@@ -33,7 +33,6 @@ import {
  * @interface LoginResponse
  */
 export interface LoginResponse {
-  [key: string]: any | any;
   /**
    *
    * @type {AuthenticationPayload}
@@ -69,7 +68,6 @@ export function LoginResponseFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     auth: AuthenticationPayloadFromJSON(json["auth"]),
     account: UserAccountFromJSON(json["account"]),
   };
@@ -88,7 +86,6 @@ export function LoginResponseToJSONTyped(
   }
 
   return {
-    ...value,
     auth: AuthenticationPayloadToJSON(value["auth"]),
     account: UserAccountToJSON(value["account"]),
   };

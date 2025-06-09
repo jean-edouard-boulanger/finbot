@@ -18,7 +18,6 @@ import { mapValues } from "../runtime";
  * @interface GroupValuation
  */
 export interface GroupValuation {
-  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -63,7 +62,6 @@ export function GroupValuationFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     name: json["name"],
     colour: json["colour"],
     value: json["value"],
@@ -83,7 +81,6 @@ export function GroupValuationToJSONTyped(
   }
 
   return {
-    ...value,
     name: value["name"],
     colour: value["colour"],
     value: value["value"],

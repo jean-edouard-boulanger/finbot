@@ -26,7 +26,6 @@ import {
  * @interface ValuationByAssetClass
  */
 export interface ValuationByAssetClass {
-  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -68,7 +67,6 @@ export function ValuationByAssetClassFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     valuationCcy: json["valuation_ccy"],
     byAssetClass: (json["by_asset_class"] as Array<any>).map(
       GroupValuationFromJSON,
@@ -89,7 +87,6 @@ export function ValuationByAssetClassToJSONTyped(
   }
 
   return {
-    ...value,
     valuation_ccy: value["valuationCcy"],
     by_asset_class: (value["byAssetClass"] as Array<any>).map(
       GroupValuationToJSON,

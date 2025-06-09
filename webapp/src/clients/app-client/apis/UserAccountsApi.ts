@@ -201,7 +201,7 @@ export interface UserAccountsApiInterface {
   updateUserAccountPasswordRaw(
     requestParameters: UpdateUserAccountPasswordOperationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<{ [key: string]: any }>>;
+  ): Promise<runtime.ApiResponse<object>>;
 
   /**
    * Update User Account Password
@@ -209,7 +209,7 @@ export interface UserAccountsApiInterface {
   updateUserAccountPassword(
     requestParameters: UpdateUserAccountPasswordOperationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<{ [key: string]: any }>;
+  ): Promise<object>;
 
   /**
    *
@@ -524,7 +524,7 @@ export class UserAccountsApi
   async updateUserAccountPasswordRaw(
     requestParameters: UpdateUserAccountPasswordOperationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<{ [key: string]: any }>> {
+  ): Promise<runtime.ApiResponse<object>> {
     if (requestParameters["userAccountId"] == null) {
       throw new runtime.RequiredError(
         "userAccountId",
@@ -578,7 +578,7 @@ export class UserAccountsApi
   async updateUserAccountPassword(
     requestParameters: UpdateUserAccountPasswordOperationRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<{ [key: string]: any }> {
+  ): Promise<object> {
     const response = await this.updateUserAccountPasswordRaw(
       requestParameters,
       initOverrides,

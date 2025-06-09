@@ -88,14 +88,14 @@ export interface AdministrationApiInterface {
    */
   removeEmailDeliverySettingsRaw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<{ [key: string]: any }>>;
+  ): Promise<runtime.ApiResponse<object>>;
 
   /**
    * Remove Email Delivery Settings
    */
   removeEmailDeliverySettings(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<{ [key: string]: any }>;
+  ): Promise<object>;
 
   /**
    *
@@ -109,7 +109,7 @@ export interface AdministrationApiInterface {
   setEmailDeliverySettingsRaw(
     requestParameters: SetEmailDeliverySettingsRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<{ [key: string]: any }>>;
+  ): Promise<runtime.ApiResponse<object>>;
 
   /**
    * Set Email Delivery Settings
@@ -117,7 +117,7 @@ export interface AdministrationApiInterface {
   setEmailDeliverySettings(
     requestParameters: SetEmailDeliverySettingsRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<{ [key: string]: any }>;
+  ): Promise<object>;
 }
 
 /**
@@ -222,7 +222,7 @@ export class AdministrationApi
    */
   async removeEmailDeliverySettingsRaw(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<{ [key: string]: any }>> {
+  ): Promise<runtime.ApiResponse<object>> {
     const queryParameters: any = {};
 
     const headerParameters: runtime.HTTPHeaders = {};
@@ -253,7 +253,7 @@ export class AdministrationApi
    */
   async removeEmailDeliverySettings(
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<{ [key: string]: any }> {
+  ): Promise<object> {
     const response = await this.removeEmailDeliverySettingsRaw(initOverrides);
     return await response.value();
   }
@@ -264,7 +264,7 @@ export class AdministrationApi
   async setEmailDeliverySettingsRaw(
     requestParameters: SetEmailDeliverySettingsRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<runtime.ApiResponse<{ [key: string]: any }>> {
+  ): Promise<runtime.ApiResponse<object>> {
     if (requestParameters["emailDeliverySettings"] == null) {
       throw new runtime.RequiredError(
         "emailDeliverySettings",
@@ -312,7 +312,7 @@ export class AdministrationApi
   async setEmailDeliverySettings(
     requestParameters: SetEmailDeliverySettingsRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction,
-  ): Promise<{ [key: string]: any }> {
+  ): Promise<object> {
     const response = await this.setEmailDeliverySettingsRaw(
       requestParameters,
       initOverrides,

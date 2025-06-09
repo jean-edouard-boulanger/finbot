@@ -33,7 +33,6 @@ import {
  * @interface ReportEntry
  */
 export interface ReportEntry {
-  [key: string]: any | any;
   /**
    *
    * @type {AggregationDescription}
@@ -70,7 +69,6 @@ export function ReportEntryFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     aggregation: AggregationDescriptionFromJSON(json["aggregation"]),
     metrics: MetricsFromJSON(json["metrics"]),
   };
@@ -89,7 +87,6 @@ export function ReportEntryToJSONTyped(
   }
 
   return {
-    ...value,
     aggregation: AggregationDescriptionToJSON(value["aggregation"]),
     metrics: MetricsToJSON(value["metrics"]),
   };

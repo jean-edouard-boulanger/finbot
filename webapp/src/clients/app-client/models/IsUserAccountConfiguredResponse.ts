@@ -18,7 +18,6 @@ import { mapValues } from "../runtime";
  * @interface IsUserAccountConfiguredResponse
  */
 export interface IsUserAccountConfiguredResponse {
-  [key: string]: any | any;
   /**
    *
    * @type {boolean}
@@ -52,7 +51,6 @@ export function IsUserAccountConfiguredResponseFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     configured: json["configured"],
   };
 }
@@ -72,7 +70,6 @@ export function IsUserAccountConfiguredResponseToJSONTyped(
   }
 
   return {
-    ...value,
     configured: value["configured"],
   };
 }

@@ -18,7 +18,6 @@ import { mapValues } from "../runtime";
  * @interface CreateOrUpdateProviderRequest
  */
 export interface CreateOrUpdateProviderRequest {
-  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -78,7 +77,6 @@ export function CreateOrUpdateProviderRequestFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     id: json["id"],
     description: json["description"],
     websiteUrl: json["website_url"],
@@ -101,7 +99,6 @@ export function CreateOrUpdateProviderRequestToJSONTyped(
   }
 
   return {
-    ...value,
     id: value["id"],
     description: value["description"],
     website_url: value["websiteUrl"],

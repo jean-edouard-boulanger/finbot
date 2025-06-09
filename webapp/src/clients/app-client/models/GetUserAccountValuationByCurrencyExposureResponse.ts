@@ -26,7 +26,6 @@ import {
  * @interface GetUserAccountValuationByCurrencyExposureResponse
  */
 export interface GetUserAccountValuationByCurrencyExposureResponse {
-  [key: string]: any | any;
   /**
    *
    * @type {ValuationByCurrencyExposure}
@@ -62,7 +61,6 @@ export function GetUserAccountValuationByCurrencyExposureResponseFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     valuation: ValuationByCurrencyExposureFromJSON(json["valuation"]),
   };
 }
@@ -85,7 +83,6 @@ export function GetUserAccountValuationByCurrencyExposureResponseToJSONTyped(
   }
 
   return {
-    ...value,
     valuation: ValuationByCurrencyExposureToJSON(value["valuation"]),
   };
 }

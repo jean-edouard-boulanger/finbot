@@ -26,7 +26,6 @@ import {
  * @interface GetUserAccountValuationHistoryResponse
  */
 export interface GetUserAccountValuationHistoryResponse {
-  [key: string]: any | any;
   /**
    *
    * @type {HistoricalValuation}
@@ -63,7 +62,6 @@ export function GetUserAccountValuationHistoryResponseFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     historicalValuation: HistoricalValuationFromJSON(
       json["historical_valuation"],
     ),
@@ -85,7 +83,6 @@ export function GetUserAccountValuationHistoryResponseToJSONTyped(
   }
 
   return {
-    ...value,
     historical_valuation: HistoricalValuationToJSON(
       value["historicalValuation"],
     ),

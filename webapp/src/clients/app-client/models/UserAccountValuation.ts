@@ -33,7 +33,6 @@ import {
  * @interface UserAccountValuation
  */
 export interface UserAccountValuation {
-  [key: string]: any | any;
   /**
    *
    * @type {Date}
@@ -100,7 +99,6 @@ export function UserAccountValuationFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     date: new Date(json["date"]),
     currency: json["currency"],
     value: json["value"],
@@ -125,7 +123,6 @@ export function UserAccountValuationToJSONTyped(
   }
 
   return {
-    ...value,
     date: value["date"].toISOString(),
     currency: value["currency"],
     value: value["value"],

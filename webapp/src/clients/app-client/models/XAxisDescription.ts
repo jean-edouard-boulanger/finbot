@@ -12,13 +12,13 @@
  */
 
 import { mapValues } from "../runtime";
-import type { XAxisDescriptionCategoriesInner } from "./XAxisDescriptionCategoriesInner";
+import type { CategoriesInner } from "./CategoriesInner";
 import {
-  XAxisDescriptionCategoriesInnerFromJSON,
-  XAxisDescriptionCategoriesInnerFromJSONTyped,
-  XAxisDescriptionCategoriesInnerToJSON,
-  XAxisDescriptionCategoriesInnerToJSONTyped,
-} from "./XAxisDescriptionCategoriesInner";
+  CategoriesInnerFromJSON,
+  CategoriesInnerFromJSONTyped,
+  CategoriesInnerToJSON,
+  CategoriesInnerToJSONTyped,
+} from "./CategoriesInner";
 
 /**
  *
@@ -26,7 +26,6 @@ import {
  * @interface XAxisDescription
  */
 export interface XAxisDescription {
-  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -35,10 +34,10 @@ export interface XAxisDescription {
   type: string;
   /**
    *
-   * @type {Array<XAxisDescriptionCategoriesInner>}
+   * @type {Array<CategoriesInner>}
    * @memberof XAxisDescription
    */
-  categories: Array<XAxisDescriptionCategoriesInner>;
+  categories: Array<CategoriesInner>;
 }
 
 /**
@@ -65,11 +64,8 @@ export function XAxisDescriptionFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     type: json["type"],
-    categories: (json["categories"] as Array<any>).map(
-      XAxisDescriptionCategoriesInnerFromJSON,
-    ),
+    categories: (json["categories"] as Array<any>).map(CategoriesInnerFromJSON),
   };
 }
 
@@ -86,10 +82,7 @@ export function XAxisDescriptionToJSONTyped(
   }
 
   return {
-    ...value,
     type: value["type"],
-    categories: (value["categories"] as Array<any>).map(
-      XAxisDescriptionCategoriesInnerToJSON,
-    ),
+    categories: (value["categories"] as Array<any>).map(CategoriesInnerToJSON),
   };
 }

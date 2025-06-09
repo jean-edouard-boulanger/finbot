@@ -18,7 +18,6 @@ import { mapValues } from "../runtime";
  * @interface LinkAccountRequest
  */
 export interface LinkAccountRequest {
-  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -74,7 +73,6 @@ export function LinkAccountRequestFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     providerId: json["provider_id"],
     credentials: json["credentials"],
     accountName: json["account_name"],
@@ -95,7 +93,6 @@ export function LinkAccountRequestToJSONTyped(
   }
 
   return {
-    ...value,
     provider_id: value["providerId"],
     credentials: value["credentials"],
     account_name: value["accountName"],

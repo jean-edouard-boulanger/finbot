@@ -26,7 +26,6 @@ import {
  * @interface SystemReportResponse
  */
 export interface SystemReportResponse {
-  [key: string]: any | any;
   /**
    *
    * @type {SystemReport}
@@ -58,7 +57,6 @@ export function SystemReportResponseFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     systemReport: SystemReportFromJSON(json["system_report"]),
   };
 }
@@ -76,7 +74,6 @@ export function SystemReportResponseToJSONTyped(
   }
 
   return {
-    ...value,
     system_report: SystemReportToJSON(value["systemReport"]),
   };
 }

@@ -12,21 +12,12 @@
  */
 
 import { mapValues } from "../runtime";
-import type { UpdatedAt } from "./UpdatedAt";
-import {
-  UpdatedAtFromJSON,
-  UpdatedAtFromJSONTyped,
-  UpdatedAtToJSON,
-  UpdatedAtToJSONTyped,
-} from "./UpdatedAt";
-
 /**
  *
  * @export
  * @interface Provider
  */
 export interface Provider {
-  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -59,10 +50,10 @@ export interface Provider {
   createdAt: Date;
   /**
    *
-   * @type {UpdatedAt}
+   * @type {Date}
    * @memberof Provider
    */
-  updatedAt: UpdatedAt;
+  updatedAt: Date | null;
 }
 
 /**
@@ -96,13 +87,12 @@ export function ProviderFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     id: json["id"],
     description: json["description"],
     websiteUrl: json["website_url"],
     credentialsSchema: json["credentials_schema"],
     createdAt: new Date(json["created_at"]),
-    updatedAt: UpdatedAtFromJSON(json["updated_at"]),
+    updatedAt: json["updated_at"] == null ? null : new Date(json["updated_at"]),
   };
 }
 
@@ -119,12 +109,14 @@ export function ProviderToJSONTyped(
   }
 
   return {
-    ...value,
     id: value["id"],
     description: value["description"],
     website_url: value["websiteUrl"],
     credentials_schema: value["credentialsSchema"],
     created_at: value["createdAt"].toISOString(),
-    updated_at: UpdatedAtToJSON(value["updatedAt"]),
+    updated_at:
+      value["updatedAt"] == null
+        ? null
+        : (value["updatedAt"] as any).toISOString(),
   };
 }

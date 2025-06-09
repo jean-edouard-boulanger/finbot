@@ -26,7 +26,6 @@ import {
  * @interface SubAccountItemDescription
  */
 export interface SubAccountItemDescription {
-  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -95,7 +94,6 @@ export function SubAccountItemDescriptionFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     name: json["name"],
     type: json["type"],
     subType: json["sub_type"],
@@ -120,7 +118,6 @@ export function SubAccountItemDescriptionToJSONTyped(
   }
 
   return {
-    ...value,
     name: value["name"],
     type: value["type"],
     sub_type: value["subType"],

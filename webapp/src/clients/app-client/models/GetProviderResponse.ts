@@ -26,7 +26,6 @@ import {
  * @interface GetProviderResponse
  */
 export interface GetProviderResponse {
-  [key: string]: any | any;
   /**
    *
    * @type {Provider}
@@ -57,7 +56,6 @@ export function GetProviderResponseFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     provider: ProviderFromJSON(json["provider"]),
   };
 }
@@ -75,7 +73,6 @@ export function GetProviderResponseToJSONTyped(
   }
 
   return {
-    ...value,
     provider: ProviderToJSON(value["provider"]),
   };
 }

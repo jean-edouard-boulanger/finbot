@@ -26,7 +26,6 @@ import {
  * @interface GetEmailDeliveryProvidersResponse
  */
 export interface GetEmailDeliveryProvidersResponse {
-  [key: string]: any | any;
   /**
    *
    * @type {Array<EmailProviderMetadata>}
@@ -59,7 +58,6 @@ export function GetEmailDeliveryProvidersResponseFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     providers: (json["providers"] as Array<any>).map(
       EmailProviderMetadataFromJSON,
     ),
@@ -81,7 +79,6 @@ export function GetEmailDeliveryProvidersResponseToJSONTyped(
   }
 
   return {
-    ...value,
     providers: (value["providers"] as Array<any>).map(
       EmailProviderMetadataToJSON,
     ),

@@ -12,13 +12,13 @@
  */
 
 import { mapValues } from "../runtime";
-import type { SeriesDescriptionDataInner } from "./SeriesDescriptionDataInner";
+import type { DataInner } from "./DataInner";
 import {
-  SeriesDescriptionDataInnerFromJSON,
-  SeriesDescriptionDataInnerFromJSONTyped,
-  SeriesDescriptionDataInnerToJSON,
-  SeriesDescriptionDataInnerToJSONTyped,
-} from "./SeriesDescriptionDataInner";
+  DataInnerFromJSON,
+  DataInnerFromJSONTyped,
+  DataInnerToJSON,
+  DataInnerToJSONTyped,
+} from "./DataInner";
 
 /**
  *
@@ -26,7 +26,6 @@ import {
  * @interface SeriesDescription
  */
 export interface SeriesDescription {
-  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -35,10 +34,10 @@ export interface SeriesDescription {
   name: string;
   /**
    *
-   * @type {Array<SeriesDescriptionDataInner>}
+   * @type {Array<DataInner>}
    * @memberof SeriesDescription
    */
-  data: Array<SeriesDescriptionDataInner>;
+  data: Array<DataInner>;
   /**
    *
    * @type {string}
@@ -71,9 +70,8 @@ export function SeriesDescriptionFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     name: json["name"],
-    data: (json["data"] as Array<any>).map(SeriesDescriptionDataInnerFromJSON),
+    data: (json["data"] as Array<any>).map(DataInnerFromJSON),
     colour: json["colour"],
   };
 }
@@ -91,9 +89,8 @@ export function SeriesDescriptionToJSONTyped(
   }
 
   return {
-    ...value,
     name: value["name"],
-    data: (value["data"] as Array<any>).map(SeriesDescriptionDataInnerToJSON),
+    data: (value["data"] as Array<any>).map(DataInnerToJSON),
     colour: value["colour"],
   };
 }

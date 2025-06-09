@@ -18,7 +18,6 @@ import { mapValues } from "../runtime";
  * @interface LoginRequest
  */
 export interface LoginRequest {
-  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -54,7 +53,6 @@ export function LoginRequestFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     email: json["email"],
     password: json["password"],
   };
@@ -73,7 +71,6 @@ export function LoginRequestToJSONTyped(
   }
 
   return {
-    ...value,
     email: value["email"],
     password: value["password"],
   };

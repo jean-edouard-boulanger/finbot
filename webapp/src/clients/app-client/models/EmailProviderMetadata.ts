@@ -18,7 +18,6 @@ import { mapValues } from "../runtime";
  * @interface EmailProviderMetadata
  */
 export interface EmailProviderMetadata {
-  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -68,7 +67,6 @@ export function EmailProviderMetadataFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     providerId: json["provider_id"],
     description: json["description"],
     settingsSchema: json["settings_schema"],
@@ -88,7 +86,6 @@ export function EmailProviderMetadataToJSONTyped(
   }
 
   return {
-    ...value,
     provider_id: value["providerId"],
     description: value["description"],
     settings_schema: value["settingsSchema"],

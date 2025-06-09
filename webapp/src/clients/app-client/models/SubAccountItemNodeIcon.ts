@@ -18,7 +18,6 @@ import { mapValues } from "../runtime";
  * @interface SubAccountItemNodeIcon
  */
 export interface SubAccountItemNodeIcon {
-  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -66,7 +65,6 @@ export function SubAccountItemNodeIconFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     backgroundColour: json["background_colour"],
     label: json["label"],
     tooltip: json["tooltip"],
@@ -88,7 +86,6 @@ export function SubAccountItemNodeIconToJSONTyped(
   }
 
   return {
-    ...value,
     background_colour: value["backgroundColour"],
     label: value["label"],
     tooltip: value["tooltip"],

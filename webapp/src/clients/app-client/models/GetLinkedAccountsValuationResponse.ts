@@ -26,7 +26,6 @@ import {
  * @interface GetLinkedAccountsValuationResponse
  */
 export interface GetLinkedAccountsValuationResponse {
-  [key: string]: any | any;
   /**
    *
    * @type {LinkedAccountsValuation}
@@ -59,7 +58,6 @@ export function GetLinkedAccountsValuationResponseFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     valuation: LinkedAccountsValuationFromJSON(json["valuation"]),
   };
 }
@@ -79,7 +77,6 @@ export function GetLinkedAccountsValuationResponseToJSONTyped(
   }
 
   return {
-    ...value,
     valuation: LinkedAccountsValuationToJSON(value["valuation"]),
   };
 }

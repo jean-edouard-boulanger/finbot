@@ -18,7 +18,6 @@ import { mapValues } from "../runtime";
  * @interface UserAccountCreationSettings
  */
 export interface UserAccountCreationSettings {
-  [key: string]: any | any;
   /**
    *
    * @type {string}
@@ -52,7 +51,6 @@ export function UserAccountCreationSettingsFromJSONTyped(
     return json;
   }
   return {
-    ...json,
     valuationCcy: json["valuation_ccy"],
   };
 }
@@ -72,7 +70,6 @@ export function UserAccountCreationSettingsToJSONTyped(
   }
 
   return {
-    ...value,
     valuation_ccy: value["valuationCcy"],
   };
 }
