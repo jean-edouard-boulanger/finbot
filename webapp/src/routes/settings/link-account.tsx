@@ -261,8 +261,8 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
       await linkedAccountsApi.updateLinkedAccountCredentials({
         userAccountId: userAccountId!,
         linkedAccountId: linkedAccount!.id,
-        validate: true,
-        persist: false,
+        doValidate: true,
+        doPersist: false,
         updateLinkedAccountCredentialsRequest: {
           credentials: credentials,
         },
@@ -277,8 +277,8 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
       await linkedAccountsApi.updateLinkedAccountCredentials({
         userAccountId: userAccountId!,
         linkedAccountId: linkedAccount!.id,
-        validate: false,
-        persist: true,
+        doValidate: false,
+        doPersist: true,
         updateLinkedAccountCredentialsRequest: {
           credentials: credentials,
         },
@@ -308,8 +308,8 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
     try {
       await linkedAccountsApi.linkNewAccount({
         userAccountId: userAccountId!,
-        validate: true,
-        persist: false,
+        doValidate: true,
+        doPersist: false,
         linkAccountRequest: linkRequest,
       });
     } catch (e) {
@@ -321,8 +321,8 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
     try {
       await linkedAccountsApi.linkNewAccount({
         userAccountId: userAccountId!,
-        validate: false,
-        persist: true,
+        doValidate: false,
+        doPersist: true,
         linkAccountRequest: linkRequest,
       });
     } catch (e) {

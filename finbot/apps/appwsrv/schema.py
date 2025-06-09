@@ -127,8 +127,8 @@ class UpdateLinkedAccountMetadataResponse(AppModel):
 
 
 class LinkAccountCommitParams(AppModel):
-    do_validate: bool = Field(default=True, alias="validate")
-    do_persist: bool = Field(default=True, alias="persist")
+    do_validate: bool = True
+    do_persist: bool = True
 
 
 class LinkAccountRequest(AppModel):
