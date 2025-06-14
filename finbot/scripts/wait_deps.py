@@ -21,7 +21,6 @@ from sqlalchemy.sql import text
 
 from finbot.apps.workersrv_temporal.worker import HealthcheckWorkflow
 from finbot.core import environment
-from finbot.core import schema as core_schema
 from finbot.core.async_ import maybe_awaitable
 from finbot.core.logging import configure_logging
 from finbot.core.temporal_ import GENERIC_TASK_QUEUE, get_temporal_client, temporal_workflow_id
@@ -49,6 +48,15 @@ class Checker(Protocol):
         pass
 
 
+class TemporalServerChecker(Checker):
+    async def __call__(self) -> bool:
+        try:
+            await get_temporal_client()
+            return True
+        except Exception:
+            return False
+
+
 class TemporalWorkerChecker(Checker):
     async def __call__(self) -> bool:
         try:
@@ -60,7 +68,6 @@ class TemporalWorkerChecker(Checker):
                 execution_timeout=timedelta(seconds=1.0),
             )
         except Exception:
-            logging.exception("TemporalWorkerChecker")
             return False
 
 
@@ -116,16 +123,6 @@ class RabbitMQChecker(Checker):
             return False
 
 
-class CeleryWorkerChecker(Checker):
-    def __call__(self) -> bool:
-        try:
-            from finbot.tasks import health as health_task
-
-            return health_task.client.run(core_schema.HealthRequest(), timeout=timedelta(seconds=1.0)).healthy
-        except Exception:
-            return False
-
-
 def get_checker(dep_name: str) -> Checker:
     if dep_name == "finbotdb":
         database_url = environment.get_database_url()
@@ -139,10 +136,10 @@ def get_checker(dep_name: str) -> Checker:
         rmq_url = environment.get_rmq_url()
         logging.info(f"will wait on '{dep_name}': {rmq_url}")
         return RabbitMQChecker(rmq_url)
-    if dep_name == "workersrv_temporal":
+    if dep_name == "temporal":
         logging.info(f"will wait on '{dep_name}'")
-        return CeleryWorkerChecker()
-    if dep_name == "workersrv_temporal[temporal]":
+        return TemporalServerChecker()
+    if dep_name == "workersrv[temporal]":
         logging.info(f"will wait on '{dep_name}'")
         return TemporalWorkerChecker()
     if dep_name in WEB_SERVICES:
@@ -185,7 +182,7 @@ async def main_impl() -> ExitCode:
                 try:
                     if await maybe_awaitable(checker()):
                         resolved.add(dep)
-                        logging.info(f"dependency {dep} is now available")
+                        logging.info(f"⚡ dependency {dep} is now available")
                     else:
                         logging.info(f"dependency {dep} is not yet available")
                 except Exception as e:
@@ -197,7 +194,7 @@ async def main_impl() -> ExitCode:
             logging.warning(f"still waiting for dependencies after timeout ({timeout.total_seconds()}s), aborting")
             return ExitCode.Timeout
         time.sleep(wait_interval)
-    logging.info(f"all dependencies available: {', '.join(deps)}")
+    logging.info(f"✅ all dependencies available: {', '.join(deps)}")
     return ExitCode.Ok
 
 

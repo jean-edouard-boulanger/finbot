@@ -7,7 +7,7 @@ from finbot.core import schema as core_schema
 from finbot.core.serialization import pretty_dump, reinterpret_as_pydantic
 from finbot.core.utils import some
 from finbot.model import PersistScope, SessionType
-from finbot.services.valuation_history_writer import repository, schema
+from finbot.workflows.write_valuation_history import repository, schema
 
 
 def deserialize_provider_specific_data(raw_data: str | None) -> dict[str, Any] | None:
@@ -195,5 +195,5 @@ class ValuationHistoryWriterService(object):
     def __init__(self, db_session: SessionType):
         self._db_session = db_session
 
-    def write_history(self, snapshot_id: int) -> schema.WriteHistoryResponse:
-        return write_history_impl(snapshot_id=snapshot_id, db_session=self._db_session)
+    def write_history(self, request: schema.WriteHistoryRequest) -> schema.WriteHistoryResponse:
+        return write_history_impl(snapshot_id=request.snapshot_id, db_session=self._db_session)

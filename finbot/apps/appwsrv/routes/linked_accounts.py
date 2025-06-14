@@ -10,7 +10,6 @@ from finbot.apps.appwsrv import schema as appwsrv_schema
 from finbot.apps.appwsrv import serializer
 from finbot.apps.appwsrv.core import providers as appwsrv_providers
 from finbot.apps.appwsrv.core import valuation as appwsrv_valuation
-from finbot.apps.finbotwsrv.client import FinbotwsrvClient
 from finbot.apps.http_base import CurrentUserIdDep
 from finbot.core import environment, secure
 from finbot.core.environment import is_plaid_configured
@@ -48,7 +47,7 @@ def get_linked_accounts(
 
 
 @router.post("/", operation_id="link_new_account")
-def link_new_account(
+async def link_new_account(
     user_account_id: Annotated[int, Path()],
     json: appwsrv_schema.LinkAccountRequest,
     query: Annotated[appwsrv_schema.LinkAccountCommitParams, Query()],
@@ -78,10 +77,9 @@ def link_new_account(
         logging.info(
             f"validating authentication details for account_id={user_account_id} and provider_id={provider_id}"
         )
-        appwsrv_providers.validate_credentials(
-            finbot_client=FinbotwsrvClient.create(),
+        await appwsrv_providers.validate_credentials(
             provider_id=provider_id,
-            credentials=credentials,
+            encrypted_credentials=secure.fernet_encrypt_json(credentials, environment.get_secret_key()).decode(),
             user_account_currency=CurrencyCode(user_account.settings.valuation_ccy),
         )
 
@@ -109,7 +107,7 @@ def link_new_account(
             )
 
     if do_persist:
-        appwsrv_valuation.try_trigger_valuation(
+        await appwsrv_valuation.try_trigger_valuation(
             user_account_id=user_account_id, linked_account_ids=[new_linked_account.id]
         )
 
@@ -161,7 +159,7 @@ def get_linked_account(
 
 
 @router.delete("/{linked_account_id}/", operation_id="delete_linked_account")
-def delete_linked_account(
+async def delete_linked_account(
     user_account_id: Annotated[int, Path()],
     linked_account_id: Annotated[int, Path()],
     current_user_id: CurrentUserIdDep,
@@ -180,7 +178,7 @@ def delete_linked_account(
         linked_account.account_name = f"DELETED {uuid.uuid4()} / {linked_account.account_name}"
         linked_account.deleted = True
 
-    appwsrv_valuation.try_trigger_valuation(user_account_id=user_account_id)
+    await appwsrv_valuation.try_trigger_valuation(user_account_id=user_account_id)
     return appwsrv_schema.DeleteLinkedAccountResponse()
 
 
@@ -219,7 +217,7 @@ def update_linked_account_metadata(
 
 
 @router.put("/{linked_account_id}/credentials/", operation_id="update_linked_account_credentials")
-def update_linked_account_credentials(
+async def update_linked_account_credentials(
     user_account_id: Annotated[int, Path()],
     linked_account_id: Annotated[int, Path()],
     json: appwsrv_schema.UpdateLinkedAccountCredentialsRequest,
@@ -251,32 +249,25 @@ def update_linked_account_credentials(
     if is_plaid and not is_plaid_configured():
         raise InvalidUserInput("user account is not setup for Plaid")
 
-    credentials = json.credentials
-    if is_plaid:
-        credentials = orjson.loads(
-            secure.fernet_decrypt(
-                some(linked_account.encrypted_credentials).encode(),
-                environment.get_secret_key().encode(),
-            ).decode()
-        )
+    encrypted_credentials = (
+        some(linked_account.encrypted_credentials)
+        if is_plaid
+        else secure.fernet_encrypt_json(json.credentials, environment.get_secret_key()).decode()
+    )
 
     if do_validate:
-        appwsrv_providers.validate_credentials(
-            finbot_client=FinbotwsrvClient.create(),
+        await appwsrv_providers.validate_credentials(
             provider_id=linked_account.provider_id,
-            credentials=credentials,
+            encrypted_credentials=encrypted_credentials,
             user_account_currency=CurrencyCode(user_account_settings.valuation_ccy),
         )
 
     if do_persist:
         with persist_scope(linked_account):
-            linked_account.encrypted_credentials = secure.fernet_encrypt(
-                orjson.dumps(credentials),
-                environment.get_secret_key().encode(),
-            ).decode()
+            linked_account.encrypted_credentials = encrypted_credentials
 
     if do_persist:
-        appwsrv_valuation.try_trigger_valuation(
+        await appwsrv_valuation.try_trigger_valuation(
             user_account_id=user_account_id,
             linked_account_ids=[linked_account.id],
         )

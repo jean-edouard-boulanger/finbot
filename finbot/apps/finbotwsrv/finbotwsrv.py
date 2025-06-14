@@ -5,8 +5,8 @@ from finbot.apps.http_base import ORJSONResponse, setup_app
 from finbot.core import environment
 from finbot.core import schema as core_schema
 from finbot.core.logging import configure_logging
-from finbot.services.financial_data_fetcher import schema
-from finbot.services.financial_data_fetcher.service import FinancialDataFetcherService
+from finbot.workflows.fetch_financial_data import schema
+from finbot.workflows.fetch_financial_data.service import FinancialDataFetcherService
 
 configure_logging(environment.get_desired_log_level())
 

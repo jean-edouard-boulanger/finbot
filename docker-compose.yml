@@ -13,6 +13,11 @@ services:
       - "15432:5432"
     volumes:
       - .finbotdb:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   finbotdb-test:
     image: "postgres:12"
@@ -24,13 +29,6 @@ services:
     shm_size: 256MB
     ports:
       - "15433:5432"
-
-  finbotrmq:
-    image: "rabbitmq:3-management-alpine"
-    env_file: *env_files
-    ports:
-      - "5672:5672"
-      - "15672:15672"
 
   finbotwsrv:
     image: "finbotapp/runtime-dev:latest"
@@ -49,41 +47,28 @@ services:
     env_file: *env_files
     depends_on:
       - finbotdb
-      - workersrv
+      - workersrv_temporal
     working_dir: /finbot
     command: bash -c "tools/autorestart finbot/ ./tools/run schedsrv"
     tty: true
     volumes:
       - .:/finbot
     environment:
-      FINBOT_WAIT_DEPS: "${FINBOT_WAIT_DEPS:-finbotdb,workersrv}"
-
-  workersrv:
-    image: "finbotapp/runtime-dev:latest"
-    env_file: *env_files
-    depends_on:
-      - finbotdb
-      - finbotrmq
-    working_dir: /finbot
-    command: bash -c "tools/autorestart finbot/ ./tools/run workersrv"
-    tty: true
-    volumes:
-      - .:/finbot
-    environment:
-      FINBOT_WAIT_DEPS: "${FINBOT_WAIT_DEPS:-finbotdb,finbotrmq}"
+      FINBOT_WAIT_DEPS: "${FINBOT_WAIT_DEPS:-finbotdb,workersrv[temporal]}"
 
   workersrv_temporal:
     image: "finbotapp/runtime-dev:latest"
     env_file: *env_files
     depends_on:
       - finbotdb
+      - temporal
     working_dir: /finbot
-    command: bash -c "./tools/run workersrv[temporal]"
+    command: bash -c "tools/autorestart finbot/ tools/run workersrv[temporal]"
     tty: true
     volumes:
       - .:/finbot
     environment:
-      FINBOT_WAIT_DEPS: "${FINBOT_WAIT_DEPS:-finbotdb}"
+      FINBOT_WAIT_DEPS: "${FINBOT_WAIT_DEPS:-finbotdb,temporal}"
 
   appwsrv:
     image: "finbotapp/runtime-dev:latest"
@@ -91,7 +76,7 @@ services:
     depends_on:
       - finbotdb
       - finbotwsrv
-      - workersrv
+      - workersrv_temporal
     working_dir: /finbot
     command: bash -c "./tools/run appwsrv"
     tty: true
@@ -100,7 +85,7 @@ services:
     volumes:
       - .:/finbot
     environment:
-      FINBOT_WAIT_DEPS: "${FINBOT_WAIT_DEPS:-finbotdb,finbotwsrv,workersrv,workersrv[temporal]}"
+      FINBOT_WAIT_DEPS: "${FINBOT_WAIT_DEPS:-finbotdb,finbotwsrv,workersrv[temporal]}"
 
   operator:
     image: "finbotapp/runtime-dev:latest"
@@ -141,7 +126,8 @@ services:
   temporal:
     container_name: temporal
     depends_on:
-      - finbotdb
+      finbotdb:
+        condition: service_healthy
     environment:
       - DB=postgres12
       - DB_PORT=5432

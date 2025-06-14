@@ -1,11 +1,13 @@
 import logging
-from typing import Any
+from typing import Any, cast
 
+from finbot.core.environment import get_secret_key
 from finbot.core.schema import ApplicationErrorData, CurrencyCode
+from finbot.core.secure import fernet_decrypt_json
 from finbot.providers.base import ProviderBase
 from finbot.providers.errors import AuthenticationError
 from finbot.providers.factory import get_provider
-from finbot.services.financial_data_fetcher import schema
+from finbot.workflows.fetch_financial_data import schema
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +66,10 @@ class FinancialDataFetcherService:
             provider_type = get_provider(request.provider_id)
             return await get_financial_data_impl(
                 provider_type=provider_type,
-                authentication_payload=request.credentials,
+                authentication_payload=cast(
+                    dict[str, Any],
+                    fernet_decrypt_json(request.encrypted_credentials, get_secret_key()),
+                ),
                 line_items=request.items,
                 user_account_currency=request.user_account_currency,
             )
@@ -80,7 +85,10 @@ class FinancialDataFetcherService:
         request: schema.ValidateCredentialsRequest,
     ) -> schema.ValidateCredentialsResponse:
         provider_type = get_provider(request.provider_id)
-        async with provider_type.create(request.credentials, request.user_account_currency) as provider:
+        authentication_payload = cast(
+            dict[str, Any], fernet_decrypt_json(request.encrypted_credentials, get_secret_key())
+        )
+        async with provider_type.create(authentication_payload, request.user_account_currency) as provider:
             try:
                 await provider.initialize()
                 return schema.ValidateCredentialsResponse(valid=True)

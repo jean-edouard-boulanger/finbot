@@ -1,5 +1,6 @@
 import abc
 import argparse
+import asyncio
 import logging
 import signal
 import sys
@@ -8,16 +9,17 @@ import time
 import traceback
 from dataclasses import dataclass
 from types import FrameType
-from typing import Generator, Iterable
+from typing import Generator, Iterable, Literal
 
 import schedule
 
 from finbot.core import environment
 from finbot.core.errors import FinbotError
 from finbot.core.logging import configure_logging
+from finbot.core.temporal_ import GENERIC_TASK_QUEUE, TRY_ONCE, get_temporal_client, temporal_workflow_id
 from finbot.model import UserAccount, db, with_scoped_session
-from finbot.services.user_account_valuation import ValuationRequest
-from finbot.tasks.user_account_valuation import client as user_account_valuation_client
+from finbot.workflows.user_account_valuation.schema import ValuationRequest, ValuationResponse
+from finbot.workflows.user_account_valuation.workflows import UserAccountValuationWorkflow
 
 configure_logging(environment.get_desired_log_level())
 
@@ -91,11 +93,24 @@ def iter_user_accounts() -> Generator[UserAccount, None, None]:
         yield user_account
 
 
+async def run_valuation_async(
+    request: ValuationRequest, source: Literal["one_shot", "regular_schedule"]
+) -> ValuationResponse:
+    temporal_client = await get_temporal_client()
+    return await temporal_client.execute_workflow(
+        UserAccountValuationWorkflow,
+        request,
+        retry_policy=TRY_ONCE,
+        id=temporal_workflow_id(f"sched.valuation.{source}."),
+        task_queue=GENERIC_TASK_QUEUE,
+    )
+
+
 def run_one_shot(requests: Iterable[ValuationRequest]) -> None:
     for request in requests:
         try:
             logging.info(f"handling valuation request {request}")
-            valuation = user_account_valuation_client.run(request)
+            valuation = asyncio.run(run_valuation_async(request, "one_shot"))
             logging.info(
                 f"user account {request.user_account_id} valuation"
                 f" (linked_accounts={request.linked_accounts}): {valuation.dict()}"
@@ -127,10 +142,13 @@ class Scheduler(Worker):
             if not user_account.settings.schedule_valuation:
                 continue
             logging.info(f"[scheduler thread] dispatching valuation for user_account_id={user_account_id}")
-            user_account_valuation_client.run_async(
-                request=ValuationRequest(
-                    user_account_id=user_account_id,
-                    notify_valuation=notify_valuation,
+            asyncio.run(
+                run_valuation_async(
+                    request=ValuationRequest(
+                        user_account_id=user_account_id,
+                        notify_valuation=notify_valuation,
+                    ),
+                    source="regular_schedule",
                 )
             )
 

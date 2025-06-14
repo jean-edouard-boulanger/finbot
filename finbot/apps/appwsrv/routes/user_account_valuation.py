@@ -40,14 +40,14 @@ router = APIRouter(
     status_code=HTTPStatus.ACCEPTED,
     operation_id="trigger_user_account_valuation",
 )
-def trigger_user_account_valuation(
+async def trigger_user_account_valuation(
     user_account_id: int,
     current_user_id: CurrentUserIdDep,
 ) -> appwsrv_schema.TriggerUserAccountValuationResponse:
     """Trigger user account valuation"""
     if user_account_id != current_user_id:
         raise NotAllowedError()
-    appwsrv_valuation.trigger_valuation(user_account_id)
+    await appwsrv_valuation.trigger_valuation(user_account_id)
     return appwsrv_schema.TriggerUserAccountValuationResponse()
 
 

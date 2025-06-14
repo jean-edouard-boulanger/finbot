@@ -15,12 +15,13 @@ from finbot.core.notifier import (
 from finbot.core.serialization import pretty_dump
 from finbot.core.utils import some
 from finbot.model import SessionType, repository
-from finbot.services.user_account_snapshot.service import UserAccountSnapshotService
-from finbot.services.user_account_valuation.schema import (
+from finbot.workflows.user_account_snapshot.impl import UserAccountSnapshotService
+from finbot.workflows.user_account_valuation.schema import (
     ValuationRequest,
     ValuationResponse,
 )
-from finbot.services.valuation_history_writer.service import (
+from finbot.workflows.write_valuation_history.schema import WriteHistoryRequest
+from finbot.workflows.write_valuation_history.service import (
     ValuationHistoryWriterService,
 )
 
@@ -78,7 +79,9 @@ class UserAccountValuationService(object):
         logger.info(f"raw snapshot created with id={snapshot_id}")
 
         logger.info("taking history report")
-        history_metadata = self._valuation_history_writer_service.write_history(snapshot_id=snapshot_id)
+        history_metadata = self._valuation_history_writer_service.write_history(
+            WriteHistoryRequest(snapshot_id=snapshot_id)
+        )
 
         history_report = history_metadata.report
 

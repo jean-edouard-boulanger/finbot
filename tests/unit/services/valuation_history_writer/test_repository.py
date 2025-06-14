@@ -19,7 +19,7 @@ from finbot.model import (
     UserAccountSnapshot,
 )
 from finbot.providers.schema import AssetClass, AssetType
-from finbot.services.valuation_history_writer.repository import (
+from finbot.workflows.write_valuation_history.repository import (
     ConsistencySnapshotEmptySubAccountEntry,
     ConsistencySnapshotItemEntry,
     ConsistentSnapshot,

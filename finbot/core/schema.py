@@ -45,6 +45,7 @@ class RegexValidatedStr(str):
     @classmethod
     def validate(cls, v: str) -> Self:  # v is already validated as str by core_schema
         import re
+
         for formatter in cls.pre_formatters or []:
             v = formatter(v)
         if not re.match(cls.pattern, v):
@@ -81,6 +82,7 @@ class ValuationChange(BaseModel):
 
 
 CredentialsPayloadType: TypeAlias = dict[str, Any]
+EncryptedCredentialsPayloadType: TypeAlias = str
 
 
 class ApplicationErrorData(BaseModel):

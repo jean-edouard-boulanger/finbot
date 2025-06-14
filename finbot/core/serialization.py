@@ -18,7 +18,7 @@ def serialize(data: Any) -> Any:
         return key
 
     if isinstance(data, BaseModel):
-        return serialize(data.dict())
+        return serialize(data.model_dump())
     if dataclasses.is_dataclass(data):
         return serialize(dataclasses.asdict(data))  # type: ignore
     if hasattr(data, "serialize"):
