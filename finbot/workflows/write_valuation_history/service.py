@@ -7,7 +7,9 @@ from finbot.core import schema as core_schema
 from finbot.core.serialization import pretty_dump, reinterpret_as_pydantic
 from finbot.core.utils import some
 from finbot.model import PersistScope, SessionType
-from finbot.services.valuation_history_writer import repository, schema
+from finbot.workflows.write_valuation_history import repository, schema
+
+logger = logging.getLogger(__name__)
 
 
 def deserialize_provider_specific_data(raw_data: str | None) -> dict[str, Any] | None:
@@ -46,7 +48,7 @@ def write_history_impl(
     repo = repository.ReportRepository(db_session)
     persist_scope = PersistScope(db_session)
 
-    logging.info("fetching snapshot_id={} metadata".format(snapshot_id))
+    logging.info(f"fetching snapshot_id={snapshot_id} metadata")
     snapshot: model.UserAccountSnapshot = db_session.query(model.UserAccountSnapshot).filter_by(id=snapshot_id).one()
 
     valuation_date = some(snapshot.end_time)
@@ -195,5 +197,5 @@ class ValuationHistoryWriterService(object):
     def __init__(self, db_session: SessionType):
         self._db_session = db_session
 
-    def write_history(self, snapshot_id: int) -> schema.WriteHistoryResponse:
-        return write_history_impl(snapshot_id=snapshot_id, db_session=self._db_session)
+    def write_history(self, request: schema.WriteHistoryRequest) -> schema.WriteHistoryResponse:
+        return write_history_impl(snapshot_id=request.snapshot_id, db_session=self._db_session)

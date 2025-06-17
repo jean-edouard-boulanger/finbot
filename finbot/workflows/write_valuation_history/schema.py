@@ -12,5 +12,9 @@ class NewHistoryEntryReport(BaseModel):
     valuation_change: core_schema.ValuationChange
 
 
+class WriteHistoryRequest(BaseModel):
+    snapshot_id: int
+
+
 class WriteHistoryResponse(BaseModel):
     report: NewHistoryEntryReport

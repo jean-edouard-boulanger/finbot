@@ -1,0 +1,33 @@
+#!/usr/bin/env python3
+import click
+import asyncio
+import logging
+
+from finbot.core.logging import configure_logging
+from finbot.workflows.user_account_valuation.client import run_valuation
+from finbot.workflows.user_account_valuation.schema import ValuationRequest, ValuationResponse
+from finbot.core.jobs import JobPriority, JobSource
+
+
+configure_logging('INFO')
+logger = logging.getLogger(__name__)
+
+
+@click.command()
+@click.argument("account_id", type=int)
+def main(account_id: int):
+    logger.info(f"Starting valuation for user account {account_id}")
+    valuation: ValuationResponse = asyncio.run(
+        run_valuation(
+            request=ValuationRequest(
+                user_account_id=account_id,
+            ),
+            job_source=JobSource.app,
+            priority=JobPriority.medium,
+        )
+    )
+    logger.info(valuation.model_dump_json(indent=4))
+
+
+if __name__ == "__main__":
+    main()

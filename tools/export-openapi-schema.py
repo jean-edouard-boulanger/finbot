@@ -13,15 +13,8 @@ def export_appwsrv_openapi_schema():
     return patch_schema(appwsrv.app.openapi())
 
 
-def export_finbotwsrv_openapi_schema():
-    from finbot.apps.finbotwsrv import finbotwsrv
-
-    return patch_schema(finbotwsrv.app.openapi())
-
-
 SCHEMA_EXPORTERS = {
     "appwsrv": export_appwsrv_openapi_schema,
-    "finbotwsrv": export_finbotwsrv_openapi_schema,
 }
 
 
@@ -46,13 +39,6 @@ def patch_schema(node: Any) -> Any:
 def create_argument_parser():
     parser = ArgumentParser("Export OpenAPI schema")
     parser.add_argument(
-        "-s",
-        "--service",
-        type=str,
-        choices=["appwsrv", "finbotwsrv"],
-        required=True,
-    )
-    parser.add_argument(
         "--show-api-version",
         action="store_true",
         default=False,
@@ -72,7 +58,7 @@ def main():
     if settings.show_api_version:
         print(__api_version__)
         return
-    schema = json.dumps(SCHEMA_EXPORTERS[settings.service](), indent=4)
+    schema = json.dumps(SCHEMA_EXPORTERS["appwsrv"](), indent=4)
     if settings.output_file_path:
         settings.output_file_path.expanduser().absolute().write_text(schema)
     else:

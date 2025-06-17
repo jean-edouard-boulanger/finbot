@@ -7,3 +7,11 @@ class SnapshotError(FinbotError):
 
 class InconsistentSnapshotData(SnapshotError):
     pass
+
+
+class FinancialDataFetchError(SnapshotError):
+    pass
+
+
+class FinancialDataFetchAuthError(FinancialDataFetchError):
+    pass

@@ -2,32 +2,13 @@
 OWN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "${OWN_DIR}/bash-utils.sh"
 
-
-sigint_handler() {
-  if [[ -n "${PID}" ]]
-  then
-    kill -9 "${PID}"
-  fi
-  exit
-}
-
-trap sigint_handler SIGINT
-
 watched="${1}"
 shift
 
 log_info "watching directory: ${watched}"
-while true
-do
-  log_info "running: ${*}"
-  "$@" &
-  app_pid=${!}
-  if [[ "$(uname)" == "Darwin" ]]
-  then
-    fswatch -1 -r "${watched}"
-  else
-    inotifywait -e modify -e move -e create -e delete -e attrib -r "${watched}"
-  fi
-  log_info "changes detected, restarting ..."
-  kill -9 "${app_pid}"
-done
+watchmedo auto-restart \
+  --directory "${watched}" \
+  --pattern '*.py' \
+  --recursive \
+  --signal SIGKILL \
+    -- "$@"

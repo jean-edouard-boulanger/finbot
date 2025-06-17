@@ -39,6 +39,7 @@ COPY finbot/ finbot/
 COPY migrations/ migrations/
 COPY tools/ tools/
 COPY alembic.ini finbotctl Makefile ./
+COPY envs/temporal/dynamicconfig /etc/temporal/config/dynamicconfig
 
 FROM runtime AS runtime-playwright
 

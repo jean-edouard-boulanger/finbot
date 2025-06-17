@@ -1,11 +1,16 @@
 import logging
+from datetime import timedelta
+
+from temporalio.common import RetryPolicy
 
 from finbot import model
-from finbot.apps.finbotwsrv.client import FinbotwsrvClient
 from finbot.core import schema as core_schema
 from finbot.core.environment import get_plaid_environment, is_demo, is_plaid_configured, is_saxo_configured
 from finbot.core.errors import InvalidUserInput
 from finbot.core.schema import CurrencyCode
+from finbot.core.temporal_ import GENERIC_TASK_QUEUE, get_temporal_client, temporal_workflow_id
+from finbot.workflows.fetch_financial_data.schema import ValidateCredentialsRequest
+from finbot.workflows.fetch_financial_data.workflows import ValidateCredentialsWorkflow
 
 logger = logging.getLogger(__name__)
 
@@ -39,16 +44,25 @@ def is_provider_supported(provider: model.Provider) -> bool:
     return True
 
 
-def validate_credentials(
-    finbot_client: FinbotwsrvClient,
+async def validate_credentials(
     provider_id: str,
-    credentials: core_schema.CredentialsPayloadType,
+    encrypted_credentials: core_schema.EncryptedCredentialsPayloadType,
     user_account_currency: CurrencyCode,
 ) -> None:
-    result = finbot_client.validate_credentials(
-        provider_id=provider_id,
-        credentials_data=credentials,
-        user_account_currency=user_account_currency,
+    temporal_client = await get_temporal_client()
+    result = await temporal_client.execute_workflow(
+        ValidateCredentialsWorkflow,
+        ValidateCredentialsRequest(
+            provider_id=provider_id,
+            encrypted_credentials=encrypted_credentials,
+            user_account_currency=user_account_currency,
+        ),
+        id=temporal_workflow_id("app.validate_credentials."),
+        task_queue=GENERIC_TASK_QUEUE,
+        retry_policy=RetryPolicy(
+            maximum_attempts=1,
+        ),
+        execution_timeout=timedelta(seconds=15),
     )
     if not result.valid:
         raise InvalidUserInput(f"Unable to validate provided credentials ({result.error_message})")

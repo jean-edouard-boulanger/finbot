@@ -156,14 +156,12 @@ multidict==6.4.4
 multitasking==0.0.11
     # via yfinance
 mypy==1.15.0
-    # via
-    #   finbot (pyproject.toml)
-    #   sqlalchemy-stubs
+    # via finbot (pyproject.toml)
 mypy-extensions==1.1.0
     # via mypy
 nulltype==2.3.1
     # via plaid-python
-numpy==2.2.6
+numpy==2.3.0
     # via
     #   pandas
     #   yfinance
@@ -203,7 +201,9 @@ propcache==0.3.1
     #   aiohttp
     #   yarl
 protobuf==6.31.1
-    # via yfinance
+    # via
+    #   temporalio
+    #   yfinance
 psycopg2==2.9.10
     # via finbot (pyproject.toml)
 pyasn1==0.6.1
@@ -320,16 +320,18 @@ sqlalchemy==2.0.41
     # via
     #   finbot (pyproject.toml)
     #   alembic
-sqlalchemy-stubs==0.4
-    # via finbot (pyproject.toml)
 starlette==0.46.2
     # via fastapi
+temporalio==1.12.0
+    # via finbot (pyproject.toml)
 twilio==9.6.1
     # via finbot (pyproject.toml)
 typer==0.16.0
     # via fastapi-cli
 types-cachetools==6.0.0.20250525
     # via finbot (pyproject.toml)
+types-protobuf==6.30.2.20250516
+    # via temporalio
 types-requests==2.32.0.20250515
     # via finbot (pyproject.toml)
 typing-extensions==4.14.0
@@ -343,7 +345,7 @@ typing-extensions==4.14.0
     #   pyee
     #   rich-toolkit
     #   sqlalchemy
-    #   sqlalchemy-stubs
+    #   temporalio
     #   typer
     #   typing-inspection
 typing-inspection==0.4.1

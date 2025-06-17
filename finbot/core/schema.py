@@ -1,7 +1,6 @@
 import enum
-import re
 import traceback
-from typing import Annotated, Any, Callable, Pattern, Self, TypeAlias, TypeVar
+from typing import Annotated, Any, Callable, Self, TypeAlias, TypeVar
 
 from pydantic import BaseModel as _BaseModel
 from pydantic import ConfigDict, Field, GetJsonSchemaHandler
@@ -23,7 +22,7 @@ BaseModelT = TypeVar("BaseModelT", bound=BaseModel)
 
 
 class RegexValidatedStr(str):
-    validation_regex: Pattern[str]
+    pattern: str
     examples: list[str]
     pre_formatters: list[Callable[[str], str]] | None = None
 
@@ -38,22 +37,24 @@ class RegexValidatedStr(str):
     def __get_pydantic_json_schema__(cls, schema: CoreSchema, handler: GetJsonSchemaHandler) -> JsonSchemaValue:
         json_schema = handler(schema)
         json_schema.update(
-            pattern=cls.validation_regex.pattern,
+            pattern=cls.pattern,
             examples=cls.examples,
         )
         return json_schema
 
     @classmethod
     def validate(cls, v: str) -> Self:  # v is already validated as str by core_schema
+        import re
+
         for formatter in cls.pre_formatters or []:
             v = formatter(v)
-        if not cls.validation_regex.match(v):
+        if not re.match(cls.pattern, v):
             raise ValueError("invalid format")
         return cls(v)  # Remove f-string, just pass v directly
 
 
 class CurrencyCode(RegexValidatedStr):
-    validation_regex = re.compile("^[A-Z]{3}$")
+    pattern = "^[A-Z]{3}$"
     examples = ["EUR", "USD", "GBP"]
     pre_formatters = [str.upper]
 
@@ -81,6 +82,7 @@ class ValuationChange(BaseModel):
 
 
 CredentialsPayloadType: TypeAlias = dict[str, Any]
+EncryptedCredentialsPayloadType: TypeAlias = str
 
 
 class ApplicationErrorData(BaseModel):

@@ -2,11 +2,11 @@ from unittest.mock import Mock, call
 
 import pytest
 
-from finbot.apps.finbotwsrv import schema as finbotwsrv_schema
 from finbot.core import fx_market
 from finbot.core import schema as core_schema
 from finbot.providers import schema as providers_schema
-from finbot.services.user_account_snapshot import service
+from finbot.workflows.fetch_financial_data import schema as finbotwsrv_schema
+from finbot.workflows.user_account_snapshot import impl, schema
 
 TEST_USER_ACCOUNT_CCY = core_schema.CurrencyCode.validate("EUR")
 ALL_LINE_ITEMS = [
@@ -17,13 +17,13 @@ ALL_LINE_ITEMS = [
 
 
 @pytest.fixture(scope="function")
-def valid_snapshot_data() -> list[service.LinkedAccountSnapshotResult]:
+def valid_snapshot_data() -> list[schema.LinkedAccountSnapshotResponse]:
     return [
-        service.LinkedAccountSnapshotResult(
-            request=service.LinkedAccountSnapshotRequest(
+        schema.LinkedAccountSnapshotResponse(
+            request=schema.LinkedAccountSnapshotRequest(
                 linked_account_id=1,
                 provider_id="dummy_uk",
-                credentials_data={},
+                encrypted_credentials="",
                 line_items=ALL_LINE_ITEMS,
                 user_account_currency=TEST_USER_ACCOUNT_CCY,
             ),
@@ -79,11 +79,11 @@ def valid_snapshot_data() -> list[service.LinkedAccountSnapshotResult]:
                 ]
             ),
         ),
-        service.LinkedAccountSnapshotResult(
-            request=service.LinkedAccountSnapshotRequest(
+        schema.LinkedAccountSnapshotResponse(
+            request=schema.LinkedAccountSnapshotRequest(
                 linked_account_id=2,
                 provider_id="dummy_uk",
-                credentials_data={},
+                encrypted_credentials="",
                 line_items=ALL_LINE_ITEMS,
                 user_account_currency=TEST_USER_ACCOUNT_CCY,
             ),
@@ -148,9 +148,9 @@ def valid_snapshot_data() -> list[service.LinkedAccountSnapshotResult]:
     ]
 
 
-def test_visit_snapshot_tree(valid_snapshot_data: list[service.LinkedAccountSnapshotResult]):
+def test_visit_snapshot_tree(valid_snapshot_data: list[schema.LinkedAccountSnapshotResponse]):
     visitor_mock = Mock()
-    service.visit_snapshot_tree(valid_snapshot_data, visitor_mock)
+    impl.visit_snapshot_tree(valid_snapshot_data, visitor_mock)
     assert visitor_mock.visit_linked_account.call_count == 2
     visitor_mock.visit_linked_account.assert_has_calls(
         [
@@ -317,10 +317,10 @@ def test_visit_snapshot_tree(valid_snapshot_data: list[service.LinkedAccountSnap
 class TestXccyCollector:
     def test_all_currencies_are_collected(
         self,
-        valid_snapshot_data: list[service.LinkedAccountSnapshotResult],
+        valid_snapshot_data: list[schema.LinkedAccountSnapshotResponse],
     ):
-        collector = service.XccyCollector(target_ccy=TEST_USER_ACCOUNT_CCY)
-        service.visit_snapshot_tree(valid_snapshot_data, collector)
+        collector = impl.XccyCollector(target_ccy=TEST_USER_ACCOUNT_CCY)
+        impl.visit_snapshot_tree(valid_snapshot_data, collector)
         assert collector.xccys == {
             fx_market.Xccy("USD", TEST_USER_ACCOUNT_CCY),
             fx_market.Xccy("GBP", "USD"),

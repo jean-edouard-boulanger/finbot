@@ -5,8 +5,12 @@ from twilio.rest import Client as TwilioClient
 
 from finbot import model
 from finbot.core import email_delivery
-from finbot.core.environment import TwilioEnvironment
+from finbot.core.email_delivery import DeliverySettings as EmailDeliverySettings
+from finbot.core.environment import TwilioEnvironment, get_twilio_environment, is_twilio_configured
+from finbot.core.kv_store import DBKVStore
 from finbot.core.schema import BaseModel
+from finbot.core.utils import some
+from finbot.model import SessionType, db
 
 
 class TwilioSettings(BaseModel):
@@ -127,3 +131,25 @@ class CompositeNotifier(Notifier):
     ) -> None:
         for notifier in self._notifiers:
             notifier.notify_linked_accounts_snapshot_errors(error_entries)
+
+
+def configure_notifier(user_account: model.UserAccount, db_session: SessionType | None = None) -> Notifier:
+    db_session = db_session or db.session
+    notifiers: list[Notifier] = []
+    if user_account.mobile_phone_number and is_twilio_configured():
+        twilio_settings = TwilioSettings.from_env(some(get_twilio_environment()))
+        notifiers.append(
+            TwilioNotifier(
+                twilio_settings=twilio_settings,
+                recipient_phone_number=user_account.mobile_phone_number,
+            )
+        )
+    email_delivery_settings = DBKVStore(db_session).get_entity(EmailDeliverySettings)
+    if email_delivery_settings:
+        notifiers.append(
+            EmailNotifier(
+                email_delivery_settings=email_delivery_settings,
+                recipient_email=user_account.email,
+            )
+        )
+    return CompositeNotifier(notifiers)

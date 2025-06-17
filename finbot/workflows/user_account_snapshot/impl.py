@@ -1,42 +1,23 @@
-import json
 import logging
-import traceback
 from collections import defaultdict
-from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Any, Generator, Optional, Protocol, TypedDict, cast
+from typing import Generator, Optional, Protocol, TypedDict, cast
 
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import joinedload
 
 from finbot import model
-from finbot.apps.finbotwsrv import schema as finbotwsrv_schema
-from finbot.apps.finbotwsrv.client import FinbotwsrvClient
-from finbot.core import environment, fx_market, secure, utils
+from finbot.core import fx_market, utils
 from finbot.core import schema as core_schema
 from finbot.core.schema import ApplicationErrorData
 from finbot.core.serialization import serialize
 from finbot.core.utils import some
-from finbot.model import PersistScope
+from finbot.model import PersistScope, SessionType
 from finbot.providers import schema as providers_schema
-from finbot.services.user_account_snapshot import schema
+from finbot.workflows.fetch_financial_data import schema as finbotwsrv_schema
+from finbot.workflows.user_account_snapshot import schema
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class LinkedAccountSnapshotRequest:
-    linked_account_id: core_schema.LinkedAccountId
-    provider_id: providers_schema.ProviderId
-    credentials_data: dict[Any, Any]
-    line_items: list[finbotwsrv_schema.LineItem]
-    user_account_currency: core_schema.CurrencyCode
-
-
-@dataclass
-class LinkedAccountSnapshotResult:
-    request: LinkedAccountSnapshotRequest
-    snapshot_data: finbotwsrv_schema.GetFinancialDataResponse | ApplicationErrorData
 
 
 @dataclass
@@ -72,7 +53,7 @@ class SnapshotTreeVisitor(Protocol):
 class LinkedAccountSnapshotWrapper:
     def __init__(
         self,
-        snapshot: LinkedAccountSnapshotResult,
+        snapshot: schema.LinkedAccountSnapshotResponse,
     ) -> None:
         self.snapshot = snapshot
         self.snapshot_data = snapshot.snapshot_data
@@ -112,7 +93,7 @@ class LinkedAccountSnapshotWrapper:
 
 
 def visit_snapshot_tree(
-    raw_snapshot: list[LinkedAccountSnapshotResult],
+    raw_snapshot: list[schema.LinkedAccountSnapshotResponse],
     visitor: SnapshotTreeVisitor,
 ) -> None:
     for linked_account_snapshot in raw_snapshot:
@@ -316,62 +297,6 @@ class SnapshotBuilderVisitor(SnapshotTreeVisitor):
         raise ValueError(f"unsupported item type: {type(item).__name__}")
 
 
-def dispatch_snapshot_entry(
-    snap_request: LinkedAccountSnapshotRequest,
-) -> LinkedAccountSnapshotResult:
-    try:
-        logger.info(
-            f"starting snapshot for linked_account_id={snap_request.linked_account_id}'"
-            f" provider_id={snap_request.provider_id}"
-        )
-
-        finbot_client = FinbotwsrvClient.create()
-        account_snapshot = finbot_client.get_financial_data(
-            provider_id=snap_request.provider_id,
-            credentials_data=snap_request.credentials_data,
-            line_items=snap_request.line_items,
-            user_account_currency=snap_request.user_account_currency,
-        )
-        if error := account_snapshot.error:
-            logger.warning(
-                f"error while taking snapshot for linked_account_id={snap_request.linked_account_id}'"
-                f" provider_id={snap_request.provider_id} error_code={error.error_code}"
-                f" exception_type={error.exception_type} user_message: {error.user_message}"
-                f" debug_message: {error.debug_message}"
-                f" trace:\n{error.trace}"
-            )
-            return LinkedAccountSnapshotResult(snap_request, account_snapshot.error)
-
-        logger.info(
-            f"snapshot complete for for linked_account_id={snap_request.linked_account_id}'"
-            f" provider_id={snap_request.provider_id}"
-        )
-        return LinkedAccountSnapshotResult(snap_request, account_snapshot)
-    except Exception as e:
-        logger.warning(
-            f"fatal error while taking snapshot for linked_account_id={snap_request.linked_account_id}"
-            f" provider_id={snap_request.provider_id}"
-            f" error: {e}"
-            f" trace:\n{traceback.format_exc()}"
-        )
-        return LinkedAccountSnapshotResult(snap_request, ApplicationErrorData.from_exception(e))
-
-
-def get_credentials_data(
-    linked_account: model.LinkedAccount,
-) -> core_schema.CredentialsPayloadType:
-    assert linked_account.encrypted_credentials is not None
-    return cast(
-        core_schema.CredentialsPayloadType,
-        json.loads(
-            secure.fernet_decrypt(
-                linked_account.encrypted_credentials.encode(),
-                environment.get_secret_key().encode(),
-            ).decode()
-        ),
-    )
-
-
 def is_linked_account_included_in_snapshot(
     linked_account: model.LinkedAccount,
     linked_account_ids: list[core_schema.LinkedAccountId] | None,
@@ -383,32 +308,25 @@ def is_linked_account_included_in_snapshot(
     return True
 
 
-def take_raw_snapshot(
+def prepare_raw_snapshot_requests(
     user_account: model.UserAccount,
     linked_account_ids: list[core_schema.LinkedAccountId] | None,
-) -> list[LinkedAccountSnapshotResult]:
-    with ThreadPoolExecutor(max_workers=4) as executor:
-        logger.info("initializing accounts snapshot requests")
-        requests = [
-            LinkedAccountSnapshotRequest(
-                linked_account_id=linked_account.id,
-                provider_id=linked_account.provider_id,
-                credentials_data=get_credentials_data(linked_account),
-                line_items=[
-                    finbotwsrv_schema.LineItem.Accounts,
-                    finbotwsrv_schema.LineItem.Assets,
-                    finbotwsrv_schema.LineItem.Liabilities,
-                ],
-                user_account_currency=core_schema.CurrencyCode(user_account.settings.valuation_ccy),
-            )
-            for linked_account in user_account.linked_accounts
-            if is_linked_account_included_in_snapshot(linked_account, linked_account_ids)
-        ]
-
-        logger.info(f"starting snapshot with {len(requests)} request(s)")
-        snapshot_entries = executor.map(dispatch_snapshot_entry, requests)
-        logger.info("complete snapshot taken")
-        return list(snapshot_entries)
+) -> list[schema.LinkedAccountSnapshotRequest]:
+    return [
+        schema.LinkedAccountSnapshotRequest(
+            linked_account_id=linked_account.id,
+            provider_id=linked_account.provider_id,
+            encrypted_credentials=some(linked_account.encrypted_credentials),
+            line_items=[
+                finbotwsrv_schema.LineItem.Accounts,
+                finbotwsrv_schema.LineItem.Assets,
+                finbotwsrv_schema.LineItem.Liabilities,
+            ],
+            user_account_currency=core_schema.CurrencyCode(user_account.settings.valuation_ccy),
+        )
+        for linked_account in user_account.linked_accounts
+        if is_linked_account_included_in_snapshot(linked_account, linked_account_ids)
+    ]
 
 
 def validate_fx_rates(rates: dict[fx_market.Xccy, Optional[float]]) -> None:
@@ -417,40 +335,40 @@ def validate_fx_rates(rates: dict[fx_market.Xccy, Optional[float]]) -> None:
         raise RuntimeError(f"rate is missing for the following FX pair(s): {', '.join(missing_rates)}")
 
 
-def take_snapshot_impl(
-    user_account_id: int,
-    linked_account_ids: Optional[list[core_schema.LinkedAccountId]],
-    db_session: Session,
-) -> schema.SnapshotSummary:
-    logger.info(
-        f"fetching user information for user_account_id={user_account_id} linked_account_ids={linked_account_ids}"
-    )
-
-    persist_scope = PersistScope(db_session)
-    user_account: model.UserAccount = (
+def load_user_account(user_account_id: int, db_session: SessionType) -> model.UserAccount:
+    return cast(
+        model.UserAccount,
         db_session.query(model.UserAccount)  # type: ignore
         .options(joinedload(model.UserAccount.linked_accounts))
         .options(joinedload(model.UserAccount.settings))
         .filter_by(id=user_account_id)
-        .first()
+        .one(),
     )
 
-    logger.info(f"starting snapshot for user account linked to {len(user_account.linked_accounts)} external accounts")
 
+def create_empty_snapshot(
+    user_account_id: int,
+    db_session: SessionType,
+) -> model.UserAccountSnapshot:
+    persist_scope = PersistScope(db_session)
+    user_account = load_user_account(user_account_id, db_session)
     requested_ccy = core_schema.CurrencyCode(user_account.settings.valuation_ccy)
-    logger.info(f"requested valuation currency is {requested_ccy}")
-
     with persist_scope(model.UserAccountSnapshot()) as new_snapshot:
         new_snapshot.status = model.SnapshotStatus.Processing
         new_snapshot.requested_ccy = requested_ccy
         new_snapshot.user_account_id = user_account_id
         new_snapshot.start_time = utils.now_utc()
+    return new_snapshot
 
-    raw_snapshot = take_raw_snapshot(
-        user_account=user_account,
-        linked_account_ids=linked_account_ids,
-    )
-    xccy_collector = XccyCollector(requested_ccy)
+
+def build_and_persist_final_snapshot(
+    user_account: model.UserAccount,
+    new_snapshot: model.UserAccountSnapshot,
+    raw_snapshot: list[schema.LinkedAccountSnapshotResponse],
+    db_session: SessionType,
+) -> schema.SnapshotSummary:
+    persist_scope = PersistScope(db_session)
+    xccy_collector = XccyCollector(core_schema.CurrencyCode(new_snapshot.requested_ccy))
     visit_snapshot_tree(raw_snapshot, xccy_collector)
     xccy_rates = fx_market.get_rates(xccy_collector.xccys)
 
@@ -485,35 +403,7 @@ def take_snapshot_impl(
 
     return schema.SnapshotSummary(
         identifier=new_snapshot.id,
-        start_time=new_snapshot.start_time,
+        start_time=some(new_snapshot.start_time),
         end_time=new_snapshot.end_time,
         results_count=snapshot_builder.results_count,
     )
-
-
-class UserAccountSnapshotService(object):
-    def __init__(self, db_session: Session) -> None:
-        self._db_session = db_session
-
-    def take_snapshot(
-        self,
-        user_account_id: int,
-        linked_account_ids: list[core_schema.LinkedAccountId] | None = None,
-    ) -> schema.TakeSnapshotResponse:
-        try:
-            return schema.TakeSnapshotResponse(
-                snapshot=take_snapshot_impl(
-                    user_account_id=user_account_id,
-                    linked_account_ids=linked_account_ids,
-                    db_session=self._db_session,
-                )
-            )
-        except Exception as e:
-            logger.error(
-                "fatal error while taking snapshot for user_account_id=%s, linked_account_ids=%s, error: %s trace:\n%s",
-                user_account_id,
-                linked_account_ids,
-                e,
-                traceback.format_exc(),
-            )
-            raise

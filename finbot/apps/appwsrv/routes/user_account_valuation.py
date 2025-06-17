@@ -10,15 +10,17 @@ from fastapi import APIRouter, Query
 from finbot.apps.appwsrv import schema as appwsrv_schema
 from finbot.apps.appwsrv import serializer
 from finbot.apps.appwsrv.core import formatting_rules
-from finbot.apps.appwsrv.core import valuation as appwsrv_valuation
 from finbot.apps.appwsrv.core.series import order_series_by_last_value
 from finbot.apps.http_base import CurrentUserIdDep
 from finbot.core import schema as core_schema
 from finbot.core import timeseries
 from finbot.core.errors import InvalidUserInput, MissingUserData, NotAllowedError
+from finbot.core.jobs import JobPriority, JobSource
 from finbot.core.utils import now_utc, some
 from finbot.model import SubAccountItemType, SubAccountItemValuationHistoryEntry, db, repository
 from finbot.providers.schema import AssetClass, AssetType
+from finbot.workflows.user_account_valuation import client as valuation_client
+from finbot.workflows.user_account_valuation.schema import ValuationRequest
 
 logger = logging.getLogger(__name__)
 
@@ -40,14 +42,20 @@ router = APIRouter(
     status_code=HTTPStatus.ACCEPTED,
     operation_id="trigger_user_account_valuation",
 )
-def trigger_user_account_valuation(
+async def trigger_user_account_valuation(
     user_account_id: int,
     current_user_id: CurrentUserIdDep,
 ) -> appwsrv_schema.TriggerUserAccountValuationResponse:
     """Trigger user account valuation"""
     if user_account_id != current_user_id:
         raise NotAllowedError()
-    appwsrv_valuation.trigger_valuation(user_account_id)
+    await valuation_client.kickoff_valuation(
+        request=ValuationRequest(
+            user_account_id=user_account_id,
+        ),
+        priority=JobPriority.medium,
+        job_source=JobSource.app,
+    )
     return appwsrv_schema.TriggerUserAccountValuationResponse()
 
 
