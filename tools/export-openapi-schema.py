@@ -13,15 +13,8 @@ def export_appwsrv_openapi_schema():
     return patch_schema(appwsrv.app.openapi())
 
 
-def export_finbotwsrv_openapi_schema():
-    from finbot.apps.finbotwsrv import finbotwsrv
-
-    return patch_schema(finbotwsrv.app.openapi())
-
-
 SCHEMA_EXPORTERS = {
     "appwsrv": export_appwsrv_openapi_schema,
-    "finbotwsrv": export_finbotwsrv_openapi_schema,
 }
 
 
@@ -49,7 +42,7 @@ def create_argument_parser():
         "-s",
         "--service",
         type=str,
-        choices=["appwsrv", "finbotwsrv"],
+        choices=list(SCHEMA_EXPORTERS.keys()),
         required=True,
     )
     parser.add_argument(

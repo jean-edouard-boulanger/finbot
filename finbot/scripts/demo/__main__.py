@@ -14,7 +14,8 @@ from finbot.model import ScopedSession, db
 from finbot.providers.schema import Asset
 from finbot.scripts.demo import scenarios, sim
 from finbot.scripts.demo.market import Market
-from finbot.services.valuation_history_writer import ValuationHistoryWriterService
+from finbot.workflows.write_valuation_history.schema import WriteHistoryRequest
+from finbot.workflows.write_valuation_history.service import ValuationHistoryWriterService
 
 configure_logging()
 logger = logging.getLogger("demo")
@@ -239,7 +240,7 @@ def setup_demo() -> None:
             market=simulator.market,
         )
         history_writer = ValuationHistoryWriterService(db.session)
-        history_writer.write_history(snapshot_id=snapshot.id)
+        history_writer.write_history(WriteHistoryRequest(snapshot_id=snapshot.id))
     activate_new_demo_accounts(
         old_demo_account=db.session.query(model.UserAccount).filter_by(email=settings.email).first(),
         new_demo_account=demo_account,

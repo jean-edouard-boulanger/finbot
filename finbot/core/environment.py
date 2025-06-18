@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from functools import cache
 from typing import Literal, TypeVar, cast
 
+from finbot.core.utils import some
+
 logger = logging.getLogger(__name__)
 
 PRODUCTION_ENV = "production"
@@ -19,6 +21,12 @@ class MissingEnvironment(RuntimeError):
 
 class _Raise(object):
     pass
+
+
+@dataclass(frozen=True)
+class TemporalEnvironment:
+    host: str
+    port: int
 
 
 @dataclass(frozen=True)
@@ -45,7 +53,6 @@ class Environment:
     secret_key: str
     jwt_secret_key: str
     database_url: str
-    finbotwsrv_endpoint: str
     appwsrv_endpoint: str
     webapp_endpoint: str
     runtime: str
@@ -101,10 +108,6 @@ def get_test_database_url() -> str:
     return test_db_url or DEFAULT_TEST_DATABASE_URL
 
 
-def get_finbotwsrv_endpoint() -> str:
-    return get_environment_value("FINBOT_FINBOTWSRV_ENDPOINT")
-
-
 def get_appwsrv_endpoint() -> str:
     return get_environment_value("FINBOT_APPWSRV_ENDPOINT")
 
@@ -119,6 +122,13 @@ def get_web_service_endpoint(service_name: str) -> str:
 
 def get_saxo_gateway_url() -> str | None:
     return get_environment_value_or("FINBOT_SAXO_GATEWAY_URL", None)
+
+
+def get_temporal_environment() -> TemporalEnvironment:
+    return TemporalEnvironment(
+        host=get_environment_value("FINBOT_TEMPORAL_HOST"),
+        port=int(some(get_environment_value_or("FINBOT_TEMPORAL_PORT", "7233"))),
+    )
 
 
 def is_saxo_configured() -> bool:
@@ -199,7 +209,6 @@ def get() -> Environment:
         secret_key=get_secret_key(),
         jwt_secret_key=get_jwt_secret_key(),
         database_url=get_database_url(),
-        finbotwsrv_endpoint=get_finbotwsrv_endpoint(),
         appwsrv_endpoint=get_appwsrv_endpoint(),
         webapp_endpoint=get_webapp_endpoint(),
         runtime=get_finbot_runtime(),

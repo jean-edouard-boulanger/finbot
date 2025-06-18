@@ -10,22 +10,11 @@ services:
     shm_size: 256MB
     volumes:
       - .finbotdb:/var/lib/postgresql/data
-
-  finbotrmq:
-    image: "rabbitmq:3-management-alpine"
-    env_file:
-      - envs/prod.env
-      - envs/secrets.prod.env
-
-  finbotwsrv:
-    image: "finbotapp/runtime-playwright:latest"
-    env_file:
-      - envs/prod.env
-      - envs/secrets.prod.env
-    working_dir: /finbot
-    command: bash -c "./tools/run finbotwsrv"
-    volumes:
-      - .intake_data:/intake_data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   schedsrv:
     image: "finbotapp/runtime:latest"
@@ -40,18 +29,18 @@ services:
     environment:
       FINBOT_WAIT_DEPS: "finbotdb,workersrv"
 
-  workersrv:
-    image: "finbotapp/runtime:latest"
+  workersrv_temporal:
+    image: "finbotapp/runtime-playwright:latest"
     env_file:
       - envs/prod.env
       - envs/secrets.prod.env
     depends_on:
       - finbotdb
-      - finbotrmq
+      - temporal
     working_dir: /finbot
-    command: bash -c "./tools/run workersrv"
+    command: bash -c "tools/run workersrv[temporal]"
     environment:
-      FINBOT_WAIT_DEPS: "finbotdb,finbotrmq"
+      FINBOT_WAIT_DEPS: "finbotdb,temporal"
 
   appwsrv:
     image: "finbotapp/runtime:latest"
@@ -70,6 +59,42 @@ services:
       - .:/finbot
     environment:
       FINBOT_WAIT_DEPS: "finbotdb,finbotwsrv,workersrv"
+
+  temporal:
+    image: temporalio/auto-setup:1.27
+    env_file:
+      - envs/prod.env
+      - envs/secrets.prod.env
+    container_name: temporal
+    depends_on:
+      finbotdb:
+        condition: service_healthy
+    ports:
+      - 7233:7233
+    volumes:
+      - ./envs/temporal/dynamicconfig:/etc/temporal/config/dynamicconfig
+
+  temporal-admin-tools:
+    image: temporalio/admin-tools:1.27
+    env_file:
+      - envs/prod.env
+      - envs/secrets.prod.env
+    container_name: temporal-admin-tools
+    depends_on:
+      - temporal
+    stdin_open: true
+    tty: true
+
+  temporal-ui:
+    image: temporalio/ui:v2.37.4
+    env_file:
+      - envs/prod.env
+      - envs/secrets.prod.env
+    container_name: temporal-ui
+    depends_on:
+      - temporal
+    ports:
+      - 5006:8080
 
   webapp:
     image: "finbotapp/webapp:latest"

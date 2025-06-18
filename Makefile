@@ -35,9 +35,7 @@ docker-build-all: docker-build-dev docker-build-prod
 trigger-valuation:
 	tools/check-env.sh accounts;
 	docker compose exec schedsrv \
-		./tools/run -- $(PYTHON) finbot/apps/schedsrv/schedsrv.py \
-			--mode one_shot \
-			--accounts ${accounts}
+		./tools/run -- $(PYTHON) tools/trigger-valuation ${accounts}
 
 run-system-tests:
 	docker compose run --rm operator env FINBOT_WAIT_DEPS=appwsrv,finbotwsrv ./tools/finbot-wait;

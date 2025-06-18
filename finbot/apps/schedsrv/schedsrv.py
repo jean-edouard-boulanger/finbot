@@ -1,5 +1,6 @@
 import abc
 import argparse
+import asyncio
 import logging
 import signal
 import sys
@@ -8,16 +9,16 @@ import time
 import traceback
 from dataclasses import dataclass
 from types import FrameType
-from typing import Generator, Iterable
+from typing import Generator
 
 import schedule
 
 from finbot.core import environment
-from finbot.core.errors import FinbotError
+from finbot.core.jobs import JobPriority, JobSource
 from finbot.core.logging import configure_logging
 from finbot.model import UserAccount, db, with_scoped_session
-from finbot.services.user_account_valuation import ValuationRequest
-from finbot.tasks.user_account_valuation import client as user_account_valuation_client
+from finbot.workflows.user_account_valuation import client as valuation_client
+from finbot.workflows.user_account_valuation.schema import ValuationRequest
 
 configure_logging(environment.get_desired_log_level())
 
@@ -91,28 +92,12 @@ def iter_user_accounts() -> Generator[UserAccount, None, None]:
         yield user_account
 
 
-def run_one_shot(requests: Iterable[ValuationRequest]) -> None:
-    for request in requests:
-        try:
-            logging.info(f"handling valuation request {request}")
-            valuation = user_account_valuation_client.run(request)
-            logging.info(
-                f"user account {request.user_account_id} valuation"
-                f" (linked_accounts={request.linked_accounts}): {valuation.dict()}"
-            )
-        except Exception as e:
-            logging.warning(
-                f"failure while running workflow for "
-                f"user_id={request.user_account_id}: {e}, "
-                f"trace: \n{traceback.format_exc()}"
-            )
-
-
 class Scheduler(Worker):
     def __init__(self) -> None:
         super().__init__()
         self._scheduler = schedule.Scheduler()
         self._stop_event = threading.Event()
+        self._loop = asyncio.new_event_loop()
         for schedule_entry in VALUATION_SCHEDULE:
             self._scheduler.every().day.at(schedule_entry.time_str, tz=schedule_entry.tz).do(
                 with_scoped_session(self._dispatch_valuation),
@@ -127,10 +112,14 @@ class Scheduler(Worker):
             if not user_account.settings.schedule_valuation:
                 continue
             logging.info(f"[scheduler thread] dispatching valuation for user_account_id={user_account_id}")
-            user_account_valuation_client.run_async(
-                request=ValuationRequest(
-                    user_account_id=user_account_id,
-                    notify_valuation=notify_valuation,
+            self._loop.run_until_complete(
+                valuation_client.kickoff_valuation(
+                    request=ValuationRequest(
+                        user_account_id=user_account_id,
+                        notify_valuation=notify_valuation,
+                    ),
+                    priority=JobPriority.medium,
+                    job_source=JobSource.schedule,
                 )
             )
 
@@ -170,15 +159,7 @@ class StopHandler(object):
 
 
 def main_impl() -> None:
-    settings = create_parser().parse_args()
-
-    logging.info(f"running in mode: {settings.mode}")
-    if settings.mode == "one_shot":
-        if settings.accounts is None:
-            raise FinbotError("--accounts must be provided in on shot mode")
-        run_one_shot(settings.accounts)
-        return
-
+    create_parser().parse_args()
     workers: list[Worker] = []
 
     logging.info("initializing scheduler thread")

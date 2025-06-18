@@ -13,6 +13,11 @@ services:
       - "15432:5432"
     volumes:
       - .finbotdb:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   finbotdb-test:
     image: "postgres:12"
@@ -25,60 +30,40 @@ services:
     ports:
       - "15433:5432"
 
-  finbotrmq:
-    image: "rabbitmq:3-management-alpine"
-    env_file: *env_files
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-
-  finbotwsrv:
-    image: "finbotapp/runtime-dev:latest"
-    env_file: *env_files
-    working_dir: /finbot
-    command: bash -c "./tools/run finbotwsrv"
-    tty: true
-    ports:
-      - "5001:5001"
-    volumes:
-      - .:/finbot
-      - .intake_data:/intake_data
-
   schedsrv:
     image: "finbotapp/runtime-dev:latest"
     env_file: *env_files
     depends_on:
       - finbotdb
-      - workersrv
+      - workersrv_temporal
     working_dir: /finbot
     command: bash -c "tools/autorestart finbot/ ./tools/run schedsrv"
     tty: true
     volumes:
       - .:/finbot
     environment:
-      FINBOT_WAIT_DEPS: "${FINBOT_WAIT_DEPS:-finbotdb,workersrv}"
+      FINBOT_WAIT_DEPS: "${FINBOT_WAIT_DEPS:-finbotdb,workersrv[temporal]}"
 
-  workersrv:
+  workersrv_temporal:
     image: "finbotapp/runtime-dev:latest"
     env_file: *env_files
     depends_on:
       - finbotdb
-      - finbotrmq
+      - temporal
     working_dir: /finbot
-    command: bash -c "tools/autorestart finbot/ ./tools/run workersrv"
+    command: bash -c "tools/autorestart finbot/ tools/run workersrv[temporal]"
     tty: true
     volumes:
       - .:/finbot
     environment:
-      FINBOT_WAIT_DEPS: "${FINBOT_WAIT_DEPS:-finbotdb,finbotrmq}"
+      FINBOT_WAIT_DEPS: "${FINBOT_WAIT_DEPS:-finbotdb,temporal}"
 
   appwsrv:
     image: "finbotapp/runtime-dev:latest"
     env_file: *env_files
     depends_on:
       - finbotdb
-      - finbotwsrv
-      - workersrv
+      - workersrv_temporal
     working_dir: /finbot
     command: bash -c "./tools/run appwsrv"
     tty: true
@@ -87,7 +72,7 @@ services:
     volumes:
       - .:/finbot
     environment:
-      FINBOT_WAIT_DEPS: "${FINBOT_WAIT_DEPS:-finbotdb,finbotwsrv,workersrv}"
+      FINBOT_WAIT_DEPS: "${FINBOT_WAIT_DEPS:-finbotdb,workersrv[temporal]}"
 
   operator:
     image: "finbotapp/runtime-dev:latest"
@@ -124,3 +109,33 @@ services:
       - '5000:80'
     profiles:
       - smtp4dev
+
+  temporal:
+    image: temporalio/auto-setup:1.27
+    env_file: *env_files
+    container_name: temporal
+    depends_on:
+      finbotdb:
+        condition: service_healthy
+    ports:
+      - 7233:7233
+    volumes:
+      - ./envs/temporal/dynamicconfig:/etc/temporal/config/dynamicconfig
+
+  temporal-admin-tools:
+    image: temporalio/admin-tools:1.27
+    env_file: *env_files
+    container_name: temporal-admin-tools
+    depends_on:
+      - temporal
+    stdin_open: true
+    tty: true
+
+  temporal-ui:
+    image: temporalio/ui:v2.37.4
+    env_file: *env_files
+    container_name: temporal-ui
+    depends_on:
+      - temporal
+    ports:
+      - 5006:8080
