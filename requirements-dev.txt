@@ -84,7 +84,7 @@ ecdsa==0.19.1
     # via python-jose
 email-validator==2.2.0
     # via fastapi
-fastapi==0.115.12
+fastapi==0.115.13
     # via finbot (pyproject.toml)
 fastapi-cli==0.0.7
     # via fastapi
@@ -149,7 +149,7 @@ markupsafe==3.0.2
     #   mako
 mdurl==0.1.2
     # via markdown-it-py
-multidict==6.4.4
+multidict==6.5.0
     # via
     #   aiohttp
     #   yarl
@@ -169,7 +169,7 @@ numpy==2.3.0
     #   yfinance
 oauth2client==4.1.3
     # via finbot (pyproject.toml)
-oauthlib==3.2.2
+oauthlib==3.3.0
     # via requests-oauthlib
 orjson==3.10.18
     # via finbot (pyproject.toml)
@@ -300,8 +300,6 @@ rsa==4.9.1
     #   python-jose
 ruff==0.11.11
     # via finbot (pyproject.toml)
-schedule==1.2.2
-    # via finbot (pyproject.toml)
 semver==3.0.4
     # via finbot (pyproject.toml)
 shellingham==1.5.4
@@ -361,7 +359,7 @@ tzdata==2025.2
     #   pandas
 tzlocal==5.3.1
     # via dateparser
-urllib3==2.4.0
+urllib3==2.5.0
     # via
     #   plaid-python
     #   requests

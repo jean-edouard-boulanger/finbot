@@ -55,3 +55,18 @@ def send_error_notifications(
                 notifier.notify_linked_accounts_snapshot_errors(failed_snapshot_entries)
     except Exception:
         activity.logger.exception("failed to send linked accounts snapshot errors notification")
+
+
+class GetIdsOfUserAccountsThatNeedValuationResponse(BaseModel):
+    user_account_ids: list[int]
+
+
+@activity.defn(name="kickoff_valuation_for_all_user_accounts")
+def get_ids_of_user_accounts_that_need_valuation() -> GetIdsOfUserAccountsThatNeedValuationResponse:
+    from finbot.model import ScopedSession, UserAccount
+
+    activity.logger.info("Dispatching valuation for all accounts")
+    with ScopedSession() as db_session:
+        return GetIdsOfUserAccountsThatNeedValuationResponse(
+            user_account_ids=[row[0] for row in db_session.query(UserAccount.id).all()]
+        )

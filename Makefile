@@ -34,7 +34,7 @@ docker-build-all: docker-build-dev docker-build-prod
 
 trigger-valuation:
 	tools/check-env.sh accounts;
-	docker compose exec schedsrv \
+	docker compose exec workersrv_temporal \
 		./tools/run -- $(PYTHON) tools/trigger-valuation ${accounts}
 
 run-system-tests:

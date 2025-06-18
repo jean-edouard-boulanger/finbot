@@ -1,3 +1,4 @@
+import asyncio
 from datetime import timedelta
 
 from temporalio import workflow
@@ -78,3 +79,39 @@ class UserAccountValuationWorkflow:
             valuation_date=history_report.valuation_date,
             valuation_change=history_report.valuation_change,
         )
+
+
+@workflow.defn(name="run_valuation_for_all_users")
+class RunValuationForAllUsers:
+    @workflow.run
+    async def run(self) -> None:
+        from finbot.workflows.user_account_valuation.activities import (
+            GetIdsOfUserAccountsThatNeedValuationResponse,
+            get_ids_of_user_accounts_that_need_valuation,
+        )
+
+        result: GetIdsOfUserAccountsThatNeedValuationResponse = await workflow.execute_activity(
+            get_ids_of_user_accounts_that_need_valuation,
+            retry_policy=TRY_ONCE,
+            start_to_close_timeout=timedelta(seconds=60.0),
+        )
+        workflow.logger.info(f"kicking off valuation for all ({len(result.user_account_ids)}) users")
+        valuation_tasks = [
+            workflow.execute_child_workflow(
+                UserAccountValuationWorkflow,
+                ValuationRequest(
+                    user_account_id=user_account_id,
+                ),
+                retry_policy=TRY_ONCE,
+            )
+            for user_account_id in result.user_account_ids
+        ]
+        for user_account_id, valuation_result_coro in zip(
+            result.user_account_ids, asyncio.as_completed(valuation_tasks)
+        ):
+            try:
+                await valuation_result_coro
+            except Exception:
+                workflow.logger.exception(f"Valuation workflow failed for user account {user_account_id}")
+            else:
+                workflow.logger.info(f"Valuation workflow complete for user account {user_account_id}")

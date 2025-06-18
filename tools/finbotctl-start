@@ -59,7 +59,6 @@ log_info "starting finbot application containers"
 docker compose up -d \
   workersrv_temporal \
   appwsrv \
-  schedsrv \
   || die failed to start containers
 
 log_info "waiting for finbot application containers"

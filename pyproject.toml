@@ -26,7 +26,6 @@ dependencies = [
     "python-gnupg==0.5.4",
     "python-jose[cryptography]<4",
     "requests==2.32.3",
-    "schedule==1.2.2",
     "spectree==1.2.10",
     "sqlalchemy==2.0.41",
     "temporalio<2",

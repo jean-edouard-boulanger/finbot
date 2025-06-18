@@ -30,20 +30,6 @@ services:
     ports:
       - "15433:5432"
 
-  schedsrv:
-    image: "finbotapp/runtime-dev:latest"
-    env_file: *env_files
-    depends_on:
-      - finbotdb
-      - workersrv_temporal
-    working_dir: /finbot
-    command: bash -c "tools/autorestart finbot/ ./tools/run schedsrv"
-    tty: true
-    volumes:
-      - .:/finbot
-    environment:
-      FINBOT_WAIT_DEPS: "${FINBOT_WAIT_DEPS:-finbotdb,workersrv[temporal]}"
-
   workersrv_temporal:
     image: "finbotapp/runtime-dev:latest"
     env_file: *env_files
