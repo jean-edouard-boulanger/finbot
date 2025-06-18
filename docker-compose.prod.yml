@@ -23,11 +23,11 @@ services:
       - envs/secrets.prod.env
     depends_on:
       - finbotdb
-      - workersrv
+      - workersrv_temporal
     working_dir: /finbot
     command: bash -c "./tools/run schedsrv"
     environment:
-      FINBOT_WAIT_DEPS: "finbotdb,workersrv"
+      FINBOT_WAIT_DEPS: "finbotdb,workersrv[temporal]"
 
   workersrv_temporal:
     image: "finbotapp/runtime-playwright:latest"
@@ -49,8 +49,7 @@ services:
       - envs/secrets.prod.env
     depends_on:
       - finbotdb
-      - finbotwsrv
-      - workersrv
+      - workersrv_temporal
     working_dir: /finbot
     command: bash -c "./tools/run appwsrv"
     ports:
@@ -58,7 +57,7 @@ services:
     volumes:
       - .:/finbot
     environment:
-      FINBOT_WAIT_DEPS: "finbotdb,finbotwsrv,workersrv"
+      FINBOT_WAIT_DEPS: "finbotdb,workersrv[temporal]"
 
   temporal:
     image: temporalio/auto-setup:1.27
