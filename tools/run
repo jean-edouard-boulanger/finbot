@@ -13,14 +13,6 @@ then
 elif [[ "${service_name}" == "webapp" ]]
 then
   exec "${script_dir}/run-webapp-dev.sh"
-elif [[ "${service_name}" == "schedsrv" ]]
-then
-  exec python3 finbot/apps/schedsrv/schedsrv.py
-elif [[ "${service_name}" == "workersrv" ]]
-then
-  exec python3 -m celery \
-    -A finbot.tasks.base worker \
-    --loglevel INFO
 elif [[ "${service_name}" == "workersrv[temporal]" ]]
 then
   exec python3 -m finbot.apps.workersrv_temporal

@@ -16,19 +16,6 @@ services:
       timeout: 5s
       retries: 5
 
-  schedsrv:
-    image: "finbotapp/runtime:latest"
-    env_file:
-      - envs/prod.env
-      - envs/secrets.prod.env
-    depends_on:
-      - finbotdb
-      - workersrv_temporal
-    working_dir: /finbot
-    command: bash -c "./tools/run schedsrv"
-    environment:
-      FINBOT_WAIT_DEPS: "finbotdb,workersrv[temporal]"
-
   workersrv_temporal:
     image: "finbotapp/runtime-playwright:latest"
     env_file:
