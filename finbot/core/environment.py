@@ -53,7 +53,6 @@ class Environment:
     secret_key: str
     jwt_secret_key: str
     database_url: str
-    finbotwsrv_endpoint: str
     appwsrv_endpoint: str
     webapp_endpoint: str
     runtime: str
@@ -107,10 +106,6 @@ def get_database_url() -> str:
 def get_test_database_url() -> str:
     test_db_url = get_environment_value_or("FINBOT_TEST_DB_URL")
     return test_db_url or DEFAULT_TEST_DATABASE_URL
-
-
-def get_finbotwsrv_endpoint() -> str:
-    return get_environment_value("FINBOT_FINBOTWSRV_ENDPOINT")
 
 
 def get_appwsrv_endpoint() -> str:
@@ -214,7 +209,6 @@ def get() -> Environment:
         secret_key=get_secret_key(),
         jwt_secret_key=get_jwt_secret_key(),
         database_url=get_database_url(),
-        finbotwsrv_endpoint=get_finbotwsrv_endpoint(),
         appwsrv_endpoint=get_appwsrv_endpoint(),
         webapp_endpoint=get_webapp_endpoint(),
         runtime=get_finbot_runtime(),

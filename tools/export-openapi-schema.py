@@ -39,6 +39,13 @@ def patch_schema(node: Any) -> Any:
 def create_argument_parser():
     parser = ArgumentParser("Export OpenAPI schema")
     parser.add_argument(
+        "-s",
+        "--service",
+        type=str,
+        choices=list(SCHEMA_EXPORTERS.keys()),
+        required=True,
+    )
+    parser.add_argument(
         "--show-api-version",
         action="store_true",
         default=False,
@@ -58,7 +65,7 @@ def main():
     if settings.show_api_version:
         print(__api_version__)
         return
-    schema = json.dumps(SCHEMA_EXPORTERS["appwsrv"](), indent=4)
+    schema = json.dumps(SCHEMA_EXPORTERS[settings.service](), indent=4)
     if settings.output_file_path:
         settings.output_file_path.expanduser().absolute().write_text(schema)
     else:

@@ -1,18 +1,12 @@
 import pytest
 
-from finbot.apps.finbotwsrv import schema as finbotwsrv_schema
-from finbot.apps.finbotwsrv.client import FinbotwsrvClient
+from finbot.core.environment import get_secret_key
+from finbot.core.secure import fernet_encrypt_json
+from finbot.core.temporal_ import GENERIC_TASK_QUEUE, TRY_ONCE, get_temporal_client, temporal_workflow_id
 from finbot.providers import schema as providers_schema
 from finbot.providers.dummy_uk import make_default_dummy_data
-
-
-@pytest.fixture
-def api() -> FinbotwsrvClient:
-    return FinbotwsrvClient.create()
-
-
-def test_healthy(api: FinbotwsrvClient):
-    assert api.healthy
+from finbot.workflows.fetch_financial_data import schema as finbotwsrv_schema
+from finbot.workflows.fetch_financial_data.workflows import GetFinancialDataWorkflow
 
 
 def check_account(account: providers_schema.Account):
@@ -42,18 +36,29 @@ def check_accounts_financial_data(results: list[providers_schema.Account]):
     check_account(results[0])
 
 
-def test_get_financial_data(api: FinbotwsrvClient):
+@pytest.mark.asyncio
+async def test_get_financial_data():
+    client = await get_temporal_client()
     user_account_currency = providers_schema.CurrencyCode("EUR")
-    response = api.get_financial_data(
-        provider_id="dummy_uk",
-        credentials_data={
-            "dummy_data": make_default_dummy_data(user_account_currency, sub_accounts_count=1).dict(),
-        },
-        line_items=[
-            finbotwsrv_schema.LineItem.Assets,
-            finbotwsrv_schema.LineItem.Accounts,
-        ],
-        user_account_currency=providers_schema.CurrencyCode("EUR"),
+    response = await client.execute_workflow(
+        GetFinancialDataWorkflow,
+        finbotwsrv_schema.GetFinancialDataRequest(
+            provider_id="dummy_uk",
+            encrypted_credentials=fernet_encrypt_json(
+                {
+                    "dummy_data": make_default_dummy_data(user_account_currency, sub_accounts_count=1).model_dump(),
+                },
+                get_secret_key(),
+            ).decode(),
+            items=[
+                finbotwsrv_schema.LineItem.Assets,
+                finbotwsrv_schema.LineItem.Accounts,
+            ],
+            user_account_currency=user_account_currency,
+        ),
+        id=temporal_workflow_id(prefix="tests/system/"),
+        retry_policy=TRY_ONCE,
+        task_queue=GENERIC_TASK_QUEUE,
     )
     financial_data = response.financial_data
     assert len(financial_data) == 2

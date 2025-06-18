@@ -9,7 +9,7 @@ from finbot.core.environment import get_desired_log_level
 from finbot.core.logging import configure_logging
 from finbot.core.temporal_ import GENERIC_TASK_QUEUE, TRY_ONCE, get_temporal_client
 from finbot.workflows.fetch_financial_data.activities import get_financial_data, validate_credentials
-from finbot.workflows.fetch_financial_data.workflows import ValidateCredentialsWorkflow
+from finbot.workflows.fetch_financial_data.workflows import GetFinancialDataWorkflow, ValidateCredentialsWorkflow
 from finbot.workflows.user_account_snapshot.activities import (
     build_and_persist_final_snapshot,
     create_empty_snapshot,
@@ -57,6 +57,7 @@ async def worker_main() -> None:
         workflows=[
             # workflows.fetch_financial_data
             ValidateCredentialsWorkflow,
+            GetFinancialDataWorkflow,
             # workflows.write_valuation_history
             WriteValuationHistoryWorkflow,
             # workflows.user_account_snapshot
