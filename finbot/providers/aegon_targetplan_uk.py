@@ -94,6 +94,10 @@ class Api(PlaywrightProviderBase):
                     AuthenticationError(el.inner_text().strip()),
                 ),
             ),
+            Condition(
+                lambda: self._password_change_needed(),
+                when_fulfilled=lambda el: raise_(AuthenticationError("Password change is required")),
+            ),
         ).wait_any(page)
         self._accounts = await MainDashboardPage(page).get_accounts()
 
@@ -119,3 +123,12 @@ class Api(PlaywrightProviderBase):
                 for entry in some(self._accounts)
             ]
         )
+
+    async def _password_change_needed(self) -> bool:
+        heading_element = await self.get_element_or_none("#page-heading")
+        if not heading_element:
+            return False
+        heading_text = await heading_element.text_content()
+        if not heading_text:
+            return False
+        return "Edit password".lower() in heading_text.lower()

@@ -62,7 +62,10 @@ class LinkedAccountSnapshotWrapper:
     def iter_errors(
         self,
     ) -> Generator[SnapshotErrorEntry, None, None]:
-        if isinstance(self.snapshot_data, ApplicationErrorData):
+        if isinstance(self.snapshot_data, finbotwsrv_schema.GetFinancialDataResponse) and self.snapshot_data.error:
+            yield SnapshotErrorEntry(scope="linked_account", error=self.snapshot_data.error)
+            return
+        elif isinstance(self.snapshot_data, ApplicationErrorData):
             yield SnapshotErrorEntry(scope="linked_account", error=self.snapshot_data)
             return
         for entry in self.snapshot_data.financial_data:
