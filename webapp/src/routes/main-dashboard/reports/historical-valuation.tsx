@@ -8,6 +8,7 @@ import {
   HistoricalValuation,
 } from "clients";
 
+import { Alert, AlertTitle, AlertDescription } from "components/ui/alert";
 import { Card, CardContent, CardHeader } from "components/ui/card";
 import {
   DropdownMenu,
@@ -254,91 +255,97 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
     useState<TimeRangeChoiceType>(DEFAULT_RANGE);
   const [historicalValuation, setHistoricalValuation] =
     useState<HistoricalValuation | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setHistoricalValuation(null);
+    setError(null);
     const fetchValuation = async () => {
-      const range = selectedTimeRange.makeRange(now);
-      const request = {
-        userAccountId: userAccountId,
-        fromTime: range.from_time?.toJSDate(),
-        toTime: range.to_time?.toJSDate(),
-        frequency: selectedFrequency as ValuationFrequency,
-      };
-      switch (selectedLevel.type) {
-        case "account": {
-          if (isSingleAccount) {
+      try {
+        const range = selectedTimeRange.makeRange(now);
+        const request = {
+          userAccountId: userAccountId,
+          fromTime: range.from_time?.toJSDate(),
+          toTime: range.to_time?.toJSDate(),
+          frequency: selectedFrequency as ValuationFrequency,
+        };
+        switch (selectedLevel.type) {
+          case "account": {
+            if (isSingleAccount) {
+              const data =
+                await linkedAccountsValuationApi.getLinkedAccountsHistoricalValuation(
+                  request,
+                );
+              const hv = data.historicalValuation;
+              const matchedSeries = hv.seriesData.series.filter(
+                (s) => s.name === linkedAccountName,
+              );
+              // Trim x-axis to only indices where this series has data
+              const seriesData = matchedSeries[0]?.data as (number | null)[] | undefined;
+              const categories = hv.seriesData.xAxis.categories as (string | number)[];
+              if (seriesData) {
+                const firstIdx = seriesData.findIndex((v) => v != null);
+                const lastIdx = seriesData.length - 1 - [...seriesData].reverse().findIndex((v) => v != null);
+                const trimmedCategories = categories.slice(firstIdx, lastIdx + 1);
+                const trimmedSeries = matchedSeries.map((s) => ({
+                  ...s,
+                  data: (s.data as (number | null)[]).slice(firstIdx, lastIdx + 1),
+                }));
+                setHistoricalValuation({
+                  ...hv,
+                  seriesData: {
+                    xAxis: { ...hv.seriesData.xAxis, categories: trimmedCategories },
+                    series: trimmedSeries,
+                  },
+                });
+              } else {
+                setHistoricalValuation({
+                  ...hv,
+                  seriesData: { ...hv.seriesData, series: matchedSeries },
+                });
+              }
+            } else {
+              const data =
+                await userAccountsValuationApi.getUserAccountHistoricalValuation(
+                  request,
+                );
+              setHistoricalValuation(data.historicalValuation);
+            }
+            break;
+          }
+          case "linked_account": {
             const data =
               await linkedAccountsValuationApi.getLinkedAccountsHistoricalValuation(
                 request,
               );
-            const hv = data.historicalValuation;
-            const matchedSeries = hv.seriesData.series.filter(
-              (s) => s.name === linkedAccountName,
-            );
-            // Trim x-axis to only indices where this series has data
-            const seriesData = matchedSeries[0]?.data as (number | null)[] | undefined;
-            const categories = hv.seriesData.xAxis.categories as (string | number)[];
-            if (seriesData) {
-              const firstIdx = seriesData.findIndex((v) => v != null);
-              const lastIdx = seriesData.length - 1 - [...seriesData].reverse().findIndex((v) => v != null);
-              const trimmedCategories = categories.slice(firstIdx, lastIdx + 1);
-              const trimmedSeries = matchedSeries.map((s) => ({
-                ...s,
-                data: (s.data as (number | null)[]).slice(firstIdx, lastIdx + 1),
-              }));
-              setHistoricalValuation({
-                ...hv,
-                seriesData: {
-                  xAxis: { ...hv.seriesData.xAxis, categories: trimmedCategories },
-                  series: trimmedSeries,
-                },
-              });
-            } else {
-              setHistoricalValuation({
-                ...hv,
-                seriesData: { ...hv.seriesData, series: matchedSeries },
-              });
-            }
-          } else {
+            setHistoricalValuation(data.historicalValuation);
+            break;
+          }
+          case "asset_type": {
             const data =
-              await userAccountsValuationApi.getUserAccountHistoricalValuation(
-                request,
+              await userAccountsValuationApi.getUserAccountHistoricalValuationByAssetType(
+                {
+                  ...request,
+                  linkedAccountId: linkedAccountId,
+                },
               );
             setHistoricalValuation(data.historicalValuation);
+            break;
           }
-          break;
+          case "asset_class": {
+            const data =
+              await userAccountsValuationApi.getUserAccountHistoricalValuationByAssetClass(
+                {
+                  ...request,
+                  linkedAccountId: linkedAccountId,
+                },
+              );
+            setHistoricalValuation(data.historicalValuation);
+            break;
+          }
         }
-        case "linked_account": {
-          const data =
-            await linkedAccountsValuationApi.getLinkedAccountsHistoricalValuation(
-              request,
-            );
-          setHistoricalValuation(data.historicalValuation);
-          break;
-        }
-        case "asset_type": {
-          const data =
-            await userAccountsValuationApi.getUserAccountHistoricalValuationByAssetType(
-              {
-                ...request,
-                linkedAccountId: linkedAccountId,
-              },
-            );
-          setHistoricalValuation(data.historicalValuation);
-          break;
-        }
-        case "asset_class": {
-          const data =
-            await userAccountsValuationApi.getUserAccountHistoricalValuationByAssetClass(
-              {
-                ...request,
-                linkedAccountId: linkedAccountId,
-              },
-            );
-          setHistoricalValuation(data.historicalValuation);
-          break;
-        }
+      } catch (e) {
+        setError(`${e}`);
       }
     };
     fetchValuation();
@@ -618,6 +625,13 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
               </BarChart>
             )}
           </ChartContainer>
+        ) : error !== null ? (
+          <div className="flex h-[250px] items-center justify-center">
+            <Alert variant="destructive">
+              <AlertTitle>Failed to load chart</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          </div>
         ) : (
           <div className="flex h-[250px] items-end gap-1 px-4">
             {Array.from({ length: 24 }).map((_, i) => (

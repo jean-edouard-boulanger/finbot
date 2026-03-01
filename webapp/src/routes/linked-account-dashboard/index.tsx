@@ -25,6 +25,7 @@ import {
 import { Money, TreeGrid, BarLoader } from "components";
 import { defaultMoneyFormatter } from "components/money";
 import { ChartTooltipContent } from "components/ui/chart";
+import { Alert, AlertTitle, AlertDescription } from "components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "components/ui/card";
 import { Badge } from "components/ui/badge";
 import {
@@ -116,9 +117,11 @@ export const LinkedAccountDashboard: React.FC = () => {
   const [valuationEntry, setValuationEntry] = useState<LinkedAccountValuationEntry | null>(null);
   const [holdingsTree, setHoldingsTree] = useState<ValuationTree | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setLoading(true);
+    setError(null);
     setLinkedAccount(null);
     setValuationEntry(null);
     setHoldingsTree(null);
@@ -145,8 +148,8 @@ export const LinkedAccountDashboard: React.FC = () => {
         setValuationEntry(entry ?? null);
 
         setHoldingsTree(holdingsResult.report);
-      } catch {
-        // handled by empty states
+      } catch (e) {
+        setError(`${e}`);
       }
       setLoading(false);
     };
@@ -214,6 +217,18 @@ export const LinkedAccountDashboard: React.FC = () => {
   }
 
   if (!linkedAccount) {
+    if (error !== null) {
+      return (
+        <div className="bg-dot-grid min-h-screen">
+          <div className="container mx-auto px-6 pb-48 pt-8">
+            <Alert variant="destructive">
+              <AlertTitle>Failed to load account</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          </div>
+        </div>
+      );
+    }
     return <Navigate to="/dashboard" replace />;
   }
 

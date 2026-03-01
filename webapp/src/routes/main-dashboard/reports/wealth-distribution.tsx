@@ -5,6 +5,7 @@ import {
   UserAccountsValuationApi,
   LinkedAccountsValuationApi,
 } from "clients";
+import { Alert, AlertTitle, AlertDescription } from "components/ui/alert";
 import { Card, CardContent, CardHeader } from "components/ui/card";
 import {
   DropdownMenu,
@@ -74,13 +75,16 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
     DEFAULT_AGGREGATION_MODE,
   );
   const [valuation, setValuation] = useState<ValuationData | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const userAccountsValuationApi = useApi(UserAccountsValuationApi);
   const linkedAccountsValuationApi = useApi(LinkedAccountsValuationApi);
   const showLegend = useShowLegend();
 
   useEffect(() => {
+    setError(null);
     const fetch = async () => {
-      switch (aggregationMode) {
+      try {
+        switch (aggregationMode) {
         case "account": {
           const result = (
             await linkedAccountsValuationApi.getLinkedAccountsValuation({
@@ -141,6 +145,9 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
           });
           break;
         }
+        }
+      } catch (e) {
+        setError(`${e}`);
       }
     };
     fetch();
@@ -243,6 +250,13 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
                 })}
               </div>
             )}
+          </div>
+        ) : error !== null ? (
+          <div className="flex items-center justify-center" style={{ height: 240 }}>
+            <Alert variant="destructive">
+              <AlertTitle>Failed to load chart</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
           </div>
         ) : (
           <div className="flex items-center justify-center" style={{ height: 240 }}>

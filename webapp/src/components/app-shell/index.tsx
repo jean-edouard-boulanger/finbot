@@ -131,9 +131,11 @@ function SettingsSubNav({ onNavigate }: { onNavigate?: () => void }) {
 
 function SidebarContent({
   accounts,
+  accountsError,
   onNavigate,
 }: {
   accounts: LinkedAccountValuationEntry[];
+  accountsError?: string | null;
   onNavigate?: () => void;
 }) {
   const { pathname } = useLocation();
@@ -167,15 +169,21 @@ function SidebarContent({
             <p className="mt-4 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Accounts
             </p>
-            {accounts.map((entry) => (
-              <AccountNavItem
-                key={entry.linkedAccount.id}
-                to={`/dashboard/accounts/${entry.linkedAccount.id}`}
-                colour={entry.linkedAccount.accountColour}
-                name={entry.linkedAccount.description}
-                onClick={onNavigate}
-              />
-            ))}
+            {accountsError ? (
+              <p className="px-3 py-1 text-xs text-destructive">
+                Failed to load accounts
+              </p>
+            ) : (
+              accounts.map((entry) => (
+                <AccountNavItem
+                  key={entry.linkedAccount.id}
+                  to={`/dashboard/accounts/${entry.linkedAccount.id}`}
+                  colour={entry.linkedAccount.accountColour}
+                  name={entry.linkedAccount.description}
+                  onClick={onNavigate}
+                />
+              ))
+            )}
             <NavLink to="/settings/linked?action=link" onClick={onNavigate}>
               <Button
                 variant="ghost"
@@ -209,6 +217,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({
   const { userAccountId } = useContext(AuthContext);
   const linkedAccountsValuationApi = useApi(LinkedAccountsValuationApi);
   const [accounts, setAccounts] = useState<LinkedAccountValuationEntry[]>([]);
+  const [accountsError, setAccountsError] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
@@ -219,8 +228,8 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({
             userAccountId: userAccountId!,
           });
         setAccounts(result.valuation.entries);
-      } catch {
-        // Accounts may not be configured yet
+      } catch (e) {
+        setAccountsError(`${e}`);
       }
     };
     fetch();
@@ -230,7 +239,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({
     <div className="flex min-h-screen">
       {/* Desktop sidebar */}
       <aside className="hidden w-64 shrink-0 border-r border-border/50 bg-background md:fixed md:inset-y-0 md:flex md:flex-col">
-        <SidebarContent accounts={accounts} />
+        <SidebarContent accounts={accounts} accountsError={accountsError} />
       </aside>
 
       {/* Mobile header + sheet */}
@@ -246,6 +255,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({
             <SheetTitle className="sr-only">Navigation</SheetTitle>
             <SidebarContent
               accounts={accounts}
+              accountsError={accountsError}
               onNavigate={() => setMobileOpen(false)}
             />
           </SheetContent>

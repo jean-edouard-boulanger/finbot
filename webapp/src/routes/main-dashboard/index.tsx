@@ -21,6 +21,7 @@ import {
   WealthDistributionPanel,
 } from "./reports";
 
+import { Alert, AlertTitle, AlertDescription } from "components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "components/ui/tabs";
 
@@ -63,13 +64,18 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
   const [configured, setConfigured] = useState<boolean | null>(null);
   const [valuation, setValuation] = useState<UserAccountValuation | null>(null);
   const [selectedReport, setSelectedReport] = useState<string>(DEFAULT_REPORT);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetch = async () => {
-      const result = await userAccountsApi.isUserAccountConfigured({
-        userAccountId: userAccountId!,
-      });
-      setConfigured(result.configured);
+      try {
+        const result = await userAccountsApi.isUserAccountConfigured({
+          userAccountId: userAccountId!,
+        });
+        setConfigured(result.configured);
+      } catch (e) {
+        setError(`${e}`);
+      }
     };
     fetch();
   }, [userAccountsApi]);
@@ -79,11 +85,13 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
       return;
     }
     const fetch = async () => {
-      {
+      try {
         const result = await userAccountValuationApi.getUserAccountValuation({
           userAccountId: userAccountId!,
         });
         setValuation(result.valuation);
+      } catch (e) {
+        setError(`${e}`);
       }
     };
     fetch();
@@ -95,6 +103,19 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
       .filter((entry) => entry.value !== null)
       .map((entry, i) => ({ x: i, value: entry.value as number }));
   }, [valuation?.sparkline]);
+
+  if (error !== null) {
+    return (
+      <div className="bg-dot-grid min-h-screen">
+        <div className="container mx-auto px-6 pb-48 pt-8">
+          <Alert variant="destructive">
+            <AlertTitle>Failed to load dashboard</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        </div>
+      </div>
+    );
+  }
 
   if (configured === false) {
     return <Navigate to={"/welcome"} />;
