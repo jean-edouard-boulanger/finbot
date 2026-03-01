@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useContext, useState, useEffect, useRef } from "react";
 
 import AceEditor from "react-ace";
 import { useApi, FinancialDataProvidersApi } from "clients";
+import { ThemeContext } from "contexts";
 import { withTheme } from "@rjsf/core";
 import validator from "@rjsf/validator-ajv8";
 import { shadcnTheme } from "components/ui/rjsf-theme";
@@ -20,6 +21,7 @@ import { Separator } from "components/ui/separator";
 import * as Yup from "yup";
 
 import "ace-builds/src-noconflict/theme-github";
+import "ace-builds/src-noconflict/theme-github_dark";
 import "ace-builds/src-noconflict/mode-json";
 
 const DEFAULT_CREDENTIALS_SCHEMA = {
@@ -87,6 +89,7 @@ const makeProviderDescription = (
 };
 
 export const EditProviderPanel: React.FC<Record<string, never>> = () => {
+  const { theme } = useContext(ThemeContext);
   const financialDataProvidersApi = useApi(FinancialDataProvidersApi);
   const [selectedProviderId, setSelectedProviderId] = useState<string | null>(
     null,
@@ -264,7 +267,7 @@ export const EditProviderPanel: React.FC<Record<string, never>> = () => {
                       }}
                       tabSize={2}
                       mode={"json"}
-                      theme="github"
+                      theme={theme === "dark" ? "github_dark" : "github"}
                       width="100%"
                       showGutter={true}
                       showPrintMargin={true}

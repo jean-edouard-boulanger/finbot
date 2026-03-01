@@ -540,7 +540,7 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
                   tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
                   tickFormatter={yTickFormatter}
                   width={60}
-                  domain={["auto", "auto"]}
+                  domain={[(min: number) => Math.min(min, 0), "auto"]}
                 />
                 {isSingleSeries && hasNegativeValues && (
                   <ReferenceLine
@@ -591,7 +591,7 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
                   tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
                   tickFormatter={yTickFormatter}
                   width={60}
-                  domain={["auto", "auto"]}
+                  domain={[(min: number) => Math.min(min, 0), "auto"]}
                 />
                 <Tooltip
                   content={

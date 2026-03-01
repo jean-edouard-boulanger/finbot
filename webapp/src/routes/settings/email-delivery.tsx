@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useApi, AdministrationApi, EmailProviderMetadata } from "clients";
 
 import ReactSelect from "react-select";
+import { themedSelectStyles } from "components/ui/react-select-theme";
 import { withTheme } from "@rjsf/core";
 import type { UiSchema } from "@rjsf/utils";
 import validator from "@rjsf/validator-ajv8";
@@ -163,6 +164,7 @@ export const EmailDeliverySettingsPanel: React.FC<
       <div className="max-w-lg space-y-2">
         <Label>Delivery method*</Label>
         <ReactSelect
+          styles={themedSelectStyles}
           isDisabled={!enableDelivery}
           placeholder="Delivery method"
           isLoading={providers.length === 0}
