@@ -25,6 +25,7 @@ import {
   XAxis,
   YAxis,
   Tooltip,
+  ReferenceLine,
 } from "recharts";
 import {
   ChartContainer,
@@ -255,6 +256,7 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
     useState<HistoricalValuation | null>(null);
 
   useEffect(() => {
+    setHistoricalValuation(null);
     const fetchValuation = async () => {
       const range = selectedTimeRange.makeRange(now);
       const request = {
@@ -404,6 +406,42 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
     };
   }, [historicalValuation, isSingleSeries]);
 
+  const xTickFormatter = (value: string | number) => {
+    if (!isDatetime) return String(value);
+    const num = Number(value);
+    const dt = isNaN(num)
+      ? DateTime.fromISO(String(value))
+      : DateTime.fromMillis(num);
+    return dt.toFormat("MMM ''yy");
+  };
+
+  const yTickFormatter = (value: number) => {
+    const ccy = historicalValuation?.valuationCcy ?? "";
+    const abs = Math.abs(value);
+    let formatted: string;
+    if (abs >= 1_000_000_000) {
+      formatted = `${Math.round(value / 1_000_000_000)}B`;
+    } else if (abs >= 1_000_000) {
+      formatted = `${Math.round(value / 1_000_000)}M`;
+    } else if (abs >= 1_000) {
+      formatted = `${Math.round(value / 1_000)}k`;
+    } else {
+      formatted = Math.round(value).toString();
+    }
+    return ccy ? `${ccy}${formatted}` : formatted;
+  };
+
+  const hasNegativeValues = useMemo(() => {
+    if (!isSingleSeries || !historicalValuation) return false;
+    const series = historicalValuation.seriesData.series;
+    if (series.length !== 1) return false;
+    return (series[0].data as (number | null)[]).some(
+      (v) => v != null && v < 0,
+    );
+  }, [historicalValuation, isSingleSeries]);
+
+  const xTickInterval = Math.max(Math.ceil(chartData.length / 6) - 1, 0);
+
   const tooltipFormatter = (value: number, name: string) => {
     return moneyFormatter(
       value,
@@ -459,7 +497,7 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
       </CardHeader>
       <CardContent>
         {historicalValuation ? (
-          <ChartContainer config={chartConfig} className="h-[250px] w-full">
+          <ChartContainer config={chartConfig} className="h-[250px] w-full animate-fade-up">
             {isDatetime ? (
               <AreaChart data={chartData}>
                 {isSingleSeries && (
@@ -478,8 +516,33 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
                     </linearGradient>
                   </defs>
                 )}
-                <XAxis dataKey="x" tickCount={7} hide />
-                <YAxis hide domain={["auto", "auto"]} />
+                <XAxis
+                  dataKey="x"
+                  interval={xTickInterval}
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                  tickFormatter={xTickFormatter}
+                  padding={{ left: 20 }}
+                />
+                <YAxis
+                  orientation="right"
+                  tickCount={4}
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                  tickFormatter={yTickFormatter}
+                  width={60}
+                  domain={["auto", "auto"]}
+                />
+                {isSingleSeries && hasNegativeValues && (
+                  <ReferenceLine
+                    y={0}
+                    stroke="hsl(var(--muted-foreground))"
+                    strokeDasharray="3 3"
+                    strokeOpacity={0.5}
+                  />
+                )}
                 <Tooltip
                   content={
                     <ChartTooltipContent
@@ -504,8 +567,25 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
               </AreaChart>
             ) : (
               <BarChart data={chartData}>
-                <XAxis dataKey="x" tickCount={7} hide />
-                <YAxis hide domain={["auto", "auto"]} />
+                <XAxis
+                  dataKey="x"
+                  interval={xTickInterval}
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                  tickFormatter={xTickFormatter}
+                  padding={{ left: 20 }}
+                />
+                <YAxis
+                  orientation="right"
+                  tickCount={4}
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                  tickFormatter={yTickFormatter}
+                  width={60}
+                  domain={["auto", "auto"]}
+                />
                 <Tooltip
                   content={
                     <ChartTooltipContent
