@@ -56,6 +56,7 @@ export interface GetUserAccountHistoricalValuationByAssetClassRequest {
   fromTime?: Date | null;
   toTime?: Date | null;
   frequency?: ValuationFrequency;
+  linkedAccountId?: number | null;
 }
 
 export interface GetUserAccountHistoricalValuationByAssetTypeRequest {
@@ -63,6 +64,7 @@ export interface GetUserAccountHistoricalValuationByAssetTypeRequest {
   fromTime?: Date | null;
   toTime?: Date | null;
   frequency?: ValuationFrequency;
+  linkedAccountId?: number | null;
 }
 
 export interface GetUserAccountValuationRequest {
@@ -402,6 +404,11 @@ export class UserAccountsValuationApi
       queryParameters["frequency"] = requestParameters["frequency"];
     }
 
+    if (requestParameters["linkedAccountId"] != null) {
+      queryParameters["linked_account_id"] =
+        requestParameters["linkedAccountId"];
+    }
+
     const headerParameters: runtime.HTTPHeaders = {};
 
     if (this.configuration && this.configuration.accessToken) {
@@ -479,6 +486,11 @@ export class UserAccountsValuationApi
 
     if (requestParameters["frequency"] != null) {
       queryParameters["frequency"] = requestParameters["frequency"];
+    }
+
+    if (requestParameters["linkedAccountId"] != null) {
+      queryParameters["linked_account_id"] =
+        requestParameters["linkedAccountId"];
     }
 
     const headerParameters: runtime.HTTPHeaders = {};

@@ -21,6 +21,7 @@ import {
   Area,
   BarChart,
   Bar,
+  Cell,
   XAxis,
   YAxis,
   Tooltip,
@@ -72,7 +73,7 @@ const LEVELS: Array<LevelChoiceProp> = [
   },
 ];
 
-const DEFAULT_LEVEL = LEVELS[1];
+const DEFAULT_LEVEL = LEVELS[0];
 
 const FREQUENCIES: Array<string> = [
   "Daily",
@@ -82,7 +83,7 @@ const FREQUENCIES: Array<string> = [
   "Yearly",
 ];
 
-const DEFAULT_FREQUENCY = FREQUENCIES[2];
+const DEFAULT_FREQUENCY = FREQUENCIES[0];
 
 const TIME_RANGES: Array<TimeRangeChoiceType> = [
   {
@@ -246,7 +247,7 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
   const userAccountsValuationApi = useApi(UserAccountsValuationApi);
   const linkedAccountsValuationApi = useApi(LinkedAccountsValuationApi);
   const [now] = useState<DateTime>(DateTime.now());
-  const [selectedLevel, setSelectedLevel] = useState(isSingleAccount ? LEVELS[0] : DEFAULT_LEVEL);
+  const [selectedLevel, setSelectedLevel] = useState(DEFAULT_LEVEL);
   const [selectedFrequency, setSelectedFrequency] = useState(DEFAULT_FREQUENCY);
   const [selectedTimeRange, setSelectedTimeRange] =
     useState<TimeRangeChoiceType>(DEFAULT_RANGE);
@@ -269,16 +270,34 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
               await linkedAccountsValuationApi.getLinkedAccountsHistoricalValuation(
                 request,
               );
-            const filtered = {
-              ...data.historicalValuation,
-              seriesData: {
-                ...data.historicalValuation.seriesData,
-                series: data.historicalValuation.seriesData.series.filter(
-                  (s) => s.name === linkedAccountName,
-                ),
-              },
-            };
-            setHistoricalValuation(filtered);
+            const hv = data.historicalValuation;
+            const matchedSeries = hv.seriesData.series.filter(
+              (s) => s.name === linkedAccountName,
+            );
+            // Trim x-axis to only indices where this series has data
+            const seriesData = matchedSeries[0]?.data as (number | null)[] | undefined;
+            const categories = hv.seriesData.xAxis.categories as (string | number)[];
+            if (seriesData) {
+              const firstIdx = seriesData.findIndex((v) => v != null);
+              const lastIdx = seriesData.length - 1 - [...seriesData].reverse().findIndex((v) => v != null);
+              const trimmedCategories = categories.slice(firstIdx, lastIdx + 1);
+              const trimmedSeries = matchedSeries.map((s) => ({
+                ...s,
+                data: (s.data as (number | null)[]).slice(firstIdx, lastIdx + 1),
+              }));
+              setHistoricalValuation({
+                ...hv,
+                seriesData: {
+                  xAxis: { ...hv.seriesData.xAxis, categories: trimmedCategories },
+                  series: trimmedSeries,
+                },
+              });
+            } else {
+              setHistoricalValuation({
+                ...hv,
+                seriesData: { ...hv.seriesData, series: matchedSeries },
+              });
+            }
           } else {
             const data =
               await userAccountsValuationApi.getUserAccountHistoricalValuation(
@@ -299,7 +318,10 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
         case "asset_type": {
           const data =
             await userAccountsValuationApi.getUserAccountHistoricalValuationByAssetType(
-              request,
+              {
+                ...request,
+                linkedAccountId: linkedAccountId,
+              },
             );
           setHistoricalValuation(data.historicalValuation);
           break;
@@ -307,7 +329,10 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
         case "asset_class": {
           const data =
             await userAccountsValuationApi.getUserAccountHistoricalValuationByAssetClass(
-              request,
+              {
+                ...request,
+                linkedAccountId: linkedAccountId,
+              },
             );
           setHistoricalValuation(data.historicalValuation);
           break;
@@ -325,9 +350,13 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
     selectedFrequency,
   ]);
 
-  const { chartData, chartConfig, seriesKeys, isDatetime } = useMemo(() => {
+  const isSingleSeries = selectedLevel.type === "account";
+  const gainColor = "hsl(var(--gain))";
+  const lossColor = "hsl(var(--loss))";
+
+  const { chartData, chartConfig, seriesKeys, isDatetime, gradientOffset } = useMemo(() => {
     if (!historicalValuation) {
-      return { chartData: [], chartConfig: {} as ChartConfig, seriesKeys: [] as string[], isDatetime: false };
+      return { chartData: [], chartConfig: {} as ChartConfig, seriesKeys: [] as string[], isDatetime: false, gradientOffset: 1 };
     }
     const { xAxis, series } = historicalValuation.seriesData;
     const categories = xAxis.categories as Array<string | number>;
@@ -343,16 +372,37 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
 
     const config: ChartConfig = {};
     series.forEach((s) => {
-      config[s.name] = { label: s.name, color: s.colour };
+      config[s.name] = {
+        label: s.name,
+        color: isSingleSeries ? gainColor : s.colour,
+      };
     });
+
+    // Compute gradient stop offset for area chart (where y=0 falls as fraction from top)
+    let gradientOffset = 0;
+    if (isSingleSeries && series.length === 1) {
+      const values = (series[0].data as (number | null)[]).filter(
+        (v): v is number => v != null,
+      );
+      const max = Math.max(...values);
+      const min = Math.min(...values);
+      if (max <= 0) {
+        gradientOffset = 0;
+      } else if (min >= 0) {
+        gradientOffset = 1;
+      } else {
+        gradientOffset = max / (max - min);
+      }
+    }
 
     return {
       chartData: data,
       chartConfig: config,
       seriesKeys: series.map((s) => s.name),
       isDatetime,
+      gradientOffset,
     };
-  }, [historicalValuation]);
+  }, [historicalValuation, isSingleSeries]);
 
   const tooltipFormatter = (value: number, name: string) => {
     return moneyFormatter(
@@ -364,8 +414,11 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
 
   const labelFormatter = (label: string) => {
     if (isDatetime) {
-      const dt = DateTime.fromMillis(Number(label));
-      return dt.toFormat("dd-MMM-yyyy HH:mm");
+      const num = Number(label);
+      const dt = isNaN(num)
+        ? DateTime.fromISO(label)
+        : DateTime.fromMillis(num);
+      return dt.toFormat("dd MMM yyyy");
     }
     return String(label);
   };
@@ -409,8 +462,24 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
           <ChartContainer config={chartConfig} className="h-[250px] w-full">
             {isDatetime ? (
               <AreaChart data={chartData}>
+                {isSingleSeries && (
+                  <defs>
+                    <linearGradient id="gainLossGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset={0} stopColor={gainColor} stopOpacity={0.6} />
+                      <stop offset={gradientOffset} stopColor={gainColor} stopOpacity={0.6} />
+                      <stop offset={gradientOffset} stopColor={lossColor} stopOpacity={0.6} />
+                      <stop offset={1} stopColor={lossColor} stopOpacity={0.6} />
+                    </linearGradient>
+                    <linearGradient id="gainLossStroke" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset={0} stopColor={gainColor} stopOpacity={1} />
+                      <stop offset={gradientOffset} stopColor={gainColor} stopOpacity={1} />
+                      <stop offset={gradientOffset} stopColor={lossColor} stopOpacity={1} />
+                      <stop offset={1} stopColor={lossColor} stopOpacity={1} />
+                    </linearGradient>
+                  </defs>
+                )}
                 <XAxis dataKey="x" tickCount={7} hide />
-                <YAxis hide domain={[0, "auto"]} />
+                <YAxis hide domain={["auto", "auto"]} />
                 <Tooltip
                   content={
                     <ChartTooltipContent
@@ -424,10 +493,10 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
                     key={key}
                     type="monotone"
                     dataKey={key}
-                    stackId="1"
-                    fill={chartConfig[key].color}
-                    stroke={chartConfig[key].color}
-                    fillOpacity={0.6}
+                    stackId={isSingleSeries ? undefined : "1"}
+                    fill={isSingleSeries ? "url(#gainLossGradient)" : chartConfig[key].color}
+                    stroke={isSingleSeries ? "url(#gainLossStroke)" : chartConfig[key].color}
+                    fillOpacity={isSingleSeries ? 1 : 0.6}
                     strokeWidth={1.5}
                     isAnimationActive={false}
                   />
@@ -436,7 +505,7 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
             ) : (
               <BarChart data={chartData}>
                 <XAxis dataKey="x" tickCount={7} hide />
-                <YAxis hide domain={[0, "auto"]} />
+                <YAxis hide domain={["auto", "auto"]} />
                 <Tooltip
                   content={
                     <ChartTooltipContent
@@ -449,12 +518,22 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
                   <Bar
                     key={key}
                     dataKey={key}
-                    stackId="1"
+                    stackId={isSingleSeries ? undefined : "1"}
                     fill={chartConfig[key].color}
                     strokeWidth={0}
                     radius={[2, 2, 0, 0]}
                     isAnimationActive={false}
-                  />
+                  >
+                    {isSingleSeries &&
+                      chartData.map((row, i) => (
+                        <Cell
+                          key={i}
+                          fill={
+                            (row[key] as number) < 0 ? lossColor : gainColor
+                          }
+                        />
+                      ))}
+                  </Bar>
                 ))}
               </BarChart>
             )}

@@ -298,6 +298,7 @@ class HistoricalValuationParams(AppModel):
     from_time: datetime | None = None
     to_time: datetime | None = None
     frequency: core_schema.ValuationFrequency = core_schema.ValuationFrequency.Daily
+    linked_account_id: int | None = None
 
 
 class XAxisDescription(AppModel):
