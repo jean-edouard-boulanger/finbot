@@ -13,7 +13,7 @@ import { LoadingButton } from "components/loading-button";
 import { Formik, Form as MetaForm, Field, ErrorMessage } from "formik";
 import { Label } from "components/ui/label";
 import { Separator } from "components/ui/separator";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 
 import * as Yup from "yup";
 

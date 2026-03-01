@@ -187,9 +187,9 @@ export const LinkedAccountDashboard: React.FC = () => {
     "hsl(var(--chart-3))",
     "hsl(var(--chart-4))",
     "hsl(var(--chart-5))",
-    "#8884d8",
-    "#82ca9d",
-    "#ffc658",
+    "hsl(var(--primary))",
+    "hsl(var(--gain))",
+    "hsl(var(--destructive))",
   ];
 
   if (isNaN(linkedAccountId)) {

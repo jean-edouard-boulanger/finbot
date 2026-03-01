@@ -12,7 +12,7 @@ import {
 import { Input } from "components/ui/input";
 import { Label } from "components/ui/label";
 import { Separator } from "components/ui/separator";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 
 interface PasswordForm extends PasswordValidationInput {
   oldPassword: string;

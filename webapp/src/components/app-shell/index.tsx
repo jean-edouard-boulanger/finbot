@@ -11,6 +11,7 @@ import {
   Palette,
   Server,
   Mail,
+  Plus,
 } from "lucide-react";
 
 import AuthContext from "contexts/auth/auth-context";
@@ -162,22 +163,29 @@ function SidebarContent({
         {isOnSettings ? (
           <SettingsSubNav onNavigate={onNavigate} />
         ) : (
-          accounts.length > 0 && (
-            <>
-              <p className="mt-4 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Accounts
-              </p>
-              {accounts.map((entry) => (
-                <AccountNavItem
-                  key={entry.linkedAccount.id}
-                  to={`/dashboard/accounts/${entry.linkedAccount.id}`}
-                  colour={entry.linkedAccount.accountColour}
-                  name={entry.linkedAccount.description}
-                  onClick={onNavigate}
-                />
-              ))}
-            </>
-          )
+          <>
+            <p className="mt-4 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Accounts
+            </p>
+            {accounts.map((entry) => (
+              <AccountNavItem
+                key={entry.linkedAccount.id}
+                to={`/dashboard/accounts/${entry.linkedAccount.id}`}
+                colour={entry.linkedAccount.accountColour}
+                name={entry.linkedAccount.description}
+                onClick={onNavigate}
+              />
+            ))}
+            <NavLink to="/settings/linked?action=link" onClick={onNavigate}>
+              <Button
+                variant="ghost"
+                className="w-full justify-start gap-2 pl-4 text-muted-foreground"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span className="text-sm">Link account</span>
+              </Button>
+            </NavLink>
+          </>
         )}
 
         {/* Spacer */}

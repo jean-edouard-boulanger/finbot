@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   CheckCircle,
   AlertCircle,
@@ -57,7 +58,7 @@ import {
   DropdownMenuTrigger,
 } from "components/ui/dropdown-menu";
 import { Separator } from "components/ui/separator";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 
 type FormattingRules = GetAccountsFormattingRulesResponse;
 
@@ -552,6 +553,7 @@ const AccountsPanel: React.FC = () => {
   const { userAccountId } = useContext(AuthContext);
   const linkedAccountsApi = useApi(LinkedAccountsApi);
   const formattingRulesApi = useApi(FormattingRulesApi);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [accounts, setAccounts] = useState<Array<LinkedAccount>>([]);
   const [formattingRules, setFormattingRules] =
@@ -559,7 +561,10 @@ const AccountsPanel: React.FC = () => {
   const [sheetState, setSheetState] = useState<{
     open: boolean;
     linkedAccount: LinkedAccount | null;
-  }>({ open: false, linkedAccount: null });
+  }>(() => {
+    const autoOpen = searchParams.get("action") === "link";
+    return { open: autoOpen, linkedAccount: null };
+  });
   const [dialog, setDialog] = useState<UnlinkAccountDialogProps>({
     show: false,
     linkedAccount: null,
@@ -680,6 +685,10 @@ const AccountsPanel: React.FC = () => {
 
   const closeSheet = () => {
     setSheetState({ open: false, linkedAccount: null });
+    if (searchParams.has("action")) {
+      searchParams.delete("action");
+      setSearchParams(searchParams, { replace: true });
+    }
   };
 
   const handleSheetSuccess = async () => {

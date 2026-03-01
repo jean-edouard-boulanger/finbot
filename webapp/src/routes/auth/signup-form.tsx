@@ -5,7 +5,7 @@ import { CheckCircle } from "lucide-react";
 import { useApi, UserAccountsApi } from "clients";
 import { isEmailValid } from "utils/email";
 
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { LoadingButton, PasswordValidationCard } from "components";
 import {
   validatePassword,

@@ -9,7 +9,7 @@ const DataDrivenForm = withTheme(shadcnTheme);
 import { LoadingButton } from "components";
 import { Formik, Form as MetaForm, Field, ErrorMessage } from "formik";
 import { ProviderSelector } from "./components";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 
 import { Button } from "components/ui/button";
 import { Label } from "components/ui/label";

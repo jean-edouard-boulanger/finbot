@@ -1,9 +1,9 @@
 import React, { useContext } from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
 
-import { AuthProvider, AuthContext, ThemeProvider } from "contexts";
+import { AuthProvider, AuthContext, ThemeProvider, ThemeContext } from "contexts";
 
-import { ToastContainer, Slide } from "react-toastify";
+import { Toaster } from "sonner";
 import { MainContainer, Navigation } from "components";
 import { AppShell } from "components/app-shell";
 import { ProfileSettings } from "./routes/settings/profile";
@@ -21,7 +21,6 @@ import {
   Welcome,
 } from "routes";
 
-import "react-toastify/dist/ReactToastify.css";
 import "./assets/index.css";
 import { AppearanceSettings } from "./routes/settings/appearance";
 
@@ -75,17 +74,18 @@ const AppRouter = () => {
   return userAccountId ? <UserRouter /> : <GuestRouter />;
 };
 
+const ThemedToaster = () => {
+  const { theme } = useContext(ThemeContext);
+  return <Toaster position="bottom-right" duration={7000} theme={theme} />;
+};
+
 interface AppProps {}
 
 const App: React.FC<AppProps> = () => {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <ToastContainer
-          autoClose={7000}
-          transition={Slide}
-          position="bottom-right"
-        />
+        <ThemedToaster />
         <AppRouter />
       </AuthProvider>
     </ThemeProvider>

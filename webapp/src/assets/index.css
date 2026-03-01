@@ -26,6 +26,11 @@
     --radius: 0.75rem;
     --gain: 152 69% 36%;
     --loss: 0 80% 55%;
+    --chart-1: 43 90% 48%;
+    --chart-2: 192 75% 42%;
+    --chart-3: 350 70% 55%;
+    --chart-4: 262 60% 55%;
+    --chart-5: 152 60% 40%;
   }
 
   .dark {
@@ -50,6 +55,11 @@
     --ring: 43 96% 56%;
     --gain: 152 69% 50%;
     --loss: 0 80% 62%;
+    --chart-1: 43 90% 58%;
+    --chart-2: 192 75% 55%;
+    --chart-3: 350 65% 62%;
+    --chart-4: 262 55% 65%;
+    --chart-5: 152 60% 52%;
   }
 }
 
@@ -60,6 +70,24 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  /* Sonner toast overrides */
+  [data-sonner-toaster] {
+    --normal-bg: hsl(var(--card));
+    --normal-text: hsl(var(--card-foreground));
+    --normal-border: hsl(var(--border));
+    --success-bg: hsl(var(--card));
+    --success-text: hsl(var(--gain));
+    --success-border: hsl(var(--border));
+    --error-bg: hsl(var(--card));
+    --error-text: hsl(var(--destructive));
+    --error-border: hsl(var(--border));
+    font-family: "Outfit", sans-serif;
+  }
+
+  [data-sonner-toast] {
+    border-radius: var(--radius);
   }
 }
 

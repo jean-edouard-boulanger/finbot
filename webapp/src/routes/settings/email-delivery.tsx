@@ -9,7 +9,7 @@ import validator from "@rjsf/validator-ajv8";
 import { shadcnTheme } from "components/ui/rjsf-theme";
 const DataDrivenForm = withTheme(shadcnTheme);
 import { LoadingButton } from "components";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 
 import { Input } from "components/ui/input";
 import { Label } from "components/ui/label";

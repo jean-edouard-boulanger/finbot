@@ -21,7 +21,7 @@ import type { IChangeEvent } from "@rjsf/core";
 import validator from "@rjsf/validator-ajv8";
 import { shadcnTheme } from "components/ui/rjsf-theme";
 const DataDrivenForm = withTheme(shadcnTheme);
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { Button } from "components/ui/button";
 import { Input } from "components/ui/input";
 import { Label } from "components/ui/label";
@@ -117,7 +117,7 @@ const PlaidForm: React.FC<PlaidFormProps> = ({
       token={updateMode ? linkToken! : undefined}
       publicKey={settings.publicKey}
       env={settings.environment}
-      countryCodes={["GB", "US", "CA", "IE", "FR", "ES", "NL"]}
+      countryCodes={["FR"]}
       product={updateMode ? [] : ["transactions", "identity"]}
       style={{
         background: "#3458e6",

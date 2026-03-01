@@ -41,9 +41,9 @@
     "react-router-dom": "^6.25.1",
     "react-select": "^5.8.0",
     "react-spinners": "^0.14.1",
-    "react-toastify": "^10.0.5",
     "recharts": "^3.7.0",
     "serve": "^14.2.3",
+    "sonner": "^2.0.7",
     "tailwind-merge": "^3.5.0",
     "typescript": "~5.5.0",
     "yup": "^1.4.0"
