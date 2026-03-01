@@ -1,2 +1,4 @@
 import { AuthContext, AuthProvider } from "./auth";
-export { AuthContext, AuthProvider };
+import { ThemeContext, ThemeProvider } from "./theme";
+export { AuthContext, AuthProvider, ThemeContext, ThemeProvider };
+export type { Theme } from "./theme";

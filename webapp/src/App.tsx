@@ -1,7 +1,7 @@
 import React, { useContext } from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
 
-import { AuthProvider, AuthContext } from "contexts";
+import { AuthProvider, AuthContext, ThemeProvider } from "contexts";
 
 import { ToastContainer, Slide } from "react-toastify";
 import { MainContainer, Navigation } from "components";
@@ -29,6 +29,7 @@ import {
 import "react-toastify/dist/ReactToastify.css";
 import "./assets/index.css";
 import { LinkAccount } from "./routes/settings/link-account";
+import { AppearanceSettings } from "./routes/settings/appearance";
 
 const GuestRouter = () => {
   return (
@@ -62,6 +63,7 @@ const UserRouter = () => {
           <Route path="" element={<AccountsPanel />} />
           <Route path="*" element={<AccountsPanel />} />
         </Route>
+        <Route path="appearance" element={<AppearanceSettings />} />
         <Route path="admin/providers" element={<ProvidersSettings />} />
         <Route
           path="admin/email_delivery"
@@ -84,17 +86,19 @@ interface AppProps {}
 
 const App: React.FC<AppProps> = () => {
   return (
-    <AuthProvider>
-      <ToastContainer
-        autoClose={7000}
-        transition={Slide}
-        position="bottom-right"
-      />
-      <Navigation />
-      <MainContainer>
-        <AppRouter />
-      </MainContainer>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <ToastContainer
+          autoClose={7000}
+          transition={Slide}
+          position="bottom-right"
+        />
+        <Navigation />
+        <MainContainer>
+          <AppRouter />
+        </MainContainer>
+      </AuthProvider>
+    </ThemeProvider>
   );
 };
 

@@ -4,6 +4,31 @@
 
 @layer base {
   :root {
+    --background: 40 20% 98%;
+    --foreground: 225 25% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 225 25% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 225 25% 10%;
+    --primary: 43 96% 43%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 225 15% 94%;
+    --secondary-foreground: 225 25% 15%;
+    --muted: 225 12% 92%;
+    --muted-foreground: 225 10% 42%;
+    --accent: 225 12% 92%;
+    --accent-foreground: 225 25% 12%;
+    --destructive: 0 80% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 225 15% 88%;
+    --input: 225 15% 88%;
+    --ring: 43 96% 43%;
+    --radius: 0.75rem;
+    --gain: 152 69% 36%;
+    --loss: 0 80% 55%;
+  }
+
+  .dark {
     --background: 225 25% 6%;
     --foreground: 40 10% 93%;
     --card: 225 20% 9%;
@@ -23,7 +48,6 @@
     --border: 225 15% 15%;
     --input: 225 15% 15%;
     --ring: 43 96% 56%;
-    --radius: 0.75rem;
     --gain: 152 69% 50%;
     --loss: 0 80% 62%;
   }
@@ -44,7 +68,7 @@
   .bg-dot-grid {
     background-image: radial-gradient(
       circle,
-      hsl(225 15% 18%) 1px,
+      hsl(var(--border)) 1px,
       transparent 1px
     );
     background-size: 24px 24px;
@@ -77,9 +101,9 @@
     bottom: -1px;
     background: linear-gradient(
       135deg,
-      hsl(43 96% 56% / 0.15),
+      hsl(var(--primary) / 0.15),
       transparent 50%,
-      hsl(43 96% 56% / 0.05)
+      hsl(var(--primary) / 0.05)
     );
     border-radius: inherit;
     z-index: 0;
@@ -117,9 +141,9 @@
   .skeleton-shimmer {
     background: linear-gradient(
       90deg,
-      hsl(225 15% 13%) 25%,
-      hsl(225 15% 17%) 50%,
-      hsl(225 15% 13%) 75%
+      hsl(var(--muted)) 25%,
+      hsl(var(--accent)) 50%,
+      hsl(var(--muted)) 75%
     );
     background-size: 200% 100%;
     animation: shimmer 1.5s ease-in-out infinite;

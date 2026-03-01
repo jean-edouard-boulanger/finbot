@@ -59,6 +59,12 @@ export const NavigationPanel: React.FC = () => {
         currentPath={pathname}
         onClick={() => push("/settings/linked")}
       />
+      <NavItem
+        path="/settings/appearance"
+        label="Appearance"
+        currentPath={pathname}
+        onClick={() => push("/settings/appearance")}
+      />
       <Separator className="my-2" />
       <p className="px-3 py-2 text-sm font-semibold text-muted-foreground">
         Administration
