@@ -42,7 +42,7 @@ class TakeUserAccountRawSnapshotWorkflow:
         from finbot.workflows.fetch_financial_data.schema import GetFinancialDataRequest
 
         try:
-            await workflow.execute_activity(
+            snapshot_data = await workflow.execute_activity(
                 get_financial_data,
                 GetFinancialDataRequest(
                     provider_id=request.provider_id,
@@ -59,18 +59,7 @@ class TakeUserAccountRawSnapshotWorkflow:
 
         return LinkedAccountSnapshotResponse(
             request=request,
-            # TODO: implement retries
-            snapshot_data=await workflow.execute_activity(
-                get_financial_data,
-                GetFinancialDataRequest(
-                    provider_id=request.provider_id,
-                    encrypted_credentials=request.encrypted_credentials,
-                    items=request.line_items,
-                    user_account_currency=request.user_account_currency,
-                ),
-                retry_policy=TRY_ONCE,
-                start_to_close_timeout=request.timeout,
-            ),
+            snapshot_data=snapshot_data,
         )
 
 
