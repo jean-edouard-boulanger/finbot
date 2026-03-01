@@ -69,11 +69,16 @@ function NavItem({
     <NavLink
       to={to}
       className={cn(
-        "px-4 py-2 text-sm font-medium transition-colors hover:text-white",
-        isActive ? "text-white" : "text-gray-300",
+        "relative px-4 py-2 text-sm font-medium tracking-wide transition-colors",
+        isActive
+          ? "text-primary"
+          : "text-muted-foreground hover:text-foreground",
       )}
     >
       {children}
+      {isActive && (
+        <span className="absolute bottom-0 left-4 right-4 h-px bg-primary" />
+      )}
     </NavLink>
   );
 }
@@ -102,7 +107,11 @@ function MobileNav({ isAuthenticated }: { isAuthenticated: boolean }) {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="md:hidden text-white">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="md:hidden text-foreground"
+        >
           <Menu className="h-5 w-5" />
           <span className="sr-only">Toggle menu</span>
         </Button>
@@ -163,13 +172,13 @@ export const Navigation: React.FC = () => {
   const isAuthenticated = userAccountId !== null;
 
   return (
-    <header className="sticky top-0 z-40 border-b bg-gray-900 shadow-sm">
+    <header className="sticky top-0 z-40 border-b border-border/50 bg-background/80 backdrop-blur-xl">
       <div className="container mx-auto flex h-14 items-center justify-between px-6">
         <div className="flex items-center gap-4">
           <MobileNav isAuthenticated={isAuthenticated} />
           <NavLink
             to={isAuthenticated ? "/dashboard" : "/login"}
-            className="text-lg font-semibold text-white"
+            className="text-lg font-semibold tracking-tight text-foreground"
           >
             Finbot{" "}
             <SystemStatusBadge />

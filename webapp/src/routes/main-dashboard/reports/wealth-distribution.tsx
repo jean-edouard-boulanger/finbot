@@ -165,12 +165,18 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
   );
 
   return (
-    <Card className="h-[22rem]">
+    <Card className="h-[22rem] border-border/50">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <span className="font-medium">Asset diversification</span>
+        <span className="text-sm font-medium tracking-wide uppercase text-muted-foreground">
+          Asset Diversification
+        </span>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="xs">
+            <Button
+              variant="outline"
+              size="xs"
+              className="border-border/50 bg-secondary/50 text-xs font-medium tracking-wide text-muted-foreground hover:text-foreground"
+            >
               BY {aggregationMode.toUpperCase()}{" "}
               <ChevronDown className="ml-1 h-3 w-3" />
             </Button>
@@ -179,7 +185,7 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
             {AGGREGATION_MODES.map((mode) => (
               <DropdownMenuItem
                 key={mode}
-                className={mode === aggregationMode ? "bg-accent" : ""}
+                className={mode === aggregationMode ? "bg-accent text-primary" : ""}
                 onClick={() => setAggregationMode(mode)}
               >
                 BY {mode.toUpperCase()}
@@ -189,7 +195,7 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
         </DropdownMenu>
       </CardHeader>
       <CardContent>
-        {valuation !== null && (
+        {valuation !== null ? (
           <div className="flex items-center gap-4">
             <div className="shrink-0" style={{ width: showLegend ? "55%" : "100%", height: 240 }}>
               <ResponsiveContainer width="100%" height="100%">
@@ -200,7 +206,8 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
                     nameKey="name"
                     innerRadius="50%"
                     outerRadius="85%"
-                    stroke="none"
+                    stroke="hsl(225 20% 9%)"
+                    strokeWidth={2}
                     isAnimationActive={false}
                   >
                     {pieData.map((entry, i) => (
@@ -216,19 +223,19 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
               </ResponsiveContainer>
             </div>
             {showLegend && (
-              <div className="flex min-w-0 flex-1 flex-col gap-1.5 overflow-y-auto" style={{ maxHeight: 240 }}>
+              <div className="flex min-w-0 flex-1 flex-col gap-2 overflow-y-auto" style={{ maxHeight: 240 }}>
                 {pieData.map((entry, i) => {
                   const pct = total > 0 ? ((entry.value / total) * 100).toFixed(1) : "0.0";
                   return (
-                    <div key={i} className="flex items-center gap-2 text-xs">
+                    <div key={i} className="flex items-center gap-2.5 text-xs">
                       <span
-                        className="h-2 w-2 shrink-0 rounded-full"
+                        className="h-2.5 w-2.5 shrink-0 rounded-sm"
                         style={{ backgroundColor: entry.fill }}
                       />
                       <span className="min-w-0 flex-1 truncate text-muted-foreground">
                         {entry.name}
                       </span>
-                      <span className="shrink-0 tabular-nums font-medium">
+                      <span className="shrink-0 font-mono tabular-nums font-medium">
                         {pct}%
                       </span>
                     </div>
@@ -236,6 +243,10 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
                 })}
               </div>
             )}
+          </div>
+        ) : (
+          <div className="flex items-center justify-center" style={{ height: 240 }}>
+            <div className="skeleton-shimmer h-40 w-40 rounded-full" />
           </div>
         )}
       </CardContent>

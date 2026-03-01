@@ -93,11 +93,13 @@ export const ChartTooltipContent: React.FC<ChartTooltipContentProps> = ({
   const formattedLabel = labelFormatter ? labelFormatter(label ?? "") : label;
 
   return (
-    <div className="bg-background text-foreground border-border/50 rounded-md border px-3 py-2 text-sm shadow-md">
+    <div className="rounded-lg border border-border/50 bg-popover px-3 py-2.5 text-sm text-popover-foreground shadow-xl backdrop-blur-sm">
       {formattedLabel && (
-        <div className="mb-1 font-medium">{formattedLabel}</div>
+        <div className="mb-1.5 text-xs font-medium tracking-wide uppercase text-muted-foreground">
+          {formattedLabel}
+        </div>
       )}
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1.5">
         {payload.map((entry, i) => {
           const displayLabel =
             config?.[entry.dataKey]?.label ?? entry.name ?? entry.dataKey;
@@ -107,11 +109,13 @@ export const ChartTooltipContent: React.FC<ChartTooltipContentProps> = ({
           return (
             <div key={i} className="flex items-center gap-2">
               <span
-                className="h-2.5 w-2.5 shrink-0 rounded-full"
+                className="h-2.5 w-2.5 shrink-0 rounded-sm"
                 style={{ backgroundColor: entry.color }}
               />
               <span className="text-muted-foreground">{displayLabel}</span>
-              <span className="ml-auto font-medium">{displayValue}</span>
+              <span className="ml-auto font-mono font-medium tabular-nums">
+                {displayValue}
+              </span>
             </div>
           );
         })}

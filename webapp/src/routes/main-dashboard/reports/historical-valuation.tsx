@@ -204,7 +204,11 @@ function FilterDropdown({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="xs">
+        <Button
+          variant="outline"
+          size="xs"
+          className="border-border/50 bg-secondary/50 text-xs font-medium tracking-wide text-muted-foreground hover:text-foreground"
+        >
           {label} <ChevronDown className="ml-1 h-3 w-3" />
         </Button>
       </DropdownMenuTrigger>
@@ -212,7 +216,7 @@ function FilterDropdown({
         {items.map((item) => (
           <DropdownMenuItem
             key={item.key}
-            className={activeKey === item.key ? "bg-accent" : ""}
+            className={activeKey === item.key ? "bg-accent text-primary" : ""}
             onClick={() => onSelect(item.key)}
           >
             {item.label}
@@ -344,9 +348,11 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
   };
 
   return (
-    <Card className="h-[22rem]">
+    <Card className="h-[22rem] border-border/50">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <span className="font-medium">Historical Valuation</span>
+        <span className="text-sm font-medium tracking-wide uppercase text-muted-foreground">
+          Historical Valuation
+        </span>
         <div className="flex gap-1">
           <FilterDropdown
             label={selectedLevel.label}
@@ -376,7 +382,7 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
         </div>
       </CardHeader>
       <CardContent>
-        {historicalValuation && (
+        {historicalValuation ? (
           <ChartContainer config={chartConfig} className="h-[250px] w-full">
             {isDatetime ? (
               <AreaChart data={chartData}>
@@ -398,8 +404,8 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
                     stackId="1"
                     fill={chartConfig[key].color}
                     stroke={chartConfig[key].color}
-                    fillOpacity={0.8}
-                    strokeWidth={1}
+                    fillOpacity={0.6}
+                    strokeWidth={1.5}
                     isAnimationActive={false}
                   />
                 ))}
@@ -422,13 +428,24 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
                     dataKey={key}
                     stackId="1"
                     fill={chartConfig[key].color}
-                    strokeWidth={1}
+                    strokeWidth={0}
+                    radius={[2, 2, 0, 0]}
                     isAnimationActive={false}
                   />
                 ))}
               </BarChart>
             )}
           </ChartContainer>
+        ) : (
+          <div className="flex h-[250px] items-end gap-1 px-4">
+            {Array.from({ length: 24 }).map((_, i) => (
+              <div
+                key={i}
+                className="skeleton-shimmer flex-1 rounded-t"
+                style={{ height: `${30 + Math.random() * 60}%` }}
+              />
+            ))}
+          </div>
         )}
       </CardContent>
     </Card>

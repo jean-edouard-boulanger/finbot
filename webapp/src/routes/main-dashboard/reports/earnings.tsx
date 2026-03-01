@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import { useApi, UserAccountsReportsApi, EarningsReport } from "clients";
 
 import {
-  StackedBarLoader,
   Money,
   ValuationChange,
   RelativeValuationChange,
@@ -65,13 +64,11 @@ export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
 
   if (loading || !report) {
     return (
-      <StackedBarLoader
-        count={4}
-        color={"#FBFBFB"}
-        spacing={"0.8em"}
-        height={"1em"}
-        width={"100%"}
-      />
+      <div className="space-y-3 py-4">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="skeleton-shimmer h-10 rounded" />
+        ))}
+      </div>
     );
   }
 
@@ -80,24 +77,24 @@ export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
   return (
     <Table>
       <TableHeader>
-        <TableRow>
-          <TableHead>Period</TableHead>
-          <TableHead>Open</TableHead>
-          <TableHead>Close</TableHead>
-          <TableHead>Minimum</TableHead>
-          <TableHead>Maximum</TableHead>
-          <TableHead>Change</TableHead>
-          <TableHead>Change (%)</TableHead>
+        <TableRow className="border-border/50 hover:bg-transparent">
+          <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Period</TableHead>
+          <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Open</TableHead>
+          <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Close</TableHead>
+          <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Minimum</TableHead>
+          <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Maximum</TableHead>
+          <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Change</TableHead>
+          <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Change (%)</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {report.entries.map((entry, index) => {
           return (
-            <TableRow key={`entry-${index}`}>
+            <TableRow key={`entry-${index}`} className="border-border/30 transition-colors hover:bg-secondary/30">
               <TableCell>
                 <strong>{entry.aggregation.asStr}</strong>
               </TableCell>
-              <TableCell>
+              <TableCell className="font-mono tabular-nums">
                 <Money
                   amount={entry.metrics.firstValue}
                   locale={locale}
@@ -105,7 +102,7 @@ export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
                   moneyFormatter={moneyFormatter}
                 />
               </TableCell>
-              <TableCell>
+              <TableCell className="font-mono tabular-nums">
                 <Money
                   amount={entry.metrics.lastValue}
                   locale={locale}
@@ -113,7 +110,7 @@ export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
                   moneyFormatter={moneyFormatter}
                 />
               </TableCell>
-              <TableCell>
+              <TableCell className="font-mono tabular-nums">
                 <Money
                   amount={entry.metrics.minValue}
                   locale={locale}
@@ -121,7 +118,7 @@ export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
                   moneyFormatter={moneyFormatter}
                 />
               </TableCell>
-              <TableCell>
+              <TableCell className="font-mono tabular-nums">
                 <Money
                   amount={entry.metrics.maxValue}
                   locale={locale}
@@ -129,12 +126,12 @@ export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
                   moneyFormatter={moneyFormatter}
                 />
               </TableCell>
-              <TableCell>
+              <TableCell className="font-mono tabular-nums">
                 <strong>
                   <ValuationChange amount={entry.metrics.absChange} />
                 </strong>
               </TableCell>
-              <TableCell>
+              <TableCell className="font-mono tabular-nums">
                 <strong>
                   <RelativeValuationChange amount={entry.metrics.relChange} />
                 </strong>
@@ -147,14 +144,14 @@ export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
         <TableRow
           className={
             report!.rollup.absChange >= 0
-              ? "bg-green-50 font-bold"
-              : "bg-red-50 font-bold"
+              ? "border-border/50 bg-gain/5 font-bold"
+              : "border-border/50 bg-loss/5 font-bold"
           }
         >
           <TableCell>
             <strong>Summary</strong>
           </TableCell>
-          <TableCell>
+          <TableCell className="font-mono tabular-nums">
             <strong>
               <Money
                 amount={report!.rollup.firstValue}
@@ -164,7 +161,7 @@ export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
               />
             </strong>
           </TableCell>
-          <TableCell>
+          <TableCell className="font-mono tabular-nums">
             <strong>
               <Money
                 amount={report!.rollup.lastValue}
@@ -174,7 +171,7 @@ export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
               />
             </strong>
           </TableCell>
-          <TableCell>
+          <TableCell className="font-mono tabular-nums">
             <Money
               amount={report!.rollup.minValue}
               locale={locale}
@@ -182,7 +179,7 @@ export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
               moneyFormatter={moneyFormatter}
             />
           </TableCell>
-          <TableCell>
+          <TableCell className="font-mono tabular-nums">
             <Money
               amount={report!.rollup.maxValue}
               locale={locale}
@@ -190,12 +187,12 @@ export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
               moneyFormatter={moneyFormatter}
             />
           </TableCell>
-          <TableCell>
+          <TableCell className="font-mono tabular-nums">
             <strong>
               <ValuationChange amount={report!.rollup.absChange} />
             </strong>
           </TableCell>
-          <TableCell>
+          <TableCell className="font-mono tabular-nums">
             <strong>
               <RelativeValuationChange amount={report!.rollup.relChange} />
             </strong>

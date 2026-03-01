@@ -4,28 +4,28 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
-    --gain: 142 76% 36%;
-    --loss: 0 84% 60%;
+    --background: 225 25% 6%;
+    --foreground: 40 10% 93%;
+    --card: 225 20% 9%;
+    --card-foreground: 40 10% 93%;
+    --popover: 225 20% 10%;
+    --popover-foreground: 40 10% 93%;
+    --primary: 43 96% 56%;
+    --primary-foreground: 225 25% 6%;
+    --secondary: 225 15% 13%;
+    --secondary-foreground: 40 10% 85%;
+    --muted: 225 15% 13%;
+    --muted-foreground: 225 10% 48%;
+    --accent: 225 15% 15%;
+    --accent-foreground: 40 10% 90%;
+    --destructive: 0 80% 62%;
+    --destructive-foreground: 40 10% 95%;
+    --border: 225 15% 15%;
+    --input: 225 15% 15%;
+    --ring: 43 96% 56%;
+    --radius: 0.75rem;
+    --gain: 152 69% 50%;
+    --loss: 0 80% 62%;
   }
 }
 
@@ -33,8 +33,95 @@
   * {
     @apply border-border;
   }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
   }
 }
 
+@layer utilities {
+  /* Dot grid background texture */
+  .bg-dot-grid {
+    background-image: radial-gradient(
+      circle,
+      hsl(225 15% 18%) 1px,
+      transparent 1px
+    );
+    background-size: 24px 24px;
+  }
+
+  /* Subtle noise texture overlay */
+  .bg-noise {
+    position: relative;
+  }
+  .bg-noise::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Hero glow effect */
+  .hero-glow {
+    position: relative;
+  }
+  .hero-glow::before {
+    content: "";
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    right: -1px;
+    bottom: -1px;
+    background: linear-gradient(
+      135deg,
+      hsl(43 96% 56% / 0.15),
+      transparent 50%,
+      hsl(43 96% 56% / 0.05)
+    );
+    border-radius: inherit;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* Stagger animation utility */
+  .animate-fade-up {
+    animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .stagger-1 { animation-delay: 0ms; }
+  .stagger-2 { animation-delay: 60ms; }
+  .stagger-3 { animation-delay: 120ms; }
+  .stagger-4 { animation-delay: 180ms; }
+  .stagger-5 { animation-delay: 240ms; }
+
+  @keyframes fadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Shimmer for loading skeleton */
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  .skeleton-shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(225 15% 13%) 25%,
+      hsl(225 15% 17%) 50%,
+      hsl(225 15% 13%) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
+}

@@ -17,7 +17,6 @@ import {
   TreeGrid,
   Money,
   ValuationChange,
-  StackedBarLoader,
 } from "components";
 import { TreeGridRowProps } from "components/tree-grid";
 import { MoneyFormatterType } from "components/money";
@@ -65,11 +64,11 @@ const GridMetadataRow = (
 ) => {
   const { data, ...rest } = props;
   return (
-    <tr>
+    <tr className="text-muted-foreground">
       <td colSpan={7}>
         <>
           <TreeGrid.Expander {...rest} />
-          <strong>{`${data.label}: `}</strong>
+          <strong className="text-foreground">{`${data.label}: `}</strong>
           {data.value}
         </>
       </td>
@@ -112,7 +111,10 @@ const GridRow = (locale: string, moneyFormatter: MoneyFormatterType) => {
     const fontWeight = node.role === "user_account" ? "bold" : undefined;
 
     return (
-      <tr style={{ height: metadata!.height, fontWeight }}>
+      <tr
+        style={{ height: metadata!.height, fontWeight }}
+        className="border-b border-border/30 transition-colors hover:bg-secondary/30"
+      >
         <td>
           <TreeGrid.Expander {...props} />
           {node.role == "item" && node.item.icon && (
@@ -120,7 +122,7 @@ const GridRow = (locale: string, moneyFormatter: MoneyFormatterType) => {
           )}
           {`${metadata!.label}`}
         </td>
-        <td>
+        <td className="font-mono tabular-nums">
           <Money
             amount={valuation.value}
             locale={locale}
@@ -128,17 +130,19 @@ const GridRow = (locale: string, moneyFormatter: MoneyFormatterType) => {
             moneyFormatter={moneyFormatter}
           />
         </td>
-        <td>{change ? <ValuationChange amount={change.change1day} /> : "-"}</td>
-        <td>
+        <td className="font-mono tabular-nums">
+          {change ? <ValuationChange amount={change.change1day} /> : "-"}
+        </td>
+        <td className="font-mono tabular-nums">
           {change ? <ValuationChange amount={change.change1week} /> : "-"}
         </td>
-        <td>
+        <td className="font-mono tabular-nums">
           {change ? <ValuationChange amount={change.change1month} /> : "-"}
         </td>
-        <td>
+        <td className="font-mono tabular-nums">
           {change ? <ValuationChange amount={change.change1year} /> : "-"}
         </td>
-        <td>
+        <td className="font-mono tabular-nums">
           {change ? <ValuationChange amount={change.change2years} /> : "-"}
         </td>
       </tr>
@@ -148,14 +152,14 @@ const GridRow = (locale: string, moneyFormatter: MoneyFormatterType) => {
 
 const Header = () => {
   return (
-    <tr>
-      <th style={{ width: "40em" }}>&nbsp;</th>
-      <th>Value</th>
-      <th>1D</th>
-      <th>1W</th>
-      <th>1M</th>
-      <th>1Y</th>
-      <th>2Y</th>
+    <tr className="border-b border-border/50">
+      <th style={{ width: "40em" }} className="text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">&nbsp;</th>
+      <th className="text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Value</th>
+      <th className="text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">1D</th>
+      <th className="text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">1W</th>
+      <th className="text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">1M</th>
+      <th className="text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">1Y</th>
+      <th className="text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">2Y</th>
     </tr>
   );
 };
@@ -204,13 +208,11 @@ export const HoldingsReportPanel: React.FC<HoldingsReportPanelProps> = (
 
   if (loading || !report) {
     return (
-      <StackedBarLoader
-        count={4}
-        color={"#FBFBFB"}
-        spacing={"0.8em"}
-        height={"1em"}
-        width={"100%"}
-      />
+      <div className="space-y-3 py-4">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="skeleton-shimmer h-10 rounded" />
+        ))}
+      </div>
     );
   }
 
