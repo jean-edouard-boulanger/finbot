@@ -147,6 +147,7 @@ const getPlaidLinkToken = (credentials: object): string | null => {
 
 export interface LinkAccountProps {
   linkedAccount?: LinkedAccount | null;
+  onSuccess?: () => void;
 }
 
 export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
@@ -349,6 +350,10 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
   };
 
   if (linked) {
+    if (props.onSuccess) {
+      props.onSuccess();
+      return null;
+    }
     return <Navigate to={"/settings/linked"} />;
   }
 

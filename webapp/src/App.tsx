@@ -7,16 +7,9 @@ import { ToastContainer, Slide } from "react-toastify";
 import { MainContainer, Navigation } from "components";
 import { ProfileSettings } from "./routes/settings/profile";
 import { AccountSecuritySettings } from "./routes/settings/account-security";
-import {
-  AccountsPanel,
-  LinkedAccountsSettings,
-} from "./routes/settings/linked-accounts";
+import { LinkedAccountsSettings } from "./routes/settings/linked-accounts";
 import { ProvidersSettings } from "./routes/settings/providers";
 import { EmailDeliverySettingsPanel } from "./routes/settings/email-delivery";
-import {
-  UpdateLinkedAccountPanel,
-  LinkedAccountStatusPanel,
-} from "./routes/settings/linked-accounts";
 import {
   LoginForm,
   SignupForm,
@@ -28,7 +21,6 @@ import {
 
 import "react-toastify/dist/ReactToastify.css";
 import "./assets/index.css";
-import { LinkAccount } from "./routes/settings/link-account";
 import { AppearanceSettings } from "./routes/settings/appearance";
 
 const GuestRouter = () => {
@@ -50,19 +42,7 @@ const UserRouter = () => {
       <Route path="settings" element={<Settings />}>
         <Route path="profile" element={<ProfileSettings />} />
         <Route path="security" element={<AccountSecuritySettings />} />
-        <Route path="linked" element={<LinkedAccountsSettings />}>
-          <Route path="new" element={<LinkAccount />} />
-          <Route
-            path=":linkedAccountId/edit"
-            element={<UpdateLinkedAccountPanel />}
-          />
-          <Route
-            path=":linkedAccountId/status"
-            element={<LinkedAccountStatusPanel />}
-          />
-          <Route path="" element={<AccountsPanel />} />
-          <Route path="*" element={<AccountsPanel />} />
-        </Route>
+        <Route path="linked" element={<LinkedAccountsSettings />} />
         <Route path="appearance" element={<AppearanceSettings />} />
         <Route path="admin/providers" element={<ProvidersSettings />} />
         <Route

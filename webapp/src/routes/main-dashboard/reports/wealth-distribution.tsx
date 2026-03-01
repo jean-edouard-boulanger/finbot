@@ -206,7 +206,7 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
                     nameKey="name"
                     innerRadius="50%"
                     outerRadius="85%"
-                    stroke="hsl(225 20% 9%)"
+                    stroke="hsl(var(--card))"
                     strokeWidth={2}
                     isAnimationActive={false}
                   >
