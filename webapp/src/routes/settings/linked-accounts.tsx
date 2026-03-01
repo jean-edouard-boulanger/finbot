@@ -7,6 +7,13 @@ import {
   useParams,
   useNavigate,
 } from "react-router-dom";
+import {
+  CheckCircle,
+  AlertCircle,
+  Ghost,
+  HelpCircle,
+  MoreHorizontal,
+} from "lucide-react";
 
 import { AuthContext } from "contexts";
 import {
@@ -19,22 +26,32 @@ import { StackedBarLoader } from "components";
 import { asDateTime } from "utils/time";
 import { LinkAccount } from "./link-account";
 
+import { Button } from "components/ui/button";
 import {
-  Alert,
-  Row,
-  Col,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "components/ui/dialog";
+import { Alert, AlertTitle, AlertDescription } from "components/ui/alert";
+import {
   Table,
-  Button,
-  Modal,
-  SplitButton,
-  Dropdown,
-} from "react-bootstrap";
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "components/ui/table";
 import {
-  FaExclamationCircle,
-  FaCheckCircle,
-  FaQuestionCircle,
-  FaGhost,
-} from "react-icons/fa";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "components/ui/dropdown-menu";
+import { Separator } from "components/ui/separator";
 import { toast } from "react-toastify";
 import { DateTime } from "luxon";
 
@@ -53,24 +70,25 @@ export const UnlinkAccountDialog: React.FC<UnlinkAccountDialogProps> = ({
 }) => {
   const accountName = linkedAccount?.accountName;
   return (
-    <Modal show={show}>
-      <Modal.Header closeButton>
-        <Modal.Title>Unlink account</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        <p>
-          Are you sure you want to unlink (delete) account {`"${accountName}"`}?
-        </p>
-      </Modal.Body>
-      <Modal.Footer>
-        <Button variant="dark" onClick={handleClose} size={"sm"}>
-          Cancel
-        </Button>
-        <Button onClick={handleUnlink} variant="danger" size={"sm"}>
-          Confirm
-        </Button>
-      </Modal.Footer>
-    </Modal>
+    <Dialog open={show} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Unlink account</DialogTitle>
+          <DialogDescription>
+            Are you sure you want to unlink (delete) account{" "}
+            {`"${accountName}"`}?
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={handleClose} size="sm">
+            Cancel
+          </Button>
+          <Button onClick={handleUnlink} variant="destructive" size="sm">
+            Confirm
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 
@@ -132,17 +150,17 @@ const LinkedAccountStatusIcon: React.FC<LinkedAccountStatusIconProps> = ({
   return (
     <>
       {status === "stable" && (
-        <span className={"text-success"}>
-          <FaCheckCircle />
-        </span>
+        <CheckCircle className="inline h-4 w-4 text-green-500" />
       )}
       {status === "unstable" && (
-        <span className={"text-danger"}>
-          <FaExclamationCircle />
-        </span>
+        <AlertCircle className="inline h-4 w-4 text-red-500" />
       )}
-      {status === "frozen" && <FaGhost />}
-      {status === "unknown" && <FaQuestionCircle />}
+      {status === "frozen" && (
+        <Ghost className="inline h-4 w-4 text-muted-foreground" />
+      )}
+      {status === "unknown" && (
+        <HelpCircle className="inline h-4 w-4 text-muted-foreground" />
+      )}
     </>
   );
 };
@@ -187,75 +205,57 @@ export const LinkedAccountStatusPanel: React.FC = () => {
 
   return (
     <>
-      <Row className={"mb-4"}>
-        <Col>
-          <h4>
-            {linkedAccount?.accountName ?? ""}{" "}
-            <LinkedAccountStatusIcon status={status} />
-          </h4>
-        </Col>
-      </Row>
+      <div className="mb-4">
+        <h4 className="text-lg font-semibold">
+          {linkedAccount?.accountName ?? ""}{" "}
+          <LinkedAccountStatusIcon status={status} />
+        </h4>
+      </div>
       {status === "unstable" && lastError && (
-        <Row className={"mb-4"}>
-          <Col>
-            <Alert variant={"danger"}>
-              <Alert.Heading>
-                There is an issue with this linked account
-              </Alert.Heading>
-              <hr />
-              <p>
-                <strong>Details</strong>: {lastError!.userMessage} (code:{" "}
-                {lastError!.errorCode})
-              </p>
-              {showInternalDetails && (
-                <>
-                  <hr />
-                  <p>
-                    <strong>Internal details</strong>: {lastError!.debugMessage}
-                  </p>
-                </>
-              )}
-            </Alert>
-          </Col>
-        </Row>
+        <Alert variant="destructive" className="mb-4">
+          <AlertTitle>There is an issue with this linked account</AlertTitle>
+          <Separator className="my-2" />
+          <AlertDescription>
+            <strong>Details</strong>: {lastError!.userMessage} (code:{" "}
+            {lastError!.errorCode})
+          </AlertDescription>
+          {showInternalDetails && (
+            <>
+              <Separator className="my-2" />
+              <AlertDescription>
+                <strong>Internal details</strong>: {lastError!.debugMessage}
+              </AlertDescription>
+            </>
+          )}
+        </Alert>
       )}
       {status === null && (
-        <Row className={"mb-4"}>
-          <Col>
-            <Alert variant={"info"}>
-              <Alert.Heading>
-                We do not have any information about this linked account
-              </Alert.Heading>
-              <hr />
-              <p>
-                This usually happens for accounts that have just been linked.
-                The account status will be available as soon as the account
-                valuation is calculated.
-              </p>
-            </Alert>
-          </Col>
-        </Row>
+        <Alert className="mb-4">
+          <AlertTitle>
+            We do not have any information about this linked account
+          </AlertTitle>
+          <Separator className="my-2" />
+          <AlertDescription>
+            This usually happens for accounts that have just been linked. The
+            account status will be available as soon as the account valuation
+            is calculated.
+          </AlertDescription>
+        </Alert>
       )}
       {status === "frozen" && (
-        <Row className={"mb-4"}>
-          <Col>
-            <Alert variant={"info"}>
-              <Alert.Heading>This account is frozen</Alert.Heading>
-              <hr />
-              <p>
-                Frozen accounts can no longer be updated and are no longer
-                valuated. Their historical valuation is still used in the
-                calculation of the performance of your portfolio.
-              </p>
-            </Alert>
-          </Col>
-        </Row>
+        <Alert className="mb-4">
+          <AlertTitle>This account is frozen</AlertTitle>
+          <Separator className="my-2" />
+          <AlertDescription>
+            Frozen accounts can no longer be updated and are no longer
+            valuated. Their historical valuation is still used in the
+            calculation of the performance of your portfolio.
+          </AlertDescription>
+        </Alert>
       )}
-      <Row className={"mb-4"}>
-        <Col>
-          <h5>Previous snapshots</h5>
-        </Col>
-      </Row>
+      <div className="mb-4">
+        <h5 className="font-medium">Previous snapshots</h5>
+      </div>
     </>
   );
 };
@@ -312,79 +312,96 @@ export const AccountsPanel: React.FC<AccountsPanelProps> = () => {
   return (
     <>
       <UnlinkAccountDialog {...dialog} />
-      <Table hover size={"sm"}>
-        <thead>
-          <tr>
-            <th>Account name</th>
-            <th>Last snapshot</th>
-            <th>Provider</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Account name</TableHead>
+            <TableHead>Last snapshot</TableHead>
+            <TableHead>Provider</TableHead>
+            <TableHead>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {accounts.sort(activeAccountsFirst).map((linkedAccount) => {
             const linkedAccountStatus = getLinkedAccountStatus(linkedAccount);
             const lastSnapshotTime = asDateTime(
               linkedAccount!.status?.lastSnapshotTime,
             );
             return (
-              <tr key={`account-${linkedAccount.id}`}>
-                <td>
-                  <Link to={`/settings/linked/${linkedAccount.id}/status`}>
+              <TableRow key={`account-${linkedAccount.id}`}>
+                <TableCell>
+                  <Link
+                    to={`/settings/linked/${linkedAccount.id}/status`}
+                    className="text-primary hover:underline"
+                  >
                     {linkedAccount.accountName}
                   </Link>
-                </td>
-                <td>
+                </TableCell>
+                <TableCell>
                   <LinkedAccountStatusIcon status={linkedAccountStatus} />
                   {"  "}
                   {lastSnapshotTime === null
                     ? ""
                     : lastSnapshotTime.toLocaleString(DateTime.DATETIME_MED)}
-                </td>
-                <td>{linkedAccount!.provider!.description}</td>
-                <td>
-                  <SplitButton
-                    id={`action-${linkedAccount.id}`}
-                    disabled={linkedAccount.frozen}
-                    variant={"dark"}
-                    title={"Edit"}
-                    size={"sm"}
-                    toggleLabel={""}
-                    onClick={() => {
-                      push(`/settings/linked/${linkedAccount.id}/edit`);
-                    }}
-                  >
-                    <Dropdown.Item
+                </TableCell>
+                <TableCell>{linkedAccount!.provider!.description}</TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      size="sm"
+                      disabled={linkedAccount.frozen}
                       onClick={() => {
-                        setDialog({
-                          show: true,
-                          linkedAccount,
-                          handleUnlink: () => {
-                            hideDialog();
-                            handleUnlinkAccount(linkedAccount);
-                          },
-                          handleClose: () => {
-                            hideDialog();
-                          },
-                        });
+                        push(`/settings/linked/${linkedAccount.id}/edit`);
                       }}
                     >
-                      Unlink
-                    </Dropdown.Item>
-                    <Dropdown.Divider />
-                    <Dropdown.Item
-                      onClick={() => {
-                        push(`/settings/linked/${linkedAccount.id}/status`);
-                      }}
-                    >
-                      Status
-                    </Dropdown.Item>
-                  </SplitButton>
-                </td>
-              </tr>
+                      Edit
+                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={linkedAccount.frozen}
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setDialog({
+                              show: true,
+                              linkedAccount,
+                              handleUnlink: () => {
+                                hideDialog();
+                                handleUnlinkAccount(linkedAccount);
+                              },
+                              handleClose: () => {
+                                hideDialog();
+                              },
+                            });
+                          }}
+                        >
+                          Unlink
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => {
+                            push(
+                              `/settings/linked/${linkedAccount.id}/status`,
+                            );
+                          }}
+                        >
+                          Status
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </TableCell>
+              </TableRow>
             );
           })}
-        </tbody>
+        </TableBody>
       </Table>
     </>
   );
@@ -394,39 +411,33 @@ export const LinkedAccountsSettings: React.FC = () => {
   const { pathname } = useLocation();
   return (
     <>
-      <Row className={"mb-4"}>
-        <Col>
-          <h3>
-            <Link to={"/settings/linked"}>Linked accounts</Link>{" "}
-            {matchPath("/settings/linked/new", pathname) ? (
-              <small>{"| New"}</small>
-            ) : matchPath("/settings/linked/:id/edit", pathname) ? (
-              <small>{"| Edit"}</small>
-            ) : matchPath("/settings/linked/:id/status", pathname) ? (
-              <small>{"| Status"}</small>
-            ) : (
-              <></>
-            )}
-          </h3>
-          <hr />
-        </Col>
-      </Row>
+      <div className="mb-4">
+        <h3 className="text-2xl font-semibold">
+          <Link to={"/settings/linked"} className="hover:underline">
+            Linked accounts
+          </Link>{" "}
+          {matchPath("/settings/linked/new", pathname) ? (
+            <span className="text-lg text-muted-foreground">| New</span>
+          ) : matchPath("/settings/linked/:id/edit", pathname) ? (
+            <span className="text-lg text-muted-foreground">| Edit</span>
+          ) : matchPath("/settings/linked/:id/status", pathname) ? (
+            <span className="text-lg text-muted-foreground">| Status</span>
+          ) : (
+            <></>
+          )}
+        </h3>
+        <Separator className="mt-2" />
+      </div>
       {pathname === "/settings/linked" && (
-        <Row className={"mb-4"}>
-          <Col>
-            <Link to={"/settings/linked/new"}>
-              <Button size={"sm"} variant={"info"}>
-                Link new account
-              </Button>
-            </Link>
-          </Col>
-        </Row>
+        <div className="mb-4">
+          <Link to={"/settings/linked/new"}>
+            <Button size="sm">Link new account</Button>
+          </Link>
+        </div>
       )}
-      <Row>
-        <Col>
-          <Outlet />
-        </Col>
-      </Row>
+      <div>
+        <Outlet />
+      </div>
     </>
   );
 };

@@ -24,13 +24,13 @@ export const ValuationChange: React.FC<ValuationChangeProps> = (props) => {
 
   function impl(val?: number | null) {
     if (val === null || val === undefined || (val === 0.0 && !showZero)) {
-      return <span className="text-muted">-</span>;
+      return <span className="text-muted-foreground">-</span>;
     } else if (val === 0.0) {
-      return <span className="text-muted">{fmt(0)}</span>;
+      return <span className="text-muted-foreground">{fmt(0)}</span>;
     } else if (val < 0) {
-      return <span className="text-danger">{fmt(val)}</span>;
+      return <span className="text-red-500">{fmt(val)}</span>;
     } else {
-      return <span className="text-success">+{fmt(val)}</span>;
+      return <span className="text-green-500">+{fmt(val)}</span>;
     }
   }
 
@@ -62,11 +62,11 @@ export const RelativeValuationChange: React.FC<RelativeValuationChangeProps> = (
 ) => {
   const { amount } = props;
   if (!amount || amount === 0.0) {
-    return <span className="text-muted">-</span>;
+    return <span className="text-muted-foreground">-</span>;
   }
   if (amount < 0) {
-    return <span className="text-danger">{(amount * 100).toFixed(2)}%</span>;
+    return <span className="text-red-500">{(amount * 100).toFixed(2)}%</span>;
   } else {
-    return <span className="text-success">+{(amount * 100).toFixed(2)}%</span>;
+    return <span className="text-green-500">+{(amount * 100).toFixed(2)}%</span>;
   }
 };

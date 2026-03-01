@@ -17,7 +17,9 @@ import {
   HistoricalValuationPanel,
   WealthDistributionPanel,
 } from "./reports";
-import { Row, Col, Card, Nav } from "react-bootstrap";
+
+import { Card, CardContent, CardHeader, CardTitle } from "components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "components/ui/tabs";
 
 import { DateTime } from "luxon";
 
@@ -27,7 +29,7 @@ const getRelativeChange = (startVal: number, finalVal: number) => {
 
 const REPORTS = {
   HOLDINGS: "holdings",
-  EARNINGS: "Earnings",
+  EARNINGS: "earnings",
 };
 
 const DEFAULT_REPORT = REPORTS.HOLDINGS;
@@ -72,119 +74,116 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
 
   return (
     <>
-      <Row>
-        <Col md={4} className="mt-3">
-          <Card>
-            <Card.Body>
-              <Card.Title>
-                Net Worth{" "}
-                {valuation !== null &&
-                  `(${DateTime.fromJSDate(valuation.date).toLocaleString(
-                    DateTime.DATETIME_FULL,
-                  )})`}
-              </Card.Title>
-              {valuation !== null && (
-                <strong>
-                  <Money
-                    amount={valuation.value}
-                    locale={locale}
-                    ccy={valuation.currency}
-                    moneyFormatter={defaultMoneyFormatter}
-                  />
-                </strong>
-              )}
-            </Card.Body>
-            {valuation === null && <BarLoader width={"100%"} />}
-          </Card>
-        </Col>
-        <Col md={4} className="mt-3">
-          <Card>
-            <Card.Body>
-              <Card.Title>Liabilities</Card.Title>
-              {valuation !== null && (
+      <div className="mt-3 grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Net Worth{" "}
+              {valuation !== null &&
+                `(${DateTime.fromJSDate(valuation.date).toLocaleString(
+                  DateTime.DATETIME_FULL,
+                )})`}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {valuation !== null && (
+              <strong className="text-2xl">
+                <Money
+                  amount={valuation.value}
+                  locale={locale}
+                  ccy={valuation.currency}
+                  moneyFormatter={defaultMoneyFormatter}
+                />
+              </strong>
+            )}
+          </CardContent>
+          {valuation === null && <BarLoader width={"100%"} />}
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Liabilities
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {valuation !== null && (
+              <span className="text-2xl">
                 <Money
                   amount={valuation.totalLiabilities}
                   locale={locale}
                   ccy={valuation.currency}
                   moneyFormatter={defaultMoneyFormatter}
                 />
-              )}
-            </Card.Body>
-            {valuation === null && <BarLoader width={"100%"} />}
-          </Card>
-        </Col>
-        <Col md={4} className="mt-3">
-          <Card>
-            <Card.Body>
-              <Card.Title>24h Change</Card.Title>
-              {valuation?.change?.change1day && (
+              </span>
+            )}
+          </CardContent>
+          {valuation === null && <BarLoader width={"100%"} />}
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              24h Change
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {valuation?.change?.change1day && (
+              <span className="text-2xl">
                 <RelativeValuationChange
                   amount={getRelativeChange(
                     valuation.value - valuation.change.change1day,
                     valuation.value,
                   )}
                 />
-              )}
-            </Card.Body>
-            {valuation === null && <BarLoader width={"100%"} />}
-          </Card>
-        </Col>
-      </Row>
-      <Row>
-        <Col lg={6} md={12} sm={12} xs={12} className="mt-3">
-          <HistoricalValuationPanel
-            userAccountId={userAccountId!}
-            locale={locale}
-            moneyFormatter={defaultMoneyFormatter}
-          />
-        </Col>
-        <Col lg={6} md={12} sm={12} xs={12} className="mt-3">
-          <WealthDistributionPanel
-            userAccountId={userAccountId!}
-            locale={locale}
-            moneyFormatter={defaultMoneyFormatter}
-          />
-        </Col>
-      </Row>
-      <Row className="mt-3">
-        <Col>
+              </span>
+            )}
+          </CardContent>
+          {valuation === null && <BarLoader width={"100%"} />}
+        </Card>
+      </div>
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <HistoricalValuationPanel
+          userAccountId={userAccountId!}
+          locale={locale}
+          moneyFormatter={defaultMoneyFormatter}
+        />
+        <WealthDistributionPanel
+          userAccountId={userAccountId!}
+          locale={locale}
+          moneyFormatter={defaultMoneyFormatter}
+        />
+      </div>
+      <div className="mt-4">
+        <Tabs
+          defaultValue={DEFAULT_REPORT}
+          value={selectedReport}
+          onValueChange={(value) => setSelectedReport(value)}
+        >
           <Card>
-            <Card.Header>
-              <Nav
-                id="reports-nav"
-                variant="tabs"
-                defaultActiveKey={selectedReport}
-                onSelect={(reportSelection) =>
-                  setSelectedReport(reportSelection ?? DEFAULT_REPORT)
-                }
-              >
-                <Nav.Item>
-                  <Nav.Link eventKey={REPORTS.HOLDINGS}>Holdings</Nav.Link>
-                </Nav.Item>
-                <Nav.Item>
-                  <Nav.Link eventKey={REPORTS.EARNINGS}>Earnings</Nav.Link>
-                </Nav.Item>
-              </Nav>
-            </Card.Header>
-            <Card.Body>
-              {selectedReport === REPORTS.HOLDINGS && (
+            <CardHeader className="pb-0">
+              <TabsList className="self-start">
+                <TabsTrigger value={REPORTS.HOLDINGS}>Holdings</TabsTrigger>
+                <TabsTrigger value={REPORTS.EARNINGS}>Earnings</TabsTrigger>
+              </TabsList>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <TabsContent value={REPORTS.HOLDINGS} className="mt-0">
                 <HoldingsReportPanel
                   userAccountId={userAccountId!}
                   locale={locale}
                   moneyFormatter={defaultMoneyFormatter}
                 />
-              )}
-              {selectedReport === REPORTS.EARNINGS && (
+              </TabsContent>
+              <TabsContent value={REPORTS.EARNINGS} className="mt-0">
                 <EarningsReportPanel
                   userAccountId={userAccountId!}
                   locale={locale}
                   moneyFormatter={defaultMoneyFormatter}
                 />
-              )}
-            </Card.Body>
+              </TabsContent>
+            </CardContent>
           </Card>
-        </Col>
-      </Row>
+        </Tabs>
+      </div>
     </>
   );
 };

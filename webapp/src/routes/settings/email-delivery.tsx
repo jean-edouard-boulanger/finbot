@@ -2,11 +2,19 @@ import React, { useEffect, useState } from "react";
 
 import { useApi, AdministrationApi, EmailProviderMetadata } from "clients";
 
-import Select from "react-select";
-import { default as DataDrivenForm, UiSchema } from "react-jsonschema-form";
-import { Row, Col, Form } from "react-bootstrap";
+import ReactSelect from "react-select";
+import { withTheme } from "@rjsf/core";
+import type { UiSchema } from "@rjsf/utils";
+import validator from "@rjsf/validator-ajv8";
+import { shadcnTheme } from "components/ui/rjsf-theme";
+const DataDrivenForm = withTheme(shadcnTheme);
 import { LoadingButton } from "components";
 import { toast } from "react-toastify";
+
+import { Input } from "components/ui/input";
+import { Label } from "components/ui/label";
+import { Checkbox } from "components/ui/checkbox";
+import { Separator } from "components/ui/separator";
 
 const getProviderUiSchema = (provider: EmailProviderMetadata): UiSchema => {
   if ("ui_schema" in provider.settingsSchema) {
@@ -109,118 +117,100 @@ export const EmailDeliverySettingsPanel: React.FC<
   };
 
   return (
-    <>
-      <Row className={"mb-4"}>
-        <Col>
-          <h3>Email delivery</h3>
-          <hr />
-        </Col>
-      </Row>
-      <Row className={"mb-4"}>
-        <Col>
-          <Form.Group>
-            <Form.Check
-              checked={enableDelivery}
-              onChange={(event) => {
-                const checked = event.currentTarget.checked;
-                setEnableDelivery(checked);
-                if (provider === null && checked) {
-                  setProvider(providers[0]);
-                }
-              }}
-              type="checkbox"
-              label="Enable email delivery"
-            />
-          </Form.Group>
-        </Col>
-      </Row>
-      <Row className={"mb-4"}>
-        <Col md={3}>
-          <Form.Group>
-            <Form.Label>Sender name*</Form.Label>
-            <Form.Control
-              type={"text"}
-              value={senderName}
-              disabled={!enableDelivery}
-              onChange={(event) => {
-                setSenderName(event.currentTarget.value);
-              }}
-            />
-          </Form.Group>
-        </Col>
-        <Col md={3}>
-          <Form.Group>
-            <Form.Label>Subject prefix</Form.Label>
-            <Form.Control
-              type={"text"}
-              value={subjectPrefix}
-              disabled={!enableDelivery}
-              onChange={(event) => {
-                setSubjectPrefix(event.currentTarget.value);
-              }}
-            />
-          </Form.Group>
-        </Col>
-      </Row>
-      <Row className={"mb-4"}>
-        <Col md={6}>
-          <Form.Group>
-            <Form.Label>Delivery method*</Form.Label>
-            <Select
-              isDisabled={!enableDelivery}
-              placeholder="Delivery method"
-              isLoading={providers.length === 0}
-              value={
-                provider === null
-                  ? undefined
-                  : makeProvidersSelectValue(provider)
-              }
-              options={providers.map(makeProvidersSelectValue)}
-              onChange={(entry) => {
-                setProviderById(entry?.value);
-              }}
-            />
-          </Form.Group>
-        </Col>
-      </Row>
-      <Row className={"mb-4"}>
-        <Col md={6}>
-          {provider && (
-            <DataDrivenForm
-              formData={providerSettings ?? ({} as any)}
-              onSubmit={({ formData }) => {
-                handleSaveWithProviderSettings(formData);
-              }}
-              disabled={!enableDelivery}
-              uiSchema={getProviderUiSchema(provider)}
-              schema={getProviderSchema(provider)}
-            >
-              <LoadingButton
-                style={{
-                  display: enableDelivery ? "block" : "none",
-                  marginTop: "1.3em",
-                }}
-                type="submit"
-                disabled={loading || !enableDelivery}
-                loading={loading}
-                size={"sm"}
-              >
-                Save
-              </LoadingButton>
-            </DataDrivenForm>
-          )}
-          {!enableDelivery && (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-2xl font-semibold">Email delivery</h3>
+        <Separator className="mt-2" />
+      </div>
+      <div className="flex items-center gap-2">
+        <Checkbox
+          id="enable-delivery"
+          checked={enableDelivery}
+          onCheckedChange={(checked) => {
+            const isChecked = !!checked;
+            setEnableDelivery(isChecked);
+            if (provider === null && isChecked) {
+              setProvider(providers[0]);
+            }
+          }}
+        />
+        <Label htmlFor="enable-delivery">Enable email delivery</Label>
+      </div>
+      <div className="grid max-w-lg gap-4 md:grid-cols-2">
+        <div className="space-y-2">
+          <Label>Sender name*</Label>
+          <Input
+            type="text"
+            value={senderName}
+            disabled={!enableDelivery}
+            onChange={(event) => {
+              setSenderName(event.currentTarget.value);
+            }}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Subject prefix</Label>
+          <Input
+            type="text"
+            value={subjectPrefix}
+            disabled={!enableDelivery}
+            onChange={(event) => {
+              setSubjectPrefix(event.currentTarget.value);
+            }}
+          />
+        </div>
+      </div>
+      <div className="max-w-lg space-y-2">
+        <Label>Delivery method*</Label>
+        <ReactSelect
+          isDisabled={!enableDelivery}
+          placeholder="Delivery method"
+          isLoading={providers.length === 0}
+          value={
+            provider === null
+              ? undefined
+              : makeProvidersSelectValue(provider)
+          }
+          options={providers.map(makeProvidersSelectValue)}
+          onChange={(entry) => {
+            setProviderById(entry?.value);
+          }}
+        />
+      </div>
+      <div className="max-w-lg">
+        {provider && (
+          <DataDrivenForm
+            formData={providerSettings ?? ({} as any)}
+            onSubmit={({ formData }) => {
+              handleSaveWithProviderSettings(formData);
+            }}
+            disabled={!enableDelivery}
+            uiSchema={getProviderUiSchema(provider)}
+            schema={getProviderSchema(provider)}
+            validator={validator}
+          >
             <LoadingButton
-              onClick={handleSaveDisableEmailDelivery}
-              disabled={enableDelivery}
+              className={enableDelivery ? "mt-4" : "hidden"}
+              type="submit"
+              disabled={loading || !enableDelivery}
               loading={loading}
-              size={"sm"}
+              size="sm"
             >
               Save
             </LoadingButton>
-          )}
-        </Col>
-      </Row>
-    </>
+          </DataDrivenForm>
+        )}
+        {!enableDelivery && (
+          <LoadingButton
+            onClick={handleSaveDisableEmailDelivery}
+            disabled={enableDelivery}
+            loading={loading}
+            size="sm"
+          >
+            Save
+          </LoadingButton>
+        )}
+      </div>
+    </div>
   );
 };

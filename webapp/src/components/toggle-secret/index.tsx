@@ -1,7 +1,8 @@
 import React, { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 
-import { Form, InputGroup, Button } from "react-bootstrap";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { Input } from "components/ui/input";
+import { Button } from "components/ui/button";
 
 export interface ToggleSecretProps {
   renderAs?: any;
@@ -16,15 +17,24 @@ export const ToggleSecret: React.FC<
   const onToggle = () => {
     setDisplayed(!displayed);
   };
-  const As = renderAs ? renderAs : Form.Control;
-  const ControlIcon = displayed ? FaEyeSlash : FaEye;
+  const As = renderAs ? renderAs : Input;
+  const ControlIcon = displayed ? EyeOff : Eye;
 
   return (
-    <InputGroup>
-      <As type={displayed ? "text" : "password"} {...rest} />
-      <Button onClick={onToggle}>
-        <ControlIcon />
+    <div className="flex">
+      <As
+        type={displayed ? "text" : "password"}
+        className="rounded-r-none"
+        {...rest}
+      />
+      <Button
+        type="button"
+        variant="outline"
+        className="rounded-l-none border-l-0"
+        onClick={onToggle}
+      >
+        <ControlIcon className="h-4 w-4" />
       </Button>
-    </InputGroup>
+    </div>
   );
 };

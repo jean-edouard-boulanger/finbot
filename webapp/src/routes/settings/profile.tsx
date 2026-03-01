@@ -11,7 +11,8 @@ import { AuthContext } from "contexts";
 import { LoadingButton } from "components/loading-button";
 
 import { Formik, Form as MetaForm, Field, ErrorMessage } from "formik";
-import { Row, Col, Form } from "react-bootstrap";
+import { Label } from "components/ui/label";
+import { Separator } from "components/ui/separator";
 import { toast } from "react-toastify";
 
 import * as Yup from "yup";
@@ -78,70 +79,72 @@ export const ProfileSettings: React.FC<Record<string, never>> = () => {
 
   return (
     <>
-      <Row className={"mb-4"}>
-        <Col>
-          <h3>Profile</h3>
-          <hr />
-        </Col>
-      </Row>
-      <Row className={"mb-4"}>
-        <Col>
-          <h4>Update profile</h4>
-        </Col>
-      </Row>
-      <Row>
-        <Col md={6}>
-          <Formik
-            enableReinitialize
-            validationSchema={PROFILE_SCHEMA}
-            initialValues={profile ?? makeProfile()}
-            onSubmit={handleSubmit}
-          >
-            {({ isSubmitting, submitForm }) => (
-              <MetaForm>
-                <Form.Group className="mb-3">
-                  <Form.Label>Full name</Form.Label>
-                  <Field type="text" name="fullName" className="form-control" />
-                  <ErrorMessage
-                    className="text-danger"
-                    name="fullName"
-                    component="div"
-                  />
-                </Form.Group>
-                <Form.Group className="mb-3">
-                  <Form.Label>Email</Form.Label>
-                  <Field type="text" name="email" className="form-control" />
-                  <ErrorMessage
-                    className="text-danger"
-                    name="email"
-                    component="div"
-                  />
-                </Form.Group>
-                <Form.Group className="mb-3">
-                  <Form.Label>Mobile phone number</Form.Label>
-                  <Field
-                    type="text"
-                    name="mobilePhoneNumber"
-                    className="form-control"
-                  />
-                  <ErrorMessage
-                    className="text-danger"
-                    name="mobilePhoneNumber"
-                    component="div"
-                  />
-                </Form.Group>
-                <LoadingButton
-                  size={"sm"}
-                  onClick={submitForm}
-                  loading={isSubmitting}
-                >
-                  Update
-                </LoadingButton>
-              </MetaForm>
-            )}
-          </Formik>
-        </Col>
-      </Row>
+      <div className="mb-4">
+        <h3 className="text-2xl font-semibold">Profile</h3>
+        <Separator className="mt-2" />
+      </div>
+      <div className="mb-4">
+        <h4 className="text-lg font-medium">Update profile</h4>
+      </div>
+      <div className="max-w-md">
+        <Formik
+          enableReinitialize
+          validationSchema={PROFILE_SCHEMA}
+          initialValues={profile ?? makeProfile()}
+          onSubmit={handleSubmit}
+        >
+          {({ isSubmitting, submitForm }) => (
+            <MetaForm>
+              <div className="mb-4 space-y-2">
+                <Label>Full name</Label>
+                <Field
+                  type="text"
+                  name="fullName"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                />
+                <ErrorMessage
+                  className="text-sm text-red-500"
+                  name="fullName"
+                  component="div"
+                />
+              </div>
+              <div className="mb-4 space-y-2">
+                <Label>Email</Label>
+                <Field
+                  type="text"
+                  name="email"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                />
+                <ErrorMessage
+                  className="text-sm text-red-500"
+                  name="email"
+                  component="div"
+                />
+              </div>
+              <div className="mb-4 space-y-2">
+                <Label>Mobile phone number</Label>
+                <Field
+                  type="text"
+                  name="mobilePhoneNumber"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                />
+                <ErrorMessage
+                  className="text-sm text-red-500"
+                  name="mobilePhoneNumber"
+                  component="div"
+                />
+              </div>
+              <LoadingButton
+                size="sm"
+                onClick={submitForm}
+                loading={isSubmitting}
+              >
+                Update
+              </LoadingButton>
+            </MetaForm>
+          )}
+        </Formik>
+      </div>
     </>
   );
 };

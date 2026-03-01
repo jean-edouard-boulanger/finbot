@@ -26,10 +26,7 @@ import {
   Welcome,
 } from "routes";
 
-import "datejs";
-
 import "react-toastify/dist/ReactToastify.css";
-import "bootswatch/dist/zephyr/bootstrap.min.css";
 import "./assets/index.css";
 import { LinkAccount } from "./routes/settings/link-account";
 

@@ -16,13 +16,12 @@ import {
 import {
   TreeGrid,
   Money,
-  SparkLine,
   ValuationChange,
   StackedBarLoader,
 } from "components";
 import { TreeGridRowProps } from "components/tree-grid";
 import { MoneyFormatterType } from "components/money";
-import { Alert } from "react-bootstrap";
+import { Alert, AlertTitle, AlertDescription } from "components/ui/alert";
 
 type HoldingsReportNode =
   | UserAccountNode
@@ -67,7 +66,7 @@ const GridMetadataRow = (
   const { data, ...rest } = props;
   return (
     <tr>
-      <td colSpan={8}>
+      <td colSpan={7}>
         <>
           <TreeGrid.Expander {...rest} />
           <strong>{`${data.label}: `}</strong>
@@ -85,18 +84,15 @@ interface ItemIconProps {
 const ItemIcon = (props: ItemIconProps) => {
   return (
     <span
+      className="mr-2 inline-block rounded text-center text-xs font-bold text-white"
       style={{
-        display: "inline-block",
         width: "2.35em",
-        textAlign: "center",
-        color: "white",
         backgroundColor: props.icon.backgroundColour,
         paddingTop: "0.2em",
         paddingBottom: "0.2em",
-        marginRight: "0.5em",
       }}
     >
-      <strong>{props.icon.label}</strong>
+      {props.icon.label}
     </span>
   );
 };
@@ -113,8 +109,6 @@ const GridRow = (locale: string, moneyFormatter: MoneyFormatterType) => {
 
     const valuation = getNodeValuation(node)!;
     const change = valuation.change;
-    const sparkline =
-      "sparkline" in valuation ? valuation.sparkline : undefined;
     const fontWeight = node.role === "user_account" ? "bold" : undefined;
 
     return (
@@ -133,9 +127,6 @@ const GridRow = (locale: string, moneyFormatter: MoneyFormatterType) => {
             ccy={valuation.currency}
             moneyFormatter={moneyFormatter}
           />
-        </td>
-        <td>
-          {sparkline !== undefined && <SparkLine series={sparkline as any} />}
         </td>
         <td>{change ? <ValuationChange amount={change.change1day} /> : "-"}</td>
         <td>
@@ -160,7 +151,6 @@ const Header = () => {
     <tr>
       <th style={{ width: "40em" }}>&nbsp;</th>
       <th>Value</th>
-      <th style={{ width: "10em" }}>&nbsp;</th>
       <th>1D</th>
       <th>1W</th>
       <th>1M</th>
@@ -203,11 +193,11 @@ export const HoldingsReportPanel: React.FC<HoldingsReportPanelProps> = (
 
   if (error !== null) {
     return (
-      <Alert variant={"danger"}>
-        <Alert.Heading>
+      <Alert variant="destructive">
+        <AlertTitle>
           Snap! An error occurred while generating your report
-        </Alert.Heading>
-        <p>{error}</p>
+        </AlertTitle>
+        <AlertDescription>{error}</AlertDescription>
       </Alert>
     );
   }

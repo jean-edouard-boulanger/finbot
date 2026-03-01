@@ -10,7 +10,16 @@ import {
 } from "components";
 import { MoneyFormatterType } from "components/money";
 
-import { Alert, Table } from "react-bootstrap";
+import { Alert, AlertTitle, AlertDescription } from "components/ui/alert";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "components/ui/table";
 
 export interface EarningsReportPanelProps {
   userAccountId: number;
@@ -45,11 +54,11 @@ export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
 
   if (error !== null) {
     return (
-      <Alert variant={"danger"}>
-        <Alert.Heading>
+      <Alert variant="destructive">
+        <AlertTitle>
           Snap! An error occurred while generating your report
-        </Alert.Heading>
-        <p>{error}</p>
+        </AlertTitle>
+        <AlertDescription>{error}</AlertDescription>
       </Alert>
     );
   }
@@ -69,82 +78,83 @@ export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
   const currency = report.currency;
 
   return (
-    <Table hover size="sm">
-      <thead>
-        <tr>
-          <th>Period</th>
-          <th>Open</th>
-          <th>Close</th>
-          <th>Minimum</th>
-          <th>Maximum</th>
-          <th>Change</th>
-          <th>Change (%)</th>
-        </tr>
-      </thead>
-      <tbody>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Period</TableHead>
+          <TableHead>Open</TableHead>
+          <TableHead>Close</TableHead>
+          <TableHead>Minimum</TableHead>
+          <TableHead>Maximum</TableHead>
+          <TableHead>Change</TableHead>
+          <TableHead>Change (%)</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
         {report.entries.map((entry, index) => {
           return (
-            <tr key={`entry-${index}`}>
-              <td>
+            <TableRow key={`entry-${index}`}>
+              <TableCell>
                 <strong>{entry.aggregation.asStr}</strong>
-              </td>
-              <td>
+              </TableCell>
+              <TableCell>
                 <Money
                   amount={entry.metrics.firstValue}
                   locale={locale}
                   ccy={currency}
                   moneyFormatter={moneyFormatter}
                 />
-              </td>
-              <td>
+              </TableCell>
+              <TableCell>
                 <Money
                   amount={entry.metrics.lastValue}
                   locale={locale}
                   ccy={currency}
                   moneyFormatter={moneyFormatter}
                 />
-              </td>
-              <td>
+              </TableCell>
+              <TableCell>
                 <Money
                   amount={entry.metrics.minValue}
                   locale={locale}
                   ccy={currency}
                   moneyFormatter={moneyFormatter}
                 />
-              </td>
-              <td>
+              </TableCell>
+              <TableCell>
                 <Money
                   amount={entry.metrics.maxValue}
                   locale={locale}
                   ccy={currency}
                   moneyFormatter={moneyFormatter}
                 />
-              </td>
-              <td>
+              </TableCell>
+              <TableCell>
                 <strong>
                   <ValuationChange amount={entry.metrics.absChange} />
                 </strong>
-              </td>
-              <td>
+              </TableCell>
+              <TableCell>
                 <strong>
                   <RelativeValuationChange amount={entry.metrics.relChange} />
                 </strong>
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           );
         })}
-      </tbody>
-      <tfoot>
-        <tr
-          style={{ fontWeight: "bold" }}
+      </TableBody>
+      <TableFooter>
+        <TableRow
           className={
-            report!.rollup.absChange >= 0 ? "table-success" : "table-danger"
+            report!.rollup.absChange >= 0
+              ? "bg-green-50 font-bold"
+              : "bg-red-50 font-bold"
           }
         >
-          <td>
+          <TableCell>
             <strong>Summary</strong>
-          </td>
-          <td>
+          </TableCell>
+          <TableCell>
             <strong>
               <Money
                 amount={report!.rollup.firstValue}
@@ -153,8 +163,8 @@ export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
                 moneyFormatter={moneyFormatter}
               />
             </strong>
-          </td>
-          <td>
+          </TableCell>
+          <TableCell>
             <strong>
               <Money
                 amount={report!.rollup.lastValue}
@@ -163,35 +173,35 @@ export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
                 moneyFormatter={moneyFormatter}
               />
             </strong>
-          </td>
-          <td>
+          </TableCell>
+          <TableCell>
             <Money
               amount={report!.rollup.minValue}
               locale={locale}
               ccy={currency}
               moneyFormatter={moneyFormatter}
             />
-          </td>
-          <td>
+          </TableCell>
+          <TableCell>
             <Money
               amount={report!.rollup.maxValue}
               locale={locale}
               ccy={currency}
               moneyFormatter={moneyFormatter}
             />
-          </td>
-          <td>
+          </TableCell>
+          <TableCell>
             <strong>
               <ValuationChange amount={report!.rollup.absChange} />
             </strong>
-          </td>
-          <td>
+          </TableCell>
+          <TableCell>
             <strong>
               <RelativeValuationChange amount={report!.rollup.relChange} />
             </strong>
-          </td>
-        </tr>
-      </tfoot>
+          </TableCell>
+        </TableRow>
+      </TableFooter>
     </Table>
   );
 };

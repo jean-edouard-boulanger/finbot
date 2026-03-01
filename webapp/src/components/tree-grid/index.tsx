@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Table } from "react-bootstrap";
-import { FaCaretDown, FaCaretRight } from "react-icons/fa";
+import { ChevronDown, ChevronRight } from "lucide-react";
+
+import {
+  Table,
+  TableBody,
+  TableHeader,
+} from "components/ui/table";
 
 interface TreeNodeWithChildren<NodeType> {
   children: Array<NodeType>;
@@ -95,9 +100,9 @@ function getExpanderIcon<UserNodeType extends TreeNode<UserNodeType>>(
     return () => null;
   }
   if (node.expanded) {
-    return FaCaretDown;
+    return ChevronDown;
   }
-  return FaCaretRight;
+  return ChevronRight;
 }
 
 interface ExpanderSelfProps {
@@ -121,8 +126,8 @@ const Expander: React.FC<ExpanderProps> = (props) => {
     marginRight: "5px",
   };
   return (
-    <span style={style}>
-      <self.Icon onClick={self.cb} />
+    <span style={style} className="inline-flex cursor-pointer">
+      <self.Icon className="h-4 w-4" onClick={self.cb} />
     </span>
   );
 };
@@ -164,13 +169,13 @@ export function TreeGrid<UserNodeType extends TreeNode<UserNodeType>>(
   }
 
   return (
-    <Table hover size="sm">
+    <Table>
       {(Header ?? null) !== null && (
-        <thead>
+        <TableHeader>
           <Header />
-        </thead>
+        </TableHeader>
       )}
-      <tbody>
+      <TableBody>
         {topology
           .filter((n) => n.visible)
           .map((n) => {
@@ -187,7 +192,7 @@ export function TreeGrid<UserNodeType extends TreeNode<UserNodeType>>(
             };
             return <Row key={n.id} {...rowProps} />;
           })}
-      </tbody>
+      </TableBody>
     </Table>
   );
 }
