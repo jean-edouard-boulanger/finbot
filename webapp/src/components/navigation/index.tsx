@@ -167,6 +167,8 @@ function MobileNav({ isAuthenticated }: { isAuthenticated: boolean }) {
   );
 }
 
+export { SystemStatusBadge };
+
 export const Navigation: React.FC = () => {
   const { userAccountId } = useContext(AuthContext);
   const isAuthenticated = userAccountId !== null;

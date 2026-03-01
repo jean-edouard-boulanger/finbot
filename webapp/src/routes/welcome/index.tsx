@@ -14,7 +14,7 @@ export interface WelcomeProps {}
 
 export const Welcome: React.FC<WelcomeProps> = () => {
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto space-y-6 px-6 pb-48 pt-6">
       <h1 className="text-3xl font-bold">Welcome to finbot!</h1>
       <div className="flex gap-6">
         <div className="w-40 shrink-0">

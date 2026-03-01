@@ -5,6 +5,7 @@ import { AuthProvider, AuthContext, ThemeProvider } from "contexts";
 
 import { ToastContainer, Slide } from "react-toastify";
 import { MainContainer, Navigation } from "components";
+import { AppShell } from "components/app-shell";
 import { ProfileSettings } from "./routes/settings/profile";
 import { AccountSecuritySettings } from "./routes/settings/account-security";
 import { LinkedAccountsSettings } from "./routes/settings/linked-accounts";
@@ -15,6 +16,7 @@ import {
   SignupForm,
   Logout,
   MainDashboard,
+  LinkedAccountDashboard,
   Settings,
   Welcome,
 } from "routes";
@@ -25,35 +27,46 @@ import { AppearanceSettings } from "./routes/settings/appearance";
 
 const GuestRouter = () => {
   return (
-    <Routes>
-      <Route path="/login" element={<LoginForm />} />
-      <Route path="/signup" element={<SignupForm />} />
-      <Route path="*" element={<Navigate to={"/login"} replace />} />
-    </Routes>
+    <>
+      <Navigation />
+      <MainContainer>
+        <Routes>
+          <Route path="/login" element={<LoginForm />} />
+          <Route path="/signup" element={<SignupForm />} />
+          <Route path="*" element={<Navigate to={"/login"} replace />} />
+        </Routes>
+      </MainContainer>
+    </>
   );
 };
 
 const UserRouter = () => {
   return (
-    <Routes>
-      <Route path="welcome" element={<Welcome />} />
-      <Route path="dashboard" element={<MainDashboard />} />
-      <Route path="logout" element={<Logout />} />
-      <Route path="settings" element={<Settings />}>
-        <Route path="profile" element={<ProfileSettings />} />
-        <Route path="security" element={<AccountSecuritySettings />} />
-        <Route path="linked" element={<LinkedAccountsSettings />} />
-        <Route path="appearance" element={<AppearanceSettings />} />
-        <Route path="admin/providers" element={<ProvidersSettings />} />
+    <AppShell>
+      <Routes>
+        <Route path="welcome" element={<Welcome />} />
+        <Route path="dashboard" element={<MainDashboard />} />
         <Route
-          path="admin/email_delivery"
-          element={<EmailDeliverySettingsPanel />}
+          path="dashboard/accounts/:linkedAccountId"
+          element={<LinkedAccountDashboard />}
         />
-        <Route path="" element={<Navigate to={"/settings/profile"} />} />
-        <Route path="*" element={<Navigate to={"/settings/profile"} />} />
-      </Route>
-      <Route path="*" element={<Navigate to={"/dashboard"} replace />} />
-    </Routes>
+        <Route path="logout" element={<Logout />} />
+        <Route path="settings" element={<Settings />}>
+          <Route path="profile" element={<ProfileSettings />} />
+          <Route path="security" element={<AccountSecuritySettings />} />
+          <Route path="linked" element={<LinkedAccountsSettings />} />
+          <Route path="appearance" element={<AppearanceSettings />} />
+          <Route path="admin/providers" element={<ProvidersSettings />} />
+          <Route
+            path="admin/email_delivery"
+            element={<EmailDeliverySettingsPanel />}
+          />
+          <Route path="" element={<Navigate to={"/settings/profile"} />} />
+          <Route path="*" element={<Navigate to={"/settings/profile"} />} />
+        </Route>
+        <Route path="*" element={<Navigate to={"/dashboard"} replace />} />
+      </Routes>
+    </AppShell>
   );
 };
 
@@ -73,10 +86,7 @@ const App: React.FC<AppProps> = () => {
           transition={Slide}
           position="bottom-right"
         />
-        <Navigation />
-        <MainContainer>
-          <AppRouter />
-        </MainContainer>
+        <AppRouter />
       </AuthProvider>
     </ThemeProvider>
   );

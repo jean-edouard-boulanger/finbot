@@ -231,16 +231,22 @@ export interface HistoricalValuationProps {
   userAccountId: number;
   locale: string;
   moneyFormatter: MoneyFormatterType;
+  linkedAccountId?: number;
+  linkedAccountName?: string;
 }
 
 export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
   props,
 ) => {
-  const { userAccountId, locale, moneyFormatter } = props;
+  const { userAccountId, locale, moneyFormatter, linkedAccountId, linkedAccountName } = props;
+  const isSingleAccount = linkedAccountId !== undefined;
+  const availableLevels = isSingleAccount
+    ? LEVELS.filter((l) => l.type !== "linked_account")
+    : LEVELS;
   const userAccountsValuationApi = useApi(UserAccountsValuationApi);
   const linkedAccountsValuationApi = useApi(LinkedAccountsValuationApi);
   const [now] = useState<DateTime>(DateTime.now());
-  const [selectedLevel, setSelectedLevel] = useState(DEFAULT_LEVEL);
+  const [selectedLevel, setSelectedLevel] = useState(isSingleAccount ? LEVELS[0] : DEFAULT_LEVEL);
   const [selectedFrequency, setSelectedFrequency] = useState(DEFAULT_FREQUENCY);
   const [selectedTimeRange, setSelectedTimeRange] =
     useState<TimeRangeChoiceType>(DEFAULT_RANGE);
@@ -258,11 +264,28 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
       };
       switch (selectedLevel.type) {
         case "account": {
-          const data =
-            await userAccountsValuationApi.getUserAccountHistoricalValuation(
-              request,
-            );
-          setHistoricalValuation(data.historicalValuation);
+          if (isSingleAccount) {
+            const data =
+              await linkedAccountsValuationApi.getLinkedAccountsHistoricalValuation(
+                request,
+              );
+            const filtered = {
+              ...data.historicalValuation,
+              seriesData: {
+                ...data.historicalValuation.seriesData,
+                series: data.historicalValuation.seriesData.series.filter(
+                  (s) => s.name === linkedAccountName,
+                ),
+              },
+            };
+            setHistoricalValuation(filtered);
+          } else {
+            const data =
+              await userAccountsValuationApi.getUserAccountHistoricalValuation(
+                request,
+              );
+            setHistoricalValuation(data.historicalValuation);
+          }
           break;
         }
         case "linked_account": {
@@ -356,10 +379,10 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
         <div className="flex gap-1">
           <FilterDropdown
             label={selectedLevel.label}
-            items={LEVELS.map((l) => ({ key: l.type, label: l.label }))}
+            items={availableLevels.map((l) => ({ key: l.type, label: l.label }))}
             activeKey={selectedLevel.type}
             onSelect={(key) =>
-              setSelectedLevel(LEVELS.find((l) => l.type === key)!)
+              setSelectedLevel(availableLevels.find((l) => l.type === key)!)
             }
           />
           <FilterDropdown

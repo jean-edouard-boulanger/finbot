@@ -2,6 +2,7 @@ import { LoadingButton } from "./loading-button";
 import { MainContainer } from "./main-container";
 import { Money } from "./money";
 import { Navigation } from "./navigation";
+import { AppShell } from "./app-shell";
 
 import { BarLoader, StackedBarLoader } from "./bar-loader";
 import { ToggleSecret } from "./toggle-secret";
@@ -11,6 +12,7 @@ import { PasswordValidationCard } from "./password";
 import { ColourPicker } from "./colour-picker";
 
 export {
+  AppShell,
   LoadingButton,
   MainContainer,
   Money,

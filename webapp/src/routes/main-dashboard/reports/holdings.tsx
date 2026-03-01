@@ -22,7 +22,7 @@ import { TreeGridRowProps } from "components/tree-grid";
 import { MoneyFormatterType } from "components/money";
 import { Alert, AlertTitle, AlertDescription } from "components/ui/alert";
 
-type HoldingsReportNode =
+export type HoldingsReportNode =
   | UserAccountNode
   | LinkedAccountNode
   | SubAccountNode
@@ -96,7 +96,7 @@ const ItemIcon = (props: ItemIconProps) => {
   );
 };
 
-const GridRow = (locale: string, moneyFormatter: MoneyFormatterType) => {
+export const GridRow = (locale: string, moneyFormatter: MoneyFormatterType) => {
   return (props: TreeGridRowProps<HoldingsReportNode>) => {
     const node = props.data;
     const metadata = getRowMetadata(node);
@@ -150,7 +150,7 @@ const GridRow = (locale: string, moneyFormatter: MoneyFormatterType) => {
   };
 };
 
-const Header = () => {
+export const Header = () => {
   return (
     <tr className="border-b border-border/50">
       <th style={{ width: "40em" }} className="text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">&nbsp;</th>
