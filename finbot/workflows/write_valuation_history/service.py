@@ -7,7 +7,7 @@ from finbot.core import schema as core_schema
 from finbot.core.serialization import pretty_dump, reinterpret_as_pydantic
 from finbot.core.utils import some
 from finbot.model import PersistScope, SessionType
-from finbot.workflows.write_valuation_history import repository, schema
+from finbot.workflows.write_valuation_history import repository, schema, transactions
 
 logger = logging.getLogger(__name__)
 
@@ -182,6 +182,18 @@ def write_history_impl(
 
     logging.info("new history entry added and enabled successfully")
 
+    # Consolidate transactions (dedup + FX convert + upsert)
+    try:
+        new_uncategorized_ids = transactions.consolidate_transactions(
+            snapshot_id=snapshot_id,
+            db_session=db_session,
+        )
+        if new_uncategorized_ids:
+            logging.info(f"consolidated {len(new_uncategorized_ids)} new transactions")
+            _categorize_new_transactions(new_uncategorized_ids, db_session)
+    except Exception:
+        logging.exception("failed to consolidate transactions (non-fatal)")
+
     return schema.WriteHistoryResponse(
         report=schema.NewHistoryEntryReport(
             history_entry_id=history_entry.id,
@@ -191,6 +203,22 @@ def write_history_impl(
             valuation_change=reinterpret_as_pydantic(core_schema.ValuationChange, user_account_valuation_change),
         )
     )
+
+
+def _categorize_new_transactions(
+    transaction_ids: list[int],
+    db_session: SessionType,
+) -> None:
+    try:
+        from finbot.core.spending_categorizer import categorize_transaction_batch
+    except ImportError:
+        logging.info("spending categorizer not available, skipping LLM categorization")
+        return
+
+    try:
+        categorize_transaction_batch(transaction_ids, db_session)
+    except Exception:
+        logging.exception("LLM spending categorization failed (non-fatal)")
 
 
 class ValuationHistoryWriterService(object):

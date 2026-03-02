@@ -49,6 +49,7 @@ class TakeUserAccountRawSnapshotWorkflow:
                     encrypted_credentials=request.encrypted_credentials,
                     items=request.line_items,
                     user_account_currency=request.user_account_currency,
+                    transactions_from_date=request.transactions_from_date,
                 ),
                 retry_policy=TRY_ONCE,
                 start_to_close_timeout=request.timeout,

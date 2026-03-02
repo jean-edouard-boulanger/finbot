@@ -2,11 +2,7 @@ import React, { useEffect, useState } from "react";
 
 import { useApi, UserAccountsReportsApi, EarningsReport } from "clients";
 
-import {
-  Money,
-  ValuationChange,
-  RelativeValuationChange,
-} from "components";
+import { Money, ValuationChange, RelativeValuationChange } from "components";
 import { MoneyFormatterType } from "components/money";
 
 import { Alert, AlertTitle, AlertDescription } from "components/ui/alert";
@@ -78,19 +74,36 @@ export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
     <Table>
       <TableHeader>
         <TableRow className="border-border/50 hover:bg-transparent">
-          <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Period</TableHead>
-          <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Open</TableHead>
-          <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Close</TableHead>
-          <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Minimum</TableHead>
-          <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Maximum</TableHead>
-          <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Change</TableHead>
-          <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Change (%)</TableHead>
+          <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Period
+          </TableHead>
+          <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Open
+          </TableHead>
+          <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Close
+          </TableHead>
+          <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Minimum
+          </TableHead>
+          <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Maximum
+          </TableHead>
+          <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Change
+          </TableHead>
+          <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Change (%)
+          </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {report.entries.map((entry, index) => {
           return (
-            <TableRow key={`entry-${index}`} className="border-border/30 transition-colors hover:bg-secondary/30">
+            <TableRow
+              key={`entry-${index}`}
+              className="border-border/30 transition-colors hover:bg-secondary/30"
+            >
               <TableCell>
                 <strong>{entry.aggregation.asStr}</strong>
               </TableCell>

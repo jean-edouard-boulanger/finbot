@@ -37,7 +37,9 @@ function BaseInputTemplate<
       disabled={disabled || readonly}
       required={required}
       placeholder={placeholder}
-      onChange={(e) => onChange(e.target.value === "" ? undefined : e.target.value)}
+      onChange={(e) =>
+        onChange(e.target.value === "" ? undefined : e.target.value)
+      }
       onBlur={(e) => onBlur(id, e.target.value)}
       onFocus={(e) => onFocus(id, e.target.value)}
     />

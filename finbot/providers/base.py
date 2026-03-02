@@ -1,9 +1,10 @@
 import abc
+from datetime import datetime
 from typing import Any, Self
 
 from finbot.core import schema as core_schema
 from finbot.providers.errors import RetiredProviderError
-from finbot.providers.schema import Account, Assets, Liabilities
+from finbot.providers.schema import Account, Assets, Liabilities, Transactions
 
 
 class ProviderBase:
@@ -57,6 +58,15 @@ class ProviderBase:
     async def get_liabilities(self) -> Liabilities:
         """Retrieve all accounts and respective liabilities associated with this linked account"""
         return Liabilities(accounts=[])
+
+    async def get_transactions(self, from_date: datetime | None = None) -> Transactions:
+        """Retrieve transactions associated with this linked account.
+
+        Args:
+            from_date: If provided, only return transactions on or after this date.
+                       Providers should use this to limit the data they fetch.
+        """
+        return Transactions(transactions=[])
 
 
 class RetiredProvider(ProviderBase):

@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from typing import Any
 
 from finbot.core.schema import BaseModel, CurrencyCode
@@ -8,6 +9,9 @@ from finbot.providers.schema import (
     Asset,
     Assets,
     AssetsEntry,
+    Transaction,
+    Transactions,
+    TransactionType,
 )
 
 
@@ -80,3 +84,44 @@ class Api(ProviderBase):
 
     async def get_assets(self) -> Assets:
         return self.dummy_data.assets
+
+    async def get_transactions(self, from_date: datetime | None = None) -> Transactions:
+        now = datetime.now(tz=timezone.utc)
+        account_id = self.dummy_data.accounts[0].id
+        ccy = self.dummy_data.accounts[0].iso_currency
+        return Transactions(
+            transactions=[
+                Transaction(
+                    transaction_id="dummy-txn-001",
+                    account_id=account_id,
+                    transaction_date=now,
+                    transaction_type=TransactionType.dividend,
+                    amount=25.50,
+                    currency=ccy,
+                    description="Dummy dividend payment",
+                    symbol="DUMMY",
+                ),
+                Transaction(
+                    transaction_id="dummy-txn-002",
+                    account_id=account_id,
+                    transaction_date=now,
+                    transaction_type=TransactionType.buy,
+                    amount=-500.00,
+                    currency=ccy,
+                    description="BUY 10 DUMMY @ 50.00",
+                    symbol="DUMMY",
+                    units=10.0,
+                    unit_price=50.0,
+                    fee=1.50,
+                ),
+                Transaction(
+                    transaction_id="dummy-txn-003",
+                    account_id=account_id,
+                    transaction_date=now,
+                    transaction_type=TransactionType.fee,
+                    amount=-2.99,
+                    currency=ccy,
+                    description="Platform fee",
+                ),
+            ]
+        )

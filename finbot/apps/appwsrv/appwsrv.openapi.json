@@ -724,6 +724,22 @@
                             "$ref": "#/components/schemas/ValuationFrequency",
                             "default": "Daily"
                         }
+                    },
+                    {
+                        "name": "linked_account_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Linked Account Id"
+                        }
                     }
                 ],
                 "responses": {
@@ -815,6 +831,22 @@
                             "$ref": "#/components/schemas/ValuationFrequency",
                             "default": "Daily"
                         }
+                    },
+                    {
+                        "name": "linked_account_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Linked Account Id"
+                        }
                     }
                 ],
                 "responses": {
@@ -905,6 +937,22 @@
                         "schema": {
                             "$ref": "#/components/schemas/ValuationFrequency",
                             "default": "Daily"
+                        }
+                    },
+                    {
+                        "name": "linked_account_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Linked Account Id"
                         }
                     }
                 ],
@@ -1383,6 +1431,22 @@
                             "$ref": "#/components/schemas/ValuationFrequency",
                             "default": "Daily"
                         }
+                    },
+                    {
+                        "name": "linked_account_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Linked Account Id"
+                        }
                     }
                 ],
                 "responses": {
@@ -1853,6 +1917,378 @@
                 ]
             }
         },
+        "/reports/transactions/": {
+            "get": {
+                "tags": [
+                    "User accounts (reports)"
+                ],
+                "summary": "Get Transactions Report",
+                "description": "Get paginated transactions report",
+                "operationId": "get_user_account_transactions_report",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "from_time",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "format": "date-time"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "From Time"
+                        }
+                    },
+                    {
+                        "name": "to_time",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "format": "date-time"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "To Time"
+                        }
+                    },
+                    {
+                        "name": "linked_account_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Linked Account Id"
+                        }
+                    },
+                    {
+                        "name": "transaction_category",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Transaction Category"
+                        }
+                    },
+                    {
+                        "name": "spending_category",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Spending Category"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 500,
+                            "default": 100,
+                            "title": "Limit"
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "default": 0,
+                            "title": "Offset"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GetTransactionsReportResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/cash-flow/summary/": {
+            "get": {
+                "tags": [
+                    "User accounts (reports)"
+                ],
+                "summary": "Get Cash Flow Summary",
+                "description": "Get cash flow summary by transaction category",
+                "operationId": "get_user_account_cash_flow_summary",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "from_time",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "format": "date-time"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "From Time"
+                        }
+                    },
+                    {
+                        "name": "to_time",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "format": "date-time"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "To Time"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GetCashFlowSummaryResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/cash-flow/time-series/": {
+            "get": {
+                "tags": [
+                    "User accounts (reports)"
+                ],
+                "summary": "Get Cash Flow Time Series",
+                "description": "Get time-bucketed cash flow data",
+                "operationId": "get_user_account_cash_flow_time_series",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "from_time",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "format": "date-time"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "From Time"
+                        }
+                    },
+                    {
+                        "name": "to_time",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "format": "date-time"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "To Time"
+                        }
+                    },
+                    {
+                        "name": "frequency",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "monthly",
+                            "title": "Frequency"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GetCashFlowTimeSeriesResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/spending/breakdown/": {
+            "get": {
+                "tags": [
+                    "User accounts (reports)"
+                ],
+                "summary": "Get Spending Breakdown",
+                "description": "Get spending totals grouped by PFC primary category",
+                "operationId": "get_user_account_spending_breakdown",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "from_time",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "format": "date-time"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "From Time"
+                        }
+                    },
+                    {
+                        "name": "to_time",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "format": "date-time"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "To Time"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GetSpendingBreakdownResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/formatting_rules/accounts/": {
             "get": {
                 "tags": [
@@ -1915,6 +2351,115 @@
                     "refresh_token"
                 ],
                 "title": "AuthenticationPayload"
+            },
+            "CashFlowCategoryEntry": {
+                "properties": {
+                    "category": {
+                        "type": "string",
+                        "title": "Category"
+                    },
+                    "total": {
+                        "type": "number",
+                        "title": "Total"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "category",
+                    "total"
+                ],
+                "title": "CashFlowCategoryEntry"
+            },
+            "CashFlowSummary": {
+                "properties": {
+                    "valuation_ccy": {
+                        "type": "string",
+                        "title": "Valuation Ccy"
+                    },
+                    "from_date": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "From Date"
+                    },
+                    "to_date": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "To Date"
+                    },
+                    "net_cash_flow": {
+                        "type": "number",
+                        "title": "Net Cash Flow"
+                    },
+                    "by_category": {
+                        "items": {
+                            "$ref": "#/components/schemas/CashFlowCategoryEntry"
+                        },
+                        "type": "array",
+                        "title": "By Category"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "valuation_ccy",
+                    "from_date",
+                    "to_date",
+                    "net_cash_flow",
+                    "by_category"
+                ],
+                "title": "CashFlowSummary"
+            },
+            "CashFlowTimeSeries": {
+                "properties": {
+                    "valuation_ccy": {
+                        "type": "string",
+                        "title": "Valuation Ccy"
+                    },
+                    "entries": {
+                        "items": {
+                            "$ref": "#/components/schemas/CashFlowTimeSeriesEntry"
+                        },
+                        "type": "array",
+                        "title": "Entries"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "valuation_ccy",
+                    "entries"
+                ],
+                "title": "CashFlowTimeSeries"
+            },
+            "CashFlowTimeSeriesEntry": {
+                "properties": {
+                    "period": {
+                        "type": "string",
+                        "title": "Period"
+                    },
+                    "income": {
+                        "type": "number",
+                        "title": "Income"
+                    },
+                    "expense": {
+                        "type": "number",
+                        "title": "Expense"
+                    },
+                    "net": {
+                        "type": "number",
+                        "title": "Net"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "period",
+                    "income",
+                    "expense",
+                    "net"
+                ],
+                "title": "CashFlowTimeSeriesEntry"
             },
             "CreateOrUpdateProviderRequest": {
                 "properties": {
@@ -2174,6 +2719,32 @@
                 ],
                 "title": "GetAccountsFormattingRulesResponse"
             },
+            "GetCashFlowSummaryResponse": {
+                "properties": {
+                    "report": {
+                        "$ref": "#/components/schemas/CashFlowSummary"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "report"
+                ],
+                "title": "GetCashFlowSummaryResponse"
+            },
+            "GetCashFlowTimeSeriesResponse": {
+                "properties": {
+                    "report": {
+                        "$ref": "#/components/schemas/CashFlowTimeSeries"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "report"
+                ],
+                "title": "GetCashFlowTimeSeriesResponse"
+            },
             "GetEarningsReportResponse": {
                 "properties": {
                     "report": {
@@ -2342,6 +2913,32 @@
                     "providers"
                 ],
                 "title": "GetProvidersResponse"
+            },
+            "GetSpendingBreakdownResponse": {
+                "properties": {
+                    "report": {
+                        "$ref": "#/components/schemas/SpendingBreakdown"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "report"
+                ],
+                "title": "GetSpendingBreakdownResponse"
+            },
+            "GetTransactionsReportResponse": {
+                "properties": {
+                    "report": {
+                        "$ref": "#/components/schemas/TransactionsReport"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "report"
+                ],
+                "title": "GetTransactionsReportResponse"
             },
             "GetUserAccountResponse": {
                 "properties": {
@@ -3144,6 +3741,64 @@
                 "type": "object",
                 "title": "SetEmailDeliverySettingsResponse"
             },
+            "SpendingBreakdown": {
+                "properties": {
+                    "valuation_ccy": {
+                        "type": "string",
+                        "title": "Valuation Ccy"
+                    },
+                    "from_date": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "From Date"
+                    },
+                    "to_date": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "To Date"
+                    },
+                    "entries": {
+                        "items": {
+                            "$ref": "#/components/schemas/SpendingBreakdownEntry"
+                        },
+                        "type": "array",
+                        "title": "Entries"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "valuation_ccy",
+                    "from_date",
+                    "to_date",
+                    "entries"
+                ],
+                "title": "SpendingBreakdown"
+            },
+            "SpendingBreakdownEntry": {
+                "properties": {
+                    "category": {
+                        "type": "string",
+                        "title": "Category"
+                    },
+                    "total": {
+                        "type": "number",
+                        "title": "Total"
+                    },
+                    "transaction_count": {
+                        "type": "integer",
+                        "title": "Transaction Count"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "category",
+                    "total",
+                    "transaction_count"
+                ],
+                "title": "SpendingBreakdownEntry"
+            },
             "SubAccountDescription": {
                 "properties": {
                     "id": {
@@ -3404,6 +4059,189 @@
                     "system_report"
                 ],
                 "title": "SystemReportResponse"
+            },
+            "TransactionEntry": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "title": "Id"
+                    },
+                    "linked_account_id": {
+                        "type": "integer",
+                        "title": "Linked Account Id"
+                    },
+                    "linked_account_name": {
+                        "type": "string",
+                        "title": "Linked Account Name"
+                    },
+                    "sub_account_id": {
+                        "type": "string",
+                        "title": "Sub Account Id"
+                    },
+                    "transaction_date": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Transaction Date"
+                    },
+                    "transaction_type": {
+                        "type": "string",
+                        "title": "Transaction Type"
+                    },
+                    "transaction_category": {
+                        "type": "string",
+                        "title": "Transaction Category"
+                    },
+                    "amount": {
+                        "type": "number",
+                        "title": "Amount"
+                    },
+                    "amount_snapshot_ccy": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Amount Snapshot Ccy"
+                    },
+                    "currency": {
+                        "type": "string",
+                        "title": "Currency"
+                    },
+                    "description": {
+                        "type": "string",
+                        "title": "Description"
+                    },
+                    "symbol": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Symbol"
+                    },
+                    "units": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Units"
+                    },
+                    "unit_price": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Unit Price"
+                    },
+                    "fee": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Fee"
+                    },
+                    "counterparty": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Counterparty"
+                    },
+                    "spending_category_primary": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Spending Category Primary"
+                    },
+                    "spending_category_detailed": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Spending Category Detailed"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "id",
+                    "linked_account_id",
+                    "linked_account_name",
+                    "sub_account_id",
+                    "transaction_date",
+                    "transaction_type",
+                    "transaction_category",
+                    "amount",
+                    "amount_snapshot_ccy",
+                    "currency",
+                    "description",
+                    "symbol",
+                    "units",
+                    "unit_price",
+                    "fee",
+                    "counterparty",
+                    "spending_category_primary",
+                    "spending_category_detailed"
+                ],
+                "title": "TransactionEntry"
+            },
+            "TransactionsReport": {
+                "properties": {
+                    "valuation_ccy": {
+                        "type": "string",
+                        "title": "Valuation Ccy"
+                    },
+                    "transactions": {
+                        "items": {
+                            "$ref": "#/components/schemas/TransactionEntry"
+                        },
+                        "type": "array",
+                        "title": "Transactions"
+                    },
+                    "total_count": {
+                        "type": "integer",
+                        "title": "Total Count"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "valuation_ccy",
+                    "transactions",
+                    "total_count"
+                ],
+                "title": "TransactionsReport"
             },
             "TriggerUserAccountValuationResponse": {
                 "properties": {},

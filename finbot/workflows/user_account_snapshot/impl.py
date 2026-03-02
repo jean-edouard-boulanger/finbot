@@ -1,9 +1,11 @@
 import logging
 from collections import defaultdict
 from dataclasses import dataclass
+from datetime import timedelta
 from decimal import Decimal
 from typing import Generator, Optional, Protocol, TypedDict, cast
 
+from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 
 from finbot import model
@@ -93,6 +95,27 @@ class LinkedAccountSnapshotWrapper:
             if isinstance(snapshot_entry, (finbotwsrv_schema.AssetsResults, finbotwsrv_schema.LiabilitiesResults)):
                 for result_entry in snapshot_entry.results:
                     yield result_entry
+
+    def iter_transactions(
+        self,
+    ) -> Generator[providers_schema.Transaction, None, None]:
+        if isinstance(self.snapshot_data, ApplicationErrorData):
+            return
+        for entry in self.snapshot_data.financial_data:
+            if isinstance(entry, finbotwsrv_schema.TransactionsResults):
+                yield from entry.results
+
+
+def collect_transaction_xccys(
+    raw_snapshot: list[schema.LinkedAccountSnapshotResponse],
+    target_ccy: core_schema.CurrencyCode,
+    xccys: set[fx_market.Xccy],
+) -> None:
+    for linked_account_snapshot in raw_snapshot:
+        wrapper = LinkedAccountSnapshotWrapper(linked_account_snapshot)
+        for txn in wrapper.iter_transactions():
+            if txn.currency != target_ccy:
+                xccys.add(fx_market.Xccy(domestic=txn.currency, foreign=target_ccy))
 
 
 def visit_snapshot_tree(
@@ -311,25 +334,53 @@ def is_linked_account_included_in_snapshot(
     return True
 
 
+TRANSACTIONS_LOOKBACK = timedelta(days=7)
+
+
 def prepare_raw_snapshot_requests(
     user_account: model.UserAccount,
     linked_account_ids: list[core_schema.LinkedAccountId] | None,
+    db_session: SessionType,
 ) -> list[schema.LinkedAccountSnapshotRequest]:
-    return [
-        schema.LinkedAccountSnapshotRequest(
-            linked_account_id=linked_account.id,
-            provider_id=linked_account.provider_id,
-            encrypted_credentials=some(linked_account.encrypted_credentials),
-            line_items=[
-                finbotwsrv_schema.LineItem.Accounts,
-                finbotwsrv_schema.LineItem.Assets,
-                finbotwsrv_schema.LineItem.Liabilities,
-            ],
-            user_account_currency=core_schema.CurrencyCode(user_account.settings.valuation_ccy),
+    # Query the latest transaction date per linked account to determine
+    # the from_date for each provider. Accounts with no history get None
+    # (fetch all available), accounts with history get latest - 7 days.
+    latest_txn_dates: dict[int, object] = dict(
+        db_session.query(
+            model.TransactionHistoryEntry.linked_account_id,
+            func.max(model.TransactionHistoryEntry.transaction_date),
         )
-        for linked_account in user_account.linked_accounts
-        if is_linked_account_included_in_snapshot(linked_account, linked_account_ids)
-    ]
+        .filter(
+            model.TransactionHistoryEntry.linked_account_id.in_(
+                [la.id for la in user_account.linked_accounts]
+            )
+        )
+        .group_by(model.TransactionHistoryEntry.linked_account_id)
+        .all()
+    )
+
+    requests = []
+    for linked_account in user_account.linked_accounts:
+        if not is_linked_account_included_in_snapshot(linked_account, linked_account_ids):
+            continue
+        latest = latest_txn_dates.get(linked_account.id)
+        transactions_from_date = (latest - TRANSACTIONS_LOOKBACK) if latest else None
+        requests.append(
+            schema.LinkedAccountSnapshotRequest(
+                linked_account_id=linked_account.id,
+                provider_id=linked_account.provider_id,
+                encrypted_credentials=some(linked_account.encrypted_credentials),
+                line_items=[
+                    finbotwsrv_schema.LineItem.Accounts,
+                    finbotwsrv_schema.LineItem.Assets,
+                    finbotwsrv_schema.LineItem.Liabilities,
+                    finbotwsrv_schema.LineItem.Transactions,
+                ],
+                user_account_currency=core_schema.CurrencyCode(user_account.settings.valuation_ccy),
+                transactions_from_date=transactions_from_date,
+            )
+        )
+    return requests
 
 
 def validate_fx_rates(rates: dict[fx_market.Xccy, Optional[float]]) -> None:
@@ -373,6 +424,7 @@ def build_and_persist_final_snapshot(
     persist_scope = PersistScope(db_session)
     xccy_collector = XccyCollector(core_schema.CurrencyCode(new_snapshot.requested_ccy))
     visit_snapshot_tree(raw_snapshot, xccy_collector)
+    collect_transaction_xccys(raw_snapshot, core_schema.CurrencyCode(new_snapshot.requested_ccy), xccy_collector.xccys)
     xccy_rates = fx_market.get_rates(xccy_collector.xccys)
 
     logger.debug("adding cross currency rates to snapshot")
@@ -403,6 +455,21 @@ def build_and_persist_final_snapshot(
         visit_snapshot_tree(raw_snapshot, snapshot_builder)
         new_snapshot.status = model.SnapshotStatus.Success
         new_snapshot.end_time = utils.now_utc()
+
+    # Store raw transactions for each linked account
+    for linked_account_snapshot in raw_snapshot:
+        wrapper = LinkedAccountSnapshotWrapper(linked_account_snapshot)
+        transactions = list(wrapper.iter_transactions())
+        if not transactions:
+            continue
+        linked_account_entry = snapshot_builder.linked_accounts.get(wrapper.linked_account_id)
+        if linked_account_entry is None:
+            continue
+        serialized = [txn.model_dump(mode="json") for txn in transactions]
+        with persist_scope(model.TransactionsSnapshotEntry()) as txn_entry:
+            txn_entry.linked_account_snapshot_entry_id = linked_account_entry.id
+            txn_entry.transaction_count = len(transactions)
+            txn_entry.transactions_data = model.TransactionsSnapshotEntry.compress_transactions(serialized)
 
     return schema.SnapshotSummary(
         identifier=new_snapshot.id,

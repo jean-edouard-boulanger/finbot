@@ -34,6 +34,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+llm = [
+    "openai>=1",
+]
 dev = [
     "click==8.2.1",
     "mypy==1.15.0",

@@ -1,7 +1,12 @@
 import React, { useContext } from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
 
-import { AuthProvider, AuthContext, ThemeProvider, ThemeContext } from "contexts";
+import {
+  AuthProvider,
+  AuthContext,
+  ThemeProvider,
+  ThemeContext,
+} from "contexts";
 
 import { Toaster } from "sonner";
 import { MainContainer, Navigation } from "components";

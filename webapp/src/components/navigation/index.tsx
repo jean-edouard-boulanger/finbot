@@ -56,13 +56,7 @@ const SystemStatusBadge: React.FC<Record<string, never>> = () => {
   return <></>;
 };
 
-function NavItem({
-  to,
-  children,
-}: {
-  to: string;
-  children: React.ReactNode;
-}) {
+function NavItem({ to, children }: { to: string; children: React.ReactNode }) {
   const { pathname } = useLocation();
   const isActive = pathname.startsWith(to);
   return (
@@ -182,8 +176,7 @@ export const Navigation: React.FC = () => {
             to={isAuthenticated ? "/dashboard" : "/login"}
             className="text-lg font-semibold tracking-tight text-foreground"
           >
-            Finbot{" "}
-            <SystemStatusBadge />
+            Finbot <SystemStatusBadge />
           </NavLink>
         </div>
         {isAuthenticated ? <UserNavbar /> : <GuestNavbar />}

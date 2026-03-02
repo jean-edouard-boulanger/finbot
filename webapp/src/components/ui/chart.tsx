@@ -22,8 +22,7 @@ function useChartConfig(): ChartConfig | null {
 
 // --- ChartContainer ---
 
-export interface ChartContainerProps
-  extends React.HTMLAttributes<HTMLDivElement> {
+export interface ChartContainerProps extends React.HTMLAttributes<HTMLDivElement> {
   config: ChartConfig;
   children: React.ReactElement;
 }
@@ -119,17 +118,21 @@ export const ChartTooltipContent: React.FC<ChartTooltipContentProps> = ({
             </div>
           );
         })}
-        {payload.length > 1 && (() => {
-          const total = payload.reduce((sum, entry) => sum + (entry.value ?? 0), 0);
-          return (
-            <div className="mt-1 flex items-center gap-2 border-t border-border/50 pt-1.5">
-              <span className="text-muted-foreground">Total</span>
-              <span className="ml-auto font-mono font-medium tabular-nums">
-                {formatter ? formatter(total, "Total") : total}
-              </span>
-            </div>
-          );
-        })()}
+        {payload.length > 1 &&
+          (() => {
+            const total = payload.reduce(
+              (sum, entry) => sum + (entry.value ?? 0),
+              0,
+            );
+            return (
+              <div className="mt-1 flex items-center gap-2 border-t border-border/50 pt-1.5">
+                <span className="text-muted-foreground">Total</span>
+                <span className="ml-auto font-mono font-medium tabular-nums">
+                  {formatter ? formatter(total, "Total") : total}
+                </span>
+              </div>
+            );
+          })()}
       </div>
     </div>
   );

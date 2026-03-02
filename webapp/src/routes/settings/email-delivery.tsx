@@ -169,9 +169,7 @@ export const EmailDeliverySettingsPanel: React.FC<
           placeholder="Delivery method"
           isLoading={providers.length === 0}
           value={
-            provider === null
-              ? undefined
-              : makeProvidersSelectValue(provider)
+            provider === null ? undefined : makeProvidersSelectValue(provider)
           }
           options={providers.map(makeProvidersSelectValue)}
           onChange={(entry) => {

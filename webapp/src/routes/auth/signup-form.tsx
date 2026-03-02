@@ -142,7 +142,10 @@ export const SignupForm: React.FC<Record<string, never>> = () => {
     <>
       <div className="mb-4">
         <h1 className="text-3xl font-bold">
-          Register <span className="text-lg font-normal text-muted-foreground">a new finbot account</span>
+          Register{" "}
+          <span className="text-lg font-normal text-muted-foreground">
+            a new finbot account
+          </span>
         </h1>
       </div>
       <div hidden={step !== "personal"}>

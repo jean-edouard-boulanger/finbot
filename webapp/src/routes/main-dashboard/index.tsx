@@ -19,6 +19,9 @@ import {
   HoldingsReportPanel,
   HistoricalValuationPanel,
   WealthDistributionPanel,
+  TransactionsReportPanel,
+  CashFlowPanel,
+  SpendingBreakdownPanel,
 } from "./reports";
 
 import { Alert, AlertTitle, AlertDescription } from "components/ui/alert";
@@ -43,6 +46,7 @@ const CHANGE_PERIODS: { key: keyof ValuationChange; label: string }[] = [
 const REPORTS = {
   HOLDINGS: "holdings",
   EARNINGS: "earnings",
+  TRANSACTIONS: "transactions",
 };
 
 const DEFAULT_REPORT = REPORTS.HOLDINGS;
@@ -131,11 +135,28 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
             {sparklineData.length > 1 && (
               <div className="absolute inset-0 opacity-[0.12]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={sparklineData} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+                  <AreaChart
+                    data={sparklineData}
+                    margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+                  >
                     <defs>
-                      <linearGradient id="heroSparkFill" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={1} />
-                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                      <linearGradient
+                        id="heroSparkFill"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="0%"
+                          stopColor="hsl(var(--primary))"
+                          stopOpacity={1}
+                        />
+                        <stop
+                          offset="100%"
+                          stopColor="hsl(var(--primary))"
+                          stopOpacity={0}
+                        />
                       </linearGradient>
                     </defs>
                     <Area
@@ -226,7 +247,8 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
                                   : "border-border/50 bg-muted/50 text-muted-foreground"
                             }`}
                           >
-                            {label} {isPositive ? "+" : ""}{pct}%
+                            {label} {isPositive ? "+" : ""}
+                            {pct}%
                           </span>
                         );
                       })}
@@ -261,6 +283,20 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
               moneyFormatter={defaultMoneyFormatter}
             />
           </div>
+          <div className="animate-fade-up stagger-4">
+            <CashFlowPanel
+              userAccountId={userAccountId!}
+              locale={locale}
+              moneyFormatter={defaultMoneyFormatter}
+            />
+          </div>
+          <div className="animate-fade-up stagger-4">
+            <SpendingBreakdownPanel
+              userAccountId={userAccountId!}
+              locale={locale}
+              moneyFormatter={defaultMoneyFormatter}
+            />
+          </div>
         </div>
 
         {/* Reports */}
@@ -275,6 +311,9 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
                 <TabsList className="self-start">
                   <TabsTrigger value={REPORTS.HOLDINGS}>Holdings</TabsTrigger>
                   <TabsTrigger value={REPORTS.EARNINGS}>Earnings</TabsTrigger>
+                  <TabsTrigger value={REPORTS.TRANSACTIONS}>
+                    Transactions
+                  </TabsTrigger>
                 </TabsList>
               </CardHeader>
               <CardContent className="pt-4">
@@ -287,6 +326,13 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
                 </TabsContent>
                 <TabsContent value={REPORTS.EARNINGS} className="mt-0">
                   <EarningsReportPanel
+                    userAccountId={userAccountId!}
+                    locale={locale}
+                    moneyFormatter={defaultMoneyFormatter}
+                  />
+                </TabsContent>
+                <TabsContent value={REPORTS.TRANSACTIONS} className="mt-0">
+                  <TransactionsReportPanel
                     userAccountId={userAccountId!}
                     locale={locale}
                     moneyFormatter={defaultMoneyFormatter}

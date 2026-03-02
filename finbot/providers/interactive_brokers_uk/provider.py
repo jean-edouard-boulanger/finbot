@@ -1,4 +1,5 @@
 import base64
+from datetime import datetime
 from typing import Any
 
 from pydantic import SecretStr
@@ -14,16 +15,19 @@ from finbot.providers.interactive_brokers_uk.flex_report.parser import (
 )
 from finbot.providers.interactive_brokers_uk.flex_report.schema import (
     AccountInformation,
+    CashTransaction,
     FlexReport,
     FlexStatement,
     FlexStatementEntries,
     OpenPosition,
+    Trade,
+    TradeDirection,
 )
 from finbot.providers.interactive_brokers_uk.intake import (
     IntakeMethod,
     async_load_latest_report_payload,
 )
-from finbot.providers.schema import Account, AccountType
+from finbot.providers.schema import Account, AccountType, Transaction, Transactions, TransactionType
 
 
 class PGPKey(BaseModel):
@@ -75,6 +79,14 @@ class Api(ProviderBase):
             accounts=[statement.get_assets(self.user_account_currency) for statement in some(self.__report).statements],
         )
 
+    async def get_transactions(self, from_date: datetime | None = None) -> Transactions:
+        all_transactions: list[Transaction] = []
+        for statement in some(self.__report).statements:
+            all_transactions.extend(statement.get_transactions())
+        if from_date:
+            all_transactions = [t for t in all_transactions if t.transaction_date >= from_date]
+        return Transactions(transactions=all_transactions)
+
 
 class FlexStatementWrapper:
     def __init__(self, statement: FlexStatement):
@@ -123,6 +135,16 @@ class FlexStatementWrapper:
             items=cash_assets + [_make_asset(entry=entry) for entry in some(self.entries.open_positions).entries],
         )
 
+    def get_transactions(self) -> list[Transaction]:
+        transactions: list[Transaction] = []
+        if self.entries.trades:
+            for trade in self.entries.trades.entries:
+                transactions.append(_make_trade_transaction(trade, self.account_id))
+        if self.entries.cash_transactions:
+            for cash_txn in self.entries.cash_transactions.entries:
+                transactions.append(_make_cash_transaction(cash_txn, self.account_id))
+        return transactions
+
 
 class FlexReportWrapper:
     def __init__(self, report: FlexReport):
@@ -155,3 +177,62 @@ def _make_asset(
             },
         )
     raise UnsupportedFinancialInstrument(asset_category, entry.symbol)
+
+
+_CASH_TRANSACTION_TYPE_MAP: dict[str, TransactionType] = {
+    "Dividends": TransactionType.dividend,
+    "Payment In Lieu Of Dividends": TransactionType.dividend,
+    "Withholding Tax": TransactionType.tax,
+    "Broker Interest Received": TransactionType.interest_earned,
+    "Broker Interest Paid": TransactionType.interest_charged,
+    "Commission Adjustments": TransactionType.fee,
+    "Other Fees": TransactionType.fee,
+    "Deposits/Withdrawals": TransactionType.deposit,
+}
+
+
+def _make_trade_transaction(trade: Trade, account_id: str) -> Transaction:
+    from datetime import timezone
+
+    txn_type = TransactionType.buy if trade.buy_sell == TradeDirection.buy else TransactionType.sell
+    return Transaction(
+        transaction_id=trade.transaction_id,
+        account_id=account_id,
+        transaction_date=trade.trade_time.replace(tzinfo=timezone.utc)
+        if trade.trade_time.tzinfo is None
+        else trade.trade_time,
+        transaction_type=txn_type,
+        amount=trade.net_cash,
+        currency=trade.currency,
+        description=f"{trade.buy_sell.value.upper()} {abs(trade.quantity)} {trade.symbol} @ {trade.trade_price}",
+        symbol=trade.symbol,
+        units=abs(trade.quantity),
+        unit_price=trade.trade_price,
+        fee=abs(trade.ib_commission),
+        provider_specific={
+            "trade_id": trade.trade_id,
+            "exchange": trade.exchange,
+            "order_type": trade.order_type,
+            "isin": trade.isin,
+        },
+    )
+
+
+def _make_cash_transaction(cash_txn: CashTransaction, account_id: str) -> Transaction:
+    from datetime import timezone
+
+    txn_type = _CASH_TRANSACTION_TYPE_MAP.get(cash_txn.transaction_type, TransactionType.other)
+    if txn_type == TransactionType.deposit and cash_txn.amount < 0:
+        txn_type = TransactionType.withdrawal
+    return Transaction(
+        transaction_id=cash_txn.transaction_id,
+        account_id=account_id,
+        transaction_date=datetime.combine(cash_txn.settlement_date, datetime.min.time(), tzinfo=timezone.utc),
+        transaction_type=txn_type,
+        amount=cash_txn.amount,
+        currency=cash_txn.currency,
+        description=cash_txn.description,
+        provider_specific={
+            "ib_transaction_type": cash_txn.transaction_type,
+        },
+    )

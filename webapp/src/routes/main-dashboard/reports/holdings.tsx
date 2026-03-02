@@ -13,11 +13,7 @@ import {
   Valuation,
 } from "clients";
 
-import {
-  TreeGrid,
-  Money,
-  ValuationChange,
-} from "components";
+import { TreeGrid, Money, ValuationChange } from "components";
 import { TreeGridRowProps } from "components/tree-grid";
 import { MoneyFormatterType } from "components/money";
 import { Alert, AlertTitle, AlertDescription } from "components/ui/alert";
@@ -153,13 +149,30 @@ export const GridRow = (locale: string, moneyFormatter: MoneyFormatterType) => {
 export const Header = () => {
   return (
     <tr className="border-b border-border/50">
-      <th style={{ width: "40em" }} className="text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">&nbsp;</th>
-      <th className="text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Value</th>
-      <th className="text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">1D</th>
-      <th className="text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">1W</th>
-      <th className="text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">1M</th>
-      <th className="text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">1Y</th>
-      <th className="text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">2Y</th>
+      <th
+        style={{ width: "40em" }}
+        className="text-left text-xs font-medium uppercase tracking-wider text-muted-foreground"
+      >
+        &nbsp;
+      </th>
+      <th className="text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        Value
+      </th>
+      <th className="text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        1D
+      </th>
+      <th className="text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        1W
+      </th>
+      <th className="text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        1M
+      </th>
+      <th className="text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        1Y
+      </th>
+      <th className="text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        2Y
+      </th>
     </tr>
   );
 };

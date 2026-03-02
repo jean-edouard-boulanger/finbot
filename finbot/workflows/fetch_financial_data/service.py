@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from typing import Any, cast
 
 from finbot.core.environment import get_secret_key
@@ -24,20 +25,30 @@ async def liabilities_handler(provider_api: ProviderBase) -> schema.LineItemResu
     return schema.LiabilitiesResults(results=(await provider_api.get_liabilities()).accounts)
 
 
+async def transactions_handler(
+    provider_api: ProviderBase,
+    from_date: datetime | None = None,
+) -> schema.LineItemResults:
+    return schema.TransactionsResults(results=(await provider_api.get_transactions(from_date=from_date)).transactions)
+
+
 async def item_handler(
     item_type: schema.LineItem,
     provider_api: ProviderBase,
+    transactions_from_date: datetime | None = None,
 ) -> schema.LineItemResults:
-    handler = {
-        schema.LineItem.Accounts: accounts_handler,
-        schema.LineItem.Assets: assets_handler,
-        schema.LineItem.Liabilities: liabilities_handler,
-    }.get(item_type)
     try:
-        if not handler:
-            raise ValueError(f"unknown line item: '{item_type}'")
         logger.debug(f"handling '{item_type}' line item")
-        return await handler(provider_api)
+        if item_type == schema.LineItem.Accounts:
+            return await accounts_handler(provider_api)
+        elif item_type == schema.LineItem.Assets:
+            return await assets_handler(provider_api)
+        elif item_type == schema.LineItem.Liabilities:
+            return await liabilities_handler(provider_api)
+        elif item_type == schema.LineItem.Transactions:
+            return await transactions_handler(provider_api, from_date=transactions_from_date)
+        else:
+            raise ValueError(f"unknown line item: '{item_type}'")
     except Exception as e:
         logger.exception(f"error while handling '{item_type}'")
         return schema.LineItemError(
@@ -51,11 +62,15 @@ async def get_financial_data_impl(
     authentication_payload: dict[str, Any],
     line_items: list[schema.LineItem],
     user_account_currency: CurrencyCode,
+    transactions_from_date: datetime | None = None,
 ) -> schema.GetFinancialDataResponse:
     async with provider_type.create(authentication_payload, user_account_currency) as provider_api:
         await provider_api.initialize()
         return schema.GetFinancialDataResponse(
-            financial_data=[await item_handler(line_item, provider_api) for line_item in set(line_items)]
+            financial_data=[
+                await item_handler(line_item, provider_api, transactions_from_date=transactions_from_date)
+                for line_item in set(line_items)
+            ]
         )
 
 
@@ -72,6 +87,7 @@ class FinancialDataFetcherService:
                 ),
                 line_items=request.items,
                 user_account_currency=request.user_account_currency,
+                transactions_from_date=request.transactions_from_date,
             )
         except Exception as e:
             return schema.GetFinancialDataResponse(

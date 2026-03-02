@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 
-import {
-  Table,
-  TableBody,
-  TableHeader,
-} from "components/ui/table";
+import { Table, TableBody, TableHeader } from "components/ui/table";
 
 interface TreeNodeWithChildren<NodeType> {
   children: Array<NodeType>;

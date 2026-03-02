@@ -45,9 +45,7 @@ function SidebarNavItem({
 }) {
   const { pathname } = useLocation();
   const isActive =
-    to === "/dashboard"
-      ? pathname === "/dashboard"
-      : pathname.startsWith(to);
+    to === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(to);
 
   return (
     <NavLink to={to} onClick={onClick}>
@@ -107,22 +105,38 @@ function SettingsSubNav({ onNavigate }: { onNavigate?: () => void }) {
       <SidebarNavItem to="/settings/profile" icon={User} onClick={onNavigate}>
         Profile
       </SidebarNavItem>
-      <SidebarNavItem to="/settings/security" icon={Shield} onClick={onNavigate}>
+      <SidebarNavItem
+        to="/settings/security"
+        icon={Shield}
+        onClick={onNavigate}
+      >
         Account security
       </SidebarNavItem>
       <SidebarNavItem to="/settings/linked" icon={Link2} onClick={onNavigate}>
         Linked accounts
       </SidebarNavItem>
-      <SidebarNavItem to="/settings/appearance" icon={Palette} onClick={onNavigate}>
+      <SidebarNavItem
+        to="/settings/appearance"
+        icon={Palette}
+        onClick={onNavigate}
+      >
         Appearance
       </SidebarNavItem>
       <p className="mt-4 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         Administration
       </p>
-      <SidebarNavItem to="/settings/admin/providers" icon={Server} onClick={onNavigate}>
+      <SidebarNavItem
+        to="/settings/admin/providers"
+        icon={Server}
+        onClick={onNavigate}
+      >
         Providers
       </SidebarNavItem>
-      <SidebarNavItem to="/settings/admin/email_delivery" icon={Mail} onClick={onNavigate}>
+      <SidebarNavItem
+        to="/settings/admin/email_delivery"
+        icon={Mail}
+        onClick={onNavigate}
+      >
         Email delivery
       </SidebarNavItem>
     </>
@@ -158,7 +172,11 @@ function SidebarContent({
 
       {/* Navigation */}
       <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-2 py-3">
-        <SidebarNavItem to="/dashboard" icon={LayoutDashboard} onClick={onNavigate}>
+        <SidebarNavItem
+          to="/dashboard"
+          icon={LayoutDashboard}
+          onClick={onNavigate}
+        >
           Dashboard
         </SidebarNavItem>
 

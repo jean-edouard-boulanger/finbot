@@ -1,4 +1,5 @@
 import enum
+from datetime import datetime
 from typing import Any, Self, TypeAlias
 
 from pydantic import Field, model_validator
@@ -269,6 +270,90 @@ class Liabilities(BaseModel):
 
 
 ItemType: TypeAlias = Asset | Liability
+
+
+class TransactionType(str, enum.Enum):
+    # income
+    dividend = "dividend"
+    interest_earned = "interest_earned"
+    staking_reward = "staking_reward"
+    # expense
+    fee = "fee"
+    commission = "commission"
+    interest_charged = "interest_charged"
+    tax = "tax"
+    # trade
+    buy = "buy"
+    sell = "sell"
+    # transfer
+    deposit = "deposit"
+    withdrawal = "withdrawal"
+    transfer_in = "transfer_in"
+    transfer_out = "transfer_out"
+    payment = "payment"
+    purchase = "purchase"
+    contribution = "contribution"
+    # other
+    corporate_action = "corporate_action"
+    adjustment = "adjustment"
+    other = "other"
+
+
+class TransactionCategory(str, enum.Enum):
+    income = "income"
+    expense = "expense"
+    trade = "trade"
+    transfer = "transfer"
+    other = "other"
+
+
+_TRANSACTION_TYPE_TO_CATEGORY: dict[TransactionType, TransactionCategory] = {
+    TransactionType.dividend: TransactionCategory.income,
+    TransactionType.interest_earned: TransactionCategory.income,
+    TransactionType.staking_reward: TransactionCategory.income,
+    TransactionType.fee: TransactionCategory.expense,
+    TransactionType.commission: TransactionCategory.expense,
+    TransactionType.interest_charged: TransactionCategory.expense,
+    TransactionType.tax: TransactionCategory.expense,
+    TransactionType.buy: TransactionCategory.trade,
+    TransactionType.sell: TransactionCategory.trade,
+    TransactionType.deposit: TransactionCategory.transfer,
+    TransactionType.withdrawal: TransactionCategory.transfer,
+    TransactionType.transfer_in: TransactionCategory.transfer,
+    TransactionType.transfer_out: TransactionCategory.transfer,
+    TransactionType.payment: TransactionCategory.transfer,
+    TransactionType.purchase: TransactionCategory.expense,
+    TransactionType.contribution: TransactionCategory.transfer,
+    TransactionType.corporate_action: TransactionCategory.other,
+    TransactionType.adjustment: TransactionCategory.other,
+    TransactionType.other: TransactionCategory.other,
+}
+
+
+def category_for_type(t: TransactionType) -> TransactionCategory:
+    return _TRANSACTION_TYPE_TO_CATEGORY[t]
+
+
+class Transaction(BaseModel):
+    transaction_id: str
+    account_id: SubAccountId
+    transaction_date: datetime
+    transaction_type: TransactionType
+    amount: float
+    currency: CurrencyCode
+    description: str
+    symbol: str | None = None
+    units: float | None = None
+    unit_price: float | None = None
+    fee: float | None = None
+    counterparty: str | None = None
+    spending_category_primary: str | None = None
+    spending_category_detailed: str | None = None
+    provider_specific: ProviderSpecificPayloadType | None = None
+
+
+class Transactions(BaseModel):
+    transactions: list[Transaction]
 
 
 def _validate_item_value(

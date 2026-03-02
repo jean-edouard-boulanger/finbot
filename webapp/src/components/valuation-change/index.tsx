@@ -67,6 +67,8 @@ export const RelativeValuationChange: React.FC<RelativeValuationChangeProps> = (
   if (amount < 0) {
     return <span className="text-red-500">{(amount * 100).toFixed(2)}%</span>;
   } else {
-    return <span className="text-green-500">+{(amount * 100).toFixed(2)}%</span>;
+    return (
+      <span className="text-green-500">+{(amount * 100).toFixed(2)}%</span>
+    );
   }
 };

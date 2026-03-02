@@ -66,7 +66,28 @@ def _parse_trades(node: Element) -> schema.Trades:
         entries=[
             _parse_trade(child_node)
             for child_node in list(node)
-            if node.tag == "Trade" and node.attrib["levelOfDetail"] == "EXECUTION"
+            if child_node.tag == "Trade" and child_node.attrib["levelOfDetail"] == "EXECUTION"
+        ]
+    )
+
+
+def _parse_cash_transaction(node: Element) -> schema.CashTransaction:
+    return _parse_xml_to_pydantic(
+        model_type=schema.CashTransaction,
+        node=node,
+        model_to_xml_fields_overrides={
+            "transaction_type": "type",
+            "transaction_id": "transactionID",
+        },
+    )
+
+
+def _parse_cash_transactions(node: Element) -> schema.CashTransactions:
+    return schema.CashTransactions(
+        entries=[
+            _parse_cash_transaction(child_node)
+            for child_node in list(node)
+            if child_node.attrib.get("levelOfDetail") == "DETAIL"
         ]
     )
 
@@ -185,6 +206,7 @@ def _parse_flex_statement_entries(nodes: list[Element]) -> schema.FlexStatementE
     open_positions: schema.OpenPositions | None = None
     cash_report: schema.CashReport | None = None
     trades: schema.Trades | None = None
+    cash_transactions: schema.CashTransactions | None = None
     for node in nodes:
         node_type = node.tag
         if node_type == "AccountInformation":
@@ -201,6 +223,8 @@ def _parse_flex_statement_entries(nodes: list[Element]) -> schema.FlexStatementE
             cash_report = _parse_cash_report(node)
         elif node_type == "Trades":
             trades = _parse_trades(node)
+        elif node_type == "CashTransactions":
+            cash_transactions = _parse_cash_transactions(node)
     return schema.FlexStatementEntries(
         account_information=account_information,
         mtm_performance_summary_in_base=mtm_performance_summary_in_base,
@@ -209,6 +233,7 @@ def _parse_flex_statement_entries(nodes: list[Element]) -> schema.FlexStatementE
         open_positions=open_positions,
         cash_report=cash_report,
         trades=trades,
+        cash_transactions=cash_transactions,
     )
 
 

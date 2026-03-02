@@ -241,7 +241,13 @@ export interface HistoricalValuationProps {
 export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
   props,
 ) => {
-  const { userAccountId, locale, moneyFormatter, linkedAccountId, linkedAccountName } = props;
+  const {
+    userAccountId,
+    locale,
+    moneyFormatter,
+    linkedAccountId,
+    linkedAccountName,
+  } = props;
   const isSingleAccount = linkedAccountId !== undefined;
   const availableLevels = isSingleAccount
     ? LEVELS.filter((l) => l.type !== "linked_account")
@@ -281,20 +287,37 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
                 (s) => s.name === linkedAccountName,
               );
               // Trim x-axis to only indices where this series has data
-              const seriesData = matchedSeries[0]?.data as (number | null)[] | undefined;
-              const categories = hv.seriesData.xAxis.categories as (string | number)[];
+              const seriesData = matchedSeries[0]?.data as
+                | (number | null)[]
+                | undefined;
+              const categories = hv.seriesData.xAxis.categories as (
+                | string
+                | number
+              )[];
               if (seriesData) {
                 const firstIdx = seriesData.findIndex((v) => v != null);
-                const lastIdx = seriesData.length - 1 - [...seriesData].reverse().findIndex((v) => v != null);
-                const trimmedCategories = categories.slice(firstIdx, lastIdx + 1);
+                const lastIdx =
+                  seriesData.length -
+                  1 -
+                  [...seriesData].reverse().findIndex((v) => v != null);
+                const trimmedCategories = categories.slice(
+                  firstIdx,
+                  lastIdx + 1,
+                );
                 const trimmedSeries = matchedSeries.map((s) => ({
                   ...s,
-                  data: (s.data as (number | null)[]).slice(firstIdx, lastIdx + 1),
+                  data: (s.data as (number | null)[]).slice(
+                    firstIdx,
+                    lastIdx + 1,
+                  ),
                 }));
                 setHistoricalValuation({
                   ...hv,
                   seriesData: {
-                    xAxis: { ...hv.seriesData.xAxis, categories: trimmedCategories },
+                    xAxis: {
+                      ...hv.seriesData.xAxis,
+                      categories: trimmedCategories,
+                    },
                     series: trimmedSeries,
                   },
                 });
@@ -363,55 +386,62 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
   const gainColor = "hsl(var(--gain))";
   const lossColor = "hsl(var(--loss))";
 
-  const { chartData, chartConfig, seriesKeys, isDatetime, gradientOffset } = useMemo(() => {
-    if (!historicalValuation) {
-      return { chartData: [], chartConfig: {} as ChartConfig, seriesKeys: [] as string[], isDatetime: false, gradientOffset: 1 };
-    }
-    const { xAxis, series } = historicalValuation.seriesData;
-    const categories = xAxis.categories as Array<string | number>;
-    const isDatetime = xAxis.type === "datetime";
-
-    const data = categories.map((cat, i) => {
-      const row: Record<string, unknown> = { x: cat };
-      series.forEach((s) => {
-        row[s.name] = (s.data as number[])[i];
-      });
-      return row;
-    });
-
-    const config: ChartConfig = {};
-    series.forEach((s) => {
-      config[s.name] = {
-        label: s.name,
-        color: isSingleSeries ? gainColor : s.colour,
-      };
-    });
-
-    // Compute gradient stop offset for area chart (where y=0 falls as fraction from top)
-    let gradientOffset = 0;
-    if (isSingleSeries && series.length === 1) {
-      const values = (series[0].data as (number | null)[]).filter(
-        (v): v is number => v != null,
-      );
-      const max = Math.max(...values);
-      const min = Math.min(...values);
-      if (max <= 0) {
-        gradientOffset = 0;
-      } else if (min >= 0) {
-        gradientOffset = 1;
-      } else {
-        gradientOffset = max / (max - min);
+  const { chartData, chartConfig, seriesKeys, isDatetime, gradientOffset } =
+    useMemo(() => {
+      if (!historicalValuation) {
+        return {
+          chartData: [],
+          chartConfig: {} as ChartConfig,
+          seriesKeys: [] as string[],
+          isDatetime: false,
+          gradientOffset: 1,
+        };
       }
-    }
+      const { xAxis, series } = historicalValuation.seriesData;
+      const categories = xAxis.categories as Array<string | number>;
+      const isDatetime = xAxis.type === "datetime";
 
-    return {
-      chartData: data,
-      chartConfig: config,
-      seriesKeys: series.map((s) => s.name),
-      isDatetime,
-      gradientOffset,
-    };
-  }, [historicalValuation, isSingleSeries]);
+      const data = categories.map((cat, i) => {
+        const row: Record<string, unknown> = { x: cat };
+        series.forEach((s) => {
+          row[s.name] = (s.data as number[])[i];
+        });
+        return row;
+      });
+
+      const config: ChartConfig = {};
+      series.forEach((s) => {
+        config[s.name] = {
+          label: s.name,
+          color: isSingleSeries ? gainColor : s.colour,
+        };
+      });
+
+      // Compute gradient stop offset for area chart (where y=0 falls as fraction from top)
+      let gradientOffset = 0;
+      if (isSingleSeries && series.length === 1) {
+        const values = (series[0].data as (number | null)[]).filter(
+          (v): v is number => v != null,
+        );
+        const max = Math.max(...values);
+        const min = Math.min(...values);
+        if (max <= 0) {
+          gradientOffset = 0;
+        } else if (min >= 0) {
+          gradientOffset = 1;
+        } else {
+          gradientOffset = max / (max - min);
+        }
+      }
+
+      return {
+        chartData: data,
+        chartConfig: config,
+        seriesKeys: series.map((s) => s.name),
+        isDatetime,
+        gradientOffset,
+      };
+    }, [historicalValuation, isSingleSeries]);
 
   const xTickFormatter = (value: string | number) => {
     if (!isDatetime) return String(value);
@@ -477,7 +507,10 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
         <div className="flex gap-1">
           <FilterDropdown
             label={selectedLevel.label}
-            items={availableLevels.map((l) => ({ key: l.type, label: l.label }))}
+            items={availableLevels.map((l) => ({
+              key: l.type,
+              label: l.label,
+            }))}
             activeKey={selectedLevel.type}
             onSelect={(key) =>
               setSelectedLevel(availableLevels.find((l) => l.type === key)!)
@@ -504,21 +537,60 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
       </CardHeader>
       <CardContent>
         {historicalValuation ? (
-          <ChartContainer config={chartConfig} className="h-[250px] w-full animate-fade-up">
+          <ChartContainer
+            config={chartConfig}
+            className="h-[250px] w-full animate-fade-up"
+          >
             {isDatetime ? (
               <AreaChart data={chartData}>
                 {isSingleSeries && (
                   <defs>
-                    <linearGradient id="gainLossGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset={0} stopColor={gainColor} stopOpacity={0.6} />
-                      <stop offset={gradientOffset} stopColor={gainColor} stopOpacity={0.6} />
-                      <stop offset={gradientOffset} stopColor={lossColor} stopOpacity={0.6} />
-                      <stop offset={1} stopColor={lossColor} stopOpacity={0.6} />
+                    <linearGradient
+                      id="gainLossGradient"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop
+                        offset={0}
+                        stopColor={gainColor}
+                        stopOpacity={0.6}
+                      />
+                      <stop
+                        offset={gradientOffset}
+                        stopColor={gainColor}
+                        stopOpacity={0.6}
+                      />
+                      <stop
+                        offset={gradientOffset}
+                        stopColor={lossColor}
+                        stopOpacity={0.6}
+                      />
+                      <stop
+                        offset={1}
+                        stopColor={lossColor}
+                        stopOpacity={0.6}
+                      />
                     </linearGradient>
-                    <linearGradient id="gainLossStroke" x1="0" y1="0" x2="0" y2="1">
+                    <linearGradient
+                      id="gainLossStroke"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
                       <stop offset={0} stopColor={gainColor} stopOpacity={1} />
-                      <stop offset={gradientOffset} stopColor={gainColor} stopOpacity={1} />
-                      <stop offset={gradientOffset} stopColor={lossColor} stopOpacity={1} />
+                      <stop
+                        offset={gradientOffset}
+                        stopColor={gainColor}
+                        stopOpacity={1}
+                      />
+                      <stop
+                        offset={gradientOffset}
+                        stopColor={lossColor}
+                        stopOpacity={1}
+                      />
                       <stop offset={1} stopColor={lossColor} stopOpacity={1} />
                     </linearGradient>
                   </defs>
@@ -564,8 +636,16 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
                     type="monotone"
                     dataKey={key}
                     stackId={isSingleSeries ? undefined : "1"}
-                    fill={isSingleSeries ? "url(#gainLossGradient)" : chartConfig[key].color}
-                    stroke={isSingleSeries ? "url(#gainLossStroke)" : chartConfig[key].color}
+                    fill={
+                      isSingleSeries
+                        ? "url(#gainLossGradient)"
+                        : chartConfig[key].color
+                    }
+                    stroke={
+                      isSingleSeries
+                        ? "url(#gainLossStroke)"
+                        : chartConfig[key].color
+                    }
                     fillOpacity={isSingleSeries ? 1 : 0.6}
                     strokeWidth={1.5}
                     isAnimationActive={false}

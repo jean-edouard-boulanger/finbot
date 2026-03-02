@@ -5,12 +5,7 @@ import { AuthContext } from "contexts";
 
 import { LoadingButton } from "components";
 import { Credentials } from "contexts/auth";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "components/ui/card";
 import { Button } from "components/ui/button";
 import { Label } from "components/ui/label";
 import { Alert, AlertDescription } from "components/ui/alert";
@@ -98,10 +93,7 @@ export const LoginForm: React.FC<LoginFormProps> = () => {
                     >
                       Sign-in
                     </LoadingButton>
-                    <Button
-                      variant="link"
-                      onClick={() => navigate("/signup")}
-                    >
+                    <Button variant="link" onClick={() => navigate("/signup")}>
                       Register
                     </Button>
                   </div>

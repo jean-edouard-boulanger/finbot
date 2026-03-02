@@ -15,13 +15,7 @@ import {
 } from "components/ui/dropdown-menu";
 import { Button } from "components/ui/button";
 import { ChevronDown } from "lucide-react";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { ChartTooltipContent } from "components/ui/chart";
 import { MoneyFormatterType } from "components/money";
 
@@ -85,66 +79,68 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
     const fetch = async () => {
       try {
         switch (aggregationMode) {
-        case "account": {
-          const result = (
-            await linkedAccountsValuationApi.getLinkedAccountsValuation({
-              userAccountId,
-            })
-          ).valuation;
-          setValuation({
-            valuation_ccy: result.valuationCcy,
-            labels: result.entries.map(
-              (entry) => entry.linkedAccount.description,
-            ),
-            values: result.entries.map((entry) => entry.valuation.value),
-            colours: result.entries.map(
-              (entry) => entry.linkedAccount.accountColour,
-            ),
-          });
-          break;
-        }
-        case "asset type": {
-          const result = (
-            await userAccountsValuationApi.getUserAccountValuationByAssetType({
-              userAccountId,
-            })
-          ).valuation;
-          setValuation({
-            valuation_ccy: result.valuationCcy,
-            labels: result.byAssetType.map((entry) => entry.name),
-            values: result.byAssetType.map((entry) => entry.value),
-            colours: result.byAssetType.map((entry) => entry.colour),
-          });
-          break;
-        }
-        case "asset class": {
-          const result = (
-            await userAccountsValuationApi!.getUserAccountValuationByAssetClass(
-              { userAccountId },
-            )
-          ).valuation;
-          setValuation({
-            valuation_ccy: result.valuationCcy,
-            labels: result.byAssetClass.map((entry) => entry.name),
-            values: result.byAssetClass.map((entry) => entry.value),
-            colours: result.byAssetClass.map((entry) => entry.colour),
-          });
-          break;
-        }
-        case "currency exposure": {
-          const result = (
-            await userAccountsValuationApi!.getUserAccountValuationByCurrencyExposure(
-              { userAccountId },
-            )
-          ).valuation;
-          setValuation({
-            valuation_ccy: result.valuationCcy,
-            labels: result.byCurrencyExposure.map((entry) => entry.name),
-            values: result.byCurrencyExposure.map((entry) => entry.value),
-            colours: result.byCurrencyExposure.map((entry) => entry.colour),
-          });
-          break;
-        }
+          case "account": {
+            const result = (
+              await linkedAccountsValuationApi.getLinkedAccountsValuation({
+                userAccountId,
+              })
+            ).valuation;
+            setValuation({
+              valuation_ccy: result.valuationCcy,
+              labels: result.entries.map(
+                (entry) => entry.linkedAccount.description,
+              ),
+              values: result.entries.map((entry) => entry.valuation.value),
+              colours: result.entries.map(
+                (entry) => entry.linkedAccount.accountColour,
+              ),
+            });
+            break;
+          }
+          case "asset type": {
+            const result = (
+              await userAccountsValuationApi.getUserAccountValuationByAssetType(
+                {
+                  userAccountId,
+                },
+              )
+            ).valuation;
+            setValuation({
+              valuation_ccy: result.valuationCcy,
+              labels: result.byAssetType.map((entry) => entry.name),
+              values: result.byAssetType.map((entry) => entry.value),
+              colours: result.byAssetType.map((entry) => entry.colour),
+            });
+            break;
+          }
+          case "asset class": {
+            const result = (
+              await userAccountsValuationApi!.getUserAccountValuationByAssetClass(
+                { userAccountId },
+              )
+            ).valuation;
+            setValuation({
+              valuation_ccy: result.valuationCcy,
+              labels: result.byAssetClass.map((entry) => entry.name),
+              values: result.byAssetClass.map((entry) => entry.value),
+              colours: result.byAssetClass.map((entry) => entry.colour),
+            });
+            break;
+          }
+          case "currency exposure": {
+            const result = (
+              await userAccountsValuationApi!.getUserAccountValuationByCurrencyExposure(
+                { userAccountId },
+              )
+            ).valuation;
+            setValuation({
+              valuation_ccy: result.valuationCcy,
+              labels: result.byCurrencyExposure.map((entry) => entry.name),
+              values: result.byCurrencyExposure.map((entry) => entry.value),
+              colours: result.byCurrencyExposure.map((entry) => entry.colour),
+            });
+            break;
+          }
         }
       } catch (e) {
         setError(`${e}`);
@@ -192,7 +188,9 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
             {AGGREGATION_MODES.map((mode) => (
               <DropdownMenuItem
                 key={mode}
-                className={mode === aggregationMode ? "bg-accent text-primary" : ""}
+                className={
+                  mode === aggregationMode ? "bg-accent text-primary" : ""
+                }
                 onClick={() => setAggregationMode(mode)}
               >
                 BY {mode.toUpperCase()}
@@ -204,7 +202,10 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
       <CardContent>
         {valuation !== null ? (
           <div className="flex items-center gap-4">
-            <div className="shrink-0" style={{ width: showLegend ? "55%" : "100%", height: 240 }}>
+            <div
+              className="shrink-0"
+              style={{ width: showLegend ? "55%" : "100%", height: 240 }}
+            >
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -230,9 +231,15 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
               </ResponsiveContainer>
             </div>
             {showLegend && (
-              <div className="flex min-w-0 flex-1 flex-col gap-2 overflow-y-auto" style={{ maxHeight: 240 }}>
+              <div
+                className="flex min-w-0 flex-1 flex-col gap-2 overflow-y-auto"
+                style={{ maxHeight: 240 }}
+              >
                 {pieData.map((entry, i) => {
-                  const pct = total > 0 ? ((entry.value / total) * 100).toFixed(1) : "0.0";
+                  const pct =
+                    total > 0
+                      ? ((entry.value / total) * 100).toFixed(1)
+                      : "0.0";
                   return (
                     <div key={i} className="flex items-center gap-2.5 text-xs">
                       <span
@@ -252,14 +259,20 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
             )}
           </div>
         ) : error !== null ? (
-          <div className="flex items-center justify-center" style={{ height: 240 }}>
+          <div
+            className="flex items-center justify-center"
+            style={{ height: 240 }}
+          >
             <Alert variant="destructive">
               <AlertTitle>Failed to load chart</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           </div>
         ) : (
-          <div className="flex items-center justify-center" style={{ height: 240 }}>
+          <div
+            className="flex items-center justify-center"
+            style={{ height: 240 }}
+          >
             <div className="skeleton-shimmer h-40 w-40 rounded-full" />
           </div>
         )}

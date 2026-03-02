@@ -428,10 +428,7 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
                 if (updateMode) {
                   requestUpdateCredentials(credentials);
                 } else {
-                  requestLinkAccount(
-                    { ...selectedProvider },
-                    credentials,
-                  );
+                  requestLinkAccount({ ...selectedProvider }, credentials);
                 }
               }}
             />

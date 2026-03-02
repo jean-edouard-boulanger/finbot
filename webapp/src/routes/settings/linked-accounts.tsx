@@ -618,10 +618,7 @@ const AccountsPanel: React.FC = () => {
     }
   };
 
-  const handleRename = async (
-    account: LinkedAccount,
-    newName: string,
-  ) => {
+  const handleRename = async (account: LinkedAccount, newName: string) => {
     try {
       await linkedAccountsApi.updateLinkedAccountMetadata({
         userAccountId: userAccountId!,
@@ -635,10 +632,7 @@ const AccountsPanel: React.FC = () => {
     }
   };
 
-  const handleRecolour = async (
-    account: LinkedAccount,
-    newColour: string,
-  ) => {
+  const handleRecolour = async (account: LinkedAccount, newColour: string) => {
     try {
       await linkedAccountsApi.updateLinkedAccountMetadata({
         userAccountId: userAccountId!,

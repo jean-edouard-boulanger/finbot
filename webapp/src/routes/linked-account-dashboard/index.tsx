@@ -1,13 +1,7 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { useParams, Navigate } from "react-router-dom";
 import { Clock } from "lucide-react";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 
 import { AuthContext } from "contexts";
 import {
@@ -51,7 +45,11 @@ const CHANGE_PERIODS: { key: keyof ValuationChange; label: string }[] = [
   { key: "change2years", label: "2Y" },
 ];
 
-function AccountStatusBadge({ linkedAccount }: { linkedAccount: LinkedAccount }) {
+function AccountStatusBadge({
+  linkedAccount,
+}: {
+  linkedAccount: LinkedAccount;
+}) {
   const status = linkedAccount.frozen
     ? "frozen"
     : (linkedAccount.status ?? { status: "unknown" }).status;
@@ -113,8 +111,11 @@ export const LinkedAccountDashboard: React.FC = () => {
   const linkedAccountsValuationApi = useApi(LinkedAccountsValuationApi);
   const userAccountsReportsApi = useApi(UserAccountsReportsApi);
 
-  const [linkedAccount, setLinkedAccount] = useState<LinkedAccount | null>(null);
-  const [valuationEntry, setValuationEntry] = useState<LinkedAccountValuationEntry | null>(null);
+  const [linkedAccount, setLinkedAccount] = useState<LinkedAccount | null>(
+    null,
+  );
+  const [valuationEntry, setValuationEntry] =
+    useState<LinkedAccountValuationEntry | null>(null);
   const [holdingsTree, setHoldingsTree] = useState<ValuationTree | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -166,9 +167,11 @@ export const LinkedAccountDashboard: React.FC = () => {
     if (!holdingsTree) return null;
     const root = holdingsTree.valuationTree;
     if (!root || !("children" in root)) return null;
-    return (root.children as LinkedAccountNode[]).find(
-      (c) => c.linkedAccount.id === linkedAccountId,
-    ) ?? null;
+    return (
+      (root.children as LinkedAccountNode[]).find(
+        (c) => c.linkedAccount.id === linkedAccountId,
+      ) ?? null
+    );
   }, [holdingsTree, linkedAccountId]);
 
   const subAccountPieData = useMemo(() => {
@@ -234,7 +237,9 @@ export const LinkedAccountDashboard: React.FC = () => {
 
   const valuation = valuationEntry?.valuation;
   const lastSnapshotTime = linkedAccount.status?.lastSnapshotTime
-    ? DateTime.fromJSDate(new Date(linkedAccount.status.lastSnapshotTime as unknown as string))
+    ? DateTime.fromJSDate(
+        new Date(linkedAccount.status.lastSnapshotTime as unknown as string),
+      )
     : null;
 
   return (
@@ -358,7 +363,10 @@ export const LinkedAccountDashboard: React.FC = () => {
               <CardContent>
                 {subAccountPieData.length > 0 ? (
                   <div className="flex items-center gap-4">
-                    <div className="shrink-0" style={{ width: "55%", height: 240 }}>
+                    <div
+                      className="shrink-0"
+                      style={{ width: "55%", height: 240 }}
+                    >
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                           <Pie

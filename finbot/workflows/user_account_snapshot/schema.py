@@ -43,6 +43,7 @@ class LinkedAccountSnapshotRequest(BaseModel):
     encrypted_credentials: str
     line_items: list[LineItem]
     user_account_currency: CurrencyCode
+    transactions_from_date: datetime | None = None
     max_retries: int = DEFAULT_MAX_LINKED_ACCOUNT_SNAPSHOT_RETRIES
     timeout: timedelta = DEFAULT_LINKED_ACCOUNT_SNAPSHOT_TIMEOUT
 
