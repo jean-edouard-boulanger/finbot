@@ -1,6 +1,7 @@
 import logging
-from datetime import datetime
 from typing import Any, cast
+
+from pydantic import AwareDatetime
 
 from finbot.core.environment import get_secret_key
 from finbot.core.schema import ApplicationErrorData, CurrencyCode
@@ -27,7 +28,7 @@ async def liabilities_handler(provider_api: ProviderBase) -> schema.LineItemResu
 
 async def transactions_handler(
     provider_api: ProviderBase,
-    from_date: datetime | None = None,
+    from_date: AwareDatetime | None = None,
 ) -> schema.LineItemResults:
     return schema.TransactionsResults(results=(await provider_api.get_transactions(from_date=from_date)).transactions)
 
@@ -35,7 +36,7 @@ async def transactions_handler(
 async def item_handler(
     item_type: schema.LineItem,
     provider_api: ProviderBase,
-    transactions_from_date: datetime | None = None,
+    transactions_from_date: AwareDatetime | None = None,
 ) -> schema.LineItemResults:
     try:
         logger.debug(f"handling '{item_type}' line item")
@@ -62,7 +63,7 @@ async def get_financial_data_impl(
     authentication_payload: dict[str, Any],
     line_items: list[schema.LineItem],
     user_account_currency: CurrencyCode,
-    transactions_from_date: datetime | None = None,
+    transactions_from_date: AwareDatetime | None = None,
 ) -> schema.GetFinancialDataResponse:
     async with provider_type.create(authentication_payload, user_account_currency) as provider_api:
         await provider_api.initialize()

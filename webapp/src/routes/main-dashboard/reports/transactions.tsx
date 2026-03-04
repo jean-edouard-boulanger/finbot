@@ -20,6 +20,12 @@ import {
   DropdownMenuContent,
   DropdownMenuCheckboxItem,
 } from "components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "components/ui/tooltip";
 import { Filter } from "lucide-react";
 import { DateTime } from "luxon";
 
@@ -28,6 +34,7 @@ interface TransactionEntry {
   linked_account_id: number;
   linked_account_name: string;
   sub_account_id: string;
+  sub_account_name: string;
   transaction_date: string;
   transaction_type: string;
   transaction_category: string;
@@ -183,6 +190,9 @@ export const TransactionsReportPanel: React.FC<TransactionsReportPanelProps> = (
                   Account
                 </TableHead>
                 <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  Sub-account
+                </TableHead>
+                <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   Description
                 </TableHead>
                 <TableHead className="text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -201,8 +211,22 @@ export const TransactionsReportPanel: React.FC<TransactionsReportPanelProps> = (
                   <TableCell className="text-sm text-muted-foreground">
                     {txn.linked_account_name}
                   </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {txn.sub_account_name}
+                  </TableCell>
                   <TableCell className="max-w-[200px] truncate text-sm">
-                    {txn.description}
+                    <TooltipProvider delayDuration={200}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="cursor-default truncate block">
+                            {txn.description}
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {txn.description}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </TableCell>
                   <TableCell className="text-right">
                     <span

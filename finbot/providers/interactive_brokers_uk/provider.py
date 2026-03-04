@@ -2,7 +2,7 @@ import base64
 from datetime import datetime
 from typing import Any
 
-from pydantic import SecretStr
+from pydantic import AwareDatetime, SecretStr
 
 from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.core.secure import async_pgp_decrypt
@@ -79,7 +79,7 @@ class Api(ProviderBase):
             accounts=[statement.get_assets(self.user_account_currency) for statement in some(self.__report).statements],
         )
 
-    async def get_transactions(self, from_date: datetime | None = None) -> Transactions:
+    async def get_transactions(self, from_date: AwareDatetime | None = None) -> Transactions:
         all_transactions: list[Transaction] = []
         for statement in some(self.__report).statements:
             all_transactions.extend(statement.get_transactions())

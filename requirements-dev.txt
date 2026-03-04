@@ -101,9 +101,7 @@ google-auth==2.40.3
 google-auth-oauthlib==1.2.2
     # via gspread
 greenlet==3.2.3
-    # via
-    #   playwright
-    #   sqlalchemy
+    # via playwright
 gspread==6.2.1
     # via finbot (pyproject.toml)
 gunicorn==23.0.0

@@ -89,7 +89,8 @@ async def async_main(
         print(pretty_dump({
             "accounts": await provider_api.get_accounts(),
             "assets": await provider_api.get_assets(),
-            "liabilities": await provider_api.get_liabilities()
+            "liabilities": await provider_api.get_liabilities(),
+            "transactions": await provider_api.get_transactions()
         }, indent=2))
 
 

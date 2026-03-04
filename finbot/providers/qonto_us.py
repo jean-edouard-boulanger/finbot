@@ -1,8 +1,9 @@
 from dataclasses import dataclass
 from typing import Any, Optional
 
-from pydantic import SecretStr
+from pydantic import SecretStr, AwareDatetime
 
+from finbot.core import qonto_api
 from finbot.core.qonto_api import QontoApi, Unauthorized
 from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.core.utils import some
@@ -13,7 +14,7 @@ from finbot.providers.schema import (
     AccountType,
     Asset,
     Assets,
-    AssetsEntry,
+    AssetsEntry, Transactions, Transaction, TransactionType,
 )
 
 AUTH_URL = "https://app.qonto.com/signin"
@@ -42,15 +43,16 @@ class Api(ProviderBase):
     ) -> None:
         super().__init__(user_account_currency=user_account_currency, **kwargs)
         self._credentials = credentials
+        self._api: QontoApi | None = None
         self._accounts: Optional[list[AccountValue]] = None
 
     async def initialize(self) -> None:
-        api = QontoApi(
+        self._api = QontoApi(
             identifier=self._credentials.identifier,
             secret_key=self._credentials.secret_key.get_secret_value(),
         )
         try:
-            organization = (await api.list_organizations())[0]
+            organization = (await self._api.list_organizations())[0]
         except Unauthorized as e:
             raise AuthenticationError(str(e)) from e
         self._accounts = [
@@ -86,3 +88,30 @@ class Api(ProviderBase):
                 for entry in some(self._accounts)
             ]
         )
+
+    async def get_transactions(self, from_date: AwareDatetime | None = None) -> Transactions:
+        organization = (await self._api.list_organizations())[0]
+        all_transactions = []
+        for bank_account in organization.bank_accounts:
+            account_transactions: list[qonto_api.Transaction] = await self._api.list_transactions(bank_account.iban, from_date)
+            all_transactions.extend(
+                Transaction(
+                    transaction_id=txn.transaction_id,
+                    account_id=bank_account.slug,
+                    transaction_date=txn.emitted_at,
+                    effective_date=txn.settled_at,
+                    transaction_type=TransactionType.withdrawal if txn.side == 'debit' else TransactionType.deposit,
+                    amount=-1.0 * txn.amount if txn.side == 'debit' else txn.amount,
+                    currency=CurrencyCode(txn.currency),
+                    description=_make_transaction_description(txn),
+                )
+                for txn in account_transactions
+            )
+        return Transactions(transactions=all_transactions)
+
+
+def _make_transaction_description(txn: qonto_api.Transaction):
+    description = txn.label
+    if txn.reference:
+        description += f" - {txn.reference}"
+    return description

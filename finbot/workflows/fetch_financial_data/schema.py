@@ -1,6 +1,7 @@
-from datetime import datetime
 from enum import Enum
 from typing import Literal, TypeAlias
+
+from pydantic import AwareDatetime
 
 from finbot.core.schema import ApplicationErrorData, BaseModel, CurrencyCode, EncryptedCredentialsPayloadType
 from finbot.providers import schema as providers_schema
@@ -57,7 +58,7 @@ class GetFinancialDataRequest(BaseModel):
     encrypted_credentials: EncryptedCredentialsPayloadType
     items: list[LineItem]
     user_account_currency: CurrencyCode
-    transactions_from_date: datetime | None = None
+    transactions_from_date: AwareDatetime | None = None
 
 
 class GetFinancialDataResponse(BaseModel):

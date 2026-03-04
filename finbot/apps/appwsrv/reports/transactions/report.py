@@ -1,5 +1,4 @@
-from datetime import datetime
-
+from pydantic import AwareDatetime
 from sqlalchemy.sql import text
 
 from finbot.apps.appwsrv.reports.transactions import schema
@@ -10,8 +9,8 @@ from finbot.model import SessionType, repository
 def get_transactions_report(
     session: SessionType,
     user_account_id: int,
-    from_time: datetime | None = None,
-    to_time: datetime | None = None,
+    from_time: AwareDatetime | None = None,
+    to_time: AwareDatetime | None = None,
     linked_account_id: int | None = None,
     transaction_category: list[str] | None = None,
     spending_category: str | None = None,
@@ -57,6 +56,15 @@ def get_transactions_report(
                th.linked_account_id,
                la.account_name AS linked_account_name,
                th.sub_account_id,
+               COALESCE(
+                   (SELECT savhe.sub_account_description
+                      FROM finbot_sub_accounts_valuation_history_entries savhe
+                     WHERE savhe.linked_account_id = th.linked_account_id
+                       AND savhe.sub_account_id = th.sub_account_id
+                     ORDER BY savhe.history_entry_id DESC
+                     LIMIT 1),
+                   th.sub_account_id
+               ) AS sub_account_name,
                th.transaction_date,
                th.transaction_type,
                th.transaction_category,
@@ -91,8 +99,8 @@ def get_transactions_report(
 def get_cash_flow_summary(
     session: SessionType,
     user_account_id: int,
-    from_time: datetime,
-    to_time: datetime,
+    from_time: AwareDatetime,
+    to_time: AwareDatetime,
 ) -> schema.CashFlowSummary:
     settings = repository.get_user_account_settings(session, user_account_id)
 
@@ -133,8 +141,8 @@ def get_cash_flow_summary(
 def get_cash_flow_time_series(
     session: SessionType,
     user_account_id: int,
-    from_time: datetime,
-    to_time: datetime,
+    from_time: AwareDatetime,
+    to_time: AwareDatetime,
     frequency: str = "monthly",
 ) -> schema.CashFlowTimeSeries:
     settings = repository.get_user_account_settings(session, user_account_id)
@@ -183,8 +191,8 @@ def get_cash_flow_time_series(
 def get_spending_breakdown(
     session: SessionType,
     user_account_id: int,
-    from_time: datetime,
-    to_time: datetime,
+    from_time: AwareDatetime,
+    to_time: AwareDatetime,
 ) -> schema.SpendingBreakdown:
     settings = repository.get_user_account_settings(session, user_account_id)
 

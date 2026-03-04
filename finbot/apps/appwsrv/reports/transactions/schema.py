@@ -1,4 +1,4 @@
-from datetime import datetime
+from pydantic import AwareDatetime
 
 from finbot.core.schema import BaseModel
 
@@ -8,7 +8,8 @@ class TransactionEntry(BaseModel):
     linked_account_id: int
     linked_account_name: str
     sub_account_id: str
-    transaction_date: datetime
+    sub_account_name: str
+    transaction_date: AwareDatetime
     transaction_type: str
     transaction_category: str
     amount: float
@@ -37,8 +38,8 @@ class CashFlowCategoryEntry(BaseModel):
 
 class CashFlowSummary(BaseModel):
     valuation_ccy: str
-    from_date: datetime
-    to_date: datetime
+    from_date: AwareDatetime
+    to_date: AwareDatetime
     net_cash_flow: float
     by_category: list[CashFlowCategoryEntry]
 
@@ -63,6 +64,6 @@ class SpendingBreakdownEntry(BaseModel):
 
 class SpendingBreakdown(BaseModel):
     valuation_ccy: str
-    from_date: datetime
-    to_date: datetime
+    from_date: AwareDatetime
+    to_date: AwareDatetime
     entries: list[SpendingBreakdownEntry]

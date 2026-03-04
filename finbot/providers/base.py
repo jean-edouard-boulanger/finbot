@@ -1,6 +1,7 @@
 import abc
-from datetime import datetime
 from typing import Any, Self
+
+from pydantic import AwareDatetime
 
 from finbot.core import schema as core_schema
 from finbot.providers.errors import RetiredProviderError
@@ -59,7 +60,7 @@ class ProviderBase:
         """Retrieve all accounts and respective liabilities associated with this linked account"""
         return Liabilities(accounts=[])
 
-    async def get_transactions(self, from_date: datetime | None = None) -> Transactions:
+    async def get_transactions(self, from_date: AwareDatetime | None = None) -> Transactions:
         """Retrieve transactions associated with this linked account.
 
         Args:

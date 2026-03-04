@@ -1,6 +1,8 @@
 from datetime import datetime, timezone
 from typing import Any
 
+from pydantic import AwareDatetime
+
 from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.providers.base import ProviderBase
 from finbot.providers.schema import (
@@ -85,7 +87,7 @@ class Api(ProviderBase):
     async def get_assets(self) -> Assets:
         return self.dummy_data.assets
 
-    async def get_transactions(self, from_date: datetime | None = None) -> Transactions:
+    async def get_transactions(self, from_date: AwareDatetime | None = None) -> Transactions:
         now = datetime.now(tz=timezone.utc)
         account_id = self.dummy_data.accounts[0].id
         ccy = self.dummy_data.accounts[0].iso_currency
@@ -95,6 +97,7 @@ class Api(ProviderBase):
                     transaction_id="dummy-txn-001",
                     account_id=account_id,
                     transaction_date=now,
+                    effective_date=now,
                     transaction_type=TransactionType.dividend,
                     amount=25.50,
                     currency=ccy,
@@ -105,6 +108,7 @@ class Api(ProviderBase):
                     transaction_id="dummy-txn-002",
                     account_id=account_id,
                     transaction_date=now,
+                    effective_date=now,
                     transaction_type=TransactionType.buy,
                     amount=-500.00,
                     currency=ccy,
@@ -118,6 +122,7 @@ class Api(ProviderBase):
                     transaction_id="dummy-txn-003",
                     account_id=account_id,
                     transaction_date=now,
+                    effective_date=now,
                     transaction_type=TransactionType.fee,
                     amount=-2.99,
                     currency=ccy,

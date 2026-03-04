@@ -1,7 +1,8 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from fastapi import APIRouter, Query
+from pydantic import AwareDatetime
 
 from finbot.apps.appwsrv import schema as appwsrv_schema
 from finbot.apps.appwsrv.reports.earnings.report import (
@@ -68,8 +69,8 @@ def get_earnings_report(
 @router.get("/transactions/", operation_id="get_user_account_transactions_report")
 def get_transactions_report(
     current_user_id: CurrentUserIdDep,
-    from_time: datetime | None = Query(default=None),
-    to_time: datetime | None = Query(default=None),
+    from_time: AwareDatetime | None = Query(default=None),
+    to_time: AwareDatetime | None = Query(default=None),
     linked_account_id: int | None = Query(default=None),
     transaction_category: list[str] | None = Query(default=None),
     spending_category: str | None = Query(default=None),
@@ -95,8 +96,8 @@ def get_transactions_report(
 @router.get("/cash-flow/summary/", operation_id="get_user_account_cash_flow_summary")
 def get_cash_flow_summary(
     current_user_id: CurrentUserIdDep,
-    from_time: datetime | None = Query(default=None),
-    to_time: datetime | None = Query(default=None),
+    from_time: AwareDatetime | None = Query(default=None),
+    to_time: AwareDatetime | None = Query(default=None),
 ) -> appwsrv_schema.GetCashFlowSummaryResponse:
     """Get cash flow summary by transaction category"""
     effective_to = to_time or now_utc()
@@ -114,8 +115,8 @@ def get_cash_flow_summary(
 @router.get("/cash-flow/time-series/", operation_id="get_user_account_cash_flow_time_series")
 def get_cash_flow_time_series(
     current_user_id: CurrentUserIdDep,
-    from_time: datetime | None = Query(default=None),
-    to_time: datetime | None = Query(default=None),
+    from_time: AwareDatetime | None = Query(default=None),
+    to_time: AwareDatetime | None = Query(default=None),
     frequency: str = Query(default="monthly"),
 ) -> appwsrv_schema.GetCashFlowTimeSeriesResponse:
     """Get time-bucketed cash flow data"""
@@ -135,8 +136,8 @@ def get_cash_flow_time_series(
 @router.get("/spending/breakdown/", operation_id="get_user_account_spending_breakdown")
 def get_spending_breakdown(
     current_user_id: CurrentUserIdDep,
-    from_time: datetime | None = Query(default=None),
-    to_time: datetime | None = Query(default=None),
+    from_time: AwareDatetime | None = Query(default=None),
+    to_time: AwareDatetime | None = Query(default=None),
 ) -> appwsrv_schema.GetSpendingBreakdownResponse:
     """Get spending totals grouped by PFC primary category"""
     effective_to = to_time or now_utc()
