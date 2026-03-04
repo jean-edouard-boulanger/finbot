@@ -1,45 +1,46 @@
-"""LLM-based spending categorization using OpenAI GPT-4o-mini.
+"""LLM-based spending categorization using OpenAI gpt-5-mini.
 
 Categorizes transactions into the Plaid PFC taxonomy.
-Gracefully degrades if OpenAI is unavailable.
 """
 
+import asyncio
 import json
 import logging
-import os
-from dataclasses import dataclass
+
+from pydantic import BaseModel
+from openai import AsyncOpenAI
 
 from finbot import model
-from finbot.core.spending_categories import get_taxonomy_prompt_text
+from finbot.core.environment import get_openai_api_key
+from finbot.core.spending_categories import PLAID_PFC_TAXONOMY, get_taxonomy_prompt_text
 from finbot.model import SessionType
 
 logger = logging.getLogger(__name__)
 
-BATCH_SIZE = 50
+BATCH_SIZE = 10
+
+VALID_CATEGORIES: set[tuple[str, str]] = {
+    (primary, detailed) for primary, detailed, _ in PLAID_PFC_TAXONOMY
+}
 
 
-@dataclass
-class UncategorizedTransaction:
+class TransactionCategoryResult(BaseModel):
     id: int
-    description: str
-    amount: float
-    transaction_type: str
-    counterparty: str | None
+    primary: str
+    detailed: str
 
 
-def categorize_transaction_batch(
+class CategorizeResponse(BaseModel):
+    results: list[TransactionCategoryResult]
+
+
+async def categorize_transaction_batch(
     transaction_ids: list[int],
     db_session: SessionType,
 ) -> None:
-    api_key = os.environ.get("OPENAI_API_KEY")
+    api_key = get_openai_api_key()
     if not api_key:
-        logger.info("OPENAI_API_KEY not set, skipping LLM spending categorization")
-        return
-
-    try:
-        import openai
-    except ImportError:
-        logger.info("openai package not installed, skipping LLM spending categorization")
+        logger.info("FINBOT_OPENAI_API_KEY not set, skipping LLM spending categorization")
         return
 
     # Load the uncategorized transactions
@@ -53,19 +54,50 @@ def categorize_transaction_batch(
     if not entries:
         return
 
-    client = openai.OpenAI(api_key=api_key)
+    client = AsyncOpenAI(api_key=api_key)
+    semaphore = asyncio.Semaphore(8)
 
-    # Process in batches
-    for i in range(0, len(entries), BATCH_SIZE):
-        batch = entries[i : i + BATCH_SIZE]
-        _categorize_batch(client, batch, db_session)
+    # Build all batch slices and launch concurrently
+    batches = [entries[i : i + BATCH_SIZE] for i in range(0, len(entries), BATCH_SIZE)]
+    tasks = [_categorize_batch(client, batch, db_session, semaphore) for batch in batches]
+    await asyncio.gather(*tasks)
 
 
-def _categorize_batch(
-    client: "openai.OpenAI",  # type: ignore[name-defined]
+async def _categorize_batch(
+    client: AsyncOpenAI,
     entries: list[model.TransactionHistoryEntry],
     db_session: SessionType,
+    semaphore: asyncio.Semaphore,
 ) -> None:
+    entries_by_id = {entry.id: entry for entry in entries}
+
+    async with semaphore:
+        categorized_ids = await _call_and_apply(client, entries, entries_by_id)
+
+    # Retry uncategorized transactions once
+    failed_ids = set(entries_by_id.keys()) - categorized_ids
+    if failed_ids:
+        retry_entries = [entries_by_id[eid] for eid in failed_ids]
+        logger.info("Retrying %d uncategorized transactions", len(retry_entries))
+        async with semaphore:
+            retry_categorized = await _call_and_apply(client, retry_entries, entries_by_id)
+        still_failed = failed_ids - retry_categorized
+        if still_failed:
+            logger.warning(
+                "Failed to categorize %d transactions after retry: %s",
+                len(still_failed),
+                sorted(still_failed),
+            )
+
+    db_session.flush()
+
+
+async def _call_and_apply(
+    client: AsyncOpenAI,
+    entries: list[model.TransactionHistoryEntry],
+    entries_by_id: dict[int, model.TransactionHistoryEntry],
+) -> set[int]:
+    """Call OpenAI and apply valid results. Returns set of successfully categorized IDs."""
     taxonomy_text = get_taxonomy_prompt_text()
 
     transactions_json = json.dumps(
@@ -75,7 +107,7 @@ def _categorize_batch(
                 "description": entry.description,
                 "amount": float(entry.amount),
                 "type": entry.transaction_type,
-                "counterparty": entry.counterparty,
+                "category": entry.transaction_category,
             }
             for entry in entries
         ]
@@ -89,51 +121,41 @@ TAXONOMY REFERENCE:
 TRANSACTIONS:
 {transactions_json}
 
-For each transaction, return a JSON array with objects having these fields:
-- "id": the transaction id
-- "primary": the primary category from the taxonomy
-- "detailed": the detailed category from the taxonomy
-
-Return ONLY the JSON array, no other text."""
+For each transaction, return the id, primary category, and detailed category."""
 
     try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0,
-            response_format={"type": "json_object"},
+        response = await client.responses.parse(
+            model="gpt-5-mini",
+            input=[{"role": "user", "content": prompt}],
+            text_format=CategorizeResponse,
         )
 
-        content = response.choices[0].message.content
-        if not content:
-            return
+        parsed = response.output_parsed
+        if not parsed:
+            return set()
 
-        result = json.loads(content)
+        categorized: set[int] = set()
+        for cat in parsed.results:
+            if cat.id not in entries_by_id:
+                logger.warning("LLM returned unknown transaction id %d, skipping", cat.id)
+                continue
+            if (cat.primary, cat.detailed) not in VALID_CATEGORIES:
+                logger.warning(
+                    "LLM returned invalid category (%s, %s) for transaction %d, skipping",
+                    cat.primary,
+                    cat.detailed,
+                    cat.id,
+                )
+                continue
+            entry = entries_by_id[cat.id]
+            entry.spending_category_primary = cat.primary
+            entry.spending_category_detailed = cat.detailed
+            entry.spending_category_source = "llm"
+            categorized.add(cat.id)
 
-        # Handle both {"results": [...]} and bare [...]
-        if isinstance(result, dict):
-            categories = result.get("results") or result.get("categories") or result.get("transactions") or []
-        elif isinstance(result, list):
-            categories = result
-        else:
-            logger.warning("unexpected LLM response format: %s", type(result))
-            return
+        logger.info("LLM categorized %d/%d transactions", len(categorized), len(entries))
+        return categorized
 
-        # Build lookup
-        entries_by_id = {entry.id: entry for entry in entries}
-
-        for cat in categories:
-            entry_id = cat.get("id")
-            primary = cat.get("primary")
-            detailed = cat.get("detailed")
-            entry = entries_by_id.get(entry_id)
-            if entry and primary:
-                entry.spending_category_primary = primary
-                entry.spending_category_detailed = detailed
-                entry.spending_category_source = "llm"
-
-        db_session.flush()
-        logger.info("LLM categorized %d transactions", len(categories))
-
-    except Exception:
-        logger.exception("LLM categorization API call failed")
+    except Exception as e:
+        logger.exception("LLM categorization API call failed: %s", e)
+        return set()

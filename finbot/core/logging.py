@@ -6,6 +6,7 @@ def configure_logging(log_level: Optional[str] = None) -> None:
     logging.config.dictConfig(
         {
             "version": 1,
+            "disable_existing_loggers": False,
             "formatters": {
                 "default": {
                     "format": "%(asctime)s (%(threadName)s) [%(levelname)s] %(message)s (%(filename)s:%(lineno)d)",

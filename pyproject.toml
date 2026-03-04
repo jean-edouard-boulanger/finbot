@@ -31,12 +31,10 @@ dependencies = [
     "temporalio<2",
     "twilio==9.6.1",
     "uvicorn<1",
+    "openai>=2",
 ]
 
 [project.optional-dependencies]
-llm = [
-    "openai>=1",
-]
 dev = [
     "click==8.2.1",
     "mypy==1.15.0",

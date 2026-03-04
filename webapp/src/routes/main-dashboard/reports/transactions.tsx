@@ -195,6 +195,9 @@ export const TransactionsReportPanel: React.FC<TransactionsReportPanelProps> = (
                 <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   Description
                 </TableHead>
+                <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  Category
+                </TableHead>
                 <TableHead className="text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   Amount
                 </TableHead>
@@ -227,6 +230,14 @@ export const TransactionsReportPanel: React.FC<TransactionsReportPanelProps> = (
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {txn.spending_category_primary
+                      ? txn.spending_category_primary
+                          .replace(/_/g, " ")
+                          .toLowerCase()
+                          .replace(/\b\w/g, (c) => c.toUpperCase())
+                      : "—"}
                   </TableCell>
                   <TableCell className="text-right">
                     <span

@@ -4,10 +4,18 @@ import { APP_SERVICE_ENDPOINT } from "utils/env-config";
 
 import { Card, CardContent, CardHeader, CardTitle } from "components/ui/card";
 import { Alert, AlertTitle, AlertDescription } from "components/ui/alert";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "components/ui/dropdown-menu";
+import { Button } from "components/ui/button";
 import { MoneyFormatterType } from "components/money";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { ChartTooltipContent } from "components/ui/chart";
-import { ShoppingBag } from "lucide-react";
+import { ShoppingBag, ChevronDown } from "lucide-react";
+import { DateTime } from "luxon";
 
 interface SpendingBreakdownEntry {
   category: string;
@@ -35,6 +43,88 @@ const SPENDING_COLOURS = [
   "hsl(350 60% 55%)",
 ];
 
+interface TimeRange {
+  from_time?: DateTime;
+  to_time?: DateTime;
+}
+
+interface TimeRangeChoice {
+  label: string;
+  makeRange(now: DateTime): TimeRange;
+}
+
+const SPENDING_TIME_RANGES: TimeRangeChoice[] = [
+  {
+    label: "1W",
+    makeRange: (now) => ({ from_time: now.minus({ weeks: 1 }) }),
+  },
+  {
+    label: "2W",
+    makeRange: (now) => ({ from_time: now.minus({ weeks: 2 }) }),
+  },
+  {
+    label: "1M",
+    makeRange: (now) => ({ from_time: now.minus({ month: 1 }) }),
+  },
+  {
+    label: "2M",
+    makeRange: (now) => ({ from_time: now.minus({ months: 2 }) }),
+  },
+  {
+    label: "6M",
+    makeRange: (now) => ({ from_time: now.minus({ months: 6 }) }),
+  },
+  {
+    label: "1Y",
+    makeRange: (now) => ({ from_time: now.minus({ year: 1 }) }),
+  },
+  {
+    label: "THIS YEAR",
+    makeRange: (now) => ({
+      from_time: DateTime.fromObject({ year: now.year, month: 1, day: 1 }),
+    }),
+  },
+];
+
+const DEFAULT_SPENDING_RANGE = SPENDING_TIME_RANGES[2]; // 1M
+
+function FilterDropdown({
+  label,
+  items,
+  activeKey,
+  onSelect,
+}: {
+  label: string;
+  items: { key: string; label: string }[];
+  activeKey: string;
+  onSelect: (key: string) => void;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="outline"
+          size="xs"
+          className="border-border/50 bg-secondary/50 text-xs font-medium tracking-wide text-muted-foreground hover:text-foreground"
+        >
+          {label} <ChevronDown className="ml-1 h-3 w-3" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent>
+        {items.map((item) => (
+          <DropdownMenuItem
+            key={item.key}
+            className={activeKey === item.key ? "bg-accent text-primary" : ""}
+            onClick={() => onSelect(item.key)}
+          >
+            {item.label}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 function formatCategory(raw: string): string {
   return raw
     .replace(/_/g, " ")
@@ -56,19 +146,30 @@ export const SpendingBreakdownPanel: React.FC<SpendingBreakdownPanelProps> = (
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<SpendingBreakdown | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [now] = useState<DateTime>(DateTime.now());
+  const [selectedTimeRange, setSelectedTimeRange] =
+    useState<TimeRangeChoice>(DEFAULT_SPENDING_RANGE);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const resp = await fetch(
-          `${APP_SERVICE_ENDPOINT}/reports/spending/breakdown/`,
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
+        setError(null);
+        const range = selectedTimeRange.makeRange(now);
+        const params = new URLSearchParams();
+        if (range.from_time) {
+          params.set("from_time", range.from_time.toISO()!);
+        }
+        if (range.to_time) {
+          params.set("to_time", range.to_time.toISO()!);
+        }
+        const qs = params.toString();
+        const url = `${APP_SERVICE_ENDPOINT}/reports/spending/breakdown/${qs ? `?${qs}` : ""}`;
+        const resp = await fetch(url, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
           },
-        );
+        });
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const json = await resp.json();
         setData(json.report);
@@ -78,7 +179,7 @@ export const SpendingBreakdownPanel: React.FC<SpendingBreakdownPanelProps> = (
       setLoading(false);
     };
     fetchData();
-  }, [accessToken, userAccountId]);
+  }, [accessToken, userAccountId, now, selectedTimeRange]);
 
   if (error) {
     return (
@@ -106,13 +207,26 @@ export const SpendingBreakdownPanel: React.FC<SpendingBreakdownPanelProps> = (
 
   return (
     <Card className="border-border/50">
-      <CardHeader className="pb-2">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div className="flex items-center gap-2 text-muted-foreground">
           <ShoppingBag className="h-4 w-4" />
           <CardTitle className="text-sm font-medium tracking-wide uppercase">
             Spending Breakdown
           </CardTitle>
         </div>
+        <FilterDropdown
+          label={selectedTimeRange.label}
+          items={SPENDING_TIME_RANGES.map((r) => ({
+            key: r.label,
+            label: r.label,
+          }))}
+          activeKey={selectedTimeRange.label}
+          onSelect={(key) =>
+            setSelectedTimeRange(
+              SPENDING_TIME_RANGES.find((r) => r.label === key)!,
+            )
+          }
+        />
       </CardHeader>
       <CardContent>
         {loading || !data ? (

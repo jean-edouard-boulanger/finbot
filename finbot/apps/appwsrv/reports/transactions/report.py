@@ -207,7 +207,7 @@ def get_spending_breakdown(
            AND th.transaction_date >= :from_time
            AND th.transaction_date <= :to_time
            AND th.spending_category_primary IS NOT NULL
-           AND th.transaction_category IN ('expense', 'other')
+           AND th.transaction_type IN ('expense', 'other', 'payment')
          GROUP BY th.spending_category_primary
          ORDER BY total DESC
     """

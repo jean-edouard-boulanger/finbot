@@ -189,6 +189,10 @@ def is_production() -> bool:
     return get_finbot_runtime() == PRODUCTION_ENV
 
 
+def get_openai_api_key() -> str | None:
+    return get_environment_value_or("FINBOT_OPENAI_API_KEY")
+
+
 def is_demo() -> bool:
     value = get_environment_value_or("FINBOT_IS_DEMO", "0")
     assert isinstance(value, str)
