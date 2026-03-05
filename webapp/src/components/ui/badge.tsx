@@ -32,7 +32,11 @@ export interface BadgeProps
     React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof badgeVariants> {}
 
-function Badge({ className, variant, ...props }: BadgeProps): React.JSX.Element {
+function Badge({
+  className,
+  variant,
+  ...props
+}: BadgeProps): React.JSX.Element {
   return (
     <div className={cn(badgeVariants({ variant }), className)} {...props} />
   );

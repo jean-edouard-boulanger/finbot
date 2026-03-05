@@ -92,7 +92,10 @@ const ItemIcon = (props: ItemIconProps) => {
   );
 };
 
-export const GridRow = (locale: string, moneyFormatter: MoneyFormatterType): ((props: TreeGridRowProps<HoldingsReportNode>) => React.JSX.Element) => {
+export const GridRow = (
+  locale: string,
+  moneyFormatter: MoneyFormatterType,
+): ((props: TreeGridRowProps<HoldingsReportNode>) => React.JSX.Element) => {
   return (props: TreeGridRowProps<HoldingsReportNode>): React.JSX.Element => {
     const node = props.data;
     const metadata = getRowMetadata(node);
