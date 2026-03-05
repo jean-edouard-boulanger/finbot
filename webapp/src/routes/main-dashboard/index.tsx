@@ -12,7 +12,7 @@ import {
   ValuationChange,
 } from "clients";
 
-import { Money, BarLoader } from "components";
+import { Money } from "components";
 import { defaultMoneyFormatter } from "components/money";
 import {
   EarningsReportPanel,

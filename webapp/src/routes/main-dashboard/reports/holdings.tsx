@@ -92,8 +92,8 @@ const ItemIcon = (props: ItemIconProps) => {
   );
 };
 
-export const GridRow = (locale: string, moneyFormatter: MoneyFormatterType) => {
-  return (props: TreeGridRowProps<HoldingsReportNode>) => {
+export const GridRow = (locale: string, moneyFormatter: MoneyFormatterType): ((props: TreeGridRowProps<HoldingsReportNode>) => React.JSX.Element) => {
+  return (props: TreeGridRowProps<HoldingsReportNode>): React.JSX.Element => {
     const node = props.data;
     const metadata = getRowMetadata(node);
 
@@ -146,7 +146,7 @@ export const GridRow = (locale: string, moneyFormatter: MoneyFormatterType) => {
   };
 };
 
-export const Header = () => {
+export const Header = (): React.JSX.Element => {
   return (
     <tr className="border-b border-border/50">
       <th

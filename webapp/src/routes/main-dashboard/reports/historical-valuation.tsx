@@ -479,7 +479,7 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
 
   const xTickInterval = Math.max(Math.ceil(chartData.length / 6) - 1, 0);
 
-  const tooltipFormatter = (value: number, name: string) => {
+  const tooltipFormatter = (value: number) => {
     return moneyFormatter(
       value,
       locale,

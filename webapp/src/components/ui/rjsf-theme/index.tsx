@@ -1,3 +1,4 @@
+import React from "react";
 import {
   FormContextType,
   RJSFSchema,
@@ -16,7 +17,7 @@ function BaseInputTemplate<
   T = any,
   S extends StrictRJSFSchema = RJSFSchema,
   F extends FormContextType = any,
->(props: BaseInputTemplateProps<T, S, F>) {
+>(props: BaseInputTemplateProps<T, S, F>): React.JSX.Element {
   const {
     id,
     type,
@@ -50,7 +51,7 @@ function FieldTemplate<
   T = any,
   S extends StrictRJSFSchema = RJSFSchema,
   F extends FormContextType = any,
->(props: FieldTemplateProps<T, S, F>) {
+>(props: FieldTemplateProps<T, S, F>): React.JSX.Element {
   const { id, label, children, errors, help, description, hidden, required } =
     props;
   if (hidden) {
@@ -76,7 +77,7 @@ function CheckboxWidget<
   T = any,
   S extends StrictRJSFSchema = RJSFSchema,
   F extends FormContextType = any,
->(props: WidgetProps<T, S, F>) {
+>(props: WidgetProps<T, S, F>): React.JSX.Element {
   const { id, value, disabled, readonly, label, onChange } = props;
   return (
     <div className="flex items-center gap-2">
@@ -95,7 +96,7 @@ function PasswordWidget<
   T = any,
   S extends StrictRJSFSchema = RJSFSchema,
   F extends FormContextType = any,
->(props: WidgetProps<T, S, F>) {
+>(props: WidgetProps<T, S, F>): React.JSX.Element {
   const { id, value, disabled, readonly, required, onChange, onBlur, onFocus } =
     props;
   return (

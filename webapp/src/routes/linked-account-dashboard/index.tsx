@@ -16,7 +16,7 @@ import {
   ValuationChange,
 } from "clients";
 
-import { Money, TreeGrid, BarLoader } from "components";
+import { Money, TreeGrid } from "components";
 import { defaultMoneyFormatter } from "components/money";
 import { ChartTooltipContent } from "components/ui/chart";
 import { Alert, AlertTitle, AlertDescription } from "components/ui/alert";
