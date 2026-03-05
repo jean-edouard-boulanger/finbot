@@ -211,6 +211,7 @@ def _categorize_new_transactions(
     db_session: SessionType,
 ) -> None:
     from finbot.core.spending_categorizer import categorize_transaction_batch
+
     try:
         asyncio.run(categorize_transaction_batch(transaction_ids, db_session))
     except Exception:

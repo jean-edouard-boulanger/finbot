@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any, Optional
 
-from pydantic import SecretStr, AwareDatetime
+from pydantic import AwareDatetime, SecretStr
 
 from finbot.core import qonto_api
 from finbot.core.qonto_api import QontoApi, Unauthorized
@@ -14,7 +14,10 @@ from finbot.providers.schema import (
     AccountType,
     Asset,
     Assets,
-    AssetsEntry, Transactions, Transaction, TransactionType,
+    AssetsEntry,
+    Transaction,
+    Transactions,
+    TransactionType,
 )
 
 AUTH_URL = "https://app.qonto.com/signin"
@@ -90,10 +93,13 @@ class Api(ProviderBase):
         )
 
     async def get_transactions(self, from_date: AwareDatetime | None = None) -> Transactions:
-        organization = (await self._api.list_organizations())[0]
-        all_transactions = []
+        api = some(self._api)
+        organization = (await api.list_organizations())[0]
+        all_transactions: list[Transaction] = []
         for bank_account in organization.bank_accounts:
-            account_transactions: list[qonto_api.Transaction] = await self._api.list_transactions(bank_account.iban, from_date)
+            account_transactions: list[qonto_api.Transaction] = await api.list_transactions(
+                bank_account.iban, from_date
+            )
             all_transactions.extend(
                 Transaction(
                     transaction_id=txn.transaction_id,
@@ -101,7 +107,7 @@ class Api(ProviderBase):
                     transaction_date=txn.emitted_at,
                     effective_date=txn.settled_at,
                     transaction_type=get_transaction_type(txn.side, txn.category),
-                    amount=-1.0 * txn.amount if txn.side == 'debit' else txn.amount,
+                    amount=-1.0 * txn.amount if txn.side == "debit" else txn.amount,
                     currency=CurrencyCode(txn.currency),
                     description=_make_transaction_description(txn),
                 )
@@ -110,7 +116,7 @@ class Api(ProviderBase):
         return Transactions(transactions=all_transactions)
 
 
-def _make_transaction_description(txn: qonto_api.Transaction):
+def _make_transaction_description(txn: qonto_api.Transaction) -> str:
     description = txn.label
     if txn.reference:
         description += f" - {txn.reference}"
@@ -120,32 +126,27 @@ def _make_transaction_description(txn: qonto_api.Transaction):
 # Maps (side, category) -> TransactionType
 _MAPPING: dict[tuple[str, str], TransactionType] = {
     # ── Credits ──────────────────────────────────────────────────────────────
-    ("credit", "other_income"):       TransactionType.deposit,
-    ("credit", "sales"):              TransactionType.deposit,
-    ("credit", "refund"):             TransactionType.adjustment,
+    ("credit", "other_income"): TransactionType.deposit,
+    ("credit", "sales"): TransactionType.deposit,
+    ("credit", "refund"): TransactionType.adjustment,
     # Money received from another account owned by the same person
     ("credit", "treasury_and_interco"): TransactionType.transfer_in,
-
     # ── Debits ───────────────────────────────────────────────────────────────
     # Wage transfers to the owner (sole trader paying themselves)
-    ("debit", "salary"):              TransactionType.transfer_out,
-
+    ("debit", "salary"): TransactionType.transfer_out,
     # Bank / platform fees
-    ("debit", "fees"):                TransactionType.fee,
-    ("debit", "subscription"):        TransactionType.fee,
-
+    ("debit", "fees"): TransactionType.fee,
+    ("debit", "subscription"): TransactionType.fee,
     # Social-security contributions (URSSAF) and government taxes (CFE)
-    ("debit", "other_expense"):       TransactionType.tax,
-    ("debit", "tax"):                 TransactionType.tax,
-    ("debit", "other_service"):       TransactionType.tax,
-
+    ("debit", "other_expense"): TransactionType.tax,
+    ("debit", "tax"): TransactionType.tax,
+    ("debit", "other_service"): TransactionType.tax,
     # Card spending on goods / services
-    ("debit", "marketing"):           TransactionType.purchase,
-    ("debit", "online_service"):      TransactionType.purchase,
+    ("debit", "marketing"): TransactionType.purchase,
+    ("debit", "online_service"): TransactionType.purchase,
     ("debit", "hardware_and_equipment"): TransactionType.purchase,
-
     # Generic outflows that don't fit a narrower bucket
-    ("debit", "other"):               TransactionType.payment,
+    ("debit", "other"): TransactionType.payment,
 }
 
 
@@ -162,7 +163,7 @@ def get_transaction_type(side: str, category: str | None) -> TransactionType:
     -------
     The matching TransactionType, or TransactionType.other if unknown.
     """
-    default = TransactionType.withdrawal if side == 'debit' else TransactionType.deposit
+    default = TransactionType.withdrawal if side == "debit" else TransactionType.deposit
     if not category:
         return default
     key = (side.lower(), category.lower())

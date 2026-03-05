@@ -235,7 +235,7 @@ class CashAccount(SubAccount):
         assert amount >= 0
         self.balance += amount
 
-    def withdraw(self, amount: float) -> None:
+    def withdraw(self, amount: float) -> bool:
         assert amount >= 0
         if self.balance >= amount:
             logging.info(f"{type(self).__name__}({self.identifier}) withdraw {amount=} ({self.currency=})")

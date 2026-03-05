@@ -1,7 +1,7 @@
 import logging
 from collections import defaultdict
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Generator, Optional, Protocol, TypedDict, cast
 
@@ -345,16 +345,12 @@ def prepare_raw_snapshot_requests(
     # Query the latest transaction date per linked account to determine
     # the from_date for each provider. Accounts with no history get None
     # (fetch all available), accounts with history get latest - 7 days.
-    latest_txn_dates: dict[int, object] = dict(
+    latest_txn_dates: dict[int, datetime] = dict(
         db_session.query(
             model.TransactionHistoryEntry.linked_account_id,
             func.max(model.TransactionHistoryEntry.transaction_date),
         )
-        .filter(
-            model.TransactionHistoryEntry.linked_account_id.in_(
-                [la.id for la in user_account.linked_accounts]
-            )
-        )
+        .filter(model.TransactionHistoryEntry.linked_account_id.in_([la.id for la in user_account.linked_accounts]))
         .group_by(model.TransactionHistoryEntry.linked_account_id)
         .all()
     )
@@ -364,7 +360,7 @@ def prepare_raw_snapshot_requests(
         if not is_linked_account_included_in_snapshot(linked_account, linked_account_ids):
             continue
         latest = latest_txn_dates.get(linked_account.id)
-        transactions_from_date = (latest - TRANSACTIONS_LOOKBACK) if latest else None
+        transactions_from_date: datetime | None = (latest - TRANSACTIONS_LOOKBACK) if latest else None
         requests.append(
             schema.LinkedAccountSnapshotRequest(
                 linked_account_id=linked_account.id,

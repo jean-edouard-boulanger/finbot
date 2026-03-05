@@ -44,6 +44,12 @@ export interface TransactionEntry {
     subAccountId: string;
     /**
      * 
+     * @type {string}
+     * @memberof TransactionEntry
+     */
+    subAccountName: string;
+    /**
+     * 
      * @type {Date}
      * @memberof TransactionEntry
      */
@@ -136,6 +142,7 @@ export function instanceOfTransactionEntry(value: object): value is TransactionE
     if (!('linkedAccountId' in value) || value['linkedAccountId'] === undefined) return false;
     if (!('linkedAccountName' in value) || value['linkedAccountName'] === undefined) return false;
     if (!('subAccountId' in value) || value['subAccountId'] === undefined) return false;
+    if (!('subAccountName' in value) || value['subAccountName'] === undefined) return false;
     if (!('transactionDate' in value) || value['transactionDate'] === undefined) return false;
     if (!('transactionType' in value) || value['transactionType'] === undefined) return false;
     if (!('transactionCategory' in value) || value['transactionCategory'] === undefined) return false;
@@ -167,6 +174,7 @@ export function TransactionEntryFromJSONTyped(json: any, ignoreDiscriminator: bo
         'linkedAccountId': json['linked_account_id'],
         'linkedAccountName': json['linked_account_name'],
         'subAccountId': json['sub_account_id'],
+        'subAccountName': json['sub_account_name'],
         'transactionDate': (new Date(json['transaction_date'])),
         'transactionType': json['transaction_type'],
         'transactionCategory': json['transaction_category'],
@@ -199,6 +207,7 @@ export function TransactionEntryToJSONTyped(value?: TransactionEntry | null, ign
         'linked_account_id': value['linkedAccountId'],
         'linked_account_name': value['linkedAccountName'],
         'sub_account_id': value['subAccountId'],
+        'sub_account_name': value['subAccountName'],
         'transaction_date': ((value['transactionDate']).toISOString()),
         'transaction_type': value['transactionType'],
         'transaction_category': value['transactionCategory'],

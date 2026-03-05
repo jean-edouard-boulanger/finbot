@@ -59,7 +59,7 @@ export interface GetUserAccountTransactionsReportRequest {
     fromTime?: Date | null;
     toTime?: Date | null;
     linkedAccountId?: number | null;
-    transactionCategory?: string | null;
+    transactionCategory?: Array<string> | null;
     spendingCategory?: string | null;
     limit?: number;
     offset?: number;
@@ -160,7 +160,7 @@ export interface UserAccountsReportsApiInterface {
      * @param {Date} [fromTime] 
      * @param {Date} [toTime] 
      * @param {number} [linkedAccountId] 
-     * @param {string} [transactionCategory] 
+     * @param {Array<string>} [transactionCategory] 
      * @param {string} [spendingCategory] 
      * @param {number} [limit] 
      * @param {number} [offset] 

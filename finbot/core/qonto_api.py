@@ -2,12 +2,11 @@ import datetime
 from typing import cast
 
 import aiohttp
-from pydantic import BaseModel, AwareDatetime
+from pydantic import AwareDatetime, BaseModel
 
 from finbot.core.collections import drop_dict_items_with_null_values
 from finbot.core.errors import FinbotError
 from finbot.core.typing_extensions import JSON
-from finbot.core.utils import some
 
 
 class BankAccount(BaseModel):
@@ -88,26 +87,32 @@ class QontoApi(object):
                 assert isinstance(payload, dict)
                 return [Organization.model_validate(payload["organization"])]
 
-    async def list_transactions(self, iban: str, created_at_from: datetime.datetime | None):
-        all_transactions = []
+    async def list_transactions(self, iban: str, created_at_from: datetime.datetime | None) -> list[Transaction]:
+        all_transactions: list[Transaction] = []
         async with aiohttp.ClientSession(raise_for_status=True) as session:
-            total_pages = None
+            total_pages: int | None = None
             page = 1
-            while total_pages is None or page <= some(total_pages):
+            while total_pages is None or page <= total_pages:
                 async with session.get(
                     "https://thirdparty.qonto.com/v2/transactions",
                     headers={"Authorization": f"{self._creds[0]}:{self._creds[1]}"},
-                    params=drop_dict_items_with_null_values({
-                        "iban": iban,
-                        "created_at_from": created_at_from.isoformat() if created_at_from else None,
-                        "per_page": 100,
-                        "page": page
-                    })
+                    params=drop_dict_items_with_null_values(
+                        {
+                            "iban": iban,
+                            "created_at_from": created_at_from.isoformat() if created_at_from else None,
+                            "per_page": 100,
+                            "page": page,
+                        }
+                    ),
                 ) as resp:
                     payload = await self._handle_response(resp)
                     assert isinstance(payload, dict)
-                    all_transactions.extend([Transaction.model_validate(txn) for txn in payload["transactions"]])
+                    transactions_data = payload["transactions"]
+                    assert isinstance(transactions_data, list)
+                    all_transactions.extend([Transaction.model_validate(txn) for txn in transactions_data])
                     page += 1
                     if total_pages is None:
-                        total_pages = payload["meta"]["total_pages"]
+                        meta = payload["meta"]
+                        assert isinstance(meta, dict)
+                        total_pages = int(meta["total_pages"])  # type: ignore[arg-type]
         return all_transactions

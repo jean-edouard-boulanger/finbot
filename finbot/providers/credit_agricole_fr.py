@@ -1,13 +1,13 @@
 import asyncio
+import hashlib
 import json
 import logging
 import re
-import hashlib
 from copy import deepcopy
 from dataclasses import dataclass
 from datetime import datetime
-from zoneinfo import ZoneInfo
 from typing import Any, Generator, cast
+from zoneinfo import ZoneInfo
 
 from playwright.async_api import Locator, Response
 from pydantic import AwareDatetime, SecretStr
@@ -25,7 +25,10 @@ from finbot.providers.schema import (
     AccountType,
     Asset,
     Assets,
-    AssetsEntry, Transactions, Transaction, TransactionType,
+    AssetsEntry,
+    Transaction,
+    Transactions,
+    TransactionType,
 )
 
 BASE_URL = "https://www.credit-agricole.fr/{region}/particulier/acceder-a-mes-comptes.html"
@@ -162,13 +165,15 @@ class Api(PlaywrightProviderBase):
         while True:
             await self._goto_dashboard()
             await asyncio.sleep(5.0)
-            raw_main_account_id = (await self.page.locator("div.SynthesisMainAccount-headMainDescriptionItem--number").text_content()).strip()
+            raw_main_account_id = (
+                await self.page.locator("div.SynthesisMainAccount-headMainDescriptionItem--number").text_content() or ""
+            ).strip()
             main_account_id = _extract_account_number(raw_main_account_id)
-            main_account = accounts_by_id.get(main_account_id)
+            main_account = accounts_by_id.get(main_account_id) if main_account_id else None
             other_account_navs: list[tuple[Account, Locator]] = []
             other_account_links = await self.page.locator("a.npc-sn1-produit-meteo").all()
             for other_account_link in other_account_links:
-                if account_number := _extract_account_number(await other_account_link.text_content()):
+                if account_number := _extract_account_number(await other_account_link.text_content() or ""):
                     if account := accounts_by_id.get(account_number):
                         other_account_navs.append((account, other_account_link))
             nav, account = None, None
@@ -184,7 +189,8 @@ class Api(PlaywrightProviderBase):
             assert nav
             logging.info(f"collecting transactions for account '{account.id}' ({account.name})")
             async with self.page.expect_response(
-                lambda r: ("bff/operations/imputees" in r.url or "bff/api/compte_epargne/operations" in r.url) and r.status == 200,
+                lambda r: ("bff/operations/imputees" in r.url or "bff/api/compte_epargne/operations" in r.url)
+                and r.status == 200,
                 timeout=30000,
             ) as response_info:
                 await nav.click()
@@ -194,15 +200,16 @@ class Api(PlaywrightProviderBase):
         return Transactions(
             transactions=sorted(
                 (t for t in collected_transactions if not from_date or t.transaction_date >= from_date),
-                key=lambda t: t.transaction_date
+                key=lambda t: t.transaction_date,
             )
         )
 
-    async def _goto_dashboard(self):
+    async def _goto_dashboard(self) -> None:
         await self.page.goto(DASHBOARD_URL.format(region=self._credentials.region))
         if not self._acked_cookie_policy:
             await self.page.click("#popin_tc_privacy_button_3")
             self._acked_cookie_policy = True
+
 
 def _parse_account_type_and_subtype(account_data: dict[str, Any]) -> tuple[AccountType, str]:
     raw_account_type = account_data["typeProduit"].strip()
@@ -241,17 +248,14 @@ def _parse_transactions_from_imputees_response_data(
                 "counterparty": counterparty,
                 "warrant_ref": operation["referenceMandat"] or None,
                 "creator_id": operation["idEmetteur"],
-                "cheque": operation["cheque"]
+                "cheque": operation["cheque"],
             }
             hashed_key = hashlib.sha256(json.dumps(key).encode()).hexdigest()
             transaction_date = _parse_french_date(operation["dateOperationAffichee"].strip())
             transactions.append(
                 Transaction(
                     transaction_id=(
-                        f"{account.id}"
-                        f"-{transaction_date.isoformat()}"
-                        f"-{effective_date.isoformat()}"
-                        f"-{hashed_key}"
+                        f"{account.id}-{transaction_date.isoformat()}-{effective_date.isoformat()}-{hashed_key}"
                     ),
                     account_id=account.id,
                     transaction_date=transaction_date,
@@ -273,9 +277,9 @@ def _parse_transactions_from_operations_response_data(
 ) -> list[Transaction]:
     transactions = []
     for operation in payload["operations"]:
-        transaction_date = datetime.fromtimestamp(operation['date_operation'] / 1000.0, tz=ZoneInfo("Europe/Paris"))
-        effective_date = datetime.fromtimestamp(operation['date_valeur'] / 1000.0, tz=ZoneInfo("Europe/Paris"))
-        amount = operation['montant']
+        transaction_date = datetime.fromtimestamp(operation["date_operation"] / 1000.0, tz=ZoneInfo("Europe/Paris"))
+        effective_date = datetime.fromtimestamp(operation["date_valeur"] / 1000.0, tz=ZoneInfo("Europe/Paris"))
+        amount = operation["montant"]
         transaction_type = TransactionType.transfer_in if amount > 0 else TransactionType.transfer_out
         if "INTERETS CREDITEURS" in operation["libelle_operation"]:
             transaction_type = TransactionType.interest_earned
@@ -349,10 +353,10 @@ def _parse_french_date(s: str) -> AwareDatetime:
         month_num = 12
     else:
         assert False
-    return cast(AwareDatetime, datetime(year=int(year), month=month_num, day=int(day), tzinfo=ZoneInfo("Europe/Paris")))
+    return datetime(year=int(year), month=month_num, day=int(day), tzinfo=ZoneInfo("Europe/Paris"))
 
 
-def _classify_transaction_type(raw_txn: Any):
+def _classify_transaction_type(raw_txn: Any) -> TransactionType:
     amount = raw_txn["montant"]
     operation_family = int(raw_txn["codeFamilleOperation"])
     operation_subtype = int(raw_txn["codeTypeOperation"])

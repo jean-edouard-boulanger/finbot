@@ -147,8 +147,9 @@ export const SpendingBreakdownPanel: React.FC<SpendingBreakdownPanelProps> = (
   const [data, setData] = useState<SpendingBreakdown | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [now] = useState<DateTime>(DateTime.now());
-  const [selectedTimeRange, setSelectedTimeRange] =
-    useState<TimeRangeChoice>(DEFAULT_SPENDING_RANGE);
+  const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRangeChoice>(
+    DEFAULT_SPENDING_RANGE,
+  );
 
   useEffect(() => {
     const fetchData = async () => {

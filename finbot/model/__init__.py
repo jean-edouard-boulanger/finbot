@@ -2,7 +2,7 @@ import enum
 import json
 import zlib
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Optional, Type, TypeVar
+from typing import TYPE_CHECKING, Any, Optional, Type, TypeVar, cast
 
 import orjson
 from sqlalchemy import (
@@ -504,7 +504,7 @@ class TransactionsSnapshotEntry(Base):
 
     @property
     def transactions(self) -> list[dict[str, Any]]:
-        return json.loads(zlib.decompress(self.transactions_data))
+        return cast(list[dict[str, Any]], json.loads(zlib.decompress(self.transactions_data)))
 
     @staticmethod
     def compress_transactions(transactions: list[dict[str, Any]]) -> bytes:

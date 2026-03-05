@@ -1,6 +1,5 @@
 import logging
 from decimal import Decimal
-from typing import Any
 
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.sql import text
@@ -23,7 +22,7 @@ def consolidate_transactions(
     # 1. Read raw transaction snapshot entries for this snapshot
     raw_entries: list[model.TransactionsSnapshotEntry] = (
         db_session.query(model.TransactionsSnapshotEntry)
-        .join(
+        .join(  # type: ignore[no-untyped-call]
             model.LinkedAccountSnapshotEntry,
             model.TransactionsSnapshotEntry.linked_account_snapshot_entry_id == model.LinkedAccountSnapshotEntry.id,
         )

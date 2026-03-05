@@ -1988,7 +1988,10 @@
                         "schema": {
                             "anyOf": [
                                 {
-                                    "type": "string"
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
                                 },
                                 {
                                     "type": "null"
@@ -4078,6 +4081,10 @@
                         "type": "string",
                         "title": "Sub Account Id"
                     },
+                    "sub_account_name": {
+                        "type": "string",
+                        "title": "Sub Account Name"
+                    },
                     "transaction_date": {
                         "type": "string",
                         "format": "date-time",
@@ -4199,6 +4206,7 @@
                     "linked_account_id",
                     "linked_account_name",
                     "sub_account_id",
+                    "sub_account_name",
                     "transaction_date",
                     "transaction_type",
                     "transaction_category",

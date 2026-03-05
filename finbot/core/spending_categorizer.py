@@ -7,8 +7,8 @@ import asyncio
 import json
 import logging
 
-from pydantic import BaseModel
 from openai import AsyncOpenAI
+from pydantic import BaseModel
 
 from finbot import model
 from finbot.core.environment import get_openai_api_key
@@ -19,9 +19,7 @@ logger = logging.getLogger(__name__)
 
 BATCH_SIZE = 10
 
-VALID_CATEGORIES: set[tuple[str, str]] = {
-    (primary, detailed) for primary, detailed, _ in PLAID_PFC_TAXONOMY
-}
+VALID_CATEGORIES: set[tuple[str, str]] = {(primary, detailed) for primary, detailed, _ in PLAID_PFC_TAXONOMY}
 
 
 class TransactionCategoryResult(BaseModel):
@@ -47,7 +45,7 @@ async def categorize_transaction_batch(
     entries = (
         db_session.query(model.TransactionHistoryEntry)
         .filter(model.TransactionHistoryEntry.id.in_(transaction_ids))
-        .filter(model.TransactionHistoryEntry.spending_category_source.is_(None))
+        .filter(model.TransactionHistoryEntry.spending_category_source.is_(None))  # type: ignore[no-untyped-call]
         .all()
     )
 

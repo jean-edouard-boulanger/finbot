@@ -1,3 +1,5 @@
+from typing import Any
+
 from pydantic import AwareDatetime
 from sqlalchemy.sql import text
 
@@ -19,7 +21,7 @@ def get_transactions_report(
 ) -> schema.TransactionsReport:
     settings = repository.get_user_account_settings(session, user_account_id)
 
-    params: dict = {"user_account_id": user_account_id, "limit": limit, "offset": offset}
+    params: dict[str, Any] = {"user_account_id": user_account_id, "limit": limit, "offset": offset}
 
     where_clauses = [
         "la.user_account_id = :user_account_id",
@@ -155,8 +157,10 @@ def get_cash_flow_time_series(
 
     query = f"""
         SELECT {grouping} AS period,
-               COALESCE(SUM(CASE WHEN th.transaction_category = 'income' THEN th.amount_snapshot_ccy ELSE 0 END), 0) AS income,
-               COALESCE(SUM(CASE WHEN th.transaction_category = 'expense' THEN th.amount_snapshot_ccy ELSE 0 END), 0) AS expense,
+               COALESCE(SUM(CASE WHEN th.transaction_category = 'income'
+                                THEN th.amount_snapshot_ccy ELSE 0 END), 0) AS income,
+               COALESCE(SUM(CASE WHEN th.transaction_category = 'expense'
+                                THEN th.amount_snapshot_ccy ELSE 0 END), 0) AS expense,
                COALESCE(SUM(th.amount_snapshot_ccy), 0) AS net
           FROM finbot_transactions_history th
           JOIN finbot_linked_accounts la ON th.linked_account_id = la.id

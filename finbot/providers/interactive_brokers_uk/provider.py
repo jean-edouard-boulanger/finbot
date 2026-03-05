@@ -195,12 +195,12 @@ def _make_trade_transaction(trade: Trade, account_id: str) -> Transaction:
     from datetime import timezone
 
     txn_type = TransactionType.buy if trade.buy_sell == TradeDirection.buy else TransactionType.sell
+    trade_date = trade.trade_time.replace(tzinfo=timezone.utc) if trade.trade_time.tzinfo is None else trade.trade_time
     return Transaction(
         transaction_id=trade.transaction_id,
         account_id=account_id,
-        transaction_date=trade.trade_time.replace(tzinfo=timezone.utc)
-        if trade.trade_time.tzinfo is None
-        else trade.trade_time,
+        transaction_date=trade_date,
+        effective_date=trade_date,
         transaction_type=txn_type,
         amount=trade.net_cash,
         currency=trade.currency,
@@ -224,10 +224,12 @@ def _make_cash_transaction(cash_txn: CashTransaction, account_id: str) -> Transa
     txn_type = _CASH_TRANSACTION_TYPE_MAP.get(cash_txn.transaction_type, TransactionType.other)
     if txn_type == TransactionType.deposit and cash_txn.amount < 0:
         txn_type = TransactionType.withdrawal
+    cash_date = datetime.combine(cash_txn.settlement_date, datetime.min.time(), tzinfo=timezone.utc)
     return Transaction(
         transaction_id=cash_txn.transaction_id,
         account_id=account_id,
-        transaction_date=datetime.combine(cash_txn.settlement_date, datetime.min.time(), tzinfo=timezone.utc),
+        transaction_date=cash_date,
+        effective_date=cash_date,
         transaction_type=txn_type,
         amount=cash_txn.amount,
         currency=cash_txn.currency,

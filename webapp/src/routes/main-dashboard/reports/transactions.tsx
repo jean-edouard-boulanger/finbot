@@ -225,9 +225,7 @@ export const TransactionsReportPanel: React.FC<TransactionsReportPanelProps> = (
                             {txn.description}
                           </span>
                         </TooltipTrigger>
-                        <TooltipContent>
-                          {txn.description}
-                        </TooltipContent>
+                        <TooltipContent>{txn.description}</TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
                   </TableCell>
@@ -265,8 +263,9 @@ export const TransactionsReportPanel: React.FC<TransactionsReportPanelProps> = (
           {/* Pagination */}
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <span>
-              Showing {offset + 1}-{Math.min(offset + limit, report.total_count)}{" "}
-              of {report.total_count}
+              Showing {offset + 1}-
+              {Math.min(offset + limit, report.total_count)} of{" "}
+              {report.total_count}
             </span>
             <div className="flex gap-2">
               <Button
