@@ -100,7 +100,7 @@ class Api(ProviderBase):
                     account_id=bank_account.slug,
                     transaction_date=txn.emitted_at,
                     effective_date=txn.settled_at,
-                    transaction_type=TransactionType.withdrawal if txn.side == 'debit' else TransactionType.deposit,
+                    transaction_type=get_transaction_type(txn.side, txn.category),
                     amount=-1.0 * txn.amount if txn.side == 'debit' else txn.amount,
                     currency=CurrencyCode(txn.currency),
                     description=_make_transaction_description(txn),
@@ -115,3 +115,55 @@ def _make_transaction_description(txn: qonto_api.Transaction):
     if txn.reference:
         description += f" - {txn.reference}"
     return description
+
+
+# Maps (side, category) -> TransactionType
+_MAPPING: dict[tuple[str, str], TransactionType] = {
+    # ── Credits ──────────────────────────────────────────────────────────────
+    ("credit", "other_income"):       TransactionType.deposit,
+    ("credit", "sales"):              TransactionType.deposit,
+    ("credit", "refund"):             TransactionType.adjustment,
+    # Money received from another account owned by the same person
+    ("credit", "treasury_and_interco"): TransactionType.transfer_in,
+
+    # ── Debits ───────────────────────────────────────────────────────────────
+    # Wage transfers to the owner (sole trader paying themselves)
+    ("debit", "salary"):              TransactionType.transfer_out,
+
+    # Bank / platform fees
+    ("debit", "fees"):                TransactionType.fee,
+    ("debit", "subscription"):        TransactionType.fee,
+
+    # Social-security contributions (URSSAF) and government taxes (CFE)
+    ("debit", "other_expense"):       TransactionType.tax,
+    ("debit", "tax"):                 TransactionType.tax,
+    ("debit", "other_service"):       TransactionType.tax,
+
+    # Card spending on goods / services
+    ("debit", "marketing"):           TransactionType.purchase,
+    ("debit", "online_service"):      TransactionType.purchase,
+    ("debit", "hardware_and_equipment"): TransactionType.purchase,
+
+    # Generic outflows that don't fit a narrower bucket
+    ("debit", "other"):               TransactionType.payment,
+}
+
+
+def get_transaction_type(side: str, category: str | None) -> TransactionType:
+    """
+    Map a Qonto (side, category) pair to a TransactionType.
+
+    Parameters
+    ----------
+    side     : "credit" or "debit"
+    category : the category string from the transaction payload
+
+    Returns
+    -------
+    The matching TransactionType, or TransactionType.other if unknown.
+    """
+    default = TransactionType.withdrawal if side == 'debit' else TransactionType.deposit
+    if not category:
+        return default
+    key = (side.lower(), category.lower())
+    return _MAPPING.get(key, default)

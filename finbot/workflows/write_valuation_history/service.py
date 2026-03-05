@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 from typing import Any, Generator, cast
@@ -209,14 +210,9 @@ def _categorize_new_transactions(
     transaction_ids: list[int],
     db_session: SessionType,
 ) -> None:
+    from finbot.core.spending_categorizer import categorize_transaction_batch
     try:
-        from finbot.core.spending_categorizer import categorize_transaction_batch
-    except ImportError:
-        logging.info("spending categorizer not available, skipping LLM categorization")
-        return
-
-    try:
-        categorize_transaction_batch(transaction_ids, db_session)
+        asyncio.run(categorize_transaction_batch(transaction_ids, db_session))
     except Exception:
         logging.exception("LLM spending categorization failed (non-fatal)")
 

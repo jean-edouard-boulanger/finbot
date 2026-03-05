@@ -47,6 +47,7 @@ class Transaction(BaseModel):
     reference: str | None
     initiator_id: str | None
     label_ids: list[str]
+    category: str | None
     cashflow_category: dict[str, str | None] | None
     cashflow_subcategory: dict[str, str | None] | None
     id: str

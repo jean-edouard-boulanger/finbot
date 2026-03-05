@@ -18,5 +18,5 @@ class WriteValuationHistoryWorkflow:
             retry_policy=RetryPolicy(
                 maximum_attempts=1,
             ),
-            start_to_close_timeout=timedelta(seconds=60.0),
+            start_to_close_timeout=timedelta(seconds=1200.0),
         )
