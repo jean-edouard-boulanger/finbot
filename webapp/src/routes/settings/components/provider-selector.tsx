@@ -59,13 +59,14 @@ export const ProviderSelector: React.FC<ProviderSelectorProps> & {
       isSearchable
       defaultValue={defaultValue}
       onChange={(value) => {
-        if (isNewProvider(value)) {
+        const item = value as SelectItem | null;
+        if (isNewProvider(item)) {
           if (onNew !== null) {
             onNew();
           }
           return;
         }
-        onChange(value);
+        onChange(item);
       }}
       options={options}
     />

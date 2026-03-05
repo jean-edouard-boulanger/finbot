@@ -201,7 +201,7 @@ export const SpendingBreakdownPanel: React.FC<SpendingBreakdownPanelProps> = (
     ? data.entries.map((entry, i) => ({
         name: formatCategory(entry.category),
         value: entry.total,
-        count: entry.transactionCount,
+        count: entry.transaction_count,
         fill: SPENDING_COLOURS[i % SPENDING_COLOURS.length],
       }))
     : [];

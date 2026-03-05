@@ -173,7 +173,8 @@ export const EmailDeliverySettingsPanel: React.FC<
           }
           options={providers.map(makeProvidersSelectValue)}
           onChange={(entry) => {
-            setProviderById(entry?.value);
+            const item = entry as { value: string } | null;
+            setProviderById(item?.value);
           }}
         />
       </div>

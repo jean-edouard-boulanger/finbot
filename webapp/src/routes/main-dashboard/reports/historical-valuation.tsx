@@ -309,7 +309,7 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
                   data: (s.data as (number | null)[]).slice(
                     firstIdx,
                     lastIdx + 1,
-                  ),
+                  ) as unknown as typeof s.data,
                 }));
                 setHistoricalValuation({
                   ...hv,

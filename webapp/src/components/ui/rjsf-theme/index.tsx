@@ -7,8 +7,8 @@ import {
   WidgetProps,
   FieldTemplateProps,
   BaseInputTemplateProps,
-  ThemeProps,
 } from "@rjsf/utils";
+import type { ThemeProps } from "@rjsf/core";
 import { Input } from "components/ui/input";
 import { Label } from "components/ui/label";
 import { Checkbox } from "components/ui/checkbox";
