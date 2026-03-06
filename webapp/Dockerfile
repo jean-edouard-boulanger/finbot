@@ -10,6 +10,8 @@ COPY public/ ./public/
 COPY src/ ./src/
 COPY index.html ./
 COPY vite.config.ts ./
+COPY tailwind.config.ts ./
+COPY postcss.config.js ./
 COPY tsconfig.json ./
 COPY tsconfig.node.json ./
 
