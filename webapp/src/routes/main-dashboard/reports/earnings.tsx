@@ -2,15 +2,19 @@ import React, { useEffect, useState } from "react";
 
 import { useApi, UserAccountsReportsApi, EarningsReport } from "clients";
 
-import {
-  StackedBarLoader,
-  Money,
-  ValuationChange,
-  RelativeValuationChange,
-} from "components";
+import { Money, ValuationChange, RelativeValuationChange } from "components";
 import { MoneyFormatterType } from "components/money";
 
-import { Alert, Table } from "react-bootstrap";
+import { Alert, AlertTitle, AlertDescription } from "components/ui/alert";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "components/ui/table";
 
 export interface EarningsReportPanelProps {
   userAccountId: number;
@@ -45,106 +49,122 @@ export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
 
   if (error !== null) {
     return (
-      <Alert variant={"danger"}>
-        <Alert.Heading>
+      <Alert variant="destructive">
+        <AlertTitle>
           Snap! An error occurred while generating your report
-        </Alert.Heading>
-        <p>{error}</p>
+        </AlertTitle>
+        <AlertDescription>{error}</AlertDescription>
       </Alert>
     );
   }
 
   if (loading || !report) {
     return (
-      <StackedBarLoader
-        count={4}
-        color={"#FBFBFB"}
-        spacing={"0.8em"}
-        height={"1em"}
-        width={"100%"}
-      />
+      <div className="space-y-3 py-4">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="skeleton-shimmer h-10 rounded" />
+        ))}
+      </div>
     );
   }
 
   const currency = report.currency;
 
   return (
-    <Table hover size="sm">
-      <thead>
-        <tr>
-          <th>Period</th>
-          <th>Open</th>
-          <th>Close</th>
-          <th>Minimum</th>
-          <th>Maximum</th>
-          <th>Change</th>
-          <th>Change (%)</th>
-        </tr>
-      </thead>
-      <tbody>
+    <Table>
+      <TableHeader>
+        <TableRow className="border-border/50 hover:bg-transparent">
+          <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Period
+          </TableHead>
+          <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Open
+          </TableHead>
+          <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Close
+          </TableHead>
+          <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Minimum
+          </TableHead>
+          <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Maximum
+          </TableHead>
+          <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Change
+          </TableHead>
+          <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Change (%)
+          </TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
         {report.entries.map((entry, index) => {
           return (
-            <tr key={`entry-${index}`}>
-              <td>
+            <TableRow
+              key={`entry-${index}`}
+              className="border-border/30 transition-colors hover:bg-secondary/30"
+            >
+              <TableCell>
                 <strong>{entry.aggregation.asStr}</strong>
-              </td>
-              <td>
+              </TableCell>
+              <TableCell className="font-mono tabular-nums">
                 <Money
                   amount={entry.metrics.firstValue}
                   locale={locale}
                   ccy={currency}
                   moneyFormatter={moneyFormatter}
                 />
-              </td>
-              <td>
+              </TableCell>
+              <TableCell className="font-mono tabular-nums">
                 <Money
                   amount={entry.metrics.lastValue}
                   locale={locale}
                   ccy={currency}
                   moneyFormatter={moneyFormatter}
                 />
-              </td>
-              <td>
+              </TableCell>
+              <TableCell className="font-mono tabular-nums">
                 <Money
                   amount={entry.metrics.minValue}
                   locale={locale}
                   ccy={currency}
                   moneyFormatter={moneyFormatter}
                 />
-              </td>
-              <td>
+              </TableCell>
+              <TableCell className="font-mono tabular-nums">
                 <Money
                   amount={entry.metrics.maxValue}
                   locale={locale}
                   ccy={currency}
                   moneyFormatter={moneyFormatter}
                 />
-              </td>
-              <td>
+              </TableCell>
+              <TableCell className="font-mono tabular-nums">
                 <strong>
                   <ValuationChange amount={entry.metrics.absChange} />
                 </strong>
-              </td>
-              <td>
+              </TableCell>
+              <TableCell className="font-mono tabular-nums">
                 <strong>
                   <RelativeValuationChange amount={entry.metrics.relChange} />
                 </strong>
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           );
         })}
-      </tbody>
-      <tfoot>
-        <tr
-          style={{ fontWeight: "bold" }}
+      </TableBody>
+      <TableFooter>
+        <TableRow
           className={
-            report!.rollup.absChange >= 0 ? "table-success" : "table-danger"
+            report!.rollup.absChange >= 0
+              ? "border-border/50 bg-gain/5 font-bold"
+              : "border-border/50 bg-loss/5 font-bold"
           }
         >
-          <td>
+          <TableCell>
             <strong>Summary</strong>
-          </td>
-          <td>
+          </TableCell>
+          <TableCell className="font-mono tabular-nums">
             <strong>
               <Money
                 amount={report!.rollup.firstValue}
@@ -153,8 +173,8 @@ export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
                 moneyFormatter={moneyFormatter}
               />
             </strong>
-          </td>
-          <td>
+          </TableCell>
+          <TableCell className="font-mono tabular-nums">
             <strong>
               <Money
                 amount={report!.rollup.lastValue}
@@ -163,35 +183,35 @@ export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
                 moneyFormatter={moneyFormatter}
               />
             </strong>
-          </td>
-          <td>
+          </TableCell>
+          <TableCell className="font-mono tabular-nums">
             <Money
               amount={report!.rollup.minValue}
               locale={locale}
               ccy={currency}
               moneyFormatter={moneyFormatter}
             />
-          </td>
-          <td>
+          </TableCell>
+          <TableCell className="font-mono tabular-nums">
             <Money
               amount={report!.rollup.maxValue}
               locale={locale}
               ccy={currency}
               moneyFormatter={moneyFormatter}
             />
-          </td>
-          <td>
+          </TableCell>
+          <TableCell className="font-mono tabular-nums">
             <strong>
               <ValuationChange amount={report!.rollup.absChange} />
             </strong>
-          </td>
-          <td>
+          </TableCell>
+          <TableCell className="font-mono tabular-nums">
             <strong>
               <RelativeValuationChange amount={report!.rollup.relChange} />
             </strong>
-          </td>
-        </tr>
-      </tfoot>
+          </TableCell>
+        </TableRow>
+      </TableFooter>
     </Table>
   );
 };

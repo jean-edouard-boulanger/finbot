@@ -31,6 +31,7 @@ dependencies = [
     "temporalio<2",
     "twilio==9.6.1",
     "uvicorn<1",
+    "openai>=2",
 ]
 
 [project.optional-dependencies]

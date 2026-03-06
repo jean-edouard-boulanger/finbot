@@ -1,4 +1,5 @@
 import logging
+import threading
 from dataclasses import dataclass
 from typing import Optional, TypeAlias, cast
 
@@ -31,7 +32,7 @@ class Error(FinbotError):
     pass
 
 
-@cached(TTLCache(maxsize=1000, ttl=3600.0))
+@cached(TTLCache(maxsize=1000, ttl=3600.0), lock=threading.Lock())
 def _get_rates_for_base(base_ccy: CurrencyType) -> dict[CurrencyType, float]:
     api_key = get_freecurrencyapi_key()
     response = requests.get(f"https://api.freecurrencyapi.com/v1/latest?apikey={api_key}&base_currency={base_ccy}")

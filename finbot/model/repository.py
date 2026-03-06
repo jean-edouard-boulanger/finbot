@@ -362,6 +362,7 @@ def get_historical_valuation_by(
     from_time: Optional[datetime] = None,
     to_time: Optional[datetime] = None,
     frequency: Optional[ValuationFrequency] = None,
+    linked_account_id: Optional[int] = None,
 ) -> list[AssetTypeHistoricalValuationEntry]: ...
 
 
@@ -373,6 +374,7 @@ def get_historical_valuation_by(
     from_time: Optional[datetime] = None,
     to_time: Optional[datetime] = None,
     frequency: Optional[ValuationFrequency] = None,
+    linked_account_id: Optional[int] = None,
 ) -> list[AssetClassHistoricalValuationEntry]: ...
 
 
@@ -383,6 +385,7 @@ def get_historical_valuation_by(
     from_time: Optional[datetime] = None,
     to_time: Optional[datetime] = None,
     frequency: Optional[ValuationFrequency] = None,
+    linked_account_id: Optional[int] = None,
 ) -> list[AssetTypeHistoricalValuationEntry] | list[AssetClassHistoricalValuationEntry]:
     frequency = frequency or ValuationFrequency.Daily
     sub_grouping = _get_valuation_grouping_from_frequency(frequency).sql_grouping
@@ -394,6 +397,10 @@ def get_historical_valuation_by(
     if to_time:
         query_params["to_time"] = to_time
         time_clause += " and fuahe.effective_at <= :to_time "
+    linked_account_clause = ""
+    if linked_account_id is not None:
+        query_params["linked_account_id"] = linked_account_id
+        linked_account_clause = " and fsaivhe.linked_account_id = :linked_account_id "
     main_query = f"""
         select distinct on (agg_items.agg_criterion, {sub_grouping})
                {sub_grouping} as valuation_period,
@@ -431,7 +438,7 @@ def get_historical_valuation_by(
                   on fsaivhe.linked_account_id = fla.id
                where fuahe.available
              and not fla.deleted
-                 and fuahe.user_account_id = :user_account_id {time_clause}
+                 and fuahe.user_account_id = :user_account_id {time_clause}{linked_account_clause}
                  and fsaivhe.item_type = 'Asset'
             group by history_entry_id, {by.agg_criterion}
           ) agg_items

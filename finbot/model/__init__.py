@@ -1,6 +1,8 @@
 import enum
+import json
+import zlib
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Optional, Type, TypeVar
+from typing import TYPE_CHECKING, Any, Optional, Type, TypeVar, cast
 
 import orjson
 from sqlalchemy import (
@@ -8,6 +10,7 @@ from sqlalchemy import (
     Column,
     ForeignKey,
     ForeignKeyConstraint,
+    Index,
     Integer,
     LargeBinary,
     Numeric,
@@ -485,6 +488,66 @@ class SubAccountItemValuationHistoryEntry(Base):
     @property
     def is_liability(self) -> bool:
         return self.item_type == SubAccountItemType.Liability
+
+
+class TransactionsSnapshotEntry(Base):
+    __tablename__ = "finbot_transactions_snapshot_entries"
+    id = Column(Integer, primary_key=True)
+    linked_account_snapshot_entry_id = Column(
+        Integer, ForeignKey(LinkedAccountSnapshotEntry.id, ondelete="CASCADE"), nullable=False
+    )
+    transaction_count = Column(Integer, nullable=False)
+    transactions_data = Column(LargeBinary, nullable=False)
+    created_at = Column(DateTimeTz, server_default=func.now(), nullable=False)
+
+    linked_account_snapshot_entry = relationship(LinkedAccountSnapshotEntry, uselist=False)
+
+    @property
+    def transactions(self) -> list[dict[str, Any]]:
+        return cast(list[dict[str, Any]], json.loads(zlib.decompress(self.transactions_data)))
+
+    @staticmethod
+    def compress_transactions(transactions: list[dict[str, Any]]) -> bytes:
+        return zlib.compress(json.dumps(transactions).encode())
+
+
+class TransactionHistoryEntry(Base):
+    __tablename__ = "finbot_transactions_history"
+    id = Column(Integer, primary_key=True)
+    linked_account_id = Column(Integer, ForeignKey(LinkedAccount.id, ondelete="CASCADE"), nullable=False)
+    sub_account_id = Column(String(64), nullable=False)
+    provider_transaction_id = Column(String(256), nullable=False)
+    transaction_date = Column(DateTimeTz, nullable=False, index=True)
+    transaction_type = Column(String(32), nullable=False)
+    transaction_category = Column(String(16), nullable=False)
+    amount = Column(Numeric, nullable=False)
+    amount_snapshot_ccy = Column(Numeric)
+    currency = Column(String(4), nullable=False)
+    description = Column(String(512), nullable=False)
+    symbol = Column(String(64))
+    units = Column(Numeric)
+    unit_price = Column(Numeric)
+    fee = Column(Numeric)
+    counterparty = Column(String(256))
+    spending_category_primary = Column(String(64))
+    spending_category_detailed = Column(String(128))
+    spending_category_source = Column(String(16))
+    provider_specific_data = Column(JSONEncoded)
+    source_snapshot_id = Column(Integer, ForeignKey(UserAccountSnapshot.id, ondelete="SET NULL"))
+    created_at = Column(DateTimeTz, server_default=func.now(), nullable=False)
+    updated_at = Column(DateTimeTz, onupdate=func.now())
+
+    linked_account = relationship(LinkedAccount, uselist=False)
+
+    __table_args__ = (
+        UniqueConstraint(
+            "linked_account_id",
+            "sub_account_id",
+            "provider_transaction_id",
+            name="uidx_transactions_history_dedup",
+        ),
+        Index("idx_transactions_history_account_date", "linked_account_id", "transaction_date"),
+    )
 
 
 class GenericKeyValueStore(Base):

@@ -53,6 +53,10 @@ jobs:
       - name: Find Typescript clients changes
         id: find-ts-clients-changes
         uses: tj-actions/verify-changed-files@v16
+        with:
+          files: |
+            webapp/src/clients/app-client/**
+            finbot/apps/appwsrv/appwsrv.openapi.json
       - name: Error if any Typescript clients changes
         if: steps.find-ts-clients-changes.outputs.files_changed == 'true'
         run: |

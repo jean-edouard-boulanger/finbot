@@ -9,8 +9,10 @@ import {
   PasswordValidationInput,
   PasswordValidationResult,
 } from "components/password";
-import { Col, Form, Row } from "react-bootstrap";
-import { toast } from "react-toastify";
+import { Input } from "components/ui/input";
+import { Label } from "components/ui/label";
+import { Separator } from "components/ui/separator";
+import { toast } from "sonner";
 
 interface PasswordForm extends PasswordValidationInput {
   oldPassword: string;
@@ -70,64 +72,57 @@ export const AccountSecuritySettings: React.FC<
 
   return (
     <>
-      <Row className={"mb-4"}>
-        <Col>
-          <h3>Account security</h3>
-          <hr />
-        </Col>
-      </Row>
-      <Row className={"mb-4"}>
-        <Col>
-          <h4>Update password</h4>
-        </Col>
-      </Row>
-      <Row>
-        <Col>
-          <Form>
-            <Form.Group className="mb-4">
-              <Form.Label>Old password</Form.Label>
-              <Form.Control
-                type="password"
-                name="oldPassword"
-                value={passwordForm.oldPassword}
-                onChange={handleFormChange}
-              />
-            </Form.Group>
-            <Form.Group className="mb-4">
-              <Form.Label>New password</Form.Label>
-              <Form.Control
-                type="password"
-                name="password"
-                value={passwordForm.password}
-                onChange={handleFormChange}
-              />
-            </Form.Group>
-            <Form.Group className="mb-4">
-              <Form.Label>Confirm new password</Form.Label>
-              <Form.Control
-                type="password"
-                name="passwordConfirm"
-                value={passwordForm.passwordConfirm}
-                onChange={handleFormChange}
-              />
-            </Form.Group>
-            <LoadingButton
-              size={"sm"}
-              onClick={() => {
-                handleFormSubmit({ ...passwordForm });
-              }}
-              variant="primary"
-              loading={loading}
-              disabled={!passwordValidation.valid}
-            >
-              Update password
-            </LoadingButton>
-          </Form>
-        </Col>
-        <Col>
+      <div className="mb-4">
+        <h3 className="text-2xl font-semibold">Account security</h3>
+        <Separator className="mt-2" />
+      </div>
+      <div className="mb-4">
+        <h4 className="text-lg font-medium">Update password</h4>
+      </div>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>Old password</Label>
+            <Input
+              type="password"
+              name="oldPassword"
+              value={passwordForm.oldPassword}
+              onChange={handleFormChange}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>New password</Label>
+            <Input
+              type="password"
+              name="password"
+              value={passwordForm.password}
+              onChange={handleFormChange}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Confirm new password</Label>
+            <Input
+              type="password"
+              name="passwordConfirm"
+              value={passwordForm.passwordConfirm}
+              onChange={handleFormChange}
+            />
+          </div>
+          <LoadingButton
+            size="sm"
+            onClick={() => {
+              handleFormSubmit({ ...passwordForm });
+            }}
+            loading={loading}
+            disabled={!passwordValidation.valid}
+          >
+            Update password
+          </LoadingButton>
+        </div>
+        <div>
           <PasswordValidationCard validation={passwordValidation} />
-        </Col>
-      </Row>
+        </div>
+      </div>
     </>
   );
 };

@@ -1,6 +1,8 @@
 from enum import Enum
 from typing import Literal, TypeAlias
 
+from pydantic import AwareDatetime
+
 from finbot.core.schema import ApplicationErrorData, BaseModel, CurrencyCode, EncryptedCredentialsPayloadType
 from finbot.providers import schema as providers_schema
 
@@ -9,6 +11,7 @@ class LineItem(str, Enum):
     Accounts = "Accounts"
     Assets = "Assets"
     Liabilities = "Liabilities"
+    Transactions = "Transactions"
 
 
 class LineItemError(BaseModel):
@@ -31,7 +34,12 @@ class LiabilitiesResults(BaseModel):
     results: list[providers_schema.LiabilitiesEntry]
 
 
-LineItemResults: TypeAlias = AccountsResults | AssetsResults | LiabilitiesResults | LineItemError
+class TransactionsResults(BaseModel):
+    line_item: Literal[LineItem.Transactions] = LineItem.Transactions
+    results: list[providers_schema.Transaction]
+
+
+LineItemResults: TypeAlias = AccountsResults | AssetsResults | LiabilitiesResults | TransactionsResults | LineItemError
 
 
 class ValidateCredentialsRequest(BaseModel):
@@ -50,6 +58,7 @@ class GetFinancialDataRequest(BaseModel):
     encrypted_credentials: EncryptedCredentialsPayloadType
     items: list[LineItem]
     user_account_currency: CurrencyCode
+    transactions_from_date: AwareDatetime | None = None
 
 
 class GetFinancialDataResponse(BaseModel):

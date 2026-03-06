@@ -292,6 +292,7 @@ def get_user_account_historical_valuation_by_asset_type(
         from_time=from_time,
         to_time=to_time,
         frequency=frequency,
+        linked_account_id=query.linked_account_id,
     )
     if len(valuation_history) == 0:
         raise MissingUserData("No valuation available for selected time range")
@@ -368,6 +369,7 @@ def get_user_account_historical_valuation_by_asset_class(
         from_time=from_time,
         to_time=to_time,
         frequency=frequency,
+        linked_account_id=query.linked_account_id,
     )
     if len(valuation_history) == 0:
         raise MissingUserData("No valuation available for selected time range")

@@ -1,11 +1,11 @@
 import enum
 from typing import Any, Self, TypeAlias
 
-from pydantic import Field, model_validator
+from pydantic import AwareDatetime, Field, model_validator
 
 from finbot.core.schema import BaseModel, CurrencyCode
 
-ProviderSpecificPayloadType: TypeAlias = dict[str, str | int | float | bool]
+ProviderSpecificPayloadType: TypeAlias = dict[str, str | int | float | bool | None]
 
 
 DEPOSITORY_ACCOUNT_SUB_TYPES = (
@@ -269,6 +269,97 @@ class Liabilities(BaseModel):
 
 
 ItemType: TypeAlias = Asset | Liability
+
+
+class TransactionType(str, enum.Enum):
+    # income
+    dividend = "dividend"  # cash distribution from an equity or fund holding
+    interest_earned = "interest_earned"  # interest credited on a deposit or bond
+    staking_reward = "staking_reward"  # reward earned from staking crypto assets
+
+    # expense
+    fee = "fee"  # bank or platform fee (e.g. account fee, foreign card surcharge)
+    commission = "commission"  # trading commission charged by a broker
+    interest_charged = "interest_charged"  # interest debited on a loan or credit balance
+    tax = "tax"  # tax withholding or levy (e.g. income tax, capital gains tax)
+
+    # trade
+    buy = "buy"  # acquisition of a financial instrument (stock, bond, fund, crypto)
+    sell = "sell"  # disposal of a financial instrument
+
+    # transfer: money coming in
+    deposit = "deposit"  # generic inflow from an external third party (e.g. card refund, incoming payment)
+    transfer_in = "transfer_in"  # inflow from another account owned by the same user (internal transfer)
+
+    # transfer: money going out
+    withdrawal = "withdrawal"  # generic outflow (e.g. ATM cash withdrawal)
+    transfer_out = "transfer_out"  # outflow to another account owned by the same user (internal transfer)
+    payment = "payment"  # outflow to settle a bill or obligation (e.g. direct debit, bill payment, loan repayment)
+    purchase = "purchase"  # spending on goods or services (e.g. card payment at a merchant); categorized as expense
+    contribution = "contribution"  # outflow to a savings or retirement plan (e.g. pension, PER)
+
+    # other
+    corporate_action = "corporate_action"  # issuer-initiated event (e.g. stock split, merger, spin-off)
+    adjustment = "adjustment"  # correction or reconciliation entry applied by the institution
+    other = "other"  # any transaction that does not fit the above categories
+
+
+class TransactionCategory(str, enum.Enum):
+    income = "income"
+    expense = "expense"
+    trade = "trade"
+    transfer = "transfer"
+    other = "other"
+
+
+_TRANSACTION_TYPE_TO_CATEGORY: dict[TransactionType, TransactionCategory] = {
+    TransactionType.dividend: TransactionCategory.income,
+    TransactionType.interest_earned: TransactionCategory.income,
+    TransactionType.staking_reward: TransactionCategory.income,
+    TransactionType.fee: TransactionCategory.expense,
+    TransactionType.commission: TransactionCategory.expense,
+    TransactionType.interest_charged: TransactionCategory.expense,
+    TransactionType.tax: TransactionCategory.expense,
+    TransactionType.buy: TransactionCategory.trade,
+    TransactionType.sell: TransactionCategory.trade,
+    TransactionType.deposit: TransactionCategory.transfer,
+    TransactionType.withdrawal: TransactionCategory.transfer,
+    TransactionType.transfer_in: TransactionCategory.transfer,
+    TransactionType.transfer_out: TransactionCategory.transfer,
+    TransactionType.payment: TransactionCategory.transfer,
+    TransactionType.purchase: TransactionCategory.expense,
+    TransactionType.contribution: TransactionCategory.transfer,
+    TransactionType.corporate_action: TransactionCategory.other,
+    TransactionType.adjustment: TransactionCategory.other,
+    TransactionType.other: TransactionCategory.other,
+}
+
+
+def category_for_type(t: TransactionType) -> TransactionCategory:
+    return _TRANSACTION_TYPE_TO_CATEGORY[t]
+
+
+class Transaction(BaseModel):
+    transaction_id: str
+    account_id: SubAccountId
+    transaction_date: AwareDatetime
+    effective_date: AwareDatetime
+    transaction_type: TransactionType
+    amount: float
+    currency: CurrencyCode
+    description: str
+    symbol: str | None = None
+    units: float | None = None
+    unit_price: float | None = None
+    fee: float | None = None
+    counterparty: str | None = None
+    spending_category_primary: str | None = None
+    spending_category_detailed: str | None = None
+    provider_specific: ProviderSpecificPayloadType | None = None
+
+
+class Transactions(BaseModel):
+    transactions: list[Transaction]
 
 
 def _validate_item_value(

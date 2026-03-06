@@ -235,16 +235,22 @@ class CashAccount(SubAccount):
         assert amount >= 0
         self.balance += amount
 
-    def withdraw(self, amount: float) -> None:
-        logging.info(f"{type(self).__name__}({self.identifier}) withdraw {amount=} ({self.currency=})")
+    def withdraw(self, amount: float) -> bool:
         assert amount >= 0
-        assert amount <= self.balance
-        self.balance -= amount
+        if self.balance >= amount:
+            logging.info(f"{type(self).__name__}({self.identifier}) withdraw {amount=} ({self.currency=})")
+            self.balance -= amount
+            return True
+        logging.info(
+            f"{type(self).__name__}({self.identifier}) CANNOT withdraw {amount=} ({self.currency=}):"
+            f" insufficient funds (available: {self.balance})"
+        )
+        return False
 
     def transfer(self, amount: float, other: "CashAccount") -> None:
         assert other.currency == self.currency
-        self.withdraw(amount)
-        other.deposit(amount)
+        if self.withdraw(amount):
+            other.deposit(amount)
 
     def get_items(self, as_of: date, market: Market) -> list[ItemType]:
         return [

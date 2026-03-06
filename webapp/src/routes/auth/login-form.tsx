@@ -5,7 +5,10 @@ import { AuthContext } from "contexts";
 
 import { LoadingButton } from "components";
 import { Credentials } from "contexts/auth";
-import { Row, Col, Button, Card, Form, Alert } from "react-bootstrap";
+import { Card, CardContent, CardHeader, CardTitle } from "components/ui/card";
+import { Button } from "components/ui/button";
+import { Label } from "components/ui/label";
+import { Alert, AlertDescription } from "components/ui/alert";
 import { Formik, Form as MetaForm, Field, ErrorMessage } from "formik";
 
 import * as Yup from "yup";
@@ -35,78 +38,72 @@ export const LoginForm: React.FC<LoginFormProps> = () => {
   };
 
   return (
-    <Row className={"justify-content-center mt-5"}>
-      <Col md={5}>
+    <div className="mt-10 flex justify-center">
+      <div className="w-full max-w-md">
         {loginError && (
-          <Row>
-            <Col>
-              <Alert variant={"danger"}>Invalid email or password</Alert>
-            </Col>
-          </Row>
+          <Alert variant="destructive" className="mb-4">
+            <AlertDescription>Invalid email or password</AlertDescription>
+          </Alert>
         )}
-        <Row>
-          <Col>
-            <Card>
-              <Card.Header>Sign-in</Card.Header>
-              <Card.Body>
-                <Formik
-                  initialValues={{ email: "", password: "" }}
-                  validationSchema={CREDENTIALS_SCHEMA}
-                  onSubmit={handleSubmit}
-                >
-                  {({ isSubmitting, submitForm }) => (
-                    <MetaForm>
-                      <Form.Group className="mb-3">
-                        <Form.Label>Email address</Form.Label>
-                        <Field
-                          type="text"
-                          name="email"
-                          className="form-control"
-                        />
-                        <ErrorMessage
-                          className="text-danger"
-                          name="email"
-                          component="div"
-                        />
-                      </Form.Group>
-                      <Form.Group className="mb-3">
-                        <Form.Label>Password</Form.Label>
-                        <Field
-                          type="password"
-                          name="password"
-                          className="form-control"
-                        />
-                        <ErrorMessage
-                          className="text-danger"
-                          name="password"
-                          component="div"
-                        />
-                      </Form.Group>
-                      <LoadingButton
-                        variant="primary"
-                        loading={isSubmitting}
-                        onClick={() => {
-                          setLoginError(null);
-                          submitForm();
-                        }}
-                      >
-                        Sign-in
-                      </LoadingButton>
-                      <Button
-                        variant={"link"}
-                        onClick={() => navigate("/signup")}
-                      >
-                        Register
-                      </Button>
-                    </MetaForm>
-                  )}
-                </Formik>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-      </Col>
-    </Row>
+        <Card>
+          <CardHeader>
+            <CardTitle>Sign-in</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Formik
+              initialValues={{ email: "", password: "" }}
+              validationSchema={CREDENTIALS_SCHEMA}
+              onSubmit={handleSubmit}
+            >
+              {({ isSubmitting, submitForm }) => (
+                <MetaForm>
+                  <div className="mb-4 space-y-2">
+                    <Label>Email address</Label>
+                    <Field
+                      type="text"
+                      name="email"
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    />
+                    <ErrorMessage
+                      className="text-sm text-red-500"
+                      name="email"
+                      component="div"
+                    />
+                  </div>
+                  <div className="mb-4 space-y-2">
+                    <Label>Password</Label>
+                    <Field
+                      type="password"
+                      name="password"
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    />
+                    <ErrorMessage
+                      className="text-sm text-red-500"
+                      name="password"
+                      component="div"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <LoadingButton
+                      loading={isSubmitting}
+                      onClick={() => {
+                        setLoginError(null);
+                        submitForm();
+                      }}
+                    >
+                      Sign-in
+                    </LoadingButton>
+                    <Button variant="link" onClick={() => navigate("/signup")}>
+                      Register
+                    </Button>
+                  </div>
+                </MetaForm>
+              )}
+            </Formik>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 };
 

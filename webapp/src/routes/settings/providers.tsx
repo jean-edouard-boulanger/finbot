@@ -1,17 +1,27 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useContext, useState, useEffect, useRef } from "react";
 
 import AceEditor from "react-ace";
 import { useApi, FinancialDataProvidersApi } from "clients";
-import { default as DataDrivenForm } from "react-jsonschema-form";
-import { Alert, Row, Col, Button, Tabs, Tab, Form } from "react-bootstrap";
+import { ThemeContext } from "contexts";
+import { withTheme } from "@rjsf/core";
+import validator from "@rjsf/validator-ajv8";
+import { shadcnTheme } from "components/ui/rjsf-theme";
+const DataDrivenForm = withTheme(shadcnTheme);
 import { LoadingButton } from "components";
 import { Formik, Form as MetaForm, Field, ErrorMessage } from "formik";
 import { ProviderSelector } from "./components";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
+
+import { Button } from "components/ui/button";
+import { Label } from "components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "components/ui/tabs";
+import { Alert, AlertDescription } from "components/ui/alert";
+import { Separator } from "components/ui/separator";
 
 import * as Yup from "yup";
 
 import "ace-builds/src-noconflict/theme-github";
+import "ace-builds/src-noconflict/theme-github_dark";
 import "ace-builds/src-noconflict/mode-json";
 
 const DEFAULT_CREDENTIALS_SCHEMA = {
@@ -79,6 +89,7 @@ const makeProviderDescription = (
 };
 
 export const EditProviderPanel: React.FC<Record<string, never>> = () => {
+  const { theme } = useContext(ThemeContext);
   const financialDataProvidersApi = useApi(FinancialDataProvidersApi);
   const [selectedProviderId, setSelectedProviderId] = useState<string | null>(
     null,
@@ -163,28 +174,27 @@ export const EditProviderPanel: React.FC<Record<string, never>> = () => {
   const isNew = selectedProviderId === null;
 
   return (
-    <div>
-      <Row className={"mb-4"}>
-        <Col>
-          <h3>
-            Providers <small>| {isNew ? "New" : selectedProviderId}</small>
-          </h3>
-          <hr />
-        </Col>
-      </Row>
-      <Row className={"mb-4"}>
-        <Col>
-          <ProviderSelector
-            defaultValue={ProviderSelector.New}
-            onChange={(item) => {
-              setSelectedProviderId(item?.value ?? null);
-            }}
-            onNew={() => {
-              setSelectedProviderId(null);
-            }}
-          />
-        </Col>
-      </Row>
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-2xl font-semibold">
+          Providers{" "}
+          <span className="text-lg text-muted-foreground">
+            | {isNew ? "New" : selectedProviderId}
+          </span>
+        </h3>
+        <Separator className="mt-2" />
+      </div>
+      <div>
+        <ProviderSelector
+          defaultValue={ProviderSelector.New}
+          onChange={(item) => {
+            setSelectedProviderId(item?.value ?? null);
+          }}
+          onNew={() => {
+            setSelectedProviderId(null);
+          }}
+        />
+      </div>
       <Formik
         enableReinitialize
         validationSchema={PROVIDER_SCHEMA}
@@ -193,64 +203,58 @@ export const EditProviderPanel: React.FC<Record<string, never>> = () => {
       >
         {({ isSubmitting, submitForm }) => (
           <MetaForm>
-            <Row className={"mb-4"}>
-              <Col>
-                <h5>Description</h5>
-              </Col>
-            </Row>
-            <Row className={"mb-4"}>
-              <Col>
-                <Form.Group>
-                  <Form.Label>Identifier</Form.Label>
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <h5 className="font-medium">Description</h5>
+                <div className="space-y-2">
+                  <Label>Identifier</Label>
                   <Field
                     type="text"
                     name="id"
-                    className="form-control"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     disabled={!isNew}
                   />
                   <ErrorMessage
-                    className="text-danger"
+                    className="text-sm text-red-500"
                     name="id"
                     component="div"
                   />
-                </Form.Group>
-                <Form.Group>
-                  <Form.Label>Description</Form.Label>
+                </div>
+                <div className="space-y-2">
+                  <Label>Description</Label>
                   <Field
                     type="text"
                     name="description"
-                    className="form-control"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   />
                   <ErrorMessage
-                    className="text-danger"
+                    className="text-sm text-red-500"
                     name="description"
                     component="div"
                   />
-                </Form.Group>
-                <Form.Group>
-                  <Form.Label>Website</Form.Label>
+                </div>
+                <div className="space-y-2">
+                  <Label>Website</Label>
                   <Field
                     type="text"
                     name="websiteUrl"
-                    className="form-control"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   />
                   <ErrorMessage
-                    className="text-danger"
+                    className="text-sm text-red-500"
                     name="websiteUrl"
                     component="div"
                   />
-                </Form.Group>
-              </Col>
-            </Row>
-            <Row className={"mb-4"}>
-              <Col>
-                <h5>Credentials schema</h5>
-              </Col>
-            </Row>
-            <Row className={"mb-4"}>
-              <Col>
-                <Tabs defaultActiveKey={"editor"} id={"editor"}>
-                  <Tab eventKey={"editor"} title={"Editor"}>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <h5 className="font-medium">Credentials schema</h5>
+                <Tabs defaultValue="editor">
+                  <TabsList>
+                    <TabsTrigger value="editor">Editor</TabsTrigger>
+                    <TabsTrigger value="preview">Preview</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="editor">
                     <AceEditor
                       height="30em"
                       value={rawSchema}
@@ -263,62 +267,60 @@ export const EditProviderPanel: React.FC<Record<string, never>> = () => {
                       }}
                       tabSize={2}
                       mode={"json"}
-                      theme="github"
+                      theme={theme === "dark" ? "github_dark" : "github"}
                       width="100%"
                       showGutter={true}
                       showPrintMargin={true}
                       readOnly={false}
                     />
-                  </Tab>
-                  <Tab eventKey={"preview"} title={"Preview"}>
-                    <Row className={"mx-2 my-4"}>
-                      <Col>
-                        {schemaError === null && (
-                          <DataDrivenForm
-                            schema={schema.json_schema ?? {}}
-                            uiSchema={schema.ui_schema ?? {}}
-                            showErrorList={false}
-                          >
-                            <Button hidden disabled size={"sm"}>
-                              Hidden
-                            </Button>
-                          </DataDrivenForm>
-                        )}
-                        {schemaError !== null && (
-                          <Alert variant={"warning"}>
+                  </TabsContent>
+                  <TabsContent value="preview">
+                    <div className="p-4">
+                      {schemaError === null && (
+                        <DataDrivenForm
+                          schema={schema.json_schema ?? {}}
+                          uiSchema={schema.ui_schema ?? {}}
+                          validator={validator}
+                          showErrorList={false}
+                        >
+                          <Button hidden disabled size="sm">
+                            Hidden
+                          </Button>
+                        </DataDrivenForm>
+                      )}
+                      {schemaError !== null && (
+                        <Alert variant="warning">
+                          <AlertDescription>
                             The credentials schema has errors: {schemaError}
-                          </Alert>
-                        )}
-                      </Col>
-                    </Row>
-                  </Tab>
+                          </AlertDescription>
+                        </Alert>
+                      )}
+                    </div>
+                  </TabsContent>
                 </Tabs>
-              </Col>
-            </Row>
-            <Row>
-              <Col>
+              </div>
+              <div className="flex items-center gap-2">
                 <LoadingButton
-                  size={"sm"}
+                  size="sm"
                   onClick={submitForm}
-                  variant="primary"
                   disabled={schemaError !== null}
                   loading={isSubmitting}
                 >
                   {isNew ? "Create" : "Update"}
-                </LoadingButton>{" "}
+                </LoadingButton>
                 {!isNew && (
                   <Button
                     onClick={() => {
                       handleDelete(selectedProviderId);
                     }}
-                    variant={"danger"}
-                    size={"sm"}
+                    variant="destructive"
+                    size="sm"
                   >
                     Delete
                   </Button>
                 )}
-              </Col>
-            </Row>
+              </div>
+            </div>
           </MetaForm>
         )}
       </Formik>
@@ -327,11 +329,5 @@ export const EditProviderPanel: React.FC<Record<string, never>> = () => {
 };
 
 export const ProvidersSettings: React.FC<Record<string, never>> = () => {
-  return (
-    <Row>
-      <Col>
-        <EditProviderPanel />
-      </Col>
-    </Row>
-  );
+  return <EditProviderPanel />;
 };

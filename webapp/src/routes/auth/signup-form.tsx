@@ -1,26 +1,28 @@
 import React, { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
+import { CheckCircle } from "lucide-react";
 
 import { useApi, UserAccountsApi } from "clients";
 import { isEmailValid } from "utils/email";
 
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { LoadingButton, PasswordValidationCard } from "components";
 import {
   validatePassword,
   PasswordValidationInput,
   PasswordValidationResult,
 } from "components/password";
+import { Button } from "components/ui/button";
+import { Input } from "components/ui/input";
+import { Label } from "components/ui/label";
+import { Badge } from "components/ui/badge";
 import {
-  Row,
-  Col,
-  Form,
-  Dropdown,
-  Button,
-  Badge,
-  InputGroup,
-} from "react-bootstrap";
-import { FaCheckCircle } from "react-icons/fa";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "components/ui/select";
 
 const VALUATION_CURRENCIES = [
   "EUR",
@@ -138,186 +140,144 @@ export const SignupForm: React.FC<Record<string, never>> = () => {
 
   return (
     <>
-      <Row>
-        <Col>
-          <div className={"page-header mb-4"}>
-            <h1>
-              Register <small>a new finbot account</small>
-            </h1>
-          </div>
-        </Col>
-      </Row>
+      <div className="mb-4">
+        <h1 className="text-3xl font-bold">
+          Register{" "}
+          <span className="text-lg font-normal text-muted-foreground">
+            a new finbot account
+          </span>
+        </h1>
+      </div>
       <div hidden={step !== "personal"}>
-        <>
-          <Row className={"mb-2"}>
-            <Col>
-              <h4>
-                <Badge bg={"primary"}>1</Badge> Personal information
-              </h4>
-            </Col>
-          </Row>
-          <Row>
-            <Col lg={6}>
-              <Form.Group>
-                <Form.Label>Full name</Form.Label>
-                <InputGroup>
-                  <Form.Control
-                    onChange={handleFormChange}
-                    value={registrationForm.fullName}
-                    name={"fullName"}
-                    type={"text"}
-                  />
-                  {personalFormValidation.fullNameValid && (
-                    <InputGroup.Text>
-                      <FaCheckCircle />
-                    </InputGroup.Text>
-                  )}
-                </InputGroup>
-              </Form.Group>
-            </Col>
-          </Row>
-          <Row>
-            <Col lg={6}>
-              <Form.Group>
-                <Form.Label>Email address</Form.Label>
-                <InputGroup>
-                  <Form.Control
-                    onChange={handleFormChange}
-                    value={registrationForm.email}
-                    name={"email"}
-                    type={"email"}
-                  />
-                  {personalFormValidation.emailValid && (
-                    <InputGroup.Text>
-                      <FaCheckCircle />
-                    </InputGroup.Text>
-                  )}
-                </InputGroup>
-              </Form.Group>
-            </Col>
-          </Row>
-          <Row className={"mb-4"}>
-            <Col lg={6}>
-              <Form.Group>
-                <Form.Label>Valuation currency</Form.Label>
-                <Dropdown>
-                  <Dropdown.Toggle size={"sm"} variant={"secondary"}>
-                    {registrationForm.valuationCurrency || "Select a currency"}
-                  </Dropdown.Toggle>
-                  <Dropdown.Menu>
-                    {VALUATION_CURRENCIES.map((currency) => {
-                      return (
-                        <Dropdown.Item
-                          key={currency}
-                          active={
-                            currency === registrationForm.valuationCurrency
-                          }
-                          onClick={() => {
-                            setRegistrationForm({
-                              ...registrationForm,
-                              valuationCurrency: currency,
-                            });
-                          }}
-                        >
-                          {currency}
-                        </Dropdown.Item>
-                      );
-                    })}
-                  </Dropdown.Menu>
-                </Dropdown>
-              </Form.Group>
-            </Col>
-          </Row>
-          <Row className={"mb-4"}>
-            <Col>
-              <Button
-                disabled={!personalFormValidation.valid}
-                onClick={async () => {
-                  if (
-                    (
-                      await userAccountsApi.isEmailAvailable({
-                        email: registrationForm.email,
-                      })
-                    ).available
-                  ) {
-                    setStep("password");
-                  } else {
-                    toast.error(
-                      `Email '${registrationForm.email}' is already used by another finbot account`,
-                    );
-                  }
-                }}
-              >
-                Next: password
-              </Button>
-            </Col>
-          </Row>
-        </>
+        <div className="mb-2">
+          <h4 className="text-lg font-semibold">
+            <Badge className="mr-2">1</Badge> Personal information
+          </h4>
+        </div>
+        <div className="max-w-lg space-y-4">
+          <div className="space-y-2">
+            <Label>Full name</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                onChange={handleFormChange}
+                value={registrationForm.fullName}
+                name="fullName"
+                type="text"
+              />
+              {personalFormValidation.fullNameValid && (
+                <CheckCircle className="h-5 w-5 shrink-0 text-green-500" />
+              )}
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Email address</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                onChange={handleFormChange}
+                value={registrationForm.email}
+                name="email"
+                type="email"
+              />
+              {personalFormValidation.emailValid && (
+                <CheckCircle className="h-5 w-5 shrink-0 text-green-500" />
+              )}
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Valuation currency</Label>
+            <Select
+              value={registrationForm.valuationCurrency}
+              onValueChange={(value) => {
+                setRegistrationForm({
+                  ...registrationForm,
+                  valuationCurrency: value,
+                });
+              }}
+            >
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Select a currency" />
+              </SelectTrigger>
+              <SelectContent>
+                {VALUATION_CURRENCIES.map((currency) => (
+                  <SelectItem key={currency} value={currency}>
+                    {currency}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="pt-2">
+            <Button
+              disabled={!personalFormValidation.valid}
+              onClick={async () => {
+                if (
+                  (
+                    await userAccountsApi.isEmailAvailable({
+                      email: registrationForm.email,
+                    })
+                  ).available
+                ) {
+                  setStep("password");
+                } else {
+                  toast.error(
+                    `Email '${registrationForm.email}' is already used by another finbot account`,
+                  );
+                }
+              }}
+            >
+              Next: password
+            </Button>
+          </div>
+        </div>
       </div>
       <div hidden={step !== "password"}>
-        <>
-          <Row>
-            <Col lg={6}>
-              <Row className={"mb-2"}>
-                <Col>
-                  <h4>
-                    <Badge bg={"primary"}>2</Badge> Password
-                  </h4>
-                </Col>
-              </Row>
-              <Row>
-                <Col>
-                  <Form.Group>
-                    <Form.Label>Password</Form.Label>
-                    <Form.Control
-                      onChange={handleFormChange}
-                      value={registrationForm.password}
-                      name={"password"}
-                      type={"password"}
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
-              <Row>
-                <Col>
-                  <Form.Group>
-                    <Form.Label>Confirm password</Form.Label>
-                    <Form.Control
-                      onChange={handleFormChange}
-                      value={registrationForm.passwordConfirm}
-                      name={"passwordConfirm"}
-                      type={"password"}
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
-            </Col>
-            <Col lg={6}>
-              <PasswordValidationCard validation={passwordValidation} />
-            </Col>
-          </Row>
-          <Row>
-            <Col>
-              <Button
-                onClick={() => {
-                  setStep("personal");
-                }}
-              >
-                Previous
-              </Button>
-              &nbsp;
-              <LoadingButton
-                disabled={!passwordValidation.valid}
-                onClick={() => {
-                  handleSignup({ ...registrationForm });
-                }}
-                loading={loading}
-              >
-                Register
-              </LoadingButton>
-            </Col>
-          </Row>
-        </>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="space-y-4">
+            <h4 className="text-lg font-semibold">
+              <Badge className="mr-2">2</Badge> Password
+            </h4>
+            <div className="space-y-2">
+              <Label>Password</Label>
+              <Input
+                onChange={handleFormChange}
+                value={registrationForm.password}
+                name="password"
+                type="password"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Confirm password</Label>
+              <Input
+                onChange={handleFormChange}
+                value={registrationForm.passwordConfirm}
+                name="passwordConfirm"
+                type="password"
+              />
+            </div>
+          </div>
+          <div>
+            <PasswordValidationCard validation={passwordValidation} />
+          </div>
+        </div>
+        <div className="mt-4 flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => {
+              setStep("personal");
+            }}
+          >
+            Previous
+          </Button>
+          <LoadingButton
+            disabled={!passwordValidation.valid}
+            onClick={() => {
+              handleSignup({ ...registrationForm });
+            }}
+            loading={loading}
+          >
+            Register
+          </LoadingButton>
+        </div>
       </div>
     </>
   );

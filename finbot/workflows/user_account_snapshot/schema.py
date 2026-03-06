@@ -1,4 +1,6 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
+
+from pydantic import AwareDatetime
 
 from finbot.core.schema import ApplicationErrorData, BaseModel, CurrencyCode, LinkedAccountId
 from finbot.providers.schema import ProviderId
@@ -22,8 +24,8 @@ class SnapshotResultsCount(BaseModel):
 
 class SnapshotSummary(BaseModel):
     identifier: int
-    start_time: datetime
-    end_time: datetime
+    start_time: AwareDatetime
+    end_time: AwareDatetime
     results_count: SnapshotResultsCount
 
 
@@ -43,6 +45,7 @@ class LinkedAccountSnapshotRequest(BaseModel):
     encrypted_credentials: str
     line_items: list[LineItem]
     user_account_currency: CurrencyCode
+    transactions_from_date: AwareDatetime | None = None
     max_retries: int = DEFAULT_MAX_LINKED_ACCOUNT_SNAPSHOT_RETRIES
     timeout: timedelta = DEFAULT_LINKED_ACCOUNT_SNAPSHOT_TIMEOUT
 

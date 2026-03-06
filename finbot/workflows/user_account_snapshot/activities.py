@@ -32,6 +32,7 @@ def prepare_raw_snapshot_requests(
         return impl.prepare_raw_snapshot_requests(
             user_account=impl.load_user_account(request.user_account_id, session),
             linked_account_ids=request.linked_account_ids,
+            db_session=session,
         )
 
 

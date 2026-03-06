@@ -5,6 +5,7 @@ from pydantic import ConfigDict, Field, SecretStr
 
 from finbot.apps.appwsrv.reports.earnings import schema as earnings_schema
 from finbot.apps.appwsrv.reports.holdings import schema as holdings_schema
+from finbot.apps.appwsrv.reports.transactions import schema as transactions_schema
 from finbot.core import schema as core_schema
 from finbot.core.schema import BaseModel, HexColour
 from finbot.providers import schema as providers_schema
@@ -298,6 +299,7 @@ class HistoricalValuationParams(AppModel):
     from_time: datetime | None = None
     to_time: datetime | None = None
     frequency: core_schema.ValuationFrequency = core_schema.ValuationFrequency.Daily
+    linked_account_id: int | None = None
 
 
 class XAxisDescription(AppModel):
@@ -404,6 +406,22 @@ class GetHoldingsReportResponse(AppModel):
 
 class GetEarningsReportResponse(AppModel):
     report: earnings_schema.EarningsReport
+
+
+class GetTransactionsReportResponse(AppModel):
+    report: transactions_schema.TransactionsReport
+
+
+class GetCashFlowSummaryResponse(AppModel):
+    report: transactions_schema.CashFlowSummary
+
+
+class GetCashFlowTimeSeriesResponse(AppModel):
+    report: transactions_schema.CashFlowTimeSeries
+
+
+class GetSpendingBreakdownResponse(AppModel):
+    report: transactions_schema.SpendingBreakdown
 
 
 class PlaidSettings(AppModel):

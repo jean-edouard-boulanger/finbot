@@ -13,18 +13,12 @@ import {
   Valuation,
 } from "clients";
 
-import {
-  TreeGrid,
-  Money,
-  SparkLine,
-  ValuationChange,
-  StackedBarLoader,
-} from "components";
+import { TreeGrid, Money, ValuationChange } from "components";
 import { TreeGridRowProps } from "components/tree-grid";
 import { MoneyFormatterType } from "components/money";
-import { Alert } from "react-bootstrap";
+import { Alert, AlertTitle, AlertDescription } from "components/ui/alert";
 
-type HoldingsReportNode =
+export type HoldingsReportNode =
   | UserAccountNode
   | LinkedAccountNode
   | SubAccountNode
@@ -66,11 +60,11 @@ const GridMetadataRow = (
 ) => {
   const { data, ...rest } = props;
   return (
-    <tr>
-      <td colSpan={8}>
+    <tr className="text-muted-foreground">
+      <td colSpan={7}>
         <>
           <TreeGrid.Expander {...rest} />
-          <strong>{`${data.label}: `}</strong>
+          <strong className="text-foreground">{`${data.label}: `}</strong>
           {data.value}
         </>
       </td>
@@ -85,24 +79,24 @@ interface ItemIconProps {
 const ItemIcon = (props: ItemIconProps) => {
   return (
     <span
+      className="mr-2 inline-block rounded text-center text-xs font-bold text-white"
       style={{
-        display: "inline-block",
         width: "2.35em",
-        textAlign: "center",
-        color: "white",
         backgroundColor: props.icon.backgroundColour,
         paddingTop: "0.2em",
         paddingBottom: "0.2em",
-        marginRight: "0.5em",
       }}
     >
-      <strong>{props.icon.label}</strong>
+      {props.icon.label}
     </span>
   );
 };
 
-const GridRow = (locale: string, moneyFormatter: MoneyFormatterType) => {
-  return (props: TreeGridRowProps<HoldingsReportNode>) => {
+export const GridRow = (
+  locale: string,
+  moneyFormatter: MoneyFormatterType,
+): ((props: TreeGridRowProps<HoldingsReportNode>) => React.JSX.Element) => {
+  return (props: TreeGridRowProps<HoldingsReportNode>): React.JSX.Element => {
     const node = props.data;
     const metadata = getRowMetadata(node);
 
@@ -113,12 +107,13 @@ const GridRow = (locale: string, moneyFormatter: MoneyFormatterType) => {
 
     const valuation = getNodeValuation(node)!;
     const change = valuation.change;
-    const sparkline =
-      "sparkline" in valuation ? valuation.sparkline : undefined;
     const fontWeight = node.role === "user_account" ? "bold" : undefined;
 
     return (
-      <tr style={{ height: metadata!.height, fontWeight }}>
+      <tr
+        style={{ height: metadata!.height, fontWeight }}
+        className="border-b border-border/30 transition-colors hover:bg-secondary/30"
+      >
         <td>
           <TreeGrid.Expander {...props} />
           {node.role == "item" && node.item.icon && (
@@ -126,7 +121,7 @@ const GridRow = (locale: string, moneyFormatter: MoneyFormatterType) => {
           )}
           {`${metadata!.label}`}
         </td>
-        <td>
+        <td className="font-mono tabular-nums">
           <Money
             amount={valuation.value}
             locale={locale}
@@ -134,20 +129,19 @@ const GridRow = (locale: string, moneyFormatter: MoneyFormatterType) => {
             moneyFormatter={moneyFormatter}
           />
         </td>
-        <td>
-          {sparkline !== undefined && <SparkLine series={sparkline as any} />}
+        <td className="font-mono tabular-nums">
+          {change ? <ValuationChange amount={change.change1day} /> : "-"}
         </td>
-        <td>{change ? <ValuationChange amount={change.change1day} /> : "-"}</td>
-        <td>
+        <td className="font-mono tabular-nums">
           {change ? <ValuationChange amount={change.change1week} /> : "-"}
         </td>
-        <td>
+        <td className="font-mono tabular-nums">
           {change ? <ValuationChange amount={change.change1month} /> : "-"}
         </td>
-        <td>
+        <td className="font-mono tabular-nums">
           {change ? <ValuationChange amount={change.change1year} /> : "-"}
         </td>
-        <td>
+        <td className="font-mono tabular-nums">
           {change ? <ValuationChange amount={change.change2years} /> : "-"}
         </td>
       </tr>
@@ -155,17 +149,33 @@ const GridRow = (locale: string, moneyFormatter: MoneyFormatterType) => {
   };
 };
 
-const Header = () => {
+export const Header = (): React.JSX.Element => {
   return (
-    <tr>
-      <th style={{ width: "40em" }}>&nbsp;</th>
-      <th>Value</th>
-      <th style={{ width: "10em" }}>&nbsp;</th>
-      <th>1D</th>
-      <th>1W</th>
-      <th>1M</th>
-      <th>1Y</th>
-      <th>2Y</th>
+    <tr className="border-b border-border/50">
+      <th
+        style={{ width: "40em" }}
+        className="text-left text-xs font-medium uppercase tracking-wider text-muted-foreground"
+      >
+        &nbsp;
+      </th>
+      <th className="text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        Value
+      </th>
+      <th className="text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        1D
+      </th>
+      <th className="text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        1W
+      </th>
+      <th className="text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        1M
+      </th>
+      <th className="text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        1Y
+      </th>
+      <th className="text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        2Y
+      </th>
     </tr>
   );
 };
@@ -203,24 +213,22 @@ export const HoldingsReportPanel: React.FC<HoldingsReportPanelProps> = (
 
   if (error !== null) {
     return (
-      <Alert variant={"danger"}>
-        <Alert.Heading>
+      <Alert variant="destructive">
+        <AlertTitle>
           Snap! An error occurred while generating your report
-        </Alert.Heading>
-        <p>{error}</p>
+        </AlertTitle>
+        <AlertDescription>{error}</AlertDescription>
       </Alert>
     );
   }
 
   if (loading || !report) {
     return (
-      <StackedBarLoader
-        count={4}
-        color={"#FBFBFB"}
-        spacing={"0.8em"}
-        height={"1em"}
-        width={"100%"}
-      />
+      <div className="space-y-3 py-4">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="skeleton-shimmer h-10 rounded" />
+        ))}
+      </div>
     );
   }
 

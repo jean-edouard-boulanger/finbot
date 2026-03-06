@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useApi, FinancialDataProvidersApi } from "clients";
 
 import Select from "react-select";
+import { themedSelectStyles } from "components/ui/react-select-theme";
 
 interface SelectItem {
   label: string;
@@ -54,16 +55,18 @@ export const ProviderSelector: React.FC<ProviderSelectorProps> & {
 
   return (
     <Select
+      styles={themedSelectStyles}
       isSearchable
       defaultValue={defaultValue}
       onChange={(value) => {
-        if (isNewProvider(value)) {
+        const item = value as SelectItem | null;
+        if (isNewProvider(item)) {
           if (onNew !== null) {
             onNew();
           }
           return;
         }
-        onChange(value);
+        onChange(item);
       }}
       options={options}
     />

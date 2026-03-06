@@ -60,6 +60,10 @@ class CashTransaction(BaseModel):
     report_date: date
 
 
+class CashTransactions(BaseModel):
+    entries: list[CashTransaction]
+
+
 class PositionSide(str, Enum):
     long = "long"
     short = "short"
@@ -168,6 +172,7 @@ class FlexStatementEntries(BaseModel):
     open_positions: OpenPositions | None = None
     cash_report: CashReport | None = None
     trades: Trades | None = None
+    cash_transactions: CashTransactions | None = None
 
 
 class FlexStatement(BaseModel):

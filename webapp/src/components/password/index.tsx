@@ -1,6 +1,7 @@
 import React from "react";
-import { Card, ListGroup } from "react-bootstrap";
-import { FaCheckCircle } from "react-icons/fa";
+import { CheckCircle } from "lucide-react";
+
+import { Card, CardContent, CardHeader, CardTitle } from "components/ui/card";
 
 export interface PasswordValidationInput {
   password: string;
@@ -80,24 +81,25 @@ export const PasswordValidationCard: React.FC<PasswordValidationCardProps> = ({
 }) => {
   return (
     <Card>
-      <ListGroup className={"list-group-flush"}>
-        <ListGroup.Item>
-          <strong>Password rules</strong>
-        </ListGroup.Item>
-        {validation.rules.map((rule, index) => {
-          return (
-            <ListGroup.Item key={`${index}`}>
-              {rule.description}
-              {rule.valid && (
-                <span className={"text-success"}>
-                  &nbsp;
-                  <FaCheckCircle />
-                </span>
-              )}
-            </ListGroup.Item>
-          );
-        })}
-      </ListGroup>
+      <CardHeader>
+        <CardTitle className="text-base">Password rules</CardTitle>
+      </CardHeader>
+      <CardContent className="p-0">
+        <div className="divide-y">
+          {validation.rules.map((rule, index) => {
+            return (
+              <div key={`${index}`} className="px-6 py-3 text-sm">
+                {rule.description}
+                {rule.valid && (
+                  <span className="ml-2 text-green-500">
+                    <CheckCircle className="inline h-4 w-4" />
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </CardContent>
     </Card>
   );
 };

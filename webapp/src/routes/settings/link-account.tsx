@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useContext, useRef } from "react";
 import { Navigate } from "react-router-dom";
+import { Check } from "lucide-react";
 
 import {
   useApi,
@@ -15,10 +16,22 @@ import {
 import { AuthContext } from "contexts";
 import { LoadingButton, ColourPicker } from "components";
 
-import { default as DataDrivenForm, ISubmitEvent } from "react-jsonschema-form";
-import { toast } from "react-toastify";
-import { Row, Col, Form, InputGroup, Button, Alert } from "react-bootstrap";
-import { FaCheck } from "react-icons/fa";
+import { withTheme } from "@rjsf/core";
+import type { IChangeEvent } from "@rjsf/core";
+import validator from "@rjsf/validator-ajv8";
+import { shadcnTheme } from "components/ui/rjsf-theme";
+const DataDrivenForm = withTheme(shadcnTheme);
+import { toast } from "sonner";
+import { Button } from "components/ui/button";
+import { Input } from "components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "components/ui/select";
+import { Alert, AlertDescription } from "components/ui/alert";
 import { PlaidLink } from "react-plaid-link";
 
 const NO_PROVIDER_SELECTED = "NO_PROVIDER_SELECTED";
@@ -45,17 +58,17 @@ const DataDrivenAccountForm: React.FC<DataDrivenAccountFormProps> = ({
     <DataDrivenForm
       schema={schema.json_schema ?? {}}
       uiSchema={schema.ui_schema ?? {}}
-      onSubmit={(event: ISubmitEvent<LinkedAccountCredentials | null>) => {
+      onSubmit={(event: IChangeEvent<LinkedAccountCredentials | null>) => {
         onSubmit(event.formData ?? {});
       }}
+      validator={validator}
       showErrorList={false}
     >
       <LoadingButton
         loading={operation !== null}
-        variant={"primary"}
         type="submit"
         size="sm"
-        style={{ marginTop: "1.3em" }}
+        className="mt-4"
       >
         {operation || (updateMode ? "Update credentials" : "Link account")}
       </LoadingButton>
@@ -80,7 +93,7 @@ const PlaidForm: React.FC<PlaidFormProps> = ({
 
   if (operation !== null) {
     return (
-      <LoadingButton variant="primary" size="sm" loading>
+      <LoadingButton size="sm" loading>
         {operation}
       </LoadingButton>
     );
@@ -103,7 +116,7 @@ const PlaidForm: React.FC<PlaidFormProps> = ({
       token={updateMode ? linkToken! : undefined}
       publicKey={settings.publicKey}
       env={settings.environment}
-      countryCodes={["GB", "US", "CA", "IE", "FR", "ES", "NL"]}
+      countryCodes={["FR"]}
       product={updateMode ? [] : ["transactions", "identity"]}
       style={{
         background: "#3458e6",
@@ -133,6 +146,7 @@ const getPlaidLinkToken = (credentials: object): string | null => {
 
 export interface LinkAccountProps {
   linkedAccount?: LinkedAccount | null;
+  onSuccess?: () => void;
 }
 
 export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
@@ -335,139 +349,109 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
   };
 
   if (linked) {
+    if (props.onSuccess) {
+      props.onSuccess();
+      return null;
+    }
     return <Navigate to={"/settings/linked"} />;
   }
 
   return (
-    <>
-      <Row>
-        <Col md={6}>
-          {isDemo && (
-            <Row className={"mb-2"}>
-              <Alert variant={"warning"}>
-                <strong>Note</strong>: Only fake financial data providers are
-                available in the Finbot demo.
-              </Alert>
-            </Row>
-          )}
-          <Row className={"mb-4"}>
-            <Col>
-              <h5>Provider selection</h5>
-            </Col>
-          </Row>
-          <Row className={"mb-4"}>
-            <Col>
-              <Form.Group>
-                <Form.Control
-                  value={(selectedProvider ?? { id: NO_PROVIDER_SELECTED }).id}
-                  as="select"
-                  size="sm"
-                  onChange={(event) => {
-                    onSelectedProviderChanged(event.target.value);
-                  }}
-                  disabled={updateMode}
-                >
-                  <option value={NO_PROVIDER_SELECTED}>
-                    Select a provider
-                  </option>
-                  {providers.map((provider) => {
-                    return (
-                      <option key={`sel-${provider.id}`} value={provider.id}>
-                        {provider.description}
-                      </option>
-                    );
-                  })}
-                </Form.Control>
-              </Form.Group>
-            </Col>
-          </Row>
-          {selectedProvider !== null && (
-            <>
-              <Row className={"mb-4"}>
-                <Col>
-                  <h5>Account name</h5>
-                </Col>
-              </Row>
-              <Row className={"mb-4"}>
-                <Col>
-                  <InputGroup>
-                    <ColourPicker
-                      presetsColours={formattingRules?.colourPalette}
-                      colour={accountColour ?? FALLBACK_COLOUR}
-                      onChange={(newColour) => updateAccountColour(newColour)}
-                    />
-                    <Form.Control
-                      type="text"
-                      placeholder="Account name"
-                      value={accountName ?? ""}
-                      onChange={(event) => {
-                        updateAccountName(event.target.value);
-                      }}
-                    />
-                    {updateMode &&
-                      (accountName !== linkedAccount!.accountName ||
-                        accountColour !== linkedAccount!.accountColour) && (
-                        <Button
-                          variant={"primary"}
-                          onClick={onUpdateExistingAccountMetadata}
-                        >
-                          <FaCheck />
-                        </Button>
-                      )}
-                  </InputGroup>
-                </Col>
-              </Row>
-            </>
-          )}
-          {selectedProvider !== null && (
-            <Row className={"mb-3"}>
-              <Col>
-                <h5>Credentials</h5>
-              </Col>
-            </Row>
-          )}
-          <Row>
-            <Col>
-              {selectedProvider !== null &&
-                !isPlaidSelected(selectedProvider) && (
-                  <DataDrivenAccountForm
-                    operation={operation}
-                    schema={selectedProvider.credentialsSchema}
-                    updateMode={updateMode}
-                    onSubmit={(credentials: LinkedAccountCredentials) => {
-                      if (updateMode) {
-                        requestUpdateCredentials(credentials);
-                      } else {
-                        requestLinkAccount(
-                          { ...selectedProvider },
-                          credentials,
-                        );
-                      }
-                    }}
-                  />
-                )}
-              {isPlaidSelected(selectedProvider) && plaidSettings && (
-                <PlaidForm
-                  operation={operation}
-                  settings={plaidSettings!}
-                  linkToken={
-                    updateMode
-                      ? getPlaidLinkToken(linkedAccount!.credentials!)
-                      : null
-                  }
-                  onSubmit={(credentials) => {
-                    if (updateMode) {
-                      requestUpdateCredentials(credentials);
-                    } else {
-                      requestLinkAccount({ ...selectedProvider! }, credentials);
-                    }
-                  }}
-                />
+    <div className="max-w-lg space-y-6">
+      {isDemo && (
+        <Alert variant="warning">
+          <AlertDescription>
+            <strong>Note</strong>: Only fake financial data providers are
+            available in the Finbot demo.
+          </AlertDescription>
+        </Alert>
+      )}
+      <div className="space-y-2">
+        <h5 className="font-medium">Provider selection</h5>
+        <Select
+          value={(selectedProvider ?? { id: NO_PROVIDER_SELECTED }).id}
+          onValueChange={onSelectedProviderChanged}
+          disabled={updateMode}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select a provider" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={NO_PROVIDER_SELECTED}>
+              Select a provider
+            </SelectItem>
+            {providers.map((provider) => (
+              <SelectItem key={`sel-${provider.id}`} value={provider.id}>
+                {provider.description}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      {selectedProvider !== null && (
+        <div className="space-y-2">
+          <h5 className="font-medium">Account name</h5>
+          <div className="flex items-center gap-2">
+            <ColourPicker
+              presetsColours={formattingRules?.colourPalette}
+              colour={accountColour ?? FALLBACK_COLOUR}
+              onChange={(newColour) => updateAccountColour(newColour)}
+            />
+            <Input
+              type="text"
+              placeholder="Account name"
+              value={accountName ?? ""}
+              onChange={(event) => {
+                updateAccountName(event.target.value);
+              }}
+            />
+            {updateMode &&
+              (accountName !== linkedAccount!.accountName ||
+                accountColour !== linkedAccount!.accountColour) && (
+                <Button size="sm" onClick={onUpdateExistingAccountMetadata}>
+                  <Check className="h-4 w-4" />
+                </Button>
               )}
-            </Col>
-          </Row>
-        </Col>
-      </Row>
-    </>
+          </div>
+        </div>
+      )}
+      {selectedProvider !== null && (
+        <div className="space-y-2">
+          <h5 className="font-medium">Credentials</h5>
+          {!isPlaidSelected(selectedProvider) && (
+            <DataDrivenAccountForm
+              operation={operation}
+              schema={selectedProvider.credentialsSchema}
+              updateMode={updateMode}
+              onSubmit={(credentials: LinkedAccountCredentials) => {
+                if (updateMode) {
+                  requestUpdateCredentials(credentials);
+                } else {
+                  requestLinkAccount({ ...selectedProvider }, credentials);
+                }
+              }}
+            />
+          )}
+          {isPlaidSelected(selectedProvider) && plaidSettings && (
+            <PlaidForm
+              operation={operation}
+              settings={plaidSettings!}
+              linkToken={
+                updateMode
+                  ? getPlaidLinkToken(linkedAccount!.credentials!)
+                  : null
+              }
+              onSubmit={(credentials) => {
+                if (updateMode) {
+                  requestUpdateCredentials(credentials);
+                } else {
+                  requestLinkAccount({ ...selectedProvider! }, credentials);
+                }
+              }}
+            />
+          )}
+        </div>
+      )}
+    </div>
   );
 };
