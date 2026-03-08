@@ -26,7 +26,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "components/ui/tooltip";
-import { Filter } from "lucide-react";
+import { Filter, ArrowRightLeft } from "lucide-react";
 import { DateTime } from "luxon";
 
 interface TransactionEntry {
@@ -48,6 +48,7 @@ interface TransactionEntry {
   counterparty: string | null;
   spending_category_primary: string | null;
   spending_category_detailed: string | null;
+  matched_transaction_id: number | null;
 }
 
 interface TransactionsReport {
@@ -99,6 +100,7 @@ export const TransactionsReportPanel: React.FC<TransactionsReportPanelProps> = (
     new Set(),
   );
   const [offset, setOffset] = useState(0);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
   const limit = pageSize ?? 50;
 
   const toggleType = (value: string) => {
@@ -225,61 +227,144 @@ export const TransactionsReportPanel: React.FC<TransactionsReportPanelProps> = (
               </TableRow>
             </TableHeader>
             <TableBody>
-              {report.transactions.map((txn) => (
-                <TableRow key={txn.id} className="border-border/30">
-                  <TableCell className="text-sm tabular-nums">
-                    {DateTime.fromISO(txn.transaction_date).toLocaleString(
-                      DateTime.DATE_MED,
-                    )}
-                  </TableCell>
-                  {linkedAccountId === undefined && (
-                    <TableCell className="text-sm text-muted-foreground">
-                      {txn.linked_account_name}
-                    </TableCell>
-                  )}
-                  <TableCell className="text-sm text-muted-foreground">
-                    {txn.sub_account_name}
-                  </TableCell>
-                  <TableCell className="max-w-[200px] truncate text-sm">
-                    <TooltipProvider delayDuration={200}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span className="cursor-default truncate block">
-                            {txn.description}
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent>{txn.description}</TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {txn.spending_category_primary
-                      ? txn.spending_category_primary
-                          .replace(/_/g, " ")
-                          .toLowerCase()
-                          .replace(/\b\w/g, (c) => c.toUpperCase())
-                      : "—"}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <span
-                      className={`font-mono text-sm tabular-nums ${
-                        txn.amount > 0
-                          ? "text-gain"
-                          : txn.amount < 0
-                            ? "text-loss"
-                            : ""
-                      }`}
+              {report.transactions.map((txn) => {
+                const isExpanded = expandedId === txn.id;
+                const hasMatch = txn.matched_transaction_id != null;
+                const counterpart = hasMatch
+                  ? report.transactions.find(
+                      (t) => t.id === txn.matched_transaction_id,
+                    )
+                  : null;
+                const colCount = linkedAccountId === undefined ? 6 : 5;
+
+                return (
+                  <React.Fragment key={txn.id}>
+                    <TableRow
+                      className={`border-border/30 ${hasMatch ? "cursor-pointer" : ""}`}
+                      onClick={
+                        hasMatch
+                          ? () => setExpandedId(isExpanded ? null : txn.id)
+                          : undefined
+                      }
                     >
-                      <Money
-                        amount={txn.amount}
-                        locale={locale}
-                        ccy={txn.currency}
-                        moneyFormatter={moneyFormatter}
-                      />
-                    </span>
-                  </TableCell>
-                </TableRow>
-              ))}
+                      <TableCell className="text-sm tabular-nums">
+                        {DateTime.fromISO(txn.transaction_date).toLocaleString(
+                          DateTime.DATE_MED,
+                        )}
+                      </TableCell>
+                      {linkedAccountId === undefined && (
+                        <TableCell className="text-sm text-muted-foreground">
+                          {txn.linked_account_name}
+                        </TableCell>
+                      )}
+                      <TableCell className="text-sm text-muted-foreground">
+                        {txn.sub_account_name}
+                      </TableCell>
+                      <TableCell className="max-w-[200px] truncate text-sm">
+                        <div className="flex items-center gap-1.5">
+                          <TooltipProvider delayDuration={200}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="cursor-default truncate block">
+                                  {txn.description}
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>{txn.description}</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                          {hasMatch && (
+                            <ArrowRightLeft className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {txn.spending_category_primary
+                          ? txn.spending_category_primary
+                              .replace(/_/g, " ")
+                              .toLowerCase()
+                              .replace(/\b\w/g, (c) => c.toUpperCase())
+                          : "—"}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <span
+                          className={`font-mono text-sm tabular-nums ${
+                            txn.amount > 0
+                              ? "text-gain"
+                              : txn.amount < 0
+                                ? "text-loss"
+                                : ""
+                          }`}
+                        >
+                          <Money
+                            amount={txn.amount}
+                            locale={locale}
+                            ccy={txn.currency}
+                            moneyFormatter={moneyFormatter}
+                          />
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                    {isExpanded && (
+                      <TableRow className="border-border/30 bg-muted/30 hover:bg-muted/30">
+                        <TableCell colSpan={colCount} className="py-3 pl-10">
+                          {counterpart ? (
+                            <div className="flex items-center gap-6 text-sm">
+                              <div className="flex items-center gap-1.5 text-muted-foreground">
+                                <ArrowRightLeft className="h-3.5 w-3.5" />
+                                <span>Matched transfer</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">
+                                  {counterpart.linked_account_name}
+                                </span>
+                                {" · "}
+                                <span className="text-muted-foreground">
+                                  {counterpart.sub_account_name}
+                                </span>
+                              </div>
+                              <div className="text-muted-foreground">
+                                {counterpart.transaction_type
+                                  .replace(/_/g, " ")
+                                  .toLowerCase()
+                                  .replace(/\b\w/g, (c) => c.toUpperCase())}
+                              </div>
+                              <div className="text-muted-foreground">
+                                {counterpart.description}
+                              </div>
+                              <div className="ml-auto">
+                                <span
+                                  className={`font-mono tabular-nums ${
+                                    counterpart.amount > 0
+                                      ? "text-gain"
+                                      : counterpart.amount < 0
+                                        ? "text-loss"
+                                        : ""
+                                  }`}
+                                >
+                                  <Money
+                                    amount={counterpart.amount}
+                                    locale={locale}
+                                    ccy={counterpart.currency}
+                                    moneyFormatter={moneyFormatter}
+                                  />
+                                </span>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                              <ArrowRightLeft className="h-3.5 w-3.5" />
+                              <span>
+                                Matched transfer (counterpart not on current
+                                page)
+                              </span>
+                            </div>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </React.Fragment>
+                );
+              })}
             </TableBody>
           </Table>
 

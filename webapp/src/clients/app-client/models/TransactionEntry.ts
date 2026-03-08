@@ -126,6 +126,12 @@ export interface TransactionEntry {
      * @memberof TransactionEntry
      */
     spendingCategoryDetailed: string | null;
+    /**
+     * 
+     * @type {number}
+     * @memberof TransactionEntry
+     */
+    matchedTransactionId: number | null;
 }
 
 /**
@@ -150,6 +156,7 @@ export function instanceOfTransactionEntry(value: object): value is TransactionE
     if (!('counterparty' in value) || value['counterparty'] === undefined) return false;
     if (!('spendingCategoryPrimary' in value) || value['spendingCategoryPrimary'] === undefined) return false;
     if (!('spendingCategoryDetailed' in value) || value['spendingCategoryDetailed'] === undefined) return false;
+    if (!('matchedTransactionId' in value) || value['matchedTransactionId'] === undefined) return false;
     return true;
 }
 
@@ -181,6 +188,7 @@ export function TransactionEntryFromJSONTyped(json: any, ignoreDiscriminator: bo
         'counterparty': json['counterparty'],
         'spendingCategoryPrimary': json['spending_category_primary'],
         'spendingCategoryDetailed': json['spending_category_detailed'],
+        'matchedTransactionId': json['matched_transaction_id'],
     };
 }
 
@@ -213,6 +221,7 @@ export function TransactionEntryToJSONTyped(value?: TransactionEntry | null, ign
         'counterparty': value['counterparty'],
         'spending_category_primary': value['spendingCategoryPrimary'],
         'spending_category_detailed': value['spendingCategoryDetailed'],
+        'matched_transaction_id': value['matchedTransactionId'],
     };
 }
 

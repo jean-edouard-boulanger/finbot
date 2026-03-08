@@ -79,7 +79,15 @@ def get_transactions_report(
                th.fee,
                th.counterparty,
                th.spending_category_primary,
-               th.spending_category_detailed
+               th.spending_category_detailed,
+               (SELECT CASE WHEN tm.outflow_transaction_id = th.id
+                       THEN tm.inflow_transaction_id
+                       ELSE tm.outflow_transaction_id END
+                  FROM finbot_transaction_matches tm
+                 WHERE (tm.outflow_transaction_id = th.id OR tm.inflow_transaction_id = th.id)
+                   AND tm.match_status != 'rejected'
+                 LIMIT 1
+               ) AS matched_transaction_id
           FROM finbot_transactions_history th
           JOIN finbot_linked_accounts la ON th.linked_account_id = la.id
          WHERE {where}

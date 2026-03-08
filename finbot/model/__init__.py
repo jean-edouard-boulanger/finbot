@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, Optional, Type, TypeVar, cast
 import orjson
 from sqlalchemy import (
     Boolean,
+    CheckConstraint,
     Column,
     ForeignKey,
     ForeignKeyConstraint,
@@ -546,6 +547,33 @@ class TransactionHistoryEntry(Base):
             name="uidx_transactions_history_dedup",
         ),
         Index("idx_transactions_history_account_date", "linked_account_id", "transaction_date"),
+    )
+
+
+class TransactionMatch(Base):
+    __tablename__ = "finbot_transaction_matches"
+    id = Column(Integer, primary_key=True)
+    user_account_id = Column(Integer, ForeignKey(UserAccount.id, ondelete="CASCADE"), nullable=False)
+    outflow_transaction_id = Column(
+        Integer, ForeignKey(TransactionHistoryEntry.id, ondelete="CASCADE"), nullable=False, unique=True
+    )
+    inflow_transaction_id = Column(
+        Integer, ForeignKey(TransactionHistoryEntry.id, ondelete="CASCADE"), nullable=False, unique=True
+    )
+    match_confidence = Column(Numeric(3, 2), nullable=False)
+    match_status = Column(String(16), nullable=False, server_default="auto")
+    created_at = Column(DateTimeTz, server_default=func.now(), nullable=False)
+    updated_at = Column(DateTimeTz, onupdate=func.now())
+
+    outflow_transaction = relationship(TransactionHistoryEntry, foreign_keys=[outflow_transaction_id], uselist=False)
+    inflow_transaction = relationship(TransactionHistoryEntry, foreign_keys=[inflow_transaction_id], uselist=False)
+
+    __table_args__ = (
+        CheckConstraint(
+            "outflow_transaction_id != inflow_transaction_id",
+            name="ck_transaction_matches_different_txns",
+        ),
+        Index("idx_transaction_matches_user_status", "user_account_id", "match_status"),
     )
 
 

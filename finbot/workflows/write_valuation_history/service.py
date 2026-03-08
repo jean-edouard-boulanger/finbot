@@ -8,7 +8,7 @@ from finbot.core import schema as core_schema
 from finbot.core.serialization import pretty_dump, reinterpret_as_pydantic
 from finbot.core.utils import some
 from finbot.model import PersistScope, SessionType
-from finbot.workflows.write_valuation_history import repository, schema, transactions
+from finbot.workflows.write_valuation_history import matching, repository, schema, transactions
 
 logger = logging.getLogger(__name__)
 
@@ -194,6 +194,17 @@ def write_history_impl(
             _categorize_new_transactions(new_uncategorized_ids, db_session)
     except Exception:
         logging.exception("failed to consolidate transactions (non-fatal)")
+
+    # Match transfer pairs across accounts
+    try:
+        match_count = matching.match_transactions(
+            snapshot_id=snapshot_id,
+            db_session=db_session,
+        )
+        if match_count:
+            logging.info(f"matched {match_count} transaction pairs")
+    except Exception:
+        logging.exception("failed to match transactions (non-fatal)")
 
     return schema.WriteHistoryResponse(
         report=schema.NewHistoryEntryReport(
