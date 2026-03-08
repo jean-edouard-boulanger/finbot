@@ -29,18 +29,6 @@ export interface CashFlowTimeSeriesEntry {
      * @type {number}
      * @memberof CashFlowTimeSeriesEntry
      */
-    income: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof CashFlowTimeSeriesEntry
-     */
-    expense: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof CashFlowTimeSeriesEntry
-     */
     net: number;
 }
 
@@ -49,8 +37,6 @@ export interface CashFlowTimeSeriesEntry {
  */
 export function instanceOfCashFlowTimeSeriesEntry(value: object): value is CashFlowTimeSeriesEntry {
     if (!('period' in value) || value['period'] === undefined) return false;
-    if (!('income' in value) || value['income'] === undefined) return false;
-    if (!('expense' in value) || value['expense'] === undefined) return false;
     if (!('net' in value) || value['net'] === undefined) return false;
     return true;
 }
@@ -66,8 +52,6 @@ export function CashFlowTimeSeriesEntryFromJSONTyped(json: any, ignoreDiscrimina
     return {
         
         'period': json['period'],
-        'income': json['income'],
-        'expense': json['expense'],
         'net': json['net'],
     };
 }
@@ -84,8 +68,6 @@ export function CashFlowTimeSeriesEntryToJSONTyped(value?: CashFlowTimeSeriesEnt
     return {
         
         'period': value['period'],
-        'income': value['income'],
-        'expense': value['expense'],
         'net': value['net'],
     };
 }

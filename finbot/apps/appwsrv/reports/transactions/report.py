@@ -14,7 +14,7 @@ def get_transactions_report(
     from_time: AwareDatetime | None = None,
     to_time: AwareDatetime | None = None,
     linked_account_id: int | None = None,
-    transaction_category: list[str] | None = None,
+    transaction_type: list[str] | None = None,
     spending_category: str | None = None,
     limit: int = 100,
     offset: int = 0,
@@ -36,9 +36,9 @@ def get_transactions_report(
     if linked_account_id:
         params["linked_account_id"] = linked_account_id
         where_clauses.append("th.linked_account_id = :linked_account_id")
-    if transaction_category:
-        params["transaction_categories"] = tuple(transaction_category)
-        where_clauses.append("th.transaction_category IN :transaction_categories")
+    if transaction_type:
+        params["transaction_types"] = tuple(transaction_type)
+        where_clauses.append("th.transaction_type IN :transaction_types")
     if spending_category:
         params["spending_category"] = spending_category
         where_clauses.append("th.spending_category_primary = :spending_category")
@@ -69,7 +69,6 @@ def get_transactions_report(
                ) AS sub_account_name,
                th.transaction_date,
                th.transaction_type,
-               th.transaction_category,
                th.amount,
                th.amount_snapshot_ccy,
                th.currency,
@@ -107,7 +106,7 @@ def get_cash_flow_summary(
     settings = repository.get_user_account_settings(session, user_account_id)
 
     query = """
-        SELECT th.transaction_category AS category,
+        SELECT th.transaction_type,
                COALESCE(SUM(th.amount_snapshot_ccy), 0) AS total
           FROM finbot_transactions_history th
           JOIN finbot_linked_accounts la ON th.linked_account_id = la.id
@@ -115,8 +114,8 @@ def get_cash_flow_summary(
            AND NOT la.deleted
            AND th.transaction_date >= :from_time
            AND th.transaction_date <= :to_time
-         GROUP BY th.transaction_category
-         ORDER BY th.transaction_category
+         GROUP BY th.transaction_type
+         ORDER BY th.transaction_type
     """
     rows = session.execute(
         text(query),
@@ -129,7 +128,7 @@ def get_cash_flow_summary(
         data = row_to_dict(row)
         total = float(data["total"])
         net += total
-        by_category.append(schema.CashFlowCategoryEntry(category=data["category"], total=total))
+        by_category.append(schema.CashFlowCategoryEntry(transaction_type=data["transaction_type"], total=total))
 
     return schema.CashFlowSummary(
         valuation_ccy=settings.valuation_ccy,
@@ -146,21 +145,29 @@ def get_cash_flow_time_series(
     from_time: AwareDatetime,
     to_time: AwareDatetime,
     frequency: str = "monthly",
+    linked_account_id: int | None = None,
 ) -> schema.CashFlowTimeSeries:
     settings = repository.get_user_account_settings(session, user_account_id)
 
     grouping = {
         "daily": "th.transaction_date::date::text",
-        "weekly": "'W' || to_char(th.transaction_date, 'IW IYYY')",
+        "weekly": "to_char(th.transaction_date, 'IYYY') || '-W' || to_char(th.transaction_date, 'IW')",
         "monthly": "to_char(th.transaction_date, 'YYYY-MM')",
     }.get(frequency, "to_char(th.transaction_date, 'YYYY-MM')")
 
+    params: dict[str, Any] = {
+        "user_account_id": user_account_id,
+        "from_time": from_time,
+        "to_time": to_time,
+    }
+
+    extra_where = ""
+    if linked_account_id is not None:
+        params["linked_account_id"] = linked_account_id
+        extra_where = "AND th.linked_account_id = :linked_account_id"
+
     query = f"""
         SELECT {grouping} AS period,
-               COALESCE(SUM(CASE WHEN th.transaction_category = 'income'
-                                THEN th.amount_snapshot_ccy ELSE 0 END), 0) AS income,
-               COALESCE(SUM(CASE WHEN th.transaction_category = 'expense'
-                                THEN th.amount_snapshot_ccy ELSE 0 END), 0) AS expense,
                COALESCE(SUM(th.amount_snapshot_ccy), 0) AS net
           FROM finbot_transactions_history th
           JOIN finbot_linked_accounts la ON th.linked_account_id = la.id
@@ -168,19 +175,15 @@ def get_cash_flow_time_series(
            AND NOT la.deleted
            AND th.transaction_date >= :from_time
            AND th.transaction_date <= :to_time
+           {extra_where}
          GROUP BY {grouping}
          ORDER BY {grouping}
     """
-    rows = session.execute(
-        text(query),
-        {"user_account_id": user_account_id, "from_time": from_time, "to_time": to_time},
-    )
+    rows = session.execute(text(query), params)
 
     entries = [
         schema.CashFlowTimeSeriesEntry(
             period=row_to_dict(row)["period"],
-            income=float(row_to_dict(row)["income"]),
-            expense=float(row_to_dict(row)["expense"]),
             net=float(row_to_dict(row)["net"]),
         )
         for row in rows

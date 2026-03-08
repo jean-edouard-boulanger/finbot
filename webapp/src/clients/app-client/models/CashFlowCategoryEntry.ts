@@ -23,7 +23,7 @@ export interface CashFlowCategoryEntry {
      * @type {string}
      * @memberof CashFlowCategoryEntry
      */
-    category: string;
+    transactionType: string;
     /**
      * 
      * @type {number}
@@ -36,7 +36,7 @@ export interface CashFlowCategoryEntry {
  * Check if a given object implements the CashFlowCategoryEntry interface.
  */
 export function instanceOfCashFlowCategoryEntry(value: object): value is CashFlowCategoryEntry {
-    if (!('category' in value) || value['category'] === undefined) return false;
+    if (!('transactionType' in value) || value['transactionType'] === undefined) return false;
     if (!('total' in value) || value['total'] === undefined) return false;
     return true;
 }
@@ -51,7 +51,7 @@ export function CashFlowCategoryEntryFromJSONTyped(json: any, ignoreDiscriminato
     }
     return {
         
-        'category': json['category'],
+        'transactionType': json['transaction_type'],
         'total': json['total'],
     };
 }
@@ -67,7 +67,7 @@ export function CashFlowCategoryEntryToJSONTyped(value?: CashFlowCategoryEntry |
 
     return {
         
-        'category': value['category'],
+        'transaction_type': value['transactionType'],
         'total': value['total'],
     };
 }

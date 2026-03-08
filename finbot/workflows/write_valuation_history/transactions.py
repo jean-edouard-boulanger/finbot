@@ -6,7 +6,7 @@ from sqlalchemy.sql import text
 
 from finbot import model
 from finbot.model import SessionType
-from finbot.providers.schema import TransactionType, category_for_type
+from finbot.providers.schema import TransactionType
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +51,6 @@ def consolidate_transactions(
 
         for txn_data in transactions:
             txn_type = TransactionType(txn_data["transaction_type"])
-            txn_category = category_for_type(txn_type)
             amount = Decimal(str(txn_data["amount"]))
             currency = txn_data["currency"]
 
@@ -70,7 +69,6 @@ def consolidate_transactions(
                 provider_transaction_id=txn_data["transaction_id"],
                 transaction_date=txn_data["transaction_date"],
                 transaction_type=txn_type.value,
-                transaction_category=txn_category.value,
                 amount=amount,
                 amount_snapshot_ccy=amount_snapshot_ccy,
                 currency=currency,
@@ -93,7 +91,6 @@ def consolidate_transactions(
                 set_={
                     "transaction_date": stmt.excluded.transaction_date,
                     "transaction_type": stmt.excluded.transaction_type,
-                    "transaction_category": stmt.excluded.transaction_category,
                     "amount": stmt.excluded.amount,
                     "amount_snapshot_ccy": stmt.excluded.amount_snapshot_ccy,
                     "currency": stmt.excluded.currency,

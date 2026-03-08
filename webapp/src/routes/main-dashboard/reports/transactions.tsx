@@ -37,7 +37,6 @@ interface TransactionEntry {
   sub_account_name: string;
   transaction_date: string;
   transaction_type: string;
-  transaction_category: string;
   amount: number;
   amount_snapshot_ccy: number | null;
   currency: string;
@@ -57,35 +56,52 @@ interface TransactionsReport {
   total_count: number;
 }
 
-const CATEGORIES = [
-  { label: "Income", value: "income" },
-  { label: "Expense", value: "expense" },
-  { label: "Trade", value: "trade" },
-  { label: "Transfer", value: "transfer" },
+const TRANSACTION_TYPES = [
+  { label: "Adjustment", value: "adjustment" },
+  { label: "Buy", value: "buy" },
+  { label: "Commission", value: "commission" },
+  { label: "Contribution", value: "contribution" },
+  { label: "Corporate Action", value: "corporate_action" },
+  { label: "Deposit", value: "deposit" },
+  { label: "Dividend", value: "dividend" },
+  { label: "Fee", value: "fee" },
+  { label: "Interest Charged", value: "interest_charged" },
+  { label: "Interest Earned", value: "interest_earned" },
   { label: "Other", value: "other" },
+  { label: "Payment", value: "payment" },
+  { label: "Purchase", value: "purchase" },
+  { label: "Sell", value: "sell" },
+  { label: "Staking Reward", value: "staking_reward" },
+  { label: "Tax", value: "tax" },
+  { label: "Transfer In", value: "transfer_in" },
+  { label: "Transfer Out", value: "transfer_out" },
+  { label: "Withdrawal", value: "withdrawal" },
 ];
 
 export interface TransactionsReportPanelProps {
   userAccountId: number;
   locale: string;
   moneyFormatter: MoneyFormatterType;
+  linkedAccountId?: number;
+  pageSize?: number;
 }
 
 export const TransactionsReportPanel: React.FC<TransactionsReportPanelProps> = (
   props,
 ) => {
-  const { userAccountId, locale, moneyFormatter } = props;
+  const { userAccountId, locale, moneyFormatter, linkedAccountId, pageSize } =
+    props;
   const { accessToken } = useContext(AuthContext);
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState<TransactionsReport | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(
+  const [selectedTypes, setSelectedCategories] = useState<Set<string>>(
     new Set(),
   );
   const [offset, setOffset] = useState(0);
-  const limit = 50;
+  const limit = pageSize ?? 50;
 
-  const toggleCategory = (value: string) => {
+  const toggleType = (value: string) => {
     setSelectedCategories((prev) => {
       const next = new Set(prev);
       if (next.has(value)) {
@@ -105,8 +121,11 @@ export const TransactionsReportPanel: React.FC<TransactionsReportPanelProps> = (
         const params = new URLSearchParams();
         params.set("limit", String(limit));
         params.set("offset", String(offset));
-        for (const cat of selectedCategories) {
-          params.append("transaction_category", cat);
+        if (linkedAccountId !== undefined) {
+          params.set("linked_account_id", String(linkedAccountId));
+        }
+        for (const t of selectedTypes) {
+          params.append("transaction_type", t);
         }
         const resp = await fetch(
           `${APP_SERVICE_ENDPOINT}/reports/transactions/?${params}`,
@@ -125,7 +144,7 @@ export const TransactionsReportPanel: React.FC<TransactionsReportPanelProps> = (
       setLoading(false);
     };
     fetchData();
-  }, [accessToken, userAccountId, selectedCategories, offset]);
+  }, [accessToken, userAccountId, linkedAccountId, selectedTypes, offset]);
 
   if (error) {
     return (
@@ -137,10 +156,10 @@ export const TransactionsReportPanel: React.FC<TransactionsReportPanelProps> = (
   }
 
   const filterLabel =
-    selectedCategories.size === 0
-      ? "All categories"
-      : [...selectedCategories]
-          .map((v) => CATEGORIES.find((c) => c.value === v)?.label ?? v)
+    selectedTypes.size === 0
+      ? "All types"
+      : [...selectedTypes]
+          .map((v) => TRANSACTION_TYPES.find((t) => t.value === v)?.label ?? v)
           .join(", ");
 
   return (
@@ -154,11 +173,11 @@ export const TransactionsReportPanel: React.FC<TransactionsReportPanelProps> = (
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            {CATEGORIES.map(({ label, value }) => (
+            {TRANSACTION_TYPES.map(({ label, value }) => (
               <DropdownMenuCheckboxItem
                 key={value}
-                checked={selectedCategories.has(value)}
-                onCheckedChange={() => toggleCategory(value)}
+                checked={selectedTypes.has(value)}
+                onCheckedChange={() => toggleType(value)}
                 onSelect={(e) => e.preventDefault()}
               >
                 {label}
@@ -186,9 +205,11 @@ export const TransactionsReportPanel: React.FC<TransactionsReportPanelProps> = (
                 <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   Date
                 </TableHead>
-                <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                  Account
-                </TableHead>
+                {linkedAccountId === undefined && (
+                  <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    Account
+                  </TableHead>
+                )}
                 <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   Sub-account
                 </TableHead>
@@ -211,9 +232,11 @@ export const TransactionsReportPanel: React.FC<TransactionsReportPanelProps> = (
                       DateTime.DATE_MED,
                     )}
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {txn.linked_account_name}
-                  </TableCell>
+                  {linkedAccountId === undefined && (
+                    <TableCell className="text-sm text-muted-foreground">
+                      {txn.linked_account_name}
+                    </TableCell>
+                  )}
                   <TableCell className="text-sm text-muted-foreground">
                     {txn.sub_account_name}
                   </TableCell>

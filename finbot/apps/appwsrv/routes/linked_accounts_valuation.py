@@ -48,6 +48,7 @@ def get_linked_accounts_valuation(
                         provider_id=entry.linked_account.provider_id,
                         description=entry.linked_account.account_name,
                         account_colour=entry.linked_account.account_colour,
+                        frozen=entry.linked_account.frozen,
                     ),
                     valuation=appwsrv_schema.LinkedAccountValuation(
                         date=(

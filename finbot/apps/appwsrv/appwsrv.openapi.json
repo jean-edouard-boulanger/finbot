@@ -1982,7 +1982,7 @@
                         }
                     },
                     {
-                        "name": "transaction_category",
+                        "name": "transaction_type",
                         "in": "query",
                         "required": false,
                         "schema": {
@@ -1997,7 +1997,7 @@
                                     "type": "null"
                                 }
                             ],
-                            "title": "Transaction Category"
+                            "title": "Transaction Type"
                         }
                     },
                     {
@@ -2193,6 +2193,22 @@
                             "default": "monthly",
                             "title": "Frequency"
                         }
+                    },
+                    {
+                        "name": "linked_account_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Linked Account Id"
+                        }
                     }
                 ],
                 "responses": {
@@ -2357,9 +2373,9 @@
             },
             "CashFlowCategoryEntry": {
                 "properties": {
-                    "category": {
+                    "transaction_type": {
                         "type": "string",
-                        "title": "Category"
+                        "title": "Transaction Type"
                     },
                     "total": {
                         "type": "number",
@@ -2369,7 +2385,7 @@
                 "additionalProperties": false,
                 "type": "object",
                 "required": [
-                    "category",
+                    "transaction_type",
                     "total"
                 ],
                 "title": "CashFlowCategoryEntry"
@@ -2441,14 +2457,6 @@
                         "type": "string",
                         "title": "Period"
                     },
-                    "income": {
-                        "type": "number",
-                        "title": "Income"
-                    },
-                    "expense": {
-                        "type": "number",
-                        "title": "Expense"
-                    },
                     "net": {
                         "type": "number",
                         "title": "Net"
@@ -2458,8 +2466,6 @@
                 "type": "object",
                 "required": [
                     "period",
-                    "income",
-                    "expense",
                     "net"
                 ],
                 "title": "CashFlowTimeSeriesEntry"
@@ -3463,6 +3469,10 @@
                         "type": "string",
                         "pattern": "^#[A-Fa-f0-9]{6}$",
                         "title": "Account Colour"
+                    },
+                    "frozen": {
+                        "type": "boolean",
+                        "title": "Frozen"
                     }
                 },
                 "additionalProperties": false,
@@ -3471,7 +3481,8 @@
                     "id",
                     "provider_id",
                     "description",
-                    "account_colour"
+                    "account_colour",
+                    "frozen"
                 ],
                 "title": "LinkedAccountValuationLinkedAccountDescription"
             },
@@ -4094,10 +4105,6 @@
                         "type": "string",
                         "title": "Transaction Type"
                     },
-                    "transaction_category": {
-                        "type": "string",
-                        "title": "Transaction Category"
-                    },
                     "amount": {
                         "type": "number",
                         "title": "Amount"
@@ -4209,7 +4216,6 @@
                     "sub_account_name",
                     "transaction_date",
                     "transaction_type",
-                    "transaction_category",
                     "amount",
                     "amount_snapshot_ccy",
                     "currency",

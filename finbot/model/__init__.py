@@ -519,7 +519,6 @@ class TransactionHistoryEntry(Base):
     provider_transaction_id = Column(String(256), nullable=False)
     transaction_date = Column(DateTimeTz, nullable=False, index=True)
     transaction_type = Column(String(32), nullable=False)
-    transaction_category = Column(String(16), nullable=False)
     amount = Column(Numeric, nullable=False)
     amount_snapshot_ccy = Column(Numeric)
     currency = Column(String(4), nullable=False)

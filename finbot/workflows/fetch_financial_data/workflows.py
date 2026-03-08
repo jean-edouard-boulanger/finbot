@@ -21,7 +21,7 @@ class ValidateCredentialsWorkflow:
             validate_credentials,
             request,
             retry_policy=TRY_ONCE,
-            start_to_close_timeout=timedelta(seconds=5.0),
+            start_to_close_timeout=timedelta(seconds=30.0),
         )
 
 

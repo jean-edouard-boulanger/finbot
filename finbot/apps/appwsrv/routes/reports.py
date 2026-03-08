@@ -72,7 +72,7 @@ def get_transactions_report(
     from_time: AwareDatetime | None = Query(default=None),
     to_time: AwareDatetime | None = Query(default=None),
     linked_account_id: int | None = Query(default=None),
-    transaction_category: list[str] | None = Query(default=None),
+    transaction_type: list[str] | None = Query(default=None),
     spending_category: str | None = Query(default=None),
     limit: int = Query(default=100, le=500),
     offset: int = Query(default=0, ge=0),
@@ -85,7 +85,7 @@ def get_transactions_report(
             from_time=from_time,
             to_time=to_time,
             linked_account_id=linked_account_id,
-            transaction_category=transaction_category,
+            transaction_type=transaction_type,
             spending_category=spending_category,
             limit=limit,
             offset=offset,
@@ -118,6 +118,7 @@ def get_cash_flow_time_series(
     from_time: AwareDatetime | None = Query(default=None),
     to_time: AwareDatetime | None = Query(default=None),
     frequency: str = Query(default="monthly"),
+    linked_account_id: int | None = Query(default=None),
 ) -> appwsrv_schema.GetCashFlowTimeSeriesResponse:
     """Get time-bucketed cash flow data"""
     effective_to = to_time or now_utc()
@@ -129,6 +130,7 @@ def get_cash_flow_time_series(
             from_time=effective_from,
             to_time=effective_to,
             frequency=frequency,
+            linked_account_id=linked_account_id,
         )
     )
 

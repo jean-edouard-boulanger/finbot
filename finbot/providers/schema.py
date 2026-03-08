@@ -304,41 +304,6 @@ class TransactionType(str, enum.Enum):
     other = "other"  # any transaction that does not fit the above categories
 
 
-class TransactionCategory(str, enum.Enum):
-    income = "income"
-    expense = "expense"
-    trade = "trade"
-    transfer = "transfer"
-    other = "other"
-
-
-_TRANSACTION_TYPE_TO_CATEGORY: dict[TransactionType, TransactionCategory] = {
-    TransactionType.dividend: TransactionCategory.income,
-    TransactionType.interest_earned: TransactionCategory.income,
-    TransactionType.staking_reward: TransactionCategory.income,
-    TransactionType.fee: TransactionCategory.expense,
-    TransactionType.commission: TransactionCategory.expense,
-    TransactionType.interest_charged: TransactionCategory.expense,
-    TransactionType.tax: TransactionCategory.expense,
-    TransactionType.buy: TransactionCategory.trade,
-    TransactionType.sell: TransactionCategory.trade,
-    TransactionType.deposit: TransactionCategory.transfer,
-    TransactionType.withdrawal: TransactionCategory.transfer,
-    TransactionType.transfer_in: TransactionCategory.transfer,
-    TransactionType.transfer_out: TransactionCategory.transfer,
-    TransactionType.payment: TransactionCategory.transfer,
-    TransactionType.purchase: TransactionCategory.expense,
-    TransactionType.contribution: TransactionCategory.transfer,
-    TransactionType.corporate_action: TransactionCategory.other,
-    TransactionType.adjustment: TransactionCategory.other,
-    TransactionType.other: TransactionCategory.other,
-}
-
-
-def category_for_type(t: TransactionType) -> TransactionCategory:
-    return _TRANSACTION_TYPE_TO_CATEGORY[t]
-
-
 class Transaction(BaseModel):
     transaction_id: str
     account_id: SubAccountId

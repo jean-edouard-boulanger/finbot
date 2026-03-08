@@ -105,7 +105,6 @@ async def _call_and_apply(
                 "description": entry.description,
                 "amount": float(entry.amount),
                 "type": entry.transaction_type,
-                "category": entry.transaction_category,
             }
             for entry in entries
         ]

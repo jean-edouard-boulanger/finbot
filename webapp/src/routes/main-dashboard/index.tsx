@@ -20,8 +20,9 @@ import {
   HistoricalValuationPanel,
   WealthDistributionPanel,
   TransactionsReportPanel,
-  CashFlowPanel,
   SpendingBreakdownPanel,
+  TopTransactionsPanel,
+  CashFlowPanel,
 } from "./reports";
 
 import { Alert, AlertTitle, AlertDescription } from "components/ui/alert";
@@ -284,7 +285,7 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
             />
           </div>
           <div className="animate-fade-up stagger-4">
-            <CashFlowPanel
+            <TopTransactionsPanel
               userAccountId={userAccountId!}
               locale={locale}
               moneyFormatter={defaultMoneyFormatter}
@@ -292,6 +293,13 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
           </div>
           <div className="animate-fade-up stagger-4">
             <SpendingBreakdownPanel
+              userAccountId={userAccountId!}
+              locale={locale}
+              moneyFormatter={defaultMoneyFormatter}
+            />
+          </div>
+          <div className="animate-fade-up stagger-4 lg:col-span-2">
+            <CashFlowPanel
               userAccountId={userAccountId!}
               locale={locale}
               moneyFormatter={defaultMoneyFormatter}
