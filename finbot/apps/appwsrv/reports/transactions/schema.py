@@ -22,6 +22,7 @@ class TransactionEntry(BaseModel):
     counterparty: str | None
     spending_category_primary: str | None
     spending_category_detailed: str | None
+    matched_transaction_id: int | None
 
 
 class TransactionsReport(BaseModel):

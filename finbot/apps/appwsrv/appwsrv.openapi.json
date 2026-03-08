@@ -4204,6 +4204,17 @@
                             }
                         ],
                         "title": "Spending Category Detailed"
+                    },
+                    "matched_transaction_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Matched Transaction Id"
                     }
                 },
                 "additionalProperties": false,
@@ -4226,7 +4237,8 @@
                     "fee",
                     "counterparty",
                     "spending_category_primary",
-                    "spending_category_detailed"
+                    "spending_category_detailed",
+                    "matched_transaction_id"
                 ],
                 "title": "TransactionEntry"
             },
