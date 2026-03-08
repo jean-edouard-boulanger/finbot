@@ -2457,6 +2457,14 @@
                         "type": "string",
                         "title": "Period"
                     },
+                    "inflows": {
+                        "type": "number",
+                        "title": "Inflows"
+                    },
+                    "outflows": {
+                        "type": "number",
+                        "title": "Outflows"
+                    },
                     "net": {
                         "type": "number",
                         "title": "Net"
@@ -2466,6 +2474,8 @@
                 "type": "object",
                 "required": [
                     "period",
+                    "inflows",
+                    "outflows",
                     "net"
                 ],
                 "title": "CashFlowTimeSeriesEntry"

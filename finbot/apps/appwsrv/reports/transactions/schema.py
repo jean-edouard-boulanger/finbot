@@ -46,6 +46,8 @@ class CashFlowSummary(BaseModel):
 
 class CashFlowTimeSeriesEntry(BaseModel):
     period: str
+    inflows: float
+    outflows: float
     net: float
 
 
