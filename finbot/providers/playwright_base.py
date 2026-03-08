@@ -117,7 +117,7 @@ class ConditionGuard(object):
             for index, cond in enumerate(self._conditions):
                 if val := (await cond.predicate()):
                     if cond.when_fulfilled:
-                        cond.when_fulfilled(val)
+                        await maybe_awaitable(cond.when_fulfilled(val))
                     return index, val
         return -1, None
 

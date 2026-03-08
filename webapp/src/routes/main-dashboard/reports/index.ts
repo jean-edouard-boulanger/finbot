@@ -5,6 +5,7 @@ import { WealthDistributionPanel } from "./wealth-distribution";
 import { TransactionsReportPanel } from "./transactions";
 import { CashFlowPanel } from "./cash-flow";
 import { SpendingBreakdownPanel } from "./spending-breakdown";
+import { TopTransactionsPanel } from "./top-transactions";
 
 export {
   EarningsReportPanel,
@@ -14,4 +15,5 @@ export {
   TransactionsReportPanel,
   CashFlowPanel,
   SpendingBreakdownPanel,
+  TopTransactionsPanel,
 };

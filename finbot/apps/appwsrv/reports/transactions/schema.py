@@ -11,7 +11,6 @@ class TransactionEntry(BaseModel):
     sub_account_name: str
     transaction_date: AwareDatetime
     transaction_type: str
-    transaction_category: str
     amount: float
     amount_snapshot_ccy: float | None
     currency: str
@@ -32,7 +31,7 @@ class TransactionsReport(BaseModel):
 
 
 class CashFlowCategoryEntry(BaseModel):
-    category: str
+    transaction_type: str
     total: float
 
 
@@ -46,8 +45,6 @@ class CashFlowSummary(BaseModel):
 
 class CashFlowTimeSeriesEntry(BaseModel):
     period: str
-    income: float
-    expense: float
     net: float
 
 

@@ -39,3 +39,10 @@ class UnsupportedAccountType(ProviderError):
 
     def __init__(self, account_type: str, account_name: str) -> None:
         super().__init__(f"Unsupported account type '{account_type}': {account_name}")
+
+
+class UnsupportedTransactionType(ProviderError):
+    error_code = "P007"
+
+    def __init__(self, transaction_type: str, detail: str | None) -> None:
+        super().__init__(f"Unsupported transaction type '{transaction_type}': {detail or 'no description'}")

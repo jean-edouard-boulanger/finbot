@@ -28,6 +28,8 @@ import {
   HoldingsReportNode,
 } from "../main-dashboard/reports/holdings";
 import { HistoricalValuationPanel } from "../main-dashboard/reports/historical-valuation";
+import { TransactionsReportPanel } from "../main-dashboard/reports/transactions";
+import { CashFlowPanel } from "../main-dashboard/reports/cash-flow";
 
 import { DateTime } from "luxon";
 import { CheckCircle, AlertCircle, Ghost, HelpCircle } from "lucide-react";
@@ -447,6 +449,16 @@ export const LinkedAccountDashboard: React.FC = () => {
           </div>
         </div>
 
+        {/* Cash Flow */}
+        <div className="mt-6 animate-fade-up stagger-4">
+          <CashFlowPanel
+            userAccountId={userAccountId!}
+            locale={locale}
+            moneyFormatter={defaultMoneyFormatter}
+            linkedAccountId={linkedAccountId}
+          />
+        </div>
+
         {/* Holdings Table */}
         {accountNode && (
           <div className="mt-6 animate-fade-up stagger-4">
@@ -469,6 +481,26 @@ export const LinkedAccountDashboard: React.FC = () => {
             </Card>
           </div>
         )}
+
+        {/* Transactions */}
+        <div className="mt-6 animate-fade-up stagger-5">
+          <Card className="border-border/50">
+            <CardHeader className="pb-0">
+              <CardTitle className="text-sm font-medium tracking-wide uppercase text-muted-foreground">
+                Transactions
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <TransactionsReportPanel
+                userAccountId={userAccountId!}
+                locale={locale}
+                moneyFormatter={defaultMoneyFormatter}
+                linkedAccountId={linkedAccountId}
+                pageSize={10}
+              />
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

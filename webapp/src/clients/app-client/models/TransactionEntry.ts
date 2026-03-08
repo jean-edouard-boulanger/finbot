@@ -62,12 +62,6 @@ export interface TransactionEntry {
     transactionType: string;
     /**
      * 
-     * @type {string}
-     * @memberof TransactionEntry
-     */
-    transactionCategory: string;
-    /**
-     * 
      * @type {number}
      * @memberof TransactionEntry
      */
@@ -145,7 +139,6 @@ export function instanceOfTransactionEntry(value: object): value is TransactionE
     if (!('subAccountName' in value) || value['subAccountName'] === undefined) return false;
     if (!('transactionDate' in value) || value['transactionDate'] === undefined) return false;
     if (!('transactionType' in value) || value['transactionType'] === undefined) return false;
-    if (!('transactionCategory' in value) || value['transactionCategory'] === undefined) return false;
     if (!('amount' in value) || value['amount'] === undefined) return false;
     if (!('amountSnapshotCcy' in value) || value['amountSnapshotCcy'] === undefined) return false;
     if (!('currency' in value) || value['currency'] === undefined) return false;
@@ -177,7 +170,6 @@ export function TransactionEntryFromJSONTyped(json: any, ignoreDiscriminator: bo
         'subAccountName': json['sub_account_name'],
         'transactionDate': (new Date(json['transaction_date'])),
         'transactionType': json['transaction_type'],
-        'transactionCategory': json['transaction_category'],
         'amount': json['amount'],
         'amountSnapshotCcy': json['amount_snapshot_ccy'],
         'currency': json['currency'],
@@ -210,7 +202,6 @@ export function TransactionEntryToJSONTyped(value?: TransactionEntry | null, ign
         'sub_account_name': value['subAccountName'],
         'transaction_date': ((value['transactionDate']).toISOString()),
         'transaction_type': value['transactionType'],
-        'transaction_category': value['transactionCategory'],
         'amount': value['amount'],
         'amount_snapshot_ccy': value['amountSnapshotCcy'],
         'currency': value['currency'],

@@ -59,7 +59,7 @@ export interface GetUserAccountTransactionsReportRequest {
     fromTime?: Date | null;
     toTime?: Date | null;
     linkedAccountId?: number | null;
-    transactionCategory?: Array<string> | null;
+    transactionType?: Array<string> | null;
     spendingCategory?: string | null;
     limit?: number;
     offset?: number;
@@ -160,7 +160,7 @@ export interface UserAccountsReportsApiInterface {
      * @param {Date} [fromTime] 
      * @param {Date} [toTime] 
      * @param {number} [linkedAccountId] 
-     * @param {Array<string>} [transactionCategory] 
+     * @param {Array<string>} [transactionType] 
      * @param {string} [spendingCategory] 
      * @param {number} [limit] 
      * @param {number} [offset] 
@@ -410,8 +410,8 @@ export class UserAccountsReportsApi extends runtime.BaseAPI implements UserAccou
             queryParameters['linked_account_id'] = requestParameters['linkedAccountId'];
         }
 
-        if (requestParameters['transactionCategory'] != null) {
-            queryParameters['transaction_category'] = requestParameters['transactionCategory'];
+        if (requestParameters['transactionType'] != null) {
+            queryParameters['transaction_type'] = requestParameters['transactionType'];
         }
 
         if (requestParameters['spendingCategory'] != null) {

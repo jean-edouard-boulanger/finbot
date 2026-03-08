@@ -347,6 +347,7 @@ class LinkedAccountValuationLinkedAccountDescription(AppModel):
     provider_id: str
     description: str
     account_colour: HexColour
+    frozen: bool
 
 
 class LinkedAccountValuationEntry(AppModel):

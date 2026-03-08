@@ -192,15 +192,17 @@ function SidebarContent({
                 Failed to load accounts
               </p>
             ) : (
-              accounts.map((entry) => (
-                <AccountNavItem
-                  key={entry.linkedAccount.id}
-                  to={`/dashboard/accounts/${entry.linkedAccount.id}`}
-                  colour={entry.linkedAccount.accountColour}
-                  name={entry.linkedAccount.description}
-                  onClick={onNavigate}
-                />
-              ))
+              accounts
+                .filter((entry) => !entry.linkedAccount.frozen)
+                .map((entry) => (
+                  <AccountNavItem
+                    key={entry.linkedAccount.id}
+                    to={`/dashboard/accounts/${entry.linkedAccount.id}`}
+                    colour={entry.linkedAccount.accountColour}
+                    name={entry.linkedAccount.description}
+                    onClick={onNavigate}
+                  />
+                ))
             )}
             <NavLink to="/settings/linked?action=link" onClick={onNavigate}>
               <Button

@@ -3,9 +3,11 @@ import json
 import logging
 import sys
 import asyncio
-from argparse import ArgumentParser
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
+
+import click
 
 from finbot.core.schema import CurrencyCode
 from finbot.core.serialization import pretty_dump
@@ -17,71 +19,122 @@ from finbot.providers.playwright_base import PlaywrightProviderBase, HEADLESS_SE
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-def create_parser() -> ArgumentParser:
-    parser = ArgumentParser("Test finbot provider")
-    parser.add_argument(
-        "-p", "--provider",
-        choices=list(providers_factory.PROVIDERS.keys()),
-        required=True,
-        type=str,
-        help="Provider"
-    )
-    parser.add_argument(
-        "--valuation-currency",
-        type=str,
-        default="EUR",
-        help="Valuation currency (only has an impact on the assets classification)"
-    )
-    parser.add_argument(
-        "--show-browser",
-        default=False,
-        action="store_const",
-        const=True,
-        help="For Playwright-based providers, shows the browser.",
-    )
-    auth_group = parser.add_mutually_exclusive_group()
-    auth_group.add_argument(
-        "-a", "--auth-payload",
-        type=str,
-        required=False,
-        default=None,
-        help="Provider authentication payload (JSON)"
-    )
-    auth_group.add_argument(
-        "-af", "--auth-payload-file",
-        type=Path,
-        required=False,
-        default=None,
-        help="Path to provider authentication payload file (JSON)"
-    )
-    auth_group.add_argument(
-        "-al", "--auth-payload-from-linked-account-id",
-        type=int,
-        required=False,
-        default=None,
-        help="Use authentication payload saved with a specific linked account"
-    )
-    return parser
+
+class AuthPayloadSource:
+    def __init__(self, inline: str | None, file: Path | None, linked_account_id: int | None):
+        self.inline = inline
+        self.file = file
+        self.linked_account_id = linked_account_id
+
+    def resolve(self) -> dict[str, Any] | None:
+        if self.inline:
+            return json.loads(self.inline)
+        if self.file:
+            return json.loads(self.file.read_text())
+        if self.linked_account_id:
+            from finbot.model import LinkedAccount
+            with ScopedSession() as session:
+                linked_account: LinkedAccount = session.query(LinkedAccount).get(self.linked_account_id)
+                return linked_account.plain_credentials
+        return None
 
 
-def get_authentication_payload(settings) -> dict[str, Any] | None:
-    if settings.auth_payload:
-        return json.loads(settings.auth_payload)
-    if settings.auth_payload_file:
-        return json.loads(settings.auth_payload_file.read_text())
-    if settings.auth_payload_from_linked_account_id:
-        from finbot.model import LinkedAccount
-        with ScopedSession() as session:
-            linked_account: LinkedAccount = session.query(LinkedAccount).get(settings.auth_payload_from_linked_account_id)
-            return linked_account.plain_credentials
+class MutuallyExclusiveOption(click.Option):
+    def __init__(self, *args, mutually_exclusive: list[str] | None = None, **kwargs):
+        self.mutually_exclusive = mutually_exclusive or []
+        super().__init__(*args, **kwargs)
 
-    return None
+    def handle_parse_result(self, ctx, opts, args):
+        if self.name in opts:
+            for other in self.mutually_exclusive:
+                if other in opts:
+                    raise click.UsageError(
+                        f"--{self.name.replace('_', '-')} is mutually exclusive with --{other.replace('_', '-')}"
+                    )
+        return super().handle_parse_result(ctx, opts, args)
+
+
+@click.command(help="Test finbot provider")
+@click.option(
+    "-p", "--provider",
+    type=click.Choice(list(providers_factory.PROVIDERS.keys())),
+    required=True,
+    help="Provider",
+)
+@click.option(
+    "--valuation-currency",
+    type=str,
+    default="EUR",
+    show_default=True,
+    help="Valuation currency (only has an impact on the assets classification)",
+)
+@click.option(
+    "--show-browser",
+    is_flag=True,
+    default=False,
+    help="For Playwright-based providers, shows the browser.",
+)
+@click.option(
+    "-a", "--auth-payload",
+    type=str,
+    default=None,
+    cls=MutuallyExclusiveOption,
+    mutually_exclusive=["auth_payload_file", "auth_payload_from_linked_account_id"],
+    help="Provider authentication payload (JSON)",
+)
+@click.option(
+    "-af", "--auth-payload-file",
+    type=click.Path(exists=True, path_type=Path),
+    default=None,
+    cls=MutuallyExclusiveOption,
+    mutually_exclusive=["auth_payload", "auth_payload_from_linked_account_id"],
+    help="Path to provider authentication payload file (JSON)",
+)
+@click.option(
+    "-al", "--auth-payload-from-linked-account-id",
+    type=int,
+    default=None,
+    cls=MutuallyExclusiveOption,
+    mutually_exclusive=["auth_payload", "auth_payload_file"],
+    help="Use authentication payload saved with a specific linked account",
+)
+@click.option(
+    "--transactions-from-date",
+    type=click.DateTime(formats=["%Y-%m-%d"]),
+    default=(datetime.now(timezone.utc) - timedelta(days=7)).strftime("%Y-%m-%d"),
+    show_default=True,
+    help="Fetch transactions from this date onwards",
+)
+def main(
+    provider: str,
+    valuation_currency: str,
+    show_browser: bool,
+    auth_payload: str | None,
+    auth_payload_file: Path | None,
+    auth_payload_from_linked_account_id: int | None,
+    transactions_from_date: datetime,
+):
+    source = AuthPayloadSource(auth_payload, auth_payload_file, auth_payload_from_linked_account_id)
+    resolved_auth = source.resolve()
+    provider_type = providers_factory.get_provider(provider)
+    extra_kwargs = {}
+    if show_browser and issubclass(provider_type, PlaywrightProviderBase):
+        extra_kwargs[HEADLESS_SETTING] = False
+    from_date = transactions_from_date.replace(tzinfo=timezone.utc)
+    asyncio.run(async_main(
+        provider_type=provider_type,
+        auth_payload=resolved_auth,
+        valuation_currency=valuation_currency,
+        transactions_from_date=from_date,
+        **extra_kwargs
+    ))
 
 
 async def async_main(
     provider_type: type[ProviderBase],
     auth_payload: dict[str, Any] | None,
     valuation_currency: CurrencyCode,
+    transactions_from_date: datetime,
     **extra_kwargs,
 ):
     async with provider_type.create(auth_payload, valuation_currency, **extra_kwargs) as provider_api:
@@ -90,23 +143,8 @@ async def async_main(
             "accounts": await provider_api.get_accounts(),
             "assets": await provider_api.get_assets(),
             "liabilities": await provider_api.get_liabilities(),
-            "transactions": await provider_api.get_transactions()
+            "transactions": await provider_api.get_transactions(from_date=transactions_from_date)
         }, indent=2))
-
-
-def main():
-    settings = create_parser().parse_args()
-    auth_payload = get_authentication_payload(settings)
-    provider_type = providers_factory.get_provider(settings.provider)
-    extra_kwargs = {}
-    if settings.show_browser and issubclass(provider_type, PlaywrightProviderBase):
-        extra_kwargs[HEADLESS_SETTING] = False
-    asyncio.run(async_main(
-        provider_type=provider_type,
-        auth_payload=auth_payload,
-        valuation_currency=settings.valuation_currency,
-        **extra_kwargs
-    ))
 
 
 if __name__ == "__main__":

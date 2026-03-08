@@ -42,6 +42,12 @@ export interface LinkedAccountValuationLinkedAccountDescription {
      * @memberof LinkedAccountValuationLinkedAccountDescription
      */
     accountColour: string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof LinkedAccountValuationLinkedAccountDescription
+     */
+    frozen: boolean;
 }
 
 /**
@@ -52,6 +58,7 @@ export function instanceOfLinkedAccountValuationLinkedAccountDescription(value: 
     if (!('providerId' in value) || value['providerId'] === undefined) return false;
     if (!('description' in value) || value['description'] === undefined) return false;
     if (!('accountColour' in value) || value['accountColour'] === undefined) return false;
+    if (!('frozen' in value) || value['frozen'] === undefined) return false;
     return true;
 }
 
@@ -69,6 +76,7 @@ export function LinkedAccountValuationLinkedAccountDescriptionFromJSONTyped(json
         'providerId': json['provider_id'],
         'description': json['description'],
         'accountColour': json['account_colour'],
+        'frozen': json['frozen'],
     };
 }
 
@@ -87,6 +95,7 @@ export function LinkedAccountValuationLinkedAccountDescriptionToJSONTyped(value?
         'provider_id': value['providerId'],
         'description': value['description'],
         'account_colour': value['accountColour'],
+        'frozen': value['frozen'],
     };
 }
 
