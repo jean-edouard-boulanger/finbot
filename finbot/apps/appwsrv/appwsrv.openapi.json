@@ -2193,6 +2193,22 @@
                             "default": "monthly",
                             "title": "Frequency"
                         }
+                    },
+                    {
+                        "name": "linked_account_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Linked Account Id"
+                        }
                     }
                 ],
                 "responses": {

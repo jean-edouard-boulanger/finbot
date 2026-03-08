@@ -48,6 +48,7 @@ export interface GetUserAccountCashFlowTimeSeriesRequest {
     fromTime?: Date | null;
     toTime?: Date | null;
     frequency?: string;
+    linkedAccountId?: number | null;
 }
 
 export interface GetUserAccountSpendingBreakdownRequest {
@@ -95,6 +96,7 @@ export interface UserAccountsReportsApiInterface {
      * @param {Date} [fromTime] 
      * @param {Date} [toTime] 
      * @param {string} [frequency] 
+     * @param {number} [linkedAccountId] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof UserAccountsReportsApiInterface
@@ -244,6 +246,10 @@ export class UserAccountsReportsApi extends runtime.BaseAPI implements UserAccou
 
         if (requestParameters['frequency'] != null) {
             queryParameters['frequency'] = requestParameters['frequency'];
+        }
+
+        if (requestParameters['linkedAccountId'] != null) {
+            queryParameters['linked_account_id'] = requestParameters['linkedAccountId'];
         }
 
         const headerParameters: runtime.HTTPHeaders = {};
