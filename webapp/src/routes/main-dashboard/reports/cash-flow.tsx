@@ -21,7 +21,6 @@ import {
   ResponsiveContainer,
   ReferenceLine,
   CartesianGrid,
-  Cell,
 } from "recharts";
 import { ChartTooltipContent } from "components/ui/chart";
 import { ChevronDown } from "lucide-react";
@@ -92,6 +91,8 @@ const DEFAULT_TIME_RANGE = lastItem(TIME_RANGES)!;
 
 interface CashFlowTimeSeriesEntry {
   period: string;
+  inflows: number;
+  outflows: number;
   net: number;
 }
 
@@ -279,20 +280,19 @@ export const CashFlowPanel: React.FC<CashFlowPanelProps> = (props) => {
               />
               <ReferenceLine y={0} stroke="hsl(var(--border))" />
               <Bar
-                dataKey="net"
-                name="Net"
+                dataKey="inflows"
+                name="Inflows"
+                fill="hsl(var(--gain))"
                 radius={[2, 2, 0, 0]}
-                maxBarSize={40}
-              >
-                {data.entries.map((entry, index) => (
-                  <Cell
-                    key={index}
-                    fill={
-                      entry.net >= 0 ? "hsl(var(--gain))" : "hsl(var(--loss))"
-                    }
-                  />
-                ))}
-              </Bar>
+                maxBarSize={20}
+              />
+              <Bar
+                dataKey="outflows"
+                name="Outflows"
+                fill="hsl(var(--loss))"
+                radius={[0, 0, 2, 2]}
+                maxBarSize={20}
+              />
             </BarChart>
           </ResponsiveContainer>
         )}

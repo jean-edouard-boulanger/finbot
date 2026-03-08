@@ -122,6 +122,11 @@ def get_cash_flow_summary(
            AND NOT la.deleted
            AND th.transaction_date >= :from_time
            AND th.transaction_date <= :to_time
+           AND th.id NOT IN (
+               SELECT tm.outflow_transaction_id FROM finbot_transaction_matches tm WHERE tm.match_status != 'rejected'
+               UNION ALL
+               SELECT tm.inflow_transaction_id FROM finbot_transaction_matches tm WHERE tm.match_status != 'rejected'
+           )
          GROUP BY th.transaction_type
          ORDER BY th.transaction_type
     """
@@ -176,6 +181,11 @@ def get_cash_flow_time_series(
 
     query = f"""
         SELECT {grouping} AS period,
+               COALESCE(SUM(CASE WHEN th.amount_snapshot_ccy > 0 THEN th.amount_snapshot_ccy ELSE 0 END), 0) AS inflows,
+               COALESCE(
+                   SUM(CASE WHEN th.amount_snapshot_ccy < 0 THEN th.amount_snapshot_ccy ELSE 0 END),
+                   0
+               ) AS outflows,
                COALESCE(SUM(th.amount_snapshot_ccy), 0) AS net
           FROM finbot_transactions_history th
           JOIN finbot_linked_accounts la ON th.linked_account_id = la.id
@@ -183,6 +193,11 @@ def get_cash_flow_time_series(
            AND NOT la.deleted
            AND th.transaction_date >= :from_time
            AND th.transaction_date <= :to_time
+           AND th.id NOT IN (
+               SELECT tm.outflow_transaction_id FROM finbot_transaction_matches tm WHERE tm.match_status != 'rejected'
+               UNION ALL
+               SELECT tm.inflow_transaction_id FROM finbot_transaction_matches tm WHERE tm.match_status != 'rejected'
+           )
            {extra_where}
          GROUP BY {grouping}
          ORDER BY {grouping}
@@ -192,6 +207,8 @@ def get_cash_flow_time_series(
     entries = [
         schema.CashFlowTimeSeriesEntry(
             period=row_to_dict(row)["period"],
+            inflows=float(row_to_dict(row)["inflows"]),
+            outflows=float(row_to_dict(row)["outflows"]),
             net=float(row_to_dict(row)["net"]),
         )
         for row in rows
