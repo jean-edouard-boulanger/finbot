@@ -27,6 +27,7 @@ interface TransactionEntry {
   currency: string;
   description: string;
   amount_snapshot_ccy: number | null;
+  matched_transaction_id: number | null;
 }
 
 interface TransactionsReport {
@@ -127,7 +128,10 @@ export const TopTransactionsPanel: React.FC<TopTransactionsPanelProps> = (
         const json = await resp.json();
         const report: TransactionsReport = json.report;
         setValuationCcy(report.valuation_ccy);
-        const sorted = [...report.transactions].sort(
+        const unmatched = report.transactions.filter(
+          (t) => t.matched_transaction_id === null,
+        );
+        const sorted = [...unmatched].sort(
           (a, b) =>
             Math.abs(b.amount_snapshot_ccy ?? b.amount) -
             Math.abs(a.amount_snapshot_ccy ?? a.amount),

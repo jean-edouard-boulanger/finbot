@@ -21,10 +21,13 @@ from finbot.apps.appwsrv.reports.transactions.report import (
     get_spending_breakdown as generate_spending_breakdown,
 )
 from finbot.apps.appwsrv.reports.transactions.report import (
+    get_transaction_by_id,
+)
+from finbot.apps.appwsrv.reports.transactions.report import (
     get_transactions_report as generate_transactions_report,
 )
 from finbot.apps.http_base import CurrentUserIdDep
-from finbot.core.errors import MissingUserData
+from finbot.core.errors import MissingUserData, ResourceNotFoundError
 from finbot.core.utils import now_utc
 from finbot.model import db, repository
 
@@ -71,9 +74,9 @@ def get_transactions_report(
     current_user_id: CurrentUserIdDep,
     from_time: AwareDatetime | None = Query(default=None),
     to_time: AwareDatetime | None = Query(default=None),
-    linked_account_id: int | None = Query(default=None),
+    linked_account_id: list[int] | None = Query(default=None),
     transaction_type: list[str] | None = Query(default=None),
-    spending_category: str | None = Query(default=None),
+    spending_category: list[str] | None = Query(default=None),
     limit: int = Query(default=100, le=500),
     offset: int = Query(default=0, ge=0),
 ) -> appwsrv_schema.GetTransactionsReportResponse:
@@ -91,6 +94,22 @@ def get_transactions_report(
             offset=offset,
         )
     )
+
+
+@router.get("/transactions/{transaction_id}/", operation_id="get_transaction")
+def get_transaction(
+    current_user_id: CurrentUserIdDep,
+    transaction_id: int,
+) -> appwsrv_schema.GetTransactionResponse:
+    """Get a single transaction by ID"""
+    entry = get_transaction_by_id(
+        session=db.session,
+        user_account_id=current_user_id,
+        transaction_id=transaction_id,
+    )
+    if entry is None:
+        raise ResourceNotFoundError(f"Transaction {transaction_id} not found")
+    return appwsrv_schema.GetTransactionResponse(transaction=entry)
 
 
 @router.get("/cash-flow/summary/", operation_id="get_user_account_cash_flow_summary")

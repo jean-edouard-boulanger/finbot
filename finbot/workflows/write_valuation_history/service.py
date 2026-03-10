@@ -192,6 +192,7 @@ def write_history_impl(
         if new_uncategorized_ids:
             logging.info(f"consolidated {len(new_uncategorized_ids)} new transactions")
             _categorize_new_transactions(new_uncategorized_ids, db_session)
+            db_session.commit()
     except Exception:
         logging.exception("failed to consolidate transactions (non-fatal)")
 

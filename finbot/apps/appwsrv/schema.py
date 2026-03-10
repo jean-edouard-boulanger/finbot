@@ -425,6 +425,10 @@ class GetSpendingBreakdownResponse(AppModel):
     report: transactions_schema.SpendingBreakdown
 
 
+class GetTransactionResponse(AppModel):
+    transaction: transactions_schema.TransactionEntry
+
+
 class PlaidSettings(AppModel):
     environment: str
     client_id: str

@@ -14,22 +14,23 @@ logger = logging.getLogger(__name__)
 
 @click.command()
 @click.option("--limit", type=int, default=None, help="Max transactions to categorize")
-def main(limit: int | None):
+@click.option("--all", "recategorize_all", is_flag=True, default=False, help="Re-categorize all transactions, not just uncategorized ones")
+def main(limit: int | None, recategorize_all: bool):
     with ScopedSession() as session:
-        query = (
-            session.query(TransactionHistoryEntry.id)
-            .filter(TransactionHistoryEntry.spending_category_source.is_(None))
-            .order_by(TransactionHistoryEntry.transaction_date.desc())
+        query = session.query(TransactionHistoryEntry.id).order_by(
+            TransactionHistoryEntry.transaction_date.desc()
         )
+        if not recategorize_all:
+            query = query.filter(TransactionHistoryEntry.spending_category_source.is_(None))
         if limit:
             query = query.limit(limit)
         ids = [row.id for row in query.all()]
 
         if not ids:
-            logger.info("No uncategorized transactions found")
+            logger.info("No %stransactions found", "" if recategorize_all else "uncategorized ")
             return
 
-        logger.info("Categorizing %d transactions", len(ids))
+        logger.info("Categorizing %d transactions%s", len(ids), " (all)" if recategorize_all else "")
         asyncio.run(categorize_transaction_batch(ids, session))
         session.commit()
         logger.info("Done")

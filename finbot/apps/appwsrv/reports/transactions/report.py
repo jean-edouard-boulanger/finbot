@@ -13,9 +13,9 @@ def get_transactions_report(
     user_account_id: int,
     from_time: AwareDatetime | None = None,
     to_time: AwareDatetime | None = None,
-    linked_account_id: int | None = None,
+    linked_account_id: list[int] | None = None,
     transaction_type: list[str] | None = None,
-    spending_category: str | None = None,
+    spending_category: list[str] | None = None,
     limit: int = 100,
     offset: int = 0,
 ) -> schema.TransactionsReport:
@@ -34,14 +34,14 @@ def get_transactions_report(
         params["to_time"] = to_time
         where_clauses.append("th.transaction_date <= :to_time")
     if linked_account_id:
-        params["linked_account_id"] = linked_account_id
-        where_clauses.append("th.linked_account_id = :linked_account_id")
+        params["linked_account_ids"] = tuple(linked_account_id)
+        where_clauses.append("th.linked_account_id IN :linked_account_ids")
     if transaction_type:
         params["transaction_types"] = tuple(transaction_type)
         where_clauses.append("th.transaction_type IN :transaction_types")
     if spending_category:
-        params["spending_category"] = spending_category
-        where_clauses.append("th.spending_category_primary = :spending_category")
+        params["spending_categories"] = tuple(spending_category)
+        where_clauses.append("th.spending_category_primary IN :spending_categories")
 
     where = " AND ".join(where_clauses)
 
@@ -103,6 +103,60 @@ def get_transactions_report(
         transactions=transactions,
         total_count=total_count,
     )
+
+
+def get_transaction_by_id(
+    session: SessionType,
+    user_account_id: int,
+    transaction_id: int,
+) -> schema.TransactionEntry | None:
+    query = """
+        SELECT th.id,
+               th.linked_account_id,
+               la.account_name AS linked_account_name,
+               th.sub_account_id,
+               COALESCE(
+                   (SELECT savhe.sub_account_description
+                      FROM finbot_sub_accounts_valuation_history_entries savhe
+                     WHERE savhe.linked_account_id = th.linked_account_id
+                       AND savhe.sub_account_id = th.sub_account_id
+                     ORDER BY savhe.history_entry_id DESC
+                     LIMIT 1),
+                   th.sub_account_id
+               ) AS sub_account_name,
+               th.transaction_date,
+               th.transaction_type,
+               th.amount,
+               th.amount_snapshot_ccy,
+               th.currency,
+               th.description,
+               th.symbol,
+               th.units,
+               th.unit_price,
+               th.fee,
+               th.counterparty,
+               th.spending_category_primary,
+               th.spending_category_detailed,
+               (SELECT CASE WHEN tm.outflow_transaction_id = th.id
+                       THEN tm.inflow_transaction_id
+                       ELSE tm.outflow_transaction_id END
+                  FROM finbot_transaction_matches tm
+                 WHERE (tm.outflow_transaction_id = th.id OR tm.inflow_transaction_id = th.id)
+                   AND tm.match_status != 'rejected'
+                 LIMIT 1
+               ) AS matched_transaction_id
+          FROM finbot_transactions_history th
+          JOIN finbot_linked_accounts la ON th.linked_account_id = la.id
+         WHERE th.id = :transaction_id
+           AND la.user_account_id = :user_account_id
+           AND NOT la.deleted
+    """
+    row = session.execute(
+        text(query), {"transaction_id": transaction_id, "user_account_id": user_account_id}
+    ).fetchone()
+    if row is None:
+        return None
+    return schema.TransactionEntry(**row_to_dict(row))
 
 
 def get_cash_flow_summary(
