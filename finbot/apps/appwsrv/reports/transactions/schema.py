@@ -67,3 +67,21 @@ class SpendingBreakdown(BaseModel):
     from_date: AwareDatetime
     to_date: AwareDatetime
     entries: list[SpendingBreakdownEntry]
+
+
+class MonthlySavingsEntry(BaseModel):
+    month: str
+    income: float
+    expenses: float
+    savings: float
+    savings_rate: float | None
+    projected_income: float | None
+    projected_expenses: float | None
+    projected_savings: float | None
+    projected_savings_rate: float | None
+
+
+class SavingsRateReport(BaseModel):
+    valuation_ccy: str
+    current_month: MonthlySavingsEntry
+    comparison_month: MonthlySavingsEntry

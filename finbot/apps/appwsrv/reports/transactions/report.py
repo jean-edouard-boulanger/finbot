@@ -1,3 +1,5 @@
+import calendar
+from datetime import datetime, timezone
 from typing import Any
 
 from pydantic import AwareDatetime
@@ -317,4 +319,128 @@ def get_spending_breakdown(
         from_date=from_time,
         to_date=to_time,
         entries=entries,
+    )
+
+
+INCOME_TYPES = {"dividend", "interest_earned", "staking_reward", "deposit", "transfer_in"}
+EXPENSE_TYPES = {
+    "fee",
+    "commission",
+    "interest_charged",
+    "tax",
+    "withdrawal",
+    "transfer_out",
+    "payment",
+    "purchase",
+    "contribution",
+}
+
+
+def _aggregate_by_type(
+    session: SessionType,
+    user_account_id: int,
+    from_time: datetime,
+    to_time: datetime,
+) -> dict[str, float]:
+    query = """
+        SELECT th.transaction_type,
+               COALESCE(SUM(th.amount_snapshot_ccy), 0) AS total
+          FROM finbot_transactions_history th
+          JOIN finbot_linked_accounts la ON th.linked_account_id = la.id
+         WHERE la.user_account_id = :user_account_id
+           AND NOT la.deleted
+           AND th.transaction_date >= :from_time
+           AND th.transaction_date <= :to_time
+           AND th.id NOT IN (
+               SELECT tm.outflow_transaction_id FROM finbot_transaction_matches tm WHERE tm.match_status != 'rejected'
+               UNION ALL
+               SELECT tm.inflow_transaction_id FROM finbot_transaction_matches tm WHERE tm.match_status != 'rejected'
+           )
+         GROUP BY th.transaction_type
+    """
+    rows = session.execute(
+        text(query),
+        {"user_account_id": user_account_id, "from_time": from_time, "to_time": to_time},
+    )
+    return {row_to_dict(row)["transaction_type"]: float(row_to_dict(row)["total"]) for row in rows}
+
+
+def _compute_savings_entry(
+    month_str: str,
+    totals_by_type: dict[str, float],
+    *,
+    is_current: bool,
+    now: datetime,
+) -> schema.MonthlySavingsEntry:
+    income = sum(totals_by_type.get(t, 0.0) for t in INCOME_TYPES)
+    expenses = abs(sum(totals_by_type.get(t, 0.0) for t in EXPENSE_TYPES))
+    savings = income - expenses
+    savings_rate = savings / income if income > 0 else None
+
+    projected_income: float | None = None
+    projected_expenses: float | None = None
+    projected_savings: float | None = None
+    projected_savings_rate: float | None = None
+
+    if is_current:
+        day_of_month = now.day
+        year, month = int(month_str[:4]), int(month_str[5:7])
+        days_in_month = calendar.monthrange(year, month)[1]
+        if day_of_month > 0:
+            scale = days_in_month / day_of_month
+            projected_income = income
+            projected_expenses = expenses * scale
+            projected_savings = projected_income - projected_expenses
+            projected_savings_rate = projected_savings / projected_income if projected_income > 0 else None
+
+    return schema.MonthlySavingsEntry(
+        month=month_str,
+        income=income,
+        expenses=expenses,
+        savings=savings,
+        savings_rate=savings_rate,
+        projected_income=projected_income,
+        projected_expenses=projected_expenses,
+        projected_savings=projected_savings,
+        projected_savings_rate=projected_savings_rate,
+    )
+
+
+def get_savings_rate_report(
+    session: SessionType,
+    user_account_id: int,
+    comparison_month: str | None = None,
+) -> schema.SavingsRateReport:
+    settings = repository.get_user_account_settings(session, user_account_id)
+    now = datetime.now(timezone.utc)
+    current_month_str = now.strftime("%Y-%m")
+
+    if comparison_month is None:
+        if now.month == 1:
+            comp_year, comp_month = now.year - 1, 12
+        else:
+            comp_year, comp_month = now.year, now.month - 1
+        comparison_month = f"{comp_year:04d}-{comp_month:02d}"
+
+    # Current month range
+    current_from = datetime(now.year, now.month, 1, tzinfo=timezone.utc)
+    current_to = now
+
+    # Comparison month range
+    comp_year_int = int(comparison_month[:4])
+    comp_month_int = int(comparison_month[5:7])
+    comp_from = datetime(comp_year_int, comp_month_int, 1, tzinfo=timezone.utc)
+    comp_last_day = calendar.monthrange(comp_year_int, comp_month_int)[1]
+    comp_to = datetime(comp_year_int, comp_month_int, comp_last_day, 23, 59, 59, tzinfo=timezone.utc)
+
+    current_totals = _aggregate_by_type(session, user_account_id, current_from, current_to)
+    comp_totals = _aggregate_by_type(session, user_account_id, comp_from, comp_to)
+
+    current_entry = _compute_savings_entry(current_month_str, current_totals, is_current=True, now=now)
+    comparison_entry = _compute_savings_entry(comparison_month, comp_totals, is_current=False, now=now)
+
+    return schema.SavingsRateReport(
+        valuation_ccy=settings.valuation_ccy,
+        current_month=current_entry,
+        comparison_month=comparison_entry,
     )

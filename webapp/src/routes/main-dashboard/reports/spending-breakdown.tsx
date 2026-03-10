@@ -207,7 +207,7 @@ export const SpendingBreakdownPanel: React.FC<SpendingBreakdownPanelProps> = (
     : [];
 
   return (
-    <Card className="border-border/50">
+    <Card className="border-border/50 flex flex-col h-full">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div className="flex items-center gap-2 text-muted-foreground">
           <ShoppingBag className="h-4 w-4" />
@@ -229,11 +229,11 @@ export const SpendingBreakdownPanel: React.FC<SpendingBreakdownPanelProps> = (
           }
         />
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1 flex flex-col">
         {loading || !data ? (
-          <div className="skeleton-shimmer h-[300px] rounded" />
+          <div className="skeleton-shimmer h-[300px] rounded flex-1" />
         ) : !hasData ? (
-          <div className="flex h-[300px] items-center justify-center text-sm text-muted-foreground">
+          <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
             No spending data available yet.
           </div>
         ) : (

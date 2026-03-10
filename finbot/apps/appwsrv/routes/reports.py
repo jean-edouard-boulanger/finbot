@@ -18,13 +18,16 @@ from finbot.apps.appwsrv.reports.transactions.report import (
     get_cash_flow_time_series as generate_cash_flow_time_series,
 )
 from finbot.apps.appwsrv.reports.transactions.report import (
+    get_savings_rate_report as generate_savings_rate_report,
+)
+from finbot.apps.appwsrv.reports.transactions.report import (
     get_spending_breakdown as generate_spending_breakdown,
 )
 from finbot.apps.appwsrv.reports.transactions.report import (
-    serialize_transaction,
+    get_transactions_report as generate_transactions_report,
 )
 from finbot.apps.appwsrv.reports.transactions.report import (
-    get_transactions_report as generate_transactions_report,
+    serialize_transaction,
 )
 from finbot.apps.http_base import CurrentUserIdDep
 from finbot.core.errors import MissingUserData, ResourceNotFoundError
@@ -171,5 +174,20 @@ def get_spending_breakdown(
             user_account_id=current_user_id,
             from_time=effective_from,
             to_time=effective_to,
+        )
+    )
+
+
+@router.get("/savings-rate/", operation_id="get_user_account_savings_rate")
+def get_savings_rate(
+    current_user_id: CurrentUserIdDep,
+    comparison_month: str | None = Query(default=None),
+) -> appwsrv_schema.GetSavingsRateReportResponse:
+    """Get monthly savings rate (current month vs comparison month)"""
+    return appwsrv_schema.GetSavingsRateReportResponse(
+        report=generate_savings_rate_report(
+            session=db.session,
+            user_account_id=current_user_id,
+            comparison_month=comparison_month,
         )
     )
