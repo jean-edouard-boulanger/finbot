@@ -5,7 +5,13 @@ from sqlalchemy.sql import text
 
 from finbot.apps.appwsrv.reports.transactions import schema
 from finbot.core.db.utils import row_to_dict
-from finbot.model import SessionType, repository
+from finbot.model import (
+    SessionType,
+    SubAccountValuationHistoryEntry,
+    TransactionHistoryEntry,
+    TransactionMatch,
+    repository,
+)
 
 
 def get_transactions_report(
@@ -105,58 +111,53 @@ def get_transactions_report(
     )
 
 
-def get_transaction_by_id(
+def serialize_transaction(
     session: SessionType,
-    user_account_id: int,
-    transaction_id: int,
-) -> schema.TransactionEntry | None:
-    query = """
-        SELECT th.id,
-               th.linked_account_id,
-               la.account_name AS linked_account_name,
-               th.sub_account_id,
-               COALESCE(
-                   (SELECT savhe.sub_account_description
-                      FROM finbot_sub_accounts_valuation_history_entries savhe
-                     WHERE savhe.linked_account_id = th.linked_account_id
-                       AND savhe.sub_account_id = th.sub_account_id
-                     ORDER BY savhe.history_entry_id DESC
-                     LIMIT 1),
-                   th.sub_account_id
-               ) AS sub_account_name,
-               th.transaction_date,
-               th.transaction_type,
-               th.amount,
-               th.amount_snapshot_ccy,
-               th.currency,
-               th.description,
-               th.symbol,
-               th.units,
-               th.unit_price,
-               th.fee,
-               th.counterparty,
-               th.spending_category_primary,
-               th.spending_category_detailed,
-               (SELECT CASE WHEN tm.outflow_transaction_id = th.id
-                       THEN tm.inflow_transaction_id
-                       ELSE tm.outflow_transaction_id END
-                  FROM finbot_transaction_matches tm
-                 WHERE (tm.outflow_transaction_id = th.id OR tm.inflow_transaction_id = th.id)
-                   AND tm.match_status != 'rejected'
-                 LIMIT 1
-               ) AS matched_transaction_id
-          FROM finbot_transactions_history th
-          JOIN finbot_linked_accounts la ON th.linked_account_id = la.id
-         WHERE th.id = :transaction_id
-           AND la.user_account_id = :user_account_id
-           AND NOT la.deleted
-    """
-    row = session.execute(
-        text(query), {"transaction_id": transaction_id, "user_account_id": user_account_id}
-    ).fetchone()
-    if row is None:
-        return None
-    return schema.TransactionEntry(**row_to_dict(row))
+    txn: TransactionHistoryEntry,
+) -> schema.TransactionEntry:
+    sub_account_name: str = (
+        session.query(SubAccountValuationHistoryEntry.sub_account_description)
+        .filter_by(linked_account_id=txn.linked_account_id, sub_account_id=txn.sub_account_id)
+        .order_by(SubAccountValuationHistoryEntry.history_entry_id.desc())
+        .limit(1)
+        .scalar()  # type: ignore[no-untyped-call]
+    ) or txn.sub_account_id
+
+    match: TransactionMatch | None = (
+        session.query(TransactionMatch)
+        .filter(
+            TransactionMatch.match_status != "rejected",
+            (TransactionMatch.outflow_transaction_id == txn.id) | (TransactionMatch.inflow_transaction_id == txn.id),
+        )
+        .first()
+    )
+    matched_transaction_id = None
+    if match is not None:
+        matched_transaction_id = (
+            match.inflow_transaction_id if match.outflow_transaction_id == txn.id else match.outflow_transaction_id
+        )
+
+    return schema.TransactionEntry(
+        id=txn.id,
+        linked_account_id=txn.linked_account_id,
+        linked_account_name=txn.linked_account.account_name,
+        sub_account_id=txn.sub_account_id,
+        sub_account_name=sub_account_name,
+        transaction_date=txn.transaction_date,
+        transaction_type=txn.transaction_type,
+        amount=float(txn.amount),
+        amount_snapshot_ccy=float(txn.amount_snapshot_ccy) if txn.amount_snapshot_ccy is not None else None,
+        currency=txn.currency,
+        description=txn.description,
+        symbol=txn.symbol,
+        units=float(txn.units) if txn.units is not None else None,
+        unit_price=float(txn.unit_price) if txn.unit_price is not None else None,
+        fee=float(txn.fee) if txn.fee is not None else None,
+        counterparty=txn.counterparty,
+        spending_category_primary=txn.spending_category_primary,
+        spending_category_detailed=txn.spending_category_detailed,
+        matched_transaction_id=matched_transaction_id,
+    )
 
 
 def get_cash_flow_summary(

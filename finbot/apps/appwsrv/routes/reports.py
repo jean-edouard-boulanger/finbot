@@ -21,7 +21,7 @@ from finbot.apps.appwsrv.reports.transactions.report import (
     get_spending_breakdown as generate_spending_breakdown,
 )
 from finbot.apps.appwsrv.reports.transactions.report import (
-    get_transaction_by_id,
+    serialize_transaction,
 )
 from finbot.apps.appwsrv.reports.transactions.report import (
     get_transactions_report as generate_transactions_report,
@@ -102,14 +102,16 @@ def get_transaction(
     transaction_id: int,
 ) -> appwsrv_schema.GetTransactionResponse:
     """Get a single transaction by ID"""
-    entry = get_transaction_by_id(
+    txn = repository.get_transaction_by_id(
         session=db.session,
         user_account_id=current_user_id,
         transaction_id=transaction_id,
     )
-    if entry is None:
+    if txn is None:
         raise ResourceNotFoundError(f"Transaction {transaction_id} not found")
-    return appwsrv_schema.GetTransactionResponse(transaction=entry)
+    return appwsrv_schema.GetTransactionResponse(
+        transaction=serialize_transaction(db.session, txn),
+    )
 
 
 @router.get("/cash-flow/summary/", operation_id="get_user_account_cash_flow_summary")
