@@ -378,7 +378,7 @@ export const TransactionsReportPanel: React.FC<TransactionsReportPanelProps> = (
 
       {loading || !report ? (
         <div className="space-y-3 py-4">
-          {Array.from({ length: 5 }).map((_, i) => (
+          {Array.from({ length: limit }).map((_, i) => (
             <div key={i} className="skeleton-shimmer h-10 rounded" />
           ))}
         </div>

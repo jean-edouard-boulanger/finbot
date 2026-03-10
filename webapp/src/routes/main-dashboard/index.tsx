@@ -344,6 +344,7 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
                     userAccountId={userAccountId!}
                     locale={locale}
                     moneyFormatter={defaultMoneyFormatter}
+                    pageSize={10}
                   />
                 </TabsContent>
               </CardContent>

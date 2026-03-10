@@ -17,7 +17,7 @@ from finbot.model import SessionType
 
 logger = logging.getLogger(__name__)
 
-BATCH_SIZE = 10
+BATCH_SIZE = 25
 
 VALID_CATEGORIES: set[tuple[str, str]] = {(primary, detailed) for primary, detailed, _ in PLAID_PFC_TAXONOMY}
 
