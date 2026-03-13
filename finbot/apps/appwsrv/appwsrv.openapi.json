@@ -1972,7 +1972,10 @@
                         "schema": {
                             "anyOf": [
                                 {
-                                    "type": "integer"
+                                    "type": "array",
+                                    "items": {
+                                        "type": "integer"
+                                    }
                                 },
                                 {
                                     "type": "null"
@@ -2007,7 +2010,10 @@
                         "schema": {
                             "anyOf": [
                                 {
-                                    "type": "string"
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
                                 },
                                 {
                                     "type": "null"
@@ -2046,6 +2052,54 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/GetTransactionsReportResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/transactions/{transaction_id}/": {
+            "get": {
+                "tags": [
+                    "User accounts (reports)"
+                ],
+                "summary": "Get Transaction",
+                "description": "Get a single transaction by ID",
+                "operationId": "get_transaction",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "transaction_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Transaction Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GetTransactionResponse"
                                 }
                             }
                         }
@@ -2291,6 +2345,61 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/GetSpendingBreakdownResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/savings-rate/": {
+            "get": {
+                "tags": [
+                    "User accounts (reports)"
+                ],
+                "summary": "Get Savings Rate",
+                "description": "Get monthly savings rate (current month vs comparison month)",
+                "operationId": "get_user_account_savings_rate",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "comparison_month",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Comparison Month"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GetSavingsRateReportResponse"
                                 }
                             }
                         }
@@ -2933,6 +3042,19 @@
                 ],
                 "title": "GetProvidersResponse"
             },
+            "GetSavingsRateReportResponse": {
+                "properties": {
+                    "report": {
+                        "$ref": "#/components/schemas/SavingsRateReport"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "report"
+                ],
+                "title": "GetSavingsRateReportResponse"
+            },
             "GetSpendingBreakdownResponse": {
                 "properties": {
                     "report": {
@@ -2945,6 +3067,19 @@
                     "report"
                 ],
                 "title": "GetSpendingBreakdownResponse"
+            },
+            "GetTransactionResponse": {
+                "properties": {
+                    "transaction": {
+                        "$ref": "#/components/schemas/TransactionEntry"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "transaction"
+                ],
+                "title": "GetTransactionResponse"
             },
             "GetTransactionsReportResponse": {
                 "properties": {
@@ -3605,6 +3740,95 @@
                 ],
                 "title": "Metrics"
             },
+            "MonthlySavingsEntry": {
+                "properties": {
+                    "month": {
+                        "type": "string",
+                        "title": "Month"
+                    },
+                    "income": {
+                        "type": "number",
+                        "title": "Income"
+                    },
+                    "expenses": {
+                        "type": "number",
+                        "title": "Expenses"
+                    },
+                    "savings": {
+                        "type": "number",
+                        "title": "Savings"
+                    },
+                    "savings_rate": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Savings Rate"
+                    },
+                    "projected_income": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Projected Income"
+                    },
+                    "projected_expenses": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Projected Expenses"
+                    },
+                    "projected_savings": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Projected Savings"
+                    },
+                    "projected_savings_rate": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Projected Savings Rate"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "month",
+                    "income",
+                    "expenses",
+                    "savings",
+                    "savings_rate",
+                    "projected_income",
+                    "projected_expenses",
+                    "projected_savings",
+                    "projected_savings_rate"
+                ],
+                "title": "MonthlySavingsEntry"
+            },
             "PlaidSettings": {
                 "properties": {
                     "environment": {
@@ -3700,6 +3924,28 @@
                     "metrics"
                 ],
                 "title": "ReportEntry"
+            },
+            "SavingsRateReport": {
+                "properties": {
+                    "valuation_ccy": {
+                        "type": "string",
+                        "title": "Valuation Ccy"
+                    },
+                    "current_month": {
+                        "$ref": "#/components/schemas/MonthlySavingsEntry"
+                    },
+                    "comparison_month": {
+                        "$ref": "#/components/schemas/MonthlySavingsEntry"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "valuation_ccy",
+                    "current_month",
+                    "comparison_month"
+                ],
+                "title": "SavingsRateReport"
             },
             "SeriesData": {
                 "properties": {
