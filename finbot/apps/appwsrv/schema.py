@@ -425,6 +425,14 @@ class GetSpendingBreakdownResponse(AppModel):
     report: transactions_schema.SpendingBreakdown
 
 
+class GetSavingsRateReportResponse(AppModel):
+    report: transactions_schema.SavingsRateReport
+
+
+class GetTransactionResponse(AppModel):
+    transaction: transactions_schema.TransactionEntry
+
+
 class PlaidSettings(AppModel):
     environment: str
     client_id: str

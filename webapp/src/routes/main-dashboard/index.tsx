@@ -21,7 +21,7 @@ import {
   WealthDistributionPanel,
   TransactionsReportPanel,
   SpendingBreakdownPanel,
-  TopTransactionsPanel,
+  SavingsRatePanel,
   CashFlowPanel,
 } from "./reports";
 
@@ -285,7 +285,7 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
             />
           </div>
           <div className="animate-fade-up stagger-4">
-            <TopTransactionsPanel
+            <SavingsRatePanel
               userAccountId={userAccountId!}
               locale={locale}
               moneyFormatter={defaultMoneyFormatter}
@@ -344,6 +344,7 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
                     userAccountId={userAccountId!}
                     locale={locale}
                     moneyFormatter={defaultMoneyFormatter}
+                    pageSize={10}
                   />
                 </TabsContent>
               </CardContent>

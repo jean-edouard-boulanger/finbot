@@ -29,6 +29,7 @@ from finbot.model import (
     SessionType,
     SubAccountItemValuationHistoryEntry,
     SubAccountValuationHistoryEntry,
+    TransactionHistoryEntry,
     UserAccount,
     UserAccountHistoryEntry,
     UserAccountSettings,
@@ -609,3 +610,21 @@ def get_linked_account(
     if not linked_account:
         raise ResourceNotFoundError(f"linked account {linked_account} not found")
     return linked_account
+
+
+def get_transaction_by_id(
+    session: SessionType,
+    user_account_id: int,
+    transaction_id: int,
+) -> Optional[TransactionHistoryEntry]:
+    txn: Optional[TransactionHistoryEntry] = (
+        session.query(TransactionHistoryEntry)
+        .join(LinkedAccount, TransactionHistoryEntry.linked_account_id == LinkedAccount.id)
+        .filter(
+            TransactionHistoryEntry.id == transaction_id,
+            LinkedAccount.user_account_id == user_account_id,
+            ~LinkedAccount.deleted,
+        )
+        .first()
+    )
+    return txn

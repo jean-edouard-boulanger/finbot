@@ -18,13 +18,19 @@ from finbot.apps.appwsrv.reports.transactions.report import (
     get_cash_flow_time_series as generate_cash_flow_time_series,
 )
 from finbot.apps.appwsrv.reports.transactions.report import (
+    get_savings_rate_report as generate_savings_rate_report,
+)
+from finbot.apps.appwsrv.reports.transactions.report import (
     get_spending_breakdown as generate_spending_breakdown,
 )
 from finbot.apps.appwsrv.reports.transactions.report import (
     get_transactions_report as generate_transactions_report,
 )
+from finbot.apps.appwsrv.reports.transactions.report import (
+    serialize_transaction,
+)
 from finbot.apps.http_base import CurrentUserIdDep
-from finbot.core.errors import MissingUserData
+from finbot.core.errors import MissingUserData, ResourceNotFoundError
 from finbot.core.utils import now_utc
 from finbot.model import db, repository
 
@@ -71,9 +77,9 @@ def get_transactions_report(
     current_user_id: CurrentUserIdDep,
     from_time: AwareDatetime | None = Query(default=None),
     to_time: AwareDatetime | None = Query(default=None),
-    linked_account_id: int | None = Query(default=None),
+    linked_account_id: list[int] | None = Query(default=None),
     transaction_type: list[str] | None = Query(default=None),
-    spending_category: str | None = Query(default=None),
+    spending_category: list[str] | None = Query(default=None),
     limit: int = Query(default=100, le=500),
     offset: int = Query(default=0, ge=0),
 ) -> appwsrv_schema.GetTransactionsReportResponse:
@@ -90,6 +96,24 @@ def get_transactions_report(
             limit=limit,
             offset=offset,
         )
+    )
+
+
+@router.get("/transactions/{transaction_id}/", operation_id="get_transaction")
+def get_transaction(
+    current_user_id: CurrentUserIdDep,
+    transaction_id: int,
+) -> appwsrv_schema.GetTransactionResponse:
+    """Get a single transaction by ID"""
+    txn = repository.get_transaction_by_id(
+        session=db.session,
+        user_account_id=current_user_id,
+        transaction_id=transaction_id,
+    )
+    if txn is None:
+        raise ResourceNotFoundError(f"Transaction {transaction_id} not found")
+    return appwsrv_schema.GetTransactionResponse(
+        transaction=serialize_transaction(db.session, txn),
     )
 
 
@@ -150,5 +174,20 @@ def get_spending_breakdown(
             user_account_id=current_user_id,
             from_time=effective_from,
             to_time=effective_to,
+        )
+    )
+
+
+@router.get("/savings-rate/", operation_id="get_user_account_savings_rate")
+def get_savings_rate(
+    current_user_id: CurrentUserIdDep,
+    comparison_month: str | None = Query(default=None),
+) -> appwsrv_schema.GetSavingsRateReportResponse:
+    """Get monthly savings rate (current month vs comparison month)"""
+    return appwsrv_schema.GetSavingsRateReportResponse(
+        report=generate_savings_rate_report(
+            session=db.session,
+            user_account_id=current_user_id,
+            comparison_month=comparison_month,
         )
     )

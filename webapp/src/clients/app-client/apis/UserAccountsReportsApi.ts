@@ -18,7 +18,9 @@ import type {
   GetCashFlowTimeSeriesResponse,
   GetEarningsReportResponse,
   GetHoldingsReportResponse,
+  GetSavingsRateReportResponse,
   GetSpendingBreakdownResponse,
+  GetTransactionResponse,
   GetTransactionsReportResponse,
   HTTPValidationError,
 } from '../models/index';
@@ -31,13 +33,21 @@ import {
     GetEarningsReportResponseToJSON,
     GetHoldingsReportResponseFromJSON,
     GetHoldingsReportResponseToJSON,
+    GetSavingsRateReportResponseFromJSON,
+    GetSavingsRateReportResponseToJSON,
     GetSpendingBreakdownResponseFromJSON,
     GetSpendingBreakdownResponseToJSON,
+    GetTransactionResponseFromJSON,
+    GetTransactionResponseToJSON,
     GetTransactionsReportResponseFromJSON,
     GetTransactionsReportResponseToJSON,
     HTTPValidationErrorFromJSON,
     HTTPValidationErrorToJSON,
 } from '../models/index';
+
+export interface GetTransactionRequest {
+    transactionId: number;
+}
 
 export interface GetUserAccountCashFlowSummaryRequest {
     fromTime?: Date | null;
@@ -51,6 +61,10 @@ export interface GetUserAccountCashFlowTimeSeriesRequest {
     linkedAccountId?: number | null;
 }
 
+export interface GetUserAccountSavingsRateRequest {
+    comparisonMonth?: string | null;
+}
+
 export interface GetUserAccountSpendingBreakdownRequest {
     fromTime?: Date | null;
     toTime?: Date | null;
@@ -59,9 +73,9 @@ export interface GetUserAccountSpendingBreakdownRequest {
 export interface GetUserAccountTransactionsReportRequest {
     fromTime?: Date | null;
     toTime?: Date | null;
-    linkedAccountId?: number | null;
+    linkedAccountId?: Array<number> | null;
     transactionType?: Array<string> | null;
-    spendingCategory?: string | null;
+    spendingCategory?: Array<string> | null;
     limit?: number;
     offset?: number;
 }
@@ -73,6 +87,22 @@ export interface GetUserAccountTransactionsReportRequest {
  * @interface UserAccountsReportsApiInterface
  */
 export interface UserAccountsReportsApiInterface {
+    /**
+     * Get a single transaction by ID
+     * @summary Get Transaction
+     * @param {number} transactionId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UserAccountsReportsApiInterface
+     */
+    getTransactionRaw(requestParameters: GetTransactionRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GetTransactionResponse>>;
+
+    /**
+     * Get a single transaction by ID
+     * Get Transaction
+     */
+    getTransaction(requestParameters: GetTransactionRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetTransactionResponse>;
+
     /**
      * Get cash flow summary by transaction category
      * @summary Get Cash Flow Summary
@@ -140,6 +170,22 @@ export interface UserAccountsReportsApiInterface {
     getUserAccountHoldingsReport(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetHoldingsReportResponse>;
 
     /**
+     * Get monthly savings rate (current month vs comparison month)
+     * @summary Get Savings Rate
+     * @param {string} [comparisonMonth] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UserAccountsReportsApiInterface
+     */
+    getUserAccountSavingsRateRaw(requestParameters: GetUserAccountSavingsRateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GetSavingsRateReportResponse>>;
+
+    /**
+     * Get monthly savings rate (current month vs comparison month)
+     * Get Savings Rate
+     */
+    getUserAccountSavingsRate(requestParameters: GetUserAccountSavingsRateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetSavingsRateReportResponse>;
+
+    /**
      * Get spending totals grouped by PFC primary category
      * @summary Get Spending Breakdown
      * @param {Date} [fromTime] 
@@ -161,9 +207,9 @@ export interface UserAccountsReportsApiInterface {
      * @summary Get Transactions Report
      * @param {Date} [fromTime] 
      * @param {Date} [toTime] 
-     * @param {number} [linkedAccountId] 
+     * @param {Array<number>} [linkedAccountId] 
      * @param {Array<string>} [transactionType] 
-     * @param {string} [spendingCategory] 
+     * @param {Array<string>} [spendingCategory] 
      * @param {number} [limit] 
      * @param {number} [offset] 
      * @param {*} [options] Override http request option.
@@ -184,6 +230,49 @@ export interface UserAccountsReportsApiInterface {
  * 
  */
 export class UserAccountsReportsApi extends runtime.BaseAPI implements UserAccountsReportsApiInterface {
+
+    /**
+     * Get a single transaction by ID
+     * Get Transaction
+     */
+    async getTransactionRaw(requestParameters: GetTransactionRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GetTransactionResponse>> {
+        if (requestParameters['transactionId'] == null) {
+            throw new runtime.RequiredError(
+                'transactionId',
+                'Required parameter "transactionId" was null or undefined when calling getTransaction().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/reports/transactions/{transaction_id}/`.replace(`{${"transaction_id"}}`, encodeURIComponent(String(requestParameters['transactionId']))),
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => GetTransactionResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Get a single transaction by ID
+     * Get Transaction
+     */
+    async getTransaction(requestParameters: GetTransactionRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetTransactionResponse> {
+        const response = await this.getTransactionRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
 
     /**
      * Get cash flow summary by transaction category
@@ -350,6 +439,46 @@ export class UserAccountsReportsApi extends runtime.BaseAPI implements UserAccou
      */
     async getUserAccountHoldingsReport(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetHoldingsReportResponse> {
         const response = await this.getUserAccountHoldingsReportRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Get monthly savings rate (current month vs comparison month)
+     * Get Savings Rate
+     */
+    async getUserAccountSavingsRateRaw(requestParameters: GetUserAccountSavingsRateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GetSavingsRateReportResponse>> {
+        const queryParameters: any = {};
+
+        if (requestParameters['comparisonMonth'] != null) {
+            queryParameters['comparison_month'] = requestParameters['comparisonMonth'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/reports/savings-rate/`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => GetSavingsRateReportResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Get monthly savings rate (current month vs comparison month)
+     * Get Savings Rate
+     */
+    async getUserAccountSavingsRate(requestParameters: GetUserAccountSavingsRateRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetSavingsRateReportResponse> {
+        const response = await this.getUserAccountSavingsRateRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

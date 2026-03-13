@@ -17,7 +17,7 @@ from finbot.model import SessionType
 
 logger = logging.getLogger(__name__)
 
-BATCH_SIZE = 10
+BATCH_SIZE = 25
 
 VALID_CATEGORIES: set[tuple[str, str]] = {(primary, detailed) for primary, detailed, _ in PLAID_PFC_TAXONOMY}
 
@@ -41,11 +41,9 @@ async def categorize_transaction_batch(
         logger.info("FINBOT_OPENAI_API_KEY not set, skipping LLM spending categorization")
         return
 
-    # Load the uncategorized transactions
     entries = (
         db_session.query(model.TransactionHistoryEntry)
         .filter(model.TransactionHistoryEntry.id.in_(transaction_ids))
-        .filter(model.TransactionHistoryEntry.spending_category_source.is_(None))  # type: ignore[no-untyped-call]
         .all()
     )
 
