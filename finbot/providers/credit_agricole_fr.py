@@ -13,7 +13,6 @@ from playwright.async_api import Locator, Response
 from pydantic import AwareDatetime, SecretStr
 
 from finbot.core.schema import BaseModel, CurrencyCode
-from finbot.core.utils import raise_
 from finbot.providers.errors import AuthenticationError, UnsupportedAccountType
 from finbot.providers.playwright_base import (
     Condition,
@@ -374,7 +373,6 @@ def _extract_account_number(s: str) -> str | None:
     return None
 
 
-async def _handle_auth_error(el: Any):
+async def _handle_auth_error(el: Any) -> None:
     raw_error = await el.inner_text()
     raise AuthenticationError(raw_error.strip())
-

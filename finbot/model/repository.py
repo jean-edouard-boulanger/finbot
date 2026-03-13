@@ -30,7 +30,6 @@ from finbot.model import (
     SubAccountItemValuationHistoryEntry,
     SubAccountValuationHistoryEntry,
     TransactionHistoryEntry,
-    TransactionMatch,
     UserAccount,
     UserAccountHistoryEntry,
     UserAccountSettings,
