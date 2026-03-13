@@ -89,9 +89,7 @@ class Api(PlaywrightProviderBase):
             Condition(lambda: page.locator("#loginForm").is_visible()),
             Condition(
                 lambda: self.get_element_or_none("div.AemBug-content"),
-                when_fulfilled=lambda element: raise_(
-                    AuthenticationError(element.inner_text().strip()),
-                ),
+                when_fulfilled=_handle_auth_error,
             ),
         ).wait_any(page)
 
@@ -120,9 +118,7 @@ class Api(PlaywrightProviderBase):
             Condition(lambda: self.get_element_or_none(".Synthesis-user")),
             Condition(
                 lambda: self.get_element_or_none("#erreur-keypad"),
-                when_fulfilled=lambda el: raise_(
-                    AuthenticationError(el.inner_text().strip()),
-                ),
+                when_fulfilled=_handle_auth_error,
             ),
         ).wait_any(page)
 
@@ -376,3 +372,9 @@ def _extract_account_number(s: str) -> str | None:
     if m := re.search(r"(\d{11})", s):
         return m.group(1)
     return None
+
+
+async def _handle_auth_error(el: Any):
+    raw_error = await el.inner_text()
+    raise AuthenticationError(raw_error.strip())
+

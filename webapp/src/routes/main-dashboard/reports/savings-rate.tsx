@@ -12,12 +12,7 @@ import {
 } from "components/ui/dropdown-menu";
 import { Button } from "components/ui/button";
 import { MoneyFormatterType } from "components/money";
-import {
-  PiggyBank,
-  ChevronDown,
-  TrendingUp,
-  TrendingDown,
-} from "lucide-react";
+import { PiggyBank, ChevronDown, TrendingUp, TrendingDown } from "lucide-react";
 import { DateTime } from "luxon";
 
 interface MonthlySavingsEntry {
@@ -76,8 +71,7 @@ function MonthColumn({
   moneyFormatter: MoneyFormatterType;
   showProjection: boolean;
 }) {
-  const hasProjection =
-    showProjection && entry.projected_savings_rate !== null;
+  const hasProjection = showProjection && entry.projected_savings_rate !== null;
 
   return (
     <div className="flex-1 space-y-3">
