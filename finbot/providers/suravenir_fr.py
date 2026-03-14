@@ -235,7 +235,7 @@ def _create_transaction(account: Account, payload: Any) -> Transaction | None:
     if (state := payload.get("movementState")) and state == "EN_ATTENTE":
         return None
     return Transaction(
-        transaction_id=payload["operationId"],
+        transaction_id=_normalize_transaction_id(payload["operationId"]),
         account_id=account.id,
         transaction_date=transaction_date,
         effective_date=effective_date,
@@ -244,6 +244,13 @@ def _create_transaction(account: Account, payload: Any) -> Transaction | None:
         currency=account.iso_currency,
         description=payload["movementLabel"],
     )
+
+
+def _normalize_transaction_id(raw_op_id: str) -> str:
+    if "_" in raw_op_id:
+        raw_op_id, _ = raw_op_id.split("_", maxsplit=1)
+        return raw_op_id.strip()
+    return raw_op_id
 
 
 def _create_transactions(account: Account, payload: Any) -> list[Transaction]:

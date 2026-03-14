@@ -47,7 +47,7 @@ services:
       FINBOT_WAIT_DEPS: "finbotdb,workersrv[temporal]"
 
   temporal:
-    image: temporalio/auto-setup:1.27
+    image: temporalio/auto-setup:1.29.4
     env_file:
       - envs/prod.env
       - envs/secrets.prod.env
@@ -61,7 +61,7 @@ services:
       - ./envs/temporal/dynamicconfig:/etc/temporal/config/dynamicconfig
 
   temporal-admin-tools:
-    image: temporalio/admin-tools:1.27
+    image: temporalio/admin-tools:1.29.4
     env_file:
       - envs/prod.env
       - envs/secrets.prod.env
@@ -72,7 +72,7 @@ services:
     tty: true
 
   temporal-ui:
-    image: temporalio/ui:v2.37.4
+    image: temporalio/ui:2.47.3
     env_file:
       - envs/prod.env
       - envs/secrets.prod.env
