@@ -97,7 +97,7 @@ services:
       - smtp4dev
 
   temporal:
-    image: temporalio/auto-setup:1.27
+    image: temporalio/auto-setup:1.29.4
     env_file: *env_files
     container_name: temporal
     depends_on:
@@ -109,7 +109,7 @@ services:
       - ./envs/temporal/dynamicconfig:/etc/temporal/config/dynamicconfig
 
   temporal-admin-tools:
-    image: temporalio/admin-tools:1.27
+    image: temporalio/admin-tools:1.29.4
     env_file: *env_files
     container_name: temporal-admin-tools
     depends_on:
@@ -118,7 +118,7 @@ services:
     tty: true
 
   temporal-ui:
-    image: temporalio/ui:v2.37.4
+    image: temporalio/ui:2.47.3
     env_file: *env_files
     container_name: temporal-ui
     depends_on:
