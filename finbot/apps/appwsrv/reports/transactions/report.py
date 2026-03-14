@@ -235,6 +235,27 @@ def get_cash_flow_time_series(
     if linked_account_id is not None:
         params["linked_account_id"] = linked_account_id
         extra_where = "AND th.linked_account_id = :linked_account_id"
+        match_exclusion = """
+           AND th.id NOT IN (
+               SELECT tm.outflow_transaction_id
+                 FROM finbot_transaction_matches tm
+                 JOIN finbot_transactions_history counterpart ON counterpart.id = tm.inflow_transaction_id
+                WHERE tm.match_status != 'rejected'
+                  AND counterpart.linked_account_id = :linked_account_id
+               UNION ALL
+               SELECT tm.inflow_transaction_id
+                 FROM finbot_transaction_matches tm
+                 JOIN finbot_transactions_history counterpart ON counterpart.id = tm.outflow_transaction_id
+                WHERE tm.match_status != 'rejected'
+                  AND counterpart.linked_account_id = :linked_account_id
+           )"""
+    else:
+        match_exclusion = """
+           AND th.id NOT IN (
+               SELECT tm.outflow_transaction_id FROM finbot_transaction_matches tm WHERE tm.match_status != 'rejected'
+               UNION ALL
+               SELECT tm.inflow_transaction_id FROM finbot_transaction_matches tm WHERE tm.match_status != 'rejected'
+           )"""
 
     query = f"""
         SELECT {grouping} AS period,
@@ -250,11 +271,7 @@ def get_cash_flow_time_series(
            AND NOT la.deleted
            AND th.transaction_date >= :from_time
            AND th.transaction_date <= :to_time
-           AND th.id NOT IN (
-               SELECT tm.outflow_transaction_id FROM finbot_transaction_matches tm WHERE tm.match_status != 'rejected'
-               UNION ALL
-               SELECT tm.inflow_transaction_id FROM finbot_transaction_matches tm WHERE tm.match_status != 'rejected'
-           )
+           {match_exclusion}
            {extra_where}
          GROUP BY {grouping}
          ORDER BY {grouping}
