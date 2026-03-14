@@ -32,6 +32,7 @@ dependencies = [
     "twilio==9.6.1",
     "uvicorn<1",
     "openai>=2",
+    "rapidfuzz>=3",
 ]
 
 [project.optional-dependencies]

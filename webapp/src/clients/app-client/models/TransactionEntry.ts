@@ -127,11 +127,29 @@ export interface TransactionEntry {
      */
     spendingCategoryDetailed: string | null;
     /**
-     * 
+     *
      * @type {number}
      * @memberof TransactionEntry
      */
     matchedTransactionId: number | null;
+    /**
+     *
+     * @type {number}
+     * @memberof TransactionEntry
+     */
+    merchantId?: number | null;
+    /**
+     *
+     * @type {string}
+     * @memberof TransactionEntry
+     */
+    merchantName?: string | null;
+    /**
+     *
+     * @type {string}
+     * @memberof TransactionEntry
+     */
+    merchantWebsiteUrl?: string | null;
 }
 
 /**
@@ -189,6 +207,9 @@ export function TransactionEntryFromJSONTyped(json: any, ignoreDiscriminator: bo
         'spendingCategoryPrimary': json['spending_category_primary'],
         'spendingCategoryDetailed': json['spending_category_detailed'],
         'matchedTransactionId': json['matched_transaction_id'],
+        'merchantId': json['merchant_id'] == null ? undefined : json['merchant_id'],
+        'merchantName': json['merchant_name'] == null ? undefined : json['merchant_name'],
+        'merchantWebsiteUrl': json['merchant_website_url'] == null ? undefined : json['merchant_website_url'],
     };
 }
 
@@ -222,6 +243,9 @@ export function TransactionEntryToJSONTyped(value?: TransactionEntry | null, ign
         'spending_category_primary': value['spendingCategoryPrimary'],
         'spending_category_detailed': value['spendingCategoryDetailed'],
         'matched_transaction_id': value['matchedTransactionId'],
+        'merchant_id': value['merchantId'],
+        'merchant_name': value['merchantName'],
+        'merchant_website_url': value['merchantWebsiteUrl'],
     };
 }
 

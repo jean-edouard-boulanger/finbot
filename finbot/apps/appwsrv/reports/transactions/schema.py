@@ -23,6 +23,9 @@ class TransactionEntry(BaseModel):
     spending_category_primary: str | None
     spending_category_detailed: str | None
     matched_transaction_id: int | None
+    merchant_id: int | None = None
+    merchant_name: str | None = None
+    merchant_website_url: str | None = None
 
 
 class TransactionsReport(BaseModel):

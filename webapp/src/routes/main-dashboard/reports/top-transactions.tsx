@@ -28,6 +28,8 @@ interface TransactionEntry {
   description: string;
   amount_snapshot_ccy: number | null;
   matched_transaction_id: number | null;
+  merchant_name: string | null;
+  merchant_website_url: string | null;
 }
 
 interface TransactionsReport {
@@ -210,8 +212,13 @@ export const TopTransactionsPanel: React.FC<TopTransactionsPanelProps> = (
               >
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-medium">
-                    {txn.description}
+                    {txn.merchant_name ?? txn.description}
                   </div>
+                  {txn.merchant_name && (
+                    <div className="truncate text-xs text-muted-foreground">
+                      {txn.description}
+                    </div>
+                  )}
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <span>
                       {DateTime.fromISO(txn.transaction_date).toLocaleString(
