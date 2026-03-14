@@ -90,9 +90,7 @@ class Api(PlaywrightProviderBase):
             Condition(lambda: self.get_element_or_none("a#nav-primary-profile")),
             Condition(
                 lambda: self.get_element_or_none("#error-container-wrapper"),
-                when_fulfilled=lambda el: raise_(
-                    AuthenticationError(el.inner_text().strip()),
-                ),
+                when_fulfilled=_handle_auth_error,
             ),
             Condition(
                 lambda: self._password_change_needed(),
@@ -132,3 +130,8 @@ class Api(PlaywrightProviderBase):
         if not heading_text:
             return False
         return "Edit password".lower() in heading_text.lower()
+
+
+async def _handle_auth_error(el: Any) -> None:
+    raw_error = await el.inner_text()
+    raise AuthenticationError(raw_error.strip())

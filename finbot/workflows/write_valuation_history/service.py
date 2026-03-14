@@ -191,6 +191,7 @@ def write_history_impl(
         )
         if new_uncategorized_ids:
             logging.info(f"consolidated {len(new_uncategorized_ids)} new transactions")
+            _enrich_merchants(new_uncategorized_ids, db_session)
             _categorize_new_transactions(new_uncategorized_ids, db_session)
             db_session.commit()
     except Exception:
@@ -216,6 +217,18 @@ def write_history_impl(
             valuation_change=reinterpret_as_pydantic(core_schema.ValuationChange, user_account_valuation_change),
         )
     )
+
+
+def _enrich_merchants(
+    transaction_ids: list[int],
+    db_session: SessionType,
+) -> None:
+    from finbot.core.merchant_enricher import enrich_transactions_with_merchants
+
+    try:
+        asyncio.run(enrich_transactions_with_merchants(transaction_ids, db_session))
+    except Exception:
+        logging.exception("merchant enrichment failed (non-fatal)")
 
 
 def _categorize_new_transactions(

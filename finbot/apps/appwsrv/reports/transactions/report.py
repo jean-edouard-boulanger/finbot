@@ -95,9 +95,13 @@ def get_transactions_report(
                  WHERE (tm.outflow_transaction_id = th.id OR tm.inflow_transaction_id = th.id)
                    AND tm.match_status != 'rejected'
                  LIMIT 1
-               ) AS matched_transaction_id
+               ) AS matched_transaction_id,
+               th.merchant_id,
+               m.name AS merchant_name,
+               m.website_url AS merchant_website_url
           FROM finbot_transactions_history th
           JOIN finbot_linked_accounts la ON th.linked_account_id = la.id
+          LEFT JOIN finbot_merchants m ON th.merchant_id = m.id
          WHERE {where}
          ORDER BY th.transaction_date DESC
          LIMIT :limit OFFSET :offset
@@ -159,6 +163,9 @@ def serialize_transaction(
         spending_category_primary=txn.spending_category_primary,
         spending_category_detailed=txn.spending_category_detailed,
         matched_transaction_id=matched_transaction_id,
+        merchant_id=txn.merchant_id,
+        merchant_name=txn.merchant.name if txn.merchant else None,
+        merchant_website_url=txn.merchant.website_url if txn.merchant else None,
     )
 
 

@@ -512,6 +512,42 @@ class TransactionsSnapshotEntry(Base):
         return zlib.compress(json.dumps(transactions).encode())
 
 
+class Merchant(Base):
+    __tablename__ = "finbot_merchants"
+    id = Column(Integer, primary_key=True)
+    name = Column(String(256), nullable=False)
+    description = Column(String(512))
+    category = Column(String(128))
+    website_url = Column(String(512))
+    created_at = Column(DateTimeTz, server_default=func.now(), nullable=False)
+    updated_at = Column(DateTimeTz, onupdate=func.now())
+
+    patterns = relationship(
+        "MerchantDescriptionPattern",
+        back_populates="merchant",
+        uselist=True,
+        passive_deletes=True,
+    )
+
+
+class MerchantDescriptionPattern(Base):
+    __tablename__ = "finbot_merchant_description_patterns"
+    id = Column(Integer, primary_key=True)
+    merchant_id = Column(Integer, ForeignKey(Merchant.id, ondelete="CASCADE"), nullable=False, index=True)
+    sanitized_description = Column(String(512), nullable=False)
+    created_at = Column(DateTimeTz, server_default=func.now(), nullable=False)
+
+    merchant = relationship(Merchant, uselist=False, back_populates="patterns")
+
+    __table_args__ = (
+        UniqueConstraint(
+            "merchant_id",
+            "sanitized_description",
+            name="uidx_merchant_description_patterns_merchant_desc",
+        ),
+    )
+
+
 class TransactionHistoryEntry(Base):
     __tablename__ = "finbot_transactions_history"
     id = Column(Integer, primary_key=True)
@@ -532,12 +568,14 @@ class TransactionHistoryEntry(Base):
     spending_category_primary = Column(String(64))
     spending_category_detailed = Column(String(128))
     spending_category_source = Column(String(16))
+    merchant_id = Column(Integer, ForeignKey(Merchant.id, ondelete="SET NULL"))
     provider_specific_data = Column(JSONEncoded)
     source_snapshot_id = Column(Integer, ForeignKey(UserAccountSnapshot.id, ondelete="SET NULL"))
     created_at = Column(DateTimeTz, server_default=func.now(), nullable=False)
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
     linked_account = relationship(LinkedAccount, uselist=False)
+    merchant = relationship(Merchant, uselist=False)
 
     __table_args__ = (
         UniqueConstraint(
@@ -547,6 +585,7 @@ class TransactionHistoryEntry(Base):
             name="uidx_transactions_history_dedup",
         ),
         Index("idx_transactions_history_account_date", "linked_account_id", "transaction_date"),
+        Index("idx_transactions_history_merchant", "merchant_id"),
     )
 
 

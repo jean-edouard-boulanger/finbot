@@ -4471,6 +4471,39 @@
                             }
                         ],
                         "title": "Matched Transaction Id"
+                    },
+                    "merchant_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Merchant Id"
+                    },
+                    "merchant_name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Merchant Name"
+                    },
+                    "merchant_website_url": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Merchant Website Url"
                     }
                 },
                 "additionalProperties": false,

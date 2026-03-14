@@ -230,6 +230,8 @@ pytz==2025.2
     # via dateparser
 pyyaml==6.0.2
     # via uvicorn
+rapidfuzz==3.14.3
+    # via finbot (pyproject.toml)
 referencing==0.36.2
     # via
     #   jsonschema

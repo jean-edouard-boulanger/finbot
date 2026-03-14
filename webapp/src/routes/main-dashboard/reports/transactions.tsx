@@ -49,6 +49,9 @@ interface TransactionEntry {
   spending_category_primary: string | null;
   spending_category_detailed: string | null;
   matched_transaction_id: number | null;
+  merchant_id: number | null;
+  merchant_name: string | null;
+  merchant_website_url: string | null;
 }
 
 interface TransactionsReport {
@@ -401,6 +404,9 @@ export const TransactionsReportPanel: React.FC<TransactionsReportPanelProps> = (
                   Description
                 </TableHead>
                 <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  Merchant
+                </TableHead>
+                <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   Category
                 </TableHead>
                 <TableHead className="text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -418,7 +424,7 @@ export const TransactionsReportPanel: React.FC<TransactionsReportPanelProps> = (
                         (t) => t.id === txn.matched_transaction_id,
                       ) ?? counterpartCache[txn.matched_transaction_id!])
                     : undefined;
-                const colCount = 5;
+                const colCount = 6;
 
                 return (
                   <React.Fragment key={txn.id}>
@@ -450,6 +456,9 @@ export const TransactionsReportPanel: React.FC<TransactionsReportPanelProps> = (
                             <ArrowRightLeft className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
                           )}
                         </div>
+                      </TableCell>
+                      <TableCell className="max-w-[150px] truncate text-sm text-muted-foreground">
+                        {txn.merchant_name ?? "—"}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {txn.spending_category_primary
