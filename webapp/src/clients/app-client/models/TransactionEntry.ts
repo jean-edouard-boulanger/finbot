@@ -127,25 +127,25 @@ export interface TransactionEntry {
      */
     spendingCategoryDetailed: string | null;
     /**
-     *
+     * 
      * @type {number}
      * @memberof TransactionEntry
      */
     matchedTransactionId: number | null;
     /**
-     *
+     * 
      * @type {number}
      * @memberof TransactionEntry
      */
     merchantId?: number | null;
     /**
-     *
+     * 
      * @type {string}
      * @memberof TransactionEntry
      */
     merchantName?: string | null;
     /**
-     *
+     * 
      * @type {string}
      * @memberof TransactionEntry
      */
