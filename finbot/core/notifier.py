@@ -1,4 +1,3 @@
-from textwrap import dedent
 from typing import Callable, Protocol
 
 from twilio.rest import Client as TwilioClient
@@ -6,6 +5,7 @@ from twilio.rest import Client as TwilioClient
 from finbot import model
 from finbot.core import email_delivery
 from finbot.core.email_delivery import DeliverySettings as EmailDeliverySettings
+from finbot.core.email_templates import get_error_message, render_snapshot_errors_html
 from finbot.core.environment import TwilioEnvironment, get_twilio_environment, is_twilio_configured
 from finbot.core.kv_store import DBKVStore
 from finbot.core.schema import BaseModel
@@ -62,16 +62,14 @@ class EmailNotifier(Notifier):
         self,
         error_entries: list[model.LinkedAccountSnapshotEntry],
     ) -> None:
+        lines = [f"- {entry.linked_account.account_name}: {get_error_message(entry)}" for entry in error_entries]
+        plain_body = "Finbot failed to get a snapshot from the following linked accounts:\n\n" + "\n".join(lines) + "\n"
         self._service.send_email(
             email=email_delivery.Email(
                 recipients_emails=[self._recipient_email],
                 subject=f"There is an issue with {len(error_entries)} of your linked account(s)",
-                body=dedent(
-                    f"""\
-                Finbot failed to get a snapshot from the following linked accounts: \
-                {(", ".join(entry.linked_account.account_name for entry in error_entries)).strip()}
-                """
-                ),
+                body=plain_body,
+                html_body=render_snapshot_errors_html(error_entries),
             )
         )
 
