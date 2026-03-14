@@ -103,6 +103,7 @@ class Email:
     recipients_emails: list[str]
     subject: str
     body: str
+    html_body: str | None = None
 
 
 class EmailProvider(Protocol):
@@ -169,6 +170,8 @@ class EmailService(object):
         else:
             msg["Bcc"] = ", ".join(email.recipients_emails)
         msg.set_content(email.body)
+        if email.html_body is not None:
+            msg.add_alternative(email.html_body, subtype="html")
         return msg
 
     def send_email(self, email: Email) -> None:
