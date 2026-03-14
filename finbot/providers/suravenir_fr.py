@@ -246,7 +246,7 @@ def _create_transaction(account: Account, payload: Any) -> Transaction | None:
     )
 
 
-def _normalize_transaction_id(raw_op_id: str):
+def _normalize_transaction_id(raw_op_id: str) -> str:
     if "_" in raw_op_id:
         raw_op_id, _ = raw_op_id.split("_", maxsplit=1)
         return raw_op_id.strip()
