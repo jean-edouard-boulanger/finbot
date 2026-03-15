@@ -7,6 +7,7 @@ from sqlalchemy.sql import text
 
 from finbot.apps.appwsrv.reports.transactions import schema
 from finbot.core.db.utils import row_to_dict
+from finbot.core.spending_categories import PRIMARY_CATEGORY_LABELS as SPENDING_CATEGORY_LABELS
 from finbot.model import (
     SessionType,
     SubAccountValuationHistoryEntry,
@@ -190,9 +191,6 @@ def serialize_transaction(
         merchant_name=txn.merchant.name if txn.merchant else None,
         merchant_website_url=txn.merchant.website_url if txn.merchant else None,
     )
-
-
-from finbot.core.spending_categories import PRIMARY_CATEGORY_LABELS as SPENDING_CATEGORY_LABELS
 
 
 def _build_filter_where(
