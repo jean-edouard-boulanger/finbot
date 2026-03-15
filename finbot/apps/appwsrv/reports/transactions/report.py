@@ -195,6 +195,92 @@ def serialize_transaction(
     )
 
 
+def serialize_transaction_detail(
+    session: SessionType,
+    txn: TransactionHistoryEntry,
+) -> schema.TransactionDetail:
+    sub_account_name: str = (
+        session.query(SubAccountValuationHistoryEntry.sub_account_description)
+        .filter_by(linked_account_id=txn.linked_account_id, sub_account_id=txn.sub_account_id)
+        .order_by(SubAccountValuationHistoryEntry.history_entry_id.desc())
+        .limit(1)
+        .scalar()  # type: ignore[no-untyped-call]
+    ) or txn.sub_account_id
+
+    merchant_detail: schema.MerchantDetail | None = None
+    if txn.merchant is not None:
+        merchant_detail = schema.MerchantDetail(
+            id=txn.merchant.id,
+            name=txn.merchant.name,
+            description=txn.merchant.description,
+            category=txn.merchant.category,
+            website_url=txn.merchant.website_url,
+        )
+
+    recurring_detail: schema.RecurringGroupDetail | None = None
+    if txn.recurring_group is not None:
+        rg = txn.recurring_group
+        recurring_detail = schema.RecurringGroupDetail(
+            id=rg.id,
+            currency=rg.currency,
+            avg_amount=float(rg.avg_amount),
+            avg_interval_days=float(rg.avg_interval_days),
+            transaction_count=rg.transaction_count,
+            total_spent=float(rg.total_spent),
+            total_spent_ccy=float(rg.total_spent_ccy) if rg.total_spent_ccy is not None else None,
+            first_seen=rg.first_seen,
+            last_seen=rg.last_seen,
+        )
+
+    match_detail: schema.MatchDetail | None = None
+    match: TransactionMatch | None = (
+        session.query(TransactionMatch)
+        .filter(
+            TransactionMatch.match_status != "rejected",
+            (TransactionMatch.outflow_transaction_id == txn.id) | (TransactionMatch.inflow_transaction_id == txn.id),
+        )
+        .first()
+    )
+    if match is not None:
+        is_outflow = match.outflow_transaction_id == txn.id
+        counterpart = match.inflow_transaction if is_outflow else match.outflow_transaction
+        match_detail = schema.MatchDetail(
+            match_confidence=float(match.match_confidence),
+            match_status=match.match_status,
+            counterpart_transaction_id=counterpart.id,
+            counterpart_account_name=counterpart.linked_account.account_name,
+            counterpart_description=counterpart.description,
+            counterpart_amount=float(counterpart.amount),
+            counterpart_currency=counterpart.currency,
+        )
+
+    return schema.TransactionDetail(
+        id=txn.id,
+        linked_account_id=txn.linked_account_id,
+        linked_account_name=txn.linked_account.account_name,
+        sub_account_id=txn.sub_account_id,
+        sub_account_name=sub_account_name,
+        transaction_date=txn.transaction_date,
+        transaction_type=txn.transaction_type,
+        amount=float(txn.amount),
+        amount_snapshot_ccy=float(txn.amount_snapshot_ccy) if txn.amount_snapshot_ccy is not None else None,
+        currency=txn.currency,
+        description=txn.description,
+        symbol=txn.symbol,
+        units=float(txn.units) if txn.units is not None else None,
+        unit_price=float(txn.unit_price) if txn.unit_price is not None else None,
+        fee=float(txn.fee) if txn.fee is not None else None,
+        counterparty=txn.counterparty,
+        spending_category_primary=txn.spending_category_primary,
+        spending_category_detailed=txn.spending_category_detailed,
+        spending_category_source=txn.spending_category_source,
+        provider_specific_data=txn.provider_specific_data,
+        merchant=merchant_detail,
+        recurring_group=recurring_detail,
+        match=match_detail,
+    )
+
+
 def _build_filter_where(
     params: dict[str, Any],
     *,

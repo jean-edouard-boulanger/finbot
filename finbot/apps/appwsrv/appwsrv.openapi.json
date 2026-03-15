@@ -2394,6 +2394,54 @@
                 }
             }
         },
+        "/reports/transactions/{transaction_id}/detail/": {
+            "get": {
+                "tags": [
+                    "User accounts (reports)"
+                ],
+                "summary": "Get Transaction Detail",
+                "description": "Get enriched transaction detail with merchant, recurring group, and match info",
+                "operationId": "get_transaction_detail",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "transaction_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Transaction Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GetTransactionDetailResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/reports/cash-flow/summary/": {
             "get": {
                 "tags": [
@@ -3369,6 +3417,19 @@
                 ],
                 "title": "GetSpendingBreakdownResponse"
             },
+            "GetTransactionDetailResponse": {
+                "properties": {
+                    "transaction": {
+                        "$ref": "#/components/schemas/TransactionDetail"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "transaction"
+                ],
+                "title": "GetTransactionDetailResponse"
+            },
             "GetTransactionFilterOptionsResponse": {
                 "properties": {
                     "filter_options": {
@@ -4003,6 +4064,105 @@
                 ],
                 "title": "LoginResponse"
             },
+            "MatchDetail": {
+                "properties": {
+                    "match_confidence": {
+                        "type": "number",
+                        "title": "Match Confidence"
+                    },
+                    "match_status": {
+                        "type": "string",
+                        "title": "Match Status"
+                    },
+                    "counterpart_transaction_id": {
+                        "type": "integer",
+                        "title": "Counterpart Transaction Id"
+                    },
+                    "counterpart_account_name": {
+                        "type": "string",
+                        "title": "Counterpart Account Name"
+                    },
+                    "counterpart_description": {
+                        "type": "string",
+                        "title": "Counterpart Description"
+                    },
+                    "counterpart_amount": {
+                        "type": "number",
+                        "title": "Counterpart Amount"
+                    },
+                    "counterpart_currency": {
+                        "type": "string",
+                        "title": "Counterpart Currency"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "match_confidence",
+                    "match_status",
+                    "counterpart_transaction_id",
+                    "counterpart_account_name",
+                    "counterpart_description",
+                    "counterpart_amount",
+                    "counterpart_currency"
+                ],
+                "title": "MatchDetail"
+            },
+            "MerchantDetail": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "title": "Id"
+                    },
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description"
+                    },
+                    "category": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Category"
+                    },
+                    "website_url": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Website Url"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "id",
+                    "name",
+                    "description",
+                    "category",
+                    "website_url"
+                ],
+                "title": "MerchantDetail"
+            },
             "Metrics": {
                 "properties": {
                     "first_date": {
@@ -4215,6 +4375,69 @@
                     "updated_at"
                 ],
                 "title": "Provider"
+            },
+            "RecurringGroupDetail": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "title": "Id"
+                    },
+                    "currency": {
+                        "type": "string",
+                        "title": "Currency"
+                    },
+                    "avg_amount": {
+                        "type": "number",
+                        "title": "Avg Amount"
+                    },
+                    "avg_interval_days": {
+                        "type": "number",
+                        "title": "Avg Interval Days"
+                    },
+                    "transaction_count": {
+                        "type": "integer",
+                        "title": "Transaction Count"
+                    },
+                    "total_spent": {
+                        "type": "number",
+                        "title": "Total Spent"
+                    },
+                    "total_spent_ccy": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Total Spent Ccy"
+                    },
+                    "first_seen": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "First Seen"
+                    },
+                    "last_seen": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Last Seen"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "id",
+                    "currency",
+                    "avg_amount",
+                    "avg_interval_days",
+                    "transaction_count",
+                    "total_spent",
+                    "total_spent_ccy",
+                    "first_seen",
+                    "last_seen"
+                ],
+                "title": "RecurringGroupDetail"
             },
             "RemoveEmailDeliverySettingsResponse": {
                 "properties": {},
@@ -4643,6 +4866,217 @@
                     "system_report"
                 ],
                 "title": "SystemReportResponse"
+            },
+            "TransactionDetail": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "title": "Id"
+                    },
+                    "linked_account_id": {
+                        "type": "integer",
+                        "title": "Linked Account Id"
+                    },
+                    "linked_account_name": {
+                        "type": "string",
+                        "title": "Linked Account Name"
+                    },
+                    "sub_account_id": {
+                        "type": "string",
+                        "title": "Sub Account Id"
+                    },
+                    "sub_account_name": {
+                        "type": "string",
+                        "title": "Sub Account Name"
+                    },
+                    "transaction_date": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Transaction Date"
+                    },
+                    "transaction_type": {
+                        "type": "string",
+                        "title": "Transaction Type"
+                    },
+                    "amount": {
+                        "type": "number",
+                        "title": "Amount"
+                    },
+                    "amount_snapshot_ccy": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Amount Snapshot Ccy"
+                    },
+                    "currency": {
+                        "type": "string",
+                        "title": "Currency"
+                    },
+                    "description": {
+                        "type": "string",
+                        "title": "Description"
+                    },
+                    "symbol": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Symbol"
+                    },
+                    "units": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Units"
+                    },
+                    "unit_price": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Unit Price"
+                    },
+                    "fee": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Fee"
+                    },
+                    "counterparty": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Counterparty"
+                    },
+                    "spending_category_primary": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Spending Category Primary"
+                    },
+                    "spending_category_detailed": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Spending Category Detailed"
+                    },
+                    "spending_category_source": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Spending Category Source"
+                    },
+                    "provider_specific_data": {
+                        "anyOf": [
+                            {
+                                "additionalProperties": true,
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Provider Specific Data"
+                    },
+                    "merchant": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/MerchantDetail"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "recurring_group": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/RecurringGroupDetail"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "match": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/MatchDetail"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "id",
+                    "linked_account_id",
+                    "linked_account_name",
+                    "sub_account_id",
+                    "sub_account_name",
+                    "transaction_date",
+                    "transaction_type",
+                    "amount",
+                    "amount_snapshot_ccy",
+                    "currency",
+                    "description",
+                    "symbol",
+                    "units",
+                    "unit_price",
+                    "fee",
+                    "counterparty",
+                    "spending_category_primary",
+                    "spending_category_detailed",
+                    "spending_category_source",
+                    "provider_specific_data"
+                ],
+                "title": "TransactionDetail"
             },
             "TransactionEntry": {
                 "properties": {
