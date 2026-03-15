@@ -251,6 +251,7 @@ export const SpendingBreakdownPanel: React.FC<SpendingBreakdownPanelProps> = (
                   paddingAngle={2}
                   stroke="hsl(var(--background))"
                   strokeWidth={2}
+                  isAnimationActive={false}
                 >
                   {chartData.map((entry, index) => (
                     <Cell key={index} fill={entry.fill} />

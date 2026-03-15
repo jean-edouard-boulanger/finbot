@@ -433,6 +433,10 @@ class GetTransactionResponse(AppModel):
     transaction: transactions_schema.TransactionEntry
 
 
+class GetTransactionFilterOptionsResponse(AppModel):
+    filter_options: transactions_schema.TransactionFilterOptions
+
+
 class PlaidSettings(AppModel):
     environment: str
     client_id: str

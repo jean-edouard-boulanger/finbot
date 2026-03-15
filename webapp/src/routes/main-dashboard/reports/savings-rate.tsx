@@ -116,7 +116,27 @@ function MonthColumn({
           </span>
         </div>
         {hasProjection && (
-          <div className="border-t border-dashed border-border/50 pt-2">
+          <div className="border-t border-dashed border-border/50 pt-2 space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground/70 italic">
+                Proj. savings
+              </span>
+              <span className="font-mono tabular-nums text-muted-foreground/70 italic">
+                {entry.projected_savings !== null
+                  ? moneyFormatter(entry.projected_savings, locale, ccy)
+                  : "N/A"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground/70 italic">
+                Proj. expenses
+              </span>
+              <span className="font-mono tabular-nums text-muted-foreground/70 italic">
+                {entry.projected_expenses !== null
+                  ? moneyFormatter(entry.projected_expenses, locale, ccy)
+                  : "N/A"}
+              </span>
+            </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground/70 italic">
                 Proj. rate

@@ -24,6 +24,9 @@ from finbot.apps.appwsrv.reports.transactions.report import (
     get_spending_breakdown as generate_spending_breakdown,
 )
 from finbot.apps.appwsrv.reports.transactions.report import (
+    get_transaction_filter_options as generate_transaction_filter_options,
+)
+from finbot.apps.appwsrv.reports.transactions.report import (
     get_transactions_report as generate_transactions_report,
 )
 from finbot.apps.appwsrv.reports.transactions.report import (
@@ -80,6 +83,11 @@ def get_transactions_report(
     linked_account_id: list[int] | None = Query(default=None),
     transaction_type: list[str] | None = Query(default=None),
     spending_category: list[str] | None = Query(default=None),
+    description: str | None = Query(default=None),
+    merchant_name: list[str] | None = Query(default=None),
+    amount_min: float | None = Query(default=None),
+    amount_max: float | None = Query(default=None),
+    amount_sign: str | None = Query(default=None),
     limit: int = Query(default=100, le=500),
     offset: int = Query(default=0, ge=0),
 ) -> appwsrv_schema.GetTransactionsReportResponse:
@@ -93,8 +101,44 @@ def get_transactions_report(
             linked_account_id=linked_account_id,
             transaction_type=transaction_type,
             spending_category=spending_category,
+            description=description,
+            merchant_name=merchant_name,
+            amount_min=amount_min,
+            amount_max=amount_max,
+            amount_sign=amount_sign,
             limit=limit,
             offset=offset,
+        )
+    )
+
+
+@router.get("/transactions/filter-options/", operation_id="get_transaction_filter_options")
+def get_transaction_filter_options(
+    current_user_id: CurrentUserIdDep,
+    from_time: AwareDatetime | None = Query(default=None),
+    to_time: AwareDatetime | None = Query(default=None),
+    linked_account_id: list[int] | None = Query(default=None),
+    spending_category: list[str] | None = Query(default=None),
+    description: str | None = Query(default=None),
+    merchant_name: list[str] | None = Query(default=None),
+    amount_min: float | None = Query(default=None),
+    amount_max: float | None = Query(default=None),
+    amount_sign: str | None = Query(default=None),
+) -> appwsrv_schema.GetTransactionFilterOptionsResponse:
+    """Get available filter options for transactions (merchants, amount range)"""
+    return appwsrv_schema.GetTransactionFilterOptionsResponse(
+        filter_options=generate_transaction_filter_options(
+            session=db.session,
+            user_account_id=current_user_id,
+            from_time=from_time,
+            to_time=to_time,
+            linked_account_id=linked_account_id,
+            spending_category=spending_category,
+            description=description,
+            merchant_name=merchant_name,
+            amount_min=amount_min,
+            amount_max=amount_max,
+            amount_sign=amount_sign,
         )
     )
 

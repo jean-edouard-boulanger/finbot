@@ -2023,6 +2023,89 @@
                         }
                     },
                     {
+                        "name": "description",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Description"
+                        }
+                    },
+                    {
+                        "name": "merchant_name",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Merchant Name"
+                        }
+                    },
+                    {
+                        "name": "amount_min",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "number"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Amount Min"
+                        }
+                    },
+                    {
+                        "name": "amount_max",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "number"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Amount Max"
+                        }
+                    },
+                    {
+                        "name": "amount_sign",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Amount Sign"
+                        }
+                    },
+                    {
                         "name": "limit",
                         "in": "query",
                         "required": false,
@@ -2052,6 +2135,200 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/GetTransactionsReportResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/transactions/filter-options/": {
+            "get": {
+                "tags": [
+                    "User accounts (reports)"
+                ],
+                "summary": "Get Transaction Filter Options",
+                "description": "Get available filter options for transactions (merchants, amount range)",
+                "operationId": "get_transaction_filter_options",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "from_time",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "format": "date-time"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "From Time"
+                        }
+                    },
+                    {
+                        "name": "to_time",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "format": "date-time"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "To Time"
+                        }
+                    },
+                    {
+                        "name": "linked_account_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "integer"
+                                    }
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Linked Account Id"
+                        }
+                    },
+                    {
+                        "name": "spending_category",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Spending Category"
+                        }
+                    },
+                    {
+                        "name": "description",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Description"
+                        }
+                    },
+                    {
+                        "name": "merchant_name",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Merchant Name"
+                        }
+                    },
+                    {
+                        "name": "amount_min",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "number"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Amount Min"
+                        }
+                    },
+                    {
+                        "name": "amount_max",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "number"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Amount Max"
+                        }
+                    },
+                    {
+                        "name": "amount_sign",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Amount Sign"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GetTransactionFilterOptionsResponse"
                                 }
                             }
                         }
@@ -2829,6 +3106,30 @@
                 ],
                 "title": "ErrorMetadata"
             },
+            "FilterOption": {
+                "properties": {
+                    "label": {
+                        "type": "string",
+                        "title": "Label"
+                    },
+                    "value": {
+                        "type": "string",
+                        "title": "Value"
+                    },
+                    "transaction_count": {
+                        "type": "integer",
+                        "title": "Transaction Count"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "label",
+                    "value",
+                    "transaction_count"
+                ],
+                "title": "FilterOption"
+            },
             "GetAccountsFormattingRulesResponse": {
                 "properties": {
                     "colour_palette": {
@@ -3067,6 +3368,19 @@
                     "report"
                 ],
                 "title": "GetSpendingBreakdownResponse"
+            },
+            "GetTransactionFilterOptionsResponse": {
+                "properties": {
+                    "filter_options": {
+                        "$ref": "#/components/schemas/TransactionFilterOptions"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "filter_options"
+                ],
+                "title": "GetTransactionFilterOptionsResponse"
             },
             "GetTransactionResponse": {
                 "properties": {
@@ -4530,6 +4844,73 @@
                     "matched_transaction_id"
                 ],
                 "title": "TransactionEntry"
+            },
+            "TransactionFilterOptions": {
+                "properties": {
+                    "accounts": {
+                        "items": {
+                            "$ref": "#/components/schemas/FilterOption"
+                        },
+                        "type": "array",
+                        "title": "Accounts"
+                    },
+                    "merchants": {
+                        "items": {
+                            "$ref": "#/components/schemas/FilterOption"
+                        },
+                        "type": "array",
+                        "title": "Merchants"
+                    },
+                    "categories": {
+                        "items": {
+                            "$ref": "#/components/schemas/FilterOption"
+                        },
+                        "type": "array",
+                        "title": "Categories"
+                    },
+                    "amount_min": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Amount Min"
+                    },
+                    "amount_max": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Amount Max"
+                    },
+                    "credit_count": {
+                        "type": "integer",
+                        "title": "Credit Count"
+                    },
+                    "debit_count": {
+                        "type": "integer",
+                        "title": "Debit Count"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "accounts",
+                    "merchants",
+                    "categories",
+                    "amount_min",
+                    "amount_max",
+                    "credit_count",
+                    "debit_count"
+                ],
+                "title": "TransactionFilterOptions"
             },
             "TransactionsReport": {
                 "properties": {
