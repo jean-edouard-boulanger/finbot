@@ -4818,6 +4818,17 @@
                             }
                         ],
                         "title": "Merchant Website Url"
+                    },
+                    "recurring_group_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Recurring Group Id"
                     }
                 },
                 "additionalProperties": false,

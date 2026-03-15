@@ -150,6 +150,12 @@ export interface TransactionEntry {
      * @memberof TransactionEntry
      */
     merchantWebsiteUrl?: string | null;
+    /**
+     * 
+     * @type {number}
+     * @memberof TransactionEntry
+     */
+    recurringGroupId?: number | null;
 }
 
 /**
@@ -210,6 +216,7 @@ export function TransactionEntryFromJSONTyped(json: any, ignoreDiscriminator: bo
         'merchantId': json['merchant_id'] == null ? undefined : json['merchant_id'],
         'merchantName': json['merchant_name'] == null ? undefined : json['merchant_name'],
         'merchantWebsiteUrl': json['merchant_website_url'] == null ? undefined : json['merchant_website_url'],
+        'recurringGroupId': json['recurring_group_id'] == null ? undefined : json['recurring_group_id'],
     };
 }
 
@@ -246,6 +253,7 @@ export function TransactionEntryToJSONTyped(value?: TransactionEntry | null, ign
         'merchant_id': value['merchantId'],
         'merchant_name': value['merchantName'],
         'merchant_website_url': value['merchantWebsiteUrl'],
+        'recurring_group_id': value['recurringGroupId'],
     };
 }
 
