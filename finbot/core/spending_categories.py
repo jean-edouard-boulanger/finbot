@@ -116,6 +116,14 @@ PLAID_PFC_TAXONOMY: list[tuple[str, str, str]] = [
 PRIMARY_CATEGORIES: list[str] = sorted(set(entry[0] for entry in PLAID_PFC_TAXONOMY))
 
 
+def format_category_label(category: str) -> str:
+    """Convert a category code like 'FOOD_AND_DRINK' to 'Food & Drink'."""
+    return category.replace("_AND_", " & ").replace("NON_PROFIT", "Non-Profit").replace("_", " ").title()
+
+
+PRIMARY_CATEGORY_LABELS: dict[str, str] = {cat: format_category_label(cat) for cat in PRIMARY_CATEGORIES}
+
+
 def get_taxonomy_prompt_text() -> str:
     """Return a formatted taxonomy reference suitable for LLM prompts."""
     lines = ["Primary Category | Detailed Category | Description"]

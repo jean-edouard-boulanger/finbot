@@ -192,24 +192,7 @@ def serialize_transaction(
     )
 
 
-SPENDING_CATEGORY_LABELS: dict[str, str] = {
-    "BANK_FEES": "Bank Fees",
-    "ENTERTAINMENT": "Entertainment",
-    "FOOD_AND_DRINK": "Food & Drink",
-    "GENERAL_MERCHANDISE": "General Merchandise",
-    "GENERAL_SERVICES": "General Services",
-    "GOVERNMENT_AND_NON_PROFIT": "Government & Non-Profit",
-    "HOME_IMPROVEMENT": "Home Improvement",
-    "INCOME": "Income",
-    "LOAN_PAYMENTS": "Loan Payments",
-    "MEDICAL": "Medical",
-    "PERSONAL_CARE": "Personal Care",
-    "RENT_AND_UTILITIES": "Rent & Utilities",
-    "TRANSFER_IN": "Transfer In",
-    "TRANSFER_OUT": "Transfer Out",
-    "TRANSPORTATION": "Transportation",
-    "TRAVEL": "Travel",
-}
+from finbot.core.spending_categories import PRIMARY_CATEGORY_LABELS as SPENDING_CATEGORY_LABELS
 
 
 def _build_filter_where(
