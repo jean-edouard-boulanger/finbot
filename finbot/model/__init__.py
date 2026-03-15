@@ -569,6 +569,7 @@ class TransactionHistoryEntry(Base):
     spending_category_detailed = Column(String(128))
     spending_category_source = Column(String(16))
     merchant_id = Column(Integer, ForeignKey(Merchant.id, ondelete="SET NULL"))
+    recurring_group_id = Column(Integer, ForeignKey("finbot_recurring_transaction_groups.id", ondelete="SET NULL"))
     provider_specific_data = Column(JSONEncoded)
     source_snapshot_id = Column(Integer, ForeignKey(UserAccountSnapshot.id, ondelete="SET NULL"))
     created_at = Column(DateTimeTz, server_default=func.now(), nullable=False)
@@ -576,6 +577,7 @@ class TransactionHistoryEntry(Base):
 
     linked_account = relationship(LinkedAccount, uselist=False)
     merchant = relationship(Merchant, uselist=False)
+    recurring_group = relationship("RecurringTransactionGroup", uselist=False)
 
     __table_args__ = (
         UniqueConstraint(
@@ -586,6 +588,31 @@ class TransactionHistoryEntry(Base):
         ),
         Index("idx_transactions_history_account_date", "linked_account_id", "transaction_date"),
         Index("idx_transactions_history_merchant", "merchant_id"),
+        Index("idx_transactions_history_recurring_group", "recurring_group_id"),
+    )
+
+
+class RecurringTransactionGroup(Base):
+    __tablename__ = "finbot_recurring_transaction_groups"
+    id = Column(Integer, primary_key=True)
+    user_account_id = Column(Integer, ForeignKey(UserAccount.id, ondelete="CASCADE"), nullable=False)
+    merchant_id = Column(Integer, ForeignKey(Merchant.id, ondelete="CASCADE"), nullable=False)
+    currency = Column(String(4), nullable=False)
+    avg_amount = Column(Numeric, nullable=False)
+    avg_interval_days = Column(Numeric, nullable=False)
+    transaction_count = Column(Integer, nullable=False)
+    total_spent = Column(Numeric, nullable=False)
+    total_spent_ccy = Column(Numeric)
+    first_seen = Column(DateTimeTz, nullable=False)
+    last_seen = Column(DateTimeTz, nullable=False)
+    created_at = Column(DateTimeTz, server_default=func.now())
+    updated_at = Column(DateTimeTz, onupdate=func.now())
+
+    merchant = relationship(Merchant, uselist=False)
+
+    __table_args__ = (
+        Index("idx_recurring_groups_user_account", "user_account_id"),
+        Index("idx_recurring_groups_merchant", "merchant_id"),
     )
 
 

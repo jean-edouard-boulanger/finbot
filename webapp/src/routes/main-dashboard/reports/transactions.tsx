@@ -20,7 +20,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "components/ui/tooltip";
-import { ArrowRightLeft } from "lucide-react";
+import { ArrowRightLeft, Repeat } from "lucide-react";
 import { DateTime } from "luxon";
 import { useDebounce } from "../../../hooks/use-debounce";
 import {
@@ -54,6 +54,7 @@ interface TransactionEntry {
   merchant_id: number | null;
   merchant_name: string | null;
   merchant_website_url: string | null;
+  recurring_group_id: number | null;
 }
 
 interface TransactionsReport {
@@ -593,6 +594,18 @@ export const TransactionsReportPanel: React.FC<TransactionsReportPanelProps> = (
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
+                              {txn.recurring_group_id != null && (
+                                <TooltipProvider delayDuration={200}>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Repeat className="h-3.5 w-3.5 flex-shrink-0 text-blue-400" />
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      Recurring transaction
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
                               {hasMatch && (
                                 <ArrowRightLeft className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
                               )}
