@@ -20,6 +20,7 @@ import type {
   GetHoldingsReportResponse,
   GetSavingsRateReportResponse,
   GetSpendingBreakdownResponse,
+  GetTransactionDetailResponse,
   GetTransactionFilterOptionsResponse,
   GetTransactionResponse,
   GetTransactionsReportResponse,
@@ -38,6 +39,8 @@ import {
     GetSavingsRateReportResponseToJSON,
     GetSpendingBreakdownResponseFromJSON,
     GetSpendingBreakdownResponseToJSON,
+    GetTransactionDetailResponseFromJSON,
+    GetTransactionDetailResponseToJSON,
     GetTransactionFilterOptionsResponseFromJSON,
     GetTransactionFilterOptionsResponseToJSON,
     GetTransactionResponseFromJSON,
@@ -49,6 +52,10 @@ import {
 } from '../models/index';
 
 export interface GetTransactionRequest {
+    transactionId: number;
+}
+
+export interface GetTransactionDetailRequest {
     transactionId: number;
 }
 
@@ -122,6 +129,22 @@ export interface UserAccountsReportsApiInterface {
      * Get Transaction
      */
     getTransaction(requestParameters: GetTransactionRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetTransactionResponse>;
+
+    /**
+     * Get enriched transaction detail with merchant, recurring group, and match info
+     * @summary Get Transaction Detail
+     * @param {number} transactionId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UserAccountsReportsApiInterface
+     */
+    getTransactionDetailRaw(requestParameters: GetTransactionDetailRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GetTransactionDetailResponse>>;
+
+    /**
+     * Get enriched transaction detail with merchant, recurring group, and match info
+     * Get Transaction Detail
+     */
+    getTransactionDetail(requestParameters: GetTransactionDetailRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetTransactionDetailResponse>;
 
     /**
      * Get available filter options for transactions (merchants, amount range)
@@ -320,6 +343,49 @@ export class UserAccountsReportsApi extends runtime.BaseAPI implements UserAccou
      */
     async getTransaction(requestParameters: GetTransactionRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetTransactionResponse> {
         const response = await this.getTransactionRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Get enriched transaction detail with merchant, recurring group, and match info
+     * Get Transaction Detail
+     */
+    async getTransactionDetailRaw(requestParameters: GetTransactionDetailRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GetTransactionDetailResponse>> {
+        if (requestParameters['transactionId'] == null) {
+            throw new runtime.RequiredError(
+                'transactionId',
+                'Required parameter "transactionId" was null or undefined when calling getTransactionDetail().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/reports/transactions/{transaction_id}/detail/`.replace(`{${"transaction_id"}}`, encodeURIComponent(String(requestParameters['transactionId']))),
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => GetTransactionDetailResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Get enriched transaction detail with merchant, recurring group, and match info
+     * Get Transaction Detail
+     */
+    async getTransactionDetail(requestParameters: GetTransactionDetailRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetTransactionDetailResponse> {
+        const response = await this.getTransactionDetailRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

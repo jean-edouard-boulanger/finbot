@@ -1,6 +1,38 @@
+from typing import Any
+
 from pydantic import AwareDatetime
 
 from finbot.core.schema import BaseModel
+
+
+class MerchantDetail(BaseModel):
+    id: int
+    name: str
+    description: str | None
+    category: str | None
+    website_url: str | None
+
+
+class RecurringGroupDetail(BaseModel):
+    id: int
+    currency: str
+    avg_amount: float
+    avg_interval_days: float
+    transaction_count: int
+    total_spent: float
+    total_spent_ccy: float | None
+    first_seen: AwareDatetime
+    last_seen: AwareDatetime
+
+
+class MatchDetail(BaseModel):
+    match_confidence: float
+    match_status: str
+    counterpart_transaction_id: int
+    counterpart_account_name: str
+    counterpart_description: str
+    counterpart_amount: float
+    counterpart_currency: str
 
 
 class TransactionEntry(BaseModel):
@@ -27,6 +59,32 @@ class TransactionEntry(BaseModel):
     merchant_name: str | None = None
     merchant_website_url: str | None = None
     recurring_group_id: int | None = None
+
+
+class TransactionDetail(BaseModel):
+    id: int
+    linked_account_id: int
+    linked_account_name: str
+    sub_account_id: str
+    sub_account_name: str
+    transaction_date: AwareDatetime
+    transaction_type: str
+    amount: float
+    amount_snapshot_ccy: float | None
+    currency: str
+    description: str
+    symbol: str | None
+    units: float | None
+    unit_price: float | None
+    fee: float | None
+    counterparty: str | None
+    spending_category_primary: str | None
+    spending_category_detailed: str | None
+    spending_category_source: str | None
+    provider_specific_data: dict[str, Any] | None
+    merchant: MerchantDetail | None = None
+    recurring_group: RecurringGroupDetail | None = None
+    match: MatchDetail | None = None
 
 
 class TransactionsReport(BaseModel):

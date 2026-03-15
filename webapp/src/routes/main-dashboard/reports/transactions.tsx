@@ -30,6 +30,7 @@ import {
   AmountRangeFilter,
   type AmountSign,
 } from "./transactions/column-filters";
+import { TransactionDetailSheet } from "./transactions/transaction-detail-sheet";
 
 interface TransactionEntry {
   id: number;
@@ -104,6 +105,7 @@ export const TransactionsReportPanel: React.FC<TransactionsReportPanelProps> = (
   );
   const [offset, setOffset] = useState(0);
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [detailId, setDetailId] = useState<number | null>(null);
   const [counterpartCache, setCounterpartCache] = useState<
     Record<number, TransactionEntry>
   >({});
@@ -567,10 +569,8 @@ export const TransactionsReportPanel: React.FC<TransactionsReportPanelProps> = (
                     return (
                       <React.Fragment key={txn.id}>
                         <TableRow
-                          className={`border-border/30 ${hasMatch ? "cursor-pointer" : ""}`}
-                          onClick={
-                            hasMatch ? () => handleExpand(txn) : undefined
-                          }
+                          className="border-border/30 cursor-pointer"
+                          onClick={() => setDetailId(txn.id)}
                         >
                           <TableCell className="truncate text-sm tabular-nums">
                             {DateTime.fromISO(
@@ -607,7 +607,15 @@ export const TransactionsReportPanel: React.FC<TransactionsReportPanelProps> = (
                                 </TooltipProvider>
                               )}
                               {hasMatch && (
-                                <ArrowRightLeft className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
+                                <button
+                                  className="flex-shrink-0 rounded p-0.5 hover:bg-muted transition-colors"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleExpand(txn);
+                                  }}
+                                >
+                                  <ArrowRightLeft className="h-3.5 w-3.5 text-muted-foreground" />
+                                </button>
                               )}
                             </div>
                           </TableCell>
@@ -735,6 +743,13 @@ export const TransactionsReportPanel: React.FC<TransactionsReportPanelProps> = (
               </div>
             </div>
           )}
+
+          <TransactionDetailSheet
+            transactionId={detailId}
+            onClose={() => setDetailId(null)}
+            locale={locale}
+            moneyFormatter={moneyFormatter}
+          />
         </>
       )}
     </div>

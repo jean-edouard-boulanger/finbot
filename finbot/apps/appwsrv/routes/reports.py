@@ -31,6 +31,7 @@ from finbot.apps.appwsrv.reports.transactions.report import (
 )
 from finbot.apps.appwsrv.reports.transactions.report import (
     serialize_transaction,
+    serialize_transaction_detail,
 )
 from finbot.apps.http_base import CurrentUserIdDep
 from finbot.core.errors import MissingUserData, ResourceNotFoundError
@@ -158,6 +159,24 @@ def get_transaction(
         raise ResourceNotFoundError(f"Transaction {transaction_id} not found")
     return appwsrv_schema.GetTransactionResponse(
         transaction=serialize_transaction(db.session, txn),
+    )
+
+
+@router.get("/transactions/{transaction_id}/detail/", operation_id="get_transaction_detail")
+def get_transaction_detail(
+    current_user_id: CurrentUserIdDep,
+    transaction_id: int,
+) -> appwsrv_schema.GetTransactionDetailResponse:
+    """Get enriched transaction detail with merchant, recurring group, and match info"""
+    txn = repository.get_transaction_by_id(
+        session=db.session,
+        user_account_id=current_user_id,
+        transaction_id=transaction_id,
+    )
+    if txn is None:
+        raise ResourceNotFoundError(f"Transaction {transaction_id} not found")
+    return appwsrv_schema.GetTransactionDetailResponse(
+        transaction=serialize_transaction_detail(db.session, txn),
     )
 
 
