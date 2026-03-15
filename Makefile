@@ -38,8 +38,8 @@ trigger-valuation:
 		./tools/run -- $(PYTHON) tools/trigger-valuation ${accounts}
 
 run-system-tests:
-	docker compose exec operator env FINBOT_WAIT_DEPS=appwsrv,finbotwsrv ./tools/finbot-wait;
-	docker compose exec operator $(PYTHON) -m pytest tests/system/
+	docker compose run --rm operator env FINBOT_WAIT_DEPS=appwsrv,finbotwsrv ./tools/finbot-wait;
+	docker compose run --rm operator $(PYTHON) -m pytest tests/system/
 
 finbotdb-build:
 	$(PYTHON) tools/finbotdb build
