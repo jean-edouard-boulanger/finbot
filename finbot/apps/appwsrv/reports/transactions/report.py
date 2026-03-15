@@ -7,6 +7,7 @@ from sqlalchemy.sql import text
 
 from finbot.apps.appwsrv.reports.transactions import schema
 from finbot.core.db.utils import row_to_dict
+from finbot.core.spending_categories import PRIMARY_CATEGORY_LABELS as SPENDING_CATEGORY_LABELS
 from finbot.model import (
     SessionType,
     SubAccountValuationHistoryEntry,
@@ -24,6 +25,11 @@ def get_transactions_report(
     linked_account_id: list[int] | None = None,
     transaction_type: list[str] | None = None,
     spending_category: list[str] | None = None,
+    description: str | None = None,
+    merchant_name: list[str] | None = None,
+    amount_min: float | None = None,
+    amount_max: float | None = None,
+    amount_sign: str | None = None,
     limit: int = 100,
     offset: int = 0,
 ) -> schema.TransactionsReport:
@@ -50,13 +56,31 @@ def get_transactions_report(
     if spending_category:
         params["spending_categories"] = tuple(spending_category)
         where_clauses.append("th.spending_category_primary IN :spending_categories")
+    if description:
+        params["description_pattern"] = f"%{description}%"
+        where_clauses.append("LOWER(th.description) LIKE LOWER(:description_pattern)")
+    if merchant_name:
+        params["merchant_names"] = tuple(merchant_name)
+        where_clauses.append("m.name IN :merchant_names")
+    if amount_min is not None:
+        params["amount_min"] = amount_min
+        where_clauses.append("ABS(th.amount) >= :amount_min")
+    if amount_max is not None:
+        params["amount_max"] = amount_max
+        where_clauses.append("ABS(th.amount) <= :amount_max")
+    if amount_sign == "credit":
+        where_clauses.append("th.amount > 0")
+    elif amount_sign == "debit":
+        where_clauses.append("th.amount < 0")
 
     where = " AND ".join(where_clauses)
 
+    merchant_join = "LEFT JOIN finbot_merchants m ON th.merchant_id = m.id" if merchant_name else ""
     count_query = f"""
         SELECT COUNT(*)
           FROM finbot_transactions_history th
           JOIN finbot_linked_accounts la ON th.linked_account_id = la.id
+          {merchant_join}
          WHERE {where}
     """
     total_count = session.execute(text(count_query), params).scalar() or 0
@@ -166,6 +190,212 @@ def serialize_transaction(
         merchant_id=txn.merchant_id,
         merchant_name=txn.merchant.name if txn.merchant else None,
         merchant_website_url=txn.merchant.website_url if txn.merchant else None,
+    )
+
+
+def _build_filter_where(
+    params: dict[str, Any],
+    *,
+    from_time: AwareDatetime | None = None,
+    to_time: AwareDatetime | None = None,
+    linked_account_id: list[int] | None = None,
+    spending_category: list[str] | None = None,
+    description: str | None = None,
+    merchant_name: list[str] | None = None,
+    amount_min: float | None = None,
+    amount_max: float | None = None,
+    amount_sign: str | None = None,
+) -> tuple[list[str], bool]:
+    clauses: list[str] = []
+    needs_merchant_join = False
+    if from_time:
+        params["f_from_time"] = from_time
+        clauses.append("th.transaction_date >= :f_from_time")
+    if to_time:
+        params["f_to_time"] = to_time
+        clauses.append("th.transaction_date <= :f_to_time")
+    if linked_account_id:
+        params["f_linked_account_ids"] = tuple(linked_account_id)
+        clauses.append("th.linked_account_id IN :f_linked_account_ids")
+    if spending_category:
+        params["f_spending_categories"] = tuple(spending_category)
+        clauses.append("th.spending_category_primary IN :f_spending_categories")
+    if description:
+        params["f_description_pattern"] = f"%{description}%"
+        clauses.append("LOWER(th.description) LIKE LOWER(:f_description_pattern)")
+    if merchant_name:
+        params["f_merchant_names"] = tuple(merchant_name)
+        clauses.append("m.name IN :f_merchant_names")
+        needs_merchant_join = True
+    if amount_min is not None:
+        params["f_amount_min"] = amount_min
+        clauses.append("ABS(th.amount) >= :f_amount_min")
+    if amount_max is not None:
+        params["f_amount_max"] = amount_max
+        clauses.append("ABS(th.amount) <= :f_amount_max")
+    if amount_sign == "credit":
+        clauses.append("th.amount > 0")
+    elif amount_sign == "debit":
+        clauses.append("th.amount < 0")
+    return clauses, needs_merchant_join
+
+
+def get_transaction_filter_options(
+    session: SessionType,
+    user_account_id: int,
+    from_time: AwareDatetime | None = None,
+    to_time: AwareDatetime | None = None,
+    linked_account_id: list[int] | None = None,
+    spending_category: list[str] | None = None,
+    description: str | None = None,
+    merchant_name: list[str] | None = None,
+    amount_min: float | None = None,
+    amount_max: float | None = None,
+    amount_sign: str | None = None,
+) -> schema.TransactionFilterOptions:
+    params: dict[str, Any] = {"user_account_id": user_account_id}
+    filter_clauses, needs_merchant_join = _build_filter_where(
+        params,
+        from_time=from_time,
+        to_time=to_time,
+        linked_account_id=linked_account_id,
+        spending_category=spending_category,
+        description=description,
+        merchant_name=merchant_name,
+        amount_min=amount_min,
+        amount_max=amount_max,
+        amount_sign=amount_sign,
+    )
+    extra_where = (" AND " + " AND ".join(filter_clauses)) if filter_clauses else ""
+    merchant_join = "LEFT JOIN finbot_merchants m ON th.merchant_id = m.id" if needs_merchant_join else ""
+
+    # Accounts: all non-deleted, non-frozen accounts with filtered transaction counts
+    # Filter clauses go into a subquery so accounts with 0 matching transactions still appear
+    account_on_clauses = [c for c in filter_clauses if c != "th.linked_account_id IN :f_linked_account_ids"]
+    account_sub_where = " AND ".join(["TRUE"] + account_on_clauses)
+    account_query = f"""
+        SELECT la.id, la.account_name,
+               COUNT(ft.id) AS transaction_count
+          FROM finbot_linked_accounts la
+          LEFT JOIN (
+            SELECT th.id, th.linked_account_id
+              FROM finbot_transactions_history th
+              {merchant_join}
+             WHERE {account_sub_where}
+          ) ft ON ft.linked_account_id = la.id
+         WHERE la.user_account_id = :user_account_id
+           AND NOT la.deleted
+           AND NOT la.frozen
+         GROUP BY la.id, la.account_name
+         ORDER BY COUNT(ft.id) DESC, la.account_name
+    """
+    account_rows = session.execute(text(account_query), params)
+    accounts = [
+        schema.FilterOption(
+            label=row_to_dict(row)["account_name"],
+            value=str(row_to_dict(row)["id"]),
+            transaction_count=row_to_dict(row)["transaction_count"],
+        )
+        for row in account_rows
+    ]
+
+    # Merchants: only those with transactions in filtered set
+    merchant_count_query = f"""
+        SELECT m.name, COUNT(*) AS transaction_count
+          FROM finbot_transactions_history th
+          JOIN finbot_linked_accounts la ON th.linked_account_id = la.id
+          JOIN finbot_merchants m ON th.merchant_id = m.id
+         WHERE la.user_account_id = :user_account_id
+           AND NOT la.deleted
+           {extra_where.replace("m.name IN :f_merchant_names", "TRUE")}
+         GROUP BY m.name
+         ORDER BY COUNT(*) DESC, m.name
+    """
+    merchant_rows = session.execute(text(merchant_count_query), params)
+    merchants = [
+        schema.FilterOption(
+            label=row_to_dict(row)["name"],
+            value=row_to_dict(row)["name"],
+            transaction_count=row_to_dict(row)["transaction_count"],
+        )
+        for row in merchant_rows
+    ]
+
+    # Categories: all known categories with filtered transaction counts
+    category_query = f"""
+        SELECT th.spending_category_primary AS category,
+               COUNT(*) AS transaction_count
+          FROM finbot_transactions_history th
+          JOIN finbot_linked_accounts la ON th.linked_account_id = la.id
+          {merchant_join}
+         WHERE la.user_account_id = :user_account_id
+           AND NOT la.deleted
+           AND th.spending_category_primary IS NOT NULL
+           {extra_where.replace("th.spending_category_primary IN :f_spending_categories", "TRUE")}
+         GROUP BY th.spending_category_primary
+    """
+    category_rows = session.execute(text(category_query), params)
+    category_counts: dict[str, int] = {
+        row_to_dict(row)["category"]: row_to_dict(row)["transaction_count"] for row in category_rows
+    }
+    categories = sorted(
+        [
+            schema.FilterOption(
+                label=label,
+                value=value,
+                transaction_count=category_counts.get(value, 0),
+            )
+            for value, label in SPENDING_CATEGORY_LABELS.items()
+        ],
+        key=lambda o: (-o.transaction_count, o.label),
+    )
+
+    # Amount range (filtered, excluding amount filters themselves)
+    amount_extra = extra_where
+    for clause in (
+        "ABS(th.amount) >= :f_amount_min",
+        "ABS(th.amount) <= :f_amount_max",
+        "th.amount > 0",
+        "th.amount < 0",
+    ):
+        amount_extra = amount_extra.replace(clause, "TRUE")
+    amount_query = f"""
+        SELECT MAX(ABS(th.amount)) AS amount_max
+          FROM finbot_transactions_history th
+          JOIN finbot_linked_accounts la ON th.linked_account_id = la.id
+          {merchant_join}
+         WHERE la.user_account_id = :user_account_id
+           AND NOT la.deleted
+           {amount_extra}
+    """
+    amount_row = session.execute(text(amount_query), params).fetchone()
+    fo_amount_min = 0.0 if amount_row and amount_row[0] is not None else None
+    fo_amount_max = float(amount_row[0]) if amount_row and amount_row[0] is not None else None
+
+    # Credit/debit counts (excluding sign filter itself)
+    sign_query = f"""
+        SELECT
+            COUNT(*) FILTER (WHERE th.amount > 0) AS credit_count,
+            COUNT(*) FILTER (WHERE th.amount < 0) AS debit_count
+          FROM finbot_transactions_history th
+          JOIN finbot_linked_accounts la ON th.linked_account_id = la.id
+          {merchant_join}
+         WHERE la.user_account_id = :user_account_id
+           AND NOT la.deleted
+           {amount_extra}
+    """
+    sign_row = session.execute(text(sign_query), params).fetchone()
+    credit_count = sign_row[0] if sign_row else 0
+    debit_count = sign_row[1] if sign_row else 0
+
+    return schema.TransactionFilterOptions(
+        accounts=accounts,
+        merchants=merchants,
+        categories=categories,
+        amount_min=fo_amount_min,
+        amount_max=fo_amount_max,
+        credit_count=credit_count,
+        debit_count=debit_count,
     )
 
 

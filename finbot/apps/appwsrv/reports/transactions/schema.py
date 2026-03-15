@@ -88,3 +88,19 @@ class SavingsRateReport(BaseModel):
     valuation_ccy: str
     current_month: MonthlySavingsEntry
     comparison_month: MonthlySavingsEntry
+
+
+class FilterOption(BaseModel):
+    label: str
+    value: str
+    transaction_count: int
+
+
+class TransactionFilterOptions(BaseModel):
+    accounts: list[FilterOption]
+    merchants: list[FilterOption]
+    categories: list[FilterOption]
+    amount_min: float | None
+    amount_max: float | None
+    credit_count: int
+    debit_count: int

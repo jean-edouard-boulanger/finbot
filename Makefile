@@ -5,16 +5,16 @@ export PYTHON := python3
 
 alembic-gen:
 	tools/check-env.sh message;
-	docker compose run --rm operator bash -c 'env FINBOT_WAIT_DEPS=finbotdb ./tools/finbot-wait && alembic revision -m "${message}"'
+	docker compose exec operator bash -c 'env FINBOT_WAIT_DEPS=finbotdb ./tools/finbot-wait && alembic revision -m "${message}"'
 
 alembic-upgrade:
-	docker compose run --rm operator bash -c 'env FINBOT_WAIT_DEPS=finbotdb ./tools/finbot-wait && alembic upgrade head'
+	docker compose exec operator bash -c 'env FINBOT_WAIT_DEPS=finbotdb ./tools/finbot-wait && alembic upgrade head'
 
 alembic-downgrade:
-	docker compose run --rm operator bash -c 'env FINBOT_WAIT_DEPS=finbotdb ./tools/finbot-wait && alembic downgrade head-1'
+	docker compose exec operator bash -c 'env FINBOT_WAIT_DEPS=finbotdb ./tools/finbot-wait && alembic downgrade head-1'
 
 alembic-history:
-	docker compose run --rm operator bash -c 'env FINBOT_WAIT_DEPS=finbotdb ./tools/finbot-wait && alembic history'
+	docker compose exec operator bash -c 'env FINBOT_WAIT_DEPS=finbotdb ./tools/finbot-wait && alembic history'
 
 docker-build-webapp:
 	cd webapp && docker build -t finbotapp/webapp:latest -f Dockerfile --pull .
@@ -113,13 +113,13 @@ lint-sh:
  		xargs shellcheck -e SC1090 -e SC1091 -e SC2002 -S style
 
 lint-schema:
-	docker compose run --rm operator ./tools/lint-schema.py
+	docker compose exec operator ./tools/lint-schema.py
 
 generate-ts-client:
-	docker compose run --rm operator ./tools/generate-ts-client
+	docker compose exec operator ./tools/generate-ts-client
 
 bash:
-	docker compose run --rm operator bash
+	docker compose exec operator bash
 
 freeze-py:
 	./tools/freeze-py

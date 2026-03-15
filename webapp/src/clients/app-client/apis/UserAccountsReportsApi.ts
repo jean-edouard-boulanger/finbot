@@ -20,6 +20,7 @@ import type {
   GetHoldingsReportResponse,
   GetSavingsRateReportResponse,
   GetSpendingBreakdownResponse,
+  GetTransactionFilterOptionsResponse,
   GetTransactionResponse,
   GetTransactionsReportResponse,
   HTTPValidationError,
@@ -37,6 +38,8 @@ import {
     GetSavingsRateReportResponseToJSON,
     GetSpendingBreakdownResponseFromJSON,
     GetSpendingBreakdownResponseToJSON,
+    GetTransactionFilterOptionsResponseFromJSON,
+    GetTransactionFilterOptionsResponseToJSON,
     GetTransactionResponseFromJSON,
     GetTransactionResponseToJSON,
     GetTransactionsReportResponseFromJSON,
@@ -47,6 +50,18 @@ import {
 
 export interface GetTransactionRequest {
     transactionId: number;
+}
+
+export interface GetTransactionFilterOptionsRequest {
+    fromTime?: Date | null;
+    toTime?: Date | null;
+    linkedAccountId?: Array<number> | null;
+    spendingCategory?: Array<string> | null;
+    description?: string | null;
+    merchantName?: Array<string> | null;
+    amountMin?: number | null;
+    amountMax?: number | null;
+    amountSign?: string | null;
 }
 
 export interface GetUserAccountCashFlowSummaryRequest {
@@ -76,6 +91,11 @@ export interface GetUserAccountTransactionsReportRequest {
     linkedAccountId?: Array<number> | null;
     transactionType?: Array<string> | null;
     spendingCategory?: Array<string> | null;
+    description?: string | null;
+    merchantName?: Array<string> | null;
+    amountMin?: number | null;
+    amountMax?: number | null;
+    amountSign?: string | null;
     limit?: number;
     offset?: number;
 }
@@ -102,6 +122,30 @@ export interface UserAccountsReportsApiInterface {
      * Get Transaction
      */
     getTransaction(requestParameters: GetTransactionRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetTransactionResponse>;
+
+    /**
+     * Get available filter options for transactions (merchants, amount range)
+     * @summary Get Transaction Filter Options
+     * @param {Date} [fromTime] 
+     * @param {Date} [toTime] 
+     * @param {Array<number>} [linkedAccountId] 
+     * @param {Array<string>} [spendingCategory] 
+     * @param {string} [description] 
+     * @param {Array<string>} [merchantName] 
+     * @param {number} [amountMin] 
+     * @param {number} [amountMax] 
+     * @param {string} [amountSign] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UserAccountsReportsApiInterface
+     */
+    getTransactionFilterOptionsRaw(requestParameters: GetTransactionFilterOptionsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GetTransactionFilterOptionsResponse>>;
+
+    /**
+     * Get available filter options for transactions (merchants, amount range)
+     * Get Transaction Filter Options
+     */
+    getTransactionFilterOptions(requestParameters: GetTransactionFilterOptionsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetTransactionFilterOptionsResponse>;
 
     /**
      * Get cash flow summary by transaction category
@@ -210,6 +254,11 @@ export interface UserAccountsReportsApiInterface {
      * @param {Array<number>} [linkedAccountId] 
      * @param {Array<string>} [transactionType] 
      * @param {Array<string>} [spendingCategory] 
+     * @param {string} [description] 
+     * @param {Array<string>} [merchantName] 
+     * @param {number} [amountMin] 
+     * @param {number} [amountMax] 
+     * @param {string} [amountSign] 
      * @param {number} [limit] 
      * @param {number} [offset] 
      * @param {*} [options] Override http request option.
@@ -271,6 +320,78 @@ export class UserAccountsReportsApi extends runtime.BaseAPI implements UserAccou
      */
     async getTransaction(requestParameters: GetTransactionRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetTransactionResponse> {
         const response = await this.getTransactionRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Get available filter options for transactions (merchants, amount range)
+     * Get Transaction Filter Options
+     */
+    async getTransactionFilterOptionsRaw(requestParameters: GetTransactionFilterOptionsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GetTransactionFilterOptionsResponse>> {
+        const queryParameters: any = {};
+
+        if (requestParameters['fromTime'] != null) {
+            queryParameters['from_time'] = (requestParameters['fromTime'] as any).toISOString();
+        }
+
+        if (requestParameters['toTime'] != null) {
+            queryParameters['to_time'] = (requestParameters['toTime'] as any).toISOString();
+        }
+
+        if (requestParameters['linkedAccountId'] != null) {
+            queryParameters['linked_account_id'] = requestParameters['linkedAccountId'];
+        }
+
+        if (requestParameters['spendingCategory'] != null) {
+            queryParameters['spending_category'] = requestParameters['spendingCategory'];
+        }
+
+        if (requestParameters['description'] != null) {
+            queryParameters['description'] = requestParameters['description'];
+        }
+
+        if (requestParameters['merchantName'] != null) {
+            queryParameters['merchant_name'] = requestParameters['merchantName'];
+        }
+
+        if (requestParameters['amountMin'] != null) {
+            queryParameters['amount_min'] = requestParameters['amountMin'];
+        }
+
+        if (requestParameters['amountMax'] != null) {
+            queryParameters['amount_max'] = requestParameters['amountMax'];
+        }
+
+        if (requestParameters['amountSign'] != null) {
+            queryParameters['amount_sign'] = requestParameters['amountSign'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/reports/transactions/filter-options/`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => GetTransactionFilterOptionsResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Get available filter options for transactions (merchants, amount range)
+     * Get Transaction Filter Options
+     */
+    async getTransactionFilterOptions(requestParameters: GetTransactionFilterOptionsRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetTransactionFilterOptionsResponse> {
+        const response = await this.getTransactionFilterOptionsRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
@@ -551,6 +672,26 @@ export class UserAccountsReportsApi extends runtime.BaseAPI implements UserAccou
 
         if (requestParameters['spendingCategory'] != null) {
             queryParameters['spending_category'] = requestParameters['spendingCategory'];
+        }
+
+        if (requestParameters['description'] != null) {
+            queryParameters['description'] = requestParameters['description'];
+        }
+
+        if (requestParameters['merchantName'] != null) {
+            queryParameters['merchant_name'] = requestParameters['merchantName'];
+        }
+
+        if (requestParameters['amountMin'] != null) {
+            queryParameters['amount_min'] = requestParameters['amountMin'];
+        }
+
+        if (requestParameters['amountMax'] != null) {
+            queryParameters['amount_max'] = requestParameters['amountMax'];
+        }
+
+        if (requestParameters['amountSign'] != null) {
+            queryParameters['amount_sign'] = requestParameters['amountSign'];
         }
 
         if (requestParameters['limit'] != null) {

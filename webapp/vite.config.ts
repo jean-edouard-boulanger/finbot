@@ -13,6 +13,7 @@ export default defineConfig({
       clients: path.resolve(__dirname, "src/clients"),
       utils: path.resolve(__dirname, "src/utils"),
       assets: path.resolve(__dirname, "src/assets"),
+      hooks: path.resolve(__dirname, "src/hooks"),
       lib: path.resolve(__dirname, "src/lib"),
     },
   },
