@@ -8,7 +8,7 @@ from finbot.core import schema as core_schema
 from finbot.core.serialization import pretty_dump, reinterpret_as_pydantic
 from finbot.core.utils import some
 from finbot.model import PersistScope, SessionType
-from finbot.workflows.write_valuation_history import matching, repository, schema, transactions
+from finbot.workflows.write_valuation_history import matching, recurring, repository, schema, transactions
 
 logger = logging.getLogger(__name__)
 
@@ -207,6 +207,17 @@ def write_history_impl(
             logging.info(f"matched {match_count} transaction pairs")
     except Exception:
         logging.exception("failed to match transactions (non-fatal)")
+
+    # Detect recurring transactions
+    try:
+        recurring_count = recurring.detect_recurring_transactions(
+            user_account_id=snapshot.user_account_id,
+            db_session=db_session,
+        )
+        if recurring_count:
+            logging.info(f"detected {recurring_count} recurring transaction groups")
+    except Exception:
+        logging.exception("failed to detect recurring transactions (non-fatal)")
 
     return schema.WriteHistoryResponse(
         report=schema.NewHistoryEntryReport(

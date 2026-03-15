@@ -122,7 +122,8 @@ def get_transactions_report(
                ) AS matched_transaction_id,
                th.merchant_id,
                m.name AS merchant_name,
-               m.website_url AS merchant_website_url
+               m.website_url AS merchant_website_url,
+               th.recurring_group_id
           FROM finbot_transactions_history th
           JOIN finbot_linked_accounts la ON th.linked_account_id = la.id
           LEFT JOIN finbot_merchants m ON th.merchant_id = m.id
@@ -190,6 +191,7 @@ def serialize_transaction(
         merchant_id=txn.merchant_id,
         merchant_name=txn.merchant.name if txn.merchant else None,
         merchant_website_url=txn.merchant.website_url if txn.merchant else None,
+        recurring_group_id=txn.recurring_group_id,
     )
 
 

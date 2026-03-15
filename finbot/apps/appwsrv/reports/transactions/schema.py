@@ -26,6 +26,7 @@ class TransactionEntry(BaseModel):
     merchant_id: int | None = None
     merchant_name: str | None = None
     merchant_website_url: str | None = None
+    recurring_group_id: int | None = None
 
 
 class TransactionsReport(BaseModel):
