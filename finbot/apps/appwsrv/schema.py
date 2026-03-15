@@ -433,6 +433,10 @@ class GetTransactionResponse(AppModel):
     transaction: transactions_schema.TransactionEntry
 
 
+class GetTransactionDetailResponse(AppModel):
+    transaction: transactions_schema.TransactionDetail
+
+
 class GetTransactionFilterOptionsResponse(AppModel):
     filter_options: transactions_schema.TransactionFilterOptions
 
