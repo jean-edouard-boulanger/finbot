@@ -607,6 +607,7 @@ class RecurringTransactionGroup(Base):
     last_seen = Column(DateTimeTz, nullable=False)
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
+    description = Column(Text)
 
     merchant = relationship(Merchant, uselist=False)
 

@@ -12,6 +12,9 @@ from finbot.apps.appwsrv.reports.holdings.report import (
     generate as generate_holdings_report,
 )
 from finbot.apps.appwsrv.reports.transactions.report import (
+    get_subscriptions_report as generate_subscriptions_report,
+)
+from finbot.apps.appwsrv.reports.transactions.report import (
     get_cash_flow_summary as generate_cash_flow_summary,
 )
 from finbot.apps.appwsrv.reports.transactions.report import (
@@ -237,6 +240,19 @@ def get_spending_breakdown(
             user_account_id=current_user_id,
             from_time=effective_from,
             to_time=effective_to,
+        )
+    )
+
+
+@router.get("/subscriptions/", operation_id="get_user_account_subscriptions")
+def get_subscriptions(
+    current_user_id: CurrentUserIdDep,
+) -> appwsrv_schema.GetSubscriptionsReportResponse:
+    """Get active subscriptions summary"""
+    return appwsrv_schema.GetSubscriptionsReportResponse(
+        report=generate_subscriptions_report(
+            session=db.session,
+            user_account_id=current_user_id,
         )
     )
 

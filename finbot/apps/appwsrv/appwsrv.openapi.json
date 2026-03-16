@@ -4413,6 +4413,10 @@
                         ],
                         "title": "Total Spent Ccy"
                     },
+                    "yearly_cost": {
+                        "type": "number",
+                        "title": "Yearly Cost"
+                    },
                     "first_seen": {
                         "type": "string",
                         "format": "date-time",
@@ -4422,6 +4426,17 @@
                         "type": "string",
                         "format": "date-time",
                         "title": "Last Seen"
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description"
                     }
                 },
                 "additionalProperties": false,
@@ -4434,6 +4449,7 @@
                     "transaction_count",
                     "total_spent",
                     "total_spent_ccy",
+                    "yearly_cost",
                     "first_seen",
                     "last_seen"
                 ],

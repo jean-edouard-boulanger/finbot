@@ -17,6 +17,78 @@ from finbot.model import (
 )
 
 
+def get_subscriptions_report(
+    session: SessionType,
+    user_account_id: int,
+) -> schema.SubscriptionsReport:
+    settings = repository.get_user_account_settings(session, user_account_id)
+    now = datetime.now(timezone.utc)
+    year_start = datetime(now.year, 1, 1, tzinfo=timezone.utc)
+
+    query = """
+        SELECT rg.id,
+               m.name AS merchant_name,
+               rg.description,
+               rg.currency,
+               rg.avg_amount,
+               rg.avg_interval_days,
+               rg.transaction_count,
+               rg.first_seen,
+               rg.last_seen,
+               COALESCE(ytd.total_spent_this_year, 0) AS total_spent_this_year
+          FROM finbot_recurring_transaction_groups rg
+          JOIN finbot_merchants m ON rg.merchant_id = m.id
+          LEFT JOIN (
+               SELECT th.recurring_group_id,
+                      SUM(ABS(th.amount)) AS total_spent_this_year
+                 FROM finbot_transactions_history th
+                WHERE th.transaction_date >= :year_start
+                GROUP BY th.recurring_group_id
+          ) ytd ON ytd.recurring_group_id = rg.id
+         WHERE rg.user_account_id = :user_account_id
+           AND rg.last_seen >= (NOW() - (rg.avg_interval_days * 1.5) * INTERVAL '1 day')
+         ORDER BY rg.avg_amount * (365.25 / rg.avg_interval_days) DESC
+    """
+    rows = session.execute(
+        text(query),
+        {"user_account_id": user_account_id, "year_start": year_start},
+    )
+
+    subscriptions = []
+    estimated_yearly_total = 0.0
+    total_spent_this_year = 0.0
+    for row in rows:
+        data = row_to_dict(row)
+        avg_amount = float(data["avg_amount"])
+        avg_interval_days = float(data["avg_interval_days"])
+        yearly_cost = avg_amount * (365.25 / avg_interval_days)
+        ytd_spent = float(data["total_spent_this_year"])
+        estimated_yearly_total += yearly_cost
+        total_spent_this_year += ytd_spent
+        subscriptions.append(
+            schema.SubscriptionEntry(
+                id=data["id"],
+                merchant_name=data["merchant_name"],
+                description=data["description"],
+                currency=data["currency"],
+                avg_amount=avg_amount,
+                avg_interval_days=avg_interval_days,
+                yearly_cost=yearly_cost,
+                total_spent_this_year=ytd_spent,
+                last_seen=data["last_seen"],
+                first_seen=data["first_seen"],
+                transaction_count=data["transaction_count"],
+            )
+        )
+
+    return schema.SubscriptionsReport(
+        valuation_ccy=settings.valuation_ccy,
+        estimated_yearly_total=estimated_yearly_total,
+        total_spent_this_year=total_spent_this_year,
+        subscriptions=subscriptions,
+    )
+
+
 def get_transactions_report(
     session: SessionType,
     user_account_id: int,
@@ -220,16 +292,21 @@ def serialize_transaction_detail(
     recurring_detail: schema.RecurringGroupDetail | None = None
     if txn.recurring_group is not None:
         rg = txn.recurring_group
+        avg_amount = float(rg.avg_amount)
+        avg_interval_days = float(rg.avg_interval_days)
+        yearly_cost = avg_amount * (365.25 / avg_interval_days)
         recurring_detail = schema.RecurringGroupDetail(
             id=rg.id,
             currency=rg.currency,
-            avg_amount=float(rg.avg_amount),
-            avg_interval_days=float(rg.avg_interval_days),
+            avg_amount=avg_amount,
+            avg_interval_days=avg_interval_days,
             transaction_count=rg.transaction_count,
             total_spent=float(rg.total_spent),
             total_spent_ccy=float(rg.total_spent_ccy) if rg.total_spent_ccy is not None else None,
+            yearly_cost=yearly_cost,
             first_seen=rg.first_seen,
             last_seen=rg.last_seen,
+            description=rg.description,
         )
 
     match_detail: schema.MatchDetail | None = None

@@ -21,8 +21,10 @@ class RecurringGroupDetail(BaseModel):
     transaction_count: int
     total_spent: float
     total_spent_ccy: float | None
+    yearly_cost: float
     first_seen: AwareDatetime
     last_seen: AwareDatetime
+    description: str | None = None
 
 
 class MatchDetail(BaseModel):
@@ -147,6 +149,27 @@ class SavingsRateReport(BaseModel):
     valuation_ccy: str
     current_month: MonthlySavingsEntry
     comparison_month: MonthlySavingsEntry
+
+
+class SubscriptionEntry(BaseModel):
+    id: int
+    merchant_name: str
+    description: str | None
+    currency: str
+    avg_amount: float
+    avg_interval_days: float
+    yearly_cost: float
+    total_spent_this_year: float
+    last_seen: AwareDatetime
+    first_seen: AwareDatetime
+    transaction_count: int
+
+
+class SubscriptionsReport(BaseModel):
+    valuation_ccy: str
+    estimated_yearly_total: float
+    total_spent_this_year: float
+    subscriptions: list[SubscriptionEntry]
 
 
 class FilterOption(BaseModel):

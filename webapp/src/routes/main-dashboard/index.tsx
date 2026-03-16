@@ -23,6 +23,7 @@ import {
   SpendingBreakdownPanel,
   SavingsRatePanel,
   CashFlowPanel,
+  SubscriptionsPanel,
 } from "./reports";
 
 import { Alert, AlertTitle, AlertDescription } from "components/ui/alert";
@@ -305,6 +306,18 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
               moneyFormatter={defaultMoneyFormatter}
             />
           </div>
+        </div>
+
+        {/* Subscriptions */}
+        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+          <div className="animate-fade-up stagger-4">
+            <SubscriptionsPanel
+              userAccountId={userAccountId!}
+              locale={locale}
+              moneyFormatter={defaultMoneyFormatter}
+            />
+          </div>
+          {/* Calendar widget placeholder — next to subscriptions */}
         </div>
 
         {/* Reports */}

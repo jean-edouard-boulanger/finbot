@@ -7,6 +7,7 @@ import { CashFlowPanel } from "./cash-flow";
 import { SpendingBreakdownPanel } from "./spending-breakdown";
 import { TopTransactionsPanel } from "./top-transactions";
 import { SavingsRatePanel } from "./savings-rate";
+import { SubscriptionsPanel } from "./subscriptions";
 
 export {
   EarningsReportPanel,
@@ -18,4 +19,5 @@ export {
   SpendingBreakdownPanel,
   TopTransactionsPanel,
   SavingsRatePanel,
+  SubscriptionsPanel,
 };

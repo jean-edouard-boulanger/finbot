@@ -441,6 +441,10 @@ class GetTransactionFilterOptionsResponse(AppModel):
     filter_options: transactions_schema.TransactionFilterOptions
 
 
+class GetSubscriptionsReportResponse(AppModel):
+    report: transactions_schema.SubscriptionsReport
+
+
 class PlaidSettings(AppModel):
     environment: str
     client_id: str

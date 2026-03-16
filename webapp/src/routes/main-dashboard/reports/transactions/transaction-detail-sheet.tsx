@@ -39,8 +39,10 @@ interface RecurringGroupDetail {
   transaction_count: number;
   total_spent: number;
   total_spent_ccy: number | null;
+  yearly_cost: number;
   first_seen: string;
   last_seen: string;
+  description: string | null;
 }
 
 interface MatchDetail {
@@ -399,6 +401,11 @@ export const TransactionDetailSheet: React.FC<TransactionDetailSheetProps> = ({
                   icon={<Repeat className="h-4 w-4" />}
                   title="Recurring"
                 >
+                  {txn.recurring_group.description && (
+                    <p className="text-sm text-muted-foreground">
+                      {txn.recurring_group.description}
+                    </p>
+                  )}
                   <DetailRow label="Frequency">
                     Every ~{Math.round(txn.recurring_group.avg_interval_days)}{" "}
                     days
@@ -407,6 +414,16 @@ export const TransactionDetailSheet: React.FC<TransactionDetailSheetProps> = ({
                     <span className="font-mono tabular-nums">
                       <Money
                         amount={txn.recurring_group.avg_amount}
+                        locale={locale}
+                        ccy={txn.recurring_group.currency}
+                        moneyFormatter={moneyFormatter}
+                      />
+                    </span>
+                  </DetailRow>
+                  <DetailRow label="Estimated yearly cost">
+                    <span className="font-mono tabular-nums">
+                      <Money
+                        amount={txn.recurring_group.yearly_cost}
                         locale={locale}
                         ccy={txn.recurring_group.currency}
                         moneyFormatter={moneyFormatter}
