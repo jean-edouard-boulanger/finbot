@@ -1,5 +1,6 @@
 import calendar
-from datetime import datetime, timezone
+from collections import defaultdict
+from datetime import date, datetime, timedelta, timezone
 from typing import Any
 
 from pydantic import AwareDatetime
@@ -15,6 +16,261 @@ from finbot.model import (
     TransactionMatch,
     repository,
 )
+
+
+def get_subscriptions_report(
+    session: SessionType,
+    user_account_id: int,
+) -> schema.SubscriptionsReport:
+    settings = repository.get_user_account_settings(session, user_account_id)
+    now = datetime.now(timezone.utc)
+    year_start = datetime(now.year, 1, 1, tzinfo=timezone.utc)
+
+    query = """
+        SELECT rg.id,
+               m.name AS merchant_name,
+               rg.description,
+               rg.currency,
+               rg.avg_amount,
+               rg.avg_interval_days,
+               rg.transaction_count,
+               rg.first_seen,
+               rg.last_seen,
+               COALESCE(ytd.total_spent_this_year, 0) AS total_spent_this_year
+          FROM finbot_recurring_transaction_groups rg
+          JOIN finbot_merchants m ON rg.merchant_id = m.id
+          LEFT JOIN (
+               SELECT th.recurring_group_id,
+                      SUM(ABS(th.amount)) AS total_spent_this_year
+                 FROM finbot_transactions_history th
+                WHERE th.transaction_date >= :year_start
+                GROUP BY th.recurring_group_id
+          ) ytd ON ytd.recurring_group_id = rg.id
+         WHERE rg.user_account_id = :user_account_id
+           AND rg.last_seen >= (NOW() - (rg.avg_interval_days * 1.5) * INTERVAL '1 day')
+         ORDER BY rg.avg_amount * (365.25 / rg.avg_interval_days) DESC
+    """
+    rows = session.execute(
+        text(query),
+        {"user_account_id": user_account_id, "year_start": year_start},
+    )
+
+    subscriptions = []
+    estimated_yearly_total = 0.0
+    total_spent_this_year = 0.0
+    for row in rows:
+        data = row_to_dict(row)
+        avg_amount = float(data["avg_amount"])
+        avg_interval_days = float(data["avg_interval_days"])
+        yearly_cost = avg_amount * (365.25 / avg_interval_days)
+        ytd_spent = float(data["total_spent_this_year"])
+        estimated_yearly_total += yearly_cost
+        total_spent_this_year += ytd_spent
+        subscriptions.append(
+            schema.SubscriptionEntry(
+                id=data["id"],
+                merchant_name=data["merchant_name"],
+                description=data["description"],
+                currency=data["currency"],
+                avg_amount=avg_amount,
+                avg_interval_days=avg_interval_days,
+                yearly_cost=yearly_cost,
+                total_spent_this_year=ytd_spent,
+                last_seen=data["last_seen"],
+                first_seen=data["first_seen"],
+                transaction_count=data["transaction_count"],
+            )
+        )
+
+    return schema.SubscriptionsReport(
+        valuation_ccy=settings.valuation_ccy,
+        estimated_yearly_total=estimated_yearly_total,
+        total_spent_this_year=total_spent_this_year,
+        subscriptions=subscriptions,
+    )
+
+
+def get_spending_calendar(
+    session: SessionType,
+    user_account_id: int,
+    month: str | None = None,
+) -> schema.SpendingCalendarReport:
+    settings = repository.get_user_account_settings(session, user_account_id)
+    now = datetime.now(timezone.utc)
+    if month is None:
+        month = now.strftime("%Y-%m")
+
+    year = int(month[:4])
+    mon = int(month[5:7])
+    month_start = date(year, mon, 1)
+    last_day = calendar.monthrange(year, mon)[1]
+    month_end = date(year, mon, last_day)
+    month_end_exclusive = month_end + timedelta(days=1)
+    today = now.date()
+
+    dt_month_start = datetime(year, mon, 1, tzinfo=timezone.utc)
+    dt_month_end_exclusive = datetime(
+        month_end_exclusive.year,
+        month_end_exclusive.month,
+        month_end_exclusive.day,
+        tzinfo=timezone.utc,
+    )
+
+    # Daily spending aggregation (outflows only, match-excluded)
+    spending_query = """
+        SELECT th.transaction_date::date AS spend_date,
+               COALESCE(SUM(ABS(th.amount_snapshot_ccy)), 0) AS total_spending
+          FROM finbot_transactions_history th
+          JOIN finbot_linked_accounts la ON th.linked_account_id = la.id
+         WHERE la.user_account_id = :user_account_id
+           AND NOT la.deleted
+           AND th.transaction_date >= :month_start
+           AND th.transaction_date < :month_end_exclusive
+           AND th.amount_snapshot_ccy < 0
+           AND th.id NOT IN (
+               SELECT tm.outflow_transaction_id FROM finbot_transaction_matches tm WHERE tm.match_status != 'rejected'
+               UNION ALL
+               SELECT tm.inflow_transaction_id FROM finbot_transaction_matches tm WHERE tm.match_status != 'rejected'
+           )
+         GROUP BY th.transaction_date::date
+    """
+    spending_rows = session.execute(
+        text(spending_query),
+        {
+            "user_account_id": user_account_id,
+            "month_start": dt_month_start,
+            "month_end_exclusive": dt_month_end_exclusive,
+        },
+    )
+    spending_by_date: dict[date, float] = {}
+    for row in spending_rows:
+        data = row_to_dict(row)
+        spend_date = data["spend_date"]
+        if hasattr(spend_date, "date"):
+            spend_date = spend_date.date()
+        spending_by_date[spend_date] = float(data["total_spending"])
+
+    payments_by_date: dict[date, list[schema.SpendingCalendarRecurringPayment]] = defaultdict(list)
+
+    # 1. Actual past transactions linked to recurring groups in this month
+    actual_query = """
+        SELECT th.transaction_date::date AS txn_date,
+               th.recurring_group_id,
+               m.name AS merchant_name,
+               rg.description,
+               th.currency,
+               ABS(th.amount) AS amount
+          FROM finbot_transactions_history th
+          JOIN finbot_linked_accounts la ON th.linked_account_id = la.id
+          JOIN finbot_recurring_transaction_groups rg ON th.recurring_group_id = rg.id
+          JOIN finbot_merchants m ON rg.merchant_id = m.id
+         WHERE la.user_account_id = :user_account_id
+           AND NOT la.deleted
+           AND th.recurring_group_id IS NOT NULL
+           AND th.transaction_date >= :month_start
+           AND th.transaction_date < :month_end_exclusive
+         ORDER BY th.transaction_date
+    """
+    actual_rows = session.execute(
+        text(actual_query),
+        {
+            "user_account_id": user_account_id,
+            "month_start": dt_month_start,
+            "month_end_exclusive": dt_month_end_exclusive,
+        },
+    )
+
+    actual_group_dates: set[tuple[int, date]] = set()
+    for row in actual_rows:
+        data = row_to_dict(row)
+        txn_date = data["txn_date"]
+        if hasattr(txn_date, "date"):
+            txn_date = txn_date.date()
+        group_id = data["recurring_group_id"]
+        actual_group_dates.add((group_id, txn_date))
+        payments_by_date[txn_date].append(
+            schema.SpendingCalendarRecurringPayment(
+                subscription_id=group_id,
+                merchant_name=data["merchant_name"],
+                description=data["description"],
+                currency=data["currency"],
+                avg_amount=float(data["amount"]),
+                is_projected=False,
+            )
+        )
+
+    # 2. Project future payments from active recurring groups
+    groups_query = """
+        SELECT rg.id,
+               m.name AS merchant_name,
+               rg.description,
+               rg.currency,
+               rg.avg_amount,
+               rg.avg_interval_days,
+               rg.last_seen
+          FROM finbot_recurring_transaction_groups rg
+          JOIN finbot_merchants m ON rg.merchant_id = m.id
+         WHERE rg.user_account_id = :user_account_id
+           AND rg.last_seen >= (NOW() - (rg.avg_interval_days * 1.5) * INTERVAL '1 day')
+         ORDER BY rg.avg_amount DESC
+    """
+    rows = session.execute(
+        text(groups_query),
+        {"user_account_id": user_account_id},
+    )
+
+    for row in rows:
+        data = row_to_dict(row)
+        avg_interval = round(float(data["avg_interval_days"]))
+        if avg_interval <= 0:
+            continue
+        last_seen_dt = data["last_seen"]
+        if hasattr(last_seen_dt, "date"):
+            last_seen_date = last_seen_dt.date()
+        else:
+            last_seen_date = last_seen_dt
+
+        group_id = data["id"]
+        payment = schema.SpendingCalendarRecurringPayment(
+            subscription_id=group_id,
+            merchant_name=data["merchant_name"],
+            description=data["description"],
+            currency=data["currency"],
+            avg_amount=float(data["avg_amount"]),
+            is_projected=True,
+        )
+
+        next_date = last_seen_date + timedelta(days=avg_interval)
+        while next_date < month_start:
+            next_date += timedelta(days=avg_interval)
+        while next_date <= month_end:
+            if next_date >= today and (group_id, next_date) not in actual_group_dates:
+                payments_by_date[next_date].append(payment)
+            next_date += timedelta(days=avg_interval)
+
+    # Merge: union of dates with spending OR recurring payments
+    all_dates = set(spending_by_date.keys()) | set(payments_by_date.keys())
+    days = sorted(
+        [
+            schema.SpendingCalendarDay(
+                date=d,
+                total_spending=spending_by_date.get(d, 0.0),
+                recurring_payments=payments_by_date.get(d, []),
+            )
+            for d in all_dates
+        ],
+        key=lambda day: day.date,
+    )
+
+    max_daily_spending = max((day.total_spending for day in days), default=0.0)
+
+    return schema.SpendingCalendarReport(
+        valuation_ccy=settings.valuation_ccy,
+        start_date=month_start,
+        end_date=month_end,
+        max_daily_spending=max_daily_spending,
+        days=days,
+    )
 
 
 def get_transactions_report(
@@ -220,16 +476,21 @@ def serialize_transaction_detail(
     recurring_detail: schema.RecurringGroupDetail | None = None
     if txn.recurring_group is not None:
         rg = txn.recurring_group
+        avg_amount = float(rg.avg_amount)
+        avg_interval_days = float(rg.avg_interval_days)
+        yearly_cost = avg_amount * (365.25 / avg_interval_days)
         recurring_detail = schema.RecurringGroupDetail(
             id=rg.id,
             currency=rg.currency,
-            avg_amount=float(rg.avg_amount),
-            avg_interval_days=float(rg.avg_interval_days),
+            avg_amount=avg_amount,
+            avg_interval_days=avg_interval_days,
             transaction_count=rg.transaction_count,
             total_spent=float(rg.total_spent),
             total_spent_ccy=float(rg.total_spent_ccy) if rg.total_spent_ccy is not None else None,
+            yearly_cost=yearly_cost,
             first_seen=rg.first_seen,
             last_seen=rg.last_seen,
+            description=rg.description,
         )
 
     match_detail: schema.MatchDetail | None = None

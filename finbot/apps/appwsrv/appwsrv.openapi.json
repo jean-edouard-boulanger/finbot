@@ -2687,6 +2687,88 @@
                 }
             }
         },
+        "/reports/subscriptions/": {
+            "get": {
+                "tags": [
+                    "User accounts (reports)"
+                ],
+                "summary": "Get Subscriptions",
+                "description": "Get active subscriptions summary",
+                "operationId": "get_user_account_subscriptions",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GetSubscriptionsReportResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
+        },
+        "/reports/spending-calendar/": {
+            "get": {
+                "tags": [
+                    "User accounts (reports)"
+                ],
+                "summary": "Get Spending Calendar",
+                "description": "Get spending calendar with heatmap and recurring payments for a given month",
+                "operationId": "get_spending_calendar",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "month",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Month"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GetSpendingCalendarResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/reports/savings-rate/": {
             "get": {
                 "tags": [
@@ -3416,6 +3498,32 @@
                     "report"
                 ],
                 "title": "GetSpendingBreakdownResponse"
+            },
+            "GetSpendingCalendarResponse": {
+                "properties": {
+                    "report": {
+                        "$ref": "#/components/schemas/SpendingCalendarReport"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "report"
+                ],
+                "title": "GetSpendingCalendarResponse"
+            },
+            "GetSubscriptionsReportResponse": {
+                "properties": {
+                    "report": {
+                        "$ref": "#/components/schemas/SubscriptionsReport"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "report"
+                ],
+                "title": "GetSubscriptionsReportResponse"
             },
             "GetTransactionDetailResponse": {
                 "properties": {
@@ -4413,6 +4521,10 @@
                         ],
                         "title": "Total Spent Ccy"
                     },
+                    "yearly_cost": {
+                        "type": "number",
+                        "title": "Yearly Cost"
+                    },
                     "first_seen": {
                         "type": "string",
                         "format": "date-time",
@@ -4422,6 +4534,17 @@
                         "type": "string",
                         "format": "date-time",
                         "title": "Last Seen"
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description"
                     }
                 },
                 "additionalProperties": false,
@@ -4434,6 +4557,7 @@
                     "transaction_count",
                     "total_spent",
                     "total_spent_ccy",
+                    "yearly_cost",
                     "first_seen",
                     "last_seen"
                 ],
@@ -4605,6 +4729,119 @@
                     "transaction_count"
                 ],
                 "title": "SpendingBreakdownEntry"
+            },
+            "SpendingCalendarDay": {
+                "properties": {
+                    "date": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "Date"
+                    },
+                    "total_spending": {
+                        "type": "number",
+                        "title": "Total Spending"
+                    },
+                    "recurring_payments": {
+                        "items": {
+                            "$ref": "#/components/schemas/SpendingCalendarRecurringPayment"
+                        },
+                        "type": "array",
+                        "title": "Recurring Payments"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "date",
+                    "total_spending",
+                    "recurring_payments"
+                ],
+                "title": "SpendingCalendarDay"
+            },
+            "SpendingCalendarRecurringPayment": {
+                "properties": {
+                    "subscription_id": {
+                        "type": "integer",
+                        "title": "Subscription Id"
+                    },
+                    "merchant_name": {
+                        "type": "string",
+                        "title": "Merchant Name"
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description"
+                    },
+                    "currency": {
+                        "type": "string",
+                        "title": "Currency"
+                    },
+                    "avg_amount": {
+                        "type": "number",
+                        "title": "Avg Amount"
+                    },
+                    "is_projected": {
+                        "type": "boolean",
+                        "title": "Is Projected"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "subscription_id",
+                    "merchant_name",
+                    "description",
+                    "currency",
+                    "avg_amount",
+                    "is_projected"
+                ],
+                "title": "SpendingCalendarRecurringPayment"
+            },
+            "SpendingCalendarReport": {
+                "properties": {
+                    "valuation_ccy": {
+                        "type": "string",
+                        "title": "Valuation Ccy"
+                    },
+                    "start_date": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "Start Date"
+                    },
+                    "end_date": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "End Date"
+                    },
+                    "max_daily_spending": {
+                        "type": "number",
+                        "title": "Max Daily Spending"
+                    },
+                    "days": {
+                        "items": {
+                            "$ref": "#/components/schemas/SpendingCalendarDay"
+                        },
+                        "type": "array",
+                        "title": "Days"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "valuation_ccy",
+                    "start_date",
+                    "end_date",
+                    "max_daily_spending",
+                    "days"
+                ],
+                "title": "SpendingCalendarReport"
             },
             "SubAccountDescription": {
                 "properties": {
@@ -4824,6 +5061,111 @@
                     "children"
                 ],
                 "title": "SubAccountNode"
+            },
+            "SubscriptionEntry": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "title": "Id"
+                    },
+                    "merchant_name": {
+                        "type": "string",
+                        "title": "Merchant Name"
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description"
+                    },
+                    "currency": {
+                        "type": "string",
+                        "title": "Currency"
+                    },
+                    "avg_amount": {
+                        "type": "number",
+                        "title": "Avg Amount"
+                    },
+                    "avg_interval_days": {
+                        "type": "number",
+                        "title": "Avg Interval Days"
+                    },
+                    "yearly_cost": {
+                        "type": "number",
+                        "title": "Yearly Cost"
+                    },
+                    "total_spent_this_year": {
+                        "type": "number",
+                        "title": "Total Spent This Year"
+                    },
+                    "last_seen": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Last Seen"
+                    },
+                    "first_seen": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "First Seen"
+                    },
+                    "transaction_count": {
+                        "type": "integer",
+                        "title": "Transaction Count"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "id",
+                    "merchant_name",
+                    "description",
+                    "currency",
+                    "avg_amount",
+                    "avg_interval_days",
+                    "yearly_cost",
+                    "total_spent_this_year",
+                    "last_seen",
+                    "first_seen",
+                    "transaction_count"
+                ],
+                "title": "SubscriptionEntry"
+            },
+            "SubscriptionsReport": {
+                "properties": {
+                    "valuation_ccy": {
+                        "type": "string",
+                        "title": "Valuation Ccy"
+                    },
+                    "estimated_yearly_total": {
+                        "type": "number",
+                        "title": "Estimated Yearly Total"
+                    },
+                    "total_spent_this_year": {
+                        "type": "number",
+                        "title": "Total Spent This Year"
+                    },
+                    "subscriptions": {
+                        "items": {
+                            "$ref": "#/components/schemas/SubscriptionEntry"
+                        },
+                        "type": "array",
+                        "title": "Subscriptions"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "valuation_ccy",
+                    "estimated_yearly_total",
+                    "total_spent_this_year",
+                    "subscriptions"
+                ],
+                "title": "SubscriptionsReport"
             },
             "SystemReport": {
                 "properties": {

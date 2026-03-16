@@ -62,6 +62,12 @@ export interface RecurringGroupDetail {
     totalSpentCcy: number | null;
     /**
      * 
+     * @type {number}
+     * @memberof RecurringGroupDetail
+     */
+    yearlyCost: number;
+    /**
+     * 
      * @type {Date}
      * @memberof RecurringGroupDetail
      */
@@ -72,6 +78,12 @@ export interface RecurringGroupDetail {
      * @memberof RecurringGroupDetail
      */
     lastSeen: Date;
+    /**
+     * 
+     * @type {string}
+     * @memberof RecurringGroupDetail
+     */
+    description?: string | null;
 }
 
 /**
@@ -85,6 +97,7 @@ export function instanceOfRecurringGroupDetail(value: object): value is Recurrin
     if (!('transactionCount' in value) || value['transactionCount'] === undefined) return false;
     if (!('totalSpent' in value) || value['totalSpent'] === undefined) return false;
     if (!('totalSpentCcy' in value) || value['totalSpentCcy'] === undefined) return false;
+    if (!('yearlyCost' in value) || value['yearlyCost'] === undefined) return false;
     if (!('firstSeen' in value) || value['firstSeen'] === undefined) return false;
     if (!('lastSeen' in value) || value['lastSeen'] === undefined) return false;
     return true;
@@ -107,8 +120,10 @@ export function RecurringGroupDetailFromJSONTyped(json: any, ignoreDiscriminator
         'transactionCount': json['transaction_count'],
         'totalSpent': json['total_spent'],
         'totalSpentCcy': json['total_spent_ccy'],
+        'yearlyCost': json['yearly_cost'],
         'firstSeen': (new Date(json['first_seen'])),
         'lastSeen': (new Date(json['last_seen'])),
+        'description': json['description'] == null ? undefined : json['description'],
     };
 }
 
@@ -130,8 +145,10 @@ export function RecurringGroupDetailToJSONTyped(value?: RecurringGroupDetail | n
         'transaction_count': value['transactionCount'],
         'total_spent': value['totalSpent'],
         'total_spent_ccy': value['totalSpentCcy'],
+        'yearly_cost': value['yearlyCost'],
         'first_seen': ((value['firstSeen']).toISOString()),
         'last_seen': ((value['lastSeen']).toISOString()),
+        'description': value['description'],
     };
 }
 
