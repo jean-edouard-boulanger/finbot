@@ -20,6 +20,8 @@ import type {
   GetHoldingsReportResponse,
   GetSavingsRateReportResponse,
   GetSpendingBreakdownResponse,
+  GetSpendingCalendarResponse,
+  GetSubscriptionsReportResponse,
   GetTransactionDetailResponse,
   GetTransactionFilterOptionsResponse,
   GetTransactionResponse,
@@ -39,6 +41,10 @@ import {
     GetSavingsRateReportResponseToJSON,
     GetSpendingBreakdownResponseFromJSON,
     GetSpendingBreakdownResponseToJSON,
+    GetSpendingCalendarResponseFromJSON,
+    GetSpendingCalendarResponseToJSON,
+    GetSubscriptionsReportResponseFromJSON,
+    GetSubscriptionsReportResponseToJSON,
     GetTransactionDetailResponseFromJSON,
     GetTransactionDetailResponseToJSON,
     GetTransactionFilterOptionsResponseFromJSON,
@@ -50,6 +56,10 @@ import {
     HTTPValidationErrorFromJSON,
     HTTPValidationErrorToJSON,
 } from '../models/index';
+
+export interface GetSpendingCalendarRequest {
+    month?: string | null;
+}
 
 export interface GetTransactionRequest {
     transactionId: number;
@@ -114,6 +124,22 @@ export interface GetUserAccountTransactionsReportRequest {
  * @interface UserAccountsReportsApiInterface
  */
 export interface UserAccountsReportsApiInterface {
+    /**
+     * Get spending calendar with heatmap and recurring payments for a given month
+     * @summary Get Spending Calendar
+     * @param {string} [month] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UserAccountsReportsApiInterface
+     */
+    getSpendingCalendarRaw(requestParameters: GetSpendingCalendarRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GetSpendingCalendarResponse>>;
+
+    /**
+     * Get spending calendar with heatmap and recurring payments for a given month
+     * Get Spending Calendar
+     */
+    getSpendingCalendar(requestParameters: GetSpendingCalendarRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetSpendingCalendarResponse>;
+
     /**
      * Get a single transaction by ID
      * @summary Get Transaction
@@ -270,6 +296,21 @@ export interface UserAccountsReportsApiInterface {
     getUserAccountSpendingBreakdown(requestParameters: GetUserAccountSpendingBreakdownRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetSpendingBreakdownResponse>;
 
     /**
+     * Get active subscriptions summary
+     * @summary Get Subscriptions
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UserAccountsReportsApiInterface
+     */
+    getUserAccountSubscriptionsRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GetSubscriptionsReportResponse>>;
+
+    /**
+     * Get active subscriptions summary
+     * Get Subscriptions
+     */
+    getUserAccountSubscriptions(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetSubscriptionsReportResponse>;
+
+    /**
      * Get paginated transactions report
      * @summary Get Transactions Report
      * @param {Date} [fromTime] 
@@ -302,6 +343,46 @@ export interface UserAccountsReportsApiInterface {
  * 
  */
 export class UserAccountsReportsApi extends runtime.BaseAPI implements UserAccountsReportsApiInterface {
+
+    /**
+     * Get spending calendar with heatmap and recurring payments for a given month
+     * Get Spending Calendar
+     */
+    async getSpendingCalendarRaw(requestParameters: GetSpendingCalendarRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GetSpendingCalendarResponse>> {
+        const queryParameters: any = {};
+
+        if (requestParameters['month'] != null) {
+            queryParameters['month'] = requestParameters['month'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/reports/spending-calendar/`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => GetSpendingCalendarResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Get spending calendar with heatmap and recurring payments for a given month
+     * Get Spending Calendar
+     */
+    async getSpendingCalendar(requestParameters: GetSpendingCalendarRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetSpendingCalendarResponse> {
+        const response = await this.getSpendingCalendarRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
 
     /**
      * Get a single transaction by ID
@@ -710,6 +791,42 @@ export class UserAccountsReportsApi extends runtime.BaseAPI implements UserAccou
      */
     async getUserAccountSpendingBreakdown(requestParameters: GetUserAccountSpendingBreakdownRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetSpendingBreakdownResponse> {
         const response = await this.getUserAccountSpendingBreakdownRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Get active subscriptions summary
+     * Get Subscriptions
+     */
+    async getUserAccountSubscriptionsRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GetSubscriptionsReportResponse>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/reports/subscriptions/`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => GetSubscriptionsReportResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Get active subscriptions summary
+     * Get Subscriptions
+     */
+    async getUserAccountSubscriptions(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetSubscriptionsReportResponse> {
+        const response = await this.getUserAccountSubscriptionsRaw(initOverrides);
         return await response.value();
     }
 

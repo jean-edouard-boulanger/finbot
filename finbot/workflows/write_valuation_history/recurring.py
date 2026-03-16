@@ -34,13 +34,22 @@ DESCRIPTION_MATCH_THRESHOLD = 80
 
 _SUBSCRIPTION_KEYWORDS = [
     # English
-    "subscription", "subscribe", "recurring", "membership", "renewal",
+    "subscription",
+    "subscribe",
+    "recurring",
+    "membership",
+    "renewal",
     # French
-    "abonnement", "cotisation", "renouvellement", "adhesion", "adhésion",
+    "abonnement",
+    "cotisation",
+    "renouvellement",
+    "adhesion",
+    "adhésion",
     # German / Dutch
     # ("abonnement" already listed above)
     # Spanish
-    "suscripcion", "suscripción",
+    "suscripcion",
+    "suscripción",
     # Italian
     "abbonamento",
     # Portuguese
@@ -362,21 +371,23 @@ async def _describe_groups_with_llm(
         merchant = db_session.query(model.Merchant).get(group.merchant_id)
         merchant_name = merchant.name if merchant else "Unknown"
         sample_descriptions = [t.description for t in txns[:2]]
-        groups_data.append({
-            "group_id": group.id,
-            "merchant_name": merchant_name,
-            "currency": group.currency,
-            "avg_amount": float(group.avg_amount),
-            "avg_interval_days": float(group.avg_interval_days),
-            "transaction_count": group.transaction_count,
-            "sample_transaction_descriptions": sample_descriptions,
-        })
+        groups_data.append(
+            {
+                "group_id": group.id,
+                "merchant_name": merchant_name,
+                "currency": group.currency,
+                "avg_amount": float(group.avg_amount),
+                "avg_interval_days": float(group.avg_interval_days),
+                "transaction_count": group.transaction_count,
+                "sample_transaction_descriptions": sample_descriptions,
+            }
+        )
         groups_by_id[group.id] = group
 
     prompt = f"""Generate a brief, human-readable description for each recurring payment group below.
-The description should capture what the subscription/recurring payment is for (e.g. "Monthly streaming subscription", "Annual cloud storage plan", "Monthly gym membership").
-Use the sample transaction descriptions to infer the nature of the recurring payment.
-Keep descriptions concise (under 10 words).
+The description should capture what the subscription/recurring payment is for (e.g. "Monthly streaming subscription",
+"Annual cloud storage plan", "Monthly gym membership"). Use the sample transaction descriptions to infer the nature of
+the recurring payment. Keep descriptions concise (under 10 words).
 
 GROUPS:
 {json.dumps(groups_data)}"""
@@ -393,9 +404,9 @@ GROUPS:
             return
 
         for result in parsed.results:
-            group = groups_by_id.get(result.group_id)
-            if group:
-                group.description = result.description
+            matched_group = groups_by_id.get(result.group_id)
+            if matched_group is not None:
+                matched_group.description = result.description
 
         logger.info(
             "LLM generated descriptions for %d/%d recurring groups",

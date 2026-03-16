@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Any
 
 from pydantic import AwareDatetime
@@ -170,6 +171,29 @@ class SubscriptionsReport(BaseModel):
     estimated_yearly_total: float
     total_spent_this_year: float
     subscriptions: list[SubscriptionEntry]
+
+
+class SpendingCalendarRecurringPayment(BaseModel):
+    subscription_id: int
+    merchant_name: str
+    description: str | None
+    currency: str
+    avg_amount: float
+    is_projected: bool
+
+
+class SpendingCalendarDay(BaseModel):
+    date: date
+    total_spending: float
+    recurring_payments: list[SpendingCalendarRecurringPayment]
+
+
+class SpendingCalendarReport(BaseModel):
+    valuation_ccy: str
+    start_date: date
+    end_date: date
+    max_daily_spending: float
+    days: list[SpendingCalendarDay]
 
 
 class FilterOption(BaseModel):

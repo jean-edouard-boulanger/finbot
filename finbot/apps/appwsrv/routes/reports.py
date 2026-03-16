@@ -12,9 +12,6 @@ from finbot.apps.appwsrv.reports.holdings.report import (
     generate as generate_holdings_report,
 )
 from finbot.apps.appwsrv.reports.transactions.report import (
-    get_subscriptions_report as generate_subscriptions_report,
-)
-from finbot.apps.appwsrv.reports.transactions.report import (
     get_cash_flow_summary as generate_cash_flow_summary,
 )
 from finbot.apps.appwsrv.reports.transactions.report import (
@@ -25,6 +22,12 @@ from finbot.apps.appwsrv.reports.transactions.report import (
 )
 from finbot.apps.appwsrv.reports.transactions.report import (
     get_spending_breakdown as generate_spending_breakdown,
+)
+from finbot.apps.appwsrv.reports.transactions.report import (
+    get_spending_calendar as generate_spending_calendar,
+)
+from finbot.apps.appwsrv.reports.transactions.report import (
+    get_subscriptions_report as generate_subscriptions_report,
 )
 from finbot.apps.appwsrv.reports.transactions.report import (
     get_transaction_filter_options as generate_transaction_filter_options,
@@ -253,6 +256,21 @@ def get_subscriptions(
         report=generate_subscriptions_report(
             session=db.session,
             user_account_id=current_user_id,
+        )
+    )
+
+
+@router.get("/spending-calendar/", operation_id="get_spending_calendar")
+def get_spending_calendar(
+    current_user_id: CurrentUserIdDep,
+    month: str | None = Query(default=None),
+) -> appwsrv_schema.GetSpendingCalendarResponse:
+    """Get spending calendar with heatmap and recurring payments for a given month"""
+    return appwsrv_schema.GetSpendingCalendarResponse(
+        report=generate_spending_calendar(
+            session=db.session,
+            user_account_id=current_user_id,
+            month=month,
         )
     )
 

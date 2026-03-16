@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "components/ui/card";
 import { Alert, AlertTitle, AlertDescription } from "components/ui/alert";
 import { MoneyFormatterType } from "components/money";
 import { Repeat } from "lucide-react";
-import { DateTime } from "luxon";
 
 interface SubscriptionEntry {
   id: number;
@@ -154,7 +153,8 @@ export const SubscriptionsPanel: React.FC<SubscriptionsPanelProps> = (
                         <span>{formatFrequency(sub.avg_interval_days)}</span>
                         <span>-</span>
                         <span>
-                          {moneyFormatter(sub.avg_amount, locale, sub.currency)}/ea
+                          {moneyFormatter(sub.avg_amount, locale, sub.currency)}
+                          /ea
                         </span>
                       </div>
                     </div>

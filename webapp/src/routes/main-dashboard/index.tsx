@@ -24,6 +24,7 @@ import {
   SavingsRatePanel,
   CashFlowPanel,
   SubscriptionsPanel,
+  SpendingCalendarPanel,
 } from "./reports";
 
 import { Alert, AlertTitle, AlertDescription } from "components/ui/alert";
@@ -317,7 +318,13 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
               moneyFormatter={defaultMoneyFormatter}
             />
           </div>
-          {/* Calendar widget placeholder — next to subscriptions */}
+          <div className="animate-fade-up stagger-4">
+            <SpendingCalendarPanel
+              userAccountId={userAccountId!}
+              locale={locale}
+              moneyFormatter={defaultMoneyFormatter}
+            />
+          </div>
         </div>
 
         {/* Reports */}
