@@ -1,5 +1,5 @@
 import base64
-from datetime import datetime
+from datetime import datetime, time, timezone
 from typing import Any
 
 from pydantic import AwareDatetime, SecretStr
@@ -192,15 +192,16 @@ _CASH_TRANSACTION_TYPE_MAP: dict[str, TransactionType] = {
 
 
 def _make_trade_transaction(trade: Trade, account_id: str) -> Transaction:
-    from datetime import timezone
-
-    txn_type = TransactionType.buy if trade.buy_sell == TradeDirection.buy else TransactionType.sell
-    trade_date = trade.trade_time.replace(tzinfo=timezone.utc) if trade.trade_time.tzinfo is None else trade.trade_time
+    txn_type = TransactionType.buy if trade.buy_sell == TradeDirection.BUY else TransactionType.sell
+    transaction_date = datetime.combine(trade.trade_date, time=time(hour=0, minute=0, second=0), tzinfo=timezone.utc)
+    effective_date = datetime.combine(
+        trade.settle_date_target, time=time(hour=0, minute=0, second=0), tzinfo=timezone.utc
+    )
     return Transaction(
         transaction_id=trade.transaction_id,
         account_id=account_id,
-        transaction_date=trade_date,
-        effective_date=trade_date,
+        transaction_date=transaction_date,
+        effective_date=effective_date,
         transaction_type=txn_type,
         amount=trade.net_cash,
         currency=trade.currency,

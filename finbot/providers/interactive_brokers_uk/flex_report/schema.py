@@ -1,12 +1,12 @@
-from datetime import date, datetime
+from datetime import date
 from enum import Enum
 
 from finbot.core.schema import BaseModel, CurrencyCode
 
 
 class TradeDirection(str, Enum):
-    buy = "buy"
-    sell = "sell"
+    BUY = "SELL"
+    SELL = "SELL"
 
 
 class Trade(BaseModel):
@@ -16,22 +16,22 @@ class Trade(BaseModel):
     sub_category: str
     symbol: str
     description: str
-    contract_identifier: str
     security_id: str
     security_id_type: str
     cusip: str
     isin: str
     listing_exchange: str
     trade_id: str
-    trade_time: datetime
     transaction_type: str
     exchange: str
     quantity: float
     trade_price: float
     trade_money: float
+    trade_date: date
     proceeds: float
     ib_commission: float
-    ib_commission_ccy: CurrencyCode
+    settle_date_target: date
+    ib_commission_currency: CurrencyCode
     net_cash: float
     net_cash_in_base: float
     close_price: float
@@ -39,7 +39,6 @@ class Trade(BaseModel):
     fifo_pnl_realized: float
     capital_gains_pnl: float
     buy_sell: TradeDirection
-    ib_order_id: str
     transaction_id: str
     order_type: str
     report_date: date
