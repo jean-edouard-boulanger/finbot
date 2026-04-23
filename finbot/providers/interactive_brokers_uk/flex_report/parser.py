@@ -58,7 +58,16 @@ def _parse_xml_to_pydantic(
 
 
 def _parse_trade(node: Element) -> schema.Trade:
-    return _parse_xml_to_pydantic(model_type=schema.Trade, node=node)
+    return _parse_xml_to_pydantic(
+        model_type=schema.Trade,
+        node=node,
+        model_to_xml_fields_overrides=dict(
+            security_id="securityID",
+            security_id_type="securityIDType",
+            trade_id="tradeID",
+            transaction_id="transactionID",
+        ),
+    )
 
 
 def _parse_trades(node: Element) -> schema.Trades:
