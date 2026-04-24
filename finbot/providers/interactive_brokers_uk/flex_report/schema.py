@@ -5,7 +5,7 @@ from finbot.core.schema import BaseModel, CurrencyCode
 
 
 class TradeDirection(str, Enum):
-    BUY = "SELL"
+    BUY = "BUY"
     SELL = "SELL"
 
 
