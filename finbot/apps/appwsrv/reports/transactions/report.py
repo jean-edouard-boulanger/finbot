@@ -48,6 +48,7 @@ def get_subscriptions_report(
           ) ytd ON ytd.recurring_group_id = rg.id
          WHERE rg.user_account_id = :user_account_id
            AND rg.last_seen >= (NOW() - (rg.avg_interval_days * 1.5) * INTERVAL '1 day')
+           AND (rg.is_subscription IS NULL OR rg.is_subscription = TRUE)
          ORDER BY rg.avg_amount * (365.25 / rg.avg_interval_days) DESC
     """
     rows = session.execute(
@@ -167,6 +168,7 @@ def get_spending_calendar(
          WHERE la.user_account_id = :user_account_id
            AND NOT la.deleted
            AND th.recurring_group_id IS NOT NULL
+           AND (rg.is_subscription IS NULL OR rg.is_subscription = TRUE)
            AND th.transaction_date >= :month_start
            AND th.transaction_date < :month_end_exclusive
          ORDER BY th.transaction_date
@@ -212,6 +214,7 @@ def get_spending_calendar(
           JOIN finbot_merchants m ON rg.merchant_id = m.id
          WHERE rg.user_account_id = :user_account_id
            AND rg.last_seen >= (NOW() - (rg.avg_interval_days * 1.5) * INTERVAL '1 day')
+           AND (rg.is_subscription IS NULL OR rg.is_subscription = TRUE)
          ORDER BY rg.avg_amount DESC
     """
     rows = session.execute(
@@ -379,10 +382,11 @@ def get_transactions_report(
                th.merchant_id,
                m.name AS merchant_name,
                m.website_url AS merchant_website_url,
-               th.recurring_group_id
+               CASE WHEN rg.is_subscription = FALSE THEN NULL ELSE th.recurring_group_id END AS recurring_group_id
           FROM finbot_transactions_history th
           JOIN finbot_linked_accounts la ON th.linked_account_id = la.id
           LEFT JOIN finbot_merchants m ON th.merchant_id = m.id
+          LEFT JOIN finbot_recurring_transaction_groups rg ON rg.id = th.recurring_group_id
          WHERE {where}
          ORDER BY th.transaction_date DESC
          LIMIT :limit OFFSET :offset
@@ -447,7 +451,11 @@ def serialize_transaction(
         merchant_id=txn.merchant_id,
         merchant_name=txn.merchant.name if txn.merchant else None,
         merchant_website_url=txn.merchant.website_url if txn.merchant else None,
-        recurring_group_id=txn.recurring_group_id,
+        recurring_group_id=(
+            txn.recurring_group_id
+            if txn.recurring_group is None or txn.recurring_group.is_subscription is not False
+            else None
+        ),
     )
 
 
@@ -491,6 +499,7 @@ def serialize_transaction_detail(
             first_seen=rg.first_seen,
             last_seen=rg.last_seen,
             description=rg.description,
+            is_subscription=rg.is_subscription,
         )
 
     match_detail: schema.MatchDetail | None = None

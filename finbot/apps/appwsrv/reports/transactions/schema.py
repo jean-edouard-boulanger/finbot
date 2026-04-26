@@ -26,6 +26,7 @@ class RecurringGroupDetail(BaseModel):
     first_seen: AwareDatetime
     last_seen: AwareDatetime
     description: str | None = None
+    is_subscription: bool | None = None
 
 
 class MatchDetail(BaseModel):

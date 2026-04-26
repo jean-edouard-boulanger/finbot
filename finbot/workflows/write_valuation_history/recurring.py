@@ -184,11 +184,8 @@ def _create_or_update_group(
     active_group_ids: set[int],
     transaction_to_group: dict[int, int],
     db_session: SessionType,
-) -> tuple[model.RecurringTransactionGroup, bool]:
-    """Create or update a recurring transaction group from a validated cluster.
-
-    Returns (group, is_new) tuple.
-    """
+) -> model.RecurringTransactionGroup:
+    """Create or update a recurring transaction group from a validated cluster."""
     amounts = [abs(t.amount) for t in cluster]
     avg_amount = Decimal(str(sum(amounts) / len(amounts)))
     total_spent = Decimal(str(sum(amounts)))
@@ -198,7 +195,6 @@ def _create_or_update_group(
 
     # Try to match to an existing group
     group = _match_group_to_existing(existing_groups, merchant_id, currency, avg_amount)
-    is_new = group is None
 
     if group is not None:
         # Update existing group
@@ -229,7 +225,7 @@ def _create_or_update_group(
     for txn in cluster:
         transaction_to_group[txn.id] = group.id
 
-    return group, is_new
+    return group
 
 
 def detect_recurring_transactions(
@@ -272,7 +268,6 @@ def detect_recurring_transactions(
 
     active_group_ids: set[int] = set()
     transaction_to_group: dict[int, int] = {}  # txn.id -> group.id
-    new_groups: list[tuple[model.RecurringTransactionGroup, list[model.TransactionHistoryEntry]]] = []
 
     for (merchant_id, currency), txns in groups_by_key.items():
         if len(txns) < MIN_CLUSTER_SIZE:
@@ -296,7 +291,7 @@ def detect_recurring_transactions(
                 avg_interval = _is_standard_interval(cluster)
                 assert avg_interval is not None  # _validate_pair already checked this
 
-            group, is_new = _create_or_update_group(
+            _create_or_update_group(
                 cluster=cluster,
                 merchant_id=merchant_id,
                 currency=currency,
@@ -307,12 +302,6 @@ def detect_recurring_transactions(
                 transaction_to_group=transaction_to_group,
                 db_session=db_session,
             )
-            if is_new:
-                new_groups.append((group, cluster))
-
-    # Generate LLM descriptions for newly created groups
-    if new_groups:
-        _describe_new_groups(new_groups, db_session)
 
     # Update recurring_group_id on all transactions for this user
     for txn in all_transactions:
@@ -325,40 +314,48 @@ def detect_recurring_transactions(
         if group.id not in active_group_ids:
             db_session.delete(group)  # type: ignore[no-untyped-call]
 
+    # Annotate (description + classification) any active group still missing a verdict.
+    # New groups always start NULL; previously-detected groups stay NULL until annotated.
+    db_session.flush()
+    groups_to_annotate = [g for g in existing_groups if g.id in active_group_ids and g.is_subscription is None]
+    if groups_to_annotate:
+        _annotate_groups(groups_to_annotate, db_session)
+
     db_session.commit()
     return len(active_group_ids)
 
 
-# --- LLM description generation ---
+# --- LLM annotation: description + subscription classification ---
 
 
-class GroupDescription(BaseModel, extra="forbid"):
+class GroupAnnotation(BaseModel, extra="forbid"):
     group_id: int
     description: str
+    is_subscription: bool
 
 
-class GroupDescriptionResponse(BaseModel, extra="forbid"):
-    results: list[GroupDescription]
+class GroupAnnotationsResponse(BaseModel, extra="forbid"):
+    results: list[GroupAnnotation]
 
 
-def _describe_new_groups(
-    groups_with_txns: list[tuple[model.RecurringTransactionGroup, list[model.TransactionHistoryEntry]]],
+def _annotate_groups(
+    groups: list[model.RecurringTransactionGroup],
     db_session: SessionType,
 ) -> None:
-    """Generate LLM descriptions for newly created recurring groups (non-fatal)."""
+    """Generate LLM description and is_subscription verdict for each group (non-fatal)."""
     try:
-        asyncio.run(_describe_groups_with_llm(groups_with_txns, db_session))
+        asyncio.run(_annotate_groups_with_llm(groups, db_session))
     except Exception:
-        logger.exception("failed to generate LLM descriptions for recurring groups")
+        logger.exception("failed to annotate recurring groups with LLM")
 
 
-async def _describe_groups_with_llm(
-    groups_with_txns: list[tuple[model.RecurringTransactionGroup, list[model.TransactionHistoryEntry]]],
+async def _annotate_groups_with_llm(
+    groups: list[model.RecurringTransactionGroup],
     db_session: SessionType,
 ) -> None:
     api_key = get_openai_api_key()
     if not api_key:
-        logger.info("FINBOT_OPENAI_API_KEY not set, skipping recurring group description generation")
+        logger.info("FINBOT_OPENAI_API_KEY not set, skipping recurring group annotation")
         return
 
     from openai import AsyncOpenAI
@@ -367,10 +364,17 @@ async def _describe_groups_with_llm(
 
     groups_data = []
     groups_by_id: dict[int, model.RecurringTransactionGroup] = {}
-    for group, txns in groups_with_txns:
+    for group in groups:
         merchant = db_session.query(model.Merchant).get(group.merchant_id)
         merchant_name = merchant.name if merchant else "Unknown"
-        sample_descriptions = [t.description for t in txns[:2]]
+        sample_txns = (
+            db_session.query(model.TransactionHistoryEntry)
+            .filter(model.TransactionHistoryEntry.recurring_group_id == group.id)
+            .order_by(model.TransactionHistoryEntry.transaction_date.desc())
+            .limit(2)
+            .all()
+        )
+        sample_descriptions = [t.description for t in sample_txns]
         groups_data.append(
             {
                 "group_id": group.id,
@@ -384,10 +388,38 @@ async def _describe_groups_with_llm(
         )
         groups_by_id[group.id] = group
 
-    prompt = f"""Generate a brief, human-readable description for each recurring payment group below.
-The description should capture what the subscription/recurring payment is for (e.g. "Monthly streaming subscription",
-"Annual cloud storage plan", "Monthly gym membership"). Use the sample transaction descriptions to infer the nature of
-the recurring payment. Keep descriptions concise (under 10 words).
+    prompt = f"""For each recurring payment group below, produce two outputs:
+
+1. `description`: a concise human-readable label (under 10 words) capturing what the recurring payment is for
+   (e.g. "Monthly streaming subscription", "Annual cloud storage plan", "Weekly grocery shopping").
+
+2. `is_subscription`: whether this group represents a TRUE subscription, not just a habitually recurring purchase.
+
+  A SUBSCRIPTION is a contractual or quasi-contractual ongoing service / membership the user has signed up for and
+  is billed for at regular intervals by the same merchant. Examples that ARE subscriptions:
+    - Streaming media (Netflix, Spotify, Disney+, Apple TV, YouTube Premium, Audible, Kindle Unlimited)
+    - SaaS / software licenses (GitHub, JetBrains, Adobe, Microsoft 365, iCloud, Google One, Dropbox, 1Password)
+    - Telecom / utilities (mobile plan, broadband, electricity, gas, water — anything billed monthly by the provider)
+    - Insurance premiums (home, car, health, life, pet, contents)
+    - Memberships and dues (gym, sports club, professional association, union, magazine, news subscription)
+    - Recurring donations / charity standing orders
+    - Childcare, tuition, or course fees billed on a fixed schedule
+    - Rent or mortgage payments
+
+  The following are NOT subscriptions, even when amounts and cadence are very regular. Set `is_subscription=false`:
+    - Supermarkets and grocery stores (Tesco, Sainsbury's, Lidl, Aldi, Carrefour, Whole Foods, Waitrose, Monoprix,
+      Auchan, Leclerc, Kroger, Walmart, Trader Joe's, etc.) — even if the user shops there weekly.
+    - Fuel stations and petrol stations (Shell, BP, Esso, Total, Texaco)
+    - Public transport top-ups / tap-and-go travel (TfL / Oyster, contactless transit, metro top-ups)
+    - Coffee shops, cafés, restaurants, fast food, takeaway, food delivery
+    - Convenience stores, corner shops, bakeries, pharmacies, drugstores
+    - Cash withdrawals and ATM fees
+    - Generic retail / department stores
+
+  Regular cadence ALONE is NOT enough to make something a subscription — what matters is whether the user is paying
+  for an ongoing service/membership versus simply repeating a habitual purchase. Lean on the merchant name first,
+  then the sample transaction descriptions. If genuinely uncertain, default to `true` (we'd rather show a borderline
+  case than hide a real subscription).
 
 GROUPS:
 {json.dumps(groups_data)}"""
@@ -396,7 +428,7 @@ GROUPS:
         response = await client.responses.parse(
             model="gpt-5-mini",
             input=[{"role": "user", "content": prompt}],
-            text_format=GroupDescriptionResponse,
+            text_format=GroupAnnotationsResponse,
         )
 
         parsed = response.output_parsed
@@ -407,15 +439,16 @@ GROUPS:
             matched_group = groups_by_id.get(result.group_id)
             if matched_group is not None:
                 matched_group.description = result.description
+                matched_group.is_subscription = result.is_subscription
 
         logger.info(
-            "LLM generated descriptions for %d/%d recurring groups",
+            "LLM annotated %d/%d recurring groups",
             len(parsed.results),
-            len(groups_with_txns),
+            len(groups),
         )
 
     except Exception:
-        logger.exception("LLM recurring group description API call failed")
+        logger.exception("LLM recurring group annotation API call failed")
 
 
 def backfill_recurring_transactions(db_session: SessionType) -> int:
