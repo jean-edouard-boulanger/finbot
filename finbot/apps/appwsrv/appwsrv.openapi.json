@@ -4545,6 +4545,17 @@
                             }
                         ],
                         "title": "Description"
+                    },
+                    "is_subscription": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Is Subscription"
                     }
                 },
                 "additionalProperties": false,

@@ -84,6 +84,12 @@ export interface RecurringGroupDetail {
      * @memberof RecurringGroupDetail
      */
     description?: string | null;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof RecurringGroupDetail
+     */
+    isSubscription?: boolean | null;
 }
 
 /**
@@ -124,6 +130,7 @@ export function RecurringGroupDetailFromJSONTyped(json: any, ignoreDiscriminator
         'firstSeen': (new Date(json['first_seen'])),
         'lastSeen': (new Date(json['last_seen'])),
         'description': json['description'] == null ? undefined : json['description'],
+        'isSubscription': json['is_subscription'] == null ? undefined : json['is_subscription'],
     };
 }
 
@@ -149,6 +156,7 @@ export function RecurringGroupDetailToJSONTyped(value?: RecurringGroupDetail | n
         'first_seen': ((value['firstSeen']).toISOString()),
         'last_seen': ((value['lastSeen']).toISOString()),
         'description': value['description'],
+        'is_subscription': value['isSubscription'],
     };
 }
 

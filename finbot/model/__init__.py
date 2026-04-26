@@ -608,6 +608,7 @@ class RecurringTransactionGroup(Base):
     created_at = Column(DateTimeTz, server_default=func.now())
     updated_at = Column(DateTimeTz, onupdate=func.now())
     description = Column(Text)
+    is_subscription = Column(Boolean, nullable=True)
 
     merchant = relationship(Merchant, uselist=False)
 
