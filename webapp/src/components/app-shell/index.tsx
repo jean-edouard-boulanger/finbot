@@ -30,6 +30,7 @@ import {
   SheetTrigger,
   SheetTitle,
 } from "components/ui/sheet";
+import { ChatDrawer, ChatLauncherButton } from "components/chat-drawer";
 import { cn } from "lib/utils";
 
 function SidebarNavItem({
@@ -239,6 +240,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({
   const [accounts, setAccounts] = useState<LinkedAccountValuationEntry[]>([]);
   const [accountsError, setAccountsError] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
 
   useEffect(() => {
     const fetch = async () => {
@@ -254,6 +256,17 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({
     };
     fetch();
   }, [linkedAccountsValuationApi, userAccountId]);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setChatOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
   return (
     <div className="flex min-h-screen">
@@ -291,6 +304,10 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({
 
       {/* Main content */}
       <main className="flex-1 pt-14 md:pl-64 md:pt-0">{children}</main>
+
+      {/* Chat assistant — global */}
+      <ChatLauncherButton onClick={() => setChatOpen(true)} />
+      <ChatDrawer open={chatOpen} onOpenChange={setChatOpen} />
     </div>
   );
 };

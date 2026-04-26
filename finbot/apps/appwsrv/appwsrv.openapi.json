@@ -2850,6 +2850,51 @@
                     }
                 ]
             }
+        },
+        "/chat/": {
+            "post": {
+                "tags": [
+                    "Chat assistant"
+                ],
+                "summary": "Chat",
+                "description": "Stream a chat response as Server-Sent Events.\n\nStateless: the client posts the full prior history with each request. The server\ndoes not persist conversations.",
+                "operationId": "chat",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ChatRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -2995,6 +3040,47 @@
                     "net"
                 ],
                 "title": "CashFlowTimeSeriesEntry"
+            },
+            "ChatMessage": {
+                "properties": {
+                    "role": {
+                        "type": "string",
+                        "enum": [
+                            "user",
+                            "assistant"
+                        ],
+                        "title": "Role"
+                    },
+                    "content": {
+                        "type": "string",
+                        "title": "Content"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "role",
+                    "content"
+                ],
+                "title": "ChatMessage"
+            },
+            "ChatRequest": {
+                "properties": {
+                    "messages": {
+                        "items": {
+                            "$ref": "#/components/schemas/ChatMessage"
+                        },
+                        "type": "array",
+                        "minItems": 1,
+                        "title": "Messages"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "messages"
+                ],
+                "title": "ChatRequest"
             },
             "CreateOrUpdateProviderRequest": {
                 "properties": {

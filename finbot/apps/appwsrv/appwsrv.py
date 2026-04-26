@@ -4,6 +4,7 @@ from finbot._version import __api_version__
 from finbot.apps.appwsrv.routes.admin import router as admin_router
 from finbot.apps.appwsrv.routes.auth import router as auth_router
 from finbot.apps.appwsrv.routes.base import router as base_router
+from finbot.apps.appwsrv.routes.chat import router as chat_router
 from finbot.apps.appwsrv.routes.formatting_rules import router as formatting_rules_router
 from finbot.apps.appwsrv.routes.linked_accounts import router as linked_accounts_router
 from finbot.apps.appwsrv.routes.linked_accounts_valuation import router as linked_accounts_valuation_router
@@ -38,3 +39,4 @@ app.include_router(linked_accounts_valuation_router)
 app.include_router(linked_accounts_router)
 app.include_router(reports_router)
 app.include_router(formatting_rules_router)
+app.include_router(chat_router)
