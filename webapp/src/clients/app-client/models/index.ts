@@ -7,6 +7,8 @@ export * from './CashFlowSummary';
 export * from './CashFlowTimeSeries';
 export * from './CashFlowTimeSeriesEntry';
 export * from './CategoriesInner';
+export * from './ChatMessage';
+export * from './ChatRequest';
 export * from './CreateOrUpdateProviderRequest';
 export * from './CreateOrUpdateProviderResponse';
 export * from './CreateUserAccountRequest';

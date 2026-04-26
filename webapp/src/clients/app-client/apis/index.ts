@@ -2,6 +2,7 @@
 /* eslint-disable */
 export * from './AdministrationApi';
 export * from './AuthenticationApi';
+export * from './ChatAssistantApi';
 export * from './FinancialDataProvidersApi';
 export * from './FormattingRulesApi';
 export * from './LinkedAccountsApi';
