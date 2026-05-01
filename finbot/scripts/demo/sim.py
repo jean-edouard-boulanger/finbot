@@ -3,16 +3,21 @@ import dataclasses
 import logging
 import typing as t
 from copy import deepcopy
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date, datetime, time, timedelta, timezone
 
 from finbot.core.schema import CurrencyCode
 from finbot.providers import schema as providers_schema
+from finbot.providers.schema import TransactionType
 from finbot.scripts.demo import utils as demo_utils
 from finbot.scripts.demo.market import Market, TickerType
 
 ItemType: t.TypeAlias = providers_schema.Liability | providers_schema.Asset
 UnitsType: t.TypeAlias = float
+
+
+def _to_aware_datetime(current_date: date) -> datetime:
+    return datetime.combine(current_date, time(hour=18, minute=0), tzinfo=timezone.utc)
 
 
 @dataclass(frozen=True)
@@ -31,6 +36,8 @@ class SubAccount(abc.ABC):
     identifier: str
     description: str
     currency: CurrencyCode
+    transactions: list[providers_schema.Transaction] = field(default_factory=list, kw_only=True)
+    _txn_counter: int = field(default=0, kw_only=True)
 
     @abc.abstractmethod
     def get_type(self) -> providers_schema.AccountType:
@@ -54,6 +61,47 @@ class SubAccount(abc.ABC):
         market: Market,
     ) -> None:
         pass
+
+    def _record_transaction(
+        self,
+        *,
+        current_date: date,
+        transaction_type: TransactionType,
+        amount: float,
+        currency: CurrencyCode,
+        description: str,
+        spending_category_primary: str,
+        spending_category_detailed: str,
+        symbol: str | None = None,
+        units: float | None = None,
+        unit_price: float | None = None,
+        fee: float | None = None,
+        counterparty: str | None = None,
+    ) -> None:
+        self._txn_counter += 1
+        when = _to_aware_datetime(current_date)
+        self.transactions.append(
+            providers_schema.Transaction(
+                transaction_id=f"sim-{self._txn_counter:08d}",
+                account_id=self.identifier,
+                transaction_date=when,
+                effective_date=when,
+                transaction_type=transaction_type,
+                amount=amount,
+                currency=currency,
+                description=description,
+                symbol=symbol,
+                units=units,
+                unit_price=unit_price,
+                fee=fee,
+                counterparty=counterparty,
+                spending_category_primary=spending_category_primary,
+                spending_category_detailed=spending_category_detailed,
+            )
+        )
+
+    def transactions_for_date(self, current_date: date) -> list[providers_schema.Transaction]:
+        return [txn for txn in self.transactions if txn.transaction_date.date() == current_date]
 
 
 @dataclass
@@ -88,9 +136,30 @@ class BrokerageAccount(SubAccount):
     def get_subtype(self) -> str | None:
         return self.account_sub_type
 
-    def deposit_cash(self, amount: UnitsType, currency: CurrencyCode) -> None:
+    def deposit_cash(
+        self,
+        amount: UnitsType,
+        currency: CurrencyCode,
+        *,
+        current_date: date,
+        description: str,
+        spending_category_primary: str,
+        spending_category_detailed: str,
+        transaction_type: TransactionType = TransactionType.transfer_in,
+        counterparty: str | None = None,
+    ) -> None:
         logging.info(f"{type(self).__name__}({self.identifier}) deposit_cash {amount=} {currency=}")
         self._update_cash_bal(currency, amount)
+        self._record_transaction(
+            current_date=current_date,
+            transaction_type=transaction_type,
+            amount=amount,
+            currency=currency,
+            description=description,
+            counterparty=counterparty,
+            spending_category_primary=spending_category_primary,
+            spending_category_detailed=spending_category_detailed,
+        )
 
     def convert_cash(
         self,
@@ -184,6 +253,18 @@ class BrokerageAccount(SubAccount):
         )
         self._update_cash_bal(asset_ccy, -total_price_in_asset_ccy)
         self._update_asset_units(ticker, purchased_units)
+        self._record_transaction(
+            current_date=as_of,
+            transaction_type=TransactionType.buy,
+            amount=-total_price_in_asset_ccy,
+            currency=asset_ccy,
+            description=f"BUY {purchased_units:.4f} {ticker} @ {unit_value:.2f}",
+            symbol=ticker,
+            units=purchased_units,
+            unit_price=unit_value,
+            spending_category_primary="TRANSFER_OUT",
+            spending_category_detailed="TRANSFER_OUT_INVESTMENT_AND_RETIREMENT_FUNDS",
+        )
 
     def get_items(
         self,
@@ -230,16 +311,56 @@ class BrokerageAccount(SubAccount):
 class CashAccount(SubAccount):
     balance: float
 
-    def deposit(self, amount: float) -> None:
+    def deposit(
+        self,
+        amount: float,
+        *,
+        current_date: date,
+        description: str,
+        spending_category_primary: str,
+        spending_category_detailed: str,
+        transaction_type: TransactionType = TransactionType.deposit,
+        counterparty: str | None = None,
+    ) -> None:
         logging.info(f"{type(self).__name__}({self.identifier}) deposit {amount=} ({self.currency=})")
         assert amount >= 0
         self.balance += amount
+        self._record_transaction(
+            current_date=current_date,
+            transaction_type=transaction_type,
+            amount=amount,
+            currency=self.currency,
+            description=description,
+            counterparty=counterparty,
+            spending_category_primary=spending_category_primary,
+            spending_category_detailed=spending_category_detailed,
+        )
 
-    def withdraw(self, amount: float) -> bool:
+    def withdraw(
+        self,
+        amount: float,
+        *,
+        current_date: date,
+        description: str,
+        spending_category_primary: str,
+        spending_category_detailed: str,
+        transaction_type: TransactionType = TransactionType.withdrawal,
+        counterparty: str | None = None,
+    ) -> bool:
         assert amount >= 0
         if self.balance >= amount:
             logging.info(f"{type(self).__name__}({self.identifier}) withdraw {amount=} ({self.currency=})")
             self.balance -= amount
+            self._record_transaction(
+                current_date=current_date,
+                transaction_type=transaction_type,
+                amount=-amount,
+                currency=self.currency,
+                description=description,
+                counterparty=counterparty,
+                spending_category_primary=spending_category_primary,
+                spending_category_detailed=spending_category_detailed,
+            )
             return True
         logging.info(
             f"{type(self).__name__}({self.identifier}) CANNOT withdraw {amount=} ({self.currency=}):"
@@ -247,10 +368,37 @@ class CashAccount(SubAccount):
         )
         return False
 
-    def transfer(self, amount: float, other: "CashAccount") -> None:
+    def transfer(
+        self,
+        amount: float,
+        other: "CashAccount",
+        *,
+        current_date: date,
+        description: str,
+        out_spending_category_primary: str = "TRANSFER_OUT",
+        out_spending_category_detailed: str = "TRANSFER_OUT_ACCOUNT_TRANSFER",
+        in_spending_category_primary: str = "TRANSFER_IN",
+        in_spending_category_detailed: str = "TRANSFER_IN_ACCOUNT_TRANSFER",
+    ) -> None:
         assert other.currency == self.currency
-        if self.withdraw(amount):
-            other.deposit(amount)
+        if self.withdraw(
+            amount,
+            current_date=current_date,
+            description=description,
+            transaction_type=TransactionType.transfer_out,
+            counterparty=other.description,
+            spending_category_primary=out_spending_category_primary,
+            spending_category_detailed=out_spending_category_detailed,
+        ):
+            other.deposit(
+                amount,
+                current_date=current_date,
+                description=description,
+                transaction_type=TransactionType.transfer_in,
+                counterparty=self.description,
+                spending_category_primary=in_spending_category_primary,
+                spending_category_detailed=in_spending_category_detailed,
+            )
 
     def get_items(self, as_of: date, market: Market) -> list[ItemType]:
         return [
@@ -282,9 +430,21 @@ class SavingsAccount(CashAccount):
     def get_subtype(self) -> str | None:
         return "savings"
 
-    def _deposit_accruals(self) -> None:
-        self.balance += self.accrued
+    def _deposit_accruals(self, current_date: date) -> None:
+        if self.accrued <= 0:
+            return
+        accrued_amount = self.accrued
+        self.balance += accrued_amount
         self.accrued = 0
+        self._record_transaction(
+            current_date=current_date,
+            transaction_type=TransactionType.interest_earned,
+            amount=accrued_amount,
+            currency=self.currency,
+            description="Savings interest",
+            spending_category_primary="INCOME",
+            spending_category_detailed="INCOME_INTEREST_EARNED",
+        )
 
     def sim(self, current_date: date, market: Market) -> None:
         self.accrued += self.balance * (self.yearly_rate / 364)
@@ -294,7 +454,7 @@ class SavingsAccount(CashAccount):
             or (self.payment_frequency == "monthly" and demo_utils.is_last_day_of_month(current_date))
             or (self.payment_frequency == "yearly" and demo_utils.is_last_day_of_year(current_date))
         ):
-            self._deposit_accruals()
+            self._deposit_accruals(current_date)
 
 
 @dataclass
@@ -357,6 +517,7 @@ class SubAccountSimResult:
     linked_account: LinkedAccount
     sub_account: SubAccount
     items: list[ItemType]
+    transactions: list[providers_schema.Transaction]
 
 
 @dataclass(frozen=True)
@@ -416,6 +577,7 @@ class Simulator:
                 as_of=current_date,
                 market=self.market,
             ),
+            transactions=sub_account.transactions_for_date(current_date),
         )
 
     def _create_linked_account_sim_result(

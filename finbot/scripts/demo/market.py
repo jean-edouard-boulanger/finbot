@@ -67,6 +67,7 @@ class Market:
             start=self._format_yfinance_date(start),
             end=self._format_yfinance_date(end),
             interval="1d",
+            multi_level_index=False,
         )
         logging.info(f"downloading yfinance data: {download_kwargs}")
         raw_data = yf.download(**download_kwargs)
