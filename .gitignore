@@ -24,3 +24,5 @@ venv/
 .intake_data/
 envs/*-overrides.env
 webapp/dist/
+tsconfig.tsbuildinfo
+

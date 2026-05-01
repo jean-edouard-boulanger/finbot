@@ -111,7 +111,7 @@ export const EditProviderPanel: React.FC<Record<string, never>> = () => {
     let schema = null;
     try {
       schema = JSON.parse(editor.getValue());
-    } catch (e) {
+    } catch {
       toast.error(
         "Could not save provider: invalid credentials schema (invalid JSON syntax)",
       );
