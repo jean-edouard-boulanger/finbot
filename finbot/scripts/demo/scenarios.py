@@ -37,9 +37,7 @@ SUBSCRIPTIONS: list[_Subscription] = [
     _Subscription(
         10, 35.00, "Internet Provider", "Home internet", "RENT_AND_UTILITIES", "RENT_AND_UTILITIES_INTERNET_AND_CABLE"
     ),
-    _Subscription(
-        15, 29.99, "FitClub", "Gym membership", "PERSONAL_CARE", "PERSONAL_CARE_GYMS_AND_FITNESS_CENTERS"
-    ),
+    _Subscription(15, 29.99, "FitClub", "Gym membership", "PERSONAL_CARE", "PERSONAL_CARE_GYMS_AND_FITNESS_CENTERS"),
 ]
 
 
