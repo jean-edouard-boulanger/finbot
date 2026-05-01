@@ -11,6 +11,7 @@ from finbot.apps.appwsrv.core.formatting_rules import ACCOUNTS_PALETTE
 from finbot.core.logging import configure_logging
 from finbot.core.schema import CurrencyCode
 from finbot.model import ScopedSession, db
+from finbot.providers import schema as providers_schema
 from finbot.providers.schema import Asset
 from finbot.scripts.demo import scenarios, sim
 from finbot.scripts.demo.market import Market
@@ -209,6 +210,59 @@ def build_snapshot_from_sim_result(
     return snapshot
 
 
+def attach_transactions_to_snapshot(
+    snapshot: model.UserAccountSnapshot,
+    sim_result: sim.SimResult,
+    mapped_linked_accounts: dict[str, model.LinkedAccount],
+) -> None:
+    linked_entries_by_id = {entry.linked_account_id: entry for entry in snapshot.linked_accounts_entries}
+    for linked_account_result in sim_result.linked_accounts:
+        transactions: list[providers_schema.Transaction] = []
+        for sub_account_result in linked_account_result.sub_accounts:
+            transactions.extend(sub_account_result.transactions)
+        if not transactions:
+            continue
+        linked_account_db_id = mapped_linked_accounts[linked_account_result.linked_account.identifier].id
+        linked_entry = linked_entries_by_id.get(linked_account_db_id)
+        if linked_entry is None:
+            continue
+        serialized = [txn.model_dump(mode="json") for txn in transactions]
+        db.session.add(
+            model.TransactionsSnapshotEntry(
+                linked_account_snapshot_entry_id=linked_entry.id,
+                transaction_count=len(transactions),
+                transactions_data=model.TransactionsSnapshotEntry.compress_transactions(serialized),
+            )
+        )
+    db.session.commit()
+
+
+def attach_xccy_rates_to_snapshot(
+    snapshot: model.UserAccountSnapshot,
+    sim_result: sim.SimResult,
+    market: Market,
+) -> None:
+    target_ccy = sim_result.scenario_config.valuation_ccy
+    needed_pairs: set[tuple[CurrencyCode, CurrencyCode]] = set()
+    for linked_account_result in sim_result.linked_accounts:
+        for sub_account_result in linked_account_result.sub_accounts:
+            for txn in sub_account_result.transactions:
+                if txn.currency != target_ccy:
+                    needed_pairs.add((txn.currency, target_ccy))
+    if not needed_pairs:
+        return
+    for src, dst in needed_pairs:
+        rate = market.get_fx_rate(src, dst, sim_result.current_date)
+        db.session.add(
+            model.XccyRateSnapshotEntry(
+                snapshot_id=snapshot.id,
+                xccy_pair=f"{src}{dst}",
+                rate=decimal.Decimal(rate),
+            )
+        )
+    db.session.commit()
+
+
 def setup_demo() -> None:
     settings = create_parser().parse_args()
     random.seed(settings.seed)
@@ -238,6 +292,16 @@ def setup_demo() -> None:
             user_account=demo_account,
             mapped_linked_accounts=mapped_linked_accounts,
             market=simulator.market,
+        )
+        attach_xccy_rates_to_snapshot(
+            snapshot=snapshot,
+            sim_result=sim_result,
+            market=simulator.market,
+        )
+        attach_transactions_to_snapshot(
+            snapshot=snapshot,
+            sim_result=sim_result,
+            mapped_linked_accounts=mapped_linked_accounts,
         )
         history_writer = ValuationHistoryWriterService(db.session)
         history_writer.write_history(WriteHistoryRequest(snapshot_id=snapshot.id))
