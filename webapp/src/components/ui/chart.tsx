@@ -92,7 +92,7 @@ export const ChartTooltipContent: React.FC<ChartTooltipContentProps> = ({
   const formattedLabel = labelFormatter ? labelFormatter(label ?? "") : label;
 
   return (
-    <div className="rounded-lg border border-border/50 bg-popover px-3 py-2.5 text-sm text-popover-foreground shadow-xl backdrop-blur-sm">
+    <div className="rounded-lg border border-border/50 bg-popover px-3 py-2.5 text-sm text-popover-foreground shadow-xl backdrop-blur-xs">
       {formattedLabel && (
         <div className="mb-1.5 text-xs font-medium tracking-wide uppercase text-muted-foreground">
           {formattedLabel}

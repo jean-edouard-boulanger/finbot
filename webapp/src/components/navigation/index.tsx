@@ -25,7 +25,7 @@ const SystemStatusBadge: React.FC<Record<string, never>> = () => {
     try {
       setReport((await systemApi.getSystemReport()).systemReport);
       setBackendReachable(true);
-    } catch (e) {
+    } catch {
       setBackendReachable(false);
       setReport(null);
     }

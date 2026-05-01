@@ -51,7 +51,7 @@ async def validate_credentials(
 ) -> None:
     temporal_client = await get_temporal_client()
     result = await temporal_client.execute_workflow(
-        ValidateCredentialsWorkflow,
+        ValidateCredentialsWorkflow.run,
         ValidateCredentialsRequest(
             provider_id=provider_id,
             encrypted_credentials=encrypted_credentials,

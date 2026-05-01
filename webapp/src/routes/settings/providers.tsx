@@ -101,7 +101,7 @@ export const EditProviderPanel: React.FC<Record<string, never>> = () => {
     return JSON.stringify(DEFAULT_CREDENTIALS_SCHEMA, null, 2);
   });
   const [schema, schemaError] = useSchema(rawSchema);
-  const editorRef = useRef<AceEditor | null>();
+  const editorRef = useRef<AceEditor | null>(null);
 
   const handleSubmit = async (
     description: ProviderDescription,
@@ -111,7 +111,7 @@ export const EditProviderPanel: React.FC<Record<string, never>> = () => {
     let schema = null;
     try {
       schema = JSON.parse(editor.getValue());
-    } catch (e) {
+    } catch {
       toast.error(
         "Could not save provider: invalid credentials schema (invalid JSON syntax)",
       );
@@ -211,7 +211,7 @@ export const EditProviderPanel: React.FC<Record<string, never>> = () => {
                   <Field
                     type="text"
                     name="id"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     disabled={!isNew}
                   />
                   <ErrorMessage
@@ -225,7 +225,7 @@ export const EditProviderPanel: React.FC<Record<string, never>> = () => {
                   <Field
                     type="text"
                     name="description"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   />
                   <ErrorMessage
                     className="text-sm text-red-500"
@@ -238,7 +238,7 @@ export const EditProviderPanel: React.FC<Record<string, never>> = () => {
                   <Field
                     type="text"
                     name="websiteUrl"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   />
                   <ErrorMessage
                     className="text-sm text-red-500"

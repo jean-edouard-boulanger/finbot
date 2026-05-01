@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.3
-FROM python:3.13-bullseye AS builder
+FROM python:3.14-bookworm AS builder
 
 ENV VENV_DIR="/venv"
 ENV PATH="${VENV_DIR}/bin:${PATH}"
@@ -16,7 +16,7 @@ COPY requirements.txt .
 RUN uv venv ${VENV_DIR} \
     && uv pip install -r requirements.txt
 
-FROM python:3.13-slim-bullseye AS runtime
+FROM python:3.14-slim-bookworm AS runtime
 
 ENV FINBOT_ROOT_DIR="/finbot"
 ENV VENV_DIR="/venv"
