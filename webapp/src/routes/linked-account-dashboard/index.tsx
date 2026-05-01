@@ -211,8 +211,8 @@ export const LinkedAccountDashboard: React.FC = () => {
           <div className="space-y-6">
             <div className="skeleton-shimmer h-32 rounded-lg" />
             <div className="grid gap-6 lg:grid-cols-2">
-              <div className="skeleton-shimmer h-[22rem] rounded-lg" />
-              <div className="skeleton-shimmer h-[22rem] rounded-lg" />
+              <div className="skeleton-shimmer h-88 rounded-lg" />
+              <div className="skeleton-shimmer h-88 rounded-lg" />
             </div>
             <div className="skeleton-shimmer h-64 rounded-lg" />
           </div>
@@ -356,7 +356,7 @@ export const LinkedAccountDashboard: React.FC = () => {
             />
           </div>
           <div className="animate-fade-up stagger-3">
-            <Card className="h-[22rem] border-border/50">
+            <Card className="h-88 border-border/50">
               <CardHeader className="pb-2">
                 <span className="text-sm font-medium tracking-wide uppercase text-muted-foreground">
                   Sub-Account Distribution
