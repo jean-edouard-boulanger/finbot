@@ -136,7 +136,7 @@ export const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
               : "border-dashed text-muted-foreground"
           }`}
         >
-          <Calendar className="h-3.5 w-3.5 flex-shrink-0" />
+          <Calendar className="h-3.5 w-3.5 shrink-0" />
           <span className="truncate">{label || "Date range"}</span>
         </Button>
       </PopoverTrigger>
@@ -250,7 +250,7 @@ export const MultiSelectFilter: React.FC<MultiSelectFilterProps> = ({
           }`}
         >
           <span className="truncate">{label}</span>
-          <ChevronDown className="h-3.5 w-3.5 flex-shrink-0 opacity-50" />
+          <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-64 space-y-2 p-3">
@@ -389,7 +389,7 @@ export const AmountRangeFilter: React.FC<AmountRangeFilterProps> = ({
           }`}
         >
           <span className="truncate">{label}</span>
-          <ChevronDown className="h-3.5 w-3.5 flex-shrink-0 opacity-50" />
+          <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-72 space-y-4 p-4">

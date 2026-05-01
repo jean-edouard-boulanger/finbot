@@ -499,7 +499,7 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
   };
 
   return (
-    <Card className="h-[22rem] border-border/50">
+    <Card className="h-88 border-border/50">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <span className="text-sm font-medium tracking-wide uppercase text-muted-foreground">
           Historical Valuation

@@ -16,7 +16,7 @@ async def validate_credentials(
 ) -> None:
     temporal_client = await get_temporal_client()
     result = await temporal_client.execute_workflow(
-        ValidateCredentialsWorkflow,
+        ValidateCredentialsWorkflow.run,
         request,
         id=temporal_workflow_id(f"{job_source.value}/validate_credentials/"),
         task_queue=GENERIC_TASK_QUEUE,

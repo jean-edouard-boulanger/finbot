@@ -1,6 +1,179 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@plugin 'tailwindcss-animate';
+
+@custom-variant dark (&:is(.dark *));
+
+@utility container {
+  margin-inline: auto;
+  padding-inline: 2rem;
+  @media (width >= --theme(--breakpoint-sm)) {
+    max-width: none;
+  }
+  @media (width >= 1400px) {
+    max-width: 1400px;
+  }
+}
+
+@theme {
+  --font-sans: Outfit, system-ui, sans-serif;
+  --font-serif: Source Serif 4, Georgia, serif;
+  --font-mono: JetBrains Mono, monospace;
+
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --color-gain: hsl(var(--gain));
+  --color-loss: hsl(var(--loss));
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+
+  @keyframes accordion-down {
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--radix-accordion-content-height);
+    }
+  }
+  @keyframes accordion-up {
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+    to {
+      height: 0;
+    }
+  }
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
+
+@utility bg-dot-grid {
+  /* Dot grid background texture */
+  background-image: radial-gradient(
+    circle,
+    hsl(var(--border)) 1px,
+    transparent 1px
+  );
+  background-size: 24px 24px;
+}
+
+@utility bg-noise {
+  /* Subtle noise texture overlay */
+  position: relative;
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+}
+
+@utility hero-glow {
+  /* Hero glow effect */
+  position: relative;
+  &::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    right: -1px;
+    bottom: -1px;
+    background: linear-gradient(
+      135deg,
+      hsl(var(--primary) / 0.15),
+      transparent 50%,
+      hsl(var(--primary) / 0.05)
+    );
+    border-radius: inherit;
+    z-index: 0;
+    pointer-events: none;
+  }
+}
+
+@utility animate-fade-up {
+  /* Stagger animation utility */
+  animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@utility stagger-1 {
+  animation-delay: 0ms;
+}
+
+@utility stagger-2 {
+  animation-delay: 60ms;
+}
+
+@utility stagger-3 {
+  animation-delay: 120ms;
+}
+
+@utility stagger-4 {
+  animation-delay: 180ms;
+}
+
+@utility stagger-5 {
+  animation-delay: 240ms;
+}
+
+@utility skeleton-shimmer {
+  /* Shimmer for loading skeleton */
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted)) 25%,
+    hsl(var(--accent)) 50%,
+    hsl(var(--muted)) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
 
 @layer base {
   :root {
@@ -92,62 +265,6 @@
 }
 
 @layer utilities {
-  /* Dot grid background texture */
-  .bg-dot-grid {
-    background-image: radial-gradient(
-      circle,
-      hsl(var(--border)) 1px,
-      transparent 1px
-    );
-    background-size: 24px 24px;
-  }
-
-  /* Subtle noise texture overlay */
-  .bg-noise {
-    position: relative;
-  }
-  .bg-noise::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    opacity: 0.025;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  /* Hero glow effect */
-  .hero-glow {
-    position: relative;
-  }
-  .hero-glow::before {
-    content: "";
-    position: absolute;
-    top: -1px;
-    left: -1px;
-    right: -1px;
-    bottom: -1px;
-    background: linear-gradient(
-      135deg,
-      hsl(var(--primary) / 0.15),
-      transparent 50%,
-      hsl(var(--primary) / 0.05)
-    );
-    border-radius: inherit;
-    z-index: 0;
-    pointer-events: none;
-  }
-
-  /* Stagger animation utility */
-  .animate-fade-up {
-    animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
-  }
-
-  .stagger-1 { animation-delay: 0ms; }
-  .stagger-2 { animation-delay: 60ms; }
-  .stagger-3 { animation-delay: 120ms; }
-  .stagger-4 { animation-delay: 180ms; }
-  .stagger-5 { animation-delay: 240ms; }
 
   @keyframes fadeUp {
     from {
@@ -159,21 +276,8 @@
       transform: translateY(0);
     }
   }
-
-  /* Shimmer for loading skeleton */
   @keyframes shimmer {
     0% { background-position: -200% 0; }
     100% { background-position: 200% 0; }
-  }
-
-  .skeleton-shimmer {
-    background: linear-gradient(
-      90deg,
-      hsl(var(--muted)) 25%,
-      hsl(var(--accent)) 50%,
-      hsl(var(--muted)) 75%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 1.5s ease-in-out infinite;
   }
 }

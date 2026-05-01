@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 from playwright.async_api import Locator, Page
-from price_parser import Price  # type: ignore
+from price_parser import Price
 from pydantic import SecretStr
 
 from finbot.core.schema import BaseModel, CurrencyCode

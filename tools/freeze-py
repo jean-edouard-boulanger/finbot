@@ -5,7 +5,7 @@ work_dir=$(mktemp -d)
 docker run --rm -w /finbot \
   -v "${root_dir}"/pyproject.toml:/finbot/pyproject.toml:ro \
   -v "${work_dir}":"${work_dir}" \
-  python:3.13-bullseye bash -c "\
+  python:3.14-bookworm bash -c "\
     set -e && \
     wget https://astral.sh/uv/install.sh -O /tmp/install-uv.sh && \
     env XDG_BIN_HOME=/usr/local/bin sh /tmp/install-uv.sh && \

@@ -77,7 +77,7 @@ const appMiddleware: Middleware = {
     let payload = null;
     try {
       payload = await context.response.json();
-    } catch (e) {
+    } catch {
       return;
     }
     if (payload && "error" in payload) {

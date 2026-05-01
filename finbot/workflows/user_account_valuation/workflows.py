@@ -42,7 +42,7 @@ class UserAccountValuationWorkflow:
         workflow.logger.info(f"raw snapshot created with id={snapshot_id}")
         workflow.logger.info("writing history report")
         history_metadata: WriteHistoryResponse = await workflow.execute_child_workflow(
-            WriteValuationHistoryWorkflow,
+            WriteValuationHistoryWorkflow.run,
             WriteHistoryRequest(
                 snapshot_id=snapshot_id,
             ),
@@ -98,7 +98,7 @@ class RunValuationForAllUsers:
         workflow.logger.info(f"kicking off valuation for all ({len(result.user_account_ids)}) users")
         valuation_tasks = [
             workflow.execute_child_workflow(
-                UserAccountValuationWorkflow,
+                UserAccountValuationWorkflow.run,
                 ValuationRequest(
                     user_account_id=user_account_id,
                 ),

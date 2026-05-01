@@ -50,7 +50,7 @@ def get_static_schedules() -> list[Schedule]:
             id=f"valuation.{entry.time_str.replace(':', '_')}",
             temporal_schedule=TemporalSchedule(
                 action=ScheduleActionStartWorkflow(
-                    RunValuationForAllUsers,
+                    RunValuationForAllUsers.run,
                     task_queue=GENERIC_TASK_QUEUE,
                     retry_policy=TRY_ONCE,
                     id=temporal_workflow_id(),

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -e
+git config --global --add safe.directory "*"
 workdir=$(mktemp -d)
 finbot_root_dir=$(git rev-parse --show-toplevel)
 
@@ -15,7 +16,6 @@ openapi-generator-cli generate \
   --additional-properties=withSeparateModelsAndApi=true,useSingleRequestParameter=true,withInterfaces=true,supportsES6=true,disallowAdditionalPropertiesIfNotPresent=false \
   -o "${workdir}/output/"
 
-git config --global --add safe.directory "*"
 app_client_dir="${finbot_root_dir}/webapp/src/clients/app-client"
 mkdir -p "${app_client_dir}"
 rm -rf "${app_client_dir:?}"/*

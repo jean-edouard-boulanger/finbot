@@ -322,7 +322,7 @@ function MessageView({
   }
   return (
     <div className="flex gap-2">
-      <div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 text-white shadow-sm">
+      <div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-violet-500 to-indigo-600 text-white shadow-xs">
         <Sparkles className="h-3.5 w-3.5" />
       </div>
       <div className="min-w-0 flex-1 space-y-2">
@@ -365,7 +365,7 @@ const SUGGESTIONS: { icon: React.FC<{ className?: string }>; text: string }[] =
 function EmptyState({ onPick }: { onPick: (text: string) => void }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-2 py-8">
-      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 text-white shadow-lg shadow-violet-500/20">
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-linear-to-br from-violet-500 to-indigo-600 text-white shadow-lg shadow-violet-500/20">
         <Sparkles className="h-6 w-6" />
       </div>
       <h3 className="mt-4 text-base font-semibold">Ask Finbot anything</h3>
@@ -380,7 +380,7 @@ function EmptyState({ onPick }: { onPick: (text: string) => void }) {
             <button
               key={i}
               onClick={() => onPick(s.text)}
-              className="group flex items-start gap-2 rounded-lg border border-border/60 bg-card/30 px-3 py-2.5 text-left text-sm transition-all hover:-translate-y-px hover:border-border hover:bg-accent/40 hover:shadow-sm"
+              className="group flex items-start gap-2 rounded-lg border border-border/60 bg-card/30 px-3 py-2.5 text-left text-sm transition-all hover:-translate-y-px hover:border-border hover:bg-accent/40 hover:shadow-xs"
             >
               <Icon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground group-hover:text-foreground" />
               <span className="text-foreground/80 group-hover:text-foreground">
@@ -623,7 +623,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
       >
         {/* Header — note: SheetContent renders its own absolute close X at top-4 right-4 */}
         <div className="flex shrink-0 items-center gap-3 border-b border-border/50 py-3 pl-4 pr-12">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 text-white shadow-sm">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-violet-500 to-indigo-600 text-white shadow-xs">
             <Sparkles className="h-4 w-4" />
           </div>
           <div className="min-w-0 flex-1">
@@ -680,7 +680,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
         </div>
 
         {/* Composer */}
-        <div className="shrink-0 border-t border-border/50 bg-background/80 px-3 py-3 backdrop-blur">
+        <div className="shrink-0 border-t border-border/50 bg-background/80 px-3 py-3 backdrop-blur-sm">
           <div
             className={cn(
               "flex items-end gap-2 rounded-xl border border-border bg-card px-2.5 py-2 transition-colors",
@@ -695,7 +695,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
               placeholder="Ask about your finances…"
               rows={1}
               disabled={busy}
-              className="flex-1 resize-none bg-transparent px-1 py-1 text-sm leading-relaxed outline-none placeholder:text-muted-foreground disabled:opacity-60"
+              className="flex-1 resize-none bg-transparent px-1 py-1 text-sm leading-relaxed outline-hidden placeholder:text-muted-foreground disabled:opacity-60"
             />
             {busy ? (
               <Button
@@ -710,7 +710,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
             ) : (
               <Button
                 size="icon"
-                className="h-8 w-8 shrink-0 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 hover:opacity-90"
+                className="h-8 w-8 shrink-0 rounded-lg bg-linear-to-br from-violet-500 to-indigo-600 hover:opacity-90"
                 onClick={() => sendQuestion(input)}
                 disabled={!input.trim() || !accessToken}
                 aria-label="Send message"
@@ -750,9 +750,9 @@ export const ChatLauncherButton: React.FC<ChatLauncherButtonProps> = ({
       onClick={onClick}
       className={cn(
         "group fixed bottom-5 right-5 z-30 flex items-center gap-2 rounded-full",
-        "bg-gradient-to-br from-violet-500 to-indigo-600 px-4 py-3 text-white",
+        "bg-linear-to-br from-violet-500 to-indigo-600 px-4 py-3 text-white",
         "shadow-lg shadow-violet-500/30 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-violet-500/40",
-        "focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:ring-offset-2 focus:ring-offset-background",
+        "focus:outline-hidden focus:ring-2 focus:ring-violet-500/40 focus:ring-offset-2 focus:ring-offset-background",
       )}
       aria-label="Open Finbot chat assistant"
     >

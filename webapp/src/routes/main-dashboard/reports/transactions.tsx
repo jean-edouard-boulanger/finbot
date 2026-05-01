@@ -598,7 +598,7 @@ export const TransactionsReportPanel: React.FC<TransactionsReportPanelProps> = (
                                 <TooltipProvider delayDuration={200}>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <Repeat className="h-3.5 w-3.5 flex-shrink-0 text-blue-400" />
+                                      <Repeat className="h-3.5 w-3.5 shrink-0 text-blue-400" />
                                     </TooltipTrigger>
                                     <TooltipContent>
                                       Recurring transaction
@@ -608,7 +608,7 @@ export const TransactionsReportPanel: React.FC<TransactionsReportPanelProps> = (
                               )}
                               {hasMatch && (
                                 <button
-                                  className="flex-shrink-0 rounded p-0.5 hover:bg-muted transition-colors"
+                                  className="shrink-0 rounded p-0.5 hover:bg-muted transition-colors"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleExpand(txn);

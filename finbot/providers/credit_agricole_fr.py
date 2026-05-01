@@ -184,8 +184,10 @@ class Api(PlaywrightProviderBase):
             assert nav
             logging.info(f"collecting transactions for account '{account.id}' ({account.name})")
             async with self.page.expect_response(
-                lambda r: ("bff/operations/imputees" in r.url or "bff/api/compte_epargne/operations" in r.url)
-                and r.status == 200,
+                lambda r: (
+                    ("bff/operations/imputees" in r.url or "bff/api/compte_epargne/operations" in r.url)
+                    and r.status == 200
+                ),
                 timeout=30000,
             ) as response_info:
                 await nav.click()
