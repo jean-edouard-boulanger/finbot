@@ -2,7 +2,7 @@
 #    uv pip compile pyproject.toml --output-file requirements.txt
 aiohappyeyeballs==2.6.1
     # via aiohttp
-aiohttp==3.11.18
+aiohttp==3.13.5
     # via
     #   finbot (pyproject.toml)
     #   aiohttp-retry
@@ -10,97 +10,93 @@ aiohttp==3.11.18
     #   twilio
 aiohttp-retry==2.9.1
     # via twilio
-aiosignal==1.3.2
+aiosignal==1.4.0
     # via aiohttp
-alembic==1.16.1
+alembic==1.18.4
     # via finbot (pyproject.toml)
-amqp==5.3.1
-    # via kombu
+annotated-doc==0.0.4
+    # via
+    #   fastapi
+    #   typer
 annotated-types==0.7.0
     # via pydantic
-anyio==4.9.0
+anyio==4.13.0
     # via
     #   httpx
     #   openai
     #   starlette
     #   watchfiles
-attrs==25.3.0
+attrs==26.1.0
     # via
     #   aiohttp
     #   jsonschema
     #   price-parser
     #   referencing
-bcrypt==4.3.0
+bcrypt==5.0.0
     # via finbot (pyproject.toml)
-billiard==4.2.1
-    # via celery
-cachetools==5.5.2
-    # via
-    #   finbot (pyproject.toml)
-    #   google-auth
-celery==5.5.2
+cachetools==6.2.6
     # via finbot (pyproject.toml)
-certifi==2025.6.15
+certifi==2026.4.22
     # via
     #   httpcore
     #   httpx
     #   requests
-cffi==1.17.1
+    #   sentry-sdk
+cffi==2.0.0
     # via
     #   finbot (pyproject.toml)
     #   cryptography
-charset-normalizer==3.4.2
+charset-normalizer==3.4.7
     # via requests
-click==8.2.1
+click==8.3.3
     # via
-    #   celery
-    #   click-didyoumean
-    #   click-plugins
-    #   click-repl
     #   rich-toolkit
     #   typer
     #   uvicorn
-click-didyoumean==0.3.1
-    # via celery
-click-plugins==1.1.1
-    # via celery
-click-repl==0.3.0
-    # via celery
-cryptography==45.0.2
+cryptography==47.0.0
     # via
     #   finbot (pyproject.toml)
+    #   google-auth
     #   python-jose
-dateparser==1.2.1
+dateparser==1.4.0
     # via python-binance
 distro==1.9.0
     # via openai
-dnspython==2.7.0
+dnspython==2.8.0
     # via email-validator
-ecdsa==0.19.1
+ecdsa==0.19.2
     # via python-jose
-email-validator==2.2.0
-    # via fastapi
-fastapi==0.115.13
+email-validator==2.3.0
+    # via
+    #   fastapi
+    #   pydantic
+fastapi==0.136.1
     # via finbot (pyproject.toml)
-fastapi-cli==0.0.7
+fastapi-cli==0.0.24
     # via fastapi
-frozenlist==1.7.0
+fastapi-cloud-cli==0.17.1
+    # via fastapi-cli
+fastar==0.11.0
+    # via
+    #   fastapi
+    #   fastapi-cloud-cli
+frozenlist==1.8.0
     # via
     #   aiohttp
     #   aiosignal
-google-auth==2.40.3
+google-auth==2.50.0
     # via
     #   google-auth-oauthlib
     #   gspread
-google-auth-oauthlib==1.2.2
+google-auth-oauthlib==1.3.1
     # via gspread
-greenlet==3.2.3
+greenlet==3.5.0
     # via
     #   playwright
     #   sqlalchemy
 gspread==6.2.1
     # via finbot (pyproject.toml)
-gunicorn==23.0.0
+gunicorn==25.3.0
     # via finbot (pyproject.toml)
 h11==0.16.0
     # via
@@ -108,15 +104,16 @@ h11==0.16.0
     #   uvicorn
 httpcore==1.0.9
     # via httpx
-httplib2==0.22.0
+httplib2==0.31.2
     # via oauth2client
-httptools==0.6.4
+httptools==0.7.1
     # via uvicorn
 httpx==0.28.1
     # via
     #   fastapi
+    #   fastapi-cloud-cli
     #   openai
-idna==3.10
+idna==3.13
     # via
     #   anyio
     #   email-validator
@@ -125,61 +122,57 @@ idna==3.10
     #   yarl
 jinja2==3.1.6
     # via fastapi
-jiter==0.13.0
+jiter==0.14.0
     # via openai
-jsonschema==4.23.0
+jsonschema==4.26.0
     # via finbot (pyproject.toml)
-jsonschema-specifications==2025.4.1
+jsonschema-specifications==2025.9.1
     # via jsonschema
-kombu==5.5.4
-    # via celery
 krakenex==2.2.2
     # via finbot (pyproject.toml)
-mako==1.3.10
+mako==1.3.12
     # via alembic
-markdown-it-py==3.0.0
+markdown-it-py==4.0.0
     # via rich
-markupsafe==3.0.2
+markupsafe==3.0.3
     # via
     #   jinja2
     #   mako
 mdurl==0.1.2
     # via markdown-it-py
-multidict==6.5.0
+multidict==6.7.1
     # via
     #   aiohttp
     #   yarl
+nexus-rpc==1.4.0
+    # via temporalio
 nulltype==2.3.1
     # via plaid-python
 oauth2client==4.1.3
     # via finbot (pyproject.toml)
-oauthlib==3.3.0
+oauthlib==3.3.1
     # via requests-oauthlib
-openai==2.24.0
+openai==2.33.0
     # via finbot (pyproject.toml)
-orjson==3.10.18
+orjson==3.11.8
     # via finbot (pyproject.toml)
-packaging==25.0
-    # via
-    #   gunicorn
-    #   kombu
-plaid-python==32.0.0
+packaging==26.2
+    # via gunicorn
+plaid-python==39.2.0
     # via finbot (pyproject.toml)
-playwright==1.52.0
+playwright==1.59.0
     # via finbot (pyproject.toml)
-price-parser==0.4.0
+price-parser==0.5.1
     # via finbot (pyproject.toml)
-prompt-toolkit==3.0.51
-    # via click-repl
-propcache==0.3.2
+propcache==0.4.1
     # via
     #   aiohttp
     #   yarl
-protobuf==6.31.1
+protobuf==6.33.6
     # via temporalio
-psycopg2==2.9.10
+psycopg2==2.9.12
     # via finbot (pyproject.toml)
-pyasn1==0.6.1
+pyasn1==0.6.3
     # via
     #   oauth2client
     #   pyasn1-modules
@@ -191,54 +184,61 @@ pyasn1-modules==0.4.2
     #   oauth2client
 pycoingecko==3.2.0
     # via finbot (pyproject.toml)
-pycparser==2.22
+pycparser==3.0
     # via cffi
 pycryptodome==3.23.0
     # via python-binance
-pydantic==2.11.5
+pydantic==2.13.3
     # via
     #   finbot (pyproject.toml)
     #   fastapi
+    #   fastapi-cloud-cli
     #   openai
-    #   spectree
-pydantic-core==2.33.2
+    #   pydantic-extra-types
+    #   pydantic-settings
+pydantic-core==2.46.3
     # via pydantic
-pyee==13.0.0
+pydantic-extra-types==2.11.1
+    # via fastapi
+pydantic-settings==2.14.0
+    # via fastapi
+pyee==13.0.1
     # via playwright
-pygments==2.19.1
+pygments==2.20.0
     # via rich
-pyjwt==2.10.1
+pyjwt==2.12.1
     # via twilio
-pyparsing==3.2.3
+pyparsing==3.3.2
     # via httplib2
-python-binance==1.0.29
+python-binance==1.0.36
     # via finbot (pyproject.toml)
 python-dateutil==2.9.0.post0
     # via
-    #   celery
     #   dateparser
     #   plaid-python
-python-dotenv==1.1.0
-    # via uvicorn
-python-gnupg==0.5.4
+python-dotenv==1.2.2
+    # via
+    #   pydantic-settings
+    #   uvicorn
+python-gnupg==0.5.6
     # via finbot (pyproject.toml)
 python-jose==3.5.0
     # via finbot (pyproject.toml)
-python-multipart==0.0.20
+python-multipart==0.0.27
     # via fastapi
-pytz==2025.2
+pytz==2026.1.post1
     # via dateparser
-pyyaml==6.0.2
+pyyaml==6.0.3
     # via uvicorn
-rapidfuzz==3.14.3
+rapidfuzz==3.14.5
     # via finbot (pyproject.toml)
-referencing==0.36.2
+referencing==0.37.0
     # via
     #   jsonschema
     #   jsonschema-specifications
-regex==2024.11.6
+regex==2026.4.4
     # via dateparser
-requests==2.32.3
+requests==2.33.1
     # via
     #   finbot (pyproject.toml)
     #   krakenex
@@ -248,21 +248,26 @@ requests==2.32.3
     #   twilio
 requests-oauthlib==2.0.0
     # via google-auth-oauthlib
-rich==14.0.0
+rich==15.0.0
     # via
     #   rich-toolkit
     #   typer
-rich-toolkit==0.14.7
-    # via fastapi-cli
-rpds-py==0.25.1
+rich-toolkit==0.19.7
+    # via
+    #   fastapi-cli
+    #   fastapi-cloud-cli
+rignore==0.7.6
+    # via fastapi-cloud-cli
+rpds-py==0.30.0
     # via
     #   jsonschema
     #   referencing
 rsa==4.9.1
     # via
-    #   google-auth
     #   oauth2client
     #   python-jose
+sentry-sdk==2.58.0
+    # via fastapi-cloud-cli
 shellingham==1.5.4
     # via typer
 six==1.17.0
@@ -272,69 +277,64 @@ six==1.17.0
     #   python-binance
     #   python-dateutil
 sniffio==1.3.1
-    # via
-    #   anyio
-    #   openai
-spectree==1.2.10
-    # via finbot (pyproject.toml)
-sqlalchemy==2.0.41
+    # via openai
+sqlalchemy==2.0.49
     # via
     #   finbot (pyproject.toml)
     #   alembic
-starlette==0.46.2
+starlette==1.0.0
     # via fastapi
-temporalio==1.12.0
+temporalio==1.27.0
     # via finbot (pyproject.toml)
 tqdm==4.67.3
     # via openai
-twilio==9.6.1
+twilio==9.10.5
     # via finbot (pyproject.toml)
-typer==0.16.0
-    # via fastapi-cli
-types-protobuf==6.30.2.20250516
+typer==0.25.1
+    # via
+    #   fastapi-cli
+    #   fastapi-cloud-cli
+types-protobuf==6.32.1.20260221
     # via temporalio
-typing-extensions==4.14.0
+typing-extensions==4.15.0
     # via
     #   alembic
     #   fastapi
+    #   nexus-rpc
     #   openai
     #   pydantic
     #   pydantic-core
+    #   pydantic-extra-types
     #   pyee
     #   rich-toolkit
     #   sqlalchemy
     #   temporalio
-    #   typer
     #   typing-inspection
-typing-inspection==0.4.1
-    # via pydantic
-tzdata==2025.2
-    # via kombu
+typing-inspection==0.4.2
+    # via
+    #   fastapi
+    #   pydantic
+    #   pydantic-settings
 tzlocal==5.3.1
     # via dateparser
-urllib3==2.5.0
+urllib3==2.6.3
     # via
     #   plaid-python
     #   requests
-uvicorn==0.34.3
+    #   sentry-sdk
+uvicorn==0.46.0
     # via
     #   finbot (pyproject.toml)
     #   fastapi
     #   fastapi-cli
-uvloop==0.21.0
+    #   fastapi-cloud-cli
+uvloop==0.22.1
     # via uvicorn
-vine==5.1.0
-    # via
-    #   amqp
-    #   celery
-    #   kombu
-watchfiles==1.1.0
+watchfiles==1.1.1
     # via uvicorn
-wcwidth==0.2.13
-    # via prompt-toolkit
-websockets==15.0.1
+websockets==16.0
     # via
     #   python-binance
     #   uvicorn
-yarl==1.20.1
+yarl==1.23.0
     # via aiohttp
