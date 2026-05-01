@@ -101,7 +101,7 @@ export const EditProviderPanel: React.FC<Record<string, never>> = () => {
     return JSON.stringify(DEFAULT_CREDENTIALS_SCHEMA, null, 2);
   });
   const [schema, schemaError] = useSchema(rawSchema);
-  const editorRef = useRef<AceEditor | null>();
+  const editorRef = useRef<AceEditor | null>(null);
 
   const handleSubmit = async (
     description: ProviderDescription,
