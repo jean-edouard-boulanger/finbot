@@ -1021,6 +1021,48 @@
                 }
             }
         },
+        "/accounts/email_available/": {
+            "get": {
+                "tags": [
+                    "User accounts"
+                ],
+                "summary": "Is Email Available",
+                "operationId": "is_email_available",
+                "parameters": [
+                    {
+                        "name": "email",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Email"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/IsEmailAvailableResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/accounts/{user_account_id}/": {
             "get": {
                 "tags": [
@@ -1259,48 +1301,6 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/IsUserAccountConfiguredResponse"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Validation Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/HTTPValidationError"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/accounts/email_available/": {
-            "get": {
-                "tags": [
-                    "User accounts"
-                ],
-                "summary": "Is Email Available",
-                "operationId": "is_email_available",
-                "parameters": [
-                    {
-                        "name": "email",
-                        "in": "query",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "title": "Email"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successful Response",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/IsEmailAvailableResponse"
                                 }
                             }
                         }
