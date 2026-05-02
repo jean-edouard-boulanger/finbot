@@ -12,6 +12,7 @@ import {
 } from "components/ui/dropdown-menu";
 import { Button } from "components/ui/button";
 import { MoneyFormatterType } from "components/money";
+import { DateRangeFilter } from "components/date-range-filter";
 import {
   BarChart,
   Bar,
@@ -25,69 +26,6 @@ import {
 import { ChartTooltipContent } from "components/ui/chart";
 import { ChevronDown } from "lucide-react";
 import { DateTime } from "luxon";
-import { lastItem } from "utils/array";
-
-interface TimeRange {
-  from_time?: DateTime;
-  to_time?: DateTime;
-}
-
-interface TimeRangeChoiceType {
-  label: string;
-  makeRange(now: DateTime): TimeRange;
-}
-
-const TIME_RANGES: Array<TimeRangeChoiceType> = [
-  {
-    label: "1M",
-    makeRange: (now) => ({ from_time: now.minus({ month: 1 }) }),
-  },
-  {
-    label: "2M",
-    makeRange: (now) => ({ from_time: now.minus({ months: 2 }) }),
-  },
-  {
-    label: "6M",
-    makeRange: (now) => ({ from_time: now.minus({ months: 6 }) }),
-  },
-  {
-    label: "1Y",
-    makeRange: (now) => ({ from_time: now.minus({ year: 1 }) }),
-  },
-  {
-    label: "2Y",
-    makeRange: (now) => ({ from_time: now.minus({ year: 2 }) }),
-  },
-  {
-    label: "5Y",
-    makeRange: (now) => ({ from_time: now.minus({ year: 5 }) }),
-  },
-  {
-    label: "LAST YEAR",
-    makeRange: (now) => ({
-      from_time: DateTime.fromObject({ year: now.year - 1, month: 1, day: 1 }),
-      to_time: DateTime.fromObject({
-        year: now.year - 1,
-        month: 12,
-        day: 31,
-        hour: 23,
-        minute: 59,
-      }),
-    }),
-  },
-  {
-    label: "THIS YEAR",
-    makeRange: (now) => ({
-      from_time: DateTime.fromObject({ year: now.year, month: 1, day: 1 }),
-    }),
-  },
-  {
-    label: "ALL DATA",
-    makeRange: () => ({}),
-  },
-];
-
-const DEFAULT_TIME_RANGE = lastItem(TIME_RANGES)!;
 
 interface CashFlowTimeSeriesEntry {
   period: string;
@@ -116,27 +54,25 @@ const DEFAULT_FREQUENCY = FREQUENCIES[2];
 export const CashFlowPanel: React.FC<CashFlowPanelProps> = (props) => {
   const { userAccountId, locale, moneyFormatter, linkedAccountId } = props;
   const { accessToken } = useContext(AuthContext);
-  const [now] = useState<DateTime>(DateTime.now());
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<CashFlowTimeSeries | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedFrequency, setSelectedFrequency] =
     useState<(typeof FREQUENCIES)[number]>(DEFAULT_FREQUENCY);
-  const [selectedTimeRange, setSelectedTimeRange] =
-    useState<TimeRangeChoiceType>(DEFAULT_TIME_RANGE);
+  const [fromDate, setFromDate] = useState<string>("");
+  const [toDate, setToDate] = useState<string>("");
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         const frequency = selectedFrequency.toLowerCase() as Frequency;
-        const range = selectedTimeRange.makeRange(now);
         let url = `${APP_SERVICE_ENDPOINT}/reports/cash-flow/time-series/?frequency=${frequency}`;
-        if (range.from_time) {
-          url += `&from_time=${range.from_time.toISO()}`;
+        if (fromDate) {
+          url += `&from_time=${DateTime.fromISO(fromDate).startOf("day").toISO()}`;
         }
-        if (range.to_time) {
-          url += `&to_time=${range.to_time.toISO()}`;
+        if (toDate) {
+          url += `&to_time=${DateTime.fromISO(toDate).endOf("day").toISO()}`;
         }
         if (linkedAccountId !== undefined) {
           url += `&linked_account_id=${linkedAccountId}`;
@@ -160,8 +96,8 @@ export const CashFlowPanel: React.FC<CashFlowPanelProps> = (props) => {
     userAccountId,
     linkedAccountId,
     selectedFrequency,
-    selectedTimeRange,
-    now,
+    fromDate,
+    toDate,
   ]);
 
   if (error) {
@@ -193,8 +129,7 @@ export const CashFlowPanel: React.FC<CashFlowPanelProps> = (props) => {
                 size="xs"
                 className="border-border/50 bg-secondary/50 text-xs font-medium tracking-wide text-muted-foreground hover:text-foreground"
               >
-                {selectedFrequency.toUpperCase()}{" "}
-                <ChevronDown className="ml-1 h-3 w-3" />
+                {selectedFrequency} <ChevronDown className="ml-1 h-3 w-3" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
@@ -206,38 +141,19 @@ export const CashFlowPanel: React.FC<CashFlowPanelProps> = (props) => {
                   }
                   onClick={() => setSelectedFrequency(f)}
                 >
-                  {f.toUpperCase()}
+                  {f}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="xs"
-                className="border-border/50 bg-secondary/50 text-xs font-medium tracking-wide text-muted-foreground hover:text-foreground"
-              >
-                {selectedTimeRange.label}{" "}
-                <ChevronDown className="ml-1 h-3 w-3" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              {TIME_RANGES.map((r) => (
-                <DropdownMenuItem
-                  key={r.label}
-                  className={
-                    selectedTimeRange.label === r.label
-                      ? "bg-accent text-primary"
-                      : ""
-                  }
-                  onClick={() => setSelectedTimeRange(r)}
-                >
-                  {r.label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <DateRangeFilter
+            fromDate={fromDate}
+            toDate={toDate}
+            onFromDateChange={setFromDate}
+            onToDateChange={setToDate}
+            compact
+            allowAllTime
+          />
         </div>
       </CardHeader>
       <CardContent>

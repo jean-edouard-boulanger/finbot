@@ -34,20 +34,10 @@ import {
   type ChartConfig,
 } from "components/ui/chart";
 import { MoneyFormatterType } from "components/money";
+import { DateRangeFilter } from "components/date-range-filter";
 
 import { DateTime } from "luxon";
-import { lastItem } from "utils/array";
 import { ChevronDown } from "lucide-react";
-
-interface TimeRange {
-  from_time?: DateTime;
-  to_time?: DateTime;
-}
-
-interface TimeRangeChoiceType {
-  label: string;
-  makeRange(now: DateTime): TimeRange;
-}
 
 type LevelType = "account" | "linked_account" | "asset_type" | "asset_class";
 
@@ -59,19 +49,19 @@ interface LevelChoiceProp {
 const LEVELS: Array<LevelChoiceProp> = [
   {
     type: "account",
-    label: "OVERALL",
+    label: "Overall",
   },
   {
     type: "linked_account",
-    label: "BY ACCOUNT",
+    label: "By account",
   },
   {
     type: "asset_type",
-    label: "BY ASSET TYPE",
+    label: "By asset type",
   },
   {
     type: "asset_class",
-    label: "BY ASSET CLASS",
+    label: "By asset class",
   },
 ];
 
@@ -86,112 +76,6 @@ const FREQUENCIES: Array<string> = [
 ];
 
 const DEFAULT_FREQUENCY = FREQUENCIES[0];
-
-const TIME_RANGES: Array<TimeRangeChoiceType> = [
-  {
-    label: "1W",
-    makeRange: (now) => {
-      return {
-        from_time: now.minus({ weeks: 1 }),
-      };
-    },
-  },
-  {
-    label: "2W",
-    makeRange: (now) => {
-      return {
-        from_time: now.minus({ weeks: 2 }),
-      };
-    },
-  },
-  {
-    label: "1M",
-    makeRange: (now) => {
-      return {
-        from_time: now.minus({ month: 1 }),
-      };
-    },
-  },
-  {
-    label: "2M",
-    makeRange: (now) => {
-      return {
-        from_time: now.minus({ months: 2 }),
-      };
-    },
-  },
-  {
-    label: "6M",
-    makeRange: (now) => {
-      return {
-        from_time: now.minus({ months: 6 }),
-      };
-    },
-  },
-  {
-    label: "1Y",
-    makeRange: (now) => {
-      return {
-        from_time: now.minus({ year: 1 }),
-      };
-    },
-  },
-  {
-    label: "2Y",
-    makeRange: (now) => {
-      return {
-        from_time: now.minus({ year: 2 }),
-      };
-    },
-  },
-  {
-    label: "5Y",
-    makeRange: (now) => {
-      return {
-        from_time: now.minus({ year: 5 }),
-      };
-    },
-  },
-  {
-    label: "LAST YEAR",
-    makeRange: (now) => {
-      return {
-        from_time: DateTime.fromObject({
-          year: now.year - 1,
-          month: 1,
-          day: 1,
-        }),
-        to_time: DateTime.fromObject({
-          year: now.year - 1,
-          month: 12,
-          day: 31,
-          hour: 23,
-          minute: 59,
-        }),
-      };
-    },
-  },
-  {
-    label: "THIS YEAR",
-    makeRange: (now) => {
-      return {
-        from_time: DateTime.fromObject({
-          year: now.year,
-          month: 1,
-          day: 1,
-        }),
-      };
-    },
-  },
-  {
-    label: "ALL DATA",
-    makeRange: () => {
-      return {};
-    },
-  },
-];
-
-const DEFAULT_RANGE = lastItem(TIME_RANGES)!;
 
 function FilterDropdown({
   label,
@@ -254,11 +138,10 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
     : LEVELS;
   const userAccountsValuationApi = useApi(UserAccountsValuationApi);
   const linkedAccountsValuationApi = useApi(LinkedAccountsValuationApi);
-  const [now] = useState<DateTime>(DateTime.now());
   const [selectedLevel, setSelectedLevel] = useState(DEFAULT_LEVEL);
   const [selectedFrequency, setSelectedFrequency] = useState(DEFAULT_FREQUENCY);
-  const [selectedTimeRange, setSelectedTimeRange] =
-    useState<TimeRangeChoiceType>(DEFAULT_RANGE);
+  const [fromDate, setFromDate] = useState<string>("");
+  const [toDate, setToDate] = useState<string>("");
   const [historicalValuation, setHistoricalValuation] =
     useState<HistoricalValuation | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -268,11 +151,16 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
     setError(null);
     const fetchValuation = async () => {
       try {
-        const range = selectedTimeRange.makeRange(now);
+        const fromTime = fromDate
+          ? DateTime.fromISO(fromDate).startOf("day").toJSDate()
+          : undefined;
+        const toTime = toDate
+          ? DateTime.fromISO(toDate).endOf("day").toJSDate()
+          : undefined;
         const request = {
           userAccountId: userAccountId,
-          fromTime: range.from_time?.toJSDate(),
-          toTime: range.to_time?.toJSDate(),
+          fromTime,
+          toTime,
           frequency: selectedFrequency as ValuationFrequency,
         };
         switch (selectedLevel.type) {
@@ -376,9 +264,9 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
     userAccountsValuationApi,
     linkedAccountsValuationApi,
     userAccountId,
-    now,
     selectedLevel,
-    selectedTimeRange,
+    fromDate,
+    toDate,
     selectedFrequency,
   ]);
 
@@ -517,21 +405,18 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
             }
           />
           <FilterDropdown
-            label={selectedFrequency.toUpperCase()}
-            items={FREQUENCIES.map((f) => ({
-              key: f,
-              label: f.toUpperCase(),
-            }))}
+            label={selectedFrequency}
+            items={FREQUENCIES.map((f) => ({ key: f, label: f }))}
             activeKey={selectedFrequency}
             onSelect={setSelectedFrequency}
           />
-          <FilterDropdown
-            label={selectedTimeRange.label}
-            items={TIME_RANGES.map((r) => ({ key: r.label, label: r.label }))}
-            activeKey={selectedTimeRange.label}
-            onSelect={(key) =>
-              setSelectedTimeRange(TIME_RANGES.find((r) => r.label === key)!)
-            }
+          <DateRangeFilter
+            fromDate={fromDate}
+            toDate={toDate}
+            onFromDateChange={setFromDate}
+            onToDateChange={setToDate}
+            compact
+            allowAllTime
           />
         </div>
       </CardHeader>
