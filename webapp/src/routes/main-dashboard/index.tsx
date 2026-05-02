@@ -14,6 +14,7 @@ import {
 
 import { Money } from "components";
 import { defaultMoneyFormatter } from "components/money";
+import { useDocumentTitle } from "hooks/use-document-title";
 import {
   EarningsReportPanel,
   HoldingsReportPanel,
@@ -66,6 +67,7 @@ function MetricSkeleton() {
 export const MainDashboard: React.FC<Record<string, never>> = () => {
   const { userAccountId } = useContext(AuthContext);
   const locale = "en-GB";
+  useDocumentTitle("Dashboard");
   const userAccountValuationApi = useApi(UserAccountsValuationApi);
   const userAccountsApi = useApi(UserAccountsApi);
   const [configured, setConfigured] = useState<boolean | null>(null);

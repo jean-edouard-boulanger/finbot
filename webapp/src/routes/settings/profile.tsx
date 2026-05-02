@@ -9,6 +9,8 @@ import {
 } from "clients";
 import { AuthContext } from "contexts";
 import { LoadingButton } from "components/loading-button";
+import { formatApiError } from "utils/errors";
+import { useDocumentTitle } from "hooks/use-document-title";
 
 import { Formik, Form as MetaForm, Field, ErrorMessage } from "formik";
 import { Label } from "components/ui/label";
@@ -50,6 +52,7 @@ export const ProfileSettings: React.FC<Record<string, never>> = () => {
   const { userAccountId } = useContext(AuthContext);
   const userAccountsApi = useApi(UserAccountsApi);
   const [profile, setProfile] = useState<UserAccountProfile | null>(null);
+  useDocumentTitle("Profile");
 
   useEffect(() => {
     const fetch = async () => {
@@ -72,7 +75,7 @@ export const ProfileSettings: React.FC<Record<string, never>> = () => {
       setProfile(result.profile);
       toast.success("Profile updated");
     } catch (e) {
-      toast.error(`Failed to update profile: ${e}`);
+      toast.error(`Failed to update profile: ${formatApiError(e)}`);
     }
     setSubmitting(false);
   };

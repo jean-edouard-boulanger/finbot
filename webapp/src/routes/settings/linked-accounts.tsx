@@ -23,6 +23,8 @@ import {
 } from "clients";
 import { ColourPicker } from "components";
 import { asDateTime } from "utils/time";
+import { formatApiError } from "utils/errors";
+import { useDocumentTitle } from "hooks/use-document-title";
 import { LinkAccount } from "./link-account";
 
 import { Button } from "components/ui/button";
@@ -354,7 +356,7 @@ const InlineEditableName: React.FC<InlineEditableNameProps> = ({
     >
       {value}
       {!disabled && (
-        <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-50 transition-opacity" />
+        <Pencil className="h-3 w-3 opacity-30 transition-opacity group-hover:opacity-70" />
       )}
     </button>
   );
@@ -613,7 +615,7 @@ const AccountsPanel: React.FC = () => {
       await refreshAccounts();
     } catch (e) {
       toast.error(
-        `Unable to unlink account '${linkedAccount.accountName}': ${e}`,
+        `Unable to unlink account '${linkedAccount.accountName}': ${formatApiError(e)}`,
       );
     }
   };
@@ -628,7 +630,7 @@ const AccountsPanel: React.FC = () => {
       toast.success("Account renamed");
       await refreshAccounts();
     } catch (e) {
-      toast.error(`Failed to rename account: ${e}`);
+      toast.error(`Failed to rename account: ${formatApiError(e)}`);
     }
   };
 
@@ -641,7 +643,7 @@ const AccountsPanel: React.FC = () => {
       });
       await refreshAccounts();
     } catch (e) {
-      toast.error(`Failed to update colour: ${e}`);
+      toast.error(`Failed to update colour: ${formatApiError(e)}`);
     }
   };
 
@@ -655,7 +657,7 @@ const AccountsPanel: React.FC = () => {
       toast.success(`Account '${account.accountName}' frozen`);
       await refreshAccounts();
     } catch (e) {
-      toast.error(`Failed to freeze account: ${e}`);
+      toast.error(`Failed to freeze account: ${formatApiError(e)}`);
     }
   };
 
@@ -669,7 +671,7 @@ const AccountsPanel: React.FC = () => {
       toast.success(`Account '${account.accountName}' unfrozen`);
       await refreshAccounts();
     } catch (e) {
-      toast.error(`Failed to unfreeze account: ${e}`);
+      toast.error(`Failed to unfreeze account: ${formatApiError(e)}`);
     }
   };
 
@@ -755,6 +757,7 @@ const AccountsPanel: React.FC = () => {
 // --- Settings Page Container ---
 
 export const LinkedAccountsSettings: React.FC = () => {
+  useDocumentTitle("Linked accounts");
   return (
     <>
       <div className="mb-4">

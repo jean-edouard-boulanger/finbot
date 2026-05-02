@@ -11,6 +11,8 @@ import { shadcnTheme } from "components/ui/rjsf-theme";
 const DataDrivenForm = withTheme(shadcnTheme);
 import { LoadingButton } from "components";
 import { toast } from "sonner";
+import { formatApiError } from "utils/errors";
+import { useDocumentTitle } from "hooks/use-document-title";
 
 import { Input } from "components/ui/input";
 import { Label } from "components/ui/label";
@@ -41,6 +43,7 @@ const makeProvidersSelectValue = (provider: EmailProviderMetadata) => {
 export const EmailDeliverySettingsPanel: React.FC<
   Record<string, never>
 > = () => {
+  useDocumentTitle("Email delivery");
   const administrationApi = useApi(AdministrationApi);
   const [loading, setLoading] = useState<boolean>(false);
   const [enableDelivery, setEnableDelivery] = useState<boolean>(false);
@@ -101,7 +104,7 @@ export const EmailDeliverySettingsPanel: React.FC<
       });
       toast.success("Email delivery settings have been updated successfully");
     } catch (e) {
-      toast.error(`${e}`);
+      toast.error(formatApiError(e));
     }
     setLoading(false);
   };
@@ -112,7 +115,7 @@ export const EmailDeliverySettingsPanel: React.FC<
       await administrationApi.removeEmailDeliverySettings();
       toast.success("Email delivery has been disabled");
     } catch (e) {
-      toast.error(`${e}`);
+      toast.error(formatApiError(e));
     }
     setLoading(false);
   };

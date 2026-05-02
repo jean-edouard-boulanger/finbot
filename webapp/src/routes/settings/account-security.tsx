@@ -13,6 +13,8 @@ import { Input } from "components/ui/input";
 import { Label } from "components/ui/label";
 import { Separator } from "components/ui/separator";
 import { toast } from "sonner";
+import { formatApiError } from "utils/errors";
+import { useDocumentTitle } from "hooks/use-document-title";
 
 interface PasswordForm extends PasswordValidationInput {
   oldPassword: string;
@@ -31,6 +33,7 @@ export const AccountSecuritySettings: React.FC<
 > = () => {
   const { userAccountId } = useContext(AuthContext);
   const [loading, setLoading] = useState<boolean>(false);
+  useDocumentTitle("Security");
   const [passwordForm, setPasswordForm] = useState<PasswordForm>(
     DEFAULT_PASSWORD_FORM,
   );
@@ -65,7 +68,7 @@ export const AccountSecuritySettings: React.FC<
       toast.success("Password updated successfully");
       setPasswordForm(DEFAULT_PASSWORD_FORM);
     } catch (e) {
-      toast.error(`${e}`);
+      toast.error(formatApiError(e));
     }
     setLoading(false);
   };

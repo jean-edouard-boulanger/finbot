@@ -1,9 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
+
+import { AuthContext } from "contexts";
 import { ArrowLeft, ArrowRight, Check, Circle } from "lucide-react";
 
 import { useApi, UserAccountsApi } from "clients";
 import { isEmailValid } from "utils/email";
+import { formatApiError } from "utils/errors";
+import { useDocumentTitle } from "hooks/use-document-title";
 
 import { toast } from "sonner";
 import { FinbotMark, LoadingButton } from "components";
@@ -157,6 +161,8 @@ const PasswordRulesList: React.FC<{ validation: PasswordValidationResult }> = ({
 
 export const SignupForm: React.FC<Record<string, never>> = () => {
   const userAccountsApi = useApi(UserAccountsApi);
+  const { login } = useContext(AuthContext);
+  useDocumentTitle("Create account");
   const [registrationForm, setRegistrationForm] = useState<RegistrationForm>(
     DEFAULT_REGISTRATION_FORM,
   );
@@ -205,6 +211,26 @@ export const SignupForm: React.FC<Record<string, never>> = () => {
     }
   };
 
+  const handlePersonalSubmit = async (
+    event: React.FormEvent<HTMLFormElement>,
+  ) => {
+    event.preventDefault();
+    if (!personalFormValidation.valid) {
+      return;
+    }
+    await handleNextFromPersonal();
+  };
+
+  const handlePasswordSubmit = async (
+    event: React.FormEvent<HTMLFormElement>,
+  ) => {
+    event.preventDefault();
+    if (!passwordValidation.valid || loading) {
+      return;
+    }
+    await handleSignup({ ...registrationForm });
+  };
+
   const handleSignup = async (form: RegistrationForm) => {
     try {
       setLoading(true);
@@ -218,14 +244,18 @@ export const SignupForm: React.FC<Record<string, never>> = () => {
           },
         },
       });
-      setLoading(false);
-      setRegistered(true);
-      toast.success(
-        `You have successfully signed up to finbot. You may now sign into your account`,
-      );
     } catch (e) {
       setLoading(false);
-      toast.error(`${e}`);
+      toast.error(formatApiError(e));
+      return;
+    }
+    try {
+      await login!({ email: form.email, password: form.password });
+      toast.success("Welcome to finbot!");
+    } catch {
+      setLoading(false);
+      toast.success("Account created. Please sign in.");
+      setRegistered(true);
     }
   };
 
@@ -270,7 +300,7 @@ export const SignupForm: React.FC<Record<string, never>> = () => {
           </CardHeader>
           <CardContent>
             {step === "personal" && (
-              <div className="space-y-4">
+              <form onSubmit={handlePersonalSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="fullName">Full name</Label>
                   <ValidatedInput
@@ -316,19 +346,18 @@ export const SignupForm: React.FC<Record<string, never>> = () => {
                   </Select>
                 </div>
                 <Button
-                  type="button"
+                  type="submit"
                   className="w-full"
                   disabled={!personalFormValidation.valid}
-                  onClick={handleNextFromPersonal}
                 >
                   Continue
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
-              </div>
+              </form>
             )}
 
             {step === "password" && (
-              <div className="space-y-4">
+              <form onSubmit={handlePasswordSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
                   <Input
@@ -361,16 +390,15 @@ export const SignupForm: React.FC<Record<string, never>> = () => {
                     Back
                   </Button>
                   <LoadingButton
-                    type="button"
+                    type="submit"
                     className="flex-1"
                     disabled={!passwordValidation.valid || loading}
-                    onClick={() => handleSignup({ ...registrationForm })}
                     loading={loading}
                   >
                     Create account
                   </LoadingButton>
                 </div>
-              </div>
+              </form>
             )}
           </CardContent>
         </Card>

@@ -24,6 +24,7 @@ import {
   SheetTitle,
 } from "components/ui/sheet";
 import { LinkAccount } from "routes/settings/link-account";
+import { useDocumentTitle } from "hooks/use-document-title";
 
 export interface WelcomeProps {}
 
@@ -52,6 +53,7 @@ const ValueProp: React.FC<ValuePropProps> = ({
 export const Welcome: React.FC<WelcomeProps> = () => {
   const navigate = useNavigate();
   const [sheetOpen, setSheetOpen] = useState(false);
+  useDocumentTitle("Welcome");
 
   const handleLinked = () => {
     setSheetOpen(false);

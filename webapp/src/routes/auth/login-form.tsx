@@ -1,12 +1,12 @@
 import React, { useContext, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 import { AuthContext } from "contexts";
 
-import { LoadingButton } from "components";
+import { FinbotMark, LoadingButton } from "components";
 import { Credentials } from "contexts/auth";
-import { Card, CardContent, CardHeader, CardTitle } from "components/ui/card";
-import { Button } from "components/ui/button";
+import { useDocumentTitle } from "hooks/use-document-title";
+import { Card, CardContent } from "components/ui/card";
 import { Label } from "components/ui/label";
 import { Alert, AlertDescription } from "components/ui/alert";
 import { Formik, Form as MetaForm, Field, ErrorMessage } from "formik";
@@ -21,9 +21,9 @@ const CREDENTIALS_SCHEMA = Yup.object().shape({
 });
 
 export const LoginForm: React.FC<LoginFormProps> = () => {
-  const navigate = useNavigate();
   const { login } = useContext(AuthContext);
   const [loginError, setLoginError] = useState<string | null>(null);
+  useDocumentTitle("Sign in");
 
   const handleSubmit = async (
     values: Credentials,
@@ -40,28 +40,43 @@ export const LoginForm: React.FC<LoginFormProps> = () => {
   return (
     <div className="mt-10 flex justify-center">
       <div className="w-full max-w-md">
+        <div className="mb-6 flex flex-col items-center text-center">
+          <div className="flex items-center gap-2 text-primary">
+            <FinbotMark className="h-9 w-9" />
+            <span className="text-2xl font-semibold tracking-tight text-foreground">
+              finbot
+            </span>
+          </div>
+          <h1 className="mt-4 text-2xl font-semibold tracking-tight">
+            Sign in
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Welcome back.
+          </p>
+        </div>
+
         {loginError && (
           <Alert variant="destructive" className="mb-4">
             <AlertDescription>Invalid email or password</AlertDescription>
           </Alert>
         )}
+
         <Card>
-          <CardHeader>
-            <CardTitle>Sign-in</CardTitle>
-          </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <Formik
               initialValues={{ email: "", password: "" }}
               validationSchema={CREDENTIALS_SCHEMA}
               onSubmit={handleSubmit}
             >
-              {({ isSubmitting, submitForm }) => (
+              {({ isSubmitting }) => (
                 <MetaForm>
                   <div className="mb-4 space-y-2">
-                    <Label>Email address</Label>
+                    <Label htmlFor="email">Email address</Label>
                     <Field
+                      id="email"
                       type="text"
                       name="email"
+                      autoFocus
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     />
                     <ErrorMessage
@@ -71,8 +86,9 @@ export const LoginForm: React.FC<LoginFormProps> = () => {
                     />
                   </div>
                   <div className="mb-4 space-y-2">
-                    <Label>Password</Label>
+                    <Label htmlFor="password">Password</Label>
                     <Field
+                      id="password"
                       type="password"
                       name="password"
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
@@ -83,29 +99,29 @@ export const LoginForm: React.FC<LoginFormProps> = () => {
                       component="div"
                     />
                   </div>
-                  <div className="flex items-center gap-2">
-                    <LoadingButton
-                      loading={isSubmitting}
-                      onClick={() => {
-                        setLoginError(null);
-                        submitForm();
-                      }}
-                    >
-                      Sign-in
-                    </LoadingButton>
-                    <Button
-                      type="button"
-                      variant="link"
-                      onClick={() => navigate("/signup")}
-                    >
-                      Register
-                    </Button>
-                  </div>
+                  <LoadingButton
+                    type="submit"
+                    className="w-full"
+                    loading={isSubmitting}
+                    onClick={() => setLoginError(null)}
+                  >
+                    Sign in
+                  </LoadingButton>
                 </MetaForm>
               )}
             </Formik>
           </CardContent>
         </Card>
+
+        <div className="mt-4 text-center text-sm text-muted-foreground">
+          Don&apos;t have an account?{" "}
+          <Link
+            to="/signup"
+            className="text-primary underline underline-offset-4 hover:text-primary/80"
+          >
+            Register
+          </Link>
+        </div>
       </div>
     </div>
   );

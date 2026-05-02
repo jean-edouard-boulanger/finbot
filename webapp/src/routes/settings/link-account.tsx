@@ -15,6 +15,7 @@ import {
 } from "clients";
 import { AuthContext } from "contexts";
 import { LoadingButton, ColourPicker } from "components";
+import { formatApiError } from "utils/errors";
 
 import { withTheme } from "@rjsf/core";
 import type { IChangeEvent } from "@rjsf/core";
@@ -269,7 +270,7 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
       setLinkedAccount({ ...linkedAccount!, ...updatedProps });
       toast.success(`Linked account updated`);
     } catch (e) {
-      toast.error(`Failed to update account: '${e}'`);
+      toast.error(`Failed to update account: ${formatApiError(e)}`);
     }
   };
 
@@ -288,7 +289,7 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
         },
       });
     } catch (e) {
-      toast.error(`Error validating credentials: ${e}`);
+      toast.error(`Error validating credentials: ${formatApiError(e)}`);
       setOperation(null);
       return;
     }
@@ -309,7 +310,7 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
         }' updated`,
       );
     } catch (e) {
-      toast.error(`Error updating credentials: ${e}`);
+      toast.error(`Error updating credentials: ${formatApiError(e)}`);
     }
     setOperation(null);
   };
@@ -333,7 +334,7 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
         linkAccountRequest: linkRequest,
       });
     } catch (e) {
-      toast.error(`Error validating credentials: ${e}`);
+      toast.error(`Error validating credentials: ${formatApiError(e)}`);
       setOperation(null);
       return;
     }
@@ -346,8 +347,7 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
         linkAccountRequest: linkRequest,
       });
     } catch (e) {
-      const message = e instanceof Error ? e.message : String(e);
-      toast.error(`Could not link account: ${message}`);
+      toast.error(`Could not link account: ${formatApiError(e)}`);
       setOperation(null);
       return;
     }

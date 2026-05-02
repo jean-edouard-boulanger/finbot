@@ -259,17 +259,6 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({
     fetch();
   }, [linkedAccountsValuationApi, userAccountId]);
 
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        setChatOpen((prev) => !prev);
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, []);
-
   return (
     <div className="flex min-h-screen">
       {/* Desktop sidebar */}
