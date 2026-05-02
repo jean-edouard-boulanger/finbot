@@ -17,6 +17,7 @@ import {
 } from "clients";
 
 import { Money, TreeGrid } from "components";
+import { useDocumentTitle } from "hooks/use-document-title";
 import { defaultMoneyFormatter } from "components/money";
 import { ChartTooltipContent } from "components/ui/chart";
 import { Alert, AlertTitle, AlertDescription } from "components/ui/alert";
@@ -121,6 +122,7 @@ export const LinkedAccountDashboard: React.FC = () => {
   const [holdingsTree, setHoldingsTree] = useState<ValuationTree | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  useDocumentTitle(linkedAccount?.accountName ?? "Account");
 
   useEffect(() => {
     setLoading(true);
@@ -405,7 +407,7 @@ export const LinkedAccountDashboard: React.FC = () => {
                       </ResponsiveContainer>
                     </div>
                     <div
-                      className="flex min-w-0 flex-1 flex-col gap-2 overflow-y-auto"
+                      className="scrollbar-subtle flex min-w-0 flex-1 flex-col gap-2 overflow-y-auto"
                       style={{ maxHeight: 240 }}
                     >
                       {subAccountPieData.map((entry, i) => {

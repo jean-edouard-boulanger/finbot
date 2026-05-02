@@ -3,6 +3,7 @@ import React, { useContext } from "react";
 import { ThemeContext, Theme } from "contexts";
 import { Separator } from "components/ui/separator";
 import { cn } from "lib/utils";
+import { useDocumentTitle } from "hooks/use-document-title";
 
 interface ThemeCardProps {
   label: string;
@@ -63,6 +64,7 @@ const ThemeCard: React.FC<ThemeCardProps> = ({
 
 export const AppearanceSettings: React.FC = () => {
   const { theme, setTheme } = useContext(ThemeContext);
+  useDocumentTitle("Appearance");
 
   return (
     <>

@@ -31,6 +31,7 @@ import {
   SheetTitle,
 } from "components/ui/sheet";
 import { ChatDrawer, ChatLauncherButton } from "components/chat-drawer";
+import { FinbotMark } from "components/finbot-mark";
 import { cn } from "lib/utils";
 
 function SidebarNavItem({
@@ -162,9 +163,10 @@ function SidebarContent({
       <div className="flex items-center gap-2 px-4 py-4">
         <NavLink
           to="/dashboard"
-          className="text-lg font-semibold tracking-tight text-foreground"
+          className="flex items-center gap-2 text-lg font-semibold tracking-tight text-foreground"
           onClick={onNavigate}
         >
+          <FinbotMark className="h-6 w-6 text-primary" />
           Finbot
         </NavLink>
         <SystemStatusBadge />
@@ -257,17 +259,6 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({
     fetch();
   }, [linkedAccountsValuationApi, userAccountId]);
 
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        setChatOpen((prev) => !prev);
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, []);
-
   return (
     <div className="flex min-h-screen">
       {/* Desktop sidebar */}
@@ -295,8 +286,9 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({
         </Sheet>
         <NavLink
           to="/dashboard"
-          className="text-lg font-semibold tracking-tight text-foreground"
+          className="flex items-center gap-2 text-lg font-semibold tracking-tight text-foreground"
         >
+          <FinbotMark className="h-6 w-6 text-primary" />
           Finbot
         </NavLink>
         <SystemStatusBadge />

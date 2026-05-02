@@ -232,7 +232,7 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
             </div>
             {showLegend && (
               <div
-                className="flex min-w-0 flex-1 flex-col gap-2 overflow-y-auto"
+                className="scrollbar-subtle flex min-w-0 flex-1 flex-col gap-2 overflow-y-auto"
                 style={{ maxHeight: 240 }}
               >
                 {pieData.map((entry, i) => {

@@ -1,6 +1,12 @@
 import React, { useContext, useState, useEffect, useRef } from "react";
 
-import AceEditor from "react-ace";
+import ReactAce from "react-ace";
+// Vite 8 + @vitejs/plugin-react 6 do not unwrap react-ace's CJS default
+// export, so the bare `import` resolves to the module namespace object at
+// runtime. Pull `.default` off if it's there, otherwise use the value as-is.
+const AceEditor: typeof ReactAce =
+  (ReactAce as unknown as { default?: typeof ReactAce }).default ?? ReactAce;
+type AceEditor = ReactAce;
 import { useApi, FinancialDataProvidersApi } from "clients";
 import { ThemeContext } from "contexts";
 import { withTheme } from "@rjsf/core";
@@ -11,6 +17,8 @@ import { LoadingButton } from "components";
 import { Formik, Form as MetaForm, Field, ErrorMessage } from "formik";
 import { ProviderSelector } from "./components";
 import { toast } from "sonner";
+import { formatApiError } from "utils/errors";
+import { useDocumentTitle } from "hooks/use-document-title";
 
 import { Button } from "components/ui/button";
 import { Label } from "components/ui/label";
@@ -133,7 +141,7 @@ export const EditProviderPanel: React.FC<Record<string, never>> = () => {
       toast.success(`Provider '${provider.id}' has been saved`);
     } catch (e) {
       setSubmitting(false);
-      toast.error(`Could not save provider: ${e}`);
+      toast.error(`Could not save provider: ${formatApiError(e)}`);
     }
   };
 
@@ -147,7 +155,7 @@ export const EditProviderPanel: React.FC<Record<string, never>> = () => {
         toast.success(`Provider '${providerId}' has been deleted`);
       }
     } catch (e) {
-      toast.error(`Could not delete provider: ${e}`);
+      toast.error(`Could not delete provider: ${formatApiError(e)}`);
     }
   };
 
@@ -329,5 +337,6 @@ export const EditProviderPanel: React.FC<Record<string, never>> = () => {
 };
 
 export const ProvidersSettings: React.FC<Record<string, never>> = () => {
+  useDocumentTitle("Providers");
   return <EditProviderPanel />;
 };
