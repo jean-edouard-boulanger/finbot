@@ -11,6 +11,7 @@ import { ValuationChange, RelativeValuationChange } from "./valuation-change";
 import { PasswordValidationCard } from "./password";
 import { ColourPicker } from "./colour-picker";
 import { FinbotMark } from "./finbot-mark";
+import { DateRangeFilter } from "./date-range-filter";
 
 export {
   AppShell,
@@ -28,4 +29,5 @@ export {
   PasswordValidationCard,
   ColourPicker,
   FinbotMark,
+  DateRangeFilter,
 };

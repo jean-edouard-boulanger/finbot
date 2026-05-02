@@ -180,8 +180,7 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
               size="xs"
               className="border-border/50 bg-secondary/50 text-xs font-medium tracking-wide text-muted-foreground hover:text-foreground"
             >
-              BY {aggregationMode.toUpperCase()}{" "}
-              <ChevronDown className="ml-1 h-3 w-3" />
+              By {aggregationMode} <ChevronDown className="ml-1 h-3 w-3" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
@@ -193,7 +192,7 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
                 }
                 onClick={() => setAggregationMode(mode)}
               >
-                BY {mode.toUpperCase()}
+                By {mode}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
