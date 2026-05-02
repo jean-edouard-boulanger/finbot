@@ -146,9 +146,7 @@ const PasswordRulesList: React.FC<{ validation: PasswordValidationResult }> = ({
           <Circle className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
         )}
         <span
-          className={
-            rule.valid ? "text-foreground" : "text-muted-foreground"
-          }
+          className={rule.valid ? "text-foreground" : "text-muted-foreground"}
         >
           {rule.description}
         </span>

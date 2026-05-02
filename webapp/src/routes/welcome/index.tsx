@@ -12,7 +12,6 @@ import { FinbotMark } from "components";
 import { Button } from "components/ui/button";
 import {
   Card,
-  CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
@@ -34,7 +33,11 @@ interface ValuePropProps {
   description: string;
 }
 
-const ValueProp: React.FC<ValuePropProps> = ({ icon: Icon, title, description }) => (
+const ValueProp: React.FC<ValuePropProps> = ({
+  icon: Icon,
+  title,
+  description,
+}) => (
   <Card>
     <CardHeader className="pb-3">
       <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary/10 text-primary">
@@ -116,7 +119,8 @@ export const Welcome: React.FC<WelcomeProps> = () => {
           <SheetHeader>
             <SheetTitle>Link your first account</SheetTitle>
             <SheetDescription>
-              Connect a financial data provider to start tracking your portfolio.
+              Connect a financial data provider to start tracking your
+              portfolio.
             </SheetDescription>
           </SheetHeader>
           <div className="mt-6">
