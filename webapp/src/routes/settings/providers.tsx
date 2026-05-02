@@ -5,7 +5,7 @@ import ReactAce from "react-ace";
 // export, so the bare `import` resolves to the module namespace object at
 // runtime. Pull `.default` off if it's there, otherwise use the value as-is.
 const AceEditor: typeof ReactAce =
-  ((ReactAce as unknown) as { default?: typeof ReactAce }).default ?? ReactAce;
+  (ReactAce as unknown as { default?: typeof ReactAce }).default ?? ReactAce;
 type AceEditor = ReactAce;
 import { useApi, FinancialDataProvidersApi } from "clients";
 import { ThemeContext } from "contexts";
