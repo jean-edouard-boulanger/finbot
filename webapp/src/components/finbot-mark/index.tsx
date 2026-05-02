@@ -25,14 +25,9 @@ export const FinbotMark: React.FC<FinbotMarkProps> = (props) => {
         strokeOpacity="0.35"
         strokeWidth="2"
       />
-      <path
-        d="M14 45 C 22 43, 26 30, 32 28 S 44 21, 50 15"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="4"
-        strokeLinecap="round"
-      />
-      <circle cx="50" cy="15" r="3.5" fill="currentColor" />
+      <rect x="17" y="36" width="8" height="14" rx="2" fill="currentColor" />
+      <rect x="28" y="28" width="8" height="22" rx="2" fill="currentColor" />
+      <rect x="39" y="18" width="8" height="32" rx="2" fill="currentColor" />
     </svg>
   );
 };
