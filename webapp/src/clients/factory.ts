@@ -81,7 +81,11 @@ const appMiddleware: Middleware = {
       return;
     }
     if (payload && "error" in payload) {
-      throw new Error(payload.error.user_message);
+      const message =
+        typeof payload.error === "string"
+          ? payload.error
+          : payload.error?.user_message;
+      throw new Error(message);
     }
   },
 };

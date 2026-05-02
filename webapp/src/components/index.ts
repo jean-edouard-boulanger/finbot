@@ -10,6 +10,7 @@ import { TreeGrid } from "./tree-grid";
 import { ValuationChange, RelativeValuationChange } from "./valuation-change";
 import { PasswordValidationCard } from "./password";
 import { ColourPicker } from "./colour-picker";
+import { FinbotMark } from "./finbot-mark";
 
 export {
   AppShell,
@@ -26,4 +27,5 @@ export {
   RelativeValuationChange,
   PasswordValidationCard,
   ColourPicker,
+  FinbotMark,
 };

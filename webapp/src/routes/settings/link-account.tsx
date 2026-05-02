@@ -215,6 +215,12 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
     }
   }, [formattingRules, accountColour]);
 
+  useEffect(() => {
+    if (linked && props.onSuccess) {
+      props.onSuccess();
+    }
+  }, [linked]);
+
   const updateAccountName = (newName: string) => {
     setAccountName(newName);
     accountNameRef.current = newName;
@@ -340,7 +346,8 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
         linkAccountRequest: linkRequest,
       });
     } catch (e) {
-      toast.error(`Error updating credentials: ${e}`);
+      const message = e instanceof Error ? e.message : String(e);
+      toast.error(`Could not link account: ${message}`);
       setOperation(null);
       return;
     }
@@ -350,7 +357,6 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
 
   if (linked) {
     if (props.onSuccess) {
-      props.onSuccess();
       return null;
     }
     return <Navigate to={"/settings/linked"} />;
@@ -420,6 +426,7 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
           <h5 className="font-medium">Credentials</h5>
           {!isPlaidSelected(selectedProvider) && (
             <DataDrivenAccountForm
+              key={selectedProvider.id}
               operation={operation}
               schema={selectedProvider.credentialsSchema}
               updateMode={updateMode}

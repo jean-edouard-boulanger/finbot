@@ -93,7 +93,11 @@ export const LoginForm: React.FC<LoginFormProps> = () => {
                     >
                       Sign-in
                     </LoadingButton>
-                    <Button variant="link" onClick={() => navigate("/signup")}>
+                    <Button
+                      type="button"
+                      variant="link"
+                      onClick={() => navigate("/signup")}
+                    >
                       Register
                     </Button>
                   </div>

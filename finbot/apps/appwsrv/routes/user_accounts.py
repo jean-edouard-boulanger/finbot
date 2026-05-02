@@ -38,6 +38,17 @@ def create_user_account(
 
 
 @router.get(
+    "/email_available/",
+    operation_id="is_email_available",
+)
+def is_email_available(
+    query: Annotated[appwsrv_schema.IsEmailAvailableRequestParams, Query()],
+) -> appwsrv_schema.IsEmailAvailableResponse:
+    user_account = repository.find_user_account_by_email(db.session, query.email)
+    return appwsrv_schema.IsEmailAvailableResponse(available=user_account is None)
+
+
+@router.get(
     "/{user_account_id}/",
     operation_id="get_user_account",
 )
@@ -119,14 +130,3 @@ def is_user_account_configured(
     account = repository.get_user_account(db.session, user_account_id)
     configured = len(account.linked_accounts) > 0
     return appwsrv_schema.IsUserAccountConfiguredResponse(configured=configured)
-
-
-@router.get(
-    "/email_available/",
-    operation_id="is_email_available",
-)
-def is_email_available(
-    query: Annotated[appwsrv_schema.IsEmailAvailableRequestParams, Query()],
-) -> appwsrv_schema.IsEmailAvailableResponse:
-    user_account = repository.find_user_account_by_email(db.session, query.email)
-    return appwsrv_schema.IsEmailAvailableResponse(available=user_account is None)
