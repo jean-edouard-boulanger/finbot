@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "components/ui/dropdown-menu";
 import { Button } from "components/ui/button";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Sigma } from "lucide-react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { ChartTooltipContent } from "components/ui/chart";
 import { MoneyFormatterType } from "components/money";
@@ -180,6 +180,7 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
               size="xs"
               className="border-border/50 bg-secondary/50 text-xs font-medium tracking-wide text-muted-foreground hover:text-foreground"
             >
+              <Sigma className="mr-1 h-3 w-3" />
               By {aggregationMode} <ChevronDown className="ml-1 h-3 w-3" />
             </Button>
           </DropdownMenuTrigger>

@@ -24,7 +24,7 @@ import {
   CartesianGrid,
 } from "recharts";
 import { ChartTooltipContent } from "components/ui/chart";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Clock } from "lucide-react";
 import { DateTime } from "luxon";
 
 interface CashFlowTimeSeriesEntry {
@@ -129,6 +129,7 @@ export const CashFlowPanel: React.FC<CashFlowPanelProps> = (props) => {
                 size="xs"
                 className="border-border/50 bg-secondary/50 text-xs font-medium tracking-wide text-muted-foreground hover:text-foreground"
               >
+                <Clock className="mr-1 h-3 w-3" />
                 {selectedFrequency} <ChevronDown className="ml-1 h-3 w-3" />
               </Button>
             </DropdownMenuTrigger>
@@ -156,61 +157,73 @@ export const CashFlowPanel: React.FC<CashFlowPanelProps> = (props) => {
           />
         </div>
       </CardHeader>
-      <CardContent>
-        {loading || !data ? (
-          <div className="skeleton-shimmer h-[300px] rounded" />
+      <CardContent className="h-[300px] overflow-hidden">
+        {!data ? (
+          <div className="skeleton-shimmer h-full rounded" />
         ) : !hasData ? (
-          <div className="flex h-[300px] items-center justify-center text-sm text-muted-foreground">
+          <div
+            className={`flex h-full items-center justify-center text-sm text-muted-foreground transition-opacity ${loading ? "opacity-60" : ""}`}
+          >
             No cash flow data available yet.
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart
-              data={data.entries}
-              margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-            >
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="hsl(var(--border))"
-                opacity={0.3}
-              />
-              <XAxis
-                dataKey="period"
-                tick={{ fontSize: 11 }}
-                stroke="hsl(var(--muted-foreground))"
-                tickLine={false}
-                axisLine={false}
-              />
-              <YAxis
-                tick={{ fontSize: 11 }}
-                stroke="hsl(var(--muted-foreground))"
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={(v: number) =>
-                  moneyFormatter(v, locale, data.valuation_ccy)
-                }
-              />
-              <Tooltip
-                content={<ChartTooltipContent />}
-                cursor={{ fill: "hsl(var(--muted))", opacity: 0.3 }}
-              />
-              <ReferenceLine y={0} stroke="hsl(var(--border))" />
-              <Bar
-                dataKey="inflows"
-                name="Inflows"
-                fill="hsl(var(--gain))"
-                radius={[2, 2, 0, 0]}
-                maxBarSize={20}
-              />
-              <Bar
-                dataKey="outflows"
-                name="Outflows"
-                fill="hsl(var(--loss))"
-                radius={[0, 0, 2, 2]}
-                maxBarSize={20}
-              />
-            </BarChart>
-          </ResponsiveContainer>
+          <div
+            className={`h-full transition-opacity ${loading ? "opacity-60" : ""}`}
+          >
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart
+                data={data.entries}
+                margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+              >
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="hsl(var(--border))"
+                  opacity={0.3}
+                />
+                <XAxis
+                  dataKey="period"
+                  tick={{ fontSize: 11 }}
+                  stroke="hsl(var(--muted-foreground))"
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 11 }}
+                  stroke="hsl(var(--muted-foreground))"
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(v: number) =>
+                    moneyFormatter(v, locale, data.valuation_ccy)
+                  }
+                />
+                <Tooltip
+                  content={
+                    <ChartTooltipContent
+                      formatter={(v) =>
+                        moneyFormatter(v, locale, data.valuation_ccy)
+                      }
+                    />
+                  }
+                  cursor={{ fill: "hsl(var(--muted))", opacity: 0.3 }}
+                />
+                <ReferenceLine y={0} stroke="hsl(var(--border))" />
+                <Bar
+                  dataKey="inflows"
+                  name="Inflows"
+                  fill="hsl(var(--gain))"
+                  radius={[2, 2, 0, 0]}
+                  maxBarSize={20}
+                />
+                <Bar
+                  dataKey="outflows"
+                  name="Outflows"
+                  fill="hsl(var(--loss))"
+                  radius={[0, 0, 2, 2]}
+                  maxBarSize={20}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         )}
       </CardContent>
     </Card>

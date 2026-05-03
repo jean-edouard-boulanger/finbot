@@ -146,15 +146,19 @@ export const SpendingBreakdownPanel: React.FC<SpendingBreakdownPanelProps> = (
           allowAllTime
         />
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col">
-        {loading || !data ? (
-          <div className="skeleton-shimmer h-[300px] rounded flex-1" />
+      <CardContent className="h-[300px] overflow-hidden">
+        {!data ? (
+          <div className="skeleton-shimmer h-full rounded" />
         ) : !hasData ? (
-          <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
+          <div
+            className={`flex h-full items-center justify-center text-sm text-muted-foreground transition-opacity ${loading ? "opacity-60" : ""}`}
+          >
             No spending data available yet.
           </div>
         ) : (
-          <div className="flex items-center gap-4">
+          <div
+            className={`flex h-full items-center gap-4 transition-opacity ${loading ? "opacity-60" : ""}`}
+          >
             <ResponsiveContainer width="60%" height={280}>
               <PieChart>
                 <Pie
@@ -174,7 +178,15 @@ export const SpendingBreakdownPanel: React.FC<SpendingBreakdownPanelProps> = (
                     <Cell key={index} fill={entry.fill} />
                   ))}
                 </Pie>
-                <Tooltip content={<ChartTooltipContent />} />
+                <Tooltip
+                  content={
+                    <ChartTooltipContent
+                      formatter={(v) =>
+                        moneyFormatter(v, locale, data.valuation_ccy)
+                      }
+                    />
+                  }
+                />
               </PieChart>
             </ResponsiveContainer>
             <div className="flex flex-1 flex-col gap-1.5">

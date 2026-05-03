@@ -88,7 +88,7 @@ export const SubscriptionsPanel: React.FC<SubscriptionsPanelProps> = (
   }
 
   return (
-    <Card className="flex h-full max-h-[420px] flex-col border-border/50">
+    <Card className="flex h-full flex-col border-border/50">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div className="flex items-center gap-2 text-muted-foreground">
           <Repeat className="h-4 w-4" />
@@ -102,7 +102,7 @@ export const SubscriptionsPanel: React.FC<SubscriptionsPanelProps> = (
           </span>
         )}
       </CardHeader>
-      <CardContent className="flex min-h-0 flex-1 flex-col">
+      <CardContent className="flex h-[300px] min-h-0 flex-col overflow-hidden">
         {loading || !data ? (
           <div className="skeleton-shimmer h-[300px] flex-1 rounded" />
         ) : data.subscriptions.length === 0 ? (
