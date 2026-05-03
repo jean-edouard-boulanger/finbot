@@ -39,13 +39,15 @@ const SystemStatusBadge: React.FC<Record<string, never>> = () => {
   }, [systemApi]);
 
   useEffect(() => {
-    if (userAccountId === null) {
+    if (userAccountId === null || userAccountId === undefined) {
       setAccountIsDemo(false);
       return;
     }
     (async () => {
       try {
-        const result = await userAccountsApi.getUserAccount({ userAccountId });
+        const result = await userAccountsApi.getUserAccount({
+          userAccountId: userAccountId!,
+        });
         setAccountIsDemo(result.userAccount.isDemo);
       } catch {
         setAccountIsDemo(false);
