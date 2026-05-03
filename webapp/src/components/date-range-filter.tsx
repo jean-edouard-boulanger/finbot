@@ -225,6 +225,7 @@ export const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
       size="xs"
       className="border-border/50 bg-secondary/50 text-xs font-medium tracking-wide text-muted-foreground hover:text-foreground"
     >
+      <Calendar className="mr-1 h-3 w-3" />
       {triggerLabel} <ChevronDown className="ml-1 h-3 w-3" />
     </Button>
   ) : (

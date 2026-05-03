@@ -37,7 +37,7 @@ import { MoneyFormatterType } from "components/money";
 import { DateRangeFilter } from "components/date-range-filter";
 
 import { DateTime } from "luxon";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Sigma, Clock, type LucideIcon } from "lucide-react";
 
 type LevelType = "account" | "linked_account" | "asset_type" | "asset_class";
 
@@ -49,7 +49,7 @@ interface LevelChoiceProp {
 const LEVELS: Array<LevelChoiceProp> = [
   {
     type: "account",
-    label: "Overall",
+    label: "Total",
   },
   {
     type: "linked_account",
@@ -79,11 +79,13 @@ const DEFAULT_FREQUENCY = FREQUENCIES[0];
 
 function FilterDropdown({
   label,
+  icon: TriggerIcon,
   items,
   activeKey,
   onSelect,
 }: {
   label: string;
+  icon?: LucideIcon;
   items: { key: string; label: string }[];
   activeKey: string;
   onSelect: (key: string) => void;
@@ -96,6 +98,7 @@ function FilterDropdown({
           size="xs"
           className="border-border/50 bg-secondary/50 text-xs font-medium tracking-wide text-muted-foreground hover:text-foreground"
         >
+          {TriggerIcon && <TriggerIcon className="mr-1 h-3 w-3" />}
           {label} <ChevronDown className="ml-1 h-3 w-3" />
         </Button>
       </DropdownMenuTrigger>
@@ -395,6 +398,7 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
         <div className="flex gap-1">
           <FilterDropdown
             label={selectedLevel.label}
+            icon={Sigma}
             items={availableLevels.map((l) => ({
               key: l.type,
               label: l.label,
@@ -406,6 +410,7 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
           />
           <FilterDropdown
             label={selectedFrequency}
+            icon={Clock}
             items={FREQUENCIES.map((f) => ({ key: f, label: f }))}
             activeKey={selectedFrequency}
             onSelect={setSelectedFrequency}

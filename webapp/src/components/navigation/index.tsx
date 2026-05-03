@@ -4,7 +4,7 @@ import { Menu } from "lucide-react";
 
 import AuthContext from "contexts/auth/auth-context";
 import { useInterval } from "utils/use-interval";
-import { useApi, SystemReport, SystemApi } from "clients";
+import { useApi, SystemReport, SystemApi, UserAccountsApi } from "clients";
 
 import { Badge } from "components/ui/badge";
 import { Button } from "components/ui/button";
@@ -17,9 +17,12 @@ import {
 import { cn } from "lib/utils";
 
 const SystemStatusBadge: React.FC<Record<string, never>> = () => {
+  const { userAccountId } = useContext(AuthContext);
   const systemApi = useApi(SystemApi);
+  const userAccountsApi = useApi(UserAccountsApi);
   const [backendReachable, setBackendReachable] = useState(true);
   const [report, setReport] = useState<SystemReport | null>(null);
+  const [accountIsDemo, setAccountIsDemo] = useState(false);
 
   const updateReport = async () => {
     try {
@@ -35,6 +38,21 @@ const SystemStatusBadge: React.FC<Record<string, never>> = () => {
     updateReport();
   }, [systemApi]);
 
+  useEffect(() => {
+    if (userAccountId === null) {
+      setAccountIsDemo(false);
+      return;
+    }
+    (async () => {
+      try {
+        const result = await userAccountsApi.getUserAccount({ userAccountId });
+        setAccountIsDemo(result.userAccount.isDemo);
+      } catch {
+        setAccountIsDemo(false);
+      }
+    })();
+  }, [userAccountsApi, userAccountId]);
+
   useInterval(async () => {
     updateReport();
   }, 10000);
@@ -43,17 +61,19 @@ const SystemStatusBadge: React.FC<Record<string, never>> = () => {
     return <Badge variant="destructive">BACKEND UNREACHABLE</Badge>;
   }
 
-  if (report?.runtime === "development") {
-    return (
-      <Badge variant="destructive">DEV build v{report!.finbotVersion}</Badge>
-    );
-  }
+  const isDemo = report?.isDemo || accountIsDemo;
 
-  if (report?.isDemo) {
+  if (isDemo) {
     return <Badge>DEMO</Badge>;
   }
 
-  return <></>;
+  if (report?.runtime === "development") {
+    return (
+      <Badge variant="destructive">DEV build v{report.finbotVersion}</Badge>
+    );
+  }
+
+  return null;
 };
 
 function NavItem({ to, children }: { to: string; children: React.ReactNode }) {
