@@ -41,7 +41,7 @@ dev = [
     "ruff==0.15.12",
     "semver==3.0.4",
     "sqlalchemy-stubs<1",
-    "types-cachetools<7",
+    "types-cachetools<8",
     "types-requests==2.33.0.20260408",
     "watchdog[watchmedo]<7",
     "yfinance<1",
