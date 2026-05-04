@@ -18,7 +18,7 @@
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@rjsf/core": "^6.5.1",
-    "@rjsf/utils": "^6.5.1",
+    "@rjsf/utils": "^6.5.2",
     "@rjsf/validator-ajv8": "^6.5.1",
     "@types/luxon": "^3.7.1",
     "@types/node": "^22.18.13",
