@@ -226,7 +226,7 @@ python-jose==3.5.0
     # via finbot (pyproject.toml)
 python-multipart==0.0.27
     # via fastapi
-pytz==2026.1.post1
+pytz==2026.2
     # via dateparser
 pyyaml==6.0.3
     # via uvicorn
