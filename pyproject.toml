@@ -42,7 +42,7 @@ dev = [
     "semver==3.0.4",
     "sqlalchemy-stubs<1",
     "types-cachetools<7",
-    "types-requests==2.33.0.20260408",
+    "types-requests==2.33.0.20260503",
     "watchdog[watchmedo]<7",
     "yfinance<1",
 ]
