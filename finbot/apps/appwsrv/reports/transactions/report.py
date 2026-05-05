@@ -388,7 +388,7 @@ def get_transactions_report(
           LEFT JOIN finbot_merchants m ON th.merchant_id = m.id
           LEFT JOIN finbot_recurring_transaction_groups rg ON rg.id = th.recurring_group_id
          WHERE {where}
-         ORDER BY th.transaction_date DESC
+         ORDER BY th.transaction_date DESC, th.id DESC
          LIMIT :limit OFFSET :offset
     """
 
