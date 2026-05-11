@@ -317,7 +317,7 @@ typing-inspection==0.4.2
     #   pydantic-settings
 tzlocal==5.3.1
     # via dateparser
-urllib3==2.6.3
+urllib3==2.7.0
     # via
     #   plaid-python
     #   requests
