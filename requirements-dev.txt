@@ -121,7 +121,7 @@ httpx==0.28.1
     #   fastapi
     #   fastapi-cloud-cli
     #   openai
-idna==3.13
+idna==3.15
     # via
     #   anyio
     #   email-validator
