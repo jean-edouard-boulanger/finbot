@@ -416,7 +416,7 @@ def _newest_first_response_oldest_date(url: str, payload: Any) -> AwareDatetime 
         if not operations:
             return None
         return datetime.fromtimestamp(operations[-1]["date_operation"] / 1000.0, tz=ZoneInfo("Europe/Paris"))
-    except (KeyError, IndexError, ValueError):
+    except KeyError, IndexError, ValueError:
         return None
 
 
