@@ -3,35 +3,48 @@ import hashlib
 import json
 import logging
 import re
-from copy import deepcopy
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Generator, cast
+from typing import Any, Callable, Generator
 from zoneinfo import ZoneInfo
 
-from playwright.async_api import Locator, Response
 from pydantic import AwareDatetime, SecretStr
 
 from finbot.core.schema import BaseModel, CurrencyCode
 from finbot.providers.errors import AuthenticationError, UnsupportedAccountType
-from finbot.providers.playwright_base import (
-    Condition,
-    ConditionGuard,
-    PlaywrightProviderBase,
-)
+from finbot.providers.playwright_base import PlaywrightProviderBase
 from finbot.providers.schema import (
     Account,
     AccountType,
     Asset,
     Assets,
     AssetsEntry,
+    ProviderSpecificPayloadType,
     Transaction,
     Transactions,
     TransactionType,
 )
 
-BASE_URL = "https://www.credit-agricole.fr/{region}/particulier/acceder-a-mes-comptes.html"
-DASHBOARD_URL = "https://www.credit-agricole.fr/{region}/particulier/operations/synthese.html"
+logger = logging.getLogger(__name__)
+
+# Since the 2026 revamp, the authenticated experience lives on dedicated hosts:
+#  - `espace-client.credit-agricole.fr`: the synthesis SPA + its BFF JSON API
+#  - `client.ca-connect.credit-agricole.fr`: OAuth2 login
+#  - `detail-dav.credit-agricole.fr` / `celc.credit-agricole.fr`: per-account detail
+#    micro-frontends (loaded in an iframe) exposing the transactions endpoints.
+SPACE_URL = "https://espace-client.credit-agricole.fr/{region}/particulier"
+SYNTHESE_URL = "https://espace-client.credit-agricole.fr/{region}/particulier/synthese"
+BFF_BASE_URL = "https://espace-client.credit-agricole.fr/bff/api"
+
+# Account "grandes familles" we know how to handle, mapped to a (tab label, transactions
+# endpoint marker) pair. The endpoint markers identify the responses to intercept in the
+# detail micro-frontend (which lives on a different host loaded inside an iframe).
+SUPPORTED_FAMILIES = ("COMPTES", "EPARGNE")
+IMPUTEES_MARKER = "/operations/imputees"
+EPARGNE_OPERATIONS_MARKER = "/compte_epargne/operations"
+
+# Bounds the number of "load more" interactions per account when collecting transactions.
+_MAX_TRANSACTION_PAGES = 25
 
 
 class Credentials(BaseModel):
@@ -44,6 +57,7 @@ class Credentials(BaseModel):
 class AccountValue:
     account: Account
     account_value: float
+    contract: dict[str, Any]
 
 
 class Api(PlaywrightProviderBase):
@@ -58,80 +72,11 @@ class Api(PlaywrightProviderBase):
     ) -> None:
         super().__init__(user_account_currency=user_account_currency, **kwargs)
         self._credentials = credentials
-        self._account_data = None
-        self._acked_cookie_policy = False
-
-    def _iter_accounts(self) -> Generator[AccountValue, None, None]:
-        def handle_account(data: dict[str, Any]) -> AccountValue:
-            account_type, account_sub_type = _parse_account_type_and_subtype(data)
-            return AccountValue(
-                account=Account(
-                    id=data["numeroCompte"].strip(),
-                    name=data["libelleProduit"].strip(),
-                    iso_currency=data["idDevise"].strip(),
-                    type=account_type,
-                    sub_type=account_sub_type,
-                ),
-                account_value=float(data["solde"]),
-            )
-
-        assert self._account_data is not None
-        yield handle_account(self._account_data["comptePrincipal"])
-        for line_item in self._account_data["grandesFamilles"]:
-            for account_data in line_item["elementsContrats"]:
-                yield handle_account(account_data)
+        self._accounts: list[AccountValue] | None = None
 
     async def initialize(self) -> None:
-        page = self.page
-        await page.goto(BASE_URL.format(region=self._credentials.region))
-        await ConditionGuard(
-            Condition(lambda: page.locator("#loginForm").is_visible()),
-            Condition(
-                lambda: self.get_element_or_none("div.AemBug-content"),
-                when_fulfilled=_handle_auth_error,
-            ),
-        ).wait_any(page)
-
-        # 1. Enter account number
-
-        await page.fill("#Login-account", self._credentials.account_number)
-        await page.click("xpath=//button[@login-submit-btn]")
-        keypad_locator: Locator = await ConditionGuard(
-            Condition(lambda: self.get_element_or_none("#clavier_num")),
-        ).wait(page)
-
-        # 2. Type password and validate
-
-        async def keypad_key_is_ready(key_: Locator) -> bool:
-            return (await key_.inner_text()).strip().isdigit()
-
-        login_keys_by_num = {}
-        for key in await keypad_locator.locator(".Login-key").all():
-            await ConditionGuard(Condition(lambda: keypad_key_is_ready(key))).wait(page)
-            login_keys_by_num[(await key.inner_text()).strip()] = key
-        for digit in self._credentials.password.get_secret_value():
-            await login_keys_by_num[digit].click()
-        await page.click("#validation")
-
-        await ConditionGuard(
-            Condition(lambda: self.get_element_or_none(".Synthesis-user")),
-            Condition(
-                lambda: self.get_element_or_none("#erreur-keypad"),
-                when_fulfilled=_handle_auth_error,
-            ),
-        ).wait_any(page)
-
-        # 2. Get account data
-
-        account_data_str = cast(
-            str,
-            await page.locator("xpath=//div[@data-ng-controller]").get_attribute("data-ng-init"),
-        )[
-            len(
-                "syntheseController.init("
-            ) : -1  # noqa
-        ]
-        self._account_data = json.loads("[" + account_data_str + "]")[0]
+        await self._login()
+        self._accounts = await self._fetch_accounts()
 
     async def get_accounts(self) -> list[Account]:
         return [entry.account for entry in self._iter_accounts()]
@@ -154,67 +99,212 @@ class Api(PlaywrightProviderBase):
         )
 
     async def get_transactions(self, from_date: AwareDatetime | None = None) -> Transactions:
-        accounts_by_id = {account.id: account for account in await self.get_accounts()}
-        done_accounts = set()
-        collected_transactions = []
-        while True:
-            await self._goto_dashboard()
-            await asyncio.sleep(5.0)
-            raw_main_account_id = (
-                await self.page.locator("div.SynthesisMainAccount-headMainDescriptionItem--number").text_content() or ""
-            ).strip()
-            main_account_id = _extract_account_number(raw_main_account_id)
-            main_account = accounts_by_id.get(main_account_id) if main_account_id else None
-            other_account_navs: list[tuple[Account, Locator]] = []
-            other_account_links = await self.page.locator("a.npc-sn1-produit-meteo").all()
-            for other_account_link in other_account_links:
-                if account_number := _extract_account_number(await other_account_link.text_content() or ""):
-                    if account := accounts_by_id.get(account_number):
-                        other_account_navs.append((account, other_account_link))
-            nav, account = None, None
-            if main_account_id and main_account and main_account_id not in done_accounts:
-                nav, account = self.page.locator("div.SynthesisMainAccount-head"), main_account
-            else:
-                for other_account, other_account_nav in other_account_navs:
-                    if other_account.id not in done_accounts:
-                        nav, account = other_account_nav, other_account
-                        break
-            if not account:
-                break
-            assert nav
-            logging.info(f"collecting transactions for account '{account.id}' ({account.name})")
-            async with self.page.expect_response(
-                lambda r: (
-                    ("bff/operations/imputees" in r.url or "bff/api/compte_epargne/operations" in r.url)
-                    and r.status == 200
-                ),
-                timeout=30000,
-            ) as response_info:
-                await nav.click()
-            response = await response_info.value
-            collected_transactions.extend(await _parse_transactions(response, account))
-            done_accounts.add(account.id)
+        collected: dict[str, Transaction] = {}
+        for entry in self._iter_accounts():
+            logger.info(f"collecting transactions for account '{entry.account.id}' ({entry.account.name})")
+            for transaction in await self._collect_account_transactions(entry, from_date):
+                collected[transaction.transaction_id] = transaction
         return Transactions(
             transactions=sorted(
-                (t for t in collected_transactions if not from_date or t.transaction_date >= from_date),
-                key=lambda t: t.transaction_date,
+                (t for t in collected.values() if not from_date or t.transaction_date >= from_date),
+                key=lambda t: (t.transaction_date, t.transaction_id),
             )
         )
 
-    async def _goto_dashboard(self) -> None:
-        await self.page.goto(DASHBOARD_URL.format(region=self._credentials.region))
-        if not self._acked_cookie_policy:
-            await self.page.click("#popin_tc_privacy_button_3")
-            self._acked_cookie_policy = True
+    def _iter_accounts(self) -> Generator[AccountValue, None, None]:
+        assert self._accounts is not None
+        yield from self._accounts
+
+    async def _login(self) -> None:
+        page = self.page
+        await page.goto(SPACE_URL.format(region=self._credentials.region))
+
+        # 1. Enter the identifiant (account number) and validate.
+        identifiant = page.get_by_role("textbox", name=re.compile("identifiant", re.IGNORECASE))
+        try:
+            await identifiant.wait_for(state="visible", timeout=30000)
+        except Exception as e:
+            raise AuthenticationError("could not reach the Credit Agricole login page") from e
+        await identifiant.fill(self._credentials.account_number)
+        await page.get_by_role("button", name=re.compile("valider", re.IGNORECASE)).click()
+
+        # 2. Solve the secure keypad: each button's accessible name is the digit it
+        #    types (the layout is shuffled per session, but the labels are readable).
+        try:
+            await page.get_by_role("heading", name=re.compile("code personnel", re.IGNORECASE)).wait_for(
+                state="visible", timeout=30000
+            )
+        except Exception as e:
+            raise AuthenticationError("invalid identifiant or unexpected login page") from e
+        for digit in self._credentials.password.get_secret_value():
+            await page.get_by_role("button", name=digit, exact=True).click()
+        await page.get_by_role("button", name=re.compile("connecter", re.IGNORECASE)).last.click()
+
+        # 3. The successful login redirects (via OAuth) to the synthesis page.
+        try:
+            await page.wait_for_url(re.compile(r"/synthese"), timeout=60000)
+        except Exception as e:
+            raise AuthenticationError("authentication failed (wrong code personnel?)") from e
+
+        await self._dismiss_cookie_banner()
+
+    async def _dismiss_cookie_banner(self) -> None:
+        """The synthesis page shows a TrustCommander consent overlay that intercepts
+        pointer events until dismissed. Accepting once sets a cookie for the session."""
+        overlay = self.page.locator("#privacy-overlay")
+        try:
+            await overlay.wait_for(state="visible", timeout=4000)
+        except Exception:
+            return  # no banner (already consented earlier in this session)
+        for selector in ("#popin_tc_privacy_button_3", "#popin_tc_privacy_button_2", "#popin_tc_privacy_button"):
+            button = self.page.locator(selector)
+            try:
+                if await button.count() and await button.is_visible():
+                    await button.click()
+                    await overlay.wait_for(state="hidden", timeout=5000)
+                    return
+            except Exception:
+                continue
+        for label in ("Tout accepter", "Tout refuser", "Accepter", "Continuer"):
+            button = self.page.get_by_role("button", name=re.compile(label, re.IGNORECASE))
+            try:
+                if await button.count() and await button.first.is_visible():
+                    await button.first.click()
+                    await overlay.wait_for(state="hidden", timeout=5000)
+                    return
+            except Exception:
+                continue
+        logger.warning("cookie consent overlay present but no known accept button found")
+
+    async def _fetch_accounts(self) -> list[AccountValue]:
+        families_query = "&".join(f"code_grande_famille={family}" for family in SUPPORTED_FAMILIES)
+        contracts_by_family: dict[str, Any] = await self._bff_get(f"{BFF_BASE_URL}/synthesis/contract?{families_query}")
+
+        accounts: list[AccountValue] = []
+        for family in SUPPORTED_FAMILIES:
+            contracts = contracts_by_family.get(family) or []
+            if not contracts:
+                continue
+            # Balances come from a separate, per-family endpoint.
+            data = await self._bff_get(f"{BFF_BASE_URL}/synthesis/contract/data?code_grande_famille={family}")
+            solde_by_account = {
+                entry["numero_compte"]: entry["solde"] for entry in (data.get(family) or []) if "solde" in entry
+            }
+            for contract in contracts:
+                account_type, account_sub_type = _parse_account_type_and_subtype(contract)
+                accounts.append(
+                    AccountValue(
+                        account=Account(
+                            id=contract["numero_compte"].strip(),
+                            name=contract["libelle_produit_commercial"].strip(),
+                            iso_currency=contract["code_devise"].strip(),
+                            type=account_type,
+                            sub_type=account_sub_type,
+                        ),
+                        account_value=float(solde_by_account.get(contract["numero_compte"], 0.0)),
+                        contract=contract,
+                    )
+                )
+        return accounts
+
+    async def _bff_get(self, url: str) -> Any:
+        """Fetch a BFF JSON endpoint from within the authenticated page context, so the
+        request carries the session cookies and is same-origin."""
+        result = await self.page.evaluate(
+            """async (url) => {
+                const response = await fetch(url, {headers: {accept: 'application/json'}, credentials: 'include'});
+                return {status: response.status, body: await response.text()};
+            }""",
+            url,
+        )
+        if result["status"] != 200:
+            raise RuntimeError(f"unexpected status {result['status']} fetching {url}")
+        return json.loads(result["body"])
+
+    async def _collect_account_transactions(
+        self,
+        entry: AccountValue,
+        from_date: AwareDatetime | None,
+    ) -> list[Transaction]:
+        marker = _transactions_marker(entry.contract)
+        captured: list[tuple[str, Any]] = []
+
+        async def on_response(response: Any) -> None:
+            if response.status == 200 and marker in response.url:
+                try:
+                    captured.append((response.url, await response.json()))
+                except Exception:
+                    pass
+
+        self.page.on("response", on_response)
+        try:
+            await self._open_account_detail(entry)
+            # Wait for the detail micro-frontend to load and fire the first operations call.
+            if not await _wait_until(lambda: len(captured) > 0, timeout=30.0):
+                logger.warning(f"no transactions response captured for account '{entry.account.id}'")
+                return []
+
+            # The detail micro-frontend renders inside an iframe whose id starts with
+            # "DETAIL-" (e.g. DETAIL-COMPTE-DAV, DETAIL-EPARGNE); the page also contains a
+            # hidden, unrelated helper iframe, so we must not match a bare "iframe".
+            frame = self.page.frame_locator("iframe[id^='DETAIL-']")
+            # Match the "Afficher plus [d'opérations]" load-more control, but NOT the
+            # "Afficher plus de détails" toggle that also sits above the operations list.
+            load_more = frame.get_by_text(re.compile(r"afficher plus(?! de détails)", re.IGNORECASE))
+            for _ in range(_MAX_TRANSACTION_PAGES):
+                if not _needs_more_pages(captured, from_date):
+                    break
+                try:
+                    if not await load_more.first.is_visible(timeout=3000):
+                        break
+                except Exception:
+                    break
+                pages_before = len(captured)
+                await load_more.first.click()
+                # The checking detail only fetches a new page once the buffered rows are
+                # exhausted, so an individual click may not trigger a request: just loop.
+                await _wait_until(lambda: len(captured) > pages_before, timeout=8.0)
+        finally:
+            self.page.remove_listener("response", on_response)
+
+        transactions: list[Transaction] = []
+        for url, payload in captured:
+            if IMPUTEES_MARKER in url:
+                transactions.extend(_parse_transactions_from_imputees_response_data(payload, entry.account))
+            elif EPARGNE_OPERATIONS_MARKER in url:
+                transactions.extend(_parse_transactions_from_operations_response_data(payload, entry.account))
+        return transactions
+
+    async def _open_account_detail(self, entry: AccountValue) -> None:
+        page = self.page
+        await page.goto(SYNTHESE_URL.format(region=self._credentials.region))
+        await self._dismiss_cookie_banner()
+        tab_name = _account_tab_name(entry.contract)
+        await page.get_by_role("tab", name=re.compile(tab_name, re.IGNORECASE)).click()
+        await page.get_by_role("link").filter(has_text=entry.account.id).first.click()
 
 
-def _parse_account_type_and_subtype(account_data: dict[str, Any]) -> tuple[AccountType, str]:
-    raw_account_type = account_data["typeProduit"].strip()
-    if raw_account_type == "compte":
+def _parse_account_type_and_subtype(contract: dict[str, Any]) -> tuple[AccountType, str]:
+    family = contract["code_grande_famille"].strip()
+    if family == "COMPTES":
         return AccountType.depository, "checking"
-    if raw_account_type in ("epargne-collecte"):
+    if family == "EPARGNE":
         return AccountType.depository, "savings"
-    raise UnsupportedAccountType(raw_account_type, account_data["libelleProduit"])
+    raise UnsupportedAccountType(family, contract.get("libelle_produit_commercial", ""))
+
+
+def _account_tab_name(contract: dict[str, Any]) -> str:
+    family = contract["code_grande_famille"].strip()
+    return {"COMPTES": "Mes Comptes", "EPARGNE": "Mon Épargne"}[family]
+
+
+def _transactions_marker(contract: dict[str, Any]) -> str:
+    family = contract["code_grande_famille"].strip()
+    return IMPUTEES_MARKER if family == "COMPTES" else EPARGNE_OPERATIONS_MARKER
+
+
+def _scalar_payload(operation: dict[str, Any]) -> ProviderSpecificPayloadType:
+    return {k: v for k, v in operation.items() if v is None or isinstance(v, (str, int, float, bool))}
 
 
 def _parse_transactions_from_imputees_response_data(
@@ -234,9 +324,14 @@ def _parse_transactions_from_imputees_response_data(
                 description += f", {label}"
             if label := operation["libelleComplementaire2"]:
                 description += f", {label}"
+            # NOTE: this hashing scheme is kept byte-for-byte identical to the
+            # pre-revamp implementation so transaction ids stay stable across the
+            # rewrite (the revamped `imputees` payload exposes the same fields). The
+            # new per-operation UUID is intentionally NOT used here for that reason;
+            # it is still preserved in `provider_specific` (`id`).
             key = {
                 "transaction_date": transaction_date.isoformat(),
-                "effective_date": _parse_french_date(operation["dateValeurAffichee"].strip()).isoformat(),
+                "effective_date": effective_date.isoformat(),
                 "operation_family": int(operation["codeFamilleOperation"]),
                 "operation_subtype": int(operation["codeTypeOperation"]),
                 "description": description,
@@ -248,12 +343,11 @@ def _parse_transactions_from_imputees_response_data(
                 "cheque": operation["cheque"],
             }
             hashed_key = hashlib.sha256(json.dumps(key).encode()).hexdigest()
-            transaction_date = _parse_french_date(operation["dateOperationAffichee"].strip())
+            dates = f"{transaction_date.isoformat()}-{effective_date.isoformat()}"
+            transaction_id = f"{account.id}-{dates}-{hashed_key}"
             transactions.append(
                 Transaction(
-                    transaction_id=(
-                        f"{account.id}-{transaction_date.isoformat()}-{effective_date.isoformat()}-{hashed_key}"
-                    ),
+                    transaction_id=transaction_id,
                     account_id=account.id,
                     transaction_date=transaction_date,
                     effective_date=effective_date,
@@ -262,7 +356,7 @@ def _parse_transactions_from_imputees_response_data(
                     currency=account.iso_currency,
                     description=description,
                     counterparty=counterparty,
-                    provider_specific=deepcopy(operation),
+                    provider_specific=_scalar_payload(operation),
                 )
             )
     return transactions
@@ -304,22 +398,55 @@ def _parse_transactions_from_operations_response_data(
                 amount=amount,
                 currency=account.iso_currency,
                 description=description,
-                provider_specific=deepcopy(operation),
+                provider_specific=_scalar_payload(operation),
             )
         )
     return transactions
 
 
-async def _parse_transactions(
-    resp: Response,
-    account: Account,
-) -> list[Transaction]:
-    if "bff/operations/imputees" in resp.url:
-        return _parse_transactions_from_imputees_response_data(await resp.json(), account)
-    elif "bff/api/compte_epargne/operations" in resp.url:
-        return _parse_transactions_from_operations_response_data(await resp.json(), account)
-    else:
-        assert False
+def _newest_first_response_oldest_date(url: str, payload: Any) -> AwareDatetime | None:
+    """Oldest transaction date in a single (newest-first) operations response."""
+    try:
+        if IMPUTEES_MARKER in url:
+            blocs = payload.get("operationBlocs") or []
+            if not blocs:
+                return None
+            return _parse_french_date(blocs[-1]["operationDetails"][-1]["dateOperationAffichee"].strip())
+        operations = payload.get("operations") or []
+        if not operations:
+            return None
+        return datetime.fromtimestamp(operations[-1]["date_operation"] / 1000.0, tz=ZoneInfo("Europe/Paris"))
+    except KeyError, IndexError, ValueError:
+        return None
+
+
+def _response_has_next(payload: Any) -> bool:
+    # `imputees` uses `hasNext`, `compte_epargne/operations` uses `has_next`.
+    return bool(payload.get("hasNext") or payload.get("has_next"))
+
+
+def _needs_more_pages(captured: list[tuple[str, Any]], from_date: AwareDatetime | None) -> bool:
+    if not captured:
+        return True
+    url, payload = captured[-1]
+    if not _response_has_next(payload):
+        return False
+    if from_date is not None:
+        oldest = _newest_first_response_oldest_date(url, payload)
+        if oldest is not None and oldest < from_date:
+            return False
+    return True
+
+
+async def _wait_until(predicate: Callable[[], bool], timeout: float, poll: float = 0.25) -> bool:
+    loop = asyncio.get_event_loop()
+    deadline = loop.time() + timeout
+    while True:
+        if predicate():
+            return True
+        if loop.time() >= deadline:
+            return False
+        await asyncio.sleep(poll)
 
 
 def _parse_french_date(s: str) -> AwareDatetime:
@@ -369,12 +496,8 @@ def _classify_transaction_type(raw_txn: Any) -> TransactionType:
     return TransactionType.payment if amount < 0 else TransactionType.deposit
 
 
+# Kept for backward compatibility with any external callers / tests.
 def _extract_account_number(s: str) -> str | None:
     if m := re.search(r"(\d{11})", s):
         return m.group(1)
     return None
-
-
-async def _handle_auth_error(el: Any) -> None:
-    raw_error = await el.inner_text()
-    raise AuthenticationError(raw_error.strip())
