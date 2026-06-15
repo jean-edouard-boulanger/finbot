@@ -2,7 +2,7 @@
 #    uv pip compile pyproject.toml --extra dev --output-file requirements-dev.txt
 aiohappyeyeballs==2.6.2
     # via aiohttp
-aiohttp==3.13.5
+aiohttp==3.14.0
     # via
     #   finbot (pyproject.toml)
     #   aiohttp-retry

@@ -2,7 +2,7 @@
 name = "finbot"
 dynamic = ["version"]
 dependencies = [
-    "aiohttp==3.13.5",
+    "aiohttp==3.14.0",
     "alembic==1.18.4",
     "bcrypt==5.0.0",
     "cachetools<7",
