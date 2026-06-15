@@ -295,7 +295,7 @@ typer==0.26.7
     # via
     #   fastapi-cli
     #   fastapi-cloud-cli
-types-protobuf==6.32.1.20260221
+types-protobuf==7.34.1.20260503
     # via temporalio
 typing-extensions==4.15.0
     # via
