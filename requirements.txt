@@ -52,7 +52,7 @@ click==8.4.1
     # via
     #   rich-toolkit
     #   uvicorn
-cryptography==47.0.0
+cryptography==48.0.1
     # via
     #   finbot (pyproject.toml)
     #   google-auth
