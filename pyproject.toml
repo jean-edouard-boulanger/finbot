@@ -7,7 +7,7 @@ dependencies = [
     "bcrypt==5.0.0",
     "cachetools<7",
     "cffi==2.0.0",
-    "cryptography==47.0.0",
+    "cryptography==48.0.1",
     "fastapi[standard]<1",
     "gspread==6.2.1",
     "gunicorn==25.3.0",
