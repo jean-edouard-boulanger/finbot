@@ -173,7 +173,7 @@ protobuf==6.33.6
     # via temporalio
 psycopg2==2.9.12
     # via finbot (pyproject.toml)
-pyasn1==0.6.3
+pyasn1==0.6.4
     # via
     #   oauth2client
     #   pyasn1-modules
