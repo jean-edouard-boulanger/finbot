@@ -115,7 +115,7 @@ h11==0.16.0
     #   uvicorn
 httpcore==1.0.9
     # via httpx
-httplib2==0.31.2
+httplib2==0.32.0
     # via oauth2client
 httptools==0.8.0
     # via uvicorn
