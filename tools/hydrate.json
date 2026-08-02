@@ -636,6 +636,14 @@
       "description": "Dummy financial provider (UK)",
       "website_url": "http://www.dummy.com",
       "credentials_schema": {}
+    },
+    {
+      "id": "finbot_portfolio",
+      "description": "Finbot managed portfolio",
+      "website_url": "https://github.com/jeanedouard-boulanger/finbot",
+      "credentials_schema": {
+        "json_schema": {}
+      }
     }
   ]
 }

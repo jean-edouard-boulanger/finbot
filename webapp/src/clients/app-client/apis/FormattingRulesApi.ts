@@ -14,11 +14,17 @@
 
 import * as runtime from '../runtime';
 import type {
+  GetAccountSubTypesResponse,
   GetAccountsFormattingRulesResponse,
+  GetAssetsFormattingRulesResponse,
 } from '../models/index';
 import {
+    GetAccountSubTypesResponseFromJSON,
+    GetAccountSubTypesResponseToJSON,
     GetAccountsFormattingRulesResponseFromJSON,
     GetAccountsFormattingRulesResponseToJSON,
+    GetAssetsFormattingRulesResponseFromJSON,
+    GetAssetsFormattingRulesResponseToJSON,
 } from '../models/index';
 
 /**
@@ -28,6 +34,21 @@ import {
  * @interface FormattingRulesApiInterface
  */
 export interface FormattingRulesApiInterface {
+    /**
+     * Get the account sub types valid for each account type
+     * @summary Get Account Sub Types
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof FormattingRulesApiInterface
+     */
+    getAccountSubTypesRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GetAccountSubTypesResponse>>;
+
+    /**
+     * Get the account sub types valid for each account type
+     * Get Account Sub Types
+     */
+    getAccountSubTypes(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetAccountSubTypesResponse>;
+
     /**
      * Get accounts formatting rules
      * @summary Get Accounts Formatting Rules
@@ -43,12 +64,63 @@ export interface FormattingRulesApiInterface {
      */
     getAccountsFormattingRules(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetAccountsFormattingRulesResponse>;
 
+    /**
+     * Get the display name and colour to use for each asset class and type
+     * @summary Get Assets Formatting Rules
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof FormattingRulesApiInterface
+     */
+    getAssetsFormattingRulesRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GetAssetsFormattingRulesResponse>>;
+
+    /**
+     * Get the display name and colour to use for each asset class and type
+     * Get Assets Formatting Rules
+     */
+    getAssetsFormattingRules(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetAssetsFormattingRulesResponse>;
+
 }
 
 /**
  * 
  */
 export class FormattingRulesApi extends runtime.BaseAPI implements FormattingRulesApiInterface {
+
+    /**
+     * Get the account sub types valid for each account type
+     * Get Account Sub Types
+     */
+    async getAccountSubTypesRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GetAccountSubTypesResponse>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/formatting_rules/account_sub_types/`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => GetAccountSubTypesResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Get the account sub types valid for each account type
+     * Get Account Sub Types
+     */
+    async getAccountSubTypes(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetAccountSubTypesResponse> {
+        const response = await this.getAccountSubTypesRaw(initOverrides);
+        return await response.value();
+    }
 
     /**
      * Get accounts formatting rules
@@ -83,6 +155,42 @@ export class FormattingRulesApi extends runtime.BaseAPI implements FormattingRul
      */
     async getAccountsFormattingRules(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetAccountsFormattingRulesResponse> {
         const response = await this.getAccountsFormattingRulesRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Get the display name and colour to use for each asset class and type
+     * Get Assets Formatting Rules
+     */
+    async getAssetsFormattingRulesRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GetAssetsFormattingRulesResponse>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/formatting_rules/assets/`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => GetAssetsFormattingRulesResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Get the display name and colour to use for each asset class and type
+     * Get Assets Formatting Rules
+     */
+    async getAssetsFormattingRules(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetAssetsFormattingRulesResponse> {
+        const response = await this.getAssetsFormattingRulesRaw(initOverrides);
         return await response.value();
     }
 

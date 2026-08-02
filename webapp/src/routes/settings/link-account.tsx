@@ -399,8 +399,9 @@ export const LinkAccount: React.FC<LinkAccountProps> = (props) => {
           <h5 className="font-medium">Account name</h5>
           <div className="flex items-center gap-2">
             <ColourPicker
-              presetsColours={formattingRules?.colourPalette}
+              colours={formattingRules?.colourPalette}
               colour={accountColour ?? FALLBACK_COLOUR}
+              label="Account colour"
               onChange={(newColour) => updateAccountColour(newColour)}
             />
             <Input

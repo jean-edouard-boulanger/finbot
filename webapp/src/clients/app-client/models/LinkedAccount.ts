@@ -83,6 +83,12 @@ export interface LinkedAccount {
     provider: Provider;
     /**
      * 
+     * @type {number}
+     * @memberof LinkedAccount
+     */
+    portfolioId: number | null;
+    /**
+     * 
      * @type {LinkedAccountStatus}
      * @memberof LinkedAccount
      */
@@ -119,6 +125,7 @@ export function instanceOfLinkedAccount(value: object): value is LinkedAccount {
     if (!('frozen' in value) || value['frozen'] === undefined) return false;
     if (!('providerId' in value) || value['providerId'] === undefined) return false;
     if (!('provider' in value) || value['provider'] === undefined) return false;
+    if (!('portfolioId' in value) || value['portfolioId'] === undefined) return false;
     if (!('status' in value) || value['status'] === undefined) return false;
     if (!('credentials' in value) || value['credentials'] === undefined) return false;
     if (!('createdAt' in value) || value['createdAt'] === undefined) return false;
@@ -144,6 +151,7 @@ export function LinkedAccountFromJSONTyped(json: any, ignoreDiscriminator: boole
         'frozen': json['frozen'],
         'providerId': json['provider_id'],
         'provider': ProviderFromJSON(json['provider']),
+        'portfolioId': json['portfolio_id'],
         'status': LinkedAccountStatusFromJSON(json['status']),
         'credentials': json['credentials'],
         'createdAt': (new Date(json['created_at'])),
@@ -170,6 +178,7 @@ export function LinkedAccountToJSONTyped(value?: LinkedAccount | null, ignoreDis
         'frozen': value['frozen'],
         'provider_id': value['providerId'],
         'provider': ProviderToJSON(value['provider']),
+        'portfolio_id': value['portfolioId'],
         'status': LinkedAccountStatusToJSON(value['status']),
         'credentials': value['credentials'],
         'created_at': ((value['createdAt']).toISOString()),

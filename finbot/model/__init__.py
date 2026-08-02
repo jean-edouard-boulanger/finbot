@@ -136,6 +136,8 @@ class LinkedAccount(Base):
 
     provider = relationship("Provider", uselist=False)
 
+    portfolio = relationship("Portfolio", uselist=False, back_populates="linked_account")
+
     __table_args__ = (
         UniqueConstraint(
             user_account_id,
@@ -649,6 +651,103 @@ class GenericKeyValueStore(Base):
     __tablename__ = "finbot_generic_key_value_store"
     key = Column(String(64), primary_key=True)
     value = Column(JSONEncoded, nullable=False)
+
+
+class PortfolioEntryPriceSource(enum.Enum):
+    Manual = 1
+    Proxy = 2
+
+
+class Portfolio(Base):
+    """A Finbot-managed (manually maintained) portfolio, backing a linked account."""
+
+    __tablename__ = "finbot_portfolios"
+    id = Column(Integer, primary_key=True)
+    user_account_id = Column(Integer, ForeignKey(UserAccount.id, ondelete="CASCADE"), nullable=False)
+    linked_account_id = Column(
+        Integer,
+        ForeignKey(LinkedAccount.id, ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+    )
+    created_at = Column(DateTimeTz, server_default=func.now(), nullable=False)
+    updated_at = Column(DateTimeTz, onupdate=func.now())
+
+    linked_account = relationship(LinkedAccount, uselist=False, back_populates="portfolio")
+    sections = relationship(
+        "PortfolioSection",
+        back_populates="portfolio",
+        uselist=True,
+        passive_deletes=True,
+        order_by="PortfolioSection.display_order",
+    )
+
+
+class PortfolioSection(Base):
+    """A section of a portfolio, exposed to the snapshot pipeline as a sub-account."""
+
+    __tablename__ = "finbot_portfolio_sections"
+    id = Column(Integer, primary_key=True)
+    portfolio_id = Column(Integer, ForeignKey(Portfolio.id, ondelete="CASCADE"), nullable=False)
+    # Stable sub-account identifier: valuation history is keyed on it, it must never change.
+    section_id = Column(String(64), nullable=False)
+    name = Column(String(256), nullable=False)
+    currency = Column(String(3), nullable=False)
+    account_type = Column(String(32), nullable=False)
+    account_sub_type = Column(String(32))
+    custom_columns = Column(JSONEncoded, nullable=False, default=list)
+    display_order = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTimeTz, server_default=func.now(), nullable=False)
+    updated_at = Column(DateTimeTz, onupdate=func.now())
+
+    portfolio = relationship(Portfolio, uselist=False, back_populates="sections")
+    entries = relationship(
+        "PortfolioEntry",
+        back_populates="section",
+        uselist=True,
+        passive_deletes=True,
+        order_by="PortfolioEntry.display_order",
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            portfolio_id,
+            section_id,
+            name="uidx_portfolio_sections_portfolio_section_id",
+        ),
+    )
+
+
+class PortfolioEntry(Base):
+    """An individual holding (asset or liability) within a portfolio section."""
+
+    __tablename__ = "finbot_portfolio_entries"
+    id = Column(Integer, primary_key=True)
+    portfolio_section_id = Column(
+        Integer,
+        ForeignKey(PortfolioSection.id, ondelete="CASCADE"),
+        nullable=False,
+    )
+    item_type = Column(Enum(SubAccountItemType), nullable=False)
+    name = Column(String(256), nullable=False)
+    asset_class = Column(String(32))
+    asset_type = Column(String(32))
+    liability_type = Column(String(32))
+    currency = Column(String(3), nullable=False)
+    units = Column(Numeric, nullable=False, default=1)
+    price_source = Column(Enum(PortfolioEntryPriceSource), nullable=False)
+    manual_unit_price = Column(Numeric)
+    manual_price_updated_at = Column(DateTimeTz)
+    proxy_symbol = Column(String(32))
+    last_resolved_unit_price = Column(Numeric)
+    last_resolved_price_at = Column(DateTimeTz)
+    isin_code = Column(String(16))
+    custom_values = Column(JSONEncoded)
+    display_order = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTimeTz, server_default=func.now(), nullable=False)
+    updated_at = Column(DateTimeTz, onupdate=func.now())
+
+    section = relationship(PortfolioSection, uselist=False, back_populates="entries")
 
 
 __all__ = [

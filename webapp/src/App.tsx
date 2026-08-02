@@ -22,6 +22,8 @@ import {
   Logout,
   MainDashboard,
   LinkedAccountDashboard,
+  PortfolioEditor,
+  Portfolios,
   Settings,
   Welcome,
 } from "routes";
@@ -54,6 +56,8 @@ const UserRouter = () => {
           path="dashboard/accounts/:linkedAccountId"
           element={<LinkedAccountDashboard />}
         />
+        <Route path="portfolios" element={<Portfolios />} />
+        <Route path="portfolios/:portfolioId" element={<PortfolioEditor />} />
         <Route path="logout" element={<Logout />} />
         <Route path="settings" element={<Settings />}>
           <Route path="profile" element={<ProfileSettings />} />

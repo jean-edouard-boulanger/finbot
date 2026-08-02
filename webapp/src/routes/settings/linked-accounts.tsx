@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   CheckCircle,
   AlertCircle,
@@ -10,6 +10,7 @@ import {
   X,
   Check,
   Link2,
+  Briefcase,
 } from "lucide-react";
 
 import { AuthContext } from "contexts";
@@ -20,8 +21,12 @@ import {
   ErrorMetadata,
   FormattingRulesApi,
   GetAccountsFormattingRulesResponse,
+  GetConversionPreviewResponse,
+  PortfoliosApi,
 } from "clients";
 import { ColourPicker } from "components";
+import { DateTime } from "luxon";
+
 import { asDateTime } from "utils/time";
 import { formatApiError } from "utils/errors";
 import { useDocumentTitle } from "hooks/use-document-title";
@@ -61,6 +66,8 @@ import {
 } from "components/ui/dropdown-menu";
 import { Separator } from "components/ui/separator";
 import { toast } from "sonner";
+
+const FINBOT_PORTFOLIO_PROVIDER_ID = "finbot_portfolio";
 
 type FormattingRules = GetAccountsFormattingRulesResponse;
 
@@ -362,6 +369,197 @@ const InlineEditableName: React.FC<InlineEditableNameProps> = ({
   );
 };
 
+// --- Convert To Portfolio Dialog ---
+
+function formatMoney(amount: number, currency: string): string {
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  } catch {
+    return `${amount.toLocaleString()} ${currency}`;
+  }
+}
+
+const ConvertToPortfolioDialog: React.FC<{
+  linkedAccount: LinkedAccount | null;
+  onClose: () => void;
+  onConverted: () => Promise<void>;
+}> = ({ linkedAccount, onClose, onConverted }) => {
+  const { userAccountId } = useContext(AuthContext);
+  const portfoliosApi = useApi(PortfoliosApi);
+  const navigate = useNavigate();
+  const [converting, setConverting] = useState(false);
+  const [preview, setPreview] = useState<GetConversionPreviewResponse | null>(
+    null,
+  );
+  const [previewError, setPreviewError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!linkedAccount) {
+      return;
+    }
+    setPreview(null);
+    setPreviewError(null);
+    const fetchPreview = async () => {
+      try {
+        setPreview(
+          await portfoliosApi.getConversionPreview({
+            userAccountId: userAccountId!,
+            linkedAccountId: linkedAccount.id,
+          }),
+        );
+      } catch (e) {
+        setPreviewError(formatApiError(e));
+      }
+    };
+    fetchPreview();
+  }, [linkedAccount, portfoliosApi, userAccountId]);
+
+  const convert = async () => {
+    if (!linkedAccount) {
+      return;
+    }
+    setConverting(true);
+    try {
+      const response = await portfoliosApi.convertLinkedAccountToPortfolio({
+        userAccountId: userAccountId!,
+        convertLinkedAccountRequest: { linkedAccountId: linkedAccount.id },
+      });
+      toast.success(`'${linkedAccount.accountName}' is now a portfolio`);
+      await onConverted();
+      onClose();
+      navigate(`/portfolios/${response.portfolio.id}`);
+    } catch (e) {
+      toast.error(formatApiError(e));
+    } finally {
+      setConverting(false);
+    }
+  };
+
+  const name = linkedAccount?.accountName ?? "";
+  const detailColumns = [
+    ...new Set((preview?.sections ?? []).flatMap((s) => s.detailColumns)),
+  ];
+
+  return (
+    <Dialog
+      open={linkedAccount !== null}
+      onOpenChange={(open) => !open && onClose()}
+    >
+      <DialogContent className="max-h-[85vh] gap-0 overflow-y-auto sm:max-w-2xl">
+        <DialogHeader className="pb-2">
+          <DialogTitle>Convert {name} to a portfolio</DialogTitle>
+          <DialogDescription>
+            Finbot will stop fetching values for this account. You will keep
+            them up to date yourself, changing them whenever they change.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="grid gap-6 py-4 sm:grid-cols-2">
+          <div>
+            <h4 className="text-[10px] font-medium uppercase tracking-[0.11em] text-muted-foreground">
+              Stays the same
+            </h4>
+            <ul className="mt-2 space-y-1.5 text-sm">
+              <li>Its name, colour and everything it holds today</li>
+              <li>Its full history and past values</li>
+              <li>Its place in your net worth</li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="text-[10px] font-medium uppercase tracking-[0.11em] text-muted-foreground">
+              Changes
+            </h4>
+            <ul className="mt-2 space-y-1.5 text-sm">
+              <li>Values stop updating on their own</li>
+              <li>You edit them directly, whenever you like</li>
+              <li>Holdings can track a market price if you want them to</li>
+              <li className="text-muted-foreground">
+                To hand it back to {linkedAccount?.provider.description}, you
+                would add the account again
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="border-t border-border pt-4">
+          <div className="flex items-baseline justify-between gap-3">
+            <h4 className="text-[10px] font-medium uppercase tracking-[0.11em] text-muted-foreground">
+              What you will start with
+            </h4>
+            {preview?.valuedAt && (
+              <span className="text-xs text-muted-foreground">
+                As last read{" "}
+                {DateTime.fromJSDate(preview.valuedAt).toRelative()}
+              </span>
+            )}
+          </div>
+
+          {previewError && (
+            <p className="mt-3 text-sm text-destructive">{previewError}</p>
+          )}
+          {!preview && !previewError && (
+            <div className="mt-3 space-y-2">
+              <Skeleton className="h-5" />
+              <Skeleton className="h-5" />
+            </div>
+          )}
+          {preview && (
+            <div className="mt-3 space-y-4">
+              {preview.sections.map((section) => (
+                <div key={section.name}>
+                  <p className="text-sm font-medium">{section.name}</p>
+                  <ul className="mt-1 divide-y divide-border/40">
+                    {section.holdings.map((holding, index) => (
+                      <li
+                        key={`${holding.name}-${index}`}
+                        className="flex items-baseline justify-between gap-4 py-1 text-sm"
+                      >
+                        <span className="min-w-0 truncate text-muted-foreground">
+                          {holding.name}
+                        </span>
+                        <span className="shrink-0 font-mono text-[13px] tabular-nums">
+                          {formatMoney(holding.value, holding.currency)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+              <p className="text-xs text-muted-foreground">
+                {preview.holdingsCount}{" "}
+                {preview.holdingsCount === 1 ? "holding" : "holdings"} across{" "}
+                {preview.sections.length}{" "}
+                {preview.sections.length === 1 ? "section" : "sections"}
+                {detailColumns.length > 0 && (
+                  <>, keeping {detailColumns.join(", ")}</>
+                )}
+                .
+              </p>
+            </div>
+          )}
+        </div>
+
+        <DialogFooter className="pt-4">
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            disabled={converting || !preview}
+            onClick={convert}
+          >
+            {converting ? "Converting…" : "Convert"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 // --- Linked Account Card ---
 
 interface LinkedAccountCardProps {
@@ -374,6 +572,7 @@ interface LinkedAccountCardProps {
   onUnfreeze: (account: LinkedAccount) => void;
   onUnlink: (account: LinkedAccount) => void;
   onViewError: (account: LinkedAccount) => void;
+  onConvertToPortfolio: (account: LinkedAccount) => void;
 }
 
 const LinkedAccountCard: React.FC<LinkedAccountCardProps> = ({
@@ -386,7 +585,11 @@ const LinkedAccountCard: React.FC<LinkedAccountCardProps> = ({
   onUnfreeze,
   onUnlink,
   onViewError,
+  onConvertToPortfolio,
 }) => {
+  // Portfolios are maintained through their own dedicated screens: they have no credentials to
+  // edit, and converting one into another portfolio makes no sense.
+  const isPortfolio = linkedAccount.providerId === FINBOT_PORTFOLIO_PROVIDER_ID;
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -394,7 +597,9 @@ const LinkedAccountCard: React.FC<LinkedAccountCardProps> = ({
           <div className="flex items-center gap-2">
             <ColourPicker
               colour={linkedAccount.accountColour}
-              presetsColours={formattingRules?.colourPalette}
+              colours={formattingRules?.colourPalette}
+              label={`Colour for ${linkedAccount.accountName}`}
+              disabled={linkedAccount.frozen}
               onChange={(newColour) => onRecolour(linkedAccount, newColour)}
             />
             <div>
@@ -415,13 +620,17 @@ const LinkedAccountCard: React.FC<LinkedAccountCardProps> = ({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                disabled={linkedAccount.frozen}
-                onClick={() => onEditCredentials(linkedAccount)}
-              >
-                Edit credentials
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
+              {!isPortfolio && (
+                <>
+                  <DropdownMenuItem
+                    disabled={linkedAccount.frozen}
+                    onClick={() => onEditCredentials(linkedAccount)}
+                  >
+                    Edit credentials
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              )}
               {linkedAccount.frozen ? (
                 <DropdownMenuItem onClick={() => onUnfreeze(linkedAccount)}>
                   Unfreeze
@@ -432,6 +641,17 @@ const LinkedAccountCard: React.FC<LinkedAccountCardProps> = ({
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
+              {!isPortfolio && (
+                <>
+                  <DropdownMenuItem
+                    onClick={() => onConvertToPortfolio(linkedAccount)}
+                  >
+                    <Briefcase className="mr-2 h-3.5 w-3.5" />
+                    Convert to Finbot portfolio
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              )}
               <DropdownMenuItem
                 className="text-destructive"
                 onClick={() => onUnlink(linkedAccount)}
@@ -556,6 +776,9 @@ const AccountsPanel: React.FC = () => {
   const linkedAccountsApi = useApi(LinkedAccountsApi);
   const formattingRulesApi = useApi(FormattingRulesApi);
   const [searchParams, setSearchParams] = useSearchParams();
+  const [convertTarget, setConvertTarget] = useState<LinkedAccount | null>(
+    null,
+  );
 
   const [accounts, setAccounts] = useState<Array<LinkedAccount>>([]);
   const [formattingRules, setFormattingRules] =
@@ -708,6 +931,11 @@ const AccountsPanel: React.FC = () => {
         onClose={closeSheet}
         onSuccess={handleSheetSuccess}
       />
+      <ConvertToPortfolioDialog
+        linkedAccount={convertTarget}
+        onClose={() => setConvertTarget(null)}
+        onConverted={refreshAccounts}
+      />
 
       {accounts.length === 0 ? (
         <EmptyAccountsState onLinkAccount={() => openSheet(null)} />
@@ -732,6 +960,7 @@ const AccountsPanel: React.FC = () => {
                 onViewError={(a) => {
                   setErrorDialog({ show: true, linkedAccount: a });
                 }}
+                onConvertToPortfolio={(a) => setConvertTarget(a)}
                 onUnlink={(a) => {
                   setDialog({
                     show: true,
