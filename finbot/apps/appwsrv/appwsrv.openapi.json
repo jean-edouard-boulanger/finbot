@@ -2789,6 +2789,93 @@
                 }
             }
         },
+        "/securities/search/": {
+            "get": {
+                "tags": [
+                    "Securities"
+                ],
+                "summary": "Search Securities",
+                "description": "Search Yahoo Finance securities by symbol or name",
+                "operationId": "search_securities",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "minLength": 2,
+                            "maxLength": 64,
+                            "title": "Q"
+                        }
+                    },
+                    {
+                        "name": "kind",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "enum": [
+                                        "equity",
+                                        "etf",
+                                        "mutualfund",
+                                        "index",
+                                        "future",
+                                        "currency",
+                                        "cryptocurrency"
+                                    ],
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Kind"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 50,
+                            "minimum": 1,
+                            "default": 15,
+                            "title": "Limit"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SearchSecuritiesResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/reports/holdings/": {
             "get": {
                 "tags": [
@@ -6772,6 +6859,28 @@
                 ],
                 "title": "SavingsRateReport"
             },
+            "SearchSecuritiesResponse": {
+                "properties": {
+                    "results": {
+                        "items": {
+                            "$ref": "#/components/schemas/SecuritySearchResult"
+                        },
+                        "type": "array",
+                        "title": "Results"
+                    },
+                    "provider_available": {
+                        "type": "boolean",
+                        "title": "Provider Available"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "results",
+                    "provider_available"
+                ],
+                "title": "SearchSecuritiesResponse"
+            },
             "SecurityQuote": {
                 "properties": {
                     "symbol": {
@@ -6814,6 +6923,65 @@
                     "as_of"
                 ],
                 "title": "SecurityQuote"
+            },
+            "SecuritySearchResult": {
+                "properties": {
+                    "symbol": {
+                        "type": "string",
+                        "title": "Symbol"
+                    },
+                    "name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Name"
+                    },
+                    "kind": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "enum": [
+                                    "equity",
+                                    "etf",
+                                    "mutualfund",
+                                    "index",
+                                    "future",
+                                    "currency",
+                                    "cryptocurrency"
+                                ]
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Kind"
+                    },
+                    "exchange": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Exchange"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "symbol",
+                    "name",
+                    "kind",
+                    "exchange"
+                ],
+                "title": "SecuritySearchResult"
             },
             "SeriesData": {
                 "properties": {

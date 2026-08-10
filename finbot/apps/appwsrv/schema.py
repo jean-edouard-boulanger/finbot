@@ -8,6 +8,7 @@ from finbot.apps.appwsrv.reports.holdings import schema as holdings_schema
 from finbot.apps.appwsrv.reports.transactions import schema as transactions_schema
 from finbot.core import schema as core_schema
 from finbot.core.schema import BaseModel, HexColour
+from finbot.core.securities_market import SecurityKind
 from finbot.providers import schema as providers_schema
 
 JsonSchemaType: TypeAlias = dict[str, Any]
@@ -749,3 +750,17 @@ class SecurityQuote(AppModel):
 
 class ResolveSecurityResponse(AppModel):
     quote: SecurityQuote
+
+
+class SecuritySearchResult(AppModel):
+    symbol: str
+    name: str | None
+    kind: SecurityKind | None
+    exchange: str | None
+
+
+class SearchSecuritiesResponse(AppModel):
+    results: list[SecuritySearchResult]
+    #: `False` when Yahoo Finance could not be reached, so that no results can be reported as
+    #: "suggestions are unavailable" rather than as "nothing matches".
+    provider_available: bool

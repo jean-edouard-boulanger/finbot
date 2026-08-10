@@ -3,6 +3,7 @@ import {
   AssetType,
   PortfolioEntry,
   PortfolioEntryPayload,
+  SearchSecuritiesKindEnum,
 } from "clients";
 
 /**
@@ -24,6 +25,11 @@ export interface HoldingKind {
   divisible: boolean;
   /** Whether tracking a market price via a proxy security makes sense. */
   proxyable: boolean;
+  /**
+   * Instrument type the symbol search starts narrowed to. Left unset where the answer is not one
+   * type: gold is tracked through futures as readily as through an ETC.
+   */
+  searchKind?: SearchSecuritiesKindEnum;
   /**
    * Asset types this preset recognises when reading an existing holding. A fund imported as
    * equities/ETF and one created here as multi_asset/generic_fund are both "Fund or ETF" to a
@@ -86,6 +92,7 @@ export const HOLDING_KINDS: HoldingKind[] = [
     assetType: AssetType.Stock,
     divisible: true,
     proxyable: true,
+    searchKind: SearchSecuritiesKindEnum.Equity,
     matches: [AssetType.Stock],
   },
   {
@@ -97,6 +104,7 @@ export const HOLDING_KINDS: HoldingKind[] = [
     assetType: AssetType.GenericFund,
     divisible: true,
     proxyable: true,
+    searchKind: SearchSecuritiesKindEnum.Etf,
     matches: [
       AssetType.GenericFund,
       AssetType.Etf,
@@ -113,6 +121,7 @@ export const HOLDING_KINDS: HoldingKind[] = [
     assetType: AssetType.CryptoCurrency,
     divisible: true,
     proxyable: true,
+    searchKind: SearchSecuritiesKindEnum.Cryptocurrency,
     matches: [
       AssetType.CryptoCurrency,
       AssetType.UtilityToken,

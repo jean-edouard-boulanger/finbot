@@ -215,6 +215,17 @@ def serialize_security_quote(quote: securities_market.SecurityQuote) -> appwsrv_
     )
 
 
+def serialize_security_search_result(
+    result: securities_market.SecuritySearchResult,
+) -> appwsrv_schema.SecuritySearchResult:
+    return appwsrv_schema.SecuritySearchResult(
+        symbol=result.symbol,
+        name=result.name,
+        kind=result.kind,
+        exchange=result.exchange,
+    )
+
+
 def serialize_conversion_preview(
     plan: portfolios_core.ConversionPlan,
 ) -> appwsrv_schema.GetConversionPreviewResponse:

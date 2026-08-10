@@ -13,7 +13,6 @@ import { formatApiError } from "utils/errors";
 import { Combobox } from "components/combobox";
 import { EditableCell } from "components/editable-cell";
 import { Button } from "components/ui/button";
-import { Input } from "components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +23,7 @@ import {
 import { Attestation } from "./attestation";
 import { currencyGroups } from "./currencies";
 import { HoldingKind } from "./holding-kinds";
+import { SecurityPicker } from "./security-picker";
 
 interface PriceCellProps {
   entry: PortfolioEntry;
@@ -50,8 +50,8 @@ export const PriceCell: React.FC<PriceCellProps> = ({
 }) => {
   const securitiesApi = useApi(SecuritiesApi);
   const [resolving, setResolving] = useState(false);
-  // A holding cannot be stored as tracked until it has a symbol to track, so choosing to track is
-  // a state of this cell until the symbol resolves.
+  // A holding cannot be stored as tracked until it has a symbol to track, so searching for one —
+  // whether the first or a replacement — is a state of this cell until the symbol resolves.
   const [enteringSymbol, setEnteringSymbol] = useState(false);
   const isProxy = entry.priceSource === "proxy";
 
@@ -94,44 +94,17 @@ export const PriceCell: React.FC<PriceCellProps> = ({
   return (
     <div className="group/price flex items-start justify-end gap-0.5">
       <div className="min-w-0 flex-1 text-right">
-        {enteringSymbol && !isProxy ? (
-          <Input
-            autoFocus
-            aria-label={`Symbol to track for ${entry.name}`}
-            placeholder="GC=F, SGLN.L…"
-            disabled={resolving}
-            className="h-7 text-right font-mono text-[13px]"
-            onBlur={(e) =>
-              e.target.value.trim()
-                ? trackSymbol(e.target.value)
-                : setEnteringSymbol(false)
-            }
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                trackSymbol((e.target as HTMLInputElement).value);
-              }
-              if (e.key === "Escape") {
-                setEnteringSymbol(false);
-              }
-            }}
-          />
-        ) : isProxy ? (
+        {isProxy ? (
           <>
-            <EditableCell
-              value={entry.proxySymbol ?? ""}
-              display={
-                entry.lastResolvedUnitPrice !== null ? (
-                  formatMoney(entry.lastResolvedUnitPrice, entry.currency)
-                ) : (
-                  <span className="text-muted-foreground">Set a symbol</span>
-                )
-              }
-              placeholder="Symbol"
-              align="right"
-              className="font-mono text-[13px] tabular-nums"
-              onSave={trackSymbol}
-            />
+            {/* A proxy price is not the user's to edit, so it is text: the symbol below it is
+                what can be changed, and is what opens the picker. */}
+            <span className="block truncate px-1 py-0.5 text-right font-mono text-[13px] tabular-nums">
+              {entry.lastResolvedUnitPrice !== null ? (
+                formatMoney(entry.lastResolvedUnitPrice, entry.currency)
+              ) : (
+                <span className="text-muted-foreground">Not priced yet</span>
+              )}
+            </span>
             <span className="block px-1">
               {resolving ? (
                 <span className="flex items-center justify-end gap-1 text-[11px] text-muted-foreground">
@@ -139,12 +112,19 @@ export const PriceCell: React.FC<PriceCellProps> = ({
                   Checking…
                 </span>
               ) : (
-                <Attestation
-                  priceSource="proxy"
-                  proxySymbol={entry.proxySymbol}
-                  attestedAt={null}
-                  resolvedAt={entry.lastResolvedPriceAt}
-                />
+                <button
+                  type="button"
+                  aria-label={`Security tracked for ${entry.name}`}
+                  onClick={() => setEnteringSymbol(true)}
+                  className="w-full rounded hover:bg-accent/60 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <Attestation
+                    priceSource="proxy"
+                    proxySymbol={entry.proxySymbol}
+                    attestedAt={null}
+                    resolvedAt={entry.lastResolvedPriceAt}
+                  />
+                </button>
               )}
             </span>
           </>
@@ -208,9 +188,14 @@ export const PriceCell: React.FC<PriceCellProps> = ({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             {isProxy ? (
-              <DropdownMenuItem onClick={setOwnPrice}>
-                Set the price myself
-              </DropdownMenuItem>
+              <>
+                <DropdownMenuItem onClick={() => setEnteringSymbol(true)}>
+                  Track another security
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={setOwnPrice}>
+                  Set the price myself
+                </DropdownMenuItem>
+              </>
             ) : (
               <DropdownMenuItem onClick={() => setEnteringSymbol(true)}>
                 Track a security instead
@@ -218,6 +203,17 @@ export const PriceCell: React.FC<PriceCellProps> = ({
             )}
           </DropdownMenuContent>
         </DropdownMenu>
+      )}
+      {enteringSymbol && (
+        <SecurityPicker
+          open
+          holdingName={entry.name}
+          currentSymbol={entry.proxySymbol}
+          defaultKind={kind.searchKind ?? null}
+          busy={resolving}
+          onSelect={trackSymbol}
+          onClose={() => setEnteringSymbol(false)}
+        />
       )}
     </div>
   );

@@ -16,16 +16,25 @@ import * as runtime from '../runtime';
 import type {
   HTTPValidationError,
   ResolveSecurityResponse,
+  SearchSecuritiesResponse,
 } from '../models/index';
 import {
     HTTPValidationErrorFromJSON,
     HTTPValidationErrorToJSON,
     ResolveSecurityResponseFromJSON,
     ResolveSecurityResponseToJSON,
+    SearchSecuritiesResponseFromJSON,
+    SearchSecuritiesResponseToJSON,
 } from '../models/index';
 
 export interface ResolveSecurityRequest {
     symbol: string;
+}
+
+export interface SearchSecuritiesRequest {
+    q: string;
+    kind?: SearchSecuritiesKindEnum;
+    limit?: number;
 }
 
 /**
@@ -50,6 +59,24 @@ export interface SecuritiesApiInterface {
      * Resolve Security
      */
     resolveSecurity(requestParameters: ResolveSecurityRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ResolveSecurityResponse>;
+
+    /**
+     * Search Yahoo Finance securities by symbol or name
+     * @summary Search Securities
+     * @param {string} q 
+     * @param {'equity' | 'etf' | 'mutualfund' | 'index' | 'future' | 'currency' | 'cryptocurrency'} [kind] 
+     * @param {number} [limit] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof SecuritiesApiInterface
+     */
+    searchSecuritiesRaw(requestParameters: SearchSecuritiesRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SearchSecuritiesResponse>>;
+
+    /**
+     * Search Yahoo Finance securities by symbol or name
+     * Search Securities
+     */
+    searchSecurities(requestParameters: SearchSecuritiesRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SearchSecuritiesResponse>;
 
 }
 
@@ -105,4 +132,73 @@ export class SecuritiesApi extends runtime.BaseAPI implements SecuritiesApiInter
         return await response.value();
     }
 
+    /**
+     * Search Yahoo Finance securities by symbol or name
+     * Search Securities
+     */
+    async searchSecuritiesRaw(requestParameters: SearchSecuritiesRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SearchSecuritiesResponse>> {
+        if (requestParameters['q'] == null) {
+            throw new runtime.RequiredError(
+                'q',
+                'Required parameter "q" was null or undefined when calling searchSecurities().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters['q'] != null) {
+            queryParameters['q'] = requestParameters['q'];
+        }
+
+        if (requestParameters['kind'] != null) {
+            queryParameters['kind'] = requestParameters['kind'];
+        }
+
+        if (requestParameters['limit'] != null) {
+            queryParameters['limit'] = requestParameters['limit'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/securities/search/`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => SearchSecuritiesResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Search Yahoo Finance securities by symbol or name
+     * Search Securities
+     */
+    async searchSecurities(requestParameters: SearchSecuritiesRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SearchSecuritiesResponse> {
+        const response = await this.searchSecuritiesRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
 }
+
+/**
+ * @export
+ */
+export const SearchSecuritiesKindEnum = {
+    Equity: 'equity',
+    Etf: 'etf',
+    Mutualfund: 'mutualfund',
+    Index: 'index',
+    Future: 'future',
+    Currency: 'currency',
+    Cryptocurrency: 'cryptocurrency'
+} as const;
+export type SearchSecuritiesKindEnum = typeof SearchSecuritiesKindEnum[keyof typeof SearchSecuritiesKindEnum];
