@@ -29,6 +29,7 @@ dependencies = [
     "temporalio<2",
     "twilio==9.10.5",
     "uvicorn<1",
+    "yfinance<2",
     "openai>=2",
     "rapidfuzz>=3",
 ]
@@ -44,7 +45,6 @@ dev = [
     "types-cachetools<7",
     "types-requests==2.33.0.20260408",
     "watchdog[watchmedo]<7",
-    "yfinance<1",
 ]
 
 [tool.ruff]

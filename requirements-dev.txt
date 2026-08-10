@@ -89,8 +89,6 @@ fastar==0.11.0
     # via
     #   fastapi
     #   fastapi-cloud-cli
-frozendict==2.4.7
-    # via yfinance
 frozenlist==1.8.0
     # via
     #   aiohttp
@@ -413,5 +411,5 @@ websockets==16.0
     #   yfinance
 yarl==1.24.2
     # via aiohttp
-yfinance==0.2.66
+yfinance==1.5.2
     # via finbot (pyproject.toml)
