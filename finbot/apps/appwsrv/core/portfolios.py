@@ -33,6 +33,7 @@ logger = logging.getLogger(__name__)
 
 _SECTION_ID_MAX_LENGTH = 64
 CUSTOM_COLUMN_KEY_MAX_LENGTH = 64
+_LINKED_ACCOUNT_NAME_CONSTRAINT = "uidx_linked_accounts_user_provider_account_name"
 
 
 def make_section_id(name: str, taken: set[str]) -> str:
@@ -345,6 +346,7 @@ def convert_linked_account(
         user_account_id=user_account_id,
         linked_account_id=linked_account_id,
     )
+    account_name = linked_account.account_name
 
     portfolio = Portfolio(user_account_id=user_account_id, linked_account_id=linked_account.id)
     session.add(portfolio)
@@ -393,8 +395,12 @@ def convert_linked_account(
     linked_account.frozen = False
     try:
         session.flush()
-    except IntegrityError:
-        raise InvalidOperation(f"A portfolio called '{linked_account.account_name}' already exists in this account")
+    except IntegrityError as e:
+        # The account name is read from the local variable: a failed flush expires the instance, so
+        # touching any of its attributes here would fail again and hide the original error.
+        if _LINKED_ACCOUNT_NAME_CONSTRAINT in str(e):
+            raise InvalidOperation(f"A portfolio called '{account_name}' already exists in this account")
+        raise
     return portfolio
 
 
