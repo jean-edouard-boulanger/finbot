@@ -572,7 +572,8 @@ def find_sub_accounts_valuation(
     if linked_account_id is not None:
         query = query.filter_by(linked_account_id=linked_account_id)
     query = query.options(joinedload(SubAccountValuationHistoryEntry.valuation_change))
-    return cast(list[SubAccountValuationHistoryEntry], query.all())
+    entries: list[SubAccountValuationHistoryEntry] = query.all()
+    return entries
 
 
 def find_items_valuation(
@@ -589,7 +590,8 @@ def find_items_valuation(
     if sub_account_id is not None:
         query = query.filter_by(sub_account_id=sub_account_id)
     query = query.options(joinedload(SubAccountItemValuationHistoryEntry.valuation_change))
-    return cast(list[SubAccountItemValuationHistoryEntry], query.all())
+    entries: list[SubAccountItemValuationHistoryEntry] = query.all()
+    return entries
 
 
 def get_linked_account(

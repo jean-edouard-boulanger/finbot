@@ -19,6 +19,8 @@ import {
   useApi,
   LinkedAccountsValuationApi,
   LinkedAccountValuationEntry,
+  PortfoliosApi,
+  PortfolioSummary,
 } from "clients";
 import { SystemStatusBadge } from "components/navigation";
 
@@ -33,6 +35,8 @@ import {
 import { ChatDrawer, ChatLauncherButton } from "components/chat-drawer";
 import { FinbotMark } from "components/finbot-mark";
 import { cn } from "lib/utils";
+
+const FINBOT_PORTFOLIO_PROVIDER_ID = "finbot_portfolio";
 
 function SidebarNavItem({
   to,
@@ -148,10 +152,12 @@ function SettingsSubNav({ onNavigate }: { onNavigate?: () => void }) {
 function SidebarContent({
   accounts,
   accountsError,
+  portfolios,
   onNavigate,
 }: {
   accounts: LinkedAccountValuationEntry[];
   accountsError?: string | null;
+  portfolios: PortfolioSummary[];
   onNavigate?: () => void;
 }) {
   const { pathname } = useLocation();
@@ -196,7 +202,13 @@ function SidebarContent({
               </p>
             ) : (
               accounts
-                .filter((entry) => !entry.linkedAccount.frozen)
+                .filter(
+                  (entry) =>
+                    !entry.linkedAccount.frozen &&
+                    // Portfolios are accounts too, but they have their own section below.
+                    entry.linkedAccount.providerId !==
+                      FINBOT_PORTFOLIO_PROVIDER_ID,
+                )
                 .map((entry) => (
                   <AccountNavItem
                     key={entry.linkedAccount.id}
@@ -214,6 +226,30 @@ function SidebarContent({
               >
                 <Plus className="h-3.5 w-3.5" />
                 <span className="text-sm">Link account</span>
+              </Button>
+            </NavLink>
+
+            <p className="mt-4 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Portfolios
+            </p>
+            {portfolios
+              .filter((portfolio) => !portfolio.frozen)
+              .map((portfolio) => (
+                <AccountNavItem
+                  key={portfolio.id}
+                  to={`/portfolios/${portfolio.id}`}
+                  colour={portfolio.colour}
+                  name={portfolio.name}
+                  onClick={onNavigate}
+                />
+              ))}
+            <NavLink to="/portfolios?action=new" onClick={onNavigate}>
+              <Button
+                variant="ghost"
+                className="w-full justify-start gap-2 pl-4 text-muted-foreground"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span className="text-sm">Create portfolio</span>
               </Button>
             </NavLink>
           </>
@@ -237,10 +273,13 @@ function SidebarContent({
 export const AppShell: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  const { pathname } = useLocation();
   const { userAccountId } = useContext(AuthContext);
   const linkedAccountsValuationApi = useApi(LinkedAccountsValuationApi);
+  const portfoliosApi = useApi(PortfoliosApi);
   const [accounts, setAccounts] = useState<LinkedAccountValuationEntry[]>([]);
   const [accountsError, setAccountsError] = useState<string | null>(null);
+  const [portfolios, setPortfolios] = useState<PortfolioSummary[]>([]);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
 
@@ -259,11 +298,31 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({
     fetch();
   }, [linkedAccountsValuationApi, userAccountId]);
 
+  useEffect(() => {
+    const fetchPortfolios = async () => {
+      try {
+        const result = await portfoliosApi.getPortfolios({
+          userAccountId: userAccountId!,
+        });
+        setPortfolios(result.portfolios);
+      } catch {
+        setPortfolios([]);
+      }
+    };
+    fetchPortfolios();
+    // Portfolios are created, renamed and deleted from within the app, so the list is re-read as
+    // you move around rather than only once on load.
+  }, [portfoliosApi, userAccountId, pathname]);
+
   return (
     <div className="flex min-h-screen">
       {/* Desktop sidebar */}
       <aside className="hidden w-64 shrink-0 border-r border-border/50 bg-background md:fixed md:inset-y-0 md:flex md:flex-col">
-        <SidebarContent accounts={accounts} accountsError={accountsError} />
+        <SidebarContent
+          accounts={accounts}
+          accountsError={accountsError}
+          portfolios={portfolios}
+        />
       </aside>
 
       {/* Mobile header + sheet */}
@@ -280,6 +339,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({
             <SidebarContent
               accounts={accounts}
               accountsError={accountsError}
+              portfolios={portfolios}
               onNavigate={() => setMobileOpen(false)}
             />
           </SheetContent>
@@ -295,7 +355,9 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({
       </div>
 
       {/* Main content */}
-      <main className="flex-1 pt-14 md:pl-64 md:pt-0">{children}</main>
+      {/* min-w-0: as a flex item, main defaults to min-width:auto and would otherwise be pushed
+          wider than the viewport by any wide content (tables) instead of letting it scroll. */}
+      <main className="min-w-0 flex-1 pt-14 md:pl-64 md:pt-0">{children}</main>
 
       {/* Chat assistant — global */}
       <ChatLauncherButton onClick={() => setChatOpen(true)} />

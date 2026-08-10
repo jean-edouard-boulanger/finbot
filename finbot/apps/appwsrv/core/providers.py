@@ -17,10 +17,24 @@ logger = logging.getLogger(__name__)
 PLAID_PROVIDER_ID = "plaid_us"
 SAXO_PROVIDER_ID = "saxo_gw_fr"
 DUMMY_PROVIDER_ID = "dummy_uk"
+FINBOT_PORTFOLIO_PROVIDER_ID = "finbot_portfolio"
 
 
 def is_plaid_linked_account(linked_account: model.LinkedAccount) -> bool:
     return linked_account.provider_id == PLAID_PROVIDER_ID
+
+
+def is_managed_provider(provider_id: str) -> bool:
+    """Managed providers are backed by Finbot itself rather than an external counterparty.
+
+    Their linked accounts are created and maintained through their own dedicated API, so they are
+    not offered in the generic 'link a new account' flow.
+    """
+    return provider_id == FINBOT_PORTFOLIO_PROVIDER_ID
+
+
+def is_finbot_portfolio_linked_account(linked_account: model.LinkedAccount) -> bool:
+    return linked_account.provider_id == FINBOT_PORTFOLIO_PROVIDER_ID
 
 
 def is_demo_provider(provider: model.Provider) -> bool:
@@ -34,6 +48,9 @@ def is_demo_provider(provider: model.Provider) -> bool:
 
 
 def is_provider_supported(provider: model.Provider) -> bool:
+    if is_managed_provider(provider.id):
+        return False
+
     if is_demo():
         return is_demo_provider(provider)
 

@@ -49,6 +49,9 @@
   --color-gain: hsl(var(--gain));
   --color-loss: hsl(var(--loss));
 
+  --color-attest-aging: hsl(var(--attest-aging));
+  --color-attest-stale: hsl(var(--attest-stale));
+
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
@@ -114,6 +117,14 @@
     pointer-events: none;
     z-index: 0;
   }
+}
+
+@utility font-register {
+  /* Display face for the portfolios register. Source Serif 4 is already loaded by index.html and
+     gives attested, hand-maintained holdings a documentary voice, distinct from the synced
+     market data set in Outfit everywhere else. */
+  font-family: 'Source Serif 4', Georgia, serif;
+  font-optical-sizing: auto;
 }
 
 @utility hero-glow {
@@ -232,6 +243,10 @@
     --radius: 0.75rem;
     --gain: 160 95% 46%;
     --loss: 0 80% 55%;
+    /* How far an attested valuation has drifted from the day it was set. Warm, not alarming:
+       a stale valuation is a chore, not an error. */
+    --attest-aging: 38 88% 42%;
+    --attest-stale: 20 85% 47%;
     --chart-1: 43 90% 48%;
     --chart-2: 192 75% 42%;
     --chart-3: 350 70% 55%;
@@ -261,6 +276,8 @@
     --ring: 43 96% 56%;
     --gain: 160 95% 46%;
     --loss: 0 80% 62%;
+    --attest-aging: 38 92% 58%;
+    --attest-stale: 20 90% 62%;
     --chart-1: 43 90% 58%;
     --chart-2: 192 75% 55%;
     --chart-3: 350 65% 62%;

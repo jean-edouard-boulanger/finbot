@@ -1,13 +1,14 @@
 from datetime import date, datetime
-from typing import Any, Literal, TypeAlias
+from typing import Annotated, Any, Literal, TypeAlias
 
-from pydantic import ConfigDict, Field, SecretStr
+from pydantic import ConfigDict, Field, SecretStr, model_validator
 
 from finbot.apps.appwsrv.reports.earnings import schema as earnings_schema
 from finbot.apps.appwsrv.reports.holdings import schema as holdings_schema
 from finbot.apps.appwsrv.reports.transactions import schema as transactions_schema
 from finbot.core import schema as core_schema
 from finbot.core.schema import BaseModel, HexColour
+from finbot.core.securities_market import SecurityKind
 from finbot.providers import schema as providers_schema
 
 JsonSchemaType: TypeAlias = dict[str, Any]
@@ -90,6 +91,8 @@ class LinkedAccount(AppModel):
     frozen: bool
     provider_id: str
     provider: Provider
+    portfolio_id: int | None
+    """Set when this account is a Finbot managed portfolio, pointing at the portfolio itself."""
     status: LinkedAccountStatus | None
     credentials: CredentialsPayloadType | None
     created_at: datetime
@@ -480,3 +483,284 @@ class AssetTypeClassFormattingRule(AppModel):
 
 class GetAccountsFormattingRulesResponse(AppModel):
     colour_palette: list[HexColour]
+
+
+class GetAssetsFormattingRulesResponse(AppModel):
+    asset_classes: list[AssetClassFormattingRule]
+    asset_types: list[AssetTypeFormattingRule]
+
+
+# `core_schema.CurrencyCode` cannot be used in API schemas: the `examples` it injects is not valid
+# under OpenAPI 3.0.3, which the typescript client generator targets.
+CurrencyCodeStr = Annotated[str, Field(pattern=r"^[A-Z]{3}$")]
+PortfolioItemType: TypeAlias = Literal["asset", "liability"]
+PortfolioPriceSource: TypeAlias = Literal["manual", "proxy"]
+PortfolioCustomColumnType: TypeAlias = Literal["text", "number", "date"]
+# Values are kept as plain strings: custom columns are display-only metadata.
+PortfolioCustomValuesType: TypeAlias = dict[str, str]
+
+
+class PortfolioCustomColumn(AppModel):
+    # Only constrained in length: keys are also derived from spreadsheet headers when converting an
+    # existing account, and those legitimately contain punctuation ("Performance (%)"). A character
+    # whitelist here would make an imported portfolio impossible to read back.
+    key: str = Field(min_length=1, max_length=64)
+    label: str = Field(max_length=64)
+    type: PortfolioCustomColumnType = "text"
+
+
+class PortfolioEntry(AppModel):
+    id: int
+    item_type: PortfolioItemType
+    name: str
+    asset_class: providers_schema.AssetClass | None
+    asset_type: providers_schema.AssetType | None
+    liability_type: str | None
+    currency: CurrencyCodeStr
+    units: float
+    price_source: PortfolioPriceSource
+    unit_price: float | None
+    """Effective unit price: the manual price, or the last price resolved from the proxy security."""
+    manual_unit_price: float | None
+    manual_price_updated_at: datetime | None
+    proxy_symbol: str | None
+    last_resolved_unit_price: float | None
+    last_resolved_price_at: datetime | None
+    isin_code: str | None
+    custom_values: PortfolioCustomValuesType
+    value: float | None
+    """`units * unit_price`, expressed in the entry currency."""
+    estimated_value: float | None
+    """Same amount converted to the user's valuation currency. An estimate, see `Portfolio`."""
+    display_order: int
+
+
+class PortfolioSection(AppModel):
+    id: int
+    section_id: str
+    name: str
+    currency: CurrencyCodeStr
+    account_type: providers_schema.AccountType
+    account_sub_type: str | None
+    custom_columns: list[PortfolioCustomColumn]
+    display_order: int
+    estimated_value: float | None
+    """Sum of this section's holdings, in the currency this section reports in. An estimate."""
+    entries: list[PortfolioEntry]
+
+
+class PortfolioSummary(AppModel):
+    id: int
+    linked_account_id: int
+    name: str
+    colour: HexColour
+    frozen: bool
+    sections_count: int
+    entries_count: int
+    estimated_value: float | None
+    valuation_ccy: CurrencyCodeStr
+    created_at: datetime
+    updated_at: datetime | None
+
+
+class Portfolio(AppModel):
+    id: int
+    linked_account_id: int
+    name: str
+    colour: HexColour
+    frozen: bool
+    estimated_value: float | None
+    """Worth of the portfolio in the user's valuation currency.
+
+    An estimate: it uses the prices already on record, including the last price read for tracked
+    holdings, so it is available immediately as figures are edited. The confirmed valuation comes
+    from the next snapshot.
+    """
+    valuation_ccy: CurrencyCodeStr
+    sections: list[PortfolioSection]
+    created_at: datetime
+    updated_at: datetime | None
+
+
+class PortfolioEntryPayload(AppModel):
+    """Full description of a portfolio entry: used to both create and replace entries."""
+
+    item_type: PortfolioItemType
+    name: str
+    asset_class: providers_schema.AssetClass | None = None
+    asset_type: providers_schema.AssetType | None = None
+    liability_type: str | None = None
+    currency: CurrencyCodeStr | None = None
+    """Not needed for proxy priced entries: it is derived from the proxy security quote."""
+    units: float = 1.0
+    price_source: PortfolioPriceSource = "manual"
+    manual_unit_price: float | None = None
+    proxy_symbol: str | None = None
+    isin_code: str | None = None
+    custom_values: PortfolioCustomValuesType = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def validate_entry(self) -> "PortfolioEntryPayload":
+        if self.item_type == "liability":
+            if self.price_source != "manual":
+                raise ValueError("Liability entries can only be manually priced")
+            if self.asset_class is not None or self.asset_type is not None:
+                raise ValueError("Liability entries cannot have an asset class or asset type")
+            if not self.liability_type:
+                raise ValueError("Liability entries must have a liability type")
+        else:
+            if self.asset_class is None or self.asset_type is None:
+                raise ValueError("Asset entries must have both an asset class and an asset type")
+            if self.liability_type is not None:
+                raise ValueError("Asset entries cannot have a liability type")
+        if self.price_source == "manual":
+            if self.manual_unit_price is None:
+                raise ValueError("Manually priced entries must have a unit price")
+            if self.currency is None:
+                raise ValueError("Manually priced entries must have a currency")
+        else:
+            if not self.proxy_symbol:
+                raise ValueError("Proxy priced entries must have a proxy symbol")
+        return self
+
+
+class PortfolioSectionPayload(AppModel):
+    """Full description of a portfolio section: used to both create and replace sections."""
+
+    name: str
+    currency: CurrencyCodeStr
+    account_type: providers_schema.AccountType
+    account_sub_type: str | None = None
+    custom_columns: list[PortfolioCustomColumn] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_sub_type(self) -> "PortfolioSectionPayload":
+        valid_sub_types = providers_schema.VALID_ACCOUNT_SUB_TYPES[self.account_type]
+        if self.account_sub_type not in valid_sub_types:
+            raise ValueError(
+                f"'{self.account_sub_type}' is not a valid sub type for a '{self.account_type.value}' account"
+            )
+        return self
+
+
+class AccountSubTypes(AppModel):
+    account_type: providers_schema.AccountType
+    sub_types: list[str]
+
+
+class GetAccountSubTypesResponse(AppModel):
+    account_sub_types: list[AccountSubTypes]
+
+
+class CreatePortfolioRequest(AppModel):
+    name: str
+    colour: HexColour
+
+
+class CreatePortfolioResponse(AppModel):
+    portfolio: Portfolio
+
+
+class ConversionPreviewHolding(AppModel):
+    name: str
+    value: float
+    currency: CurrencyCodeStr
+    is_liability: bool
+
+
+class ConversionPreviewSection(AppModel):
+    name: str
+    currency: CurrencyCodeStr
+    holdings: list[ConversionPreviewHolding]
+    detail_columns: list[str]
+    """Extra per holding details that would be carried across, by name."""
+
+
+class GetConversionPreviewResponse(AppModel):
+    account_name: str
+    valued_at: datetime | None
+    sections: list[ConversionPreviewSection]
+    holdings_count: int
+
+
+class ConvertLinkedAccountRequest(AppModel):
+    linked_account_id: int
+
+
+class ConvertLinkedAccountResponse(AppModel):
+    portfolio: Portfolio
+
+
+class GetPortfoliosResponse(AppModel):
+    portfolios: list[PortfolioSummary]
+
+
+class GetPortfolioResponse(AppModel):
+    portfolio: Portfolio
+
+
+class UpdatePortfolioRequest(AppModel):
+    name: str | None = None
+    colour: HexColour | None = None
+
+
+class UpdatePortfolioResponse(AppModel):
+    portfolio: Portfolio
+
+
+class DeletePortfolioResponse(AppModel):
+    pass
+
+
+class CreatePortfolioSectionResponse(AppModel):
+    portfolio: Portfolio
+
+
+class UpdatePortfolioSectionResponse(AppModel):
+    portfolio: Portfolio
+
+
+class DeletePortfolioSectionResponse(AppModel):
+    portfolio: Portfolio
+
+
+class CreatePortfolioEntryResponse(AppModel):
+    portfolio: Portfolio
+
+
+class UpdatePortfolioEntryResponse(AppModel):
+    portfolio: Portfolio
+
+
+class DeletePortfolioEntryResponse(AppModel):
+    portfolio: Portfolio
+
+
+class RefreshPortfolioResponse(AppModel):
+    pass
+
+
+class SecurityQuote(AppModel):
+    symbol: str
+    name: str | None
+    currency: CurrencyCodeStr
+    price: float
+    as_of: datetime
+
+
+class ResolveSecurityResponse(AppModel):
+    quote: SecurityQuote
+
+
+class SecuritySearchResult(AppModel):
+    symbol: str
+    name: str | None
+    kind: SecurityKind | None
+    exchange: str | None
+
+
+class SearchSecuritiesResponse(AppModel):
+    results: list[SecuritySearchResult]
+    #: `False` when Yahoo Finance could not be reached, so that no results can be reported as
+    #: "suggestions are unavailable" rather than as "nothing matches".
+    provider_available: bool

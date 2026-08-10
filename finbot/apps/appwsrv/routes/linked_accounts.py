@@ -266,6 +266,10 @@ async def update_linked_account_credentials(
     if linked_account.frozen:
         raise InvalidUserInput(f"Linked account '{linked_account.account_name}' is frozen and cannot be updated.")
 
+    if appwsrv_providers.is_managed_provider(linked_account.provider_id):
+        # Their credentials point at Finbot's own data, overwriting them would orphan the account.
+        raise InvalidUserInput(f"Linked account '{linked_account.account_name}' has no credentials to update.")
+
     is_plaid = appwsrv_providers.is_plaid_linked_account(linked_account)
     if is_plaid and not is_plaid_configured():
         raise InvalidUserInput("user account is not setup for Plaid")

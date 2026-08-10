@@ -31,6 +31,7 @@ import {
 import { HistoricalValuationPanel } from "../main-dashboard/reports/historical-valuation";
 import { TransactionsReportPanel } from "../main-dashboard/reports/transactions";
 import { CashFlowPanel } from "../main-dashboard/reports/cash-flow";
+import { PortfolioViewSwitch } from "../portfolios/view-switch";
 
 import { DateTime } from "luxon";
 import { CheckCircle, AlertCircle, Ghost, HelpCircle } from "lucide-react";
@@ -267,6 +268,16 @@ export const LinkedAccountDashboard: React.FC = () => {
               <span className="text-xs text-muted-foreground">
                 Synced {lastSnapshotTime.toRelative()}
               </span>
+            )}
+            {/* A portfolio is also somewhere you edit, so offer the way across. */}
+            {linkedAccount.portfolioId !== null && (
+              <div className="ml-auto">
+                <PortfolioViewSwitch
+                  portfolioId={linkedAccount.portfolioId}
+                  linkedAccountId={linkedAccount.id}
+                  current="valuation"
+                />
+              </div>
             )}
           </div>
         </div>

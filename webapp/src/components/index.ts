@@ -12,6 +12,7 @@ import { PasswordValidationCard } from "./password";
 import { ColourPicker } from "./colour-picker";
 import { FinbotMark } from "./finbot-mark";
 import { DateRangeFilter } from "./date-range-filter";
+import { EditableCell } from "./editable-cell";
 
 export {
   AppShell,
@@ -30,4 +31,5 @@ export {
   ColourPicker,
   FinbotMark,
   DateRangeFilter,
+  EditableCell,
 };

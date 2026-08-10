@@ -8,8 +8,10 @@ from finbot.apps.appwsrv.routes.chat import router as chat_router
 from finbot.apps.appwsrv.routes.formatting_rules import router as formatting_rules_router
 from finbot.apps.appwsrv.routes.linked_accounts import router as linked_accounts_router
 from finbot.apps.appwsrv.routes.linked_accounts_valuation import router as linked_accounts_valuation_router
+from finbot.apps.appwsrv.routes.portfolios import router as portfolios_router
 from finbot.apps.appwsrv.routes.providers import router as providers_router
 from finbot.apps.appwsrv.routes.reports import router as reports_router
+from finbot.apps.appwsrv.routes.securities import router as securities_router
 from finbot.apps.appwsrv.routes.user_account_valuation import router as user_account_valuation_router
 from finbot.apps.appwsrv.routes.user_accounts import router as user_accounts_router
 from finbot.apps.http_base import ORJSONResponse, setup_app
@@ -37,6 +39,8 @@ app.include_router(user_account_valuation_router)
 app.include_router(user_accounts_router)
 app.include_router(linked_accounts_valuation_router)
 app.include_router(linked_accounts_router)
+app.include_router(portfolios_router)
+app.include_router(securities_router)
 app.include_router(reports_router)
 app.include_router(formatting_rules_router)
 app.include_router(chat_router)

@@ -2,10 +2,14 @@ from typing import Any
 
 from finbot import model
 from finbot.apps.appwsrv import schema as appwsrv_schema
+from finbot.apps.appwsrv.core import portfolios as portfolios_core
+from finbot.apps.appwsrv.core.portfolio_valuation import PortfolioValuationEstimate
 from finbot.core import schema as core_schema
+from finbot.core import securities_market
 from finbot.core.email_delivery import DeliverySettings
 from finbot.core.serialization import reinterpret_as_pydantic
 from finbot.model import repository
+from finbot.providers import schema as providers_schema
 
 
 def serialize_user_account(
@@ -73,6 +77,7 @@ def serialize_linked_account(
         frozen=linked_account.frozen,
         provider_id=linked_account.provider.id,
         provider=serialize_provider(linked_account.provider),
+        portfolio_id=(linked_account.portfolio.id if linked_account.portfolio else None),
         status=serialize_linked_account_status(linked_account_status),
         credentials=credentials,
         created_at=linked_account.created_at,
@@ -98,4 +103,151 @@ def serialize_email_delivery_settings(
         )
         if settings
         else None
+    )
+
+
+def _portfolio_entry_unit_price(entry: model.PortfolioEntry) -> float | None:
+    if entry.price_source == model.PortfolioEntryPriceSource.Manual:
+        return float(entry.manual_unit_price) if entry.manual_unit_price is not None else None
+    return float(entry.last_resolved_unit_price) if entry.last_resolved_unit_price is not None else None
+
+
+def serialize_portfolio_entry(
+    entry: model.PortfolioEntry,
+    estimate: PortfolioValuationEstimate | None,
+) -> appwsrv_schema.PortfolioEntry:
+    unit_price = _portfolio_entry_unit_price(entry)
+    units = float(entry.units)
+    return appwsrv_schema.PortfolioEntry(
+        id=entry.id,
+        item_type=("liability" if entry.item_type == model.SubAccountItemType.Liability else "asset"),
+        name=entry.name,
+        asset_class=(providers_schema.AssetClass(entry.asset_class) if entry.asset_class else None),
+        asset_type=(providers_schema.AssetType(entry.asset_type) if entry.asset_type else None),
+        liability_type=entry.liability_type,
+        currency=core_schema.CurrencyCode(entry.currency),
+        units=units,
+        price_source=("proxy" if entry.price_source == model.PortfolioEntryPriceSource.Proxy else "manual"),
+        unit_price=unit_price,
+        manual_unit_price=(float(entry.manual_unit_price) if entry.manual_unit_price is not None else None),
+        manual_price_updated_at=entry.manual_price_updated_at,
+        proxy_symbol=entry.proxy_symbol,
+        last_resolved_unit_price=(
+            float(entry.last_resolved_unit_price) if entry.last_resolved_unit_price is not None else None
+        ),
+        last_resolved_price_at=entry.last_resolved_price_at,
+        isin_code=entry.isin_code,
+        custom_values=entry.custom_values or {},
+        value=(units * unit_price if unit_price is not None else None),
+        estimated_value=(estimate.by_entry.get(entry.id) if estimate else None),
+        display_order=entry.display_order,
+    )
+
+
+def serialize_portfolio_section(
+    section: model.PortfolioSection,
+    estimate: PortfolioValuationEstimate | None,
+) -> appwsrv_schema.PortfolioSection:
+    return appwsrv_schema.PortfolioSection(
+        id=section.id,
+        section_id=section.section_id,
+        name=section.name,
+        currency=core_schema.CurrencyCode(section.currency),
+        account_type=providers_schema.AccountType(section.account_type),
+        account_sub_type=section.account_sub_type,
+        custom_columns=[
+            appwsrv_schema.PortfolioCustomColumn.model_validate(column) for column in (section.custom_columns or [])
+        ],
+        display_order=section.display_order,
+        estimated_value=(estimate.by_section.get(section.id) if estimate else None),
+        entries=[serialize_portfolio_entry(entry, estimate) for entry in section.entries],
+    )
+
+
+def serialize_portfolio(
+    portfolio: model.Portfolio,
+    estimate: PortfolioValuationEstimate | None,
+    valuation_ccy: str,
+) -> appwsrv_schema.Portfolio:
+    linked_account = portfolio.linked_account
+    return appwsrv_schema.Portfolio(
+        id=portfolio.id,
+        linked_account_id=portfolio.linked_account_id,
+        name=linked_account.account_name,
+        colour=linked_account.account_colour,
+        frozen=linked_account.frozen,
+        estimated_value=(estimate.total if estimate else None),
+        valuation_ccy=valuation_ccy,
+        sections=[serialize_portfolio_section(section, estimate) for section in portfolio.sections],
+        created_at=portfolio.created_at,
+        updated_at=portfolio.updated_at,
+    )
+
+
+def serialize_portfolio_summary(
+    portfolio: model.Portfolio,
+    estimate: PortfolioValuationEstimate | None,
+    valuation_ccy: str,
+) -> appwsrv_schema.PortfolioSummary:
+    linked_account = portfolio.linked_account
+    return appwsrv_schema.PortfolioSummary(
+        id=portfolio.id,
+        linked_account_id=portfolio.linked_account_id,
+        name=linked_account.account_name,
+        colour=linked_account.account_colour,
+        frozen=linked_account.frozen,
+        sections_count=len(portfolio.sections),
+        entries_count=sum(len(section.entries) for section in portfolio.sections),
+        estimated_value=(estimate.total if estimate else None),
+        valuation_ccy=valuation_ccy,
+        created_at=portfolio.created_at,
+        updated_at=portfolio.updated_at,
+    )
+
+
+def serialize_security_quote(quote: securities_market.SecurityQuote) -> appwsrv_schema.SecurityQuote:
+    return appwsrv_schema.SecurityQuote(
+        symbol=quote.symbol,
+        name=quote.name,
+        currency=quote.currency,
+        price=quote.price,
+        as_of=quote.as_of,
+    )
+
+
+def serialize_security_search_result(
+    result: securities_market.SecuritySearchResult,
+) -> appwsrv_schema.SecuritySearchResult:
+    return appwsrv_schema.SecuritySearchResult(
+        symbol=result.symbol,
+        name=result.name,
+        kind=result.kind,
+        exchange=result.exchange,
+    )
+
+
+def serialize_conversion_preview(
+    plan: portfolios_core.ConversionPlan,
+) -> appwsrv_schema.GetConversionPreviewResponse:
+    return appwsrv_schema.GetConversionPreviewResponse(
+        account_name=plan.account_name,
+        valued_at=plan.valued_at,
+        holdings_count=plan.holdings_count,
+        sections=[
+            appwsrv_schema.ConversionPreviewSection(
+                name=section.name,
+                currency=core_schema.CurrencyCode(section.currency),
+                detail_columns=section.detail_columns,
+                holdings=[
+                    appwsrv_schema.ConversionPreviewHolding(
+                        name=holding.name,
+                        value=holding.value,
+                        currency=core_schema.CurrencyCode(holding.currency),
+                        is_liability=holding.item_type == model.SubAccountItemType.Liability,
+                    )
+                    for holding in section.holdings
+                ],
+            )
+            for section in plan.sections
+        ],
     )

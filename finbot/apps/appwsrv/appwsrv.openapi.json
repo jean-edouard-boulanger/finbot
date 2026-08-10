@@ -1863,6 +1863,1019 @@
                 }
             }
         },
+        "/accounts/{user_account_id}/portfolios/": {
+            "get": {
+                "tags": [
+                    "Portfolios"
+                ],
+                "summary": "Get Portfolios",
+                "description": "Get portfolios",
+                "operationId": "get_portfolios",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Account Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GetPortfoliosResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Portfolios"
+                ],
+                "summary": "Create Portfolio",
+                "description": "Create portfolio",
+                "operationId": "create_portfolio",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Account Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreatePortfolioRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CreatePortfolioResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/accounts/{user_account_id}/portfolios/convert/preview/": {
+            "get": {
+                "tags": [
+                    "Portfolios"
+                ],
+                "summary": "Get Conversion Preview",
+                "description": "Show what an account would look like as a portfolio, without converting it",
+                "operationId": "get_conversion_preview",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Account Id"
+                        }
+                    },
+                    {
+                        "name": "linked_account_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Linked Account Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GetConversionPreviewResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/accounts/{user_account_id}/portfolios/convert/": {
+            "post": {
+                "tags": [
+                    "Portfolios"
+                ],
+                "summary": "Convert Linked Account To Portfolio",
+                "description": "Turn an existing linked account into a Finbot managed portfolio",
+                "operationId": "convert_linked_account_to_portfolio",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Account Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ConvertLinkedAccountRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConvertLinkedAccountResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/accounts/{user_account_id}/portfolios/{portfolio_id}/": {
+            "get": {
+                "tags": [
+                    "Portfolios"
+                ],
+                "summary": "Get Portfolio",
+                "description": "Get portfolio",
+                "operationId": "get_portfolio",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Account Id"
+                        }
+                    },
+                    {
+                        "name": "portfolio_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Portfolio Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GetPortfolioResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Portfolios"
+                ],
+                "summary": "Update Portfolio",
+                "description": "Update portfolio",
+                "operationId": "update_portfolio",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Account Id"
+                        }
+                    },
+                    {
+                        "name": "portfolio_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Portfolio Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdatePortfolioRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UpdatePortfolioResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Portfolios"
+                ],
+                "summary": "Delete Portfolio",
+                "description": "Delete portfolio",
+                "operationId": "delete_portfolio",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Account Id"
+                        }
+                    },
+                    {
+                        "name": "portfolio_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Portfolio Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DeletePortfolioResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/accounts/{user_account_id}/portfolios/{portfolio_id}/snapshot/": {
+            "post": {
+                "tags": [
+                    "Portfolios"
+                ],
+                "summary": "Refresh Portfolio",
+                "description": "Take a new snapshot of this portfolio",
+                "operationId": "refresh_portfolio",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Account Id"
+                        }
+                    },
+                    {
+                        "name": "portfolio_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Portfolio Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RefreshPortfolioResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/accounts/{user_account_id}/portfolios/{portfolio_id}/sections/": {
+            "post": {
+                "tags": [
+                    "Portfolios"
+                ],
+                "summary": "Create Portfolio Section",
+                "description": "Create portfolio section",
+                "operationId": "create_portfolio_section",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Account Id"
+                        }
+                    },
+                    {
+                        "name": "portfolio_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Portfolio Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PortfolioSectionPayload"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CreatePortfolioSectionResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/accounts/{user_account_id}/portfolios/{portfolio_id}/sections/{section_id}/": {
+            "put": {
+                "tags": [
+                    "Portfolios"
+                ],
+                "summary": "Update Portfolio Section",
+                "description": "Update portfolio section",
+                "operationId": "update_portfolio_section",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Account Id"
+                        }
+                    },
+                    {
+                        "name": "portfolio_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Portfolio Id"
+                        }
+                    },
+                    {
+                        "name": "section_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Section Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PortfolioSectionPayload"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UpdatePortfolioSectionResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Portfolios"
+                ],
+                "summary": "Delete Portfolio Section",
+                "description": "Delete portfolio section",
+                "operationId": "delete_portfolio_section",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Account Id"
+                        }
+                    },
+                    {
+                        "name": "portfolio_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Portfolio Id"
+                        }
+                    },
+                    {
+                        "name": "section_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Section Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DeletePortfolioSectionResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/accounts/{user_account_id}/portfolios/{portfolio_id}/sections/{section_id}/entries/": {
+            "post": {
+                "tags": [
+                    "Portfolios"
+                ],
+                "summary": "Create Portfolio Entry",
+                "description": "Create portfolio entry",
+                "operationId": "create_portfolio_entry",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Account Id"
+                        }
+                    },
+                    {
+                        "name": "portfolio_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Portfolio Id"
+                        }
+                    },
+                    {
+                        "name": "section_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Section Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PortfolioEntryPayload"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CreatePortfolioEntryResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/accounts/{user_account_id}/portfolios/{portfolio_id}/entries/{entry_id}/": {
+            "put": {
+                "tags": [
+                    "Portfolios"
+                ],
+                "summary": "Update Portfolio Entry",
+                "description": "Update portfolio entry",
+                "operationId": "update_portfolio_entry",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Account Id"
+                        }
+                    },
+                    {
+                        "name": "portfolio_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Portfolio Id"
+                        }
+                    },
+                    {
+                        "name": "entry_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Entry Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PortfolioEntryPayload"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UpdatePortfolioEntryResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Portfolios"
+                ],
+                "summary": "Delete Portfolio Entry",
+                "description": "Delete portfolio entry",
+                "operationId": "delete_portfolio_entry",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Account Id"
+                        }
+                    },
+                    {
+                        "name": "portfolio_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Portfolio Id"
+                        }
+                    },
+                    {
+                        "name": "entry_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Entry Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DeletePortfolioEntryResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/securities/resolve/": {
+            "get": {
+                "tags": [
+                    "Securities"
+                ],
+                "summary": "Resolve Security",
+                "description": "Resolve a security by its Yahoo Finance symbol",
+                "operationId": "resolve_security",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "symbol",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 32,
+                            "title": "Symbol"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResolveSecurityResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/securities/search/": {
+            "get": {
+                "tags": [
+                    "Securities"
+                ],
+                "summary": "Search Securities",
+                "description": "Search Yahoo Finance securities by symbol or name",
+                "operationId": "search_securities",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "minLength": 2,
+                            "maxLength": 64,
+                            "title": "Q"
+                        }
+                    },
+                    {
+                        "name": "kind",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "enum": [
+                                        "equity",
+                                        "etf",
+                                        "mutualfund",
+                                        "index",
+                                        "future",
+                                        "currency",
+                                        "cryptocurrency"
+                                    ],
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Kind"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 50,
+                            "minimum": 1,
+                            "default": 15,
+                            "title": "Limit"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SearchSecuritiesResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/reports/holdings/": {
             "get": {
                 "tags": [
@@ -2824,6 +3837,60 @@
                 }
             }
         },
+        "/formatting_rules/assets/": {
+            "get": {
+                "tags": [
+                    "Formatting rules"
+                ],
+                "summary": "Get Assets Formatting Rules",
+                "description": "Get the display name and colour to use for each asset class and type",
+                "operationId": "get_assets_formatting_rules",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GetAssetsFormattingRulesResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
+        },
+        "/formatting_rules/account_sub_types/": {
+            "get": {
+                "tags": [
+                    "Formatting rules"
+                ],
+                "summary": "Get Account Sub Types",
+                "description": "Get the account sub types valid for each account type",
+                "operationId": "get_account_sub_types",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GetAccountSubTypesResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
+        },
         "/formatting_rules/accounts/": {
             "get": {
                 "tags": [
@@ -2899,6 +3966,38 @@
     },
     "components": {
         "schemas": {
+            "AccountSubTypes": {
+                "properties": {
+                    "account_type": {
+                        "$ref": "#/components/schemas/AccountType"
+                    },
+                    "sub_types": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Sub Types"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "account_type",
+                    "sub_types"
+                ],
+                "title": "AccountSubTypes"
+            },
+            "AccountType": {
+                "type": "string",
+                "enum": [
+                    "depository",
+                    "credit",
+                    "loan",
+                    "investment",
+                    "other"
+                ],
+                "title": "AccountType"
+            },
             "AggregationDescription": {
                 "properties": {
                     "as_str": {
@@ -2912,6 +4011,92 @@
                     "as_str"
                 ],
                 "title": "AggregationDescription"
+            },
+            "AssetClass": {
+                "type": "string",
+                "enum": [
+                    "equities",
+                    "fixed_income",
+                    "private_debt",
+                    "currency",
+                    "foreign_currency",
+                    "crypto",
+                    "real_estate",
+                    "commodities",
+                    "multi_asset"
+                ],
+                "title": "AssetClass"
+            },
+            "AssetClassFormattingRule": {
+                "properties": {
+                    "asset_class": {
+                        "$ref": "#/components/schemas/AssetClass"
+                    },
+                    "pretty_name": {
+                        "type": "string",
+                        "title": "Pretty Name"
+                    },
+                    "dominant_colour": {
+                        "type": "string",
+                        "pattern": "^#[A-Fa-f0-9]{6}$",
+                        "title": "Dominant Colour"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "asset_class",
+                    "pretty_name",
+                    "dominant_colour"
+                ],
+                "title": "AssetClassFormattingRule"
+            },
+            "AssetType": {
+                "type": "string",
+                "enum": [
+                    "cash",
+                    "bond",
+                    "stock",
+                    "option",
+                    "future",
+                    "ETF",
+                    "ETN",
+                    "ETC",
+                    "generic_fund",
+                    "loan",
+                    "precious_metal",
+                    "crypto_currency",
+                    "utility_token",
+                    "security_token",
+                    "stable_coin",
+                    "commercial_property",
+                    "residential_property",
+                    "land_property"
+                ],
+                "title": "AssetType"
+            },
+            "AssetTypeFormattingRule": {
+                "properties": {
+                    "asset_type": {
+                        "$ref": "#/components/schemas/AssetType"
+                    },
+                    "pretty_name": {
+                        "type": "string",
+                        "title": "Pretty Name"
+                    },
+                    "abbreviated_name": {
+                        "type": "string",
+                        "title": "Abbreviated Name"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "asset_type",
+                    "pretty_name",
+                    "abbreviated_name"
+                ],
+                "title": "AssetTypeFormattingRule"
             },
             "AuthenticationPayload": {
                 "properties": {
@@ -3082,6 +4267,99 @@
                 ],
                 "title": "ChatRequest"
             },
+            "ConversionPreviewHolding": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "value": {
+                        "type": "number",
+                        "title": "Value"
+                    },
+                    "currency": {
+                        "type": "string",
+                        "pattern": "^[A-Z]{3}$",
+                        "title": "Currency"
+                    },
+                    "is_liability": {
+                        "type": "boolean",
+                        "title": "Is Liability"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "name",
+                    "value",
+                    "currency",
+                    "is_liability"
+                ],
+                "title": "ConversionPreviewHolding"
+            },
+            "ConversionPreviewSection": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "currency": {
+                        "type": "string",
+                        "pattern": "^[A-Z]{3}$",
+                        "title": "Currency"
+                    },
+                    "holdings": {
+                        "items": {
+                            "$ref": "#/components/schemas/ConversionPreviewHolding"
+                        },
+                        "type": "array",
+                        "title": "Holdings"
+                    },
+                    "detail_columns": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Detail Columns"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "name",
+                    "currency",
+                    "holdings",
+                    "detail_columns"
+                ],
+                "title": "ConversionPreviewSection"
+            },
+            "ConvertLinkedAccountRequest": {
+                "properties": {
+                    "linked_account_id": {
+                        "type": "integer",
+                        "title": "Linked Account Id"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "linked_account_id"
+                ],
+                "title": "ConvertLinkedAccountRequest"
+            },
+            "ConvertLinkedAccountResponse": {
+                "properties": {
+                    "portfolio": {
+                        "$ref": "#/components/schemas/Portfolio"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "portfolio"
+                ],
+                "title": "ConvertLinkedAccountResponse"
+            },
             "CreateOrUpdateProviderRequest": {
                 "properties": {
                     "id": {
@@ -3124,6 +4402,65 @@
                     "provider"
                 ],
                 "title": "CreateOrUpdateProviderResponse"
+            },
+            "CreatePortfolioEntryResponse": {
+                "properties": {
+                    "portfolio": {
+                        "$ref": "#/components/schemas/Portfolio"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "portfolio"
+                ],
+                "title": "CreatePortfolioEntryResponse"
+            },
+            "CreatePortfolioRequest": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "colour": {
+                        "type": "string",
+                        "pattern": "^#[A-Fa-f0-9]{6}$",
+                        "title": "Colour"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "name",
+                    "colour"
+                ],
+                "title": "CreatePortfolioRequest"
+            },
+            "CreatePortfolioResponse": {
+                "properties": {
+                    "portfolio": {
+                        "$ref": "#/components/schemas/Portfolio"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "portfolio"
+                ],
+                "title": "CreatePortfolioResponse"
+            },
+            "CreatePortfolioSectionResponse": {
+                "properties": {
+                    "portfolio": {
+                        "$ref": "#/components/schemas/Portfolio"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "portfolio"
+                ],
+                "title": "CreatePortfolioSectionResponse"
             },
             "CreateUserAccountRequest": {
                 "properties": {
@@ -3173,6 +4510,38 @@
                 "additionalProperties": false,
                 "type": "object",
                 "title": "DeleteLinkedAccountResponse"
+            },
+            "DeletePortfolioEntryResponse": {
+                "properties": {
+                    "portfolio": {
+                        "$ref": "#/components/schemas/Portfolio"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "portfolio"
+                ],
+                "title": "DeletePortfolioEntryResponse"
+            },
+            "DeletePortfolioResponse": {
+                "properties": {},
+                "additionalProperties": false,
+                "type": "object",
+                "title": "DeletePortfolioResponse"
+            },
+            "DeletePortfolioSectionResponse": {
+                "properties": {
+                    "portfolio": {
+                        "$ref": "#/components/schemas/Portfolio"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "portfolio"
+                ],
+                "title": "DeletePortfolioSectionResponse"
             },
             "DeleteProviderResponse": {
                 "properties": {},
@@ -3346,6 +4715,23 @@
                 ],
                 "title": "FilterOption"
             },
+            "GetAccountSubTypesResponse": {
+                "properties": {
+                    "account_sub_types": {
+                        "items": {
+                            "$ref": "#/components/schemas/AccountSubTypes"
+                        },
+                        "type": "array",
+                        "title": "Account Sub Types"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "account_sub_types"
+                ],
+                "title": "GetAccountSubTypesResponse"
+            },
             "GetAccountsFormattingRulesResponse": {
                 "properties": {
                     "colour_palette": {
@@ -3363,6 +4749,31 @@
                     "colour_palette"
                 ],
                 "title": "GetAccountsFormattingRulesResponse"
+            },
+            "GetAssetsFormattingRulesResponse": {
+                "properties": {
+                    "asset_classes": {
+                        "items": {
+                            "$ref": "#/components/schemas/AssetClassFormattingRule"
+                        },
+                        "type": "array",
+                        "title": "Asset Classes"
+                    },
+                    "asset_types": {
+                        "items": {
+                            "$ref": "#/components/schemas/AssetTypeFormattingRule"
+                        },
+                        "type": "array",
+                        "title": "Asset Types"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "asset_classes",
+                    "asset_types"
+                ],
+                "title": "GetAssetsFormattingRulesResponse"
             },
             "GetCashFlowSummaryResponse": {
                 "properties": {
@@ -3389,6 +4800,46 @@
                     "report"
                 ],
                 "title": "GetCashFlowTimeSeriesResponse"
+            },
+            "GetConversionPreviewResponse": {
+                "properties": {
+                    "account_name": {
+                        "type": "string",
+                        "title": "Account Name"
+                    },
+                    "valued_at": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Valued At"
+                    },
+                    "sections": {
+                        "items": {
+                            "$ref": "#/components/schemas/ConversionPreviewSection"
+                        },
+                        "type": "array",
+                        "title": "Sections"
+                    },
+                    "holdings_count": {
+                        "type": "integer",
+                        "title": "Holdings Count"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "account_name",
+                    "valued_at",
+                    "sections",
+                    "holdings_count"
+                ],
+                "title": "GetConversionPreviewResponse"
             },
             "GetEarningsReportResponse": {
                 "properties": {
@@ -3528,6 +4979,36 @@
                     "settings"
                 ],
                 "title": "GetPlaidSettingsResponse"
+            },
+            "GetPortfolioResponse": {
+                "properties": {
+                    "portfolio": {
+                        "$ref": "#/components/schemas/Portfolio"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "portfolio"
+                ],
+                "title": "GetPortfolioResponse"
+            },
+            "GetPortfoliosResponse": {
+                "properties": {
+                    "portfolios": {
+                        "items": {
+                            "$ref": "#/components/schemas/PortfolioSummary"
+                        },
+                        "type": "array",
+                        "title": "Portfolios"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "portfolios"
+                ],
+                "title": "GetPortfoliosResponse"
             },
             "GetProviderResponse": {
                 "properties": {
@@ -3949,6 +5430,17 @@
                     "provider": {
                         "$ref": "#/components/schemas/Provider"
                     },
+                    "portfolio_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Portfolio Id"
+                    },
                     "status": {
                         "anyOf": [
                             {
@@ -4000,6 +5492,7 @@
                     "frozen",
                     "provider_id",
                     "provider",
+                    "portfolio_id",
                     "status",
                     "credentials",
                     "created_at",
@@ -4521,6 +6014,648 @@
                 ],
                 "title": "PlaidSettings"
             },
+            "Portfolio": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "title": "Id"
+                    },
+                    "linked_account_id": {
+                        "type": "integer",
+                        "title": "Linked Account Id"
+                    },
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "colour": {
+                        "type": "string",
+                        "pattern": "^#[A-Fa-f0-9]{6}$",
+                        "title": "Colour"
+                    },
+                    "frozen": {
+                        "type": "boolean",
+                        "title": "Frozen"
+                    },
+                    "estimated_value": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Estimated Value"
+                    },
+                    "valuation_ccy": {
+                        "type": "string",
+                        "pattern": "^[A-Z]{3}$",
+                        "title": "Valuation Ccy"
+                    },
+                    "sections": {
+                        "items": {
+                            "$ref": "#/components/schemas/PortfolioSection"
+                        },
+                        "type": "array",
+                        "title": "Sections"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Created At"
+                    },
+                    "updated_at": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Updated At"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "id",
+                    "linked_account_id",
+                    "name",
+                    "colour",
+                    "frozen",
+                    "estimated_value",
+                    "valuation_ccy",
+                    "sections",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "Portfolio"
+            },
+            "PortfolioCustomColumn": {
+                "properties": {
+                    "key": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "minLength": 1,
+                        "title": "Key"
+                    },
+                    "label": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Label"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "text",
+                            "number",
+                            "date"
+                        ],
+                        "title": "Type",
+                        "default": "text"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "key",
+                    "label"
+                ],
+                "title": "PortfolioCustomColumn"
+            },
+            "PortfolioEntry": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "title": "Id"
+                    },
+                    "item_type": {
+                        "type": "string",
+                        "enum": [
+                            "asset",
+                            "liability"
+                        ],
+                        "title": "Item Type"
+                    },
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "asset_class": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AssetClass"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "asset_type": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AssetType"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "liability_type": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Liability Type"
+                    },
+                    "currency": {
+                        "type": "string",
+                        "pattern": "^[A-Z]{3}$",
+                        "title": "Currency"
+                    },
+                    "units": {
+                        "type": "number",
+                        "title": "Units"
+                    },
+                    "price_source": {
+                        "type": "string",
+                        "enum": [
+                            "manual",
+                            "proxy"
+                        ],
+                        "title": "Price Source"
+                    },
+                    "unit_price": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Unit Price"
+                    },
+                    "manual_unit_price": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Manual Unit Price"
+                    },
+                    "manual_price_updated_at": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Manual Price Updated At"
+                    },
+                    "proxy_symbol": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Proxy Symbol"
+                    },
+                    "last_resolved_unit_price": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Last Resolved Unit Price"
+                    },
+                    "last_resolved_price_at": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Last Resolved Price At"
+                    },
+                    "isin_code": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Isin Code"
+                    },
+                    "custom_values": {
+                        "additionalProperties": {
+                            "type": "string"
+                        },
+                        "type": "object",
+                        "title": "Custom Values"
+                    },
+                    "value": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Value"
+                    },
+                    "estimated_value": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Estimated Value"
+                    },
+                    "display_order": {
+                        "type": "integer",
+                        "title": "Display Order"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "id",
+                    "item_type",
+                    "name",
+                    "asset_class",
+                    "asset_type",
+                    "liability_type",
+                    "currency",
+                    "units",
+                    "price_source",
+                    "unit_price",
+                    "manual_unit_price",
+                    "manual_price_updated_at",
+                    "proxy_symbol",
+                    "last_resolved_unit_price",
+                    "last_resolved_price_at",
+                    "isin_code",
+                    "custom_values",
+                    "value",
+                    "estimated_value",
+                    "display_order"
+                ],
+                "title": "PortfolioEntry"
+            },
+            "PortfolioEntryPayload": {
+                "properties": {
+                    "item_type": {
+                        "type": "string",
+                        "enum": [
+                            "asset",
+                            "liability"
+                        ],
+                        "title": "Item Type"
+                    },
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "asset_class": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AssetClass"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "asset_type": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/AssetType"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "liability_type": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Liability Type"
+                    },
+                    "currency": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "pattern": "^[A-Z]{3}$"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Currency"
+                    },
+                    "units": {
+                        "type": "number",
+                        "title": "Units",
+                        "default": 1.0
+                    },
+                    "price_source": {
+                        "type": "string",
+                        "enum": [
+                            "manual",
+                            "proxy"
+                        ],
+                        "title": "Price Source",
+                        "default": "manual"
+                    },
+                    "manual_unit_price": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Manual Unit Price"
+                    },
+                    "proxy_symbol": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Proxy Symbol"
+                    },
+                    "isin_code": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Isin Code"
+                    },
+                    "custom_values": {
+                        "additionalProperties": {
+                            "type": "string"
+                        },
+                        "type": "object",
+                        "title": "Custom Values"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "item_type",
+                    "name"
+                ],
+                "title": "PortfolioEntryPayload",
+                "description": "Full description of a portfolio entry: used to both create and replace entries."
+            },
+            "PortfolioSection": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "title": "Id"
+                    },
+                    "section_id": {
+                        "type": "string",
+                        "title": "Section Id"
+                    },
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "currency": {
+                        "type": "string",
+                        "pattern": "^[A-Z]{3}$",
+                        "title": "Currency"
+                    },
+                    "account_type": {
+                        "$ref": "#/components/schemas/AccountType"
+                    },
+                    "account_sub_type": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Account Sub Type"
+                    },
+                    "custom_columns": {
+                        "items": {
+                            "$ref": "#/components/schemas/PortfolioCustomColumn"
+                        },
+                        "type": "array",
+                        "title": "Custom Columns"
+                    },
+                    "display_order": {
+                        "type": "integer",
+                        "title": "Display Order"
+                    },
+                    "estimated_value": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Estimated Value"
+                    },
+                    "entries": {
+                        "items": {
+                            "$ref": "#/components/schemas/PortfolioEntry"
+                        },
+                        "type": "array",
+                        "title": "Entries"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "id",
+                    "section_id",
+                    "name",
+                    "currency",
+                    "account_type",
+                    "account_sub_type",
+                    "custom_columns",
+                    "display_order",
+                    "estimated_value",
+                    "entries"
+                ],
+                "title": "PortfolioSection"
+            },
+            "PortfolioSectionPayload": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "currency": {
+                        "type": "string",
+                        "pattern": "^[A-Z]{3}$",
+                        "title": "Currency"
+                    },
+                    "account_type": {
+                        "$ref": "#/components/schemas/AccountType"
+                    },
+                    "account_sub_type": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Account Sub Type"
+                    },
+                    "custom_columns": {
+                        "items": {
+                            "$ref": "#/components/schemas/PortfolioCustomColumn"
+                        },
+                        "type": "array",
+                        "title": "Custom Columns"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "name",
+                    "currency",
+                    "account_type"
+                ],
+                "title": "PortfolioSectionPayload",
+                "description": "Full description of a portfolio section: used to both create and replace sections."
+            },
+            "PortfolioSummary": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "title": "Id"
+                    },
+                    "linked_account_id": {
+                        "type": "integer",
+                        "title": "Linked Account Id"
+                    },
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "colour": {
+                        "type": "string",
+                        "pattern": "^#[A-Fa-f0-9]{6}$",
+                        "title": "Colour"
+                    },
+                    "frozen": {
+                        "type": "boolean",
+                        "title": "Frozen"
+                    },
+                    "sections_count": {
+                        "type": "integer",
+                        "title": "Sections Count"
+                    },
+                    "entries_count": {
+                        "type": "integer",
+                        "title": "Entries Count"
+                    },
+                    "estimated_value": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Estimated Value"
+                    },
+                    "valuation_ccy": {
+                        "type": "string",
+                        "pattern": "^[A-Z]{3}$",
+                        "title": "Valuation Ccy"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Created At"
+                    },
+                    "updated_at": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Updated At"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "id",
+                    "linked_account_id",
+                    "name",
+                    "colour",
+                    "frozen",
+                    "sections_count",
+                    "entries_count",
+                    "estimated_value",
+                    "valuation_ccy",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "PortfolioSummary"
+            },
             "Provider": {
                 "properties": {
                     "id": {
@@ -4660,6 +6795,12 @@
                 ],
                 "title": "RecurringGroupDetail"
             },
+            "RefreshPortfolioResponse": {
+                "properties": {},
+                "additionalProperties": false,
+                "type": "object",
+                "title": "RefreshPortfolioResponse"
+            },
             "RemoveEmailDeliverySettingsResponse": {
                 "properties": {},
                 "additionalProperties": false,
@@ -4683,6 +6824,19 @@
                 ],
                 "title": "ReportEntry"
             },
+            "ResolveSecurityResponse": {
+                "properties": {
+                    "quote": {
+                        "$ref": "#/components/schemas/SecurityQuote"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "quote"
+                ],
+                "title": "ResolveSecurityResponse"
+            },
             "SavingsRateReport": {
                 "properties": {
                     "valuation_ccy": {
@@ -4704,6 +6858,130 @@
                     "comparison_month"
                 ],
                 "title": "SavingsRateReport"
+            },
+            "SearchSecuritiesResponse": {
+                "properties": {
+                    "results": {
+                        "items": {
+                            "$ref": "#/components/schemas/SecuritySearchResult"
+                        },
+                        "type": "array",
+                        "title": "Results"
+                    },
+                    "provider_available": {
+                        "type": "boolean",
+                        "title": "Provider Available"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "results",
+                    "provider_available"
+                ],
+                "title": "SearchSecuritiesResponse"
+            },
+            "SecurityQuote": {
+                "properties": {
+                    "symbol": {
+                        "type": "string",
+                        "title": "Symbol"
+                    },
+                    "name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Name"
+                    },
+                    "currency": {
+                        "type": "string",
+                        "pattern": "^[A-Z]{3}$",
+                        "title": "Currency"
+                    },
+                    "price": {
+                        "type": "number",
+                        "title": "Price"
+                    },
+                    "as_of": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "As Of"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "symbol",
+                    "name",
+                    "currency",
+                    "price",
+                    "as_of"
+                ],
+                "title": "SecurityQuote"
+            },
+            "SecuritySearchResult": {
+                "properties": {
+                    "symbol": {
+                        "type": "string",
+                        "title": "Symbol"
+                    },
+                    "name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Name"
+                    },
+                    "kind": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "enum": [
+                                    "equity",
+                                    "etf",
+                                    "mutualfund",
+                                    "index",
+                                    "future",
+                                    "currency",
+                                    "cryptocurrency"
+                                ]
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Kind"
+                    },
+                    "exchange": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Exchange"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "symbol",
+                    "name",
+                    "kind",
+                    "exchange"
+                ],
+                "title": "SecuritySearchResult"
             },
             "SeriesData": {
                 "properties": {
@@ -5896,6 +8174,75 @@
                 "additionalProperties": false,
                 "type": "object",
                 "title": "UpdateLinkedAccountMetadataResponse"
+            },
+            "UpdatePortfolioEntryResponse": {
+                "properties": {
+                    "portfolio": {
+                        "$ref": "#/components/schemas/Portfolio"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "portfolio"
+                ],
+                "title": "UpdatePortfolioEntryResponse"
+            },
+            "UpdatePortfolioRequest": {
+                "properties": {
+                    "name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Name"
+                    },
+                    "colour": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "pattern": "^#[A-Fa-f0-9]{6}$"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Colour"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "title": "UpdatePortfolioRequest"
+            },
+            "UpdatePortfolioResponse": {
+                "properties": {
+                    "portfolio": {
+                        "$ref": "#/components/schemas/Portfolio"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "portfolio"
+                ],
+                "title": "UpdatePortfolioResponse"
+            },
+            "UpdatePortfolioSectionResponse": {
+                "properties": {
+                    "portfolio": {
+                        "$ref": "#/components/schemas/Portfolio"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "portfolio"
+                ],
+                "title": "UpdatePortfolioSectionResponse"
             },
             "UpdateUserAccountPasswordRequest": {
                 "properties": {
