@@ -11,6 +11,7 @@ import {
   Palette,
   Server,
   Mail,
+  Pencil,
   Plus,
 } from "lucide-react";
 
@@ -69,36 +70,71 @@ function SidebarNavItem({
   );
 }
 
+interface NavItemAside {
+  to: string;
+  icon: React.FC<{ className?: string }>;
+  /** Announced to screen readers, and the tooltip on hover. */
+  label: string;
+}
+
 function AccountNavItem({
   to,
+  alsoActiveOn,
+  aside,
   colour,
   name,
   onClick,
 }: {
   to: string;
+  /** Other paths this entry stands for, so it stays lit across every view of the same thing. */
+  alsoActiveOn?: string[];
+  /** Second destination for the same thing, offered as an icon at the end of the row. */
+  aside?: NavItemAside;
   colour: string;
   name: string;
   onClick?: () => void;
 }) {
   const { pathname } = useLocation();
-  const isActive = pathname.startsWith(to);
+  const isActive = [to, ...(alsoActiveOn ?? [])].some((path) =>
+    pathname.startsWith(path),
+  );
 
   return (
-    <NavLink to={to} onClick={onClick}>
-      <Button
-        variant="ghost"
-        className={cn(
-          "w-full justify-start gap-2 pl-4",
-          isActive && "bg-accent text-accent-foreground",
-        )}
-      >
-        <span
-          className="h-2.5 w-2.5 shrink-0 rounded-sm"
-          style={{ backgroundColor: colour }}
-        />
-        <span className="truncate">{name}</span>
-      </Button>
-    </NavLink>
+    <div className="group relative">
+      <NavLink to={to} onClick={onClick}>
+        <Button
+          variant="ghost"
+          className={cn(
+            "w-full justify-start gap-2 pl-4",
+            // Room for the aside, so a long name fades out rather than running under it.
+            aside && "pr-9",
+            isActive && "bg-accent text-accent-foreground",
+          )}
+        >
+          <span
+            className="h-2.5 w-2.5 shrink-0 rounded-sm"
+            style={{ backgroundColor: colour }}
+          />
+          <span className="truncate">{name}</span>
+        </Button>
+      </NavLink>
+      {aside && (
+        <NavLink
+          to={aside.to}
+          onClick={onClick}
+          title={aside.label}
+          aria-label={aside.label}
+          className={cn(
+            "absolute right-1.5 top-1/2 -translate-y-1/2 rounded-sm p-1.5 text-muted-foreground",
+            "transition-opacity hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+            // Hidden until wanted on the desktop sidebar; always there where hover isn't.
+            "md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100",
+          )}
+        >
+          <aside.icon className="h-3.5 w-3.5" />
+        </NavLink>
+      )}
+    </div>
   );
 }
 
@@ -229,15 +265,28 @@ function SidebarContent({
               </Button>
             </NavLink>
 
-            <p className="mt-4 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            {/* The rows below open valuations, so the heading keeps the way into managing them. */}
+            <NavLink
+              to="/portfolios"
+              onClick={onNavigate}
+              className="mt-4 block px-3 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground"
+            >
               Portfolios
-            </p>
+            </NavLink>
             {portfolios
               .filter((portfolio) => !portfolio.frozen)
               .map((portfolio) => (
+                // Like every other entry here, the row opens the valuation; managing the
+                // holdings is the occasional errand, so it gets the icon.
                 <AccountNavItem
                   key={portfolio.id}
-                  to={`/portfolios/${portfolio.id}`}
+                  to={`/dashboard/accounts/${portfolio.linkedAccountId}`}
+                  alsoActiveOn={[`/portfolios/${portfolio.id}`]}
+                  aside={{
+                    to: `/portfolios/${portfolio.id}`,
+                    icon: Pencil,
+                    label: `Manage ${portfolio.name}`,
+                  }}
                   colour={portfolio.colour}
                   name={portfolio.name}
                   onClick={onNavigate}

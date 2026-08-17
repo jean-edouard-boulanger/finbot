@@ -113,6 +113,12 @@ export interface PortfolioEntry {
     proxySymbol: string | null;
     /**
      * 
+     * @type {string}
+     * @memberof PortfolioEntry
+     */
+    proxyName: string | null;
+    /**
+     * 
      * @type {number}
      * @memberof PortfolioEntry
      */
@@ -192,6 +198,7 @@ export function instanceOfPortfolioEntry(value: object): value is PortfolioEntry
     if (!('manualUnitPrice' in value) || value['manualUnitPrice'] === undefined) return false;
     if (!('manualPriceUpdatedAt' in value) || value['manualPriceUpdatedAt'] === undefined) return false;
     if (!('proxySymbol' in value) || value['proxySymbol'] === undefined) return false;
+    if (!('proxyName' in value) || value['proxyName'] === undefined) return false;
     if (!('lastResolvedUnitPrice' in value) || value['lastResolvedUnitPrice'] === undefined) return false;
     if (!('lastResolvedPriceAt' in value) || value['lastResolvedPriceAt'] === undefined) return false;
     if (!('isinCode' in value) || value['isinCode'] === undefined) return false;
@@ -225,6 +232,7 @@ export function PortfolioEntryFromJSONTyped(json: any, ignoreDiscriminator: bool
         'manualUnitPrice': json['manual_unit_price'],
         'manualPriceUpdatedAt': (json['manual_price_updated_at'] == null ? null : new Date(json['manual_price_updated_at'])),
         'proxySymbol': json['proxy_symbol'],
+        'proxyName': json['proxy_name'],
         'lastResolvedUnitPrice': json['last_resolved_unit_price'],
         'lastResolvedPriceAt': (json['last_resolved_price_at'] == null ? null : new Date(json['last_resolved_price_at'])),
         'isinCode': json['isin_code'],
@@ -259,6 +267,7 @@ export function PortfolioEntryToJSONTyped(value?: PortfolioEntry | null, ignoreD
         'manual_unit_price': value['manualUnitPrice'],
         'manual_price_updated_at': (value['manualPriceUpdatedAt'] == null ? null : (value['manualPriceUpdatedAt'] as any).toISOString()),
         'proxy_symbol': value['proxySymbol'],
+        'proxy_name': value['proxyName'],
         'last_resolved_unit_price': value['lastResolvedUnitPrice'],
         'last_resolved_price_at': (value['lastResolvedPriceAt'] == null ? null : (value['lastResolvedPriceAt'] as any).toISOString()),
         'isin_code': value['isinCode'],

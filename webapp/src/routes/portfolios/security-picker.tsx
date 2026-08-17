@@ -21,9 +21,15 @@ import { cn } from "lib/utils";
 
 const RESULTS_LIMIT = 25;
 
-/** Centred in the fixed-height result area, whatever it has to say. */
-const EMPTY_STATE =
-  "flex h-full items-center justify-center px-6 text-center text-sm text-muted-foreground";
+/**
+ * Centred in the fixed-height result area, whatever it has to say. The message is its own element
+ * rather than bare children of the flex box, which would drop the spaces around any inline markup.
+ */
+const EmptyState: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <div className="flex h-full items-center justify-center px-6 text-center text-sm text-muted-foreground">
+    <p>{children}</p>
+  </div>
+);
 
 type SearchKind = SearchSecuritiesKindEnum;
 
@@ -60,6 +66,8 @@ export interface SecurityPickerProps {
   holdingName: string;
   /** Symbol the holding already tracks, if any. */
   currentSymbol?: string | null;
+  /** Display name of that symbol, when it is known. */
+  currentName?: string | null;
   /** Instrument type the results start narrowed to. */
   defaultKind?: SearchKind | null;
   /** Whether the chosen symbol is still being resolved. */
@@ -81,6 +89,7 @@ export const SecurityPicker: React.FC<SecurityPickerProps> = ({
   open,
   holdingName,
   currentSymbol,
+  currentName,
   defaultKind = null,
   busy,
   onSelect,
@@ -237,26 +246,32 @@ export const SecurityPicker: React.FC<SecurityPickerProps> = ({
           }}
         >
           {!searched && !currentSymbol && (
-            <p className={EMPTY_STATE}>
+            <EmptyState>
               Search for the security this holding tracks.
-            </p>
+            </EmptyState>
           )}
           {!searched && currentSymbol && (
-            <p className={EMPTY_STATE}>
+            <EmptyState>
               Currently tracking{" "}
               <span className="font-mono text-foreground">{currentSymbol}</span>
+              {currentName && (
+                <>
+                  {" — "}
+                  <span className="text-foreground">{currentName}</span>
+                </>
+              )}
               . Search to replace it.
-            </p>
+            </EmptyState>
           )}
           {searched && !searching && unavailable && (
-            <p className={EMPTY_STATE}>
+            <EmptyState>
               Yahoo Finance could not be reached. Try again in a moment.
-            </p>
+            </EmptyState>
           )}
           {searched && !searching && !unavailable && results.length === 0 && (
-            <p className={EMPTY_STATE}>
+            <EmptyState>
               Nothing found for &apos;{searchedQuery}&apos;.
-            </p>
+            </EmptyState>
           )}
           <div className={cn(searching && "opacity-50")}>
             {results.map((result) => (

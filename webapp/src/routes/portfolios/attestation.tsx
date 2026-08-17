@@ -87,6 +87,8 @@ export const FreshnessMeter: React.FC<{ freshness: Freshness }> = ({
 export interface AttestationProps {
   priceSource: "manual" | "proxy";
   proxySymbol: string | null;
+  /** Name of the proxy security, shown on hovering the symbol when it is known. */
+  proxyName?: string | null;
   attestedAt: Date | null;
   resolvedAt: Date | null;
 }
@@ -98,13 +100,17 @@ export interface AttestationProps {
 export const Attestation: React.FC<AttestationProps> = ({
   priceSource,
   proxySymbol,
+  proxyName,
   attestedAt,
   resolvedAt,
 }) => {
   if (priceSource === "proxy") {
     return (
       <span className="flex items-center justify-end gap-1.5 text-[11px] text-muted-foreground">
-        <span className="font-mono tracking-tight text-foreground/70">
+        <span
+          title={proxyName ?? undefined}
+          className="font-mono tracking-tight text-foreground/70"
+        >
           {proxySymbol}
         </span>
         <span

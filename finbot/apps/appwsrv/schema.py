@@ -524,6 +524,8 @@ class PortfolioEntry(AppModel):
     manual_unit_price: float | None
     manual_price_updated_at: datetime | None
     proxy_symbol: str | None
+    proxy_name: str | None
+    """Display name of the proxy security, as it was when the symbol was last resolved."""
     last_resolved_unit_price: float | None
     last_resolved_price_at: datetime | None
     isin_code: str | None
