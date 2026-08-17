@@ -87,6 +87,7 @@ def _parse_cash_transaction(node: Element) -> schema.CashTransaction:
         model_to_xml_fields_overrides={
             "transaction_type": "type",
             "transaction_id": "transactionID",
+            "settlement_date": "settleDate",
         },
     )
 
