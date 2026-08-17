@@ -132,6 +132,7 @@ def serialize_portfolio_entry(
         manual_unit_price=(float(entry.manual_unit_price) if entry.manual_unit_price is not None else None),
         manual_price_updated_at=entry.manual_price_updated_at,
         proxy_symbol=entry.proxy_symbol,
+        proxy_name=entry.proxy_name,
         last_resolved_unit_price=(
             float(entry.last_resolved_unit_price) if entry.last_resolved_unit_price is not None else None
         ),

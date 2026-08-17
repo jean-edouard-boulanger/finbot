@@ -6237,6 +6237,17 @@
                         ],
                         "title": "Proxy Symbol"
                     },
+                    "proxy_name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Proxy Name"
+                    },
                     "last_resolved_unit_price": {
                         "anyOf": [
                             {
@@ -6321,6 +6332,7 @@
                     "manual_unit_price",
                     "manual_price_updated_at",
                     "proxy_symbol",
+                    "proxy_name",
                     "last_resolved_unit_price",
                     "last_resolved_price_at",
                     "isin_code",

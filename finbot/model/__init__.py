@@ -739,6 +739,7 @@ class PortfolioEntry(Base):
     manual_unit_price = Column(Numeric)
     manual_price_updated_at = Column(DateTimeTz)
     proxy_symbol = Column(String(32))
+    proxy_name = Column(String(256))
     last_resolved_unit_price = Column(Numeric)
     last_resolved_price_at = Column(DateTimeTz)
     isin_code = Column(String(16))

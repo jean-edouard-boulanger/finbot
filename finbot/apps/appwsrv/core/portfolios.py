@@ -144,13 +144,18 @@ async def apply_entry_payload(
         entry.proxy_symbol = payload.proxy_symbol
         entry.currency = payload.currency or entry.currency or section.currency
         if symbol_changed:
-            # The previously resolved price now belongs to a different security. Resolve the new one
-            # straight away so the entry shows a value without waiting for the next snapshot.
+            # The previously resolved price and name now belong to a different security. Resolve the
+            # new one straight away so the entry shows a value without waiting for the next snapshot.
             entry.last_resolved_unit_price = None
             entry.last_resolved_price_at = None
+            entry.proxy_name = None
+            await _resolve_proxy_price(entry)
+        elif entry.proxy_name is None:
+            # Entries tracked before names were kept, and any whose earlier resolution failed.
             await _resolve_proxy_price(entry)
     else:
         entry.proxy_symbol = None
+        entry.proxy_name = None
         entry.last_resolved_unit_price = None
         entry.last_resolved_price_at = None
         entry.currency = payload.currency or section.currency
@@ -165,13 +170,16 @@ async def _resolve_proxy_price(entry: PortfolioEntry) -> None:
     A failure here is not fatal: the entry is still valid, and the snapshot will try again.
     """
     try:
-        quote = await SecuritiesMarket().async_get_quote_cached(some(entry.proxy_symbol))
+        # `with_name` costs an extra call to Yahoo Finance, which is why the name is stored: it is
+        # read here, when the symbol is chosen, and not again when the portfolio is displayed.
+        quote = await SecuritiesMarket().async_get_quote_cached(some(entry.proxy_symbol), with_name=True)
     except Exception:
         logger.warning(f"could not resolve proxy security '{entry.proxy_symbol}'", exc_info=True)
         return
     entry.last_resolved_unit_price = _as_decimal(quote.price)
     entry.last_resolved_price_at = quote.as_of
     entry.currency = quote.currency
+    entry.proxy_name = quote.name
 
 
 def _as_decimal(value: float) -> Decimal:

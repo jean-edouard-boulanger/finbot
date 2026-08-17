@@ -121,6 +121,7 @@ export const PriceCell: React.FC<PriceCellProps> = ({
                   <Attestation
                     priceSource="proxy"
                     proxySymbol={entry.proxySymbol}
+                    proxyName={entry.proxyName}
                     attestedAt={null}
                     resolvedAt={entry.lastResolvedPriceAt}
                   />
@@ -209,6 +210,7 @@ export const PriceCell: React.FC<PriceCellProps> = ({
           open
           holdingName={entry.name}
           currentSymbol={entry.proxySymbol}
+          currentName={entry.proxyName}
           defaultKind={kind.searchKind ?? null}
           busy={resolving}
           onSelect={trackSymbol}
