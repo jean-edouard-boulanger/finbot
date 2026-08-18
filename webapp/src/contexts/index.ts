@@ -1,4 +1,19 @@
 import { AuthContext, AuthProvider } from "./auth";
 import { ThemeContext, ThemeProvider } from "./theme";
-export { AuthContext, AuthProvider, ThemeContext, ThemeProvider };
+import {
+  ValuationRefreshContext,
+  ValuationRefreshProvider,
+  useNotifyValuationRefreshed,
+  useValuationVersion,
+} from "./valuation";
+export {
+  AuthContext,
+  AuthProvider,
+  ThemeContext,
+  ThemeProvider,
+  ValuationRefreshContext,
+  ValuationRefreshProvider,
+  useNotifyValuationRefreshed,
+  useValuationVersion,
+};
 export type { Theme } from "./theme";

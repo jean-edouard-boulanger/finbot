@@ -247,6 +247,10 @@ class TriggerUserAccountValuationResponse(AppModel):
     pass
 
 
+class TriggerLinkedAccountValuationResponse(AppModel):
+    pass
+
+
 class UserAccountValuationSparklineEntry(AppModel):
     effective_at: datetime
     value: float | None

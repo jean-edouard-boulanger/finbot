@@ -57,6 +57,11 @@ export interface LinkNewAccountRequest {
     doPersist?: boolean;
 }
 
+export interface TriggerLinkedAccountValuationRequest {
+    userAccountId: number;
+    linkedAccountId: number;
+}
+
 export interface UpdateLinkedAccountCredentialsOperationRequest {
     userAccountId: number;
     linkedAccountId: number;
@@ -146,6 +151,23 @@ export interface LinkedAccountsApiInterface {
      * Link New Account
      */
     linkNewAccount(requestParameters: LinkNewAccountRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<object>;
+
+    /**
+     * Trigger valuation for a single linked account
+     * @summary Trigger Linked Account Valuation
+     * @param {number} userAccountId 
+     * @param {number} linkedAccountId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof LinkedAccountsApiInterface
+     */
+    triggerLinkedAccountValuationRaw(requestParameters: TriggerLinkedAccountValuationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<object>>;
+
+    /**
+     * Trigger valuation for a single linked account
+     * Trigger Linked Account Valuation
+     */
+    triggerLinkedAccountValuation(requestParameters: TriggerLinkedAccountValuationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<object>;
 
     /**
      * Update linked account credentials
@@ -393,6 +415,56 @@ export class LinkedAccountsApi extends runtime.BaseAPI implements LinkedAccounts
      */
     async linkNewAccount(requestParameters: LinkNewAccountRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<object> {
         const response = await this.linkNewAccountRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Trigger valuation for a single linked account
+     * Trigger Linked Account Valuation
+     */
+    async triggerLinkedAccountValuationRaw(requestParameters: TriggerLinkedAccountValuationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<object>> {
+        if (requestParameters['userAccountId'] == null) {
+            throw new runtime.RequiredError(
+                'userAccountId',
+                'Required parameter "userAccountId" was null or undefined when calling triggerLinkedAccountValuation().'
+            );
+        }
+
+        if (requestParameters['linkedAccountId'] == null) {
+            throw new runtime.RequiredError(
+                'linkedAccountId',
+                'Required parameter "linkedAccountId" was null or undefined when calling triggerLinkedAccountValuation().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/accounts/{user_account_id}/linked_accounts/{linked_account_id}/valuation/trigger/`.replace(`{${"user_account_id"}}`, encodeURIComponent(String(requestParameters['userAccountId']))).replace(`{${"linked_account_id"}}`, encodeURIComponent(String(requestParameters['linkedAccountId']))),
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse<any>(response);
+    }
+
+    /**
+     * Trigger valuation for a single linked account
+     * Trigger Linked Account Valuation
+     */
+    async triggerLinkedAccountValuation(requestParameters: TriggerLinkedAccountValuationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<object> {
+        const response = await this.triggerLinkedAccountValuationRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

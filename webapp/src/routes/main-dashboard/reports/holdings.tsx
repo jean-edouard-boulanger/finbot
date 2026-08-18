@@ -13,6 +13,8 @@ import {
   Valuation,
 } from "clients";
 
+import { useValuationVersion } from "contexts";
+
 import { TreeGrid, Money, ValuationChange } from "components";
 import { TreeGridRowProps } from "components/tree-grid";
 import { MoneyFormatterType } from "components/money";
@@ -192,6 +194,7 @@ export const HoldingsReportPanel: React.FC<HoldingsReportPanelProps> = (
   const { userAccountId, locale, moneyFormatter } = props;
 
   const userAccountsReportsApi = useApi(UserAccountsReportsApi);
+  const valuationVersion = useValuationVersion();
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState<ValuationTree | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -209,7 +212,7 @@ export const HoldingsReportPanel: React.FC<HoldingsReportPanelProps> = (
       setLoading(false);
     };
     fetch();
-  }, [userAccountsReportsApi, userAccountId]);
+  }, [userAccountsReportsApi, userAccountId, valuationVersion]);
 
   if (error !== null) {
     return (

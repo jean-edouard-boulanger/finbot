@@ -6,6 +6,7 @@ import {
   AuthContext,
   ThemeProvider,
   ThemeContext,
+  ValuationRefreshProvider,
 } from "contexts";
 
 import { Toaster } from "sonner";
@@ -95,7 +96,9 @@ const App: React.FC<AppProps> = () => {
     <ThemeProvider>
       <AuthProvider>
         <ThemedToaster />
-        <AppRouter />
+        <ValuationRefreshProvider>
+          <AppRouter />
+        </ValuationRefreshProvider>
       </AuthProvider>
     </ThemeProvider>
   );

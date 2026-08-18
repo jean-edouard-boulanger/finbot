@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 import { useApi, UserAccountsReportsApi, EarningsReport } from "clients";
+import { useValuationVersion } from "contexts";
 
 import { Money, ValuationChange, RelativeValuationChange } from "components";
 import { MoneyFormatterType } from "components/money";
@@ -27,6 +28,7 @@ export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
 ) => {
   const { userAccountId, locale, moneyFormatter } = props;
   const userAccountsReportsApi = useApi(UserAccountsReportsApi);
+  const valuationVersion = useValuationVersion();
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState<EarningsReport | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +47,7 @@ export const EarningsReportPanel: React.FC<EarningsReportPanelProps> = (
       setLoading(false);
     };
     fetch();
-  }, [userAccountsReportsApi, userAccountId]);
+  }, [userAccountsReportsApi, userAccountId, valuationVersion]);
 
   if (error !== null) {
     return (

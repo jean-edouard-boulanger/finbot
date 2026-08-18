@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import AuthContext from "contexts/auth/auth-context";
+import { useValuationVersion } from "contexts";
 import {
   useApi,
   LinkedAccountsValuationApi,
@@ -324,6 +325,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const { pathname } = useLocation();
   const { userAccountId } = useContext(AuthContext);
+  const valuationVersion = useValuationVersion();
   const linkedAccountsValuationApi = useApi(LinkedAccountsValuationApi);
   const portfoliosApi = useApi(PortfoliosApi);
   const [accounts, setAccounts] = useState<LinkedAccountValuationEntry[]>([]);
@@ -345,7 +347,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({
       }
     };
     fetch();
-  }, [linkedAccountsValuationApi, userAccountId]);
+  }, [linkedAccountsValuationApi, userAccountId, valuationVersion]);
 
   useEffect(() => {
     const fetchPortfolios = async () => {

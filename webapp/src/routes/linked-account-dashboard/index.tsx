@@ -1,9 +1,16 @@
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useParams, Navigate } from "react-router-dom";
 import { Clock } from "lucide-react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 
-import { AuthContext } from "contexts";
+import { AuthContext, useValuationVersion } from "contexts";
 import {
   useApi,
   LinkedAccountsValuationApi,
@@ -16,7 +23,7 @@ import {
   ValuationChange,
 } from "clients";
 
-import { Money, TreeGrid } from "components";
+import { Money, RefreshValuationButton, TreeGrid } from "components";
 import { useDocumentTitle } from "hooks/use-document-title";
 import { defaultMoneyFormatter } from "components/money";
 import { ChartTooltipContent } from "components/ui/chart";
@@ -125,6 +132,55 @@ export const LinkedAccountDashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   useDocumentTitle(linkedAccount?.accountName ?? "Account");
 
+  const valuationVersion = useValuationVersion();
+  // Seeded with the version at mount, so arriving here after a refresh elsewhere does not
+  // re-fetch what the initial load just fetched.
+  const handledValuationVersion = useRef(valuationVersion);
+
+  const reloadValuation = useCallback(async () => {
+    const valuationResult =
+      await linkedAccountsValuationApi.getLinkedAccountsValuation({
+        userAccountId: userAccountId!,
+      });
+    const entry =
+      valuationResult.valuation.entries.find(
+        (e) => e.linkedAccount.id === linkedAccountId,
+      ) ?? null;
+    setValuationEntry(entry);
+    return entry?.valuation.date ?? null;
+  }, [linkedAccountsValuationApi, userAccountId, linkedAccountId]);
+
+  // The status line and the holdings tree hang off the same snapshot as the valuation, so
+  // move them once a refresh lands.
+  useEffect(() => {
+    if (valuationVersion === handledValuationVersion.current) {
+      return;
+    }
+    handledValuationVersion.current = valuationVersion;
+    const reloadSnapshotViews = async () => {
+      try {
+        const [accountResult, holdingsResult] = await Promise.all([
+          linkedAccountsApi.getLinkedAccount({
+            userAccountId: userAccountId!,
+            linkedAccountId,
+          }),
+          userAccountsReportsApi.getUserAccountHoldingsReport(),
+        ]);
+        setLinkedAccount(accountResult.linkedAccount);
+        setHoldingsTree(holdingsResult.report);
+      } catch {
+        // Leave the last good snapshot on screen; the valuation figure already moved.
+      }
+    };
+    reloadSnapshotViews();
+  }, [
+    valuationVersion,
+    linkedAccountsApi,
+    userAccountsReportsApi,
+    userAccountId,
+    linkedAccountId,
+  ]);
+
   useEffect(() => {
     setLoading(true);
     setError(null);
@@ -152,7 +208,6 @@ export const LinkedAccountDashboard: React.FC = () => {
           (e) => e.linkedAccount.id === linkedAccountId,
         );
         setValuationEntry(entry ?? null);
-
         setHoldingsTree(holdingsResult.report);
       } catch (e) {
         setError(`${e}`);
@@ -309,6 +364,20 @@ export const LinkedAccountDashboard: React.FC = () => {
                       {DateTime.fromJSDate(valuation.date).toLocaleString(
                         DateTime.DATETIME_FULL,
                       )}
+                      <RefreshValuationButton
+                        valuationDate={valuation.date}
+                        disabled={linkedAccount.frozen}
+                        disabledReason="This account is frozen"
+                        onTrigger={async () => {
+                          await linkedAccountsApi.triggerLinkedAccountValuation(
+                            {
+                              userAccountId: userAccountId!,
+                              linkedAccountId,
+                            },
+                          );
+                        }}
+                        onReload={reloadValuation}
+                      />
                     </div>
                   </div>
                   {/* Change pills */}
