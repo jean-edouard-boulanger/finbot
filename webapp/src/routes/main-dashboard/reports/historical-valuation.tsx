@@ -8,6 +8,7 @@ import {
   HistoricalValuation,
 } from "clients";
 
+import { useValuationVersion } from "contexts";
 import { Alert, AlertTitle, AlertDescription } from "components/ui/alert";
 import { Card, CardContent, CardHeader } from "components/ui/card";
 import {
@@ -141,6 +142,7 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
     : LEVELS;
   const userAccountsValuationApi = useApi(UserAccountsValuationApi);
   const linkedAccountsValuationApi = useApi(LinkedAccountsValuationApi);
+  const valuationVersion = useValuationVersion();
   const [selectedLevel, setSelectedLevel] = useState(DEFAULT_LEVEL);
   const [selectedFrequency, setSelectedFrequency] = useState(DEFAULT_FREQUENCY);
   const [fromDate, setFromDate] = useState<string>("");
@@ -271,6 +273,7 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
     fromDate,
     toDate,
     selectedFrequency,
+    valuationVersion,
   ]);
 
   const isSingleSeries = selectedLevel.type === "account";

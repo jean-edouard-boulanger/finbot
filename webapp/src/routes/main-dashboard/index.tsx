@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useContext, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useContext,
+  useMemo,
+  useCallback,
+} from "react";
 import { Navigate } from "react-router-dom";
 import { Clock, Wallet, CreditCard } from "lucide-react";
 import { AreaChart, Area, ResponsiveContainer } from "recharts";
@@ -12,7 +18,7 @@ import {
   ValuationChange,
 } from "clients";
 
-import { Money } from "components";
+import { Money, RefreshValuationButton } from "components";
 import { defaultMoneyFormatter } from "components/money";
 import { useDocumentTitle } from "hooks/use-document-title";
 import {
@@ -89,22 +95,20 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
     fetch();
   }, [userAccountsApi]);
 
+  const loadValuation = useCallback(async () => {
+    const result = await userAccountValuationApi.getUserAccountValuation({
+      userAccountId: userAccountId!,
+    });
+    setValuation(result.valuation);
+    return result.valuation.date;
+  }, [userAccountValuationApi, userAccountId]);
+
   useEffect(() => {
     if (!configured) {
       return;
     }
-    const fetch = async () => {
-      try {
-        const result = await userAccountValuationApi.getUserAccountValuation({
-          userAccountId: userAccountId!,
-        });
-        setValuation(result.valuation);
-      } catch (e) {
-        setError(`${e}`);
-      }
-    };
-    fetch();
-  }, [userAccountValuationApi, configured, userAccountId]);
+    loadValuation().catch((e) => setError(`${e}`));
+  }, [loadValuation, configured]);
 
   const sparklineData = useMemo(() => {
     if (!valuation?.sparkline) return [];
@@ -203,6 +207,15 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
                           {DateTime.fromJSDate(valuation.date).toLocaleString(
                             DateTime.DATETIME_FULL,
                           )}
+                          <RefreshValuationButton
+                            valuationDate={valuation.date}
+                            onTrigger={async () => {
+                              await userAccountValuationApi.triggerUserAccountValuation(
+                                { userAccountId: userAccountId! },
+                              );
+                            }}
+                            onReload={loadValuation}
+                          />
                         </div>
                       </div>
                       <div>

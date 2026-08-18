@@ -1,5 +1,6 @@
 import logging
 import uuid
+from http import HTTPStatus
 from typing import Annotated
 
 import orjson
@@ -170,6 +171,40 @@ def get_linked_account(
             credentials=credentials,
         )
     )
+
+
+@router.post(
+    "/{linked_account_id}/valuation/trigger/",
+    status_code=HTTPStatus.ACCEPTED,
+    operation_id="trigger_linked_account_valuation",
+)
+async def trigger_linked_account_valuation(
+    user_account_id: Annotated[int, Path()],
+    linked_account_id: Annotated[int, Path()],
+    current_user_id: CurrentUserIdDep,
+) -> appwsrv_schema.TriggerLinkedAccountValuationResponse:
+    """Trigger valuation for a single linked account"""
+    if user_account_id != current_user_id:
+        raise NotAllowedError()
+
+    linked_account = repository.get_linked_account(
+        session=db.session,
+        user_account_id=user_account_id,
+        linked_account_id=linked_account_id,
+    )
+    # Frozen accounts are skipped by the snapshot workflow, so a refresh would never land.
+    if linked_account.frozen:
+        raise InvalidUserInput(f"Linked account '{linked_account.account_name}' is frozen and cannot be refreshed.")
+
+    await valuation_client.kickoff_valuation(
+        request=ValuationRequest(
+            user_account_id=user_account_id,
+            linked_accounts=[linked_account_id],
+        ),
+        priority=JobPriority.high,
+        job_source=JobSource.app,
+    )
+    return appwsrv_schema.TriggerLinkedAccountValuationResponse()
 
 
 @router.delete("/{linked_account_id}/", operation_id="delete_linked_account")

@@ -13,6 +13,7 @@ import { ColourPicker } from "./colour-picker";
 import { FinbotMark } from "./finbot-mark";
 import { DateRangeFilter } from "./date-range-filter";
 import { EditableCell } from "./editable-cell";
+import { RefreshValuationButton } from "./refresh-valuation-button";
 
 export {
   AppShell,
@@ -32,4 +33,5 @@ export {
   FinbotMark,
   DateRangeFilter,
   EditableCell,
+  RefreshValuationButton,
 };

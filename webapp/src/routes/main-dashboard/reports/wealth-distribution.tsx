@@ -5,6 +5,8 @@ import {
   UserAccountsValuationApi,
   LinkedAccountsValuationApi,
 } from "clients";
+
+import { useValuationVersion } from "contexts";
 import { Alert, AlertTitle, AlertDescription } from "components/ui/alert";
 import { Card, CardContent, CardHeader } from "components/ui/card";
 import {
@@ -72,6 +74,7 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
   const [error, setError] = useState<string | null>(null);
   const userAccountsValuationApi = useApi(UserAccountsValuationApi);
   const linkedAccountsValuationApi = useApi(LinkedAccountsValuationApi);
+  const valuationVersion = useValuationVersion();
   const showLegend = useShowLegend();
 
   useEffect(() => {
@@ -147,7 +150,12 @@ export const WealthDistributionPanel: React.FC<WealthDistributionProps> = (
       }
     };
     fetch();
-  }, [userAccountsValuationApi, userAccountId, aggregationMode]);
+  }, [
+    userAccountsValuationApi,
+    userAccountId,
+    aggregationMode,
+    valuationVersion,
+  ]);
 
   const pieData = useMemo(() => {
     if (!valuation) return [];

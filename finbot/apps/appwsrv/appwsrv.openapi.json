@@ -1709,6 +1709,63 @@
                 }
             }
         },
+        "/accounts/{user_account_id}/linked_accounts/{linked_account_id}/valuation/trigger/": {
+            "post": {
+                "tags": [
+                    "Linked accounts"
+                ],
+                "summary": "Trigger Linked Account Valuation",
+                "description": "Trigger valuation for a single linked account",
+                "operationId": "trigger_linked_account_valuation",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Account Id"
+                        }
+                    },
+                    {
+                        "name": "linked_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Linked Account Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TriggerLinkedAccountValuationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/accounts/{user_account_id}/linked_accounts/{linked_account_id}/metadata/": {
             "put": {
                 "tags": [
@@ -8112,6 +8169,12 @@
                     "total_count"
                 ],
                 "title": "TransactionsReport"
+            },
+            "TriggerLinkedAccountValuationResponse": {
+                "properties": {},
+                "additionalProperties": false,
+                "type": "object",
+                "title": "TriggerLinkedAccountValuationResponse"
             },
             "TriggerUserAccountValuationResponse": {
                 "properties": {},
