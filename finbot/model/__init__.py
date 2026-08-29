@@ -19,6 +19,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     func,
+    text,
 )
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import relationship
@@ -749,6 +750,55 @@ class PortfolioEntry(Base):
     updated_at = Column(DateTimeTz, onupdate=func.now())
 
     section = relationship(PortfolioSection, uselist=False, back_populates="entries")
+
+
+class Notification(Base):
+    """In-app notification shown in the user's notification panel.
+
+    Distinct from `finbot.core.notifier`, which delivers outbound email/SMS. Written through
+    `finbot.core.inbox.service`, never directly: the aggregation semantics below only hold if every
+    write goes through `raise_notification` / `resolve_notification`.
+
+    A notification carrying a `dedup_key` aggregates: repeated occurrences of the same problem bump
+    `occurrences` on a single row rather than inserting new ones. `uidx_notifications_user_account_dedup_key`
+    is what enforces that, and its `dismissed_at IS NULL` predicate is deliberately the only term -- it must
+    NOT also test `status`. Were resolved rows excluded from the index, a problem that came back would insert
+    a second row and the user would see a 'resolved' and an 'active' card for the same source at once.
+    """
+
+    __tablename__ = "finbot_notifications"
+    id = Column(Integer, primary_key=True)
+    user_account_id = Column(Integer, ForeignKey(UserAccount.id, ondelete="CASCADE"), nullable=False)
+    notification_type = Column(String(64), nullable=False)
+    severity = Column(String(16), nullable=False)
+    status = Column(String(16), nullable=False)
+    dedup_key = Column(String(128))
+    title = Column(String(256), nullable=False)
+    body = Column(Text)
+    payload = Column(JSONEncoded)
+    occurrences = Column(Integer, nullable=False, default=1)
+    last_seen_at = Column(DateTimeTz, nullable=False)
+    # Fencing token: concurrent valuations for the same user can commit out of order, so a raise or resolve
+    # carrying an older snapshot than the one already recorded is ignored.
+    last_snapshot_id = Column(Integer)
+    resolved_at = Column(DateTimeTz)
+    read_at = Column(DateTimeTz)
+    dismissed_at = Column(DateTimeTz)
+    created_at = Column(DateTimeTz, server_default=func.now(), nullable=False)
+    updated_at = Column(DateTimeTz, onupdate=func.now())
+
+    user_account = relationship(UserAccount, uselist=False)
+
+    __table_args__ = (
+        Index(
+            "uidx_notifications_user_account_dedup_key",
+            "user_account_id",
+            "dedup_key",
+            unique=True,
+            postgresql_where=text("dismissed_at IS NULL"),
+        ),
+        Index("idx_notifications_user_account_created_at", "user_account_id", "created_at"),
+    )
 
 
 __all__ = [

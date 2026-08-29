@@ -770,3 +770,41 @@ class SearchSecuritiesResponse(AppModel):
     #: `False` when Yahoo Finance could not be reached, so that no results can be reported as
     #: "suggestions are unavailable" rather than as "nothing matches".
     provider_available: bool
+
+
+class Notification(AppModel):
+    id: int
+    notification_type: str
+    severity: Literal["info", "warning", "error", "success"]
+    status: Literal["active", "resolved"]
+    title: str
+    body: str | None
+    #: Render-only detail: for a stale linked account this carries `last_success_at`, `last_known_value` and
+    #: `error_code`, so the panel can say how old the figures are and offer the right action without
+    #: re-querying per notification.
+    payload: dict[str, Any] | None
+    #: How many times the underlying problem has recurred. Shown as supporting detail: how *long* a source
+    #: has been stale is what the reader acts on, so the panel leads with duration, not this count.
+    occurrences: int
+    created_at: datetime
+    last_seen_at: datetime
+    resolved_at: datetime | None
+    read_at: datetime | None
+
+
+class GetNotificationsResponse(AppModel):
+    notifications: list[Notification]
+    unread_count: int
+
+
+class MarkNotificationsReadRequest(AppModel):
+    #: `None` marks everything read.
+    notification_ids: list[int] | None = None
+
+
+class MarkNotificationsReadResponse(AppModel):
+    unread_count: int
+
+
+class DismissNotificationResponse(AppModel):
+    unread_count: int

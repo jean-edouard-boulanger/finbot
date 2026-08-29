@@ -3,6 +3,7 @@ import { useLocation, NavLink } from "react-router-dom";
 import { Menu } from "lucide-react";
 
 import AuthContext from "contexts/auth/auth-context";
+import { useEventsStatus } from "contexts/events";
 import { useInterval } from "utils/use-interval";
 import { useApi, SystemReport, SystemApi, UserAccountsApi } from "clients";
 
@@ -18,6 +19,7 @@ import { cn } from "lib/utils";
 
 const SystemStatusBadge: React.FC<Record<string, never>> = () => {
   const { userAccountId } = useContext(AuthContext);
+  const eventsStatus = useEventsStatus();
   const systemApi = useApi(SystemApi);
   const userAccountsApi = useApi(UserAccountsApi);
   const [backendReachable, setBackendReachable] = useState(true);
@@ -55,11 +57,18 @@ const SystemStatusBadge: React.FC<Record<string, never>> = () => {
     })();
   }, [userAccountsApi, userAccountId]);
 
-  useInterval(async () => {
-    updateReport();
-  }, 10000);
+  // An open event socket already proves the backend is reachable, so the poll is only needed where there
+  // is no socket: the guest routes, which render this badge without an EventsProvider.
+  const socketIsAuthoritative =
+    eventsStatus === "open" || eventsStatus === "reconnecting";
+  useInterval(
+    async () => {
+      updateReport();
+    },
+    socketIsAuthoritative ? null : 10000,
+  );
 
-  if (!backendReachable) {
+  if (eventsStatus === "reconnecting" || !backendReachable) {
     return <Badge variant="destructive">BACKEND UNREACHABLE</Badge>;
   }
 

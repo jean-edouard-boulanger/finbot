@@ -14,6 +14,7 @@ from finbot.apps.http_base import CurrentUserIdDep
 from finbot.core import environment, secure
 from finbot.core.environment import is_plaid_configured
 from finbot.core.errors import InvalidOperation, InvalidUserInput, NotAllowedError
+from finbot.core.inbox import dismiss_open_notification
 from finbot.core.jobs import JobPriority, JobSource
 from finbot.core.plaid import PlaidClient
 from finbot.core.schema import CurrencyCode
@@ -22,6 +23,7 @@ from finbot.model import LinkedAccount, db, persist_scope, repository
 from finbot.workflows.fetch_financial_data import client as provider_client
 from finbot.workflows.fetch_financial_data.schema import ValidateCredentialsRequest
 from finbot.workflows.user_account_valuation import client as valuation_client
+from finbot.workflows.user_account_valuation.notifications import linked_account_dedup_key
 from finbot.workflows.user_account_valuation.schema import ValuationRequest
 
 logger = logging.getLogger(__name__)
@@ -227,6 +229,14 @@ async def delete_linked_account(
         linked_account.account_name = f"DELETED {uuid.uuid4()} / {linked_account.account_name}"
         linked_account.deleted = True
 
+    # A deleted account is excluded from future snapshots, so an open "hasn't synced" notification would
+    # never resolve on its own -- it is about something the user just removed, so it goes with the account.
+    dismiss_open_notification(
+        db.session,
+        user_account_id=user_account_id,
+        dedup_key=linked_account_dedup_key(linked_account_id),
+    )
+
     await valuation_client.kickoff_valuation(
         request=ValuationRequest(
             user_account_id=user_account_id,
@@ -269,6 +279,14 @@ def update_linked_account_metadata(
             linked_account.account_colour = account_colour
         if json.frozen is True:
             linked_account.frozen = True
+    if json.frozen is True:
+        # Same reasoning as deletion: frozen accounts are excluded from snapshots, so the notification
+        # would otherwise nag forever about an account the user has deliberately shelved.
+        dismiss_open_notification(
+            db.session,
+            user_account_id=user_account_id,
+            dedup_key=linked_account_dedup_key(linked_account_id),
+        )
     return appwsrv_schema.UpdateLinkedAccountMetadataResponse()
 
 

@@ -23,6 +23,9 @@ export default defineConfig({
       "/api/v1": {
         target: "http://127.0.0.1:5003",
         changeOrigin: true,
+        // The events bus upgrades to a websocket on this prefix; without this the proxy answers the
+        // upgrade with a normal HTTP response and the socket never connects.
+        ws: true,
       },
     },
   },

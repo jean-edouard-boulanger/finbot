@@ -4,10 +4,12 @@ import { Route, Routes, Navigate } from "react-router-dom";
 import {
   AuthProvider,
   AuthContext,
+  EventsProvider,
   ThemeProvider,
   ThemeContext,
   ValuationRefreshProvider,
 } from "contexts";
+import { NotificationsProvider } from "contexts/notifications";
 
 import { Toaster } from "sonner";
 import { MainContainer, Navigation } from "components";
@@ -49,33 +51,38 @@ const GuestRouter = () => {
 
 const UserRouter = () => {
   return (
-    <AppShell>
-      <Routes>
-        <Route path="welcome" element={<Welcome />} />
-        <Route path="dashboard" element={<MainDashboard />} />
-        <Route
-          path="dashboard/accounts/:linkedAccountId"
-          element={<LinkedAccountDashboard />}
-        />
-        <Route path="portfolios" element={<Portfolios />} />
-        <Route path="portfolios/:portfolioId" element={<PortfolioEditor />} />
-        <Route path="logout" element={<Logout />} />
-        <Route path="settings" element={<Settings />}>
-          <Route path="profile" element={<ProfileSettings />} />
-          <Route path="security" element={<AccountSecuritySettings />} />
-          <Route path="linked" element={<LinkedAccountsSettings />} />
-          <Route path="appearance" element={<AppearanceSettings />} />
-          <Route path="admin/providers" element={<ProvidersSettings />} />
+    // Mounted here rather than beside EventsProvider so it is created *after* sign-in: useApi picks the
+    // access token up in its state initialiser, so a provider that outlives the sign-in transition would
+    // fire its first fetch with a tokenless client, get a 401, and trip the global logout interceptor.
+    <NotificationsProvider>
+      <AppShell>
+        <Routes>
+          <Route path="welcome" element={<Welcome />} />
+          <Route path="dashboard" element={<MainDashboard />} />
           <Route
-            path="admin/email_delivery"
-            element={<EmailDeliverySettingsPanel />}
+            path="dashboard/accounts/:linkedAccountId"
+            element={<LinkedAccountDashboard />}
           />
-          <Route path="" element={<Navigate to={"/settings/profile"} />} />
-          <Route path="*" element={<Navigate to={"/settings/profile"} />} />
-        </Route>
-        <Route path="*" element={<Navigate to={"/dashboard"} replace />} />
-      </Routes>
-    </AppShell>
+          <Route path="portfolios" element={<Portfolios />} />
+          <Route path="portfolios/:portfolioId" element={<PortfolioEditor />} />
+          <Route path="logout" element={<Logout />} />
+          <Route path="settings" element={<Settings />}>
+            <Route path="profile" element={<ProfileSettings />} />
+            <Route path="security" element={<AccountSecuritySettings />} />
+            <Route path="linked" element={<LinkedAccountsSettings />} />
+            <Route path="appearance" element={<AppearanceSettings />} />
+            <Route path="admin/providers" element={<ProvidersSettings />} />
+            <Route
+              path="admin/email_delivery"
+              element={<EmailDeliverySettingsPanel />}
+            />
+            <Route path="" element={<Navigate to={"/settings/profile"} />} />
+            <Route path="*" element={<Navigate to={"/settings/profile"} />} />
+          </Route>
+          <Route path="*" element={<Navigate to={"/dashboard"} replace />} />
+        </Routes>
+      </AppShell>
+    </NotificationsProvider>
   );
 };
 
@@ -97,7 +104,9 @@ const App: React.FC<AppProps> = () => {
       <AuthProvider>
         <ThemedToaster />
         <ValuationRefreshProvider>
-          <AppRouter />
+          <EventsProvider>
+            <AppRouter />
+          </EventsProvider>
         </ValuationRefreshProvider>
       </AuthProvider>
     </ThemeProvider>

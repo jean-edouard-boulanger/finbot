@@ -1,4 +1,5 @@
-from typing import Any
+import logging
+from typing import Any, Literal, TypeAlias, cast
 
 from finbot import model
 from finbot.apps.appwsrv import schema as appwsrv_schema
@@ -10,6 +11,8 @@ from finbot.core.email_delivery import DeliverySettings
 from finbot.core.serialization import reinterpret_as_pydantic
 from finbot.model import repository
 from finbot.providers import schema as providers_schema
+
+logger = logging.getLogger(__name__)
 
 
 def serialize_user_account(
@@ -251,4 +254,43 @@ def serialize_conversion_preview(
             )
             for section in plan.sections
         ],
+    )
+
+
+NotificationSeverity: TypeAlias = Literal["info", "warning", "error", "success"]
+NotificationStatus: TypeAlias = Literal["active", "resolved"]
+
+_NOTIFICATION_SEVERITIES: frozenset[str] = frozenset(("info", "warning", "error", "success"))
+_NOTIFICATION_STATUSES: frozenset[str] = frozenset(("active", "resolved"))
+
+
+def _notification_severity(value: str) -> NotificationSeverity:
+    """Severity is stored as a plain string, so a value written by older code cannot break the whole panel."""
+    if value in _NOTIFICATION_SEVERITIES:
+        return cast(NotificationSeverity, value)
+    logger.warning(f"unknown notification severity '{value}', falling back to 'info'")
+    return "info"
+
+
+def _notification_status(value: str) -> NotificationStatus:
+    if value in _NOTIFICATION_STATUSES:
+        return cast(NotificationStatus, value)
+    logger.warning(f"unknown notification status '{value}', falling back to 'active'")
+    return "active"
+
+
+def serialize_notification(notification: model.Notification) -> appwsrv_schema.Notification:
+    return appwsrv_schema.Notification(
+        id=notification.id,
+        notification_type=notification.notification_type,
+        severity=_notification_severity(notification.severity),
+        status=_notification_status(notification.status),
+        title=notification.title,
+        body=notification.body,
+        payload=notification.payload,
+        occurrences=notification.occurrences,
+        created_at=notification.created_at,
+        last_seen_at=notification.last_seen_at,
+        resolved_at=notification.resolved_at,
+        read_at=notification.read_at,
     )
