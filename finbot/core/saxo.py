@@ -77,8 +77,9 @@ class TransactionBooking(BaseModel):
     AmountTypeId: str
     BookedAmount: float
     BookingId: str
-    ConversionCost: float
-    ConversionRate: float
+    # Only present when the booking involved a currency conversion.
+    ConversionCost: float | None = None
+    ConversionRate: float | None = None
     CostClass: str
     CostSubClass: str
     Date: str
@@ -155,8 +156,10 @@ class TransactionBase(BaseModel):
     BookingId: str | None = None
     Bookings: list[TransactionBooking]
     Cash: TransactionCash
-    ConversionCost: float
-    ConversionRate: float
+    # Only present when the transaction involved a currency conversion -- a same-currency `CashAmount`
+    # transaction (e.g. a dividend or fee with no FX leg) omits both.
+    ConversionCost: float | None = None
+    ConversionRate: float | None = None
     Currency: CurrencyCode
     CurrencyDecimals: int
     Date: str
