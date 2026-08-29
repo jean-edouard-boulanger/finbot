@@ -18,6 +18,7 @@ import type {
   GetLinkedAccountsResponse,
   HTTPValidationError,
   LinkAccountRequest,
+  TriggerLinkedAccountValuationResponse,
   UpdateLinkedAccountCredentialsRequest,
   UpdateLinkedAccountMetadataRequest,
 } from '../models/index';
@@ -30,6 +31,8 @@ import {
     HTTPValidationErrorToJSON,
     LinkAccountRequestFromJSON,
     LinkAccountRequestToJSON,
+    TriggerLinkedAccountValuationResponseFromJSON,
+    TriggerLinkedAccountValuationResponseToJSON,
     UpdateLinkedAccountCredentialsRequestFromJSON,
     UpdateLinkedAccountCredentialsRequestToJSON,
     UpdateLinkedAccountMetadataRequestFromJSON,
@@ -161,13 +164,13 @@ export interface LinkedAccountsApiInterface {
      * @throws {RequiredError}
      * @memberof LinkedAccountsApiInterface
      */
-    triggerLinkedAccountValuationRaw(requestParameters: TriggerLinkedAccountValuationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<object>>;
+    triggerLinkedAccountValuationRaw(requestParameters: TriggerLinkedAccountValuationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TriggerLinkedAccountValuationResponse>>;
 
     /**
      * Trigger valuation for a single linked account
      * Trigger Linked Account Valuation
      */
-    triggerLinkedAccountValuation(requestParameters: TriggerLinkedAccountValuationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<object>;
+    triggerLinkedAccountValuation(requestParameters: TriggerLinkedAccountValuationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TriggerLinkedAccountValuationResponse>;
 
     /**
      * Update linked account credentials
@@ -422,7 +425,7 @@ export class LinkedAccountsApi extends runtime.BaseAPI implements LinkedAccounts
      * Trigger valuation for a single linked account
      * Trigger Linked Account Valuation
      */
-    async triggerLinkedAccountValuationRaw(requestParameters: TriggerLinkedAccountValuationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<object>> {
+    async triggerLinkedAccountValuationRaw(requestParameters: TriggerLinkedAccountValuationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TriggerLinkedAccountValuationResponse>> {
         if (requestParameters['userAccountId'] == null) {
             throw new runtime.RequiredError(
                 'userAccountId',
@@ -456,14 +459,14 @@ export class LinkedAccountsApi extends runtime.BaseAPI implements LinkedAccounts
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse<any>(response);
+        return new runtime.JSONApiResponse(response, (jsonValue) => TriggerLinkedAccountValuationResponseFromJSON(jsonValue));
     }
 
     /**
      * Trigger valuation for a single linked account
      * Trigger Linked Account Valuation
      */
-    async triggerLinkedAccountValuation(requestParameters: TriggerLinkedAccountValuationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<object> {
+    async triggerLinkedAccountValuation(requestParameters: TriggerLinkedAccountValuationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TriggerLinkedAccountValuationResponse> {
         const response = await this.triggerLinkedAccountValuationRaw(requestParameters, initOverrides);
         return await response.value();
     }

@@ -467,6 +467,63 @@
                 }
             }
         },
+        "/accounts/{user_account_id}/valuation/refresh/{job_id}/status/": {
+            "get": {
+                "tags": [
+                    "User accounts (valuation)"
+                ],
+                "summary": "Get Valuation Refresh Status",
+                "description": "Get the status of a previously triggered valuation refresh",
+                "operationId": "get_valuation_refresh_status",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Account Id"
+                        }
+                    },
+                    {
+                        "name": "job_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Job Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GetValuationRefreshStatusResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/accounts/{user_account_id}/valuation/": {
             "get": {
                 "tags": [
@@ -5577,6 +5634,25 @@
                 ],
                 "title": "GetUserAccountValuationResponse"
             },
+            "GetValuationRefreshStatusResponse": {
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "running",
+                            "succeeded",
+                            "failed"
+                        ],
+                        "title": "Status"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "status"
+                ],
+                "title": "GetValuationRefreshStatusResponse"
+            },
             "GroupValuation": {
                 "properties": {
                     "name": {
@@ -8577,15 +8653,45 @@
                 "title": "TransactionsReport"
             },
             "TriggerLinkedAccountValuationResponse": {
-                "properties": {},
+                "properties": {
+                    "job_id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Job Id"
+                    }
+                },
                 "additionalProperties": false,
                 "type": "object",
+                "required": [
+                    "job_id"
+                ],
                 "title": "TriggerLinkedAccountValuationResponse"
             },
             "TriggerUserAccountValuationResponse": {
-                "properties": {},
+                "properties": {
+                    "job_id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Job Id"
+                    }
+                },
                 "additionalProperties": false,
                 "type": "object",
+                "required": [
+                    "job_id"
+                ],
                 "title": "TriggerUserAccountValuationResponse"
             },
             "UpdateLinkedAccountCredentialsRequest": {

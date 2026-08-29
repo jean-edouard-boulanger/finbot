@@ -244,11 +244,17 @@ class IsEmailAvailableResponse(AppModel):
 
 
 class TriggerUserAccountValuationResponse(AppModel):
-    pass
+    #: Opaque handle for the triggered refresh; pass it to `get_valuation_refresh_status` to learn how it
+    #: went. `None` when the workflow could not even be started (e.g. Temporal unreachable).
+    job_id: str | None
 
 
 class TriggerLinkedAccountValuationResponse(AppModel):
-    pass
+    job_id: str | None
+
+
+class GetValuationRefreshStatusResponse(AppModel):
+    status: Literal["running", "succeeded", "failed"]
 
 
 class UserAccountValuationSparklineEntry(AppModel):
