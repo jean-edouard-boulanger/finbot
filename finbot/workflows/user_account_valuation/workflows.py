@@ -73,8 +73,7 @@ class UserAccountValuationWorkflow:
             )
             history_report = history_metadata.report
             workflow.logger.info(
-                f"history report written with id={history_report.history_entry_id} "
-                f"{pretty_dump(history_metadata)}"
+                f"history report written with id={history_report.history_entry_id} {pretty_dump(history_metadata)}"
             )
             workflow.logger.info(f"valuation workflow done for user_id={request.user_account_id}")
             if request.notify_valuation:
