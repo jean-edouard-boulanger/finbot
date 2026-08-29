@@ -12,25 +12,27 @@ import {
   TooltipTrigger,
 } from "components/ui/tooltip";
 
-const POLL_INTERVAL_MS = 3_000;
+const POLL_INTERVAL_MS = 2_000;
 const POLL_TIMEOUT_MS = 180_000;
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+export type ValuationJobStatus = "running" | "succeeded" | "failed";
+
 export interface RefreshValuationButtonProps {
-  /** Timestamp currently displayed: the baseline for "has fresh data landed?". */
-  valuationDate: Date | null;
-  /** Kicks off the valuation workflow. */
-  onTrigger: () => Promise<void>;
-  /** Re-fetches the valuation, commits it to the caller's state, and returns its date. */
+  /** Kicks off the valuation workflow and returns a job id to poll for its outcome. */
+  onTrigger: () => Promise<string>;
+  /** Polls the outcome of the job `onTrigger` started. */
+  onCheckStatus: (jobId: string) => Promise<ValuationJobStatus>;
+  /** Re-fetches the valuation and commits it to the caller's state. */
   onReload: () => Promise<Date | null>;
   disabled?: boolean;
   disabledReason?: string;
 }
 
 export const RefreshValuationButton: React.FC<RefreshValuationButtonProps> = ({
-  valuationDate,
   onTrigger,
+  onCheckStatus,
   onReload,
   disabled = false,
   disabledReason,
@@ -52,45 +54,56 @@ export const RefreshValuationButton: React.FC<RefreshValuationButtonProps> = ({
       return;
     }
     setRefreshing(true);
-    const baseline = valuationDate?.getTime() ?? 0;
 
+    let jobId: string;
     try {
-      await onTrigger();
+      jobId = await onTrigger();
     } catch (e) {
       toast.error(`Failed to start refresh: ${formatApiError(e)}`);
       setRefreshing(false);
       return;
     }
 
-    // Valuation runs as a fire-and-forget workflow with no job handle, so the only way to
-    // know it landed is to watch the valuation timestamp move forward.
     const deadline = Date.now() + POLL_TIMEOUT_MS;
     while (Date.now() < deadline) {
       await sleep(POLL_INTERVAL_MS);
       if (cancelled.current) {
         return;
       }
+      let status: ValuationJobStatus;
       try {
-        const updated = await onReload();
-        if (updated !== null && updated.getTime() > baseline) {
-          if (cancelled.current) {
-            return;
-          }
-          setRefreshing(false);
-          // The caller only reloaded its own figure; move the rest of the page with it.
-          notifyValuationRefreshed();
-          toast.success("Valuation refreshed");
-          return;
-        }
+        status = await onCheckStatus(jobId);
       } catch {
         // Transient failure while the refresh is in flight: keep polling.
+        continue;
       }
+      if (status === "running") {
+        continue;
+      }
+      if (cancelled.current) {
+        return;
+      }
+      if (status === "succeeded") {
+        // The workflow landed; a failure to re-fetch it here is a lesser, separate problem than the
+        // refresh itself failing, so it does not change the outcome reported to the user.
+        await onReload().catch(() => undefined);
+        setRefreshing(false);
+        // The caller only reloaded its own figure; move the rest of the page with it.
+        notifyValuationRefreshed();
+        toast.success("Valuation refreshed");
+        return;
+      }
+      setRefreshing(false);
+      toast.error(
+        "Valuation refresh failed. Check your notifications for details.",
+      );
+      return;
     }
 
     if (cancelled.current) {
       return;
     }
-    // Polling has stopped here, so the new figure will not arrive on its own.
+    // The job is still running -- genuinely still in progress, not a failure we missed.
     setRefreshing(false);
     toast.info(
       "Still refreshing. Reload the page in a few minutes to see the new valuation.",

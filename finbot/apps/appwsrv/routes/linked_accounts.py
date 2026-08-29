@@ -198,7 +198,7 @@ async def trigger_linked_account_valuation(
     if linked_account.frozen:
         raise InvalidUserInput(f"Linked account '{linked_account.account_name}' is frozen and cannot be refreshed.")
 
-    await valuation_client.kickoff_valuation(
+    job_id = await valuation_client.kickoff_valuation(
         request=ValuationRequest(
             user_account_id=user_account_id,
             linked_accounts=[linked_account_id],
@@ -206,7 +206,7 @@ async def trigger_linked_account_valuation(
         priority=JobPriority.high,
         job_source=JobSource.app,
     )
-    return appwsrv_schema.TriggerLinkedAccountValuationResponse()
+    return appwsrv_schema.TriggerLinkedAccountValuationResponse(job_id=job_id)
 
 
 @router.delete("/{linked_account_id}/", operation_id="delete_linked_account")

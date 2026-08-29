@@ -208,11 +208,24 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
                             DateTime.DATETIME_FULL,
                           )}
                           <RefreshValuationButton
-                            valuationDate={valuation.date}
                             onTrigger={async () => {
-                              await userAccountValuationApi.triggerUserAccountValuation(
-                                { userAccountId: userAccountId! },
-                              );
+                              const result =
+                                await userAccountValuationApi.triggerUserAccountValuation(
+                                  { userAccountId: userAccountId! },
+                                );
+                              if (!result.jobId) {
+                                throw new Error(
+                                  "Valuation refresh could not be started",
+                                );
+                              }
+                              return result.jobId;
+                            }}
+                            onCheckStatus={async (jobId) => {
+                              const result =
+                                await userAccountValuationApi.getValuationRefreshStatus(
+                                  { userAccountId: userAccountId!, jobId },
+                                );
+                              return result.status;
                             }}
                             onReload={loadValuation}
                           />

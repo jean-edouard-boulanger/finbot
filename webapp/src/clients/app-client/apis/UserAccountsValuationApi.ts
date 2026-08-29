@@ -21,7 +21,9 @@ import type {
   GetUserAccountValuationHistoryByAssetTypeResponse,
   GetUserAccountValuationHistoryResponse,
   GetUserAccountValuationResponse,
+  GetValuationRefreshStatusResponse,
   HTTPValidationError,
+  TriggerUserAccountValuationResponse,
   ValuationFrequency,
 } from '../models/index';
 import {
@@ -39,8 +41,12 @@ import {
     GetUserAccountValuationHistoryResponseToJSON,
     GetUserAccountValuationResponseFromJSON,
     GetUserAccountValuationResponseToJSON,
+    GetValuationRefreshStatusResponseFromJSON,
+    GetValuationRefreshStatusResponseToJSON,
     HTTPValidationErrorFromJSON,
     HTTPValidationErrorToJSON,
+    TriggerUserAccountValuationResponseFromJSON,
+    TriggerUserAccountValuationResponseToJSON,
     ValuationFrequencyFromJSON,
     ValuationFrequencyToJSON,
 } from '../models/index';
@@ -83,6 +89,11 @@ export interface GetUserAccountValuationByAssetTypeRequest {
 
 export interface GetUserAccountValuationByCurrencyExposureRequest {
     userAccountId: number;
+}
+
+export interface GetValuationRefreshStatusRequest {
+    userAccountId: number;
+    jobId: string;
 }
 
 export interface TriggerUserAccountValuationRequest {
@@ -221,6 +232,23 @@ export interface UserAccountsValuationApiInterface {
     getUserAccountValuationByCurrencyExposure(requestParameters: GetUserAccountValuationByCurrencyExposureRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetUserAccountValuationByCurrencyExposureResponse>;
 
     /**
+     * Get the status of a previously triggered valuation refresh
+     * @summary Get Valuation Refresh Status
+     * @param {number} userAccountId 
+     * @param {string} jobId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UserAccountsValuationApiInterface
+     */
+    getValuationRefreshStatusRaw(requestParameters: GetValuationRefreshStatusRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GetValuationRefreshStatusResponse>>;
+
+    /**
+     * Get the status of a previously triggered valuation refresh
+     * Get Valuation Refresh Status
+     */
+    getValuationRefreshStatus(requestParameters: GetValuationRefreshStatusRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetValuationRefreshStatusResponse>;
+
+    /**
      * Trigger user account valuation
      * @summary Trigger User Account Valuation
      * @param {number} userAccountId 
@@ -228,13 +256,13 @@ export interface UserAccountsValuationApiInterface {
      * @throws {RequiredError}
      * @memberof UserAccountsValuationApiInterface
      */
-    triggerUserAccountValuationRaw(requestParameters: TriggerUserAccountValuationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<object>>;
+    triggerUserAccountValuationRaw(requestParameters: TriggerUserAccountValuationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TriggerUserAccountValuationResponse>>;
 
     /**
      * Trigger user account valuation
      * Trigger User Account Valuation
      */
-    triggerUserAccountValuation(requestParameters: TriggerUserAccountValuationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<object>;
+    triggerUserAccountValuation(requestParameters: TriggerUserAccountValuationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TriggerUserAccountValuationResponse>;
 
 }
 
@@ -593,10 +621,60 @@ export class UserAccountsValuationApi extends runtime.BaseAPI implements UserAcc
     }
 
     /**
+     * Get the status of a previously triggered valuation refresh
+     * Get Valuation Refresh Status
+     */
+    async getValuationRefreshStatusRaw(requestParameters: GetValuationRefreshStatusRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GetValuationRefreshStatusResponse>> {
+        if (requestParameters['userAccountId'] == null) {
+            throw new runtime.RequiredError(
+                'userAccountId',
+                'Required parameter "userAccountId" was null or undefined when calling getValuationRefreshStatus().'
+            );
+        }
+
+        if (requestParameters['jobId'] == null) {
+            throw new runtime.RequiredError(
+                'jobId',
+                'Required parameter "jobId" was null or undefined when calling getValuationRefreshStatus().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("HTTPBearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/accounts/{user_account_id}/valuation/refresh/{job_id}/status/`.replace(`{${"user_account_id"}}`, encodeURIComponent(String(requestParameters['userAccountId']))).replace(`{${"job_id"}}`, encodeURIComponent(String(requestParameters['jobId']))),
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => GetValuationRefreshStatusResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Get the status of a previously triggered valuation refresh
+     * Get Valuation Refresh Status
+     */
+    async getValuationRefreshStatus(requestParameters: GetValuationRefreshStatusRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetValuationRefreshStatusResponse> {
+        const response = await this.getValuationRefreshStatusRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
      * Trigger user account valuation
      * Trigger User Account Valuation
      */
-    async triggerUserAccountValuationRaw(requestParameters: TriggerUserAccountValuationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<object>> {
+    async triggerUserAccountValuationRaw(requestParameters: TriggerUserAccountValuationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TriggerUserAccountValuationResponse>> {
         if (requestParameters['userAccountId'] == null) {
             throw new runtime.RequiredError(
                 'userAccountId',
@@ -623,14 +701,14 @@ export class UserAccountsValuationApi extends runtime.BaseAPI implements UserAcc
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse<any>(response);
+        return new runtime.JSONApiResponse(response, (jsonValue) => TriggerUserAccountValuationResponseFromJSON(jsonValue));
     }
 
     /**
      * Trigger user account valuation
      * Trigger User Account Valuation
      */
-    async triggerUserAccountValuation(requestParameters: TriggerUserAccountValuationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<object> {
+    async triggerUserAccountValuation(requestParameters: TriggerUserAccountValuationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TriggerUserAccountValuationResponse> {
         const response = await this.triggerUserAccountValuationRaw(requestParameters, initOverrides);
         return await response.value();
     }

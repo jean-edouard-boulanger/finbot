@@ -18,6 +18,7 @@ import {
   LinkedAccountsApi,
   LinkedAccount,
   UserAccountsReportsApi,
+  UserAccountsValuationApi,
   ValuationTree,
   LinkedAccountNode,
   ValuationChange,
@@ -121,6 +122,7 @@ export const LinkedAccountDashboard: React.FC = () => {
   const linkedAccountsApi = useApi(LinkedAccountsApi);
   const linkedAccountsValuationApi = useApi(LinkedAccountsValuationApi);
   const userAccountsReportsApi = useApi(UserAccountsReportsApi);
+  const userAccountsValuationApi = useApi(UserAccountsValuationApi);
 
   const [linkedAccount, setLinkedAccount] = useState<LinkedAccount | null>(
     null,
@@ -365,16 +367,29 @@ export const LinkedAccountDashboard: React.FC = () => {
                         DateTime.DATETIME_FULL,
                       )}
                       <RefreshValuationButton
-                        valuationDate={valuation.date}
                         disabled={linkedAccount.frozen}
                         disabledReason="This account is frozen"
                         onTrigger={async () => {
-                          await linkedAccountsApi.triggerLinkedAccountValuation(
-                            {
-                              userAccountId: userAccountId!,
-                              linkedAccountId,
-                            },
-                          );
+                          const result =
+                            await linkedAccountsApi.triggerLinkedAccountValuation(
+                              {
+                                userAccountId: userAccountId!,
+                                linkedAccountId,
+                              },
+                            );
+                          if (!result.jobId) {
+                            throw new Error(
+                              "Valuation refresh could not be started",
+                            );
+                          }
+                          return result.jobId;
+                        }}
+                        onCheckStatus={async (jobId) => {
+                          const result =
+                            await userAccountsValuationApi.getValuationRefreshStatus(
+                              { userAccountId: userAccountId!, jobId },
+                            );
+                          return result.status;
                         }}
                         onReload={reloadValuation}
                       />

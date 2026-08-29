@@ -5,7 +5,7 @@ from datetime import date, datetime, timedelta
 from http import HTTPStatus
 from typing import Annotated, Optional, Union
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Path, Query
 
 from finbot.apps.appwsrv import schema as appwsrv_schema
 from finbot.apps.appwsrv import serializer
@@ -14,7 +14,7 @@ from finbot.apps.appwsrv.core.series import order_series_by_last_value
 from finbot.apps.http_base import CurrentUserIdDep
 from finbot.core import schema as core_schema
 from finbot.core import timeseries
-from finbot.core.errors import InvalidUserInput, MissingUserData, NotAllowedError
+from finbot.core.errors import InvalidUserInput, MissingUserData, NotAllowedError, ResourceNotFoundError
 from finbot.core.jobs import JobPriority, JobSource
 from finbot.core.utils import now_utc, some
 from finbot.model import SubAccountItemType, SubAccountItemValuationHistoryEntry, db, repository
@@ -49,14 +49,33 @@ async def trigger_user_account_valuation(
     """Trigger user account valuation"""
     if user_account_id != current_user_id:
         raise NotAllowedError()
-    await valuation_client.kickoff_valuation(
+    job_id = await valuation_client.kickoff_valuation(
         request=ValuationRequest(
             user_account_id=user_account_id,
         ),
         priority=JobPriority.medium,
         job_source=JobSource.app,
     )
-    return appwsrv_schema.TriggerUserAccountValuationResponse()
+    return appwsrv_schema.TriggerUserAccountValuationResponse(job_id=job_id)
+
+
+@router.get("/refresh/{job_id}/status/", operation_id="get_valuation_refresh_status")
+async def get_valuation_refresh_status(
+    user_account_id: int,
+    job_id: Annotated[str, Path()],
+    current_user_id: CurrentUserIdDep,
+) -> appwsrv_schema.GetValuationRefreshStatusResponse:
+    """Get the status of a previously triggered valuation refresh"""
+    if user_account_id != current_user_id:
+        raise NotAllowedError()
+    # The job id embeds its owner, so this is what actually stops one account from reading another
+    # account's refresh status -- Temporal itself has no notion of account ownership to check against.
+    if valuation_client.parse_valuation_job_owner(job_id) != user_account_id:
+        raise ResourceNotFoundError(f"Valuation refresh job {job_id!r} not found")
+    status = await valuation_client.get_valuation_job_status(job_id)
+    if status is None:
+        raise ResourceNotFoundError(f"Valuation refresh job {job_id!r} not found")
+    return appwsrv_schema.GetValuationRefreshStatusResponse(status=status)
 
 
 @router.get("/", operation_id="get_user_account_valuation")
