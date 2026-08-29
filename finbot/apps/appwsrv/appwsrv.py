@@ -1,13 +1,16 @@
 from fastapi import FastAPI
 
 from finbot._version import __api_version__
+from finbot.apps.appwsrv.events import events_lifespan
 from finbot.apps.appwsrv.routes.admin import router as admin_router
 from finbot.apps.appwsrv.routes.auth import router as auth_router
 from finbot.apps.appwsrv.routes.base import router as base_router
 from finbot.apps.appwsrv.routes.chat import router as chat_router
+from finbot.apps.appwsrv.routes.events import router as events_router
 from finbot.apps.appwsrv.routes.formatting_rules import router as formatting_rules_router
 from finbot.apps.appwsrv.routes.linked_accounts import router as linked_accounts_router
 from finbot.apps.appwsrv.routes.linked_accounts_valuation import router as linked_accounts_valuation_router
+from finbot.apps.appwsrv.routes.notifications import router as notifications_router
 from finbot.apps.appwsrv.routes.portfolios import router as portfolios_router
 from finbot.apps.appwsrv.routes.providers import router as providers_router
 from finbot.apps.appwsrv.routes.reports import router as reports_router
@@ -28,6 +31,8 @@ app = FastAPI(
     version=__api_version__,
     redoc_url="/docs",
     docs_url=None,
+    # Constructor-only: the events listener has to be started here, it cannot be attached after the fact.
+    lifespan=events_lifespan,
 )
 setup_app(app)
 
@@ -43,4 +48,6 @@ app.include_router(portfolios_router)
 app.include_router(securities_router)
 app.include_router(reports_router)
 app.include_router(formatting_rules_router)
+app.include_router(notifications_router)
+app.include_router(events_router)
 app.include_router(chat_router)

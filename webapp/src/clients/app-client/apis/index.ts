@@ -11,5 +11,6 @@ export * from './PortfoliosApi';
 export * from './SecuritiesApi';
 export * from './SystemApi';
 export * from './UserAccountsApi';
+export * from './UserAccountsNotificationsApi';
 export * from './UserAccountsReportsApi';
 export * from './UserAccountsValuationApi';

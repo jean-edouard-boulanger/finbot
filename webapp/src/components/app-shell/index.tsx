@@ -25,6 +25,10 @@ import {
   PortfolioSummary,
 } from "clients";
 import { SystemStatusBadge } from "components/navigation";
+import {
+  NotificationAnnouncer,
+  NotificationBell,
+} from "components/notification-bell";
 
 import { Button } from "components/ui/button";
 import { Separator } from "components/ui/separator";
@@ -212,7 +216,14 @@ function SidebarContent({
           <FinbotMark className="h-6 w-6 text-primary" />
           Finbot
         </NavLink>
-        <SystemStatusBadge />
+        {/* The dev-build badge is the widest thing here and would otherwise wrap to two lines and
+            inflate the row; let it shorten instead so the bell keeps a fixed home. */}
+        <span className="min-w-0 overflow-hidden whitespace-nowrap">
+          <SystemStatusBadge />
+        </span>
+        <div className="ml-auto shrink-0">
+          <NotificationBell />
+        </div>
       </div>
       <Separator />
 
@@ -402,8 +413,14 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({
           <FinbotMark className="h-6 w-6 text-primary" />
           Finbot
         </NavLink>
-        <SystemStatusBadge />
+        <span className="min-w-0 overflow-hidden whitespace-nowrap">
+          <SystemStatusBadge />
+        </span>
+        <div className="ml-auto shrink-0">
+          <NotificationBell variant="mobile" />
+        </div>
       </div>
+      <NotificationAnnouncer />
 
       {/* Main content */}
       {/* min-w-0: as a flex item, main defaults to min-width:auto and would otherwise be pushed

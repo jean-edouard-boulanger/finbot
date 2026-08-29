@@ -24,8 +24,11 @@ from finbot.workflows.user_account_snapshot.workflows import (
 )
 from finbot.workflows.user_account_valuation.activities import (
     get_ids_of_user_accounts_that_need_valuation,
+    publish_valuation_updated_event,
+    raise_valuation_failure_notification,
     send_error_notifications,
     send_valuation_notification,
+    sync_linked_account_notifications,
 )
 from finbot.workflows.user_account_valuation.workflows import RunValuationForAllUsers, UserAccountValuationWorkflow
 from finbot.workflows.write_valuation_history.activities import write_history
@@ -107,6 +110,9 @@ async def worker_main() -> None:
             # workflows.user_account_valuation
             send_error_notifications,
             send_valuation_notification,
+            sync_linked_account_notifications,
+            raise_valuation_failure_notification,
+            publish_valuation_updated_event,
             get_ids_of_user_accounts_that_need_valuation,
             # apps.workersrv_temporal
             healthcheck,

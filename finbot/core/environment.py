@@ -103,6 +103,25 @@ def get_database_url() -> str:
     return f"postgresql+psycopg2://{db_user}:{db_password}@{db_hostname}:{db_port}/{db_name}"
 
 
+def get_database_dsn() -> str:
+    """Connection string in libpq keyword form, for raw psycopg2 connections.
+
+    Used by the event listener, which holds a dedicated connection outside the SQLAlchemy pool. The keyword
+    form (rather than a URL) means passwords containing URL-reserved characters need no quoting. The
+    keepalives matter because dev workers are restarted with SIGKILL, so nothing gets a chance to close
+    the listening connection and Postgres would otherwise keep the backend around until TCP times out.
+    """
+    db_user = get_environment_value("FINBOT_DB_USER")
+    db_password = get_environment_value("FINBOT_DB_PASSWORD")
+    db_hostname = get_environment_value("FINBOT_DB_HOSTNAME")
+    db_port = get_environment_value("FINBOT_DB_PORT")
+    db_name = get_environment_value("FINBOT_DB_DBNAME")
+    return (
+        f"host={db_hostname} port={db_port} dbname={db_name} user={db_user} password={db_password} "
+        f"connect_timeout=5 keepalives=1 keepalives_idle=30 keepalives_interval=10 keepalives_count=3"
+    )
+
+
 def get_test_database_url() -> str:
     test_db_url = get_environment_value_or("FINBOT_TEST_DB_URL")
     return test_db_url or DEFAULT_TEST_DATABASE_URL

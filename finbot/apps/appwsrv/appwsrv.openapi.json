@@ -3975,6 +3975,229 @@
                 ]
             }
         },
+        "/accounts/{user_account_id}/notifications/": {
+            "get": {
+                "tags": [
+                    "User accounts (notifications)"
+                ],
+                "summary": "Get Notifications",
+                "description": "Get in-app notifications for this user account",
+                "operationId": "get_notifications",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Account Id"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 200,
+                            "minimum": 1,
+                            "default": 50,
+                            "title": "Limit"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GetNotificationsResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/accounts/{user_account_id}/notifications/mark-read/": {
+            "post": {
+                "tags": [
+                    "User accounts (notifications)"
+                ],
+                "summary": "Mark Notifications Read",
+                "description": "Mark notifications as read, or all of them when no ids are given",
+                "operationId": "mark_notifications_read",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Account Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/MarkNotificationsReadRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MarkNotificationsReadResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/accounts/{user_account_id}/notifications/{notification_id}/dismiss/": {
+            "post": {
+                "tags": [
+                    "User accounts (notifications)"
+                ],
+                "summary": "Dismiss Notification",
+                "description": "Dismiss a notification.\n\nDismissing also closes its aggregation window: should the same problem happen again, it is reported as a\nnew notification rather than quietly incrementing this one.",
+                "operationId": "dismiss_notification",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Account Id"
+                        }
+                    },
+                    {
+                        "name": "notification_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Notification Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DismissNotificationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/accounts/{user_account_id}/notifications/dismiss-all/": {
+            "post": {
+                "tags": [
+                    "User accounts (notifications)"
+                ],
+                "summary": "Dismiss All Notifications",
+                "description": "Dismiss every notification currently in the panel",
+                "operationId": "dismiss_all_notifications",
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "user_account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Account Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DismissNotificationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/chat/": {
             "post": {
                 "tags": [
@@ -4606,6 +4829,20 @@
                 "type": "object",
                 "title": "DeleteProviderResponse"
             },
+            "DismissNotificationResponse": {
+                "properties": {
+                    "unread_count": {
+                        "type": "integer",
+                        "title": "Unread Count"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "unread_count"
+                ],
+                "title": "DismissNotificationResponse"
+            },
             "EarningsReport": {
                 "properties": {
                     "currency": {
@@ -5016,6 +5253,28 @@
                     "valuation"
                 ],
                 "title": "GetLinkedAccountsValuationResponse"
+            },
+            "GetNotificationsResponse": {
+                "properties": {
+                    "notifications": {
+                        "items": {
+                            "$ref": "#/components/schemas/Notification"
+                        },
+                        "type": "array",
+                        "title": "Notifications"
+                    },
+                    "unread_count": {
+                        "type": "integer",
+                        "title": "Unread Count"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "notifications",
+                    "unread_count"
+                ],
+                "title": "GetNotificationsResponse"
             },
             "GetPlaidSettingsResponse": {
                 "properties": {
@@ -5808,6 +6067,41 @@
                 ],
                 "title": "LoginResponse"
             },
+            "MarkNotificationsReadRequest": {
+                "properties": {
+                    "notification_ids": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "type": "integer"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Notification Ids"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "title": "MarkNotificationsReadRequest"
+            },
+            "MarkNotificationsReadResponse": {
+                "properties": {
+                    "unread_count": {
+                        "type": "integer",
+                        "title": "Unread Count"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "unread_count"
+                ],
+                "title": "MarkNotificationsReadResponse"
+            },
             "MatchDetail": {
                 "properties": {
                     "match_confidence": {
@@ -6046,6 +6340,118 @@
                     "projected_savings_rate"
                 ],
                 "title": "MonthlySavingsEntry"
+            },
+            "Notification": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "title": "Id"
+                    },
+                    "notification_type": {
+                        "type": "string",
+                        "title": "Notification Type"
+                    },
+                    "severity": {
+                        "type": "string",
+                        "enum": [
+                            "info",
+                            "warning",
+                            "error",
+                            "success"
+                        ],
+                        "title": "Severity"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "active",
+                            "resolved"
+                        ],
+                        "title": "Status"
+                    },
+                    "title": {
+                        "type": "string",
+                        "title": "Title"
+                    },
+                    "body": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Body"
+                    },
+                    "payload": {
+                        "anyOf": [
+                            {
+                                "additionalProperties": true,
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Payload"
+                    },
+                    "occurrences": {
+                        "type": "integer",
+                        "title": "Occurrences"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Created At"
+                    },
+                    "last_seen_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Last Seen At"
+                    },
+                    "resolved_at": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Resolved At"
+                    },
+                    "read_at": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Read At"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "id",
+                    "notification_type",
+                    "severity",
+                    "status",
+                    "title",
+                    "body",
+                    "payload",
+                    "occurrences",
+                    "created_at",
+                    "last_seen_at",
+                    "resolved_at",
+                    "read_at"
+                ],
+                "title": "Notification"
             },
             "PlaidSettings": {
                 "properties": {
