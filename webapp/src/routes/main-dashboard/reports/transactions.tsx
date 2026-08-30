@@ -20,7 +20,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "components/ui/tooltip";
-import { ArrowRightLeft, Repeat } from "lucide-react";
+import { ArrowRightLeft, Repeat, X } from "lucide-react";
 import { DateTime } from "luxon";
 import { useDebounce } from "../../../hooks/use-debounce";
 import {
@@ -80,19 +80,35 @@ interface FilterOptions {
   debit_count: number;
 }
 
+export interface RecurringGroupFilter {
+  id: number;
+  label: string;
+}
+
 export interface TransactionsReportPanelProps {
   userAccountId: number;
   locale: string;
   moneyFormatter: MoneyFormatterType;
   linkedAccountId?: number;
   pageSize?: number;
+  /** When set, the panel shows only transactions of this recurring group. */
+  recurringGroup?: RecurringGroupFilter | null;
+  onRecurringGroupChange?: (group: RecurringGroupFilter | null) => void;
 }
 
 export const TransactionsReportPanel: React.FC<TransactionsReportPanelProps> = (
   props,
 ) => {
-  const { userAccountId, locale, moneyFormatter, linkedAccountId, pageSize } =
-    props;
+  const {
+    userAccountId,
+    locale,
+    moneyFormatter,
+    linkedAccountId,
+    pageSize,
+    recurringGroup,
+    onRecurringGroupChange,
+  } = props;
+  const recurringGroupId = recurringGroup?.id ?? null;
   const { accessToken } = useContext(AuthContext);
 
   const [report, setReport] = useState<TransactionsReport | null>(null);
@@ -135,6 +151,22 @@ export const TransactionsReportPanel: React.FC<TransactionsReportPanelProps> = (
   const debouncedDescription = useDebounce(descriptionSearch, 400);
   const debouncedAmountMin = useDebounce(amountMin, 400);
   const debouncedAmountMax = useDebounce(amountMax, 400);
+
+  // A recurring group is the only filter that should apply when one is
+  // selected: drop every other filter (including the default date range).
+  useEffect(() => {
+    if (recurringGroupId === null) return;
+    setFromDate("");
+    setToDate("");
+    setSelectedAccounts(new Set());
+    setDescriptionSearch("");
+    setSelectedMerchants(new Set());
+    setSelectedCategories(new Set());
+    setAmountMin(null);
+    setAmountMax(null);
+    setAmountSign("all");
+    setOffset(0);
+  }, [recurringGroupId]);
 
   const handleExpand = (txn: TransactionEntry) => {
     if (expandedId === txn.id) {
@@ -200,6 +232,9 @@ export const TransactionsReportPanel: React.FC<TransactionsReportPanelProps> = (
         if (amountSign !== "all") {
           params.set("amount_sign", amountSign);
         }
+        if (recurringGroupId !== null) {
+          params.set("recurring_group_id", String(recurringGroupId));
+        }
         const qs = params.toString();
         const resp = await fetch(
           `${APP_SERVICE_ENDPOINT}/reports/transactions/filter-options/${qs ? `?${qs}` : ""}`,
@@ -225,6 +260,7 @@ export const TransactionsReportPanel: React.FC<TransactionsReportPanelProps> = (
     debouncedAmountMin,
     debouncedAmountMax,
     amountSign,
+    recurringGroupId,
   ]);
 
   const toggleCategory = (value: string) => {
@@ -303,6 +339,9 @@ export const TransactionsReportPanel: React.FC<TransactionsReportPanelProps> = (
         if (amountSign !== "all") {
           params.set("amount_sign", amountSign);
         }
+        if (recurringGroupId !== null) {
+          params.set("recurring_group_id", String(recurringGroupId));
+        }
         const resp = await fetch(
           `${APP_SERVICE_ENDPOINT}/reports/transactions/?${params}`,
           {
@@ -332,6 +371,7 @@ export const TransactionsReportPanel: React.FC<TransactionsReportPanelProps> = (
     debouncedAmountMin,
     debouncedAmountMax,
     amountSign,
+    recurringGroupId,
     offset,
   ]);
 
@@ -381,9 +421,11 @@ export const TransactionsReportPanel: React.FC<TransactionsReportPanelProps> = (
     selectedCategories.size > 0 ||
     amountMin !== null ||
     amountMax !== null ||
-    amountSign !== "all";
+    amountSign !== "all" ||
+    recurringGroupId !== null;
 
   const clearAllFilters = () => {
+    onRecurringGroupChange?.(null);
     setFromDate("");
     setToDate("");
     setSelectedAccounts(new Set());
@@ -407,6 +449,25 @@ export const TransactionsReportPanel: React.FC<TransactionsReportPanelProps> = (
 
   return (
     <div className="space-y-4">
+      {recurringGroup && (
+        <div className="flex items-center gap-2 text-sm">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-muted/40 py-1 pl-2.5 pr-1.5">
+            <Repeat className="h-3.5 w-3.5 text-blue-400" />
+            <span>
+              Subscription:{" "}
+              <span className="font-medium">{recurringGroup.label}</span>
+            </span>
+            <button
+              type="button"
+              aria-label="Clear subscription filter"
+              className="rounded-full p-0.5 hover:bg-muted transition-colors"
+              onClick={() => onRecurringGroupChange?.(null)}
+            >
+              <X className="h-3.5 w-3.5 text-muted-foreground" />
+            </button>
+          </span>
+        </div>
+      )}
       {!report ? (
         <div
           className="space-y-3 py-4"
@@ -749,6 +810,14 @@ export const TransactionsReportPanel: React.FC<TransactionsReportPanelProps> = (
             onClose={() => setDetailId(null)}
             locale={locale}
             moneyFormatter={moneyFormatter}
+            onViewRecurringGroup={
+              onRecurringGroupChange
+                ? (group) => {
+                    setDetailId(null);
+                    onRecurringGroupChange(group);
+                  }
+                : undefined
+            }
           />
         </>
       )}

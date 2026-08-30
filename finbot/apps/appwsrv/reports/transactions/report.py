@@ -289,6 +289,7 @@ def get_transactions_report(
     amount_min: float | None = None,
     amount_max: float | None = None,
     amount_sign: str | None = None,
+    recurring_group_id: int | None = None,
     limit: int = 100,
     offset: int = 0,
 ) -> schema.TransactionsReport:
@@ -331,6 +332,9 @@ def get_transactions_report(
         where_clauses.append("th.amount > 0")
     elif amount_sign == "debit":
         where_clauses.append("th.amount < 0")
+    if recurring_group_id is not None:
+        params["recurring_group_id"] = recurring_group_id
+        where_clauses.append("th.recurring_group_id = :recurring_group_id")
 
     where = " AND ".join(where_clauses)
 
@@ -602,6 +606,7 @@ def _build_filter_where(
     amount_min: float | None = None,
     amount_max: float | None = None,
     amount_sign: str | None = None,
+    recurring_group_id: int | None = None,
 ) -> tuple[list[str], bool]:
     clauses: list[str] = []
     needs_merchant_join = False
@@ -634,6 +639,9 @@ def _build_filter_where(
         clauses.append("th.amount > 0")
     elif amount_sign == "debit":
         clauses.append("th.amount < 0")
+    if recurring_group_id is not None:
+        params["f_recurring_group_id"] = recurring_group_id
+        clauses.append("th.recurring_group_id = :f_recurring_group_id")
     return clauses, needs_merchant_join
 
 
@@ -649,6 +657,7 @@ def get_transaction_filter_options(
     amount_min: float | None = None,
     amount_max: float | None = None,
     amount_sign: str | None = None,
+    recurring_group_id: int | None = None,
 ) -> schema.TransactionFilterOptions:
     params: dict[str, Any] = {"user_account_id": user_account_id}
     filter_clauses, needs_merchant_join = _build_filter_where(
@@ -662,6 +671,7 @@ def get_transaction_filter_options(
         amount_min=amount_min,
         amount_max=amount_max,
         amount_sign=amount_sign,
+        recurring_group_id=recurring_group_id,
     )
     extra_where = (" AND " + " AND ".join(filter_clauses)) if filter_clauses else ""
     merchant_join = "LEFT JOIN finbot_merchants m ON th.merchant_id = m.id" if needs_merchant_join else ""

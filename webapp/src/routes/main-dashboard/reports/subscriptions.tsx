@@ -41,12 +41,14 @@ export interface SubscriptionsPanelProps {
   userAccountId: number;
   locale: string;
   moneyFormatter: MoneyFormatterType;
+  /** Called when a subscription row is clicked; `id` is the recurring group id. */
+  onSelectSubscription?: (subscription: { id: number; label: string }) => void;
 }
 
 export const SubscriptionsPanel: React.FC<SubscriptionsPanelProps> = (
   props,
 ) => {
-  const { userAccountId, locale, moneyFormatter } = props;
+  const { userAccountId, locale, moneyFormatter, onSelectSubscription } = props;
   const { accessToken } = useContext(AuthContext);
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<SubscriptionsReport | null>(null);
@@ -144,7 +146,34 @@ export const SubscriptionsPanel: React.FC<SubscriptionsPanelProps> = (
             <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto">
               <div className="flex flex-col divide-y divide-border/50">
                 {data.subscriptions.map((sub) => (
-                  <div key={sub.id} className="flex items-center gap-3 py-2.5">
+                  <div
+                    key={sub.id}
+                    role={onSelectSubscription ? "button" : undefined}
+                    tabIndex={onSelectSubscription ? 0 : undefined}
+                    title={
+                      onSelectSubscription ? "View all transactions" : undefined
+                    }
+                    className={`flex items-center gap-3 py-2.5 ${
+                      onSelectSubscription
+                        ? "cursor-pointer hover:bg-muted/40 transition-colors"
+                        : ""
+                    }`}
+                    onClick={() =>
+                      onSelectSubscription?.({
+                        id: sub.id,
+                        label: sub.description ?? sub.merchant_name,
+                      })
+                    }
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        onSelectSubscription?.({
+                          id: sub.id,
+                          label: sub.description ?? sub.merchant_name,
+                        });
+                      }
+                    }}
+                  >
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-sm font-medium">
                         {sub.description ?? sub.merchant_name}

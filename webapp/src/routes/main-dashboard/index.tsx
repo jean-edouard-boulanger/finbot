@@ -4,6 +4,7 @@ import React, {
   useContext,
   useMemo,
   useCallback,
+  useRef,
 } from "react";
 import { Navigate } from "react-router-dom";
 import { Clock, Wallet, CreditCard } from "lucide-react";
@@ -32,6 +33,7 @@ import {
   CashFlowPanel,
   SubscriptionsPanel,
   SpendingCalendarPanel,
+  type RecurringGroupFilter,
 } from "./reports";
 
 import { Alert, AlertTitle, AlertDescription } from "components/ui/alert";
@@ -79,6 +81,21 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
   const [configured, setConfigured] = useState<boolean | null>(null);
   const [valuation, setValuation] = useState<UserAccountValuation | null>(null);
   const [selectedReport, setSelectedReport] = useState<string>(DEFAULT_REPORT);
+  const [recurringGroupFilter, setRecurringGroupFilter] =
+    useState<RecurringGroupFilter | null>(null);
+  const reportsRef = useRef<HTMLDivElement>(null);
+
+  const showRecurringGroupTransactions = useCallback(
+    (group: RecurringGroupFilter) => {
+      setRecurringGroupFilter(group);
+      setSelectedReport(REPORTS.TRANSACTIONS);
+      reportsRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    },
+    [],
+  );
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -344,6 +361,7 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
               userAccountId={userAccountId!}
               locale={locale}
               moneyFormatter={defaultMoneyFormatter}
+              onSelectSubscription={showRecurringGroupTransactions}
             />
           </div>
           <div className="animate-fade-up stagger-4">
@@ -356,7 +374,7 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
         </div>
 
         {/* Reports */}
-        <div className="mt-6 animate-fade-up stagger-4">
+        <div ref={reportsRef} className="mt-6 animate-fade-up stagger-4">
           <Tabs
             defaultValue={DEFAULT_REPORT}
             value={selectedReport}
@@ -393,6 +411,8 @@ export const MainDashboard: React.FC<Record<string, never>> = () => {
                     locale={locale}
                     moneyFormatter={defaultMoneyFormatter}
                     pageSize={10}
+                    recurringGroup={recurringGroupFilter}
+                    onRecurringGroupChange={setRecurringGroupFilter}
                   />
                 </TabsContent>
               </CardContent>

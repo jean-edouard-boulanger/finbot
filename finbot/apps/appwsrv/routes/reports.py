@@ -95,6 +95,7 @@ def get_transactions_report(
     amount_min: float | None = Query(default=None),
     amount_max: float | None = Query(default=None),
     amount_sign: str | None = Query(default=None),
+    recurring_group_id: int | None = Query(default=None),
     limit: int = Query(default=100, le=500),
     offset: int = Query(default=0, ge=0),
 ) -> appwsrv_schema.GetTransactionsReportResponse:
@@ -113,6 +114,7 @@ def get_transactions_report(
             amount_min=amount_min,
             amount_max=amount_max,
             amount_sign=amount_sign,
+            recurring_group_id=recurring_group_id,
             limit=limit,
             offset=offset,
         )
@@ -131,6 +133,7 @@ def get_transaction_filter_options(
     amount_min: float | None = Query(default=None),
     amount_max: float | None = Query(default=None),
     amount_sign: str | None = Query(default=None),
+    recurring_group_id: int | None = Query(default=None),
 ) -> appwsrv_schema.GetTransactionFilterOptionsResponse:
     """Get available filter options for transactions (merchants, amount range)"""
     return appwsrv_schema.GetTransactionFilterOptionsResponse(
@@ -146,6 +149,7 @@ def get_transaction_filter_options(
             amount_min=amount_min,
             amount_max=amount_max,
             amount_sign=amount_sign,
+            recurring_group_id=recurring_group_id,
         )
     )
 

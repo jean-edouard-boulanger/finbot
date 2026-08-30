@@ -79,6 +79,7 @@ export interface GetTransactionFilterOptionsRequest {
     amountMin?: number | null;
     amountMax?: number | null;
     amountSign?: string | null;
+    recurringGroupId?: number | null;
 }
 
 export interface GetUserAccountCashFlowSummaryRequest {
@@ -113,6 +114,7 @@ export interface GetUserAccountTransactionsReportRequest {
     amountMin?: number | null;
     amountMax?: number | null;
     amountSign?: string | null;
+    recurringGroupId?: number | null;
     limit?: number;
     offset?: number;
 }
@@ -184,6 +186,7 @@ export interface UserAccountsReportsApiInterface {
      * @param {number} [amountMin] 
      * @param {number} [amountMax] 
      * @param {string} [amountSign] 
+     * @param {number} [recurringGroupId] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof UserAccountsReportsApiInterface
@@ -323,6 +326,7 @@ export interface UserAccountsReportsApiInterface {
      * @param {number} [amountMin] 
      * @param {number} [amountMax] 
      * @param {string} [amountSign] 
+     * @param {number} [recurringGroupId] 
      * @param {number} [limit] 
      * @param {number} [offset] 
      * @param {*} [options] Override http request option.
@@ -511,6 +515,10 @@ export class UserAccountsReportsApi extends runtime.BaseAPI implements UserAccou
 
         if (requestParameters['amountSign'] != null) {
             queryParameters['amount_sign'] = requestParameters['amountSign'];
+        }
+
+        if (requestParameters['recurringGroupId'] != null) {
+            queryParameters['recurring_group_id'] = requestParameters['recurringGroupId'];
         }
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -875,6 +883,10 @@ export class UserAccountsReportsApi extends runtime.BaseAPI implements UserAccou
 
         if (requestParameters['amountSign'] != null) {
             queryParameters['amount_sign'] = requestParameters['amountSign'];
+        }
+
+        if (requestParameters['recurringGroupId'] != null) {
+            queryParameters['recurring_group_id'] = requestParameters['recurringGroupId'];
         }
 
         if (requestParameters['limit'] != null) {
