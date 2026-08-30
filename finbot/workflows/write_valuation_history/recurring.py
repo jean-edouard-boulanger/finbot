@@ -426,7 +426,7 @@ GROUPS:
 
     try:
         response = await client.responses.parse(
-            model="gpt-5-mini",
+            model="gpt-5.6-luna",
             input=[{"role": "user", "content": prompt}],
             text_format=GroupAnnotationsResponse,
         )

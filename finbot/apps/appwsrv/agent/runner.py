@@ -22,7 +22,7 @@ from finbot.model import ScopedSession
 logger = logging.getLogger(__name__)
 
 
-CHAT_MODEL: str = get_environment_value_or("FINBOT_CHAT_MODEL") or "gpt-5.5"
+CHAT_MODEL: str = get_environment_value_or("FINBOT_CHAT_MODEL") or "gpt-5.6-sol"
 MAX_ROUNDS: int = 8
 
 

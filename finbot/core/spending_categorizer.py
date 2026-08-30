@@ -1,4 +1,4 @@
-"""LLM-based spending categorization using OpenAI gpt-5-mini.
+"""LLM-based spending categorization using OpenAI gpt-5.6-luna.
 
 Categorizes transactions into the Plaid PFC taxonomy.
 """
@@ -120,7 +120,7 @@ For each transaction, return the id, primary category, and detailed category."""
 
     try:
         response = await client.responses.parse(
-            model="gpt-5-mini",
+            model="gpt-5.6-luna",
             input=[{"role": "user", "content": prompt}],
             text_format=CategorizeResponse,
         )

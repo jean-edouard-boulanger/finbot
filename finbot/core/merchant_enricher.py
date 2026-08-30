@@ -337,7 +337,7 @@ TRANSACTIONS:
     async with semaphore:
         try:
             response = await client.responses.parse(
-                model="gpt-5.4",
+                model="gpt-5.6-terra",
                 input=[{"role": "user", "content": prompt}],
                 text_format=MerchantEnrichmentResponse,
             )
