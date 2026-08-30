@@ -66,6 +66,18 @@ def serialize_provider(provider: model.Provider) -> appwsrv_schema.Provider:
     )
 
 
+def serialize_merchant(merchant: model.Merchant) -> appwsrv_schema.MerchantEntry:
+    return appwsrv_schema.MerchantEntry(
+        id=merchant.id,
+        name=merchant.name,
+        description=merchant.description,
+        category=merchant.category,
+        website_url=merchant.website_url,
+        created_at=merchant.created_at,
+        updated_at=merchant.updated_at,
+    )
+
+
 def serialize_linked_account(
     linked_account: model.LinkedAccount,
     linked_account_status: repository.LinkedAccountStatus | None,

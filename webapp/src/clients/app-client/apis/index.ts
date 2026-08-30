@@ -7,6 +7,7 @@ export * from './FinancialDataProvidersApi';
 export * from './FormattingRulesApi';
 export * from './LinkedAccountsApi';
 export * from './LinkedAccountsValuationApi';
+export * from './MerchantsApi';
 export * from './PortfoliosApi';
 export * from './SecuritiesApi';
 export * from './SystemApi';

@@ -13,6 +13,7 @@ import {
   Mail,
   Pencil,
   Plus,
+  Store,
 } from "lucide-react";
 
 import AuthContext from "contexts/auth/auth-context";
@@ -185,6 +186,13 @@ function SettingsSubNav({ onNavigate }: { onNavigate?: () => void }) {
         onClick={onNavigate}
       >
         Email delivery
+      </SidebarNavItem>
+      <SidebarNavItem
+        to="/settings/admin/merchants"
+        icon={Store}
+        onClick={onNavigate}
+      >
+        Merchants
       </SidebarNavItem>
     </>
   );

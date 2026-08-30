@@ -2990,6 +2990,33 @@
                 }
             }
         },
+        "/merchants/": {
+            "get": {
+                "tags": [
+                    "Merchants"
+                ],
+                "summary": "Get Merchants",
+                "description": "Get all auto-extracted merchants",
+                "operationId": "get_merchants",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GetMerchantsResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
+        },
         "/reports/holdings/": {
             "get": {
                 "tags": [
@@ -5311,6 +5338,23 @@
                 ],
                 "title": "GetLinkedAccountsValuationResponse"
             },
+            "GetMerchantsResponse": {
+                "properties": {
+                    "merchants": {
+                        "items": {
+                            "$ref": "#/components/schemas/MerchantEntry"
+                        },
+                        "type": "array",
+                        "title": "Merchants"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "merchants"
+                ],
+                "title": "GetMerchantsResponse"
+            },
             "GetNotificationsResponse": {
                 "properties": {
                     "notifications": {
@@ -6276,6 +6320,80 @@
                     "website_url"
                 ],
                 "title": "MerchantDetail"
+            },
+            "MerchantEntry": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "title": "Id"
+                    },
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description"
+                    },
+                    "category": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Category"
+                    },
+                    "website_url": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Website Url"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Created At"
+                    },
+                    "updated_at": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Updated At"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "id",
+                    "name",
+                    "description",
+                    "category",
+                    "website_url",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "MerchantEntry"
             },
             "Metrics": {
                 "properties": {

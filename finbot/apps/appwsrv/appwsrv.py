@@ -10,6 +10,7 @@ from finbot.apps.appwsrv.routes.events import router as events_router
 from finbot.apps.appwsrv.routes.formatting_rules import router as formatting_rules_router
 from finbot.apps.appwsrv.routes.linked_accounts import router as linked_accounts_router
 from finbot.apps.appwsrv.routes.linked_accounts_valuation import router as linked_accounts_valuation_router
+from finbot.apps.appwsrv.routes.merchants import router as merchants_router
 from finbot.apps.appwsrv.routes.notifications import router as notifications_router
 from finbot.apps.appwsrv.routes.portfolios import router as portfolios_router
 from finbot.apps.appwsrv.routes.providers import router as providers_router
@@ -46,6 +47,7 @@ app.include_router(linked_accounts_valuation_router)
 app.include_router(linked_accounts_router)
 app.include_router(portfolios_router)
 app.include_router(securities_router)
+app.include_router(merchants_router)
 app.include_router(reports_router)
 app.include_router(formatting_rules_router)
 app.include_router(notifications_router)
