@@ -22,10 +22,7 @@ import { ChartTooltipContent } from "components/ui/chart";
 import { MoneyFormatterType } from "components/money";
 
 type AggregationMode =
-  | "account"
-  | "asset type"
-  | "asset class"
-  | "currency exposure";
+  "account" | "asset type" | "asset class" | "currency exposure";
 
 const AGGREGATION_MODES: Array<AggregationMode> = [
   "account",

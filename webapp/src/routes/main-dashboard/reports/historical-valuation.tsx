@@ -181,11 +181,9 @@ export const HistoricalValuationPanel: React.FC<HistoricalValuationProps> = (
               );
               // Trim x-axis to only indices where this series has data
               const seriesData = matchedSeries[0]?.data as
-                | (number | null)[]
-                | undefined;
+                (number | null)[] | undefined;
               const categories = hv.seriesData.xAxis.categories as (
-                | string
-                | number
+                string | number
               )[];
               if (seriesData) {
                 const firstIdx = seriesData.findIndex((v) => v != null);

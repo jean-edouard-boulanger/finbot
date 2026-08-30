@@ -80,7 +80,7 @@ const DataDrivenAccountForm: React.FC<DataDrivenAccountFormProps> = ({
 interface PlaidFormProps {
   operation: string | null;
   settings: PlaidSettings;
-  onSubmit(data: { public_token: string }): void;
+  onSubmit(data: { public_token: string | null }): void;
   linkToken: string | null;
 }
 
@@ -103,7 +103,7 @@ const PlaidForm: React.FC<PlaidFormProps> = ({
   return (
     <PlaidLink
       clientName="Finbot"
-      onSuccess={(public_token: string) => {
+      onSuccess={(public_token: string | null) => {
         onSubmit({ public_token });
       }}
       onEvent={(
