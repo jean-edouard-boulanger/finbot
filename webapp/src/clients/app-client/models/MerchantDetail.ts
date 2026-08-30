@@ -48,6 +48,48 @@ export interface MerchantDetail {
      * @memberof MerchantDetail
      */
     websiteUrl: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof MerchantDetail
+     */
+    valuationCcy: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof MerchantDetail
+     */
+    transactionCount: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof MerchantDetail
+     */
+    totalSpentThisYear: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof MerchantDetail
+     */
+    totalSpentAllTime: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof MerchantDetail
+     */
+    averageTransactionAmount: number | null;
+    /**
+     * 
+     * @type {Date}
+     * @memberof MerchantDetail
+     */
+    firstTransactionDate: Date | null;
+    /**
+     * 
+     * @type {Date}
+     * @memberof MerchantDetail
+     */
+    lastTransactionDate: Date | null;
 }
 
 /**
@@ -59,6 +101,13 @@ export function instanceOfMerchantDetail(value: object): value is MerchantDetail
     if (!('description' in value) || value['description'] === undefined) return false;
     if (!('category' in value) || value['category'] === undefined) return false;
     if (!('websiteUrl' in value) || value['websiteUrl'] === undefined) return false;
+    if (!('valuationCcy' in value) || value['valuationCcy'] === undefined) return false;
+    if (!('transactionCount' in value) || value['transactionCount'] === undefined) return false;
+    if (!('totalSpentThisYear' in value) || value['totalSpentThisYear'] === undefined) return false;
+    if (!('totalSpentAllTime' in value) || value['totalSpentAllTime'] === undefined) return false;
+    if (!('averageTransactionAmount' in value) || value['averageTransactionAmount'] === undefined) return false;
+    if (!('firstTransactionDate' in value) || value['firstTransactionDate'] === undefined) return false;
+    if (!('lastTransactionDate' in value) || value['lastTransactionDate'] === undefined) return false;
     return true;
 }
 
@@ -77,6 +126,13 @@ export function MerchantDetailFromJSONTyped(json: any, ignoreDiscriminator: bool
         'description': json['description'],
         'category': json['category'],
         'websiteUrl': json['website_url'],
+        'valuationCcy': json['valuation_ccy'],
+        'transactionCount': json['transaction_count'],
+        'totalSpentThisYear': json['total_spent_this_year'],
+        'totalSpentAllTime': json['total_spent_all_time'],
+        'averageTransactionAmount': json['average_transaction_amount'],
+        'firstTransactionDate': (json['first_transaction_date'] == null ? null : new Date(json['first_transaction_date'])),
+        'lastTransactionDate': (json['last_transaction_date'] == null ? null : new Date(json['last_transaction_date'])),
     };
 }
 
@@ -96,6 +152,13 @@ export function MerchantDetailToJSONTyped(value?: MerchantDetail | null, ignoreD
         'description': value['description'],
         'category': value['category'],
         'website_url': value['websiteUrl'],
+        'valuation_ccy': value['valuationCcy'],
+        'transaction_count': value['transactionCount'],
+        'total_spent_this_year': value['totalSpentThisYear'],
+        'total_spent_all_time': value['totalSpentAllTime'],
+        'average_transaction_amount': value['averageTransactionAmount'],
+        'first_transaction_date': (value['firstTransactionDate'] == null ? null : (value['firstTransactionDate'] as any).toISOString()),
+        'last_transaction_date': (value['lastTransactionDate'] == null ? null : (value['lastTransactionDate'] as any).toISOString()),
     };
 }
 

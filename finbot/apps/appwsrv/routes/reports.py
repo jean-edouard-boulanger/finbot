@@ -182,7 +182,7 @@ def get_transaction_detail(
     if txn is None:
         raise ResourceNotFoundError(f"Transaction {transaction_id} not found")
     return appwsrv_schema.GetTransactionDetailResponse(
-        transaction=serialize_transaction_detail(db.session, txn),
+        transaction=serialize_transaction_detail(db.session, current_user_id, txn),
     )
 
 
