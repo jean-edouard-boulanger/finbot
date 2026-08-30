@@ -515,9 +515,7 @@ def serialize_transaction_detail(
             transaction_count=transaction_count,
             total_spent_this_year=float(spend_stats.get("total_spent_this_year", 0.0)),
             total_spent_all_time=total_spent_all_time,
-            average_transaction_amount=(
-                total_spent_all_time / transaction_count if transaction_count > 0 else None
-            ),
+            average_transaction_amount=(total_spent_all_time / transaction_count if transaction_count > 0 else None),
             first_transaction_date=spend_stats.get("first_transaction_date"),
             last_transaction_date=spend_stats.get("last_transaction_date"),
         )
