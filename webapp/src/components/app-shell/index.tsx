@@ -216,11 +216,6 @@ function SidebarContent({
           <FinbotMark className="h-6 w-6 text-primary" />
           Finbot
         </NavLink>
-        {/* The dev-build badge is the widest thing here and would otherwise wrap to two lines and
-            inflate the row; let it shorten instead so the bell keeps a fixed home. */}
-        <span className="min-w-0 overflow-hidden whitespace-nowrap">
-          <SystemStatusBadge />
-        </span>
         <div className="ml-auto shrink-0">
           <NotificationBell />
         </div>
@@ -326,6 +321,9 @@ function SidebarContent({
         <SidebarNavItem to="/logout" icon={LogOut} onClick={onNavigate}>
           Logout
         </SidebarNavItem>
+        <div className="flex justify-center px-3 pt-2">
+          <SystemStatusBadge />
+        </div>
       </nav>
     </div>
   );
