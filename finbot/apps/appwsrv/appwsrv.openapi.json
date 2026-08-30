@@ -2990,6 +2990,33 @@
                 }
             }
         },
+        "/merchants/": {
+            "get": {
+                "tags": [
+                    "Merchants"
+                ],
+                "summary": "Get Merchants",
+                "description": "Get all auto-extracted merchants",
+                "operationId": "get_merchants",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GetMerchantsResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
+        },
         "/reports/holdings/": {
             "get": {
                 "tags": [
@@ -5311,6 +5338,23 @@
                 ],
                 "title": "GetLinkedAccountsValuationResponse"
             },
+            "GetMerchantsResponse": {
+                "properties": {
+                    "merchants": {
+                        "items": {
+                            "$ref": "#/components/schemas/MerchantEntry"
+                        },
+                        "type": "array",
+                        "title": "Merchants"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "merchants"
+                ],
+                "title": "GetMerchantsResponse"
+            },
             "GetNotificationsResponse": {
                 "properties": {
                     "notifications": {
@@ -6264,6 +6308,57 @@
                             }
                         ],
                         "title": "Website Url"
+                    },
+                    "valuation_ccy": {
+                        "type": "string",
+                        "title": "Valuation Ccy"
+                    },
+                    "transaction_count": {
+                        "type": "integer",
+                        "title": "Transaction Count"
+                    },
+                    "total_spent_this_year": {
+                        "type": "number",
+                        "title": "Total Spent This Year"
+                    },
+                    "total_spent_all_time": {
+                        "type": "number",
+                        "title": "Total Spent All Time"
+                    },
+                    "average_transaction_amount": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Average Transaction Amount"
+                    },
+                    "first_transaction_date": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "First Transaction Date"
+                    },
+                    "last_transaction_date": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Last Transaction Date"
                     }
                 },
                 "additionalProperties": false,
@@ -6273,9 +6368,90 @@
                     "name",
                     "description",
                     "category",
-                    "website_url"
+                    "website_url",
+                    "valuation_ccy",
+                    "transaction_count",
+                    "total_spent_this_year",
+                    "total_spent_all_time",
+                    "average_transaction_amount",
+                    "first_transaction_date",
+                    "last_transaction_date"
                 ],
                 "title": "MerchantDetail"
+            },
+            "MerchantEntry": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "title": "Id"
+                    },
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description"
+                    },
+                    "category": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Category"
+                    },
+                    "website_url": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Website Url"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Created At"
+                    },
+                    "updated_at": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Updated At"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "id",
+                    "name",
+                    "description",
+                    "category",
+                    "website_url",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "MerchantEntry"
             },
             "Metrics": {
                 "properties": {

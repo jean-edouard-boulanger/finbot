@@ -814,3 +814,17 @@ class MarkNotificationsReadResponse(AppModel):
 
 class DismissNotificationResponse(AppModel):
     unread_count: int
+
+
+class MerchantEntry(AppModel):
+    id: int
+    name: str
+    description: str | None
+    category: str | None
+    website_url: str | None
+    created_at: datetime
+    updated_at: datetime | None
+
+
+class GetMerchantsResponse(AppModel):
+    merchants: list[MerchantEntry]

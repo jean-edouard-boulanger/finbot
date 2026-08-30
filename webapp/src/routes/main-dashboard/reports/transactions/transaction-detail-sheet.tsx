@@ -20,6 +20,7 @@ import {
   Repeat,
   ShieldCheck,
   TrendingUp,
+  Wallet,
 } from "lucide-react";
 import { DateTime } from "luxon";
 
@@ -29,6 +30,13 @@ interface MerchantDetail {
   description: string | null;
   category: string | null;
   website_url: string | null;
+  valuation_ccy: string;
+  transaction_count: number;
+  total_spent_this_year: number;
+  total_spent_all_time: number;
+  average_transaction_amount: number | null;
+  first_transaction_date: string | null;
+  last_transaction_date: string | null;
 }
 
 interface RecurringGroupDetail {
@@ -150,6 +158,30 @@ function DetailRow({
   );
 }
 
+function Stat({
+  label,
+  children,
+  hint,
+}: {
+  label: string;
+  children: React.ReactNode;
+  hint?: React.ReactNode;
+}) {
+  return (
+    <div className="flex h-full flex-col rounded-md border border-border bg-muted/40 px-3 py-2.5">
+      <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+        {label}
+      </p>
+      <p className="mt-1 font-mono text-base tabular-nums leading-tight">
+        {children}
+      </p>
+      <p className="mt-auto min-h-4 pt-1 text-xs text-muted-foreground">
+        {hint}
+      </p>
+    </div>
+  );
+}
+
 export interface TransactionDetailSheetProps {
   transactionId: number | null;
   onClose: () => void;
@@ -212,8 +244,24 @@ export const TransactionDetailSheet: React.FC<TransactionDetailSheetProps> = ({
         ) : (
           <div className="space-y-6">
             {/* Header */}
-            <SheetHeader>
-              <SheetTitle className="pr-6 leading-snug">
+            <SheetHeader className="space-y-3">
+              <p
+                className={`font-mono text-4xl font-semibold tabular-nums tracking-tight ${
+                  txn.amount > 0
+                    ? "text-gain"
+                    : txn.amount < 0
+                      ? "text-loss"
+                      : ""
+                }`}
+              >
+                <Money
+                  amount={txn.amount}
+                  locale={locale}
+                  ccy={txn.currency}
+                  moneyFormatter={moneyFormatter}
+                />
+              </p>
+              <SheetTitle className="pr-6 text-base font-medium leading-snug">
                 {txn.description}
               </SheetTitle>
               <SheetDescription>
@@ -235,24 +283,6 @@ export const TransactionDetailSheet: React.FC<TransactionDetailSheetProps> = ({
                 <Badge variant="outline" className="text-xs">
                   {formatCategory(txn.transaction_type)}
                 </Badge>
-              </DetailRow>
-              <DetailRow label="Amount">
-                <span
-                  className={`font-mono tabular-nums ${
-                    txn.amount > 0
-                      ? "text-gain"
-                      : txn.amount < 0
-                        ? "text-loss"
-                        : ""
-                  }`}
-                >
-                  <Money
-                    amount={txn.amount}
-                    locale={locale}
-                    ccy={txn.currency}
-                    moneyFormatter={moneyFormatter}
-                  />
-                </span>
               </DetailRow>
               {txn.amount_snapshot_ccy != null &&
                 txn.amount_snapshot_ccy !== txn.amount && (
@@ -388,6 +418,64 @@ export const TransactionDetailSheet: React.FC<TransactionDetailSheetProps> = ({
                     <DetailRow label="Description">
                       {txn.merchant.description}
                     </DetailRow>
+                  )}
+                </Section>
+
+                <Separator />
+                <Section
+                  icon={<Wallet className="h-4 w-4" />}
+                  title={`Your spending at ${txn.merchant.name}`}
+                >
+                  {txn.merchant.transaction_count === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      No outgoing payments recorded yet.
+                    </p>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Stat label={`This year`}>
+                          <Money
+                            amount={txn.merchant.total_spent_this_year}
+                            locale={locale}
+                            ccy={txn.merchant.valuation_ccy}
+                            moneyFormatter={moneyFormatter}
+                          />
+                        </Stat>
+                        <Stat
+                          label="All time"
+                          hint={
+                            txn.merchant.first_transaction_date
+                              ? `since ${DateTime.fromISO(
+                                  txn.merchant.first_transaction_date,
+                                ).toLocaleString(DateTime.DATE_MED)}`
+                              : undefined
+                          }
+                        >
+                          <Money
+                            amount={txn.merchant.total_spent_all_time}
+                            locale={locale}
+                            ccy={txn.merchant.valuation_ccy}
+                            moneyFormatter={moneyFormatter}
+                          />
+                        </Stat>
+                        <Stat label="Payments">
+                          {txn.merchant.transaction_count}
+                        </Stat>
+                        {txn.merchant.average_transaction_amount != null && (
+                          <Stat label="Typical payment">
+                            <Money
+                              amount={txn.merchant.average_transaction_amount}
+                              locale={locale}
+                              ccy={txn.merchant.valuation_ccy}
+                              moneyFormatter={moneyFormatter}
+                            />
+                          </Stat>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Outgoing payments only, in {txn.merchant.valuation_ccy}.
+                      </p>
+                    </>
                   )}
                 </Section>
               </>

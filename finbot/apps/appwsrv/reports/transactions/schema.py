@@ -12,6 +12,14 @@ class MerchantDetail(BaseModel):
     description: str | None
     category: str | None
     website_url: str | None
+    valuation_ccy: str
+    """Currency the spend figures below are expressed in."""
+    transaction_count: int
+    total_spent_this_year: float
+    total_spent_all_time: float
+    average_transaction_amount: float | None
+    first_transaction_date: AwareDatetime | None
+    last_transaction_date: AwareDatetime | None
 
 
 class RecurringGroupDetail(BaseModel):

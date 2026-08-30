@@ -19,6 +19,7 @@ import { AccountSecuritySettings } from "./routes/settings/account-security";
 import { LinkedAccountsSettings } from "./routes/settings/linked-accounts";
 import { ProvidersSettings } from "./routes/settings/providers";
 import { EmailDeliverySettingsPanel } from "./routes/settings/email-delivery";
+import { MerchantsSettings } from "./routes/settings/merchants";
 import {
   LoginForm,
   SignupForm,
@@ -76,6 +77,7 @@ const UserRouter = () => {
               path="admin/email_delivery"
               element={<EmailDeliverySettingsPanel />}
             />
+            <Route path="admin/merchants" element={<MerchantsSettings />} />
             <Route path="" element={<Navigate to={"/settings/profile"} />} />
             <Route path="*" element={<Navigate to={"/settings/profile"} />} />
           </Route>

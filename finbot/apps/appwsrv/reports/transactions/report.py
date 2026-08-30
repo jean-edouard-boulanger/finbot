@@ -459,8 +459,36 @@ def serialize_transaction(
     )
 
 
+def _get_merchant_spend_stats(
+    session: SessionType,
+    user_account_id: int,
+    merchant_id: int,
+) -> dict[str, Any]:
+    year_start = datetime(datetime.now(timezone.utc).year, 1, 1, tzinfo=timezone.utc)
+    query = """
+        SELECT COUNT(*) AS transaction_count,
+               COALESCE(SUM(ABS(th.amount_snapshot_ccy)), 0) AS total_spent_all_time,
+               COALESCE(SUM(ABS(th.amount_snapshot_ccy)) FILTER (WHERE th.transaction_date >= :year_start), 0)
+                   AS total_spent_this_year,
+               MIN(th.transaction_date) AS first_transaction_date,
+               MAX(th.transaction_date) AS last_transaction_date
+          FROM finbot_transactions_history th
+          JOIN finbot_linked_accounts la ON th.linked_account_id = la.id
+         WHERE la.user_account_id = :user_account_id
+           AND NOT la.deleted
+           AND th.merchant_id = :merchant_id
+           AND th.amount_snapshot_ccy < 0
+    """
+    row = session.execute(
+        text(query),
+        {"user_account_id": user_account_id, "merchant_id": merchant_id, "year_start": year_start},
+    ).fetchone()
+    return row_to_dict(row) if row else {}
+
+
 def serialize_transaction_detail(
     session: SessionType,
+    user_account_id: int,
     txn: TransactionHistoryEntry,
 ) -> schema.TransactionDetail:
     sub_account_name: str = (
@@ -473,12 +501,23 @@ def serialize_transaction_detail(
 
     merchant_detail: schema.MerchantDetail | None = None
     if txn.merchant is not None:
+        settings = repository.get_user_account_settings(session, user_account_id)
+        spend_stats = _get_merchant_spend_stats(session, user_account_id, txn.merchant.id)
+        transaction_count = spend_stats.get("transaction_count", 0)
+        total_spent_all_time = float(spend_stats.get("total_spent_all_time", 0.0))
         merchant_detail = schema.MerchantDetail(
             id=txn.merchant.id,
             name=txn.merchant.name,
             description=txn.merchant.description,
             category=txn.merchant.category,
             website_url=txn.merchant.website_url,
+            valuation_ccy=settings.valuation_ccy,
+            transaction_count=transaction_count,
+            total_spent_this_year=float(spend_stats.get("total_spent_this_year", 0.0)),
+            total_spent_all_time=total_spent_all_time,
+            average_transaction_amount=(total_spent_all_time / transaction_count if transaction_count > 0 else None),
+            first_transaction_date=spend_stats.get("first_transaction_date"),
+            last_transaction_date=spend_stats.get("last_transaction_date"),
         )
 
     recurring_detail: schema.RecurringGroupDetail | None = None
