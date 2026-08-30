@@ -187,6 +187,8 @@ export interface TransactionDetailSheetProps {
   onClose: () => void;
   locale: string;
   moneyFormatter: MoneyFormatterType;
+  /** When provided, the recurring section offers a link to list all transactions of the group. */
+  onViewRecurringGroup?: (group: { id: number; label: string }) => void;
 }
 
 export const TransactionDetailSheet: React.FC<TransactionDetailSheetProps> = ({
@@ -194,6 +196,7 @@ export const TransactionDetailSheet: React.FC<TransactionDetailSheetProps> = ({
   onClose,
   locale,
   moneyFormatter,
+  onViewRecurringGroup,
 }) => {
   const { accessToken } = useContext(AuthContext);
   const [detail, setDetail] = useState<TransactionDetail | null>(null);
@@ -540,6 +543,23 @@ export const TransactionDetailSheet: React.FC<TransactionDetailSheetProps> = ({
                       txn.recurring_group.last_seen,
                     ).toLocaleString(DateTime.DATE_MED)}
                   </DetailRow>
+                  {onViewRecurringGroup && (
+                    <button
+                      type="button"
+                      className="mt-1 text-sm text-primary hover:underline"
+                      onClick={() =>
+                        onViewRecurringGroup({
+                          id: txn.recurring_group!.id,
+                          label:
+                            txn.recurring_group!.description ??
+                            txn.merchant?.name ??
+                            txn.description,
+                        })
+                      }
+                    >
+                      View all transactions
+                    </button>
+                  )}
                 </Section>
               </>
             )}

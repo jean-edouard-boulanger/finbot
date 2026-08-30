@@ -3260,6 +3260,22 @@
                         }
                     },
                     {
+                        "name": "recurring_group_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Recurring Group Id"
+                        }
+                    },
+                    {
                         "name": "limit",
                         "in": "query",
                         "required": false,
@@ -3473,6 +3489,22 @@
                                 }
                             ],
                             "title": "Amount Sign"
+                        }
+                    },
+                    {
+                        "name": "recurring_group_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Recurring Group Id"
                         }
                     }
                 ],
