@@ -10,8 +10,7 @@ interface TreeNodeWithChildren<NodeType> {
 interface TreeNodeWithoutChildren {}
 
 type TreeNode<NodeType> =
-  | TreeNodeWithChildren<NodeType>
-  | TreeNodeWithoutChildren;
+  TreeNodeWithChildren<NodeType> | TreeNodeWithoutChildren;
 
 interface InternalTreeNode<UserNodeType> {
   id: number;
