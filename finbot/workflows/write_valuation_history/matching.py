@@ -281,7 +281,7 @@ confident about - it's better to skip uncertain matches than to pair incorrectly
 
         try:
             response = await client.responses.parse(
-                model="gpt-5-mini",
+                model="gpt-5.6-luna",
                 input=[{"role": "user", "content": prompt}],
                 text_format=DisambiguationResponse,
             )
