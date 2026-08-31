@@ -55,7 +55,7 @@
     "@tailwindcss/postcss": "^4.2.4",
     "@vitejs/plugin-react": "^6.0.1",
     "chokidar": "^5.0.0",
-    "eslint": "^9.39.5",
+    "eslint": "^10.9.1",
     "eslint-formatter-unix": "^8.40.0",
     "eslint-plugin-react": "^7.37.5",
     "globals": "^17.5.0",
