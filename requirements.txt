@@ -229,7 +229,7 @@ pydantic-extra-types==2.11.1
     # via fastapi
 pydantic-settings==2.15.0
     # via fastapi
-pyee==13.0.1
+pyee==14.0.0
     # via playwright
 pygments==2.21.0
     # via rich
