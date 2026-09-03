@@ -31,7 +31,7 @@ dependencies = [
     "uvicorn<1",
     "yfinance<2",
     "openai>=3",
-    "rapidfuzz>=3",
+    "rapidfuzz>=3.14.6",
 ]
 
 [project.optional-dependencies]
