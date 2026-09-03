@@ -288,7 +288,7 @@ pyyaml==6.0.3
     # via
     #   uvicorn
     #   watchdog
-rapidfuzz==3.14.5
+rapidfuzz==3.14.6
     # via finbot (pyproject.toml)
 referencing==0.37.0
     # via
