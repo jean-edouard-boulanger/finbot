@@ -233,7 +233,7 @@ pyee==13.0.1
     # via playwright
 pygments==2.21.0
     # via rich
-pyjwt==2.13.0
+pyjwt==2.15.0
     # via twilio
 pyparsing==3.3.2
     # via httplib2
