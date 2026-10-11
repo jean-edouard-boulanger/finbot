@@ -151,7 +151,7 @@ librt==0.15.0
     # via mypy
 lxml==6.1.2
     # via yfinance
-mako==1.4.1
+mako==1.4.2
     # via alembic
 markdown-it-py==4.2.0
     # via rich
