@@ -183,7 +183,7 @@ numpy==2.5.2
     #   yfinance
 oauth2client==4.1.3
     # via finbot (pyproject.toml)
-oauthlib==3.3.1
+oauthlib==4.0.0
     # via requests-oauthlib
 openai==3.6.0
     # via finbot (pyproject.toml)
