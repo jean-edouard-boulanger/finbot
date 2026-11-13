@@ -72,7 +72,7 @@ dateparser==1.4.2
     # via python-binance
 detect-installer==0.1.0
     # via fastapi-cloud-cli
-dnspython==2.8.0
+dnspython==2.9.2
     # via email-validator
 ecdsa==0.19.2
     # via python-jose
